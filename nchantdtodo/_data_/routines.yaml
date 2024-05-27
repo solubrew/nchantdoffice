@@ -1,0 +1,72 @@
+
+
+
+Resource_Human:
+  DEFUALT_ADULT:
+    routine:
+      base:
+        daily:
+          sleep:
+            -
+              start: 10:00EST
+              end: 6:00EST
+              days: all
+          work:
+            -
+              start: 8:00EST
+              end: 5:00EST
+              days: weekdays
+          cook:
+            -
+              start: 1230EST
+              end: 1300EST
+              days: all
+            -
+              start: 1500EST
+              end: 1530EST
+              days: all
+          eat:
+            -
+              start: 1300EST
+              end: 1330EST
+              days: all
+            -
+              start: 1530EST
+              end: 1600EST
+              days: all
+  JDB:
+    routine:
+      base:
+        daily:
+          sleep:
+            -
+              start: 01:00EST
+              end: 9:00EST
+              days: all
+          work:
+            -
+              start: 9:30EST
+              end: 18:00EST
+              days: weekdays
+          cook:
+            -
+              start: 1230EST
+              end: 1300EST
+              days: all
+            -
+              start: 1500EST
+              end: 1530EST
+              days: all
+          eat:
+            -
+              start: 1300EST
+              end: 1330EST
+              days: all
+            -
+              start: 1530EST
+              end: 1600EST
+              days: all
+        weekly:
+        monthly:
+        yearly:
+        life:

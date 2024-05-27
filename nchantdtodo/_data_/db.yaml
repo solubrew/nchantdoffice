@@ -1,0 +1,229 @@
+path: '{0}/data/db/{1}.db'
+'name': 'NchantdTODOs'
+objects:
+  table:
+    CONCERN:
+      description: >
+        A distributed table of active concerns
+      columns:
+        NAME_TXT:
+        NAME_ABBR:
+      records:
+        - ['Solutions Brewer', 'SB']
+        - ['Natural Kinetics', 'NK']
+        - ['Joseph Brewer', 'JDB']
+        - ['Wanda Sue Brown', 'WSB']
+        - ['ABO Investments', 'ABO']
+    DUE:
+      description: >
+        A serial table of due dates and due date changes
+      columns:
+        TODO_FK:
+        DUE_DTTM:
+        DUE_CHANGE_DTTM:
+        ESTIMATED_HOURS:
+      records:
+    EVENT:
+      description:
+      columns:
+        NAME_TXT:
+        INITIAL_STATE_NM:
+        FINAL_STATE_NM:
+        DESCRIPTION_LTXT:
+        INITIALIZED_DTTM:
+        EXPECTED_DTTM:
+        ACHIEVED_DTTM:
+        STATE_TXT:
+      records:
+        - ['Wake Up', 'SLEEP', 'AWAKE', 'transitioning from sleep to awake', '2024-05-03 20:45EST',
+           '2024-05-03 08:30EST', '2024-05-03 10:00EST', 'FUTURE']
+    RESOURCE:
+      columns:
+        NAME_TXT:
+        NAME_ABBR:
+        DESCRIPTION_LTXT:
+        HOURLY_COST_NBR:
+        RESOURCE_TYPE_DE:
+      records:
+        - ['Joseph Brewer', 'JDB', 'Primary Actor', 45, 'HUMAN']
+        - ['Core Desktop', 'CoreDT', '', 0.02, 'PC']
+    ROUTINE:
+      description:
+      columns:
+        NAME_TXT:
+        WINDOW_TXT:
+        STATUS_TXT:
+        START_TM:
+        END_TM:
+        WEIGHT_NBR:
+      records:
+        - ['sleep', 'daily', 'base', '01:00EST', '09:00EST', 0]
+    SCHEDULE:
+      description:
+        STATUS can be 
+          - COMPLETED...the event was completed from the POV of the user
+          - PROPOSED...the event is available to be scheduled during the window
+          - SCHEDULED...the event is scheduled for the user to complete
+          - PASSED...the event has been eclipsed in time without being completed
+          - ABORTED...the event has been eclipsed by some action of the user without being completed
+          the process should always progress PROPOSED -> SCHEDULED -> (PASSED, ABORTED, COMPLETED)
+      columns:
+        SCHEDULE_DT:
+        EVENT_FK:
+        STATUS_TXT:
+        HISTORY_BIT:
+      records:
+    tabs: #TODO: need to pull these tables from standard configurations
+      columns: ['name', 'widget', 'widgdata', 'parentid', 'position', 'readonly', 'editable', 'visible',
+                'moveable', 'uuid']
+      records:
+    TODO:
+      description: >
+      columns:
+        NAME_TXT:
+        DESCRIPTION_LTXT:
+        ASSIGNED_ACTOR_FK:
+        PARENT_TODO_FK:
+        CONCERN_FK:
+        DUE_FK:
+      records:
+    trnodes:  #nid should be set to unique
+      'columns': ['nid', 'icon', 'name', 'ntype', 'parentid', 'position',
+                  'tabset', 'treeid', 'readonly', 'visible', 'moveable',
+                  'pregnable', 'isparent', 'expanded', 'tabfocus']
+      'records':
+  view:
+    VW_ACTOR:
+      description:
+      cmd: >
+        CREATE VIEW VW_ACTOR AS
+          SELECT
+            a.ACTOR_PK,
+            a.NAME_TXT,
+            a.NAME_ABBR
+          FROM ACTOR a
+          WHERE a.ACTIVE_BIT = 1 AND a.DELETE_BIT = 0
+          GROUP BY 1,2,3
+    VW_DUE:
+      description:
+      cmd: >
+        CREATE VIEW VW_DUE AS
+          SELECT
+            d.DUE_PK,
+            d.TODO_FK,
+            d.DUE_CHANGE_DTTM,
+            d.DUE_DTTM
+          FROM DUE d
+          WHERE d.ACTIVE_BIT = 1 AND d.DELETE_BIT = 0
+          GROUP BY 1,2,3,4
+    'VW_CONCERN':
+      description:
+      cmd: >
+        CREATE VIEW VW_CONCERN AS
+          SELECT
+            c.CONCERN_PK,
+            c.NAME_TXT AS CONCERN_NM
+          FROM CONCERN c
+          WHERE c.ACTIVE_BIT = 1 AND c.DELETE_BIT = 0
+          GROUP BY 1
+    'VW_DUE_CURRENT':
+      description:
+      cmd: >
+        CREATE VIEW VW_DUE_CURRENT AS 
+          SELECT
+            d.TODO_FK,
+            d.DUE_DTTM
+          FROM VW_DUE d
+          WHERE (d.TODO_FK, d.DUE_CHANGE_DTTM) = (
+            SELECT TODO_FK, MAX(DUE_CHANGE_DTTM) 
+            FROM VW_DUE
+          )
+          GROUP BY 1,2
+    'VW_TODO':
+      description:
+      cmd: >
+        CREATE VIEW VW_TODO AS 
+          SELECT
+            t.TODO_PK,
+            t.NAME_TXT,
+            t.DESCRIPTION_LTXT,
+            t.CONCERN_FK,
+            t.DUE_FK
+          FROM TODO t
+          WHERE t.ACTIVE_BIT = 1 AND t.DELETE_BIT = 0
+          GROUP BY 1,2,3,4
+    'VW_TODO_CURRENT':
+      description:
+      cmd: >
+        CREATE VIEW VW_TODO_CURRENT AS
+          SELECT
+            t.NAME_TXT, 
+            t.DESCRIPTION_LTXT, 
+            a.NAME_TXT AS RESPONSIBLE_ACTOR_NM,
+            a.NAME_ABBR AS RESPONSIBLE_ACTOR_ABBR,
+            c.CONCERN_NM, 
+            d.DUE_DTTM
+          FROM VW_TODO t
+          INNER JOIN VW_CONCERN c ON c.CONCERN_PK = t.CONCERN_FK
+          INNER JOIN VW_DUE d ON d.TODO_FK = t.TODO_PK
+          INNER JOIN VW_ACTOR a ON t.ACTOR_FK = a.ACTOR_PK
+          GROUP BY 1,2,3,4
+    VW_DAILY_15MIN_TRACKER:
+      description:
+      cmd:
+    VW_MULTIWEEK_CALENDAR:
+      description:
+      cmd:
+    VW_MONTHLY_CALENDAR:
+      description:
+      cmd:
+    VW_WEEKLY_CALENDAR:
+      description:
+      cmd:
+    VW_DETAIL_TASK:
+      description:
+      cmd:
+    VW_GANTT_TASK:
+      description:
+      cmd:
+    VW_TRNODES:
+      description:
+      cmd: >
+        SELECT
+          tr.TRNODES_PK,
+          tr.NID,
+          tr.NAME,
+          tr.NTYPE,
+          tr.PARENTID,
+          tr.POSITION,
+          tr.TABSET,
+          tr.TREEID,
+          tr.READONLY,
+          tr.EDITABLE,
+          tr.VISIBLE,
+          tr.MOVEABLE,
+          tr.PREGNABLE,
+          tr.ISPARENT,
+          tr.EXPANDED,
+          tr.TABFOCUS,
+          tr.UUID
+        FROM TRNODES tr
+        WHERE tr.ACTIVE_BIT = 1 AND tr.DELETE_BIT = 0 AND tr.ARCHIVE_BIT = 0
+    VW_TABS:
+      decription:
+      cmd: >
+        SELECT
+          tb.TABS_PK,
+          tb.NAME,
+          tb.WIDGET,
+          tb.WIDGDATA,
+          tb.PARENTID,
+          tb.POSITION,
+          tb.READONLY,
+          tb.EDITABLE,
+          tb.VISIBLE,
+          tb.MOVEABLE,
+          tb.UUID
+        FROM TABS tb
+        WHERE tb.ACTIVE_BIT = 1 AND tb.DELETE_BIT = 0 AND tb.ARCHIVE_BIT = 0
+  index:

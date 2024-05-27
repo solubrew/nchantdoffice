@@ -1,0 +1,74 @@
+---
+<(META)>':
+  docid: ''
+  name: 'Nchantd Input Main YAML Configuration Document'
+  description: >
+  expirary: '<[expiration]>'
+  version: '<[version]>'
+  authority: 'document|this'
+  security: 'sec|lvl2'
+  <(WT)>': -32
+args:
+dstruct:
+  'config':
+    style: 'single'
+    chunking: 'custom'
+  wdir: '{path}/tskNchantrs/1_DELTA/nchantrs/nchantrs/packages/nchantdinput/data'
+  database:
+    path: &path '{0}/data/db/{1}.db'
+    name: 'nchantdinputs'
+    description: >
+      table of todos
+    objects:
+      table:
+      view:
+'gui':
+  dialogs:
+    'NchantdTab':
+      'title': 'Nchantd TODO'
+      description: >
+        A single pane dialog box with a form to enter a simple TODO
+      'size':
+        'left': 50
+        'top': 50
+        'width': 800
+        'height': 300
+      theme: 'original'
+      layout:
+        style: '1Pane'
+        center:
+          name: 'Entry Widget'
+          #widget: 'nchantdtodo.widgets.NTDAdministrateConcernsTab'
+          #widget: 'nchantdtodo.widgets.NTDAdministrateEventsTab'
+          #widget: 'nchantdtodo.widgets.NTDAdministrateResourcesTab'
+          #widget: 'nchantdtodo.widgets.NTDDaily15MinTrackerTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDDaily5MinTrackerTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDDaily30MinTrackerTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDDaily1HrTrackerTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDDaily2HrTrackerTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDDaily4HrTrackerTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDInputConcernTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDInputEventTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDInputResourceTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDInputTaskTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDHistoryTab'
+          #widget: 'nchantdtodo.widgets.NTDMonthCalendarTab'
+          #widget: 'nchantdtodo.widgets.NTDOperationOverviewTab'
+          #widget: 'nchantdtodo.widgets.NTDOperationsSummaryTab'
+          #widget: 'nchantdtodo.widgets.NTDProjectOverviewTab'
+          #widget: 'nchantdtodo.widgets.NTDProjectsSummaryTab'
+          #widget: 'nchantdtodo.widgets.NTDSplitTaskTab'
+          #widget: 'nchantdtodo.widgets.NTDTaskDetailTab'
+          #widget: 'nchantdtodo.widgets.NTDTaskGanttTab'
+          #widget: 'nchantdtodo.widgets.NTDWeekly1DayTrackerTab'
+sequence:
+  '0':
+    'method': 'setup'
+    'params':
+    'active': 1
+  '1':
+    'method': 'showSplashScreen'
+    'params':
+    'active': 0
+theme: 'original'
+
