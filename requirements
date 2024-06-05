@@ -24,3 +24,4 @@ tsfresh
 pandas_profiling
 coincurve
 h5py
+feedparser

@@ -78,7 +78,7 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		#nid = models.getLastNodeId(self.src, self.name)
 		self.rows, self.tabs = [], []
 		
-		self.initModel()
+#		self.initModel()
 
 	def buildNodes(self):
 		""""""
@@ -122,17 +122,12 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		data = next(self.src.docs['db'].read({'table': ['trnodes', 'tabs']})).dikt
 		trnodes_df = qpandas.DataFrame(data['trnodes']['records'], columns=data['trnodes']['columns'])
 		if log: logma.info(f"DATA {data}")
-#		base = [0, 1, 0, 1, 0, 1, 1, 0, 0, 0]#9
 		nodes = [
-			['1', 'Timeline', 'appnode', 0, 0, 'NTDTimelineTabSet'] + self.nodebase,
-			['2', 'Concern', 'appnode', 0, 0, 'NTDConcernTabSet'] + self.nodebase,
-			['3', 'History', 'appnode', 0, 0, 'NTDHistoryTabSet'] + self.nodebase
+			['1', 'Action', 'appnode', 0, 0, 'NTDActionTabSet'] + self.nodebase,
+			['2', 'Concern', 'appnode', 0, 1, 'NTDConcernTabSet'] + self.nodebase,
+			['3', 'History', 'appnode', 0, 2, 'NTDHistoryTabSet'] + self.nodebase
 		]
 		if log: logma.info(f'SRC {self.src}')
-		# for acct in email_accts:
-		# 	nodes.append()
-		# for contact in contacts:
-		# 	nodes.append()
 		df = qpandas.DataFrame(nodes, columns=self.nodecolumns)
 		if log: logma.info(f"TRNODES_DF {trnodes_df}")
 		df = df[~df['nid'].isin(trnodes_df['nid'].values.tolist())]
@@ -142,16 +137,26 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		if not df.empty:
 			self.src.docs['db'].write({'trnodes': df})
 		tabs = []
-		#base = [0, 1, 1, 1, 0]
 		for node in nodes:
-			#TODO: build out tid identification
-			tabs += getattr(self, f'init{node[5]}Model')(self.tabbase)
+			#TODO: build out tid identification...this is a larger problem in matching nodes being generated
+			#
+			tabs += getattr(self, f'init{node[5]}Model')(node[0])
 		if log: logma.info(f'TABS {tabs}')
 		tabs_df = qpandas.DataFrame(tabs, columns=self.tabcolumns)
+		data = next(self.src.docs['db'].read({'table': ['tabs']})).dikt
+		db_tabs_df = qpandas.DataFrame(data['tabs']['records'], columns=data['tabs']['columns'])
 		tabs_df['uuid'] = tabs_df['name'].apply(lambda x: uuid.UUID(str(uuid.uuid4())).hex)
+		if log: logma.info(f"Columns {tabs_df.columns}")
+		if log: logma.info(f"Tabs DF\n{tabs_df}")
+		if log: logma.info(f"Tabs DF\n{db_tabs_df}")
+		#TODO: this needs to be name and parent
+		tabs_df = tabs_df[~tabs_df['name'].isin(db_tabs_df['name'].values.tolist())]
+		
+		#TODO: This should be a function of a base model in nchantrs and check against already stored tabs
 		if not tabs_df.empty:
 			self.src.docs['db'].write({'tabs': tabs_df})
-		NchantdTreeGenerator().genYearMonthTreeData(self.src, 0, 4, 16)
+			
+		NchantdTreeGenerator(self, trnodes_df).genYearMonthTreeData(self.src, 0, 1, 4)
 		return self
 
 	def initModel(self):
@@ -159,129 +164,78 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		super().initModel()
 		return self
 
-	def initNTDActionTabSetModel(self, base):
+	def initNTDActionTabSetModel(self, pid):
 		""" """
 		tabs = []
-		widget = 'nchantrs.packages.NTDs.widgets.NTDActionTab'
 		data = j.dumps({'': ''})
-		tabs.append(['Actions Summary', widget, data, 1, 0] + base)
-		wiget = 'nchantrs.widgets.dashboards.NchantdNEWSTab'
+		tabs.append(['Actions', 'nchantdtodo.widgets.NTDDailyTaskTrackerTab', data, pid, 0] + self.tabbase)
 		data = j.dumps({})
-		tabs.append(['NEWS', widget, data, 1, 1] + base)
-		return tabs
-	
-	def initNTDContactTabSetModel(self, base):
-		""" """
-		tabs = []
-		widget = 'nchantrs.packages.NTDs.widgets.NTDContactTab'
-		data = j.dumps({'': ''})
-		tabs.append(['Contact', widget, data, 9, 0] + base)
-		return tabs
-	
-	def initNTDContactsLevelTabSetModel(self, base):
-		""" """
-		tabs = []
-		widget = 'nchantrs.packages.NTDs.widgets.NTDContactLevelSummaryTab'
-		data = j.dumps({'': ''})
-		tabs.append(['Contacts Level Summary', widget, data, 9, 0] + base)
-		return tabs
-	
-	def initNTDContactsTabSetModel(self, base):
-		""" """
-		tabs = []
-		widget = 'nchantrs.packages.NTDs.widgets.NTDContactsTab'
-		data = j.dumps({'': ''})
-		tabs.append(['Contacts Summary', widget, data, 9, 0] + base)
+		tabs.append(['NEWS', 'nchantrs.widgets.dashboards.NchantdNEWSTab', data, pid, 1] + self.tabbase)
+		data = j.dumps({})
+		tabs.append(['Daily Tracker', 'nchantdtodo.widgets.NTDDaily15MinTrackerTab', data, pid, 2] + self.tabbase)
+		data = j.dumps({})
+		tabs.append(['Weekly Tracker', 'nchantdtodo.widgets.NTDWeekly1DayTrackerTab', data, pid, 3] + self.tabbase)
+		data = j.dumps({})
+		tabs.append(['New Concern', 'nchantdtodo.widgets.NTDAddConcernTab', data, pid, 5] + self.tabbase)
+		data = j.dumps({})
+		tabs.append(['New Event', 'nchantdtodo.widgets.NTDAddEventTab', data, pid, 5] + self.tabbase)
+		data = j.dumps({})
+		tabs.append(['New Resource', 'nchantdtodo.widgets.NTDAddResourceTab', data, pid, 5] + self.tabbase)
+		data = j.dumps({})
+		tabs.append(['New Task', 'nchantdtodo.widgets.NTDAddTaskTab', data, pid, 5] + self.tabbase)
 		return tabs
 
-	def initNTDTimelineTabSetModel(self, base):
+	def initNTDConcernTabSetModel(self, pid):
 		""" """
 		tabs = []
-		widget = 'nchantrs.packages.NTDs.widgets.NTDeMailTab'
+		data = j.dumps({})
+		tabs.append(['Projects Summary', 'nchantdtodo.widgets.NTDProjectsSummaryTab', data, pid, 0] + self.tabbase)
+		data = j.dumps({})
+		tabs.append(['Operations Summary', 'nchantdtodo.widgets.NTDOperationsSummaryTab', data, pid, 1] + self.tabbase)
+		data = j.dumps({})
+		tabs.append(['Events Admin', 'nchantdtodo.widgets.NTDAdministrateEventsTab', data, pid, 4] + self.tabbase)
 		data = j.dumps({'': ''})
-		tabs.append(['eMail Summary', widget, data, 7, 0] + base)
+		tabs.append(['Concerns Admin', 'nchantdtodo.widgets.NTDAdministrateConcernsTab', data, pid, 2] + self.tabbase)
+		data = j.dumps({})
+		tabs.append(['New Concern', 'nchantdtodo.widgets.NTDAddConcernTab', data, pid, 3] + self.tabbase)
+		data = j.dumps({})
+		tabs.append(['Resource Admin', 'nchantdtodo.widgets.NTDAdministrateResourcesTab', data, pid, 4] + self.tabbase)
+		data = j.dumps({})
+		tabs.append(['New Resource', 'nchantdtodo.widgets.NTDAddResourceTab', data, pid, 5] + self.tabbase)
 		return tabs
 
-	def initNTDConcernTabSetModel(self, base):
+	def initNTDHistoryTabSetModel(self, pid):
 		""" """
 		tabs = []
-		widget = 'nchantrs.packages.NTDs.widgets.NTDeMailTab'
 		data = j.dumps({'': ''})
-		tabs.append(['eMail Summary', widget, data, 7, 0] + base)
+		tabs.append(['Summary', 'nchantd.widgets.NTDHistoryTab', data, pid, 0] + self.tabbase)
+		data = j.dumps({'': ''})
+		tabs.append(['Recent', 'nchantd.widgets.NTDRecentCompletedTasksTab', data, pid, 1] + self.tabbase)
 		return tabs
 
-	def initNTDHistoryTabSetModel(self, base):
-		""" """
-		tabs = []
-		widget = 'nchantrs.packages.NTDs.widgets.NTDeMailTab'
-		data = j.dumps({'': ''})
-		tabs.append(['eMail Summary', widget, data, 7, 0] + base)
-		return tabs
-
-	def initNTDeMailTabSetModel(self, base):
-		""" """
-		tabs = []
-		widget = 'nchantrs.packages.NTDs.widgets.NTDeMailTab'
-		data = j.dumps({'': ''})
-		tabs.append(['eMail Summary', widget, data, 7, 0] + base)
-		return tabs
-	
-	def initNTDFundTabSetModel(self, base):
-		""" """
-		tabs = []
-		widget = 'nchantrs.packages.NTDs.widgets.NTDFundSummaryTab'
-		data = j.dumps({'': ''})
-		tabs.append(['Fund Summary', widget, data, 6, 0] + base)
-		return tabs
-	
-	def initNTDNeedActionTabSetModel(self, base):
-		""" """
-		tabs = []
-		widget = 'nchantrs.packages.NTDs.widgets.NTDNeedActionTab'
-		data = j.dumps({'': ''})
-		tabs.append(['Need Actions Summary', widget, data, 2, 0] + base)
-		widget = 'nchantrs.packages.NTDs.widgets.NTDTaskSplitterTab'
-		data = j.dumps({'': ''})
-		tabs.append(['Split Tasks', widget, data, 2, 1] + base)
-		widget = 'nchantrs.packages.NTDs.widgets.NTDDelegationTab'
-		data = j.dumps({'': ''})
-		tabs.append(['Delegate Tasks', widget, data, 2, 2] + base)
-		return tabs
-	
-	def initNTDWaitingOnTabSetModel(self, base):
-		""" """
-		tabs = []
-		widget = 'nchantrs.packages.NTDs.widgets.NTDWaitingOnTab'
-		data = j.dumps({'': ''})
-		tabs.append(['Waiting On Summary', widget, data, 3, 0] + base)
-		return tabs
-	
 	def initNTDJournalTabSetModel(self, base):
 		""" """
 		tabs = []
 		widget = 'nchantrs.packages.NTDs.widgets.NTDJournalTab'
 		data = j.dumps({'': ''})
-		tabs.append(['Journal Summary', widget, data, 4, 0] + base)
+		tabs.append(['Journal Summary', widget, data, 4, 0] + self.tabbase)
 		return tabs
 	
 	def initNTDCalendarTabSetModel(self, base):
 		""" """
 		data = j.dumps({'': ''})
 		tabs = [
-			['This Week', 'nchantrs.widgets.calendars.NchantdWeekCalendar', data, 5, 0] + base,
-			['Next Week', 'nchantrs.widgets.calendars.NchantdWeekCalendar', data, 5, 1] + base,
-			['Next Month', 'nchantrs.widgets.calendars.NchantdMonthCalendar', data, 5, 2] + base,
-			['Yearly Calendar', 'nchantrs.widgets.calendars.NchantdYearCalendar', data, 5, 3] + base,
-			['Events', 'nchantrs.widgets.NchantdEventsList', data, 5, 4] + base
+			['This Week', 'nchantrs.widgets.calendars.NchantdWeekCalendar', data, 5, 0] + self.tabbase,
+			['Next Week', 'nchantrs.widgets.calendars.NchantdWeekCalendar', data, 5, 1] + self.tabbase,
+			['Next Month', 'nchantrs.widgets.calendars.NchantdMonthCalendar', data, 5, 2] + self.tabbase,
+			['Yearly Calendar', 'nchantrs.widgets.calendars.NchantdYearCalendar', data, 5, 3] + self.tabbase,
+			['Events', 'nchantrs.widgets.NchantdEventsList', data, 5, 4] + self.tabbase
 		]
 		return tabs
-	
-	def initNTDProcureTabSetModel(self, base):
-		""" """
-		data = j.dumps({'': ''})
-		tabs = []
-		tabs.append(['Procure', 'nchantrs.widgets.editors.NchantdDocEditor', data, 8, 0] + base)
-		return tabs
+
+	def updateTimeline(self):
+		""""""
+		self.now = dt.datetime.now()
 
 class NTDConcernModel():
 	""""""

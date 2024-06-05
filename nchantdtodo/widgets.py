@@ -35,6 +35,227 @@ logma = Logma(__name__)
 # ===============================================================================||
 pxcfg = join(here, '_data_', 'widgets.yaml')
 
+class NTDAddConcernTab(tabsets.NchantdTab):
+	""""""
+	
+	def __init__(self, parent=None, cfg={}, singlepane=False):
+		""" """
+		self.parent = parent
+		self.config = condor.instruct(pxcfg)
+		self.config.select('NTDTaskSplitterTab').override(cfg)
+		if parent:
+			self.config.override(parent.config)
+		super(NTDAddConcernTab, self).__init__(parent, self.config, singlepane)
+	
+	def buildPane(self):
+		""" """
+		layout = pyqt.QVBoxLayout()
+		top_layout = pyqt.QHBoxLayout()
+		
+		top_layout_left = pyqt.QHBoxLayout()
+		cfg = {'label': 'New Concern Name: '}
+		top_layout_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
+		
+		cfg = {'label': 'New Concern Code: '}
+		top_layout_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
+		
+		top_layout_left.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		
+		top_layout.addLayout(top_layout_left)
+		top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		
+		cfg = {'label': 'New Concern Description: '}
+		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
+		layout.addLayout(top_layout)
+		layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		layout.addWidget(controls.NchantdSaveButtons(self).initWidget(None))
+		
+		bottom_layout = pyqt.QHBoxLayout()
+		cfg = {'label': 'List of Concerns: '}
+		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
+		
+		cfg = {'label': 'Assign Resources: '}
+		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
+		
+		layout.addLayout(bottom_layout)
+		self.setLayout(layout)
+		
+		return self
+
+class NTDAddEventTab(tabsets.NchantdTab):
+	""""""
+	
+	def __init__(self, parent=None, cfg={}, singlepane=False):
+		""" """
+		self.parent = parent
+		self.config = condor.instruct(pxcfg)
+		self.config.select('NTDTaskSplitterTab').override(cfg)
+		if parent:
+			self.config.override(parent.config)
+		super(NTDAddEventTab, self).__init__(parent, self.config, singlepane)
+	
+	def buildPane(self):
+		""" """
+		gb = pyqt.QGroupBox()
+		layout = pyqt.QVBoxLayout()
+		layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		top_layout = pyqt.QHBoxLayout()
+		top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		top_layout_left = pyqt.QHBoxLayout()
+		top_layout_left.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		top_layout_left_left = pyqt.QVBoxLayout()
+		top_layout_left_left.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		calendar_time_layout_1 = pyqt.QVBoxLayout()
+		calendar_time_layout_2 = pyqt.QVBoxLayout()
+		
+		cfg = {'label': 'Event Name: '}
+		top_layout_left_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
+		cfg = {'label': 'Event Description: '}
+		top_layout_left_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
+		top_layout_left.addLayout(top_layout_left_left)
+
+		top_layout_left_left_right = pyqt.QHBoxLayout()
+		cfg = {'label': 'Focus Required: '}
+		top_layout_left_left_right.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'small'))
+		cfg = {'label': 'Event Location: '}
+		top_layout_left_left_right.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'small'))
+		top_layout_left_left.addLayout(top_layout_left_left_right)
+
+		calendar_time_layout_1.addWidget(calendars.NchantdDateTimeGroup(self, {}).initWidget())
+		calendar_time_layout_2.addWidget(calendars.NchantdDateTimeGroup(self, {}).initWidget())
+		
+		top_layout_left.addLayout(calendar_time_layout_1)
+		top_layout_left.addLayout(calendar_time_layout_2)
+		
+		top_layout.addLayout(top_layout_left)
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
+		
+		#layout.addLayout(top_layout)
+		bottom_layout = pyqt.QVBoxLayout()
+		bottom_layout.addWidget(controls.NchantdSaveButtons(self).initWidget(None))
+		gb = pyqt.QGroupBox()
+		gb.setLayout(bottom_layout)
+		layout.addWidget(gb)
+		layout_recursion = pyqt.QVBoxLayout()
+		cfg = {'label': 'Configuration Recursion: '}
+		layout_recursion.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
+		gb = pyqt.QGroupBox()
+		gb.setLayout(layout_recursion)
+		layout.addWidget(gb)
+		self.setLayout(layout)
+		return self
+
+class NTDAddResourceTab(tabsets.NchantdTab):
+	""""""
+	
+	def __init__(self, parent=None, cfg={}, singlepane=False):
+		""" """
+		self.parent = parent
+		self.config = condor.instruct(pxcfg)
+		self.config.select('NTDTaskSplitterTab').override(cfg)
+		if parent:
+			self.config.override(parent.config)
+		super(NTDAddResourceTab, self).__init__(parent, self.config, singlepane)
+	
+	def buildPane(self):
+		""" """
+		layout = pyqt.QVBoxLayout()
+		top_layout = pyqt.QHBoxLayout()
+		gb = pyqt.QGroupBox()
+		top_layout_left = pyqt.QHBoxLayout()
+		cfg = {'label': 'New Resource Name: '}
+		top_layout_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
+		
+		cfg = {'label': 'New Resource Code: '}
+		top_layout_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
+		
+		top_layout_left.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		
+		top_layout.addLayout(top_layout_left)
+		top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		cfg = {'label': 'New Resource Description: '}
+		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
+		
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
+		layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		layout.addWidget(controls.NchantdSaveButtons(self).initWidget(None))
+		
+		bottom_layout = pyqt.QHBoxLayout()
+		gb = pyqt.QGroupBox()
+		cfg = {'label': 'List of Concerns: '}
+		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
+		
+		cfg = {'label': 'Assign Resources: '}
+		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
+		gb.setLayout(bottom_layout)
+		layout.addWidget(gb)
+		self.setLayout(layout)
+		
+		return self
+
+class NTDAddTaskTab(tabsets.NchantdTab):
+	""""""
+	
+	def __init__(self, parent=None, cfg={}, singlepane=False):
+		""" """
+		self.parent = parent
+		self.config = condor.instruct(pxcfg)
+		self.config.select('NTDTaskSplitterTab').override(cfg)
+		if parent:
+			self.config.override(parent.config)
+		super(NTDAddTaskTab, self).__init__(parent, self.config, singlepane)
+	
+	def buildPane(self):
+		""" """
+		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
+		layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		top_layout = pyqt.QHBoxLayout()
+		top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		top_layout_left = pyqt.QVBoxLayout()
+		top_layout_left.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		top_layout_left_upper = pyqt.QHBoxLayout()
+		top_layout_left_upper.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		top_layout_left_lower = pyqt.QHBoxLayout()
+		top_layout_left_lower.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		top_layout_right = pyqt.QVBoxLayout()
+		top_layout_right.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		bottom_layout = pyqt.QHBoxLayout()
+		bottom_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+		
+		cfg = {'label': 'Task Name: '}
+		top_layout_left_upper.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
+		cfg = {'label': 'Estimated Task Hours: '}
+		top_layout_left_upper.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
+		top_layout_left.addLayout(top_layout_left_upper)
+		
+		cfg = {'label': 'Due Date: '}
+		top_layout_left_lower.addWidget(calendars.NchantdDateSelect(self, cfg).initWidget())
+		top_layout_left.addLayout(top_layout_left_lower)
+		top_layout.addLayout(top_layout_left)
+		
+		cfg = {'label': 'Task Notes: '}
+		top_layout_right.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
+		cfg = {'label': 'Primary Concern: '}
+		top_layout_right.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'small'))
+		top_layout.addLayout(top_layout_right)
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
+		layout.addWidget(controls.NchantdSaveButtons(self).initWidget(None))
+		gb = pyqt.QGroupBox()
+		cfg = {'label': 'Assign Dependencies: '}
+		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
+		cfg = {'label': 'Assign Dependants: '}
+		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
+		cfg = {'label': 'Assign Resources: '}
+		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
+		gb.setLayout(bottom_layout)
+		layout.addWidget(gb)
+		self.setLayout(layout)
+		return self
+
 class NTDAdministrateConcernsTab(tabsets.NchantdTab):
 	"""Show A summary of tasks connected to s a specific Concern
 	"""
@@ -45,7 +266,7 @@ class NTDAdministrateConcernsTab(tabsets.NchantdTab):
 		self.config.select('NTDConcernTasksTab').override(cfg)
 		if parent:
 			self.config.override(parent.config)
-		super(NTDAdministrateConcernTab, self).__init__(parent, self.config, singlepane)
+		super(NTDAdministrateConcernsTab, self).__init__(parent, self.config, singlepane)
 	
 	def buildPane(self):
 		""" """
@@ -116,7 +337,27 @@ class NTDAdministrateResourcesTab(tabsets.NchantdTab):
 		return self
 
 
-class NTDDailyTaskTrackerTab(tabsets.NchantdTab):
+class NTDDailyTaskTrackerTab(forms.NchantdTimeTrackerForm):
+	""" """
+	
+	def __init__(self, parent=None, cfg={}, panestyle=None):
+		""" """
+		self.parent = parent
+		if log: logma.info('CFG', cfg)
+		self.config = condor.instruct(pxcfg).select('tabsets.NchantdTab')
+		self.config.override(cfg)
+		if parent:
+			self.config.override(parent.config)
+		if log: print('Config', self.config.dikt)
+		super(NTDDailyTaskTrackerTab, self).__init__(parent, self.config, panestyle)
+	
+	def initView(self):
+		""" """
+		self.buildPane(15, 1, '08:00', 4)
+		return self
+
+
+class NTDDaily15MinTrackerTab(forms.NchantdTimeTrackerForm):
 	""" """
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
@@ -129,159 +370,13 @@ class NTDDailyTaskTrackerTab(tabsets.NchantdTab):
 			self.config.override(parent.config)
 		if log: print('Config', self.config.dikt)
 		super(NTDDaily15MinTrackerTab, self).__init__(parent, self.config, panestyle)
-	
-	def initModel(self):
-		""" """
-		if log: print('CONFIG', self.config.dikt)
-		# self.name = self.config.dikt['tab']['name']
-		# self.data = j.loads(self.config.dikt['tab']['widgdata'])
-		return self
-	
+
 	def initView(self):
 		""" """
-		self.buildPane()
-		# self.setText(self.data['text'])
-		return self
-	
-	def buildPane(self):
-		""" """
-		start_tm = time.strptime('08:00', '%H:%M')
-		if log: logma.info(f"Start TM {start_tm} {type(start_tm)}")
-		minutes = ['00', '15', '30', '45']
-		
-		def buildPane(self, minutes=['00', ], hour_inc=4):
-			""" """
-			start_tm = time.strptime('08:00', '%H:%M')
-			if log: logma.info(f"Start TM {start_tm} {type(start_tm)}")
-			windows, sections, hour = 24 * len(minutes), 4, 8
-			layout = pyqt.QVBoxLayout()
-			l = pyqt.QHBoxLayout()
-			for section in range(sections):
-				if log: logma.info(f"Section {section}")
-				l0 = pyqt.QVBoxLayout()
-				cnt = 1
-				rows = int(windows / sections)
-				if log: logma.info(f"Rows {rows}")
-				for i in range(0, rows, hour_inc):
-					if log: logma.info(f"I {i}")
-					thour = str(hour)
-					if len(str(hour)) == 1:
-						thour = f'0{hour}'
-					j = i % len(minutes)
-					if log: logma.info(f"J {j}")
-					minute = minutes[j]
-					if log: logma.info(f"Minute {minute}")
-					# if log: print('TODO Action', self.config.dikt)
-					l1 = pyqt.QHBoxLayout()
-					l1.addWidget(annotations.NchantdLabel().initWidget({'text': f'{thour}:{minute}'}))
-					l1.addWidget(editors.NchantdEntryBox(self).initWidget(None))
-					l0.addLayout(l1)
-					if cnt == len(minutes):
-						hour += hour_inc
-						if hour == 24:
-							hour = 0
-						cnt = 0
-					cnt += 1
-				l.addLayout(l0)
-			layout.addLayout(l)
-			cfg = {'label': 'Select Task', 'size': [500, 25]}
-			layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None))
-			self.setLayout(layout)
-			return self
-	
-	def onEnterEvent(self):
-		"""Run a save of the doc editor data to the database """
-	
-	def mousePressEvent(self, event):
-		""" """
-		editor.mousePressEventLog(event)
-		super().mousePressEvent(event)
+		self.buildPane(15, 1, '08:00', 4)
 		return self
 
-
-class NTDDaily15MinTrackerTab(tabsets.NchantdTab):
-	""" """
-	
-	def __init__(self, parent=None, cfg={}, panestyle=None):
-		""" """
-		self.parent = parent
-		if log: logma.info('CFG', cfg)
-		self.config = condor.instruct(pxcfg).select('tabsets.NchantdTab')
-		self.config.override(cfg)
-		if parent:
-			self.config.override(parent.config)
-		if log: print('Config', self.config.dikt)
-		super(NTDDaily15MinTrackerTab, self).__init__(parent, self.config, panestyle)
-	
-	def initModel(self):
-		""" """
-		if log: print('CONFIG', self.config.dikt)
-		# self.name = self.config.dikt['tab']['name']
-		# self.data = j.loads(self.config.dikt['tab']['widgdata'])
-		return self
-	
-	def initView(self):
-		""" """
-		self.buildPane()
-		# self.setText(self.data['text'])
-		return self
-
-	def buildPane(self):
-		""" """
-		start_tm = time.strptime('08:00', '%H:%M')
-		if log: logma.info(f"Start TM {start_tm} {type(start_tm)}")
-		minutes = ['00', '15', '30', '45']
-		
-		def buildPane(self, minutes=['00', ], hour_inc=4):
-			""" """
-			start_tm = time.strptime('08:00', '%H:%M')
-			if log: logma.info(f"Start TM {start_tm} {type(start_tm)}")
-			windows, sections, hour = 24 * len(minutes), 4, 8
-			layout = pyqt.QVBoxLayout()
-			l = pyqt.QHBoxLayout()
-			for section in range(sections):
-				if log: logma.info(f"Section {section}")
-				l0 = pyqt.QVBoxLayout()
-				cnt = 1
-				rows = int(windows / sections)
-				if log: logma.info(f"Rows {rows}")
-				for i in range(0, rows, hour_inc):
-					if log: logma.info(f"I {i}")
-					thour = str(hour)
-					if len(str(hour)) == 1:
-						thour = f'0{hour}'
-					j = i % len(minutes)
-					if log: logma.info(f"J {j}")
-					minute = minutes[j]
-					if log: logma.info(f"Minute {minute}")
-					# if log: print('TODO Action', self.config.dikt)
-					l1 = pyqt.QHBoxLayout()
-					l1.addWidget(annotations.NchantdLabel().initWidget({'text': f'{thour}:{minute}'}))
-					l1.addWidget(editors.NchantdEntryBox(self).initWidget(None))
-					l0.addLayout(l1)
-					if cnt == len(minutes):
-						hour += hour_inc
-						if hour == 24:
-							hour = 0
-						cnt = 0
-					cnt += 1
-				l.addLayout(l0)
-			layout.addLayout(l)
-			cfg = {'label': 'Select Task', 'size': [500, 25]}
-			layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None))
-			self.setLayout(layout)
-			return self
-	
-	def onEnterEvent(self):
-		"""Run a save of the doc editor data to the database """
-	
-	def mousePressEvent(self, event):
-		""" """
-		editor.mousePressEventLog(event)
-		super().mousePressEvent(event)
-		return self
-
-class NTDDaily5MinTrackerTab(tabsets.NchantdTab):
+class NTDDaily5MinTrackerTab(forms.NchantdTimeTrackerForm):
 	""" """
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
@@ -294,71 +389,9 @@ class NTDDaily5MinTrackerTab(tabsets.NchantdTab):
 			self.config.override(parent.config)
 		if log: print('Config', self.config.dikt)
 		super(NTDDaily5MinTrackerTab, self).__init__(parent, self.config, panestyle)
-	
-	def initModel(self):
-		""" """
-		if log: print('CONFIG', self.config.dikt)
-		# self.name = self.config.dikt['tab']['name']
-		# self.data = j.loads(self.config.dikt['tab']['widgdata'])
-		return self
-	
-	def initView(self):
-		""" """
-		self.buildPane()
-		# self.setText(self.data['text'])
-		return self
-	
-	def buildPane(self, minutes=5, hour_inc=1):
-		""" """
-		minutes = [str(x) if len(str(x)) == 2 else f"0{x}" for x in range(0, 60, minutes)]
-		start_tm = time.strptime('08:00', '%H:%M')
-		if log: logma.info(f"Start TM {start_tm} {type(start_tm)}")
-		windows, sections, hour = 24 * len(minutes), 10, 8
-		layout = pyqt.QVBoxLayout()
-		l = pyqt.QHBoxLayout()
-		for section in range(sections):
-			if log: logma.info(f"Section {section}")
-			l0 = pyqt.QVBoxLayout()
-			cnt = 1
-			rows = int(windows / sections)
-			if log: logma.info(f"Rows {rows}")
-			for i in range(0, rows, hour_inc):
-				if log: logma.info(f"I {i}")
-				thour = str(hour)
-				if len(str(hour)) == 1:
-					thour = f'0{hour}'
-				j = i % len(minutes)
-				if log:    logma.info(f"J {j}")
-				minute = minutes[j]
-				if log: logma.info(f"Minute {minute}")
-				# if log: print('TODO Action', self.config.dikt)
-				l1 = pyqt.QHBoxLayout()
-				l1.addWidget(annotations.NchantdLabel().initWidget({'text': f'{thour}:{minute}'}))
-				l1.addWidget(editors.NchantdSmallEntryBox(self).initWidget(None))
-				l0.addLayout(l1)
-				if cnt == len(minutes):
-					hour += hour_inc
-					if hour == 24:
-						hour = 0
-					cnt = 0
-				cnt += 1
-			l.addLayout(l0)
-		layout.addLayout(l)
-		cfg = {'label': 'Select Task', 'size': [500, 25]}
-		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None))
-		self.setLayout(layout)
-		return self
-	
-	def onEnterEvent(self):
-		"""Run a save of the doc editor data to the database """
-	
-	def mousePressEvent(self, event):
-		""" """
-		editor.mousePressEventLog(event)
-		super().mousePressEvent(event)
-		return self
 
-class NTDDaily30MinTrackerTab(tabsets.NchantdTab):
+
+class NTDDaily30MinTrackerTab(forms.NchantdTimeTrackerForm):
 	""" """
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
@@ -372,68 +405,9 @@ class NTDDaily30MinTrackerTab(tabsets.NchantdTab):
 		if log: print('Config', self.config.dikt)
 		super(NTDDaily30MinTrackerTab, self).__init__(parent, self.config, panestyle)
 	
-	def initModel(self):
-		""" """
-		if log: print('CONFIG', self.config.dikt)
-		# self.name = self.config.dikt['tab']['name']
-		# self.data = j.loads(self.config.dikt['tab']['widgdata'])
-		return self
-	
 	def initView(self):
 		""" """
-		self.buildPane()
-		# self.setText(self.data['text'])
-		return self
-	
-	def buildPane(self, start_hour=8, minutes=30, hour_inc=1, sections=4):
-		""" """
-		minutes = [str(x) if len(str(x)) == 2 else f"0{x}" for x in range(0, 60, minutes)]
-		start_tm = time.strptime('08:00', '%H:%M')
-		if log: logma.info(f"Start TM {start_tm} {type(start_tm)}")
-		windows = 24 * len(minutes)
-		layout = pyqt.QVBoxLayout()
-		l = pyqt.QHBoxLayout()
-		hour = start_hour
-		for section in range(sections):
-			if log: logma.info(f"Section {section}")
-			l0 = pyqt.QVBoxLayout()
-			cnt = 1
-			rows = int(windows / sections)
-			if log: logma.info(f"Rows {rows}")
-			for i in range(0, rows, hour_inc):
-				if log: logma.info(f"I {i}")
-				thour = str(hour)
-				if len(str(hour)) == 1:
-					thour = f'0{hour}'
-				j = i % len(minutes)
-				if log: logma.info(f"J {j}")
-				minute = minutes[j]
-				if log: logma.info(f"Minute {minute}")
-				# if log: print('TODO Action', self.config.dikt)
-				l1 = pyqt.QHBoxLayout()
-				l1.addWidget(annotations.NchantdLabel().initWidget({'text': f'{thour}:{minute}'}))
-				l1.addWidget(editors.NchantdSmallEntryBox(self).initWidget(None))
-				l0.addLayout(l1)
-				if cnt == len(minutes):
-					hour += hour_inc
-					if hour == 24:
-						hour = 0
-					cnt = 0
-				cnt += 1
-			l.addLayout(l0)
-		layout.addLayout(l)
-		cfg = {'label': 'Select Task', 'size': [500, 25]}
-		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None))
-		self.setLayout(layout)
-		return self
-	
-	def onEnterEvent(self):
-		"""Run a save of the doc editor data to the database """
-	
-	def mousePressEvent(self, event):
-		""" """
-		editor.mousePressEventLog(event)
-		super().mousePressEvent(event)
+		self.buildPane(30, 1, '08:00', 4)
 		return self
 
 class NTDDaily1HrTrackerTab(tabsets.NchantdTab):
@@ -450,62 +424,9 @@ class NTDDaily1HrTrackerTab(tabsets.NchantdTab):
 		if log: print('Config', self.config.dikt)
 		super(NTDDaily1HrTrackerTab, self).__init__(parent, self.config, panestyle)
 	
-	def initModel(self):
-		""" """
-		if log: print('CONFIG', self.config.dikt)
-		# self.name = self.config.dikt['tab']['name']
-		# self.data = j.loads(self.config.dikt['tab']['widgdata'])
-		return self
-	
 	def initView(self):
 		""" """
-		self.buildPane()
-		# self.setText(self.data['text'])
-		return self
-	
-	def buildPane(self, minutes=['00', ]):
-		""" """
-		start_tm = time.strptime('08:00', '%H:%M')
-		if log: logma.info(f"Start TM {start_tm} {type(start_tm)}")
-		windows, sections, hour = 24 * len(minutes), 4, 8
-		layout = pyqt.QVBoxLayout()
-		l = pyqt.QHBoxLayout()
-		for section in range(sections):
-			l0 = pyqt.QVBoxLayout()
-			cnt = 1
-			for i in range(int(windows / sections)):
-				thour = str(hour)
-				if len(str(hour)) == 1:
-					thour = f'0{hour}'
-				j = i % len(minutes)
-				if log: logma.info(f"J {j}")
-				minute = minutes[j]
-				if log: logma.info(f"Minute {minute}")
-				# if log: print('TODO Action', self.config.dikt)
-				l1 = pyqt.QHBoxLayout()
-				l1.addWidget(annotations.NchantdLabel().initWidget({'text': f'{thour}:{minute}'}))
-				l1.addWidget(editors.NchantdEntryBox(self).initWidget(None))
-				l0.addLayout(l1)
-				if cnt == len(minutes):
-					hour += 1
-					if hour == 24:
-						hour = 0
-					cnt = 0
-				cnt += 1
-			l.addLayout(l0)
-		layout.addLayout(l)
-		cfg = {'label': 'Select Task', 'size': [500, 25]}
-		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None))
-		self.setLayout(layout)
-		return self
-	
-	def onEnterEvent(self):
-		"""Run a save of the doc editor data to the database """
-	
-	def mousePressEvent(self, event):
-		""" """
-		editor.mousePressEventLog(event)
-		super().mousePressEvent(event)
+		self.buildPane(60, 1, '08:00', 4)
 		return self
 
 class NTDDaily2HrTrackerTab(tabsets.NchantdTab):
@@ -522,68 +443,11 @@ class NTDDaily2HrTrackerTab(tabsets.NchantdTab):
 		if log: print('Config', self.config.dikt)
 		super(NTDDaily2HrTrackerTab, self).__init__(parent, self.config, panestyle)
 	
-	def initModel(self):
-		""" """
-		if log: print('CONFIG', self.config.dikt)
-		# self.name = self.config.dikt['tab']['name']
-		# self.data = j.loads(self.config.dikt['tab']['widgdata'])
-		return self
-	
 	def initView(self):
 		""" """
-		self.buildPane()
-		# self.setText(self.data['text'])
+		self.buildPane(60, 2, '08:00', 4)
 		return self
 	
-	def buildPane(self, minutes=['00', ], hour_inc=2):
-		""" """
-		start_tm = time.strptime('08:00', '%H:%M')
-		if log: logma.info(f"Start TM {start_tm} {type(start_tm)}")
-		windows, sections, hour = 24 * len(minutes), 4, 8
-		layout = pyqt.QVBoxLayout()
-		l = pyqt.QHBoxLayout()
-		for section in range(sections):
-			if log: logma.info(f"Section {section}")
-			l0 = pyqt.QVBoxLayout()
-			cnt = 1
-			rows = int(windows / sections)
-			if log: logma.info(f"Rows {rows}")
-			for i in range(0, rows, hour_inc):
-				if log: logma.info(f"I {i}")
-				thour = str(hour)
-				if len(str(hour)) == 1:
-					thour = f'0{hour}'
-				j = i % len(minutes)
-				if log: logma.info(f"J {j}")
-				minute = minutes[j]
-				if log: logma.info(f"Minute {minute}")
-				# if log: print('TODO Action', self.config.dikt)
-				l1 = pyqt.QHBoxLayout()
-				l1.addWidget(annotations.NchantdLabel().initWidget({'text': f'{thour}:{minute}'}))
-				l1.addWidget(editors.NchantdEntryBox(self).initWidget(None))
-				l0.addLayout(l1)
-				if cnt == len(minutes):
-					hour += hour_inc
-					if hour == 24:
-						hour = 0
-					cnt = 0
-				cnt += 1
-			l.addLayout(l0)
-		layout.addLayout(l)
-		cfg = {'label': 'Select Task', 'size': [500, 25]}
-		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None))
-		self.setLayout(layout)
-		return self
-	
-	def onEnterEvent(self):
-		"""Run a save of the doc editor data to the database """
-	
-	def mousePressEvent(self, event):
-		""" """
-		editor.mousePressEventLog(event)
-		super().mousePressEvent(event)
-		return self
-
 class NTDDaily4HrTrackerTab(tabsets.NchantdTab):
 	""" """
 	
@@ -598,271 +462,9 @@ class NTDDaily4HrTrackerTab(tabsets.NchantdTab):
 		if log: print('Config', self.config.dikt)
 		super(NTDDaily4HrTrackerTab, self).__init__(parent, self.config, panestyle)
 	
-	def initModel(self):
-		""" """
-		if log: print('CONFIG', self.config.dikt)
-		# self.name = self.config.dikt['tab']['name']
-		# self.data = j.loads(self.config.dikt['tab']['widgdata'])
-		return self
-	
 	def initView(self):
 		""" """
-		self.buildPane()
-		# self.setText(self.data['text'])
-		return self
-	
-	def buildPane(self, minutes=['00', ], hour_inc=4):
-		""" """
-		start_tm = time.strptime('08:00', '%H:%M')
-		if log: logma.info(f"Start TM {start_tm} {type(start_tm)}")
-		windows, sections, hour = 24 * len(minutes), 4, 8
-		layout = pyqt.QVBoxLayout()
-		l = pyqt.QHBoxLayout()
-		for section in range(sections):
-			if log: logma.info(f"Section {section}")
-			l0 = pyqt.QVBoxLayout()
-			cnt = 1
-			rows = int(windows / sections)
-			if log: logma.info(f"Rows {rows}")
-			for i in range(0, rows, hour_inc):
-				if log: logma.info(f"I {i}")
-				thour = str(hour)
-				if len(str(hour)) == 1:
-					thour = f'0{hour}'
-				j = i % len(minutes)
-				if log: logma.info(f"J {j}")
-				minute = minutes[j]
-				if log: logma.info(f"Minute {minute}")
-				# if log: print('TODO Action', self.config.dikt)
-				l1 = pyqt.QHBoxLayout()
-				l1.addWidget(annotations.NchantdLabel().initWidget({'text': f'{thour}:{minute}'}))
-				l1.addWidget(editors.NchantdEntryBox(self).initWidget(None))
-				l0.addLayout(l1)
-				if cnt == len(minutes):
-					hour += hour_inc
-					if hour == 24:
-						hour = 0
-					cnt = 0
-				cnt += 1
-			l.addLayout(l0)
-		layout.addLayout(l)
-		cfg = {'label': 'Select Task', 'size': [500, 25]}
-		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None))
-		self.setLayout(layout)
-		return self
-	
-	def onEnterEvent(self):
-		"""Run a save of the doc editor data to the database """
-	
-	def mousePressEvent(self, event):
-		""" """
-		editor.mousePressEventLog(event)
-		super().mousePressEvent(event)
-		return self
-
-class NTDInputConcernTab(tabsets.NchantdTab):
-	""""""
-	
-	def __init__(self, parent=None, cfg={}, singlepane=False):
-		""" """
-		self.parent = parent
-		self.config = condor.instruct(pxcfg)
-		self.config.select('NTDTaskSplitterTab').override(cfg)
-		if parent:
-			self.config.override(parent.config)
-		super(NTDInputConcernTab, self).__init__(parent, self.config, singlepane)
-	
-	def buildPane(self):
-		""" """
-		layout = pyqt.QVBoxLayout()
-		top_layout = pyqt.QHBoxLayout()
-		
-		top_layout_left = pyqt.QHBoxLayout()
-		cfg = {'label': 'New Concern Name: '}
-		top_layout_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
-		
-		cfg = {'label': 'New Concern Code: '}
-		top_layout_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
-		
-		top_layout_left.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		
-		top_layout.addLayout(top_layout_left)
-		top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		
-		cfg = {'label': 'New Concern Description: '}
-		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		layout.addLayout(top_layout)
-		layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		layout.addWidget(controls.NchantdSaveButtons(self).initWidget(None))
-		
-		bottom_layout = pyqt.QHBoxLayout()
-		cfg = {'label': 'List of Concerns: '}
-		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
-		
-		cfg = {'label': 'Assign Resources: '}
-		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
-		
-		layout.addLayout(bottom_layout)
-		self.setLayout(layout)
-		
-		return self
-
-class NTDInputEventTab(tabsets.NchantdTab):
-	""""""
-	
-	def __init__(self, parent=None, cfg={}, singlepane=False):
-		""" """
-		self.parent = parent
-		self.config = condor.instruct(pxcfg)
-		self.config.select('NTDTaskSplitterTab').override(cfg)
-		if parent:
-			self.config.override(parent.config)
-		super(NTDInputEventTab, self).__init__(parent, self.config, singlepane)
-	
-	def buildPane(self):
-		""" """
-		layout = pyqt.QVBoxLayout()
-		layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		top_layout = pyqt.QHBoxLayout()
-		top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		top_layout_left = pyqt.QHBoxLayout()
-		top_layout_left.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		top_layout_left_left = pyqt.QVBoxLayout()
-		top_layout_left_left.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		calendar_time_layout_1 = pyqt.QVBoxLayout()
-		calendar_time_layout_2 = pyqt.QVBoxLayout()
-
-		cfg = {'label': 'Event Name: '}
-		top_layout_left_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
-		cfg = {'label': 'Event Description: '}
-		top_layout_left_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		cfg = {'label': 'Focus Required: '}
-		top_layout_left_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'small'))
-		top_layout_left.addLayout(top_layout_left_left)
-
-		calendar_time_layout_1.addWidget(calendars.NchantdDateTimeGroup(self, {}).initWidget())
-		calendar_time_layout_2.addWidget(calendars.NchantdDateTimeGroup(self, {}).initWidget())
-		
-		top_layout_left.addLayout(calendar_time_layout_1)
-		top_layout_left.addLayout(calendar_time_layout_2)
-		
-		top_layout.addLayout(top_layout_left)
-		layout.addLayout(top_layout)
-		layout.addWidget(controls.NchantdSaveButtons(self).initWidget(None))
-		layout_recursion = pyqt.QVBoxLayout()
-		cfg = {'label': 'Configuration Recursion: '}
-		layout_recursion.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
-		layout.addLayout(layout_recursion)
-
-		self.setLayout(layout)
-		
-		return self
-
-class NTDInputResourceTab(tabsets.NchantdTab):
-	""""""
-	
-	def __init__(self, parent=None, cfg={}, singlepane=False):
-		""" """
-		self.parent = parent
-		self.config = condor.instruct(pxcfg)
-		self.config.select('NTDTaskSplitterTab').override(cfg)
-		if parent:
-			self.config.override(parent.config)
-		super(NTDInputResourceTab, self).__init__(parent, self.config, singlepane)
-	
-	def buildPane(self):
-		""" """
-		layout = pyqt.QVBoxLayout()
-		top_layout = pyqt.QHBoxLayout()
-		
-		top_layout_left = pyqt.QHBoxLayout()
-		cfg = {'label': 'New Resource Name: '}
-		top_layout_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
-		
-		cfg = {'label': 'New Resource Code: '}
-		top_layout_left.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
-		
-		top_layout_left.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		
-		top_layout.addLayout(top_layout_left)
-		top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		
-		cfg = {'label': 'New Resource Description: '}
-		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		layout.addLayout(top_layout)
-		layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		layout.addWidget(controls.NchantdSaveButtons(self).initWidget(None))
-		
-		bottom_layout = pyqt.QHBoxLayout()
-		cfg = {'label': 'List of Concerns: '}
-		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
-		
-		cfg = {'label': 'Assign Resources: '}
-		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
-		
-		layout.addLayout(bottom_layout)
-		self.setLayout(layout)
-		
-		return self
-
-class NTDInputTaskTab(tabsets.NchantdTab):
-	""""""
-	
-	def __init__(self, parent=None, cfg={}, singlepane=False):
-		""" """
-		self.parent = parent
-		self.config = condor.instruct(pxcfg)
-		self.config.select('NTDTaskSplitterTab').override(cfg)
-		if parent:
-			self.config.override(parent.config)
-		super(NTDInputTaskTab, self).__init__(parent, self.config, singlepane)
-	
-	def buildPane(self):
-		""" """
-		layout = pyqt.QVBoxLayout()
-		layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		top_layout = pyqt.QHBoxLayout()
-		top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		top_layout_left = pyqt.QVBoxLayout()
-		top_layout_left.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		top_layout_left_upper = pyqt.QHBoxLayout()
-		top_layout_left_upper.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		top_layout_left_lower = pyqt.QHBoxLayout()
-		top_layout_left_lower.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		top_layout_right = pyqt.QVBoxLayout()
-		top_layout_right.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-		bottom_layout = pyqt.QHBoxLayout()
-		bottom_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-
-		cfg = {'label': 'Task Name: '}
-		top_layout_left_upper.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
-		cfg = {'label': 'Estimated Task Hours: '}
-		top_layout_left_upper.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget())
-		top_layout_left.addLayout(top_layout_left_upper)
-
-		cfg = {'label': 'Due Date: '}
-		top_layout_left_lower.addWidget(calendars.NchantdDateSelect(self, cfg).initWidget())
-		top_layout_left.addLayout(top_layout_left_lower)
-		top_layout.addLayout(top_layout_left)
-		
-		
-		cfg = {'label': 'Task Notes: '}
-		top_layout_right.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		cfg = {'label': 'Primary Concern: '}
-		top_layout_right.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'small'))
-		top_layout.addLayout(top_layout_right)
-		
-		layout.addLayout(top_layout)
-		layout.addWidget(controls.NchantdSaveButtons(self).initWidget(None))
-
-		cfg = {'label': 'Assign Dependencies: '}
-		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
-		cfg = {'label': 'Assign Dependants: '}
-		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
-		cfg = {'label': 'Assign Resources: '}
-		bottom_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
-		layout.addLayout(bottom_layout)
-		self.setLayout(layout)
+		self.buildPane(60, 4, '08:00', 4)
 		return self
 
 class NTDHistoryTab(tabsets.NchantdTab):
@@ -1067,6 +669,32 @@ class NTDProjectsSummaryTab(tabsets.NchantdTab):
 		self.setLayout(layout)
 		return self
 
+class NTDRecentCompletedTasksTab(tabsets.NchantdTab):
+	""" """
+	
+	def __init__(self, parent=None, cfg={}, singlepane=None):
+		""" """
+		self.parent = parent
+		self.config = condor.instruct(pxcfg)
+		self.config.select('NTDProjectsSummaryTab').override(cfg)
+		if parent:
+			self.config.override(parent.config)
+		super(NTDRecentCompletedTasksTab, self).__init__(parent, self.config, singlepane)
+	
+	def buildPane(self):
+		""" """
+		layout = pyqt.QVBoxLayout()
+		top_layout = pyqt.QHBoxLayout()
+		cfg = {'label': 'Recent Completed Tasks'}
+		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
+		cfg = {'label': 'Projects Top Level Tasks'}
+		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
+		layout.addLayout(top_layout)
+		cfg = {'label': 'Near Term Tasks List'}
+		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
+		self.setLayout(layout)
+		return self
+
 class NTDSplitTaskTab(tabsets.NchantdTab):
 	""" """
 	def __init__(self, parent=None, cfg={}, singlepane=None):
@@ -1260,7 +888,6 @@ class NTDTaskTree(trees.NchantdCustomTree):
 		
 		return self
 
-
 class NTDTree(trees.NchantdCustomTree):
 	""" """
 	def __init__(self, parent=None, cfg={}, root=None):
@@ -1306,11 +933,13 @@ class NTDWeekly1DayTrackerTab(tabsets.NchantdTab):
 	
 	def buildPane(self, sections=7):
 		""" """
+		days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 		layout = pyqt.QVBoxLayout()
-		columns, rows = 2, 3
-		for column in range(columns):
+		columns, rows, i = 2, 3, 0
+		for row in range(rows):
 			row_layout = pyqt.QHBoxLayout()
-			for row in range(rows):
+			gb = pyqt.QGroupBox()
+			for column in range(columns):
 				if row == 2 and column == 1:
 					split_layout = pyqt.QVBoxLayout()
 					cfg = {'label': 'Saturday', 'size': [500, 25]}
@@ -1318,11 +947,14 @@ class NTDWeekly1DayTrackerTab(tabsets.NchantdTab):
 					cfg = {'label': 'Sunday', 'size': [500, 25]}
 					split_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None))
 					row_layout.addLayout(split_layout)
+
 				else:
-					cfg = {'label': 'Day', 'size': [500, 25]}
+					cfg = {'label': days[i], 'size': [500, 25]}
 					row_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-				
-			layout.addLayout(row_layout)
+				i += 1
+			gb.setLayout(row_layout)
+			layout.addWidget(gb)
+			#layout.addLayout(row_layout)
 		self.setLayout(layout)
 		return self
 	
@@ -1334,5 +966,4 @@ class NTDWeekly1DayTrackerTab(tabsets.NchantdTab):
 		editor.mousePressEventLog(event)
 		super().mousePressEvent(event)
 		return self
-
 

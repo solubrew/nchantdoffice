@@ -38,6 +38,10 @@ dstruct:
         style: '1Pane'
         center:
           name: 'Entry Widget'
+          #widget: 'nchantdtodo.widgets.NTDAddConcernTab' - draft
+          widget: 'nchantdtodo.widgets.NTDAddEventTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDAddResourceTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDAddTaskTab' - draft
           #widget: 'nchantdtodo.widgets.NTDAdministrateConcernsTab'
           #widget: 'nchantdtodo.widgets.NTDAdministrateEventsTab'
           #widget: 'nchantdtodo.widgets.NTDAdministrateResourcesTab'
@@ -47,10 +51,6 @@ dstruct:
           #widget: 'nchantdtodo.widgets.NTDDaily1HrTrackerTab' - draft
           #widget: 'nchantdtodo.widgets.NTDDaily2HrTrackerTab' - draft
           #widget: 'nchantdtodo.widgets.NTDDaily4HrTrackerTab' - draft
-          #widget: 'nchantdtodo.widgets.NTDInputConcernTab' - draft
-          #widget: 'nchantdtodo.widgets.NTDInputEventTab' - draft
-          #widget: 'nchantdtodo.widgets.NTDInputResourceTab' - draft
-          #widget: 'nchantdtodo.widgets.NTDInputTaskTab' - draft
           #widget: 'nchantdtodo.widgets.NTDHistoryTab'
           #widget: 'nchantdtodo.widgets.NTDMonthCalendarTab'
           #widget: 'nchantdtodo.widgets.NTDOperationOverviewTab'
