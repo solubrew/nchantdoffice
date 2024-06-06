@@ -17,6 +17,7 @@
 # ================================Core Modules===================================||
 from os.path import abspath, dirname, exists, join
 import uuid
+import datetime as dt
 
 # ===============================================================================||
 import simplejson as j
@@ -62,57 +63,43 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		""" """
 		self.config = condor.instruct(pxcfg).select('NTDTreeModel')
 		self.config.override(cfg)
-		if log: logma.info(f'TODOTreeModel\n {parent.src}')
 		if parent:
 			self.config.override(parent.config)
-		self.src = parent.src
-		super(NTDTreeModel, self).__init__(parent, root, cfg)
+		super(NTDTreeModel, self).__init__(parent, root, cfg, 'nchantdtodos')
 		if log: logma.info(f'TODOTreeModel\n {self.src}')
-		
-		self.nodes = []
-		self.tabsets = self.config.dikt['gui']['desktop']['tabsets']
-		self.base = [0, 0, 1, 1, 1, 1, 0, 0]
-		self.tbase = ['center', 0, 1, 1]
-		self.src = self.parent.src
-		self.name = 'nchantdtodos'
-		#nid = models.getLastNodeId(self.src, self.name)
-		self.rows, self.tabs = [], []
-		
-#		self.initModel()
+		self.today = None
 
-	def buildNodes(self):
-		""""""
-		pos = 0
-		#nid = models.getLastNodeId(self.src, 'nchantdtodos')
-		nid = 0
-		nodes = self.config.dikt['gui']['desktop']['nodes']
-		for node in nodes.keys():
-			if nodes[node]:
-				nid = getattr(self, f"build{node}Nodes")(nid, 0, pos)
-				pos += 1
-
-		#self.tabs += self.buildRightTabSet()
-		super().buildNodes()
-
-		return self
-
-	def buildTimelineNodes(self, nid, pid, pos):
-		""""""
-		tset = 'NTDTimelineTabSet'
-		nid = self.buildNode(nid, 'Timeline', 'appnode', pid, pos, tset)
-		return nid
-
-	def buildConcernsNodes(self, nid, pid, pos):
-		""""""
-		tset = 'NTDConcernTabSet'
-		nid = self.buildNode(nid, 'Timeline', 'appnode', pid, pos, tset)
-		return nid
-
-	def buildHistoryNodes(self, nid, pid, pos):
-		""""""
-		tset = 'NTDHistoryTabSet'
-		nid = self.buildNode(nid, 'Timeline', 'appnode', pid, pos, tset)
-		return nid
+	# def buildNodes(self):
+	# 	""""""
+	# 	pos = 0
+	# 	#nid = models.getLastNodeId(self.src, 'nchantdtodos')
+	# 	nid = 0
+	# 	nodes = self.config.dikt['gui']['desktop']['nodes']
+	# 	for node in nodes.keys():
+	# 		if nodes[node]:
+	# 			nid = getattr(self, f"build{node}Nodes")(nid, 0, pos)
+	# 			pos += 1
+	# 	#self.tabs += self.buildRightTabSet()
+	# 	super().buildNodes()
+	# 	return self
+	#
+	# def buildTimelineNodes(self, nid, pid, pos):
+	# 	""""""
+	# 	tset = 'NTDTimelineTabSet'
+	# 	nid = self.buildNode(nid, 'Timeline', 'appnode', pid, pos, tset)
+	# 	return nid
+	#
+	# def buildConcernsNodes(self, nid, pid, pos):
+	# 	""""""
+	# 	tset = 'NTDConcernTabSet'
+	# 	nid = self.buildNode(nid, 'Timeline', 'appnode', pid, pos, tset)
+	# 	return nid
+	#
+	# def buildHistoryNodes(self, nid, pid, pos):
+	# 	""""""
+	# 	tset = 'NTDHistoryTabSet'
+	# 	nid = self.buildNode(nid, 'Timeline', 'appnode', pid, pos, tset)
+	# 	return nid
 
 	def initData(self):
 		""" """
@@ -125,7 +112,7 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		nodes = [
 			['1', 'Action', 'appnode', 0, 0, 'NTDActionTabSet'] + self.nodebase,
 			['2', 'Concern', 'appnode', 0, 1, 'NTDConcernTabSet'] + self.nodebase,
-			['3', 'History', 'appnode', 0, 2, 'NTDHistoryTabSet'] + self.nodebase
+			['3', 'Timeline', 'appnode', 0, 2, 'NTDHistoryTabSet'] + self.nodebase
 		]
 		if log: logma.info(f'SRC {self.src}')
 		df = qpandas.DataFrame(nodes, columns=self.nodecolumns)
@@ -156,7 +143,11 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		if not tabs_df.empty:
 			self.src.docs['db'].write({'tabs': tabs_df})
 			
-		NchantdTreeGenerator(self, trnodes_df).genYearMonthTreeData(self.src, 0, 1, 4)
+		#TODO: need to create a node for today and then transfer information to the timeline node for that date
+		
+		nid = NchantdTreeGenerator(self, trnodes_df).genYearMonthTreeData(self.src, 0, 3, 4)
+		
+		self.setToday(nid)
 		return self
 
 	def initModel(self):
@@ -208,9 +199,9 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		""" """
 		tabs = []
 		data = j.dumps({'': ''})
-		tabs.append(['Summary', 'nchantd.widgets.NTDHistoryTab', data, pid, 0] + self.tabbase)
+		tabs.append(['Summary', 'nchantdtodo.widgets.NTDHistoryTab', data, pid, 0] + self.tabbase)
 		data = j.dumps({'': ''})
-		tabs.append(['Recent', 'nchantd.widgets.NTDRecentCompletedTasksTab', data, pid, 1] + self.tabbase)
+		tabs.append(['Recent', 'nchantdtodo.widgets.NTDRecentCompletedTasksTab', data, pid, 1] + self.tabbase)
 		return tabs
 
 	def initNTDJournalTabSetModel(self, base):
@@ -233,9 +224,31 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		]
 		return tabs
 
+	def setToday(self, nid):
+		""""""
+		self.now = dt.datetime.now()
+		if self.today != self.now.strftime('%Y-%m-%d'):
+			self.updateActionNode(nid)
+		self.today = self.now.strftime('%Y-%m-%d')
+		return self
+
+	def updateActionNode(self, nid):
+		"""Dynamicaly change the child nodes of Action based on the current date.
+		children nodes:
+			todays_date:
+			need to get current children of action node
+		"""
+		
+		self.deleteChildren(1)
+		self.addNode(nid, self.today, 'livenode', 1, 0, self.nodebase, 'NTDActionTabSet',  1)
+		self.addTab()
+		return self
+
 	def updateTimeline(self):
 		""""""
 		self.now = dt.datetime.now()
+		return self
+
 
 class NTDConcernModel():
 	""""""

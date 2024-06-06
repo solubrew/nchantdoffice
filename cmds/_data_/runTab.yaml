@@ -38,19 +38,19 @@ dstruct:
         style: '1Pane'
         center:
           name: 'Entry Widget'
-          #widget: 'nchantdtodo.widgets.NTDAddConcernTab' - draft
-          widget: 'nchantdtodo.widgets.NTDAddEventTab' - draft
-          #widget: 'nchantdtodo.widgets.NTDAddResourceTab' - draft
-          #widget: 'nchantdtodo.widgets.NTDAddTaskTab' - draft
+          #widget: 'nchantdtodo.widgets.NTDAddConcernTab' #  - draft
+          #widget: 'nchantdtodo.widgets.NTDAddEventTab' #  - draft
+          #widget: 'nchantdtodo.widgets.NTDAddResourceTab' #  - draft
+          #widget: 'nchantdtodo.widgets.NTDAddTaskTab' #  - draft
           #widget: 'nchantdtodo.widgets.NTDAdministrateConcernsTab'
           #widget: 'nchantdtodo.widgets.NTDAdministrateEventsTab'
           #widget: 'nchantdtodo.widgets.NTDAdministrateResourcesTab'
-          #widget: 'nchantdtodo.widgets.NTDDaily15MinTrackerTab' - draft
-          #widget: 'nchantdtodo.widgets.NTDDaily5MinTrackerTab' - draft
-          #widget: 'nchantdtodo.widgets.NTDDaily30MinTrackerTab' - draft
-          #widget: 'nchantdtodo.widgets.NTDDaily1HrTrackerTab' - draft
-          #widget: 'nchantdtodo.widgets.NTDDaily2HrTrackerTab' - draft
-          #widget: 'nchantdtodo.widgets.NTDDaily4HrTrackerTab' - draft
+          widget: 'nchantdtodo.widgets.NTDDaily15MinTrackerTab' #  - draft
+          #widget: 'nchantdtodo.widgets.NTDDaily5MinTrackerTab' #  - draft
+          #widget: 'nchantdtodo.widgets.NTDDaily30MinTrackerTab' #  - draft
+          #widget: 'nchantdtodo.widgets.NTDDaily1HrTrackerTab' #  - draft
+          #widget: 'nchantdtodo.widgets.NTDDaily2HrTrackerTab' #  - draft
+          #widget: 'nchantdtodo.widgets.NTDDaily4HrTrackerTab' #  - draft
           #widget: 'nchantdtodo.widgets.NTDHistoryTab'
           #widget: 'nchantdtodo.widgets.NTDMonthCalendarTab'
           #widget: 'nchantdtodo.widgets.NTDOperationOverviewTab'

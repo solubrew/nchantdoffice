@@ -337,7 +337,7 @@ class NTDAdministrateResourcesTab(tabsets.NchantdTab):
 		return self
 
 
-class NTDDailyTaskTrackerTab(forms.NchantdTimeTrackerForm):
+class NTDDailyTaskTrackerTab(forms.NchantdTimeTrackerFormFast):
 	""" """
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
