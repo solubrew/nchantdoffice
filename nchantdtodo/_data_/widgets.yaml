@@ -165,6 +165,9 @@ NTDOperation:
   description:
   widget:
   fields:
-
-
+NTDTree:
+  name:
+  description:
+  widget:
+  fields:
 

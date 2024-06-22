@@ -271,12 +271,14 @@ class NTDAdministrateConcernsTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""" """
 		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
 		cfg = {'label': 'Operations List'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
 		cfg = {'label': 'Projects List'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		layout.addLayout(top_layout)
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
 		cfg = {'label': 'Near Term Tasks List'}
 		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
 		self.setLayout(layout)
@@ -298,12 +300,14 @@ class NTDAdministrateEventsTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""" """
 		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
 		cfg = {'label': 'Operations List'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
 		cfg = {'label': 'Projects List'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		layout.addLayout(top_layout)
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
 		cfg = {'label': 'Near Term Tasks List'}
 		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
 		self.setLayout(layout)
@@ -325,12 +329,14 @@ class NTDAdministrateResourcesTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""" """
 		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
 		cfg = {'label': 'Operations List'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
 		cfg = {'label': 'Projects List'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		layout.addLayout(top_layout)
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
 		cfg = {'label': 'Near Term Tasks List'}
 		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
 		self.setLayout(layout)
@@ -390,6 +396,10 @@ class NTDDaily5MinTrackerTab(forms.NchantdTimeTrackerForm):
 		if log: print('Config', self.config.dikt)
 		super(NTDDaily5MinTrackerTab, self).__init__(parent, self.config, panestyle)
 
+	def initView(self):
+		""" """
+		self.buildPane(5, 1, '08:00', 10)
+		return self
 
 class NTDDaily30MinTrackerTab(forms.NchantdTimeTrackerForm):
 	""" """
@@ -482,12 +492,14 @@ class NTDHistoryTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""" """
 		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
 		cfg = {'label': 'Yesterdays Tasks'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
 		cfg = {'label': 'Last Weeks Tasks'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		layout.addLayout(top_layout)
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
 		cfg = {'label': 'Completed Projects'}
 		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
 		self.setLayout(layout)
@@ -524,7 +536,10 @@ class NTDMonthCalendarTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""""""
 		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
 		layout.addWidget(calendars.NchantdMonthCalendar(self).initWidget())
+		gb.setLayout(layout)
+		
 		self.setLayout(layout)
 		return self
 
@@ -571,12 +586,14 @@ class NTDOperationOverviewTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""" """
 		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
 		cfg = {'label': 'Operation Tasks Overview'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
 		cfg = {'label': 'Operations Top Level Tasks'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		layout.addLayout(top_layout)
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
 		cfg = {'label': 'Near Term Tasks List'}
 		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
 		self.setLayout(layout)
@@ -597,12 +614,14 @@ class NTDOperationsSummaryTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""" """
 		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
 		cfg = {'label': 'Project Tasks Overview'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
 		cfg = {'label': 'Projects Top Level Tasks'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		layout.addLayout(top_layout)
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
 		cfg = {'label': 'Near Term Tasks List'}
 		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
 		self.setLayout(layout)
@@ -623,12 +642,14 @@ class NTDProjectOverviewTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""" """
 		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
 		cfg = {'label': 'Project Tasks Overview'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
 		cfg = {'label': 'Projects Top Level Tasks'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		layout.addLayout(top_layout)
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
 		cfg = {'label': 'Near Term Tasks List'}
 		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
 		self.setLayout(layout)
@@ -658,12 +679,14 @@ class NTDProjectsSummaryTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""" """
 		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
 		cfg = {'label': 'Project Tasks Overview'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
 		cfg = {'label': 'Projects Top Level Tasks'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		layout.addLayout(top_layout)
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
 		cfg = {'label': 'Near Term Tasks List'}
 		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
 		self.setLayout(layout)
@@ -684,12 +707,14 @@ class NTDRecentCompletedTasksTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""" """
 		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
 		cfg = {'label': 'Recent Completed Tasks'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
 		cfg = {'label': 'Projects Top Level Tasks'}
 		top_layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'medium'))
-		layout.addLayout(top_layout)
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
 		cfg = {'label': 'Near Term Tasks List'}
 		layout.addWidget(editors.NchantdEntryEditor(self, cfg).initWidget(None, 'large'))
 		self.setLayout(layout)
@@ -709,8 +734,8 @@ class NTDSplitTaskTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""" """
 		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
-		
 		top_layout_left = pyqt.QVBoxLayout()
 		top_layout_left.addWidget(editors.NchantdEntryEditor(self, {"label": "Task Name: "}).initWidget())
 		orig_due_date = editors.NchantdEntryEditor(self, {"label": "Original Due Date: "})
@@ -750,8 +775,9 @@ class NTDSplitTaskTab(tabsets.NchantdTab):
 		
 		top_layout_right = pyqt.QVBoxLayout()
 		top_layout.addLayout(top_layout_right)
-		layout.addLayout(top_layout)
-		
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
+		gb0 = pyqt.QGroupBox()
 		split_type = 'children'
 		bottom_layout = pyqt.QHBoxLayout()
 		new_tasks = 2
@@ -762,7 +788,8 @@ class NTDSplitTaskTab(tabsets.NchantdTab):
 			notes = editors.NchantdEntryEditor(self, {"label": "Task A: "})
 			bottom_layout.addWidget(notes.initWidget(None, 'medium'))
 
-		layout.addLayout(bottom_layout)
+		gb.setLayout(bottom_layout)
+		layout.addWidget(gb)
 		self.setLayout(layout)
 		return self
 
@@ -781,8 +808,8 @@ class NTDTaskDetailTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""" """
 		layout = pyqt.QVBoxLayout()
+		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
-
 		top_layout_left = pyqt.QVBoxLayout()
 		top_layout_left.addWidget(editors.NchantdEntryEditor(self, {"label": "Task Name: "}).initWidget())
 		orig_due_date = editors.NchantdEntryEditor(self, {"label": "Original Due Date: "})
@@ -822,8 +849,9 @@ class NTDTaskDetailTab(tabsets.NchantdTab):
 
 		top_layout_right = pyqt.QVBoxLayout()
 		top_layout.addLayout(top_layout_right)
-		layout.addLayout(top_layout)
-		
+		gb.setLayout(top_layout)
+		layout.addWidget(gb)
+		gb0 = pyqt.QGroupBox()
 		bottom_layout = pyqt.QHBoxLayout()
 		bottom_layout_left = pyqt.QVBoxLayout()
 		#need a drag -n- drop widget
@@ -841,7 +869,8 @@ class NTDTaskDetailTab(tabsets.NchantdTab):
 		bottom_layout_right.addWidget(dependancies.initWidget(None, 'large'))
 		bottom_layout.addLayout(bottom_layout_right)
 
-		layout.addLayout(bottom_layout)
+		gb0.setLayout(bottom_layout)
+		layout.addWidget(gb0)
 		self.setLayout(layout)
 		return self
 
@@ -860,13 +889,17 @@ class NTDTaskGanttTab(tabsets.NchantdTab):
 	def buildPane(self):
 		""" """
 		layout = pyqt.QHBoxLayout()
+		gb = pyqt.QGroupBox()
 		left_layout = pyqt.QVBoxLayout()
 		left_layout.addWidget(NTDTaskTree(self).initWidget())
-		layout.addLayout(left_layout)
+		gb.setLayout(left_layout)
+		layout.addWidget(gb)
 
+		gb0 = pyqt.QGroupBox()
 		right_layout = pyqt.QVBoxLayout()
 		right_layout.addWidget(calendars.NchantdGanttCanvas(self).initWidget())
-		layout.addLayout(right_layout)
+		gb0.setLayout(right_layout)
+		layout.addWidget(gb0)
 
 		self.setLayout(layout)
 		return self
@@ -894,7 +927,9 @@ class NTDTree(trees.NchantdCustomTree):
 		""" """
 		self.parent = parent
 		self.config = condor.instruct(pxcfg).select('NTDTree')
-		self.config.override(cfg)
+		#self.config.override(cfg)
+		logma.store(self.config.dikt)
+		logma.info(self.config.dikt.keys())
 		if parent:
 			self.config.override(parent.config)
 		super(NTDTree, self).__init__(parent, self.config)

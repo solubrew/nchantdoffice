@@ -27,6 +27,7 @@ from pandas import DataFrame
 from condor import condor  # ||
 from nchantrs.models.applicationmodels import NchantdCloakModel
 from nchantrs.models import models, treemodels
+from nchantrs.models.tabsetmodels import NchantdTabSetModel
 from nchantrs.dstruct.trees import NchantdTreeGenerator
 from nchantrs.libraries import qpandas
 from ogma.logma import Logma
@@ -57,102 +58,67 @@ class NTDAppModel(NchantdCloakModel):
 		return self
 
 class NTDTreeModel(treemodels.NchantdTreeModel):
-	""" """
-	
+	"""Nchantd Todo Tree Model"""
 	def __init__(self, parent=None, root=None, cfg={}):
-		""" """
+		"""An Outlined but dynamic set of tree nodes based on data from the database"""
 		self.config = condor.instruct(pxcfg).select('NTDTreeModel')
 		self.config.override(cfg)
 		if parent:
 			self.config.override(parent.config)
-		super(NTDTreeModel, self).__init__(parent, root, cfg, 'nchantdtodos')
+		super(NTDTreeModel, self).__init__(parent, root, 'nchantdtodos')
 		if log: logma.info(f'TODOTreeModel\n {self.src}')
 		self.today = None
-
-	# def buildNodes(self):
-	# 	""""""
-	# 	pos = 0
-	# 	#nid = models.getLastNodeId(self.src, 'nchantdtodos')
-	# 	nid = 0
-	# 	nodes = self.config.dikt['gui']['desktop']['nodes']
-	# 	for node in nodes.keys():
-	# 		if nodes[node]:
-	# 			nid = getattr(self, f"build{node}Nodes")(nid, 0, pos)
-	# 			pos += 1
-	# 	#self.tabs += self.buildRightTabSet()
-	# 	super().buildNodes()
-	# 	return self
-	#
-	# def buildTimelineNodes(self, nid, pid, pos):
-	# 	""""""
-	# 	tset = 'NTDTimelineTabSet'
-	# 	nid = self.buildNode(nid, 'Timeline', 'appnode', pid, pos, tset)
-	# 	return nid
-	#
-	# def buildConcernsNodes(self, nid, pid, pos):
-	# 	""""""
-	# 	tset = 'NTDConcernTabSet'
-	# 	nid = self.buildNode(nid, 'Timeline', 'appnode', pid, pos, tset)
-	# 	return nid
-	#
-	# def buildHistoryNodes(self, nid, pid, pos):
-	# 	""""""
-	# 	tset = 'NTDHistoryTabSet'
-	# 	nid = self.buildNode(nid, 'Timeline', 'appnode', pid, pos, tset)
-	# 	return nid
 
 	def initData(self):
 		""" """
 		self.genTreeNodes()
 	
-	def genTreeNodes(self):
-		data = next(self.src.docs['db'].read({'table': ['trnodes', 'tabs']})).dikt
-		trnodes_df = qpandas.DataFrame(data['trnodes']['records'], columns=data['trnodes']['columns'])
-		if log: logma.info(f"DATA {data}")
-		nodes = [
-			['1', 'Action', 'appnode', 0, 0, 'NTDActionTabSet'] + self.nodebase,
-			['2', 'Concern', 'appnode', 0, 1, 'NTDConcernTabSet'] + self.nodebase,
-			['3', 'Timeline', 'appnode', 0, 2, 'NTDHistoryTabSet'] + self.nodebase
-		]
-		if log: logma.info(f'SRC {self.src}')
-		df = qpandas.DataFrame(nodes, columns=self.nodecolumns)
-		if log: logma.info(f"TRNODES_DF {trnodes_df}")
-		df = df[~df['nid'].isin(trnodes_df['nid'].values.tolist())]
-		df['uuid'] = df['nid'].apply(lambda x: uuid.UUID(str(uuid.uuid4())).hex)
-		df.reset_index(inplace=True, drop=True)
-		if log: logma.info(f"DF {df}")
-		if not df.empty:
-			self.src.docs['db'].write({'trnodes': df})
-		tabs = []
-		for node in nodes:
-			#TODO: build out tid identification...this is a larger problem in matching nodes being generated
-			#
-			tabs += getattr(self, f'init{node[5]}Model')(node[0])
-		if log: logma.info(f'TABS {tabs}')
-		tabs_df = qpandas.DataFrame(tabs, columns=self.tabcolumns)
-		data = next(self.src.docs['db'].read({'table': ['tabs']})).dikt
-		db_tabs_df = qpandas.DataFrame(data['tabs']['records'], columns=data['tabs']['columns'])
-		tabs_df['uuid'] = tabs_df['name'].apply(lambda x: uuid.UUID(str(uuid.uuid4())).hex)
-		if log: logma.info(f"Columns {tabs_df.columns}")
-		if log: logma.info(f"Tabs DF\n{tabs_df}")
-		if log: logma.info(f"Tabs DF\n{db_tabs_df}")
-		#TODO: this needs to be name and parent
-		tabs_df = tabs_df[~tabs_df['name'].isin(db_tabs_df['name'].values.tolist())]
-		
-		#TODO: This should be a function of a base model in nchantrs and check against already stored tabs
-		if not tabs_df.empty:
-			self.src.docs['db'].write({'tabs': tabs_df})
-			
-		#TODO: need to create a node for today and then transfer information to the timeline node for that date
-		
-		nid = NchantdTreeGenerator(self, trnodes_df).genYearMonthTreeData(self.src, 0, 3, 4)
-		
-		self.setToday(nid)
-		return self
+
 
 	def initModel(self):
-		self.buildNodes()
 		super().initModel()
+		self.buildNodes()
+		return self
+	
+	def setToday(self, nid):
+		""""""
+		self.now = dt.datetime.now()
+		if self.today != self.now.strftime('%Y-%m-%d'):
+			self.updateActionNode(nid)
+		self.today = self.now.strftime('%Y-%m-%d')
+		return self
+	
+	def updateActionNode(self, nid):
+		"""Dynamicaly change the child nodes of Action based on the current date.
+		children nodes:
+			todays_date:
+			need to get current children of action node
+		"""
+		
+		self.deleteChildren(1)
+		logma.info(f"Create Today Node")
+		self.addNode(nid, self.today, 'livenode', 1, 0, self.nodebase, 'NTDActionTabSet', 1)
+		self.addTab()
+		return self
+	
+	def updateTimeline(self):
+		""""""
+		self.now = dt.datetime.now()
+		return self
+
+
+class NTDTabSetModel(NchantdTabSetModel):
+	""""""
+	def __init__(self):
+		""""""
+		self.config = condor.instruct(pxcfg).select('NTDTabSetModel')
+		self.config.override(cfg)
+		if parent:
+			self.config.override(parent.config)
+		super(NTDTabSetModel, self).__init__(parent, root, cfg, '')
+
+	def initModel(self):
+		""""""
 		return self
 
 	def initNTDActionTabSetModel(self, pid):
@@ -224,36 +190,27 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		]
 		return tabs
 
-	def setToday(self, nid):
-		""""""
-		self.now = dt.datetime.now()
-		if self.today != self.now.strftime('%Y-%m-%d'):
-			self.updateActionNode(nid)
-		self.today = self.now.strftime('%Y-%m-%d')
-		return self
-
-	def updateActionNode(self, nid):
-		"""Dynamicaly change the child nodes of Action based on the current date.
-		children nodes:
-			todays_date:
-			need to get current children of action node
-		"""
-		
-		self.deleteChildren(1)
-		self.addNode(nid, self.today, 'livenode', 1, 0, self.nodebase, 'NTDActionTabSet',  1)
-		self.addTab()
-		return self
-
-	def updateTimeline(self):
-		""""""
-		self.now = dt.datetime.now()
-		return self
-
 
 class NTDConcernModel():
 	""""""
 	def __init__(self):
 		""""""
+
+	def deleteConcern(self):
+		""""""
+	
+	def getConcerns(self):
+		""""""
+	
+	def newConcern(self):
+		""""""
+
+	def selectConcern(self):
+		""""""
+
+	def updateConcern(self):
+		""""""
+
 
 
 class NTDDailyTrackerModel():

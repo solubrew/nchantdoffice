@@ -73,10 +73,6 @@ objects:
         STATUS_TXT:
         HISTORY_BIT:
       records:
-    tabs: #TODO: need to pull these tables from standard configurations
-      columns: ['name', 'widget', 'widgdata', 'parentid', 'position', 'readonly', 'editable', 'visible',
-                'moveable', 'uuid']
-      records:
     TODO:
       description: >
       columns:
@@ -85,13 +81,7 @@ objects:
         ASSIGNED_ACTOR_FK:
         PARENT_TODO_FK:
         CONCERN_FK:
-        DUE_FK:
       records:
-    trnodes:  #nid should be set to unique
-      'columns': ['nid', 'icon', 'name', 'ntype', 'parentid', 'position',
-                  'tabset', 'treeid', 'readonly', 'visible', 'moveable',
-                  'pregnable', 'isparent', 'expanded', 'tabfocus']
-      'records':
   view:
     VW_ACTOR:
       description:
