@@ -24,7 +24,7 @@ from condor import condor
 from nchantrs.libraries import pyqt, pandas_profiling, pandasgui, sweetviz
 from nchantrs.widgets import annotations, calendars, controls, editors, forms, tables, tabsets, trees
 
-from nchantdtodo.models import NTDTreeModel
+from nchantdtodo.models import NTDTreeModel, NTDTabSetModel
 
 from ogma.logma import Logma
 
@@ -36,10 +36,21 @@ logma = Logma(__name__)
 pxcfg = join(here, '_data_', 'widgets.yaml')
 
 class NTDAddConcernTab(tabsets.NchantdTab):
-	""""""
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=False):
-		""" """
+		"""
+		Initializes an instance of the NTDAddConcernTab class.
+
+		:param parent: The parent widget (default value is None).
+		:type parent: QWidget
+		:param cfg: The configuration dictionary (default value is an empty dictionary).
+		:type cfg: dict
+		:param singlepane: Controls whether the tab uses a single pane layout (default value is False).
+		:type singlepane: bool
+		"""
 		self.parent = parent
 		self.config = condor.instruct(pxcfg)
 		self.config.select('NTDTaskSplitterTab').override(cfg)
@@ -48,7 +59,11 @@ class NTDAddConcernTab(tabsets.NchantdTab):
 		super(NTDAddConcernTab, self).__init__(parent, self.config, singlepane)
 	
 	def buildPane(self):
-		""" """
+		"""
+		Builds the pane for the application.
+
+		:return: The built pane.
+		"""
 		layout = pyqt.QVBoxLayout()
 		top_layout = pyqt.QHBoxLayout()
 		
@@ -83,10 +98,40 @@ class NTDAddConcernTab(tabsets.NchantdTab):
 		return self
 
 class NTDAddEventTab(tabsets.NchantdTab):
-	""""""
+	"""
+
+	:class: NTDAddEventTab(tabsets.NchantdTab)
+	    The NTDAddEventTab class is a subclass of tabsets.NchantdTab. It represents a tab in a GUI application for adding events.
+
+	Constructor
+	-----------
+
+	.. py:method:: __init__(self, parent=None, cfg={}, singlepane=False)
+
+	    Initialize the NTDAddEventTab instance.
+
+	    :param parent: A reference to the parent object. Defaults to None.
+	    :param cfg: A dictionary containing configuration options. Defaults to an empty dictionary.
+	    :param singlepane: A boolean flag indicating whether to use a single pane layout. Defaults to False.
+
+	Methods
+	-------
+
+	.. py:method:: buildPane(self)
+
+	    Builds the pane layout for the GUI.
+
+	    :return: None
+	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=False):
-		""" """
+		"""
+		Initialize the NTDAddEventTab instance.
+
+		:param parent: A reference to the parent object. Defaults to None.
+		:param cfg: A dictionary containing configuration options. Defaults to an empty dictionary.
+		:param singlepane: A boolean flag indicating whether to use a single pane layout. Defaults to False.
+		"""
 		self.parent = parent
 		self.config = condor.instruct(pxcfg)
 		self.config.select('NTDTaskSplitterTab').override(cfg)
@@ -95,7 +140,11 @@ class NTDAddEventTab(tabsets.NchantdTab):
 		super(NTDAddEventTab, self).__init__(parent, self.config, singlepane)
 	
 	def buildPane(self):
-		""" """
+		"""
+		Builds the pane layout for the GUI.
+
+		:return: None
+		"""
 		gb = pyqt.QGroupBox()
 		layout = pyqt.QVBoxLayout()
 		layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
@@ -147,10 +196,38 @@ class NTDAddEventTab(tabsets.NchantdTab):
 		return self
 
 class NTDAddResourceTab(tabsets.NchantdTab):
-	""""""
+	"""
+	NTDAddResourceTab
+
+	A class for creating and initializing a tab layout with various editors and buttons for adding a new resource.
+
+	Inherits from tabsets.NchantdTab.
+
+	Attributes:
+	- parent: The parent widget.
+	- config: The configuration options.
+	- singlepane: Determines if the tab should be displayed in a single pane.
+
+	Methods:
+	- __init__(self, parent=None, cfg={}, singlepane=False): Initializes an instance of the NTDAddResourceTab class.
+	- buildPane(self): Creates and initializes a pane layout with various editors and buttons.
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=False):
-		""" """
+		"""
+		Initializes an instance of the NTDAddResourceTab class.
+
+		:param parent: The parent widget. Defaults to None.
+		:type parent: Union[None, QWidget]
+
+		:param cfg: The configuration options. Defaults to an empty dict.
+		:type cfg: Dict[str, Any]
+
+		:param singlepane: Determines if the tab should be displayed in a single pane. Defaults to False.
+		:type singlepane: bool
+
+		"""
 		self.parent = parent
 		self.config = condor.instruct(pxcfg)
 		self.config.select('NTDTaskSplitterTab').override(cfg)
@@ -159,7 +236,11 @@ class NTDAddResourceTab(tabsets.NchantdTab):
 		super(NTDAddResourceTab, self).__init__(parent, self.config, singlepane)
 	
 	def buildPane(self):
-		""" """
+		"""
+		Creates and initializes a pane layout with various editors and buttons.
+
+		:return: The initialized pane layout.
+		"""
 		layout = pyqt.QVBoxLayout()
 		top_layout = pyqt.QHBoxLayout()
 		gb = pyqt.QGroupBox()
@@ -196,10 +277,28 @@ class NTDAddResourceTab(tabsets.NchantdTab):
 		return self
 
 class NTDAddTaskTab(tabsets.NchantdTab):
-	""""""
+	"""
+	Constructs a new instance of the NTDAddTaskTab class.
+
+	:param parent: The parent widget. Default is None.
+	:type parent: QWidget or None
+	:param cfg: Configuration options. Default is an empty dictionary.
+	:type cfg: dict
+	:param singlepane: Flag indicating if the widget should be displayed in a single pane. Default is False.
+	:type singlepane: bool
+	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=False):
-		""" """
+		"""
+		Constructs a new instance of the NTDAddTaskTab class.
+
+		:param parent: The parent widget. Default is None.
+		:type parent: QWidget or None
+		:param cfg: Configuration options. Default is an empty dictionary.
+		:type cfg: dict
+		:param singlepane: Flag indicating if the widget should be displayed in a single pane. Default is False.
+		:type singlepane: bool
+		"""
 		self.parent = parent
 		self.config = condor.instruct(pxcfg)
 		self.config.select('NTDTaskSplitterTab').override(cfg)
@@ -208,7 +307,11 @@ class NTDAddTaskTab(tabsets.NchantdTab):
 		super(NTDAddTaskTab, self).__init__(parent, self.config, singlepane)
 	
 	def buildPane(self):
-		""" """
+		"""
+		Builds the pane layout.
+
+		:return: The built pane layout.
+		"""
 		layout = pyqt.QVBoxLayout()
 		gb = pyqt.QGroupBox()
 		layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
@@ -257,7 +360,8 @@ class NTDAddTaskTab(tabsets.NchantdTab):
 		return self
 
 class NTDAdministrateConcernsTab(tabsets.NchantdTab):
-	"""Show A summary of tasks connected to s a specific Concern
+	"""
+
 	"""
 	def __init__(self, parent=None, cfg={}, singlepane=None):
 		""" """
@@ -269,7 +373,12 @@ class NTDAdministrateConcernsTab(tabsets.NchantdTab):
 		super(NTDAdministrateConcernsTab, self).__init__(parent, self.config, singlepane)
 	
 	def buildPane(self):
-		""" """
+		"""
+		Builds a pane layout for the GUI.
+
+		:return: The built pane layout.
+		:rtype: PyQt5.QtWidgets.QVBoxLayout
+		"""
 		layout = pyqt.QVBoxLayout()
 		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
@@ -285,11 +394,23 @@ class NTDAdministrateConcernsTab(tabsets.NchantdTab):
 		return self
 
 class NTDAdministrateEventsTab(tabsets.NchantdTab):
-	"""Show A summary of tasks connected to s a specific Concern
+	"""
+
 	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=None):
-		""" """
+		"""
+		Initialize the NTDAdministrateEventsTab object.
+
+		:param parent: The parent object. Default is None.
+		:type parent: object
+
+		:param cfg: The configuration values. Default is an empty dictionary.
+		:type cfg: dict
+
+		:param singlepane: A singlepane object. Default is None.
+		:type singlepane: object
+		"""
 		self.parent = parent
 		self.config = condor.instruct(pxcfg)
 		self.config.select('NTDConcernTasksTab').override(cfg)
@@ -298,7 +419,11 @@ class NTDAdministrateEventsTab(tabsets.NchantdTab):
 		super(NTDAdministrateEventsTab, self).__init__(parent, self.config, singlepane)
 	
 	def buildPane(self):
-		""" """
+		"""
+		Builds the pane for the GUI.
+
+		:return: The built pane.
+		"""
 		layout = pyqt.QVBoxLayout()
 		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
@@ -314,11 +439,21 @@ class NTDAdministrateEventsTab(tabsets.NchantdTab):
 		return self
 
 class NTDAdministrateResourcesTab(tabsets.NchantdTab):
-	"""Show A summary of tasks connected to s a specific Concern
+	"""
+
 	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=None):
-		""" """
+		"""
+		Initializes the NTDAdministrateResourcesTab object.
+
+		:param parent: The parent object. Defaults to None.
+		:type parent: object
+		:param cfg: The configuration object. Defaults to an empty dictionary.
+		:type cfg: dict
+		:param singlepane: The singlepane object. Defaults to None.
+		:type singlepane: object
+		"""
 		self.parent = parent
 		self.config = condor.instruct(pxcfg)
 		self.config.select('NTDConcernTasksTab').override(cfg)
@@ -327,7 +462,11 @@ class NTDAdministrateResourcesTab(tabsets.NchantdTab):
 		super(NTDAdministrateResourcesTab, self).__init__(parent, self.config, singlepane)
 	
 	def buildPane(self):
-		""" """
+		"""
+		Builds the pane with various entry editors and layouts.
+
+		:return: The built pane.
+		"""
 		layout = pyqt.QVBoxLayout()
 		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
@@ -344,7 +483,18 @@ class NTDAdministrateResourcesTab(tabsets.NchantdTab):
 
 
 class NTDDailyTaskTrackerTab(forms.NchantdTimeTrackerFormFast):
-	""" """
+	"""
+	This class represents a tab for daily task tracking.
+
+	The NTDDailyTaskTrackerTab class extends the NchantdTimeTrackerFormFast class and provides functionality for managing and tracking daily tasks.
+
+	:param parent: The parent widget of the tab.
+	:type parent: None or tkinter.Tk widget
+	:param cfg: The configuration dictionary for the tab.
+	:type cfg: dict
+	:param panestyle: The pane style for the tab.
+	:type panestyle: None or str
+	"""
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
 		""" """
@@ -358,13 +508,21 @@ class NTDDailyTaskTrackerTab(forms.NchantdTimeTrackerFormFast):
 		super(NTDDailyTaskTrackerTab, self).__init__(parent, self.config, panestyle)
 	
 	def initView(self):
-		""" """
+		"""
+		Initialize the view.
+
+		This method builds the pane and sets the default values.
+
+		:return: None
+		"""
 		self.buildPane(15, 1, '08:00', 4)
 		return self
 
 
 class NTDDaily15MinTrackerTab(forms.NchantdTimeTrackerForm):
-	""" """
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
 		""" """
@@ -383,7 +541,22 @@ class NTDDaily15MinTrackerTab(forms.NchantdTimeTrackerForm):
 		return self
 
 class NTDDaily5MinTrackerTab(forms.NchantdTimeTrackerForm):
-	""" """
+	"""
+
+	NTDDaily5MinTrackerTab
+
+	This class is a subclass of forms.NchantdTimeTrackerForm and is used to create a tab for tracking 5-minute intervals.
+
+	Attributes:
+	- parent: The parent object.
+	- config: The configuration object.
+	- panestyle: The style for the pane.
+
+	Methods:
+	- __init__(self, parent=None, cfg={}, panestyle=None): Initializes the object with the given parameters.
+	- initView(self): Initializes the view by building the pane.
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
 		""" """
@@ -402,7 +575,9 @@ class NTDDaily5MinTrackerTab(forms.NchantdTimeTrackerForm):
 		return self
 
 class NTDDaily30MinTrackerTab(forms.NchantdTimeTrackerForm):
-	""" """
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
 		""" """
@@ -421,7 +596,25 @@ class NTDDaily30MinTrackerTab(forms.NchantdTimeTrackerForm):
 		return self
 
 class NTDDaily1HrTrackerTab(tabsets.NchantdTab):
-	""" """
+	"""
+	The NTDDaily1HrTrackerTab class is a subclass of the tabsets.NchantdTab class. It represents a tab in the NTD Daily 1 Hour Tracker.
+
+	Constructor:
+	    def __init__(self, parent=None, cfg={}, panestyle=None):
+	        - parent: The parent object of the tab. Default: None
+	        - cfg: A dictionary containing configuration options. Default: {}
+	        - panestyle: The style of the tab pane. Default: None
+
+	        Initializes a new instance of the NTDDaily1HrTrackerTab class.
+
+	Methods:
+	    def initView(self):
+	        - Initializes the view of the tab.
+	        - This method builds a pane with parameters: duration=60 minutes, interval=1 minute, start_time='08:00', and max_interval=4.
+	        - Returns: The instance of the NTDDaily1HrTrackerTab class.
+
+	Docstring format:
+	    """
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
 		""" """
@@ -440,7 +633,9 @@ class NTDDaily1HrTrackerTab(tabsets.NchantdTab):
 		return self
 
 class NTDDaily2HrTrackerTab(tabsets.NchantdTab):
-	""" """
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
 		""" """
@@ -459,7 +654,9 @@ class NTDDaily2HrTrackerTab(tabsets.NchantdTab):
 		return self
 	
 class NTDDaily4HrTrackerTab(tabsets.NchantdTab):
-	""" """
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
 		""" """
@@ -478,7 +675,9 @@ class NTDDaily4HrTrackerTab(tabsets.NchantdTab):
 		return self
 
 class NTDHistoryTab(tabsets.NchantdTab):
-	""" """
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, panetype=None):
 		""" """
@@ -506,7 +705,9 @@ class NTDHistoryTab(tabsets.NchantdTab):
 		return self
 
 class NTDObjectOrganizationTab(tabsets.NchantdTab):
-	""" """
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}):
 		""" """
@@ -522,7 +723,9 @@ class NTDObjectOrganizationTab(tabsets.NchantdTab):
 		return self
 
 class NTDMonthCalendarTab(tabsets.NchantdTab):
-	""""""
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
 		""" """
@@ -544,7 +747,17 @@ class NTDMonthCalendarTab(tabsets.NchantdTab):
 		return self
 
 class NTDMonthlyTaskListTab(tabsets.NchantdTab):
-	""""""
+	"""
+	Initializes an instance of the NTDMonthlyTaskListTab class.
+
+	:param parent: The parent widget for the tab. Default is None.
+	:type parent: object
+
+	:param cfg: Configuration parameters for the tab. Default is {}.
+	:type cfg: dict
+
+	:return: None
+	"""
 	
 	def __init__(self, parent=None, cfg={}):
 		""" """
@@ -556,7 +769,9 @@ class NTDMonthlyTaskListTab(tabsets.NchantdTab):
 		super(NTDMonthlyTaskListTab, self).__init__(parent, self.config)
 
 class NTDMultiWeekCalendarTab(tabsets.NchantdTab):
-	""" """
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}):
 		""" """
@@ -572,7 +787,9 @@ class NTDMultiWeekCalendarTab(tabsets.NchantdTab):
 		return self
 
 class NTDOperationOverviewTab(tabsets.NchantdTab):
-	""" """
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=None):
 		""" """
@@ -600,7 +817,17 @@ class NTDOperationOverviewTab(tabsets.NchantdTab):
 		return self
 
 class NTDOperationsSummaryTab(tabsets.NchantdTab):
-	""" """
+	"""
+	This class represents the NTD Operations Summary Tab.
+
+	It inherits from the tabsets.NchantdTab class.
+
+	Attributes:
+	    parent (optional): The parent widget.
+	    cfg (dict): The configuration dictionary.
+	    singlepane (optional): The single pane widget.
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=None):
 		""" """
@@ -628,10 +855,32 @@ class NTDOperationsSummaryTab(tabsets.NchantdTab):
 		return self
 
 class NTDProjectOverviewTab(tabsets.NchantdTab):
-	""" """
+	"""
+	Class representing the NTD Project Overview tab.
+
+	Inherits from tabsets.NchantdTab.
+
+	Attributes:
+	    parent: The parent widget.
+	    config: The configuration object.
+	    singlepane: The single pane widget.
+
+	Methods:
+	    __init__: Initializes the NTDProjectOverviewTab instance.
+	    buildPane: Builds the pane layout.
+	    initModel: Initializes the model.
+	    initView: Initializes the view.
+	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=None):
-		""" """
+		"""
+		Constructor for NTDProjectOverviewTab class.
+
+		:param parent: The parent object. Default is None.
+		:param cfg: The configuration settings for the tab. Default is an empty dictionary.
+		:param singlepane: Specifies if the tab should be displayed as a single pane. Default is None.
+
+		"""
 		self.parent = parent
 		self.config = condor.instruct(pxcfg)
 		self.config.select('NTDProjectOverviewTab').override(cfg)
@@ -640,7 +889,11 @@ class NTDProjectOverviewTab(tabsets.NchantdTab):
 		super(NTDProjectOverviewTab, self).__init__(parent, self.config, singlepane)
 	
 	def buildPane(self):
-		""" """
+		"""
+		Builds and returns a pane layout containing several entry editors and group boxes.
+
+		:return: The pane layout containing entry editors and group boxes.
+		"""
 		layout = pyqt.QVBoxLayout()
 		gb = pyqt.QGroupBox()
 		top_layout = pyqt.QHBoxLayout()
@@ -665,7 +918,20 @@ class NTDProjectOverviewTab(tabsets.NchantdTab):
 		return self
 
 class NTDProjectsSummaryTab(tabsets.NchantdTab):
-	""" """
+	"""
+	NTDProjectsSummaryTab Class
+	---------------------------
+
+	This class represents the summary tab for NTD projects.
+
+	Methods:
+	- __init__(self, parent=None, cfg={}, singlepane=None): Constructor method for NTDProjectsSummaryTab class.
+	- buildPane(self): Method to build the layout of the summary tab.
+
+	Attributes:
+	- parent: The parent object of the summary tab.
+	- config: The configuration object for NTDProjectsSummaryTab.
+	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=None):
 		""" """
@@ -693,7 +959,9 @@ class NTDProjectsSummaryTab(tabsets.NchantdTab):
 		return self
 
 class NTDRecentCompletedTasksTab(tabsets.NchantdTab):
-	""" """
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=None):
 		""" """
@@ -721,7 +989,21 @@ class NTDRecentCompletedTasksTab(tabsets.NchantdTab):
 		return self
 
 class NTDSplitTaskTab(tabsets.NchantdTab):
-	""" """
+	"""
+
+	NTDSplitTaskTab
+
+	This class represents a tab for splitting a task in the Nchantd application. It is a subclass of tabsets.NchantdTab.
+
+	Methods:
+	- __init__(self, parent=None, cfg={}, singlepane=None): Initializes an instance of NTDSplitTaskTab.
+	- buildPane(self): Builds the layout for the tab.
+
+	Attributes:
+	- parent: The parent object of the tab.
+	- config: The configuration object for the tab.
+
+	"""
 	def __init__(self, parent=None, cfg={}, singlepane=None):
 		""" """
 		self.parent = parent
@@ -794,7 +1076,9 @@ class NTDSplitTaskTab(tabsets.NchantdTab):
 		return self
 
 class NTDTaskDetailTab(tabsets.NchantdTab):
-	""" """
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=False):
 		""" """
@@ -875,7 +1159,9 @@ class NTDTaskDetailTab(tabsets.NchantdTab):
 		return self
 
 class NTDTaskGanttTab(tabsets.NchantdTab):
-	""" """
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, singlepane=False):
 		""" """
@@ -905,9 +1191,28 @@ class NTDTaskGanttTab(tabsets.NchantdTab):
 		return self
 
 class NTDTaskTree(trees.NchantdCustomTree):
-	""" """
+	"""
+	A class representing a task tree in NTD.
+
+	...
+
+	Attributes
+	----------
+	parent : NTDTaskTree, optional
+	    The parent of the task tree.
+	cfg : dict, optional
+	    The configuration options for the task tree.
+	singlepane : bool, optional
+	    Whether the task tree is in single pane mode.
+
+	Methods
+	-------
+	buildPane()
+	    Builds the pane for the task tree.
+
+	"""
 	
-	def __init__(self, parent=None, cfg={}, singlepane=False):
+	def __init__(self, parent=None, cfg=None, singlepane=False):
 		""" """
 		self.parent = parent
 		self.config = condor.instruct(pxcfg)
@@ -921,8 +1226,53 @@ class NTDTaskTree(trees.NchantdCustomTree):
 		
 		return self
 
+class NTDTabSet(tabsets.NchantdTabSet):
+	""""""
+	def __init__(self, parent=None, cfg=None, singlepane=False):
+		""""""
+		self.parent = parent
+		self.config = condor.instruct(pxcfg)
+		self.config.select('NTDTabset').override(cfg)
+		if parent:
+			self.config.override(parent.config)
+		super(NTDTabSet, self).__init__(parent, self.config, singlepane)
+		self.model = NTDTabSetModel(self, self.src)
+		
+		
+
 class NTDTree(trees.NchantdCustomTree):
-	""" """
+	"""
+	Represents a non-threaded decision tree.
+
+	Inherits from `trees.NchantdCustomTree` class.
+
+	Parameters:
+	-----------
+	parent : NTDTree or None
+	    The parent NTDTree object.
+	cfg : dict, optional
+	    Configuration dictionary for the NTDTree object. Defaults to empty dictionary.
+	root : Node, optional
+	    The root Node object of the NTDTree. Defaults to None.
+
+	Attributes:
+	-----------
+	parent : NTDTree or None
+	    The parent NTDTree object.
+	config : dict
+	    The configuration dictionary for the NTDTree object.
+	src : str
+	    The source of the NTDTree.
+	newInstance : bool
+	    Boolean value indicating if the NTDTree is a new instance.
+	model : NTDTreeModel
+	    The NTDTree model object.
+
+	Methods:
+	--------
+	__init__(self, parent=None, cfg={}, root=None)
+	    Initializes a new NTDTree object.
+	"""
 	def __init__(self, parent=None, cfg={}, root=None):
 		""" """
 		self.parent = parent
@@ -940,7 +1290,9 @@ class NTDTree(trees.NchantdCustomTree):
 		self.model.initData()
 
 class NTDWeekly1DayTrackerTab(tabsets.NchantdTab):
-	""" """
+	"""
+
+	"""
 	
 	def __init__(self, parent=None, cfg={}, panestyle=None):
 		""" """

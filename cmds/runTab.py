@@ -40,8 +40,28 @@ logma = Logma(__name__)
 pxcfg = join(here, '_data_', 'runTab.yaml')
 
 class NchantdTab(NchantdCape):
-	"""A Dialog for entrying Account Addresses with detail information into a
-		table"""
+	"""
+	The NchantdTab class is a subclass of the NchantdCape class. It represents a database and provides methods for
+	its creation and initialization.
+	Attributes:
+	- config: A configuration object that stores the configuration settings for the database.
+	Methods:
+	- __init__(self, args): Initializes a new instance of the NchantdTab class.
+	    :param args: Additional arguments to be passed to the configuration object.
+	    :type args: dict
+	    :returns: None
+	    :rtype: None
+	    Creates a new database and sets up necessary checks to avoid deleting user databases. It also provides a way
+	    to back up non-blockchain data for selective reimport to a new database if needed. The function initializes
+	    the configuration by combining the default configuration with the user-specific configuration from a YAML file.
+	     Then it adds any additional arguments to the configuration.
+
+	    Example:
+	    >> config = {...}
+	    >> tab = NchantdTab(config)
+	    >> tab.initApp()
+
+	"""
 	def __init__(self, args):
 		"""Create new database eventually have checks in place so as not to
 			delete user db also have a way of backing up any nonblockchain data

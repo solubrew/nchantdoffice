@@ -27,7 +27,14 @@ class NTDTimeLineTabSet(tabsets.NchantdTabSet):
 
 
 class NTDAddObjectsTabSet(tabsets.NchantdTabSet):
-	""" """
+	"""
+	Initialize a new instance of NTDAddObjectsTabSet.
+
+	:param parent: Parent instance.
+	:type parent: any, optional
+	:param cfg: Configuration options.
+	:type cfg: dict, optional
+	"""
 	def __init__(self, parent=None, cfg={}):
 		""" """
 		self.parent = parent

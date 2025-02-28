@@ -35,7 +35,13 @@ logma = Logma(__name__)
 pxcfg = join(here, '_data_', 'models.yaml')
 
 def runApplication(seq):
-	""" """
+	"""
+	Method to run the application.
+
+	:param seq: The sequence parameter.
+	:type seq: any
+	:return: None
+	"""
 	name = 'Joe'
 	resource = Resource_Human(name)
 	resource.build_routine()

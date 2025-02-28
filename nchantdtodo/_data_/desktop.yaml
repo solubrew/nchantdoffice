@@ -27,14 +27,14 @@ layout:
     <(SOURCE)>:
   center:
     'Name': Main Tabs Set
-    'widget': 'nchantrs.widgets.tabsets.NchantdTabSet'
+    'widget': 'nchantdtodo.widgets.NTDTabSet'
     'size':
       'w': 1350
       'h': 1000
     '<(SOURCE)>':
   right:
     'Name':
-    widget: 'nchantrs.widgets.tabsets.NchantdTabSet'
+    widget: 'nchantdtodo.widgets.NTDTabSet'
     size:
 nodes:
   Timeline: True

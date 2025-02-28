@@ -34,9 +34,23 @@ logma = Logma(__name__)
 pxcfg = join(here, '_data_', 'nchantdtodos.yaml')
 
 class NchantdTODOs(NchantdCloak):
-	""" """
+	"""
+	Class representing NchantdTODOs.
+	"""
 	def __init__(self, args, parent=None):
-		""" """
+		"""
+		:param args: A list of arguments to be passed to the method.
+		:param parent: An optional parameter representing the parent object. Default value is None.
+
+		This method is the constructor for the NchantdTODOs class. It initializes the instance variables and performs necessary tasks to set up the object.
+
+		Example usage:
+		```
+		args = ['arg1', 'arg2']
+		parent = ParentObject()
+		obj = NchantdTODOs(args, parent)
+		```
+		"""
 		#ucfg = f'{there}/_data_/user.yaml'
 		self.config = condor.instruct(pxcfg).load().addArgs(args)
 		if parent:
@@ -46,19 +60,31 @@ class NchantdTODOs(NchantdCloak):
 		self.initApp()
 
 	def setup(self):
-		""""""
+		"""
+		Perform the setup of the application.
+
+		:return: None
+		"""
 		self.applicationSetup()
 		return self
 	
 	def applicationSetup(self):
-		""" """
+		"""
+		Perform the setup of the application.
+
+		:return: The instance object.
+		"""
 		self.newApp = True
 		self.instanceSetup()
 		self.newApp = False
 		return self
 	
 	def instanceSetup(self):
-		""" """
+		"""
+		Sets up a new instance.
+
+		:return: The instance with the 'newInstance' attribute set to True, and then set to False.
+		"""
 		self.newInstance = True
 		self.newInstance = False
 		return self

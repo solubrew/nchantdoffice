@@ -41,10 +41,23 @@ logma = Logma(__name__)
 pxcfg = join(here, '_data_', 'models.yaml')
 
 class NTDAppModel(NchantdCloakModel):
-	""" """
+	"""
+	Initializes an instance of NTDAppModel.
+
+	:param parent: (optional) Parent object.
+	:type parent: object
+	:param cfg: (optional) Configuration dictionary.
+	:type cfg: dict
+	"""
 	
 	def __init__(self, parent=None, cfg={}):
-		""" """
+		"""
+		Initializes an instance of the NTDAppModel class.
+
+		:param parent: The parent object (default is None).
+		:param cfg: A dictionary containing configuration settings (default is an empty dictionary).
+
+		"""
 		self.parent = parent
 		self.config = condor.instruct(pxcfg).select('NTDAppModel')
 		self.config.override(cfg)
@@ -58,9 +71,23 @@ class NTDAppModel(NchantdCloakModel):
 		return self
 
 class NTDTreeModel(treemodels.NchantdTreeModel):
-	"""Nchantd Todo Tree Model"""
+	"""
+	:class:`NTDTreeModel`
+
+	An Outlined but dynamic set of tree nodes based on data from the database
+
+	"""
 	def __init__(self, parent=None, root=None, cfg={}):
-		"""An Outlined but dynamic set of tree nodes based on data from the database"""
+		"""
+		Initializes an instance of the NTDTreeModel class.
+
+		:param parent: The parent widget. Defaults to None.
+		:type parent: object, optional
+		:param root: The root object. Defaults to None.
+		:type root: object, optional
+		:param cfg: The configuration dictionary. Defaults to an empty dictionary.
+		:type cfg: dict, optional
+		"""
 		self.config = condor.instruct(pxcfg).select('NTDTreeModel')
 		self.config.override(cfg)
 		if parent:
@@ -71,17 +98,23 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 
 	def initData(self):
 		""" """
-		self.genTreeNodes()
+		#self.genTreeNodes()
 	
 
 
 	def initModel(self):
+		""""""
 		super().initModel()
 		self.buildNodes()
 		return self
 	
 	def setToday(self, nid):
-		""""""
+		"""
+		Sets the current date as today and updates the action node if necessary.
+
+		:param nid: The unique identifier of the action node.
+		:return: None
+		"""
 		self.now = dt.datetime.now()
 		if self.today != self.now.strftime('%Y-%m-%d'):
 			self.updateActionNode(nid)
@@ -89,10 +122,11 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		return self
 	
 	def updateActionNode(self, nid):
-		"""Dynamicaly change the child nodes of Action based on the current date.
-		children nodes:
-			todays_date:
-			need to get current children of action node
+		"""
+		Update the action node with the given nid.
+
+		:param nid: The ID of the node to update.
+		:return: None
 		"""
 		
 		self.deleteChildren(1)
@@ -106,89 +140,99 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		self.now = dt.datetime.now()
 		return self
 
-
+#TODO: 2024-06-23 need to integrate into application configuration
+# was getting by with a generic TabSet Widget when tabs data
+# was being handled by the tree logic
 class NTDTabSetModel(NchantdTabSetModel):
 	""""""
-	def __init__(self):
+	def __init__(self, parent, cfg):
 		""""""
 		self.config = condor.instruct(pxcfg).select('NTDTabSetModel')
 		self.config.override(cfg)
 		if parent:
 			self.config.override(parent.config)
-		super(NTDTabSetModel, self).__init__(parent, root, cfg, '')
+		super(NTDTabSetModel, self).__init__(parent, cfg)
 
-	def initModel(self):
+	def initModel(self, pos, node='1', newInstance=False):
 		""""""
+		super().initModel(pos, node, newInstance)
 		return self
 
-	def initNTDActionTabSetModel(self, pid):
-		""" """
+	def initNTDAddConcernTabModel(self, pid):
+		""""""
 		tabs = []
-		data = j.dumps({'': ''})
-		tabs.append(['Actions', 'nchantdtodo.widgets.NTDDailyTaskTrackerTab', data, pid, 0] + self.tabbase)
-		data = j.dumps({})
-		tabs.append(['NEWS', 'nchantrs.widgets.dashboards.NchantdNEWSTab', data, pid, 1] + self.tabbase)
-		data = j.dumps({})
-		tabs.append(['Daily Tracker', 'nchantdtodo.widgets.NTDDaily15MinTrackerTab', data, pid, 2] + self.tabbase)
-		data = j.dumps({})
-		tabs.append(['Weekly Tracker', 'nchantdtodo.widgets.NTDWeekly1DayTrackerTab', data, pid, 3] + self.tabbase)
-		data = j.dumps({})
-		tabs.append(['New Concern', 'nchantdtodo.widgets.NTDAddConcernTab', data, pid, 5] + self.tabbase)
-		data = j.dumps({})
-		tabs.append(['New Event', 'nchantdtodo.widgets.NTDAddEventTab', data, pid, 5] + self.tabbase)
-		data = j.dumps({})
-		tabs.append(['New Resource', 'nchantdtodo.widgets.NTDAddResourceTab', data, pid, 5] + self.tabbase)
-		data = j.dumps({})
-		tabs.append(['New Task', 'nchantdtodo.widgets.NTDAddTaskTab', data, pid, 5] + self.tabbase)
 		return tabs
 
-	def initNTDConcernTabSetModel(self, pid):
-		""" """
+	def initNTDAddEventTabModel(self, pid):
+		""""""
 		tabs = []
-		data = j.dumps({})
-		tabs.append(['Projects Summary', 'nchantdtodo.widgets.NTDProjectsSummaryTab', data, pid, 0] + self.tabbase)
-		data = j.dumps({})
-		tabs.append(['Operations Summary', 'nchantdtodo.widgets.NTDOperationsSummaryTab', data, pid, 1] + self.tabbase)
-		data = j.dumps({})
-		tabs.append(['Events Admin', 'nchantdtodo.widgets.NTDAdministrateEventsTab', data, pid, 4] + self.tabbase)
-		data = j.dumps({'': ''})
-		tabs.append(['Concerns Admin', 'nchantdtodo.widgets.NTDAdministrateConcernsTab', data, pid, 2] + self.tabbase)
-		data = j.dumps({})
-		tabs.append(['New Concern', 'nchantdtodo.widgets.NTDAddConcernTab', data, pid, 3] + self.tabbase)
-		data = j.dumps({})
-		tabs.append(['Resource Admin', 'nchantdtodo.widgets.NTDAdministrateResourcesTab', data, pid, 4] + self.tabbase)
-		data = j.dumps({})
-		tabs.append(['New Resource', 'nchantdtodo.widgets.NTDAddResourceTab', data, pid, 5] + self.tabbase)
 		return tabs
 
-	def initNTDHistoryTabSetModel(self, pid):
-		""" """
+	def initNTDAddResourceTabModel(self, pid):
+		""""""
 		tabs = []
-		data = j.dumps({'': ''})
-		tabs.append(['Summary', 'nchantdtodo.widgets.NTDHistoryTab', data, pid, 0] + self.tabbase)
-		data = j.dumps({'': ''})
-		tabs.append(['Recent', 'nchantdtodo.widgets.NTDRecentCompletedTasksTab', data, pid, 1] + self.tabbase)
 		return tabs
 
-	def initNTDJournalTabSetModel(self, base):
-		""" """
+	def initNTDAddTaskTabModel(self, pid):
+		""""""
 		tabs = []
-		widget = 'nchantrs.packages.NTDs.widgets.NTDJournalTab'
-		data = j.dumps({'': ''})
-		tabs.append(['Journal Summary', widget, data, 4, 0] + self.tabbase)
 		return tabs
-	
-	def initNTDCalendarTabSetModel(self, base):
-		""" """
-		data = j.dumps({'': ''})
-		tabs = [
-			['This Week', 'nchantrs.widgets.calendars.NchantdWeekCalendar', data, 5, 0] + self.tabbase,
-			['Next Week', 'nchantrs.widgets.calendars.NchantdWeekCalendar', data, 5, 1] + self.tabbase,
-			['Next Month', 'nchantrs.widgets.calendars.NchantdMonthCalendar', data, 5, 2] + self.tabbase,
-			['Yearly Calendar', 'nchantrs.widgets.calendars.NchantdYearCalendar', data, 5, 3] + self.tabbase,
-			['Events', 'nchantrs.widgets.NchantdEventsList', data, 5, 4] + self.tabbase
-		]
+
+	def initNTDAdministrateConcernsTabModel(self, pid):
+		""""""
+		tabs = []
 		return tabs
+
+	def initNTDAdministrateEventsTabModel(self, pid):
+		""""""
+		tabs = []
+		return tabs
+
+	def initNTDAdministrateResourcesTabModel(self, pid):
+		""""""
+		tabs = []
+		return tabs
+
+	def initNTDDaily15MinTrackerTabModel(self, pid):
+		""""""
+		tabs = []
+		return tabs
+
+	def initNTDDailyTaskTrackerTabModel(self, pid):
+		""""""
+		tabs = []
+		return tabs
+
+	def initNTDHistoryTabModel(self, pid):
+		""""""
+		tabs = []
+		return tabs
+
+	def initNTDOperationsSummaryTabModel(self, pid):
+		""""""
+		tabs = []
+		return tabs
+
+	def initNTDProjectsSummaryTabModel(self, pid):
+		""""""
+		tabs = []
+		return tabs
+
+	def initNTDRecentCompletedTasksTabModel(self, pid):
+		""""""
+		tabs = []
+		return tabs
+
+	def initNTDWeekly1DayTrackerTabModel(self, pid):
+		""""""
+		tabs = []
+		return tabs
+
+	def initNchantdNEWSTabModel(self, pid):
+		""""""
+		tabs = []
+		return tabs
+
 
 
 class NTDConcernModel():
