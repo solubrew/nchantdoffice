@@ -1,0 +1,32 @@
+---
+NchantdAudio:
+    dstruct:
+        database:
+            objects:
+                table:
+                view:
+    toolbox:
+      100:
+          name: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      200:
+          name: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      300:
+          name: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      400:
+          name: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      500:
+          name: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      600:
+          name: Configuration
+          items:
+              0: {"action": "", "type": ""}

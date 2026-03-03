@@ -1,0 +1,170 @@
+---
+NchantdOfficeChart:
+    dstruct:
+        database:
+            objects:
+                table:
+                view:
+    toolbox:
+      100:
+          title: Chart Configuration
+          items:
+              0: {"action": "", "type": ""}
+              1: {"action": "", "type": ""}
+              2: {"action": "", "type": ""}
+              3: {"action": "", "type": ""}
+              4: {"action": "", "type": ""}
+              5: {"action": "", "type": ""}
+              6: {"action": "", "type": ""}
+
+      200:
+          title: Data Sources
+          items:
+              0: {"action": "", "type": ""}
+              1: {"action": "", "type": ""}
+              2: {"action": "", "type": ""}
+      300:
+          title: Chart Connections
+          items:
+              0: {"action": "", "type": ""}
+      400:
+          title: Nchantd Chart Quickstart
+          items:
+              0: {"action": "", "type": ""}
+plotfactorial:
+  'Name': Factorial Plot
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Fx':
+plotcontour:
+  'Name': Contour Plot
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Fx':
+plotsurface:
+  'Name': Surface Plot
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Fx':
+plotoverlaidcontour:
+  'Name': Overlaid Contour Plot
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Fx':
+plotmatrix:
+  'Name': 'Matrix Plot'
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Description':
+  'UUID':
+  'Icon':
+  'Fx':
+plotmarginal:
+  'Name': Marginal Plot
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Fx':
+histogram:
+  'Name': 'Histogram Plot'
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Fx': 'Create Histogram Plot'
+'plotdot':
+  'Name': Dot Plot
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Create Dot Plot'
+  'Fx':
+  'Params':
+plotstemleaf:
+  'Name': Stem & Leaf Plot
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Fx':
+plotprobability:
+  'Name': Probability Plot
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Fx':
+'empiricalcdf':
+  'Name': Empirical CDF
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Fx':
+plotprobabilitydistribution:
+  'Name': Probability Distribution Plot
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Fx':
+plotbox:
+  'Name': Boxplot
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Fx':
+plotinterval:
+  'Name': Interval Plot
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add Bar Chart Sheet to Workbook'
+  'Fx':
+plotindividualvalue:
+  'Name': Individual Value Plot
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip':
+  'Fx':
+scatterplot3d:
+  'Description':
+  'UUID':
+  'Icon':
+  'Name': '3D Scatter Plot'
+  'Shortcut':
+  'Tip': 'Add 3D Scatter Plot Sheet'
+  'Fx':
+surfaceplot3d:
+  'Name': '3D Surface Plot'
+  'Description':
+  'UUID':
+  'Icon':
+  'Shortcut':
+  'Tip': 'Add 3D Surface Plot Sheet'
+  'Fx':

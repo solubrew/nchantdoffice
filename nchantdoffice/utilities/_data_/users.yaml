@@ -1,0 +1,57 @@
+---
+NchantdIntegrationSelection:
+  integrations:
+    coingecko:
+      active: True
+      apikey: True
+      local_application: False
+      service: None
+    ethereum:
+      active: True
+      apikey: False
+      local_application: False
+      service: True
+      service_name: infura
+    excel:
+      active: True
+      apikey: False
+      local_application: True
+      service: None
+    google:
+      active: True
+      apikey: True
+      local_application: False
+      service: None
+    notion:
+      active: True
+      apikey: True
+      local_application: False
+      service: None
+    openweather:
+      active: True
+      apikey_state: True
+      apikey:
+      service: pybyte
+    outlook:
+      active: True
+      local_application: True
+      service: None
+NchantdOpenWeatherIntegration:
+  active: True
+  apikey: False
+  apikey_state: True
+  apikey_signup: "https://home.openweathermap.org/users/sign_up"
+  apikey_request: "https://home.openweathermap.org/api_keys"
+  service: airbyte
+  source: openweather
+
+
+
+sharing:
+  - 'https://www.shareaholic.com/api/share/'
+
+
+
+
+
+

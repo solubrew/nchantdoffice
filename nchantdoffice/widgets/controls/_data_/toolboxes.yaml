@@ -1,0 +1,19 @@
+---
+NchantdOfficeApplicationToolBox:
+  toolbox:
+    0:
+      title: "Application"
+      items:
+        0: {"name": "save", "type": "buttonbar"}
+  "node_toolbox":
+    10:
+      "title": "Nodes"
+      "items":
+        0: {}
+    20:
+      "title": "Tabs"
+      "items":
+    30:
+      "title": "Tools"
+      "items":
+

@@ -1,0 +1,38 @@
+---
+NchantdAccountSettingsTab:
+NchantdDataSourcesSettingsTab:
+  default_sources:
+    nchantrs:
+      L0:
+    google:
+      trends:
+    wikipedia:
+      general:
+NchantdExtensionSettingsTab:
+NchantdSecuritySettingsTab:
+  levels:
+    High:
+    Medium:
+NchantdStorageSettingsTab:
+  default_storage:
+    local:
+      paths:
+        - '~/.config/':
+            'name': 'Primary Application Storage'
+        - '~/Documents/NchantdLibrary':
+            'name': 'Document Storage'
+        - '~/Downloads/':
+            'name': 'Download Storage'
+    cloud:
+      nchantrs:
+        name: 'Nchantrs'
+      google:
+        name: 'Google'
+      dropbox:
+        name: 'Dropbox'
+NchantdThemeSettingsTab:
+  default_themes:
+    light:
+      qss:
+    dark:
+      qss:

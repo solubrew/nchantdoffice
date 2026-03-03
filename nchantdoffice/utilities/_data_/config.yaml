@@ -1,0 +1,29 @@
+PyfficeApplicationConfig:
+  document:
+    account_settings:
+
+    interface_settings:
+      show_journal_node: True
+      show_settings_node: True
+      show_left_side_pane: True
+      show_quick_launch_toolbar: True
+      show_document_launch_catalog: True
+      show_default_tab: True
+      select_default_tab_type: "browser"
+      show_right_side_pane: True
+    journal_settings:
+      enable_today_tab: True
+      enable_daily_headlines: True
+      enable_weekly_weather: True
+      expire_journal_days: 15
+      allow_editing: False
+      allow_reediting: False
+    storage_settings:
+      enable_auto_save: True
+      auto_save_timeframe: True
+      delete_hold_days: 3
+      default_document_storage: "in-place"
+      library_location: "Documents/NchantdLibrary"
+      naming_convention: "{file_name}{YYYYMMDDHHMMSS}{extension}"
+    theme_settings:
+      theme_active: midnight_mist

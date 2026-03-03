@@ -1,0 +1,88 @@
+---
+NchantdOfficeMatrix:
+  num_columns: 20
+  num_rows: 20
+  button_bar:
+    fill_selection_color:
+    launch_cell_border_sigil:
+    justify_left:
+    justify_center:
+    justify_right:
+    justify_top:
+    justify_bottom:
+    justify_middle:
+    merge_cell:
+    copy_cell_formats:
+    run_eda:
+    launch_toolbox:
+  formula_button_bar:
+    move_tab_right:
+  toolbox:
+      100:
+          title: Worksheet Configuration
+          items:
+              0: {"action": "set_document_compatibility", "type": ""}
+              1: {"action": "select_workshet_template", "type": ""}
+              2: {"action": "select_font_size", "type": ""}
+              3: {"action": "select_font_color", "type": ""}
+              4: {"action": "select_background_color", "type": ""}
+              5: {"action": "set_row_count", "type": ""}
+              6: {"action": "set_column_count", "type": ""}
+      200:
+          title: Formula
+          items:
+            0: {"action": "formula_edit_area", "type": ""}
+            1: {"action": "set_calculate_formulas", "type": ""}
+            2: {"action": "select_formula_insert", "type": ""}
+      300:
+          title: Cell Configuration
+          items:
+              0: {"action": "show_selected_cell", "type": "entryeditor", "readonly": True}
+              1: {"action": "select_font_size", "type": ""}
+              2: {"action": "select_font_style", "type": ""}
+              3: {"action": "select_font_color", "type": ""}
+              4: {"action": "select_background_color", "type": ""}
+              5: {"name": "set_border_formats", "type": ""}
+              6: {"name": "insert_object", "type": ""}
+      500:
+          title: Nchantd Matrix Quickstart
+          items:
+              0: {"action": "", "type": ""}
+  dstruct:
+    database:
+      objects:
+        table:
+          app_action:
+            records:
+#  gui:
+#    dialogs:
+#      matrix:
+#        title:
+#        position:
+#          left:
+#          top:
+#          width:
+#          height:
+#        layout:
+#          style:
+#          center:
+#            title:
+#            widget:
+#            size:
+NchantdOfficeCellBorderSigil:
+  button_bar:
+    cell_border_left_active:
+    cell_border_left_color:
+    cell_border_left_width:
+    cell_border_left_style:
+    cell_border_top_active:
+    cell_border_top_color:
+    cell_border_top_style:
+    cell_border_right_active:
+    cell_border_right_color:
+    cell_border_right_width:
+    cell_border_right_style:
+    cell_border_bottom_active:
+    cell_border_bottom_color:
+    cell_border_bottom_width:
+    cell_border_bottom_style:

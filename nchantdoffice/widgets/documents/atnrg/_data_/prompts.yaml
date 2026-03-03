@@ -1,0 +1,95 @@
+---
+NchantdOfficePrompt:
+    providers:
+        google:
+            models:
+                Gemini_2.5Flash:
+        openai:
+            models:
+                ChatGPT_3.5:
+        veniceai:
+            models:
+        anthropic:
+            models:
+    buttongrid:
+        0: "select_dialect"
+        1: "select_style"
+        2: "select_topic"
+        3: "select_verbosity"
+        4: "select_thinking"
+        5: "select_prompt_length"
+        6: "select_custom_1"
+        7: "select_custom_2"
+        8: "select_custom_3"
+    toolbar:
+        0: "add_custom_context"
+        1: "edit_custom_context"
+    toolbox:
+#      100:
+#          title: Prompt Configuration
+#          items:
+#              0: {"action": "", "type": ""}
+#      200:
+#          title: Models Configuration
+#          items:
+#              0: {"action": "", "type": ""}
+      300:
+          title: Context Inputs
+          items:
+              0: {"action": "", "type": ""}
+#      400:
+#          title: Nchantd Prompt Quickstart
+#          items:
+#              0: {"action": "", "type": ""}
+    dstruct:
+        database:
+            objects:
+                table:
+                    app_action:
+                        records:
+                            - ['base', 'select_dialect', 'Dialect', '', '067bfb7c-33e4-74b5-8000-6e72711fccdf', '', '', '', '', '', "{'vw_prompt_contexts': 'dialect'}"]
+                            - ['base', 'select_style', 'Style', '', '067bfb7c-33e4-7875-8000-c93c2a903880', '', '', '', '', '', "{'vw_prompt_contexts': 'style'}"]
+                            - ['base', 'select_topic', 'Topic', '', '067bfb7c-33e4-79c7-8000-7b2a86f12aff', '', '', '', '', '', "{'vw_prompt_contexts': 'topic'}"]
+                            - ['base', 'select_verbosity', 'Verbosity', '', '067bfb7c-33e4-7a96-8000-1abdd065f60d', '', '', '', '', '', "{'vw_prompt_contexts': 'verbosity'}"]
+                            - ['base', 'select_thinking', 'Thinking', '', '067bfb7c-33e4-7b36-8000-e674eaffedf6', '', '', '', '', '', "{'vw_prompt_contexts': 'thinking'}"]
+                            - ['base', 'select_model', 'Models', '', '067bfb7c-33e4-7c42-8000-98b78393ef3c', '', '', '', '', '', "{'vw_prompt_contexts': 'model'}"]
+                            - ['base', 'select_prompt_length', 'Prompt Length', '', '067bfc9a-3670-739b-8000-3b75c344ac61', '', '', '', '', '', "{'vw_prompt_contexts': ''}"]
+                            - ['base', 'select_custom_1', 'Custom 1', '', '067bfc9a-3670-70e9-8000-9c0029488a7e', '', '', '', '', '', "{'vw_prompt_contexts': 'user'}"]
+                            - ['base', 'select_custom_2', 'Custom 2', '', '067bfc9a-3670-7498-8000-683741da74e8', '', '', '', '', '', "{'vw_prompt_contexts': 'user'}"]
+                            - ['base', 'select_custom_3', 'Custom 3', '', '067bfc9a-3670-7549-8000-1d6093a1b8f6', '', '', '', '', '', "{'vw_prompt_contexts': 'user'}"]
+                            - ['base', 'add_custom_context', 'Set User Context', '', '067bfc9a-3670-7549-8000-1d6093a1b8f6', '', '', '', '', '', "{'vw_prompt_contexts': 'user'}"]
+                    app_option:
+                            #maybe relabel key_txt as value_txt
+                        'columns': ['UUID', 'key_txt', 'label_txt', 'option_txt', 'table_txt', 'tag_ltxt',
+                                    'parameters_ltxt', 'description_ltxt', 'parent_UUID', 'table_FK', 'instance_FK',
+                                    'user_FK']
+                        records:
+                            - ['067bfac1-62db-7ca0-8000-882e9f31ca99', 'Scientific', 'name', 'style', 'prompt_contexts', '{}', '{}', '', 'Craft your response to appeal to a scientific audience including using proper scientific references', '', '', 0, 0]
+                            - ['067bfac1-62db-7ed6-8000-4bfbde587476', 'Cultural', 'name', 'style', 'prompt_contexts', '{}', '{}', '', 'Craft your response to appeal to a cultural audience including reference current topics and memes', '', '', 0, 0]
+                            - ['067bfac1-62db-7f96-8000-3f1509717042', 'Technical', 'name', 'style', 'prompt_contexts', '{}', '{}', '', 'Craft your response to appeal to a technical audience including references to specific technologies, relevant principles and documentation', '', '', 0, 0]
+                            - ['067bfac1-62dc-7023-8000-468ab951dd38', 'Layman', 'name', 'style', 'prompt_contexts', '{}', '{}', '', 'Craft your response to appeal to a layman audience maintaining accuracy and brevity over other aspects', '', '', 0, 0]
+                            - ['067bfac1-62dc-709e-8000-161d6d5ebbb4', 'Automotive', 'name', 'topic', 'prompt_contexts', '{}', '{}', 'Craft your response to the provided question with a focus on the Automotive topic', '', '', '', 0, 0]
+                            - ['067bfac1-62dc-711e-8000-d16e53c2153f', 'Computer Programming', 'name', 'topic', 'prompt_contexts', '{}', '{}', 'Craft your response to the provided question with a focus on the Computer Programming topic', '', '', '', 0, 0]
+                            - ['067bfb51-76e7-776b-8000-9099940e09ef', 'Biology', 'name', 'topic', 'prompt_contexts', '{}', '{}', '', 'Craft your response to the provided question with a focus on the Biology topic', '', '', 0, 0]
+                            - ['067bfb51-76e7-7bf7-8000-04f27fad1f15', 'Politics', 'name', 'topic', 'prompt_contexts', '{}', '{}', '', 'Craft your response to the provided question with a focus on the Politics topic', '', '', 0, 0]
+                            - ['067bfb51-76e7-7d61-8000-15653a5399c7', 'Physics', 'name', 'topic', 'prompt_contexts', '{}', '{}', '', 'Craft your response to the provided question with a focus on the Physics topic', '', '', 0, 0]
+                            - ['067bfb51-76e7-7e26-8000-7ba195b431d3', 'English', 'name', 'dialect', 'prompt_contexts', '{}', '{}', '', 'Craft your response as if you are speaking in a general English dialect', '', '', 0, 0]
+                            - ['067bfb51-76e7-7ece-8000-002ec1df8947', 'Scottish', 'name', 'dialect', 'prompt_contexts', '{}', '{}', '', 'Craft your response as if you are speaking in a general Scottish dialect', '', '', 0, 0]
+                            - ['067bfb51-76e7-7f7a-8000-a59ae939ae4e', 'Irish', 'name', 'dialect', 'prompt_contexts', '{}', '{}', '', 'Craft your response as if you are speaking in a general Irish dialect', '', '', 0, 0]
+                            - ['067bfb51-76e8-7028-8000-5963c4de8d9e', 'Low', 'name', 'verbosity', 'prompt_contexts', '{}', '{}', '', 'Craft your response with limited verbosity focusing on brevity while still being accurate', '', '', 0, 0]
+                            - ['067bfb51-76e8-70d9-8000-23beda5ba5b9', 'Medium', 'name', 'verbosity', 'prompt_contexts', '{}', '{}', '', 'Craft your response with medium level of verbosity while still being accurate', '', '', 0, 0]
+                            - ['067bfb51-76e8-718a-8000-21380d911e03', 'High', 'name', 'verbosity', 'prompt_contexts', '{}', '{}', '', 'Craft your response with extreme verbosity focusing on completeness while still being accurate', '', '', 0, 0]
+                            - ['067bfb51-76e8-7231-8000-dba708a6adef', 'Shallow', 'name', 'thinking', 'prompt_contexts', '{}', '{}', '', 'Craft your response with limited time to think while still being as accurate as possible', '', '', 0, 0]
+                            - ['067bfb55-edcb-739f-8000-a38c5eb5d38a', 'Middling', 'name', 'thinking', 'prompt_contexts', '{}', '{}', '', 'Craft your response with middling level of time to think while still being as accurate as possible', '', '', 0, 0]
+                            - ['067bfb55-edcb-777f-8000-8657aaab10b6', 'Deep', 'name', 'thinking', 'prompt_contexts', '', '{}', '{}', '', 'Craft your response with your deepest most thoughtful thinking without respect to time to while still being as accurate as possible', '', 0, 0]
+                            - ['067bfba3-be5b-7e29-8000-d15f0a708c78', 'Deepseek-R1', 'name', 'model', 'prompt_contexts', '{}', "{'local_option': True, 'remote_option': True, 'url_code': ''}", '', '', '', '', 0, 0]
+                            - ['067bfba3-be5c-7f36-8000-6d8d210ee51a', 'Meta-Llama2', 'name', 'model', 'prompt_contexts', '{}', "{'local_option': True, 'remote_option': True, 'url_code': ''}", '', '', '', '', 0, 0]
+                            - ['067bfba3-be5d-7168-8000-b5ba33de2174', 'OpenAI-o3', 'name', 'model', 'prompt_contexts', '{}', "{'local_option': True, 'remote_option': True, 'url_code': ''}", '', '', '', '', 0, 0]
+                            - ['067bfba3-be5d-72f4-8000-f64a7343defd', 'XAi-Grok3', 'name', 'model', 'prompt_contexts', '{}', "{'local_option': True, 'remote_option': True, 'url_code': ''}", '', '', '', '', 0, 0]
+                view:
+                    vw_prompt_contexts:
+                        cmd: >
+                            SELECT
+                            *
+                            FROM vw_app_options vao
+                            WHERE vao.table = 'prompt_contexts'

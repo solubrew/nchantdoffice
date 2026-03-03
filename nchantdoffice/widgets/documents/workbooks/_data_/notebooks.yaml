@@ -1,0 +1,25 @@
+---
+NchantdOfficeNotebook:
+    path:
+    dstruct:
+        database:
+            objects:
+                table:
+                view:
+    toolbox:
+      100:
+          title: Notebook Configuration
+          items:
+              0: {"action": "", "type": ""}
+      200:
+          title: Notebook Tools
+          items:
+              0: {"action": "", "type": ""}
+      300:
+          title: Code Library
+          items:
+              0: {"action": "", "type": ""}
+      400:
+          title: Nchantd Notebook Quickstart
+          items:
+              0: {"action": "", "type": ""}

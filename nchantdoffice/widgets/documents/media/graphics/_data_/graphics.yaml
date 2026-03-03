@@ -1,0 +1,70 @@
+NchantdGraphic:
+    buttons:
+      0: {"action": "add_1d_line"}
+      1: {"action": "add_1d_curve"}
+      2: {"action": "add_1d_spline"}
+      3: {"action": "add_2d_polygon"}
+      4: {"action": "add_2d_ellipse"}
+      5: {"action": "insert_object"}
+      6: {"action": "fill_color"}
+    toolbox:
+      100:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      200:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      300:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      400:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      500:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      600:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+NchantdOfficeSketch:
+    toolbox:
+      100:
+          title: Canvas Configuration
+          items:
+             0: {"action": "select_color", "type": ""}
+             1: {"action": "select_layer", "type": ""}
+             2: {"action": "select_layer", "type": ""}
+             3: {"action": "add_new_layer", "type": ""}
+             4: {"action": "add_new_layer", "type": ""}
+      200:
+          title: Sketch Tools
+          items:
+             0: {"action": "", "type": ""}
+      300:
+          title: Object Configuration
+          items:
+              0: {"action": "add_object", "type": ""}
+      400:
+          title: Nchantd Sketch Quickstart
+          items:
+              0: {"action": "", "type": ""}
+NchantdOfficePalette:
+    toolbox:
+      100:
+          title: Content Selection
+          items:
+             0: {"action": "", "type": ""}
+      200:
+          title: Palette Tools
+          items:
+              0: {"action": "", "type": ""}
+      300:
+          title: Nchantd Sketch Quickstart
+          items:
+              0: {"action": "", "type": ""}

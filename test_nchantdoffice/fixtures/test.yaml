@@ -1,0 +1,34 @@
+---
+<(meta)>:
+	DOCid: <^[uuid]^>
+	name:
+	description: >
+	expirary: <[expiration]>
+	version: <[version]>
+	path: <[LEXIvrs]>pheonix/elements/calcgen/tree.py
+	outline: <[outline]>
+	authority: document|this
+	security: seclvl2
+	<(wt)>: -32
+
+
+
+
+
+
+
+cantor:
+
+sierpinski:
+
+koch:
+
+
+
+
+
+
+
+
+
+

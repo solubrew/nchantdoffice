@@ -1,0 +1,13 @@
+---
+NchantdLibraryToolsPackage:
+  dstruct:
+    data:
+      app_tab_set:
+        - ['library', 'Overview', 'nchantrs.widgets.dashboards.filesystems.NchantdFileSystemsDashboard', "{}"]
+        - ['library_local', 'Overview', '', "{}"]
+        - ['library_local', 'Add Folder', '', "{}"]
+        - ['library_local', 'Add File', '', "{}"]
+        - ['library_cloud', 'Overview', '', "{}"]
+        - ['library_cloud', 'Add Cloud Storage', '', "{}"]
+        - ['library_catalog_site', '<[name]>', 'nchantrs.widgets.browsers.browsers.NchantdWebBrowser', "{}"]
+        - ['library_cloud_storage_site', '<[name]>', 'nchantrs.widgets.browsers.browsers.NchantdWebBrowser', "{}"]

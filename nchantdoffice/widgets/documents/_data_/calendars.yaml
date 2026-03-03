@@ -1,0 +1,30 @@
+---
+NchantdOfficeCalendar:
+    dstruct:
+        database:
+            objects:
+                table:
+                view:
+    toolbox:
+        100:
+            title: Events
+            items:
+              0: {"action": "show_events_list", "type": ""}
+              1: {"action": "select_date_event", "type": ""}
+              2: {"action": "insert_new_event", "type": ""}
+        200:
+            title: Event Configuration
+            items:
+              0: {"action": "create_event", "type": ""}
+              1: {"action": "select_date_time", "type": ""}
+              2: {"action": "set_event_required", "type": ""}
+              3: {"action": "edit_event_recurrence", "type": ""}
+        300:
+            title: External Calendar Configuration
+            items:
+              0: {"action": "connect_google_calendar", "type": ""}
+              1: {"action": "connect_notion_calendar", "type": ""}
+              2: {"action": "connect_outlook_calendar", "type": ""}
+        400:
+            title: Nchantd Calendar Quickstart
+            items:

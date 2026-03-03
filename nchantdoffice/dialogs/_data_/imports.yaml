@@ -1,0 +1,19 @@
+---
+NchantdGoogleDriveSigil:
+  gui:
+    dialogs:
+      gdrive:
+        title:
+        size:
+          left:
+          top:
+          width:
+          height:
+        layout:
+          style:
+          center:
+            name:
+            widget:
+            size:
+              w:
+              h:

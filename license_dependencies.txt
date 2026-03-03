@@ -1,0 +1,101 @@
+sweetviz:2.3.1                      MIT License                                             Permissive                                                   
+pandas:2.2.3                        BSD License                                             Permissive                                                   
+PySide6:6.8.1.1                     GNU Library or Lesser General Public License (LGPL), Other/Proprietary License WeakCopyleft                                                 
+pytz:2024.2                         MIT License                                             Permissive                                                   
+tzdata:2024.2                       Apache Software License                                 Permissive                                                   
+six:1.17.0                          MIT License                                             Permissive                                                   
+shiboken6:6.8.1.1                   GNU Library or Lesser General Public License (LGPL), Other/Proprietary License WeakCopyleft                                                 
+numpy:2.2.1                         BSD License                                             Permissive                                                   
+python-dateutil:2.9.0.post0         Apache Software License, BSD License                    Permissive                                                   
+PySide6-Essentials:6.8.1.1          GNU Library or Lesser General Public License (LGPL), Other/Proprietary License WeakCopyleft                                                 
+PySide6-Addons:6.8.1.1              GNU Library or Lesser General Public License (LGPL), Other/Proprietary License WeakCopyleft                                                 
+pyyaml:6.0.2                        MIT License                                             Permissive                                                   
+uuid7:0.1.0                         MIT License                                             Permissive                                                   
+send2trash:1.8.3                    BSD License                                             Permissive                                                   
+sqlalchemy:2.0.36                   MIT License                                             Permissive                                                   
+webp:0.4.0                          MIT License                                             Permissive                                                   
+opencv-python:4.10.0.84             Apache Software License                                 Permissive                                                   
+moviepy:2.1.1                       MIT License                                             Permissive                                                   
+Pillow:11.0.0                       CMU License (MIT-CMU)                                   Permissive                                                   
+decorator:5.1.1                     BSD License                                             Permissive                                                   
+imageio:2.36.1                      BSD License                                             Permissive                                                   
+imageio_ffmpeg:0.5.1                BSD License                                             Permissive                                                   
+proglog:0.1.10                      MIT                                                     Permissive                                                   
+python-dotenv:1.0.1                 BSD License                                             Permissive                                                   
+setuptools:75.6.0                   MIT License                                             Permissive                                                   
+tqdm:4.67.1                         MIT License, Mozilla Public License 2.0 (MPL 2.0)       WeakCopyleft                                                 
+astor:0.8.1                         BSD License                                             Permissive                                                   
+diskcache:5.6.3                     Apache Software License                                 Permissive                                                   
+dill:0.3.9                          BSD License                                             Permissive                                                   
+pdfkit:1.0.0                        MIT                                                     Permissive                                                   
+mysql-connector-python:9.1.0        GNU General Public License (GPL)                        StrongCopyleft                                               
+pymysql:1.1.1                       MIT License                                             Permissive                                                   
+psycopg2-binary:2.9.10              GNU Library or Lesser General Public License (LGPL)     WeakCopyleft                                                 
+pyodbc:5.2.0                        MIT No Attribution License (MIT-0)                      Permissive                                                   
+cryptography:44.0.0                 Apache Software License, BSD License                    Permissive                                                   
+rsa:4.9                             Apache Software License                                 Permissive                                                   
+pycryptodome:3.21.0                 BSD License, Public Domain                              Permissive                                                   
+coincurve:20.0.0                    Apache Software License, MIT License                    Permissive                                                   
+web3:7.6.0                          MIT License                                             Permissive                                                   
+base58:2.1.1                        MIT License                                             Permissive                                                   
+ecdsa:0.19.0                        MIT                                                     Permissive                                                   
+pandas:2.2.3                        BSD License                                             Permissive                                                   
+uuid7:0.1.0                         MIT License                                             Permissive                                                   
+keyring:25.5.0                      MIT License                                             Permissive                                                   
+SecretStorage:3.3.3                 BSD License                                             Permissive                                                   
+aiohappyeyeballs:2.4.4              Python Software Foundation License, Other/Proprietary License Permissive                                                   
+aiohttp:3.11.11                     Apache Software License                                 Permissive                                                   
+aiosignal:1.3.2                     Apache Software License                                 Permissive                                                   
+annotated-types:0.7.0               MIT License                                             Permissive                                                   
+asn1crypto:1.5.1                    MIT License                                             Permissive                                                   
+attrs:24.3.0                        Error                                                   Error                                                        
+base58:2.1.1                        MIT License                                             Permissive                                                   
+bitarray:3.0.0                      Python Software Foundation License                      Permissive                                                   
+certifi:2024.12.14                  Mozilla Public License 2.0 (MPL 2.0)                    WeakCopyleft                                                 
+charset-normalizer:3.4.1            MIT License                                             Permissive                                                   
+ckzg:2.0.1                          Apache-2.0                                              Permissive                                                   
+coincurve:20.0.0                    Apache Software License, MIT License                    Permissive                                                   
+cryptography:44.0.0                 Apache Software License, BSD License                    Permissive                                                   
+cytoolz:1.0.1                       BSD License                                             Permissive                                                   
+ecdsa:0.19.0                        MIT                                                     Permissive                                                   
+eth-abi:5.1.0                       MIT License                                             Permissive                                                   
+eth-account:0.13.4                  MIT License                                             Permissive                                                   
+eth-hash:0.7.0                      MIT License                                             Permissive                                                   
+eth-keyfile:0.8.1                   MIT License                                             Permissive                                                   
+eth-keys:0.6.0                      MIT License                                             Permissive                                                   
+eth-rlp:2.1.0                       MIT License                                             Permissive                                                   
+eth-typing:5.0.1                    MIT License                                             Permissive                                                   
+eth-utils:5.1.0                     MIT License                                             Permissive                                                   
+frozenlist:1.5.0                    Apache Software License                                 Permissive                                                   
+hexbytes:1.2.1                      MIT License                                             Permissive                                                   
+idna:3.10                           BSD License                                             Permissive                                                   
+jaraco.classes:3.4.0                MIT License                                             Permissive                                                   
+jaraco.context:6.0.1                MIT License                                             Permissive                                                   
+jaraco.functools:4.1.0              MIT License                                             Permissive                                                   
+jeepney:0.8.0                       MIT License                                             Permissive                                                   
+keyring:25.6.0                      MIT License                                             Permissive                                                   
+more-itertools:10.5.0               MIT License                                             Permissive                                                   
+multidict:6.1.0                     Apache Software License                                 Permissive                                                   
+parsimonious:0.10.0                 MIT License                                             Permissive                                                   
+propcache:0.2.1                     Apache Software License                                 Permissive                                                   
+pyasn1:0.6.1                        BSD License                                             Permissive                                                   
+pycryptodome:3.21.0                 BSD License, Public Domain                              Permissive                                                   
+pydantic:2.10.4                     MIT License                                             Permissive                                                   
+pydantic-core:2.27.2                MIT License                                             Permissive                                                   
+pyunormalize:16.0.0                 MIT License                                             Permissive                                                   
+regex:2024.11.6                     Apache Software License                                 Permissive                                                   
+requests:2.32.3                     Apache Software License                                 Permissive                                                   
+rlp:4.0.1                           MIT License                                             Permissive                                                   
+rsa:4.9                             Apache Software License                                 Permissive                                                   
+toolz:1.0.0                         BSD License                                             Permissive                                                   
+types-requests:2.32.0.20241016      Apache Software License                                 Permissive                                                   
+urllib3:2.3.0                       MIT License                                             Permissive                                                   
+web3:7.6.1                          MIT License                                             Permissive                                                   
+websockets:14.1                     BSD License                                             Permissive                                                   
+yarl:1.18.3                         Apache Software License                                 Permissive                                                   
+dnspython:2.7.0                     ISC License (ISCL)                                      Permissive                                                   
+openpyxl:3.1.5                      MIT License                                             Permissive                                                   
+et-xmlfile:2.0.0                    MIT License                                             Permissive                                                   
+PyPDF2:3.0.1                        BSD License                                             Permissive                                                   
+python-docx:1.1.2                   MIT License                                             Permissive                                                   
+lxml:5.3.0                          BSD License                                             Permissive                                                   

@@ -1,0 +1,26 @@
+---
+NchantdOfficeWebBrowser:
+    default_url: "http://www.duckduckgo.com/"
+    toolbox:
+      100:
+          title: URLs
+          items:
+              0: {"action": "", "type": ""}
+      200:
+          title: Browser Configuration
+          items:
+              0: {"action": "set_default_browser", "type": "checkbox", }
+      300:
+          title: Form Control
+          items:
+              0: {"action": "fill_forms", "type": ""}
+#      400:
+#          title: Developer Tools
+#          items:
+#              0: {"action": "open_document_web_source", "type": "button"}
+#              1: {"action": "crawl_page", "type": "button"}
+#              2: {"name": "page_resource_list", "type": "list"}
+#      500:
+#          title: Nchantd Browser Quickstart
+#          items:
+#              0: {"action": "", "type": ""}

@@ -1,0 +1,85 @@
+NchantdOfficeDBUpdate:
+  versions:
+    0.0.1.0.1.0:
+      0.0.1.0.1.1:
+        tables:
+          app_tab:
+            update:
+              -
+                data:
+                  widget_txt: "widgets.documents.journal.NchantdJournalEditor"
+                WHERE:
+                  "did_txt": "06875532-6b6d-787b-8000-41ace4c1038a"
+          app_menu:
+            reload: True
+            keep-records: False
+          app_instance:
+            reload: True
+            keep-records: True
+            column-map:
+              is_new:
+              instance_id: "instance_id_txt"
+              name: "name_txt"
+              application_NCD: "application_NCD_txt"
+        indexes:
+        views:
+      0.0.1.0.1.2:
+        tables:
+          app_user:
+            reload: True
+            keep-records: True
+            filter:
+              include:
+                app_user_PK: 1
+        indexes:
+        views:
+    0.0.1.0.1.1:
+      0.0.1.0.1.2:
+        tables:
+          app_user:
+            reload: True
+            keep-records: True
+            filter:
+              include:
+                app_user_PK: 1
+        indexes:
+        views:
+    0.0.1.0.1.2:
+      0.0.1.0.1.3:
+        tables:
+        indexes:
+          reload: True
+        views:
+    0.0.1.0.1.3:
+      0.0.1.0.1.4:
+        tables:
+          app_media:
+            reload: True
+            keep-records: True
+          doc_media:
+            reload: True
+            keep-records: True
+        indexes:
+          reload: True
+        views:
+    0.0.1.0.1.4:
+      0.0.1.0.1.4:
+        tables:
+          app_media:
+            reload: True
+            keep-records: True
+          doc_media:
+            reload: True
+            keep-records: True
+            #new column is created on reload but there is only one table config...not sure how this is going to work
+            #need ability to add data to new column by update
+            update:
+              - data:
+                  "pyffice_version_txt": "0.0.1.0.1.0"
+                WHERE:
+                  "IS":
+                    "pyffice_version_txt": "NULL"
+        indexes:
+          reload: True
+        views:
+    0.0.1.0.1.5:

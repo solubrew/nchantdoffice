@@ -1,0 +1,93 @@
+---
+<(META)>:
+  docid:
+  name: Nchantrs YAML Configuration Document
+  description: >
+    Provide defaults for Nchantrs module
+  expirary: <[expiration]>
+  version: '<[version]>'
+  path: '<[LEXIvrs]>panda/LEXI/'
+  outline: '<[outline]>'
+  authority: 'document|this'
+  security: 'sec|lvl2'
+  <(WT)>: -32
+NchantdOfficeCloak:
+  app: "nchantdoffice"
+  config:
+    path: "<[user_home]>/.config/<[application_NCD]>/config.yaml"
+    has_agents: True
+    has_comms: True
+    has_services: True
+    has_extensions: True
+    has_library: True
+    version: 0.0.0
+  gui:
+    desktop:
+      'title': ''
+      icon: ''
+      'position':
+        'left': 50
+        'top': 50
+#        'width': 1850
+#        'height': 1100
+      theme: 'midnight_mist'
+      menubar:
+        0:
+          'admin':
+            '0': 'preferences'
+            '2': 'exit'
+        1:
+          'help':
+            '0': 'about'
+        '2':
+          'lookup':
+            0: 'address'
+      styles:
+        '1Pane':
+          'positions': ['center']
+        '2Pane':
+          'positions': ['left', 'center']
+        '3Pane':
+          'positions': ['left', 'center', 'right']
+      layout:
+        'style': '3Pane' #3VPane, 2VPane, 1V2HPane,
+        'left':
+          'Name': 'Navigation'
+          'widget': 'widgets.trees.NchantdOfficeApplicationTree'
+          'size': [60, 800]
+        center:
+          'Name': Main Tabs Set
+          'widget': 'widgets.widgets.NchantdOfficeTabSet'
+          'height': 980
+        right:
+          'Name':
+          widget: 'widgets.widgets.NchantdOfficeTabSet'
+          size:
+      tabsets:
+    dialogs:
+    toolbars:
+  install:
+    optional: False
+    selected: True
+  sequence:
+    0:
+      'method': 'view.showSplashScreen'
+      'params':
+      'active': 0
+    1:
+      'method': 'setup'
+      'params':
+      'active': 1
+    2:
+      method: 'launchDialog'
+      params:
+      active: 0
+  register:
+    - nchantdoffice.widgets.documents.browsers.NchantdOfficeWebBrowserDocument
+    - nchantdoffice.widgets.documents.forms.NchantdOfficeForm
+    - nchantdoffice.widgets.documents.images.NchantdOfficeSketchPad
+    - nchantdoffice.widgets.documents.matricies.NchantdOfficeMatrix
+    - nchantdoffice.widgets.documents.notes.NchantdOfficeNote
+    - nchantdoffice.widgets.documents.pdfs.NchantdOfficePDF
+    - nchantdoffice.widgets.documents.prompts.NchantdOfficePrompt
+    - nchantdoffice.widgets.documents.scripts.NchantdOfficeScript

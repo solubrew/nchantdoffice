@@ -1,0 +1,6 @@
+---
+NchantdOfficeLaunch:
+  scripts:
+    install:
+    run:
+      path: nchantdoffice/run/run.py

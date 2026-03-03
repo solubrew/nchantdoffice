@@ -1,0 +1,43 @@
+---
+NchantdOfficeNewDocumentPane:
+    action: "add_node_top"
+    file_type: "app"
+    subtrees:
+        research:
+            dstruct:
+                <[topic]>:
+                    nodes:
+                        academic:
+                            nodes:
+                                x-archive:
+                                    tabs:
+                                        found-papers:
+                                            description: >
+                                                have the ability to auto pull in cited papers
+                                        author-connections:
+                                        institutional-connections:
+                        airesponse:
+                            nodes:
+                                chatgpt:
+                                    tabs:
+                                        prompt-output:
+                                gemini:
+                                    tabs:
+                                        prompt-output:
+                                grok:
+                                    tabs:
+                                        prompt-output:
+                        websearch:
+                            tabs:
+                                wikipedia:
+                                google-search:
+                                google-trends:
+                                duckduckgo-search:
+                        economic:
+                            nodes:
+                                companies:
+                                    tabs:
+                                products:
+                                    tabs:
+                                materials:
+                                    tabs:

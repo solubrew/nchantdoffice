@@ -1,0 +1,65 @@
+---
+NchantdOfficeInstall:
+  packages:
+    nchantdoffice:
+      version: 0.0.1
+      hash: "sha256:"
+    nchantrs:
+      version: 0.0.1
+      hash: "sha256:"
+    pyffice:
+      version: 0.0.1
+      hash: "sha256:"
+    pycurity:
+      version: 0.0.1
+      hash: "sha256:"
+    squirl:
+      version: 0.0.1
+      hash: "sha256:"
+    condor:
+      version: 0.0.1
+      hash: "sha256:"
+    subtrix:
+      version: 0.0.1
+      hash: "sha256:"
+    pandas:
+      version: 0
+      hash: "sha256:"
+    PyOpenGL:
+      version: 0
+      hash: "sha256:"
+    PyOpenGL_accelerate:
+      version: 0
+      hash: "sha256:"
+    PySide6:
+      version: 0
+      hash: "sha256:"
+    PySide6[webengine]:
+      version: 0
+      hash: "sha256:"
+    pytz:
+      version: 0
+      hash: "sha256:"
+    tzdata:
+      version: 0
+      hash: "sha256:"
+    numpy:
+      version: 0
+      hash: "sha256:"
+    python-dateutil:
+      version: 0
+      hash: "sha256:"
+    PySide6-Essentials:
+      version: 0
+      hash: "sha256:"
+    PySide6-Addons:
+      version: 0
+      hash: "sha256:"
+    pyyaml:
+      version: 0
+      hash: "sha256:"
+    uuid7:
+      version: 0
+      hash: "sha256:"
+  version: 3.12.3
+  hash: "sha256:"

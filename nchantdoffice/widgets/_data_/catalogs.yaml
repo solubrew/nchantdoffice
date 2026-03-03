@@ -1,0 +1,7 @@
+NchantdOfficeDocumentsCatalog:
+  toolbox:
+    50:
+      title: Node Configuration
+      items:
+        0: {"name": "file_buttons", "type": "buttonbar"}
+        1: {"action": "open_local", "type": "buttoneditor"}
