@@ -45,7 +45,7 @@ from nchantdoffice.utilities.config import PyfficeApplicationConfig
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
-logma.off()
+# logma.off()  # Disabled - causes dialog issues
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "models.yaml")
