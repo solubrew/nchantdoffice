@@ -15,6 +15,8 @@
 from os.path import abspath, dirname, join
 import datetime as dt
 
+import os
+
 # ======================================3rd Party Library Modules=====================================================||
 import requests
 from typing import Optional, Dict, Any
@@ -29,6 +31,9 @@ here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
 
+# Configurable API URL from environment or default
+API_URL = os.environ.get("NCHANTDOFFICE_API_URL", "https://nchantdoffice.com/api/affiliate/")
+
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", ".yaml")
 pxcfg = {}
@@ -42,7 +47,7 @@ def update_affilate_links(model, last_affilate_update_dttm: str = "2025-01-01 00
             where the affiliate exists
     :return:
     """
-    API_URL = "https://nchantdoffice.com/api/affiliate/links/"
+    # Use configurable API_URL from environment
     client = APIClient(API_URL)
     if reload:
         last_affilate_update_dttm = "2025-01-01 00:00:00"

@@ -40,7 +40,7 @@ from nchantrs.widgets.groups import NchantdGroup
 here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
-logma.off()
+# logma.off()  # Disabled - causes dialog issues (P0 fix)
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "charts.yaml")

@@ -45,7 +45,7 @@ from pyffice.web.url import PyfficeURL
 here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
-logma.off()
+# logma.off()  # Disabled - causes dialog issues (P0 fix)
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "browsers.yaml")
