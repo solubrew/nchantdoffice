@@ -38,6 +38,7 @@ from nchantdoffice.utilities.cache import memoize, memoize_with_ttl, ConfigCache
 from nchantdoffice.utilities.lazy import lazy_import, LazyWidget, LazyLoader
 from nchantdoffice.utilities.parallel import parallel_load, parallel_init, ParallelLoader, PerformanceMonitor
 from nchantdoffice.utilities.vector_search import VectorSearchMixin
+from nchantdoffice.nchantdagent import GlainAgentMixin
 from nchantdoffice.widgets.catalogs import NchantdOfficeDocumentsCatalog
 from ogma.logma import Logma
 from pyffice.document import PyfficeDocument
@@ -1403,7 +1404,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
 
-class NchantdOfficeStore(VectorSearchMixin, NchantdStore):
+class NchantdOfficeStore(GlainAgentMixin, VectorSearchMixin, NchantdStore):
     """"""
 
     EXTENSION = ".pyof"
@@ -1422,6 +1423,9 @@ class NchantdOfficeStore(VectorSearchMixin, NchantdStore):
         
         # Initialize vector search capabilities
         self.init_vector_search()
+        
+        # Initialize Glain agent capabilities
+        self.init_glain()
 
         if self.app.agent_manager is None:
             return

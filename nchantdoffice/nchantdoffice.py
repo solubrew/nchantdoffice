@@ -59,6 +59,7 @@ class NchantdOfficeCloak(NchantdCloak):
         self.main = NchantdOfficeMainWindow(self)
         self.model = NchantdOfficeCloakModel(name, self.instance, self)
         self.view = NchantdOfficeCloakView(self)
+        self.view.initView()
         self.dbupdate = NchantdOfficeDBUpdate(self)
         self.application_NCD = "40c94efb-d374-437f-a48b-3c6b843fd110"
         self.install = True
