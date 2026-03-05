@@ -26,11 +26,11 @@ NchantdOffice is a document-based productivity application that combines Pyffice
 |---------|-------------|----------|---------|
 | **nchantrs** | Inheritance | `nchantrs.models.models.NchantdStore` | Core storage layer |
 | **nchantrs.widgets** | Composition | `nchantrs.widgets.*` | UI widget components |
+| **pyffice** | Inheritance | `pyffice.document.PyfficeDocument` | Document base class |
 | **micromole** | Via NchantdStore | `micromole.micromole.MicroMole` | Data collection (RSS feeds) |
 | **squirl** | Via NchantdStore | `squirl.squirl.SQuiRL` | Database queries (SQL/NoSQL) |
 | **condor** | Config | `condor.condor` | YAML configuration management |
 | **ogma** | Logging | `ogma.logma.Logma` | Rich logging and debugging |
-| **pyffice** | Composition | `pyffice.pyffice.PyfficeCodex` | Document handling (Excel, PDF, etc.) |
 | **subtrix** | Utilities | `subtrix.utilities.uuid` | UUID generation |
 
 ### Optional Integrations
@@ -82,6 +82,19 @@ nchantdoffice (Pyffice + nchantrs GUI)
 ---
 
 ## Implemented Features
+
+### Pyffice Document Integration (v0.3.1)
+- [x] NchantdOfficeDocument inherits from PyfficeDocument
+- [x] PYTYPE class variable maps to Pyffice classes
+- [x] _init_pyffice_type() initializes Pyffice document
+- [x] NchantdOfficeScript implements PyfficeScript
+- [x] NchantdOfficeMatrix implements PyfficeMatrix
+- [ ] NchantdOfficeSpreadsheet implements PyfficeSpreadSheet
+- [ ] NchantdOfficeChart implements PyfficeChart
+- [ ] NchantdOfficePresentation implements PyfficePresentation
+- [ ] NchantdOfficeNotebook implements PyfficeNotebook
+- [ ] NchantdOfficePDF implements PyfficePDF
+- [ ] Additional document types...
 
 ### Core Features
 - [x] Document-based productivity application
