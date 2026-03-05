@@ -17,6 +17,7 @@ import datetime as dt
 
 # ======================================3rd Party Library Modules=====================================================||
 from nchantrs.libraries import pyqt
+from nchantrs.libraries.pyqt import Signal, Slot
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from condor import condor
@@ -66,16 +67,16 @@ class NchantdOfficeTabs(NchantdTabSet):
     """Center pane tabs with drag-drop and document change signals"""
     
     # Signal emitted when active document changes
-    current_document_changed = pyqtSignal(object)
+    current_document_changed = Signal(object)
     
     # Signal emitted when tab is moved
-    tab_moved = pyqtSignal(int, int)  # old_index, new_index
+    tab_moved = Signal(int, int)  # old_index, new_index
     
     # Signal emitted when tab drag starts
-    tab_drag_started = pyqtSignal(int)  # tab_index
+    tab_drag_started = Signal(int)  # tab_index
     
     # Signal emitted when tab is dropped (from external source)
-    tab_dropped = pyqtSignal(str, object)  # source, data
+    tab_dropped = Signal(str, object)  # source, data
 
     def __init__(self, parent=None, cfg=None):
         """ """

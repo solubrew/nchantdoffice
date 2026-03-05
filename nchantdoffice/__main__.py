@@ -12,6 +12,12 @@
 """
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+import os
+import platform
+# Set Qt platform for headless environments
+if platform.system() != "Windows" and os.environ.get("DISPLAY") is None:
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    
 from os.path import abspath, dirname, join
 from sys import argv
 import datetime as dt

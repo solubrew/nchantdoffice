@@ -111,9 +111,24 @@ toolbar (document_created)
 
 ## Phase 6: Build & Deploy
 
+- [x] CLI commands implemented (nchantdoffice.cli)
+- [x] gui command to launch GUI application
+- [x] crow references commented out (not needed for local system)
 - [ ] Clean build to zuh environment
 - [ ] Test all integrations
 - [ ] Verify Pyffice inheritance in documents
+
+## CLI Commands Available
+
+| Command | Description |
+|---------|-------------|
+| `nchantdoffice-cli gui` | Launch GUI application |
+| `nchantdoffice-cli new <path>` | Create new document |
+| `nchantdoffice-cli open <path>` | Open document |
+| `nchantdoffice-cli save <path>` | Save document |
+| `nchantdoffice-cli export <path>` | Export document |
+| `nchantdoffice-cli list` | List recent documents |
+| `nchantdoffice-cli search <query>` | Search documents |
 
 ---
 

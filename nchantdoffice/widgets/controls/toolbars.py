@@ -17,7 +17,7 @@ import datetime as dt
 import json as j
 
 # ======================================3rd Party Library Modules=====================================================||
-
+from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 # ======================================Solutions Brewer Library Modules==============================================||
 from condor import condor
 from subtrix.utilities import uuid
@@ -112,8 +112,8 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
     """""Far left toolbar - creates new documents and emits signals"""
     
     # Signals for document lifecycle
-    document_created = pyqtSignal(str)  # Emitted when new document created (doc_type string)
-    document_opened = pyqtSignal(object)  # Emitted when document opened (NchantdOfficeDocument instance)
+    document_created = Signal(str)  # Emitted when new document created (doc_type string)
+    document_opened = Signal(object)  # Emitted when document opened (NchantdOfficeDocument instance)
     
     def __init__(self, parent=None, cfg=None):
         """ """

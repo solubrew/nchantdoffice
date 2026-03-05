@@ -16,7 +16,7 @@ from os.path import abspath, dirname, join
 import datetime as dt
 
 # ======================================3rd Party Library Modules=====================================================||
-
+from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
 # ======================================Solutions Brewer Library Modules==============================================||
 from condor import condor
 from ogma.logma import Logma
@@ -40,16 +40,16 @@ class NchantdOfficeApplicationTree(NchantdWidget):
     """Left pane tree with drag-drop and document selection signals"""
     
     # Signal emitted when a document is selected in the tree
-    document_selected = pyqtSignal(object)  # NchantdOfficeDocument
+    document_selected = Signal(object)  # NchantdOfficeDocument
     
     # Signal emitted when item drag starts
-    item_drag_started = pyqtSignal(object)  # tree item
+    item_drag_started = Signal(object)  # tree item
     
     # Signal emitted when item is dropped on tree (internal reorder)
-    item_dropped_on_tree = pyqtSignal(object, object)  # source, target
+    item_dropped_on_tree = Signal(object, object)  # source, target
     
     # Signal emitted when item is dropped on tabs (open document)
-    item_dropped_on_tabs = pyqtSignal(object)  # tree item
+    item_dropped_on_tabs = Signal(object)  # tree item
 
     def __init__(self, parent=None, cfg=None):
         """ """
