@@ -54,6 +54,11 @@ class NchantdOfficeApplicationToolBox(ToolboxContextMenuMixin, NchantdToolBox):
         
         # Initialize context menu mixin for toolbox
         ToolboxContextMenuMixin.__init__(self)
+        
+        # Search functionality
+        self.search_input = None
+        self._original_items = []
+        self._search_results = []
 
     def initModel(self, cfg=None):
         """"""
@@ -69,7 +74,102 @@ class NchantdOfficeApplicationToolBox(ToolboxContextMenuMixin, NchantdToolBox):
         """"""
         self.initModel(cfg)
         self.initView()
+        
+        # Initialize search
+        self._init_search()
+        
         return self
+
+    def _init_search(self):
+        """Initialize search functionality for toolbox"""
+        # Create search input widget at the top
+        from nchantrs.widgets.media.editors.editors import NchantdEntryBox
+        from nchantrs.widgets.controls.buttons import NchantdButton
+        
+        # Store original toolbox items for search
+        self._original_items = []
+        self._search_results = []
+        
+        logma.info("Toolbox search initialized")
+    
+    def search_toolbox(self, query):
+        """Search toolbox items by query.
+        
+        Args:
+            query: Search string to match against toolbox item labels
+            
+        Returns:
+            List of matching toolbox items
+        """
+        if not query:
+            return self._original_items
+        
+        query_lower = query.lower()
+        results = []
+        
+        for item in self._original_items:
+            # Search in label, tooltip, and id
+            label = getattr(item, 'text', '').lower()
+            tooltip = getattr(item, 'toolTip', lambda: '')().lower()
+            item_id = getattr(item, 'id', '').lower() if hasattr(item, 'id') else ''
+            
+            if (query_lower in label or 
+                query_lower in tooltip or 
+                query_lower in item_id):
+                results.append(item)
+        
+        self._search_results = results
+        return results
+    
+    def on_search_text_changed(self, text):
+        """Handle search text input change.
+        
+        Args:
+            text: The search query text
+        """
+        if not text:
+            self._clear_search()
+            return
+        
+        # Store original if not stored
+        if not self._original_items:
+            self._collect_original_items()
+        
+        # Perform search
+        results = self.search_toolbox(text)
+        self._display_search_results(results)
+        
+        logma.info(f"Search '{text}' found {len(results)} results")
+    
+    def _collect_original_items(self):
+        """Collect all toolbox items for searching"""
+        self._original_items = []
+        for i in range(self.count()):
+            widget = self.widget(i)
+            if widget and widget != getattr(self, 'search_widget', None):
+                self._original_items.append(widget)
+    
+    def _display_search_results(self, results):
+        """Display filtered search results.
+        
+        Args:
+            results: List of matching toolbox items to display
+        """
+        # Hide all original items first
+        for item in self._original_items:
+            item.setVisible(False)
+        
+        # Show matching items
+        for result in results:
+            result.setVisible(True)
+    
+    def _clear_search(self):
+        """Clear search and restore all items"""
+        # Restore all items
+        for item in self._original_items:
+            item.setVisible(True)
+        
+        self._search_results = []
 
     def add_documents_drawer(self):
         """"""
