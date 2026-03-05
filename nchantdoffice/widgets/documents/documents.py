@@ -26,11 +26,10 @@ from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.managers import NchantdManager
 from ogma.logma import Logma
 from nchantrs.dialogs.files import NchantdFileOpenSigil
-from pyffice.document import PyfficeDocument
 from nchantdoffice.widgets.panes.documents import NchantdOfficeTabEditPane, NchantdOfficeNoteEditPane
 from nchantdoffice.widgets.panes.documents import NchantdOfficeNodeEditPane
 from nchantdoffice.widgets.tabs import NchantdOfficeTab
-from nchantdoffice.widgets.menus.context_manager import DocumentContextMenuMixin
+from pyffice.document import PyfficeDocument
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -360,13 +359,10 @@ class NchantdOfficeDocumentMixin:
         return self
 
 
-class NchantdOfficeDocument(DocumentContextMenuMixin, NchantdOfficeDocumentMixin, PyfficeDocument, NchantdOfficeTab):
-    """"""
-    
-    # Pyffice Document Types Mapping
-    # Subclasses must override with their corresponding Pyffice class
-    # Example: PYTYPE = PyfficeScript
-    PYTYPE = None
+class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab, PyfficeDocument):
+    """""Document base class - implements PyfficeDocument for all document types"""
+
+    PYTYPE = 'document'  # Default Pyffice type
     
     def __init__(self, name, parent=None, cfg=None):
         """ """
@@ -376,26 +372,10 @@ class NchantdOfficeDocument(DocumentContextMenuMixin, NchantdOfficeDocumentMixin
         self.name = name
         self.did = None
         self.notes = None
-        
-        # Initialize document context menu mixin
-        DocumentContextMenuMixin.__init__(self)
-        
-        # Initialize Pyffice document type if PYTYPE is set
-        if self.PYTYPE is not None:
-            self._init_pyffice_type()
-    
-    def _init_pyffice_type(self):
-        """Initialize the Pyffice document type for this NchantdOffice document"""
-        try:
-            self.pyffice_doc = self.PYTYPE()
-            # Copy Pyffice document methods to this document
-            self.document_type = self.pyffice_doc.document_type if hasattr(self.pyffice_doc, 'document_type') else self.PYTYPE.__name__
-        except Exception as e:
-            logma.warning(f"Failed to initialize Pyffice type {self.PYTYPE}: {e}")
-            self.pyffice_doc = None
-    
-    def get_pyffice_tools(self):
-        """Get toolbox tools based on the Pyffice document type"""
+
+    @classmethod
+    def get_pyffice_tools(cls):
+        """Get toolbox tools based on Pyffice document type"""
         return []  # Override in subclasses
 
     def initModel(self, cfg=None):

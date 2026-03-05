@@ -80,18 +80,6 @@ toolbar (document_created)
             → toolbox (on_document_changed - calls get_pyffice_tools())
 ```
 
-### Implementation Details
-
-| File | Component | Implementation |
-|------|-----------|----------------|
-| `widgets/controls/toolbars.py` | NchantdNewDocumentToolBar | document_created signal |
-| `widgets/trees.py` | NchantdOfficeApplicationTree | document_selected signal |
-| `widgets/tabs.py` | NchantdOfficeTabSet | current_document_changed signal |
-| `widgets/controls/toolboxes.py` | NchantdOfficeApplicationToolBox | on_document_changed(), on_document_created(), get_pyffice_tools() |
-| `views.py` | NchantdOfficeCloakView | _connect_pane_signals() |
-| `widgets/documents/documents.py` | NchantdOfficeDocument | inherits PyfficeDocument |
-| `widgets/documents/text.py` | NchantdOfficeScript | inherits PyfficeScript + get_pyffice_tools() |
-
 ## Phase 4: Agent/Memory Layers
 - [x] glain (agent memory/knowledge)
 - [x] sentinel (supervisory loop)

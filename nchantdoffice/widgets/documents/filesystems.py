@@ -22,7 +22,6 @@ from pandas import DataFrame
 # ======================================Solutions Brewer Library Modules==============================================||
 from condor import condor
 from ogma.logma import Logma
-from pyffice.filesystems.filesystems import PyfficeFileSystem
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.annotations import NchantdLabel
@@ -349,29 +348,26 @@ class NchantdStorageEditPane(NchantdPane):
         return self
 
 
-class NchantdOfficeFileSystem(NchantdOfficeDocument, PyfficeFileSystem):
-    """NchantdOffice implementation of PyfficeFileSystem.
+class NchantdOfficeFileSystem(NchantdOfficeDocument):
+    """""File system document - implements PyfficeFileSystem"""
     
-    This class implements the PyfficeFileSystem document type for NchantdOffice,
-    providing file system navigation and management with full GUI integration.
+    PYTYPE = 'filesystem'
     
-    Inherits from:
-        - NchantdOfficeDocument: Base GUI document class
-        - PyfficeFileSystem: Pyffice data model for file systems
-    
-    Attributes:
-        directories: List of directories
-        files: List of files
-        root: Root directory path
-        tree: File tree structure
-    """
-    
-    PYTYPE = PyfficeFileSystem
+    @classmethod
+    def get_pyffice_tools(cls):
+        """Get toolbox tools for filesystem documents"""
+        return [
+            {'id': 'browse', 'icon': 'folder', 'label': 'Browse', 'method': 'browse_files'},
+            {'id': 'search', 'icon': 'search', 'label': 'Search', 'method': 'search_files'},
+            {'id': 'filter', 'icon': 'filter', 'label': 'Filter', 'method': 'filter_files'},
+            {'id': 'sort', 'icon': 'sort', 'label': 'Sort', 'method': 'sort_files'},
+            {'id': 'import', 'icon': 'import', 'label': 'Import', 'method': 'import_files'},
+            {'id': 'export', 'icon': 'export', 'label': 'Export', 'method': 'export_files'},
+        ]
     
     def __init__(self, parent=None, cfg=None):
         """ """
-        NchantdOfficeDocument.__init__(self, "Nchantd Files", parent, cfg)
-        PyfficeFileSystem.__init__(self, cfg)
+        super().__init__("Nchantd Files", parent, cfg)
         self.parent = parent
         self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeFileSystem"))
         if self.parent:
@@ -386,7 +382,6 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument, PyfficeFileSystem):
         self.file_table_two = None
         self.file_table_two_changed = True
         self.clouds = {}
-        self.document_type = "filesystem"
 
     def initModel(self, cfg=None):
         """"""
@@ -550,107 +545,6 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument, PyfficeFileSystem):
         """"""
         methods = ["Search", "Filter"]
         return methods
-
-    def get_pyffice_tools(self):
-        """Get toolbox tools for filesystem documents.
-        
-        Returns:
-            list: Toolbox configuration for filesystem operations
-        """
-        return [
-            {'id': 'navigate', 'icon': 'folder', 'label': 'Navigate', 'method': 'navigate'},
-            {'id': 'search', 'icon': 'search', 'label': 'Search', 'method': 'search_files'},
-            {'id': 'upload', 'icon': 'upload', 'label': 'Upload', 'method': 'upload_files'},
-            {'id': 'download', 'icon': 'download', 'label': 'Download', 'method': 'download_files'},
-            {'id': 'sync', 'icon': 'sync', 'label': 'Sync', 'method': 'sync_directory'},
-            {'id': 'compare', 'icon': 'compare', 'label': 'Compare', 'method': 'compare_directories'},
-            {'id': 'cloud', 'icon': 'cloud', 'label': 'Cloud Storage', 'method': 'manage_cloud'},
-            {'id': 'permissions', 'icon': 'lock', 'label': 'Permissions', 'method': 'manage_permissions'},
-        ]
-    
-    def navigate(self, path=None):
-        """Navigate to a directory.
-        
-        Args:
-            path: Directory path to navigate to
-            
-        Returns:
-            self
-        """
-        logma.info(f"Navigate to: {path}")
-        return self
-    
-    def search_files(self, query=None):
-        """Search for files.
-        
-        Args:
-            query: Search query
-            
-        Returns:
-            list: Search results
-        """
-        logma.info(f"Search files: {query}")
-        return []
-    
-    def upload_files(self, files=None):
-        """Upload files to current directory.
-        
-        Args:
-            files: List of file paths to upload
-            
-        Returns:
-            self
-        """
-        logma.info(f"Upload files: {files}")
-        return self
-    
-    def download_files(self, files=None):
-        """Download selected files.
-        
-        Args:
-            files: List of file paths to download
-            
-        Returns:
-            self
-        """
-        logma.info(f"Download files: {files}")
-        return self
-    
-    def sync_directory(self):
-        """Sync current directory.
-        
-        Returns:
-            self
-        """
-        logma.info("Sync directory")
-        return self
-    
-    def compare_directories(self):
-        """Compare two directories.
-        
-        Returns:
-            self
-        """
-        logma.info("Compare directories")
-        return self
-    
-    def manage_cloud(self):
-        """Manage cloud storage connections.
-        
-        Returns:
-            self
-        """
-        logma.info("Manage cloud storage")
-        return self
-    
-    def manage_permissions(self):
-        """Manage file/directory permissions.
-        
-        Returns:
-            self
-        """
-        logma.info("Manage permissions")
-        return self
 
     def get_children_google_drive(self):
         """"""

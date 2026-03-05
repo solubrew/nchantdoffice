@@ -181,10 +181,7 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
 
 
 class NchantdOfficeMatrix(NchantdOfficeDocument):
-    """NchantdOffice Matrix Document - implements PyfficeMatrix"""
-    
-    # Pyffice document type this implements
-    PYTYPE = PyfficeMatrix
+    """"""
 
     def __init__(self, parent=None, cfg=None):
         """ """
