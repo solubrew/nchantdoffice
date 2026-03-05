@@ -37,6 +37,7 @@ from nchantdoffice.utilities.config import PyfficeApplicationConfig
 from nchantdoffice.utilities.cache import memoize, memoize_with_ttl, ConfigCache
 from nchantdoffice.utilities.lazy import lazy_import, LazyWidget, LazyLoader
 from nchantdoffice.utilities.parallel import parallel_load, parallel_init, ParallelLoader, PerformanceMonitor
+from nchantdoffice.utilities.vector_search import VectorSearchMixin
 from nchantdoffice.widgets.catalogs import NchantdOfficeDocumentsCatalog
 from ogma.logma import Logma
 from pyffice.document import PyfficeDocument
@@ -1402,7 +1403,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
 
-class NchantdOfficeStore(NchantdStore):
+class NchantdOfficeStore(VectorSearchMixin, NchantdStore):
     """"""
 
     EXTENSION = ".pyof"
@@ -1418,6 +1419,9 @@ class NchantdOfficeStore(NchantdStore):
         if parent is not None:
             self.config.override(parent.config)
         self.config.override(cfg)
+        
+        # Initialize vector search capabilities
+        self.init_vector_search()
 
         if self.app.agent_manager is None:
             return
