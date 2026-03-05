@@ -65,7 +65,23 @@ class NchantdOfficeCloakView(NchantdCloakView):
         # Use lazy loaded toolbar for faster startup
         ToolBar = _get_toolbar()
         self.panes["toolbar"] = ToolBar(self.parent, cfg).initWidget()
+        
+        # Enable drag and drop for center app tabs
+        center_tabset = self.panes.get("center")
+        if center_tabset and hasattr(center_tabset, 'init_drag_drop'):
+            center_tabset.init_drag_drop()
+        
         super().initView()
+        return self
+    
+    def init_drag_drop(self):
+        """Initialize drag and drop for tabset widgets"""
+        if hasattr(self, 'setAcceptDrops'):
+            self.setAcceptDrops(True)
+        if hasattr(self, 'setMovable'):
+            self.setMovable(True)
+        if hasattr(self, 'setDragEnabled'):
+            self.setDragEnabled(True)
         return self
 
     @lru_cache(maxsize=32)
