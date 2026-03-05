@@ -159,6 +159,40 @@ nchantdoffice (Pyffice + nchantrs GUI)
 
 ---
 
+## UI Features Status
+
+### Tab Drag-and-Drop
+| Feature | Implementation | Status |
+|---------|---------------|--------|
+| Center app tab dragging | nchantrs `NchantdTabSet.start_drag()` | ✅ EXISTS |
+| Tab reordering within tabset | `move_tab()` method | ✅ EXISTS |
+| Tab dragging between panes | MIME data with source_widget | ✅ EXISTS |
+| Drag visual feedback | `create_drag_pixmap()` | ✅ EXISTS |
+
+### Tree Drag-and-Drop
+| Feature | Implementation | Status |
+|---------|---------------|--------|
+| Tree node drag-and-drop | QAbstractItemView.DragDrop mode | ✅ EXISTS |
+| Tab-to-tree drag handler | `NchantdOfficeApplicationTree._handle_tab_drop()` | ✅ EXISTS |
+| Node creation from dropped tab | `_create_node_from_tab()` | ✅ EXISTS |
+
+### Right Pane / Toolbox
+| Feature | Implementation | Status |
+|---------|---------------|--------|
+| Right pane tabset | `panes["right"]` | ✅ EXISTS |
+| Toolbox loading | `load_toolbox()` in tabset | ✅ EXISTS |
+| Tab-specific toolbox | Per-tab `toolbox_config` | ✅ EXISTS |
+| Search in documents | Document search widgets | ✅ EXISTS |
+
+### Still Needed
+| Priority | Feature | Status |
+|----------|---------|--------|
+| P0 | Right-click context menus | 🔴 NOT DONE |
+| P1 | Enhanced right toolbox search | 🟡 PARTIAL |
+| P1 | Additional toolbox drawer items | 🟡 PARTIAL |
+
+---
+
 ## Utility Modules
 
 | Module | Purpose |

@@ -71,6 +71,11 @@ class NchantdOfficeCloakView(NchantdCloakView):
         if center_tabset and hasattr(center_tabset, 'init_drag_drop'):
             center_tabset.init_drag_drop()
         
+        # Enable drag and drop for right pane (toolbox)
+        right_tabset = self.panes.get("right")
+        if right_tabset and hasattr(right_tabset, 'init_drag_drop'):
+            right_tabset.init_drag_drop()
+        
         super().initView()
         return self
     
