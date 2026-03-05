@@ -41,8 +41,8 @@ NchantdOffice is a document-based productivity application that combines Pyffice
 | **apig** | NEW | `nchantdoffice/utilities/apig.py` | REST API client with retry/caching |
 | **worldbridgeserver** | NEW | `nchantdoffice/utilities/worldbridge.py` | Web2 (HTTP) + Web3 (blockchain) data |
 | **elv1r4** | Via worldbridge | `elv1r4.elv1r4` | Blockchain/Web3 interactions |
-| **glain** | NchantdAgent | `nchantdagent/nchantdagent/__init__.py` | Context memory |
-| **sentinel** | NchantdAgent | `nchantdagent/nchantdagent/sentinel/` | Health monitoring |
+| **glain** | NchantdAgent | `nchantdoffice/nchantdagent/` | Context memory (optional agent layer) |
+| **sentinel** | NchantdAgent | `nchantdoffice/nchantdagent/sentinel/` | Supervisory loop for spawning agents |
 
 ---
 
@@ -187,7 +187,7 @@ nchantdoffice (Pyffice + nchantrs GUI)
 ### Still Needed
 | Priority | Feature | Status |
 |----------|---------|--------|
-| P0 | Right-click context menus | 🔴 NOT DONE |
+| P0 | Right-click context menus | ✅ DONE (context_manager.py + mixins) |
 | P1 | Enhanced right toolbox search | 🟡 PARTIAL |
 | P1 | Additional toolbox drawer items | 🟡 PARTIAL |
 

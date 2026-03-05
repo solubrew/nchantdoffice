@@ -22,6 +22,9 @@ from nchantrs.libraries import pyqt
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.media.images import NchantdImage
 from nchantrs.widgets.trees import NchantdApplicationTree
+
+# ======================================Solutions Brewer Library Modules==============================================||
+from nchantdoffice.widgets.menus.context_manager import TreeContextMenuMixin
 from nchantdoffice.widgets.items.items import NchantdOfficeTreeNode
 
 # ====================================================================================================================||
@@ -33,7 +36,7 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "trees.yaml")
 
 
-class NchantdOfficeApplicationTree(NchantdWidget):
+class NchantdOfficeApplicationTree(TreeContextMenuMixin, NchantdWidget):
     """"""
 
     def __init__(self, parent=None, cfg=None):
@@ -47,6 +50,9 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         self.tree = None
         self.image = None
         self.tab_drop_enabled = True
+        
+        # Initialize context menu mixin for tree
+        TreeContextMenuMixin.__init__(self)
 
     def initModel(self):
         """"""

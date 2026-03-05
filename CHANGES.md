@@ -81,9 +81,31 @@ The review compared NchantdOffice against nchantrs v0.3.0 patterns:
 
 ### Action Items
 
-- [ ] Implement right-click context menus throughout application
+- [x] Implement right-click context menus throughout application
 - [ ] Enhance right toolbox search functionality
 - [ ] Add more toolbox drawer items
+
+---
+
+## [2026-03-04] - Context Menu Integration
+
+### Added (2026-03-04)
+- **Right-click context menus** throughout entire application
+  - App tabs: Close, Close Others, Close All, Duplicate, Move to...
+  - App tree: Open, Rename, Delete, Copy Path, Move To...
+  - Canvas: Paste, Select All, Add Widget, Grid Settings
+  - Toolbox: Customize, Reset, Collapse/Expand All
+  - Right tabs: Close, Close Others, Pin Tab, Move to Center
+  - ContextMenuManager class with centralized menu registry
+  - TreeContextMenuMixin, TabContextMenuMixin, CanvasContextMenuMixin
+
+### Changed (2026-03-04)
+- **nchantdagent**: Moved inside nchantdoffice as module (`nchantdoffice/nchantdagent/`)
+- **tabs.py**: Added NchantdOfficeTabSet with TabContextMenuMixin
+- **trees.py**: Added TreeContextMenuMixin to NchantdOfficeApplicationTree
+
+### Architecture Updates
+- nchantdoffice/nchantdagent/ - Optional agent layer (GlainMixin + sentinel)
 
 ---
 
