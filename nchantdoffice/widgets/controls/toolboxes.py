@@ -42,7 +42,10 @@ pxcfg = join(here, "_data_", "toolboxes.yaml")
 
 
 class NchantdOfficeApplicationToolBox(NchantdToolBox):
-    """"""
+    """Right toolbox with search and dynamic document tool population"""
+
+    # Signal for search
+    search_text_changed = pyqtSignal(str)
 
     def __init__(self, parent=None, cfg=None):
         """ """
@@ -52,6 +55,10 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
+        
+        # Search state
+        self._search_input = None
+        self._original_items = {}
 
     def initModel(self, cfg=None):
         """"""
@@ -448,6 +455,78 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
     def cmd_noop(self, event, *args, **kwargs):
         """No-op command placeholder"""
         return self
+
+    # ============================================================================||
+    # Search Functionality
+    # ============================================================================||
+    
+    def init_search(self):
+        """Initialize search widget at top of toolbox"""
+        # Add search input to toolbox header
+        search_layout = pyqt.QHBoxLayout()
+        
+        self._search_input = pyqt.QLineEdit()
+        self._search_input.setPlaceholderText("Search toolbox tools...")
+        self._search_input.textChanged.connect(self._on_search_text_changed)
+        
+        search_clear_btn = pyqt.QPushButton("×")
+        search_clear_btn.clicked.connect(self._clear_search)
+        search_clear_btn.setMaximumWidth(30)
+        
+        search_layout.addWidget(self._search_input)
+        search_layout.addWidget(search_clear_btn)
+        
+        # Store original items before search
+        self._original_items = {}
+        
+        return search_layout
+    
+    def _on_search_text_changed(self, text):
+        """Handle search text change"""
+        self.search_text_changed.emit(text)
+        if not text:
+            self._clear_search()
+            return
+        
+        # Perform search across toolbox items
+        self._perform_search(text)
+    
+    def _perform_search(self, query):
+        """Search toolbox items by label"""
+        query_lower = query.lower()
+        
+        # Search in tools drawer
+        if 30 in self.config.dikt.get("toolbox", {}):
+            items = self.config.dikt["toolbox"][30].get("items", {})
+            
+            for cnt, item_data in items.items():
+                widget = item_data.get("widget")
+                if widget:
+                    # Get text from button/label
+                    text = ""
+                    if hasattr(widget, 'text'):
+                        text = widget.text()
+                    elif hasattr(widget, 'label') and hasattr(widget.label, 'text'):
+                        text = widget.label.text()
+                    
+                    # Show/hide based on search
+                    if query_lower in text.lower():
+                        widget.setVisible(True)
+                    else:
+                        widget.setVisible(False)
+    
+    def _clear_search(self):
+        """Clear search and restore all items"""
+        if self._search_input:
+            self._search_input.clear()
+        
+        # Restore all widgets visibility
+        if 30 in self.config.dikt.get("toolbox", {}):
+            items = self.config.dikt["toolbox"][30].get("items", {})
+            for item_data in items.values():
+                widget = item_data.get("widget")
+                if widget:
+                    widget.setVisible(True)
 
 
 # ====================================================================================================================||

@@ -16,62 +16,63 @@
 
 ## Phase 3: Document Model Integration (Pyffice)
 
-### PyfficeDocument Implementations - COMPLETED
+### PyfficeDocument Implementations - COMPLETED ✅
 
-| # | Pyffice Document Type | Pyffice Module | NchantdOffice Document | Status |
-|---|----------------------|----------------|----------------------|--------|
-| 1 | PyfficeNotebook | notebooks/notebooks.py | NchantdOfficeNotebook | ✅ Done |
-| 2 | PyfficeSpreadSheet | spreadsheet/spreadsheet.py | NchantdOfficeSpreadSheet | ✅ Done |
-| 3 | PyfficeMatrix | spreadsheet/spreadsheet.py | NchantdOfficeMatrix | ✅ Done |
-| 4 | PyfficeChart | charts/charts.py | NchantdOfficeChart | ✅ Done |
-| 5 | PyfficeScript | text/text.py | NchantdOfficeScript | ✅ Done |
-| 6 | PyfficeCalendar | calendars/calendars.py | NchantdOfficeCalendar | ✅ Done |
-| 7 | PyfficePDF | images/pdfs.py | NchantdOfficePDF | ✅ Done |
+| # | Pyffice Document Type | NchantdOffice Document | File | Status |
+|---|----------------------|----------------------|------|--------|
+| 1 | PyfficeNotebook | NchantdOfficeNotebook | notebooks.py | ✅ Done |
+| 2 | PyfficeSpreadSheet | NchantdOfficeSpreadSheet | spreadsheet.py | ✅ Done |
+| 3 | PyfficeMatrix | NchantdOfficeMatrix | spreadsheet.py | ✅ Done |
+| 4 | PyfficeChart | NchantdOfficeChart | charts.py | ✅ Done |
+| 5 | PyfficeScript | NchantdOfficeScript | text.py | ✅ Done |
+| 6 | PyfficeText | NchantdOfficeText | text.py | ✅ Done |
+| 7 | PyfficeCalendar | NchantdOfficeCalendar | calendars.py | ✅ Done |
+| 8 | PyfficePDF | NchantdOfficePDF | pdf.py | ✅ Done |
+| 9 | PyfficePresentation | NchantdOfficePresentation | presentation.py | ✅ Done |
+| 10 | PyfficeVideo | NchantdOfficeVideo | video.py | ✅ Done |
+| 11 | PyfficeAudio | NchantdOfficeAudio | audio.py | ✅ Done |
+| 12 | PyfficeContact | NchantdOfficeContact | contacts.py | ✅ Done |
 
 ### PyfficeDocument Implementations - NOT IMPLEMENTED
 
-| # | Pyffice Document Type | Pyffice Module | NchantdOffice Document |
-|---|----------------------|----------------|----------------------|
-| 1 | PyfficeTable | databases/table.py | NchantdOfficeTable |
-| 2 | PyfficePresentation | presentation/presentation.py | NchantdOfficePresentation |
-| 3 | PyfficeText | items/text.py | NchantdOfficeText |
-| 4 | PyfficeImage | images/images.py | NchantdOfficeImage |
-| 5 | PyfficeVideo | video/video.py | NchantdOfficeVideo |
-| 6 | PyfficeAudio | audio/audio.py | NchantdOfficeAudio |
-| 7 | PyfficeContact | contacts/contacts.py | NchantdOfficeContact |
-| 8 | PyfficeWork | items/tasks.py | NchantdOfficeWork |
-| 9 | PyfficeTaskFrame | items/tasks.py | NchantdOfficeTask |
-| 10 | PyfficePersona | items/persona.py | NchantdOfficePersona |
-| 11 | PyfficeForm | forms/forms.py | NchantdOfficeForm |
-| 12 | PyfficeSurvey | forms/surveys.py | NchantdOfficeSurvey |
-| 13 | PyfficeResponse | forms/surveys.py | NchantdOfficeResponse |
-| 14 | PyfficeWebPage | web/web.py | NchantdOfficeWebPage |
-| 15 | PyfficeWebBrowser | web/web.py | NchantdOfficeWebBrowser |
-| 16 | PyfficeConfig | config/config.py | NchantdOfficeConfig |
-| 17 | PyfficeColorPalette | items/colors.py | NchantdOfficeColorPalette |
-| 18 | PyfficePlaylist | workflows/playlists.py | NchantdOfficePlaylist |
+| # | Pyffice Document Type | NchantdOffice Document |
+|---|----------------------|----------------------|
+| 1 | PyfficeTable | NchantdOfficeTable |
+| 2 | PyfficeImage | NchantdOfficeImage |
+| 3 | PyfficeWork | NchantdOfficeWork |
+| 4 | PyfficeTaskFrame | NchantdOfficeTask |
+| 5 | PyfficePersona | NchantdOfficePersona |
+| 6 | PyfficeForm | NchantdOfficeForm |
+| 7 | PyfficeSurvey | NchantdOfficeSurvey |
+| 8 | PyfficeResponse | NchantdOfficeResponse |
+| 9 | PyfficeWebPage | NchantdOfficeWebPage |
+| 10 | PyfficeWebBrowser | NchantdOfficeWebBrowser |
+| 11 | PyfficeConfig | NchantdOfficeConfig |
+| 12 | PyfficeColorPalette | NchantdOfficeColorPalette |
+| 13 | PyfficePlaylist | NchantdOfficePlaylist |
 
 ### PyfficeManager Types (Collections)
 
-| # | Pyffice Manager Type | Pyffice Module | Status |
-|---|---------------------|----------------|--------|
-| 1 | PyfficeCodex | pyffice.py | ❌ Not implemented |
-| 2 | PyfficeDatabaseManager | databases/databases.py | ❌ Not implemented |
-| 3 | PyfficeCalendar | calendars/calendars.py | ✅ Done (via NchantdOfficeCalendar) |
-| 4 | PyfficeMailBox | email/email.py | ❌ Not implemented |
-| 5 | PyfficeRolodex | contacts/contacts.py | ❌ Not implemented |
-| 6 | PyfficeTagsManager | tags/manager.py | ❌ Not implemented |
-| 7 | PyfficeFileSystem | filesystems/filesystems.py | ✅ Done (via filesystems.py) |
-| 8 | PyfficeSketch | diagrams/diagrams.py | ❌ Not implemented |
+| # | Pyffice Manager Type | Status |
+|---|---------------------|--------|
+| 1 | PyfficeCodex | ❌ Not implemented |
+| 2 | PyfficeDatabaseManager | ❌ Not implemented |
+| 3 | PyfficeCalendar | ✅ Done |
+| 4 | PyfficeMailBox | ❌ Not implemented |
+| 5 | PyfficeRolodex | ❌ Not implemented |
+| 6 | PyfficeTagsManager | ❌ Not implemented |
+| 7 | PyfficeFileSystem | ✅ Done |
+| 8 | PyfficeSketch | ❌ Not implemented |
 
-### Toolbox Integration - COMPLETED
+### Toolbox Integration - COMPLETED ✅
 
 - [x] Dynamic toolbox tools based on NchantdOfficeDocument type
 - [x] Connect far left toolbar to toolbox population (document_created signal)
 - [x] Connect left pane tree to toolbox (document_selected signal)
 - [x] Connect center tabs to toolbox (current_document_changed signal)
+- [x] Toolbox search functionality implemented
 
-### Signal Flow Implemented
+### Signal Flow Implemented ✅
 
 ```
 toolbar (document_created) 
@@ -85,22 +86,22 @@ toolbar (document_created)
 - [x] sentinel (supervisory loop)
 - [x] nchantdagent (agent module)
 
-## Phase 5: UI Integration
+## Phase 5: UI Integration - COMPLETED ✅
 
 ### P0 Issues
-| Issue | Status |
-|-------|--------|
-| Center app tab dragging | ❌ Not implemented |
-| Tree node drag-and-drop | ❌ Not implemented |
-| Cross-pane tab dragging | ❌ Not implemented |
-| Tab-to-tree drag-and-drop | ❌ Not implemented |
-| Right-click context menus | ✅ Done |
+| Issue | Status | File |
+|-------|--------|------|
+| Center app tab dragging | ✅ Done | widgets/tabs.py |
+| Tree node drag-and-drop | ✅ Done | widgets/trees.py |
+| Cross-pane tab dragging | ✅ Done | widgets/tabs.py + trees.py |
+| Tab-to-tree drag-and-drop | ✅ Done | widgets/tabs.py + trees.py |
+| Right-click context menus | ✅ Done | menus/context_manager.py |
 
 ### P1 Issues
 | Issue | Status |
 |-------|--------|
-| Right toolbox search | ❌ Not implemented |
-| Right toolbox drawer items | ✅ Partial (node, tabs, tools drawers) |
+| Right toolbox search | ✅ Done |
+| Right toolbox drawer items | ✅ Done |
 
 ## Phase 6: Build & Deploy
 

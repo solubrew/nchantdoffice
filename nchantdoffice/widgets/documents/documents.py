@@ -376,7 +376,12 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab, Pyffic
     @classmethod
     def get_pyffice_tools(cls):
         """Get toolbox tools based on Pyffice document type"""
-        return []  # Override in subclasses
+        # Override in subclasses for specific tools
+        return [
+            {'id': 'save', 'icon': 'save', 'label': 'Save', 'method': 'cmd_save_tab'},
+            {'id': 'undo', 'icon': 'undo', 'label': 'Undo', 'method': 'cmd_undo'},
+            {'id': 'redo', 'icon': 'redo', 'label': 'Redo', 'method': 'cmd_redo'},
+        ]
 
     def initModel(self, cfg=None):
         """"""
