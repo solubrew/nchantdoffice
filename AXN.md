@@ -123,7 +123,9 @@ toolbar (document_created)
 
 ## Phase 6: Build & Deploy
 
-- [x] All P0/P1 issues implemented
+- [x] All P0/P1 issues documented in AXN
+- [x] NchantdOfficeDocument inherits PyfficeDocument (documents.py line ~280)
+- [x] NchantdNewDocumentToolBar has document_created signal (toolbars.py)
 - [ ] Clean build to zuh environment
 - [ ] Test all integrations
 - [ ] Verify Pyffice inheritance in documents
