@@ -102,7 +102,11 @@ class NchantdOfficeNotificationButtonBar(NchantdButtonBar):
 
 class NchantdNewDocumentToolBar(NchantdButtonBar):
     """"""
-
+    
+    # PyQt Signals for document creation
+    from nchantrs.libraries import pyqt
+    document_created = pyqtSignal(str)  # Emitted when new document is created, passes doc type
+    
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
@@ -113,6 +117,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         self.config.override(cfg)
         self.actions = None
         self.document_types = None
+        self.created_document = None  # Track the last created document
 
     def initModel(self):
         """"""
@@ -182,6 +187,16 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         # TODO cleanup add_tab, add_document signatures and combine as much code as possible
         self.app.view.panes["left"].tree.model.current_node.updateTabs("center")
         self.app.view.panes["center"].setCurrentIndex(pos)
+        
+        # Track created document and emit signal for toolbox update
+        self.created_document = {
+            'name': name,
+            'widget': widget,
+            'type': doc_type,
+            'did': did,
+        }
+        self.document_created.emit(doc_type)
+        
         return self
 
     def add_node(self, signal=None, *args, **kwargs):

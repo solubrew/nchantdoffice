@@ -26,6 +26,7 @@ from nchantrs.widgets.trees import NchantdApplicationTree
 # ======================================Solutions Brewer Library Modules==============================================||
 from nchantdoffice.widgets.menus.context_manager import TreeContextMenuMixin
 from nchantdoffice.widgets.items.items import NchantdOfficeTreeNode
+from nchantrs.libraries import pyqt
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -37,8 +38,11 @@ pxcfg = join(here, "_data_", "trees.yaml")
 
 
 class NchantdOfficeApplicationTree(TreeContextMenuMixin, NchantdWidget):
-    """"""
-
+    """Application tree with context menu and document selection signals."""
+    
+    # PyQt Signals
+    document_selected = pyqtSignal(object)  # Emitted when a document is selected in the tree
+    
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
@@ -96,7 +100,50 @@ class NchantdOfficeApplicationTree(TreeContextMenuMixin, NchantdWidget):
         if self.tree and self.tab_drop_enabled:
             self._setup_tab_drop_handler()
         
+        # Connect tree selection to emit document_selected signal
+        if self.tree:
+            self._connect_selection_signal()
+        
         return self
+    
+    def _connect_selection_signal(self):
+        """Connect tree selection to emit document_selected signal"""
+        if not self.tree:
+            return
+        
+        # Connect to selection changed signal
+        if hasattr(self.tree, 'selectionModel'):
+            self.tree.selectionModel().selectionChanged.connect(self._on_selection_changed)
+        elif hasattr(self.tree, 'itemSelectionChanged'):
+            self.tree.itemSelectionChanged.connect(self._on_selection_changed)
+    
+    def _on_selection_changed(self):
+        """Handle tree selection change - emit document_selected signal"""
+        selected = self.tree.selectedItems()
+        if selected:
+            item = selected[0]
+            # Get the document from the tree item
+            doc = item.data(0, pyqt.Qt.UserRole)
+            if doc is not None:
+                self.document_selected.emit(doc)
+                logma.info(f"Tree document selected: {type(doc).__name__}")
+    
+    def on_document_created(self, doc_type):
+        """Handle new document created from toolbar.
+        
+        Called when toolbar creates a new document.
+        Updates tree and selects the new document.
+        
+        Args:
+            doc_type: The type of document created
+        """
+        logma.info(f"Document created in tree: {doc_type}")
+        # Refresh tree to show new document
+        if hasattr(self, 'model') and hasattr(self.model, 'refresh'):
+            self.model.refresh()
+        
+        # The new document will be selected via the center tab
+        # Let the center tabset handle this
 
     def _setup_tab_drop_handler(self):
         """Setup custom drop handler for tabs"""

@@ -77,7 +77,51 @@ class NchantdOfficeCloakView(NchantdCloakView):
             right_tabset.init_drag_drop()
         
         super().initView()
+        
+        # Connect signals for toolbar → tree → tabs → toolbox flow
+        self._connect_pane_signals()
+        
         return self
+    
+    def _connect_pane_signals(self):
+        """Connect signals between panes for document flow.
+        
+        Flow: toolbar (new document) → tree (document selected) → tabs (document open) → toolbox (tools update)
+        """
+        toolbar = self.panes.get("toolbar")
+        tree = self.panes.get("left")
+        center = self.panes.get("center")
+        toolbox = self.panes.get("right")
+        
+        # Connect toolbar document_created to tree
+        if toolbar and hasattr(toolbar, 'document_created'):
+            if tree and hasattr(tree, 'on_document_created'):
+                toolbar.document_created.connect(tree.on_document_created)
+            logma.info("Connected toolbar.document_created")
+        
+        # Connect tree document_selected to center tabs
+        if tree and hasattr(tree, 'document_selected'):
+            if center and hasattr(center, 'on_document_selected'):
+                tree.document_selected.connect(center.on_document_selected)
+            logma.info("Connected tree.document_selected")
+        
+        # Connect center tab change to toolbox
+        if center and hasattr(center, 'current_document_changed'):
+            if toolbox and hasattr(toolbox, 'on_document_changed'):
+                center.current_document_changed.connect(toolbox.on_document_changed)
+            logma.info("Connected center.current_document_changed")
+        
+        # Also connect tree selection to toolbox directly
+        if tree and hasattr(tree, 'document_selected'):
+            if toolbox and hasattr(toolbox, 'on_document_changed'):
+                tree.document_selected.connect(toolbox.on_document_changed)
+        
+        # Connect toolbar directly to toolbox for new documents
+        if toolbar and hasattr(toolbar, 'document_created'):
+            if toolbox and hasattr(toolbox, 'on_document_created'):
+                toolbar.document_created.connect(toolbox.on_document_created)
+        
+        logma.info("All pane signals connected")
     
     def init_drag_drop(self):
         """Initialize drag and drop for tabset widgets"""

@@ -434,6 +434,182 @@ class NchantdOfficeApplicationToolBox(ToolboxContextMenuMixin, NchantdToolBox):
             self.config.dikt["node_toolbox"][20]["items"] = self.init_drawer_tabs()
             self.config.dikt["node_toolbox"][30]["items"] = self.init_drawer_tools()
         
+        # Create a drawer for Pyffice document-specific tools
+        self._init_pyffice_drawer()
+        
+        return self
+    
+    def _init_pyffice_drawer(self):
+        """Initialize the Pyffice document tools drawer"""
+        # This drawer will be populated when a document is selected
+        # Store reference for dynamic updates
+        self.pyffice_drawer_items = {}
+        self.current_pyffice_tools = []
+        
+    def on_document_changed(self, document):
+        """Handle document change - populate toolbox with document-specific tools.
+        
+        This method should be called when:
+        - A new document is created (from toolbar)
+        - A document is selected in the tree (left pane)
+        - The active tab changes (center pane)
+        
+        Args:
+            document: The active NchantdOfficeDocument widget
+        """
+        if document is None:
+            return
+            
+        # Get Pyffice tools from the document
+        if hasattr(document, 'get_pyffice_tools'):
+            tools = document.get_pyffice_tools()
+            self.current_pyffice_tools = tools
+            logma.info(f"Loaded {len(tools)} tools for document type: {type(document).__name__}")
+            self._populate_pyffice_drawer(tools)
+        elif hasattr(document, 'PYTYPE') and document.PYTYPE is not None:
+            # Fallback: try to get tools from PYTYPE class
+            pyftype = document.PYTYPE
+            if hasattr(pyftype, 'get_pyffice_tools'):
+                tools = pyftype.get_pyffice_tools()
+                self.current_pyffice_tools = tools
+                logma.info(f"Loaded {len(tools)} tools from PYTYPE: {pyftype.__name__}")
+                self._populate_pyffice_drawer(tools)
+        else:
+            logma.info(f"Document {type(document).__name__} has no get_pyffice_tools method")
+    
+    def _populate_pyffice_drawer(self, tools):
+        """Populate the Pyffice tools drawer with the given tools.
+        
+        Args:
+            tools: List of tool dictionaries with 'id', 'icon', 'label', 'method'
+        """
+        # Create button bar for Pyffice tools
+        if not tools:
+            return
+            
+        cfg = {"layout": "vertical", "justify": "left"}
+        buttons = {}
+        for i, tool in enumerate(tools):
+            tool_id = tool.get('id', f'tool_{i}')
+            tool_label = tool.get('label', tool_id)
+            tool_method = tool.get('method', '')
+            buttons[i] = {
+                "action": tool_id,
+                "label": tool_label,
+                "icon": tool.get('icon', 'gear'),
+                "handler": getattr(self, f'cmd_{tool_method}', None) if tool_method else None
+            }
+        
+        buttons = condor.Instruct(buttons).override(cfg).dikt
+        
+        # Create or update the button bar
+        if hasattr(self, 'pyffice_buttonbar'):
+            # Update existing
+            self.pyffice_buttonbar.initWidget(buttons)
+        else:
+            # Create new
+            self.pyffice_buttonbar = NchantdButtonBar(self, cfg).initWidget(buttons)
+            # Add to toolbox if drawer exists
+            if 40 in self.config.dikt.get("toolbox", {}):
+                self.config.dikt["toolbox"][40]["items"][0] = {"widget": self.pyffice_buttonbar}
+    
+    def cmd_run(self):
+        """Run script/document"""
+        logma.info("Run")
+        return self
+    
+    def cmd_debug(self):
+        """Debug script/document"""
+        logma.info("Debug")
+        return self
+    
+    def cmd_open_terminal(self):
+        """Open terminal"""
+        logma.info("Terminal")
+        return self
+    
+    def cmd_format_code(self):
+        """Format code"""
+        logma.info("Format")
+        return self
+    
+    def cmd_find_replace(self):
+        """Find and replace"""
+        logma.info("Find Replace")
+        return self
+    
+    def cmd_spell_check(self):
+        """Spell check"""
+        logma.info("Spell Check")
+        return self
+    
+    def cmd_word_count(self):
+        """Word count"""
+        logma.info("Word Count")
+        return self
+    
+    def cmd_export_document(self):
+        """Export document"""
+        logma.info("Export")
+        return self
+    
+    def on_document_created(self, doc_type):
+        """Handle new document created from toolbar.
+        
+        Args:
+            doc_type: The type of document created (e.g., 'add_script_document_nchantdscript')
+        """
+        logma.info(f"New document created in toolbox: {doc_type}")
+        # Get the widget from the center pane
+        center = None
+        if hasattr(self.app, 'view') and hasattr(self.app.view, 'panes'):
+            center = self.app.view.panes.get("center")
+        
+        if center:
+            # Get the current widget
+            widget = center.currentWidget()
+            if widget:
+                self.on_document_changed(widget)
+    
+    # Chart-specific commands
+    def cmd_set_data_source(self):
+        """Set chart data source"""
+        logma.info("Set Data Source")
+        return self
+    
+    def cmd_change_type(self):
+        """Change chart type"""
+        logma.info("Change Type")
+        return self
+    
+    def cmd_apply_style(self):
+        """Apply chart style"""
+        logma.info("Apply Style")
+        return self
+    
+    def cmd_toggle_legend(self):
+        """Toggle legend"""
+        logma.info("Toggle Legend")
+        return self
+    
+    def cmd_edit_title(self):
+        """Edit title"""
+        logma.info("Edit Title")
+        return self
+    
+    def cmd_configure_axes(self):
+        """Configure axes"""
+        logma.info("Configure Axes")
+        return self
+    
+    def cmd_edit_series(self):
+        """Edit series"""
+        logma.info("Edit Series")
+        return self
+    
+    def cmd_export_chart(self):
+        """Export chart"""
+        logma.info("Export Chart")
         return self
 
 

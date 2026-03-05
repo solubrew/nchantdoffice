@@ -22,6 +22,7 @@ from nchantrs.widgets.tabsets import NchantdTab, NchantdTabSet
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from nchantdoffice.widgets.menus.context_manager import TabContextMenuMixin
+from nchantrs.libraries import pyqt
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -63,7 +64,10 @@ class NchantdOfficeTab(NchantdTab):
 
 
 class NchantdOfficeTabSet(TabContextMenuMixin, NchantdTabSet):
-    """Tab set with right-click context menu support"""
+    """Tab set with right-click context menu support and document change signals."""
+    
+    # PyQt Signals
+    current_document_changed = pyqtSignal(object)  # Emitted when current tab/document changes
     
     def __init__(self, parent=None, cfg=None):
         """Initialize tab set with context menu mixin"""
@@ -79,6 +83,42 @@ class NchantdOfficeTabSet(TabContextMenuMixin, NchantdTabSet):
         
         # Set pane position for context menu type
         self.pane_position = cfg.get('pane_position', 'center') if cfg else 'center'
+        
+        # Connect tab change signal
+        self._connect_tab_change_signal()
+    
+    def _connect_tab_change_signal(self):
+        """Connect the tabset's currentChanged signal to our custom signal"""
+        if hasattr(self, 'currentChanged'):
+            self.currentChanged.connect(self._on_tab_changed)
+    
+    def _on_tab_changed(self, index):
+        """Handle tab change - emit current_document_changed signal"""
+        if index >= 0:
+            widget = self.widget(index)
+            if widget:
+                self.current_document_changed.emit(widget)
+                logma.info(f"Tab changed to: {type(widget).__name__}")
+    
+    def on_document_selected(self, document):
+        """Handle document selected from tree.
+        
+        Args:
+            document: The NchantdOfficeDocument to display
+        """
+        # Find and set the current tab to this document
+        for i in range(self.count()):
+            widget = self.widget(i)
+            if widget == document or (hasattr(widget, 'did') and hasattr(document, 'did') and widget.did == document.did):
+                self.setCurrentIndex(i)
+                logma.info(f"Opened document from tree: {type(document).__name__}")
+                return
+        
+        # If document not found as tab, add it
+        if hasattr(document, 'initWidget'):
+            document.initWidget()
+        self.addTab(document, getattr(document, 'name', 'Untitled'))
+        self.setCurrentWidget(document)
 
 
 # ====================================================================================================================||
