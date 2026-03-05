@@ -77,7 +77,7 @@ The review compared NchantdOffice against nchantrs v0.3.0 patterns:
 | P0 | Tab-to-tree drag-drop | ✅ DONE | Already in nchantdoffice |
 | P1 | Right toolbox: Search implementation | 🟡 PARTIAL | Per-doc search exists |
 | P1 | Right toolbox: Additional items | 🟡 PARTIAL | Calendar/Charts have drawers |
-| P2 | Right-click context menus | 🔴 NOT DONE | Needs implementation |
+| P2 | Right-click context menus | ✅ DONE | Added ContextMenuManager + mixins |
 
 ### Action Items
 
