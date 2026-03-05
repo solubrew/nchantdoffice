@@ -29,6 +29,7 @@ from nchantrs.dialogs.files import NchantdFileOpenSigil
 from nchantdoffice.widgets.panes.documents import NchantdOfficeTabEditPane, NchantdOfficeNoteEditPane
 from nchantdoffice.widgets.panes.documents import NchantdOfficeNodeEditPane
 from nchantdoffice.widgets.tabs import NchantdOfficeTab
+from nchantdoffice.widgets.menus.context_manager import DocumentContextMenuMixin
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -358,7 +359,7 @@ class NchantdOfficeDocumentMixin:
         return self
 
 
-class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
+class NchantdOfficeDocument(DocumentContextMenuMixin, NchantdOfficeDocumentMixin, NchantdOfficeTab):
     """"""
 
     def __init__(self, name, parent=None, cfg=None):
@@ -369,6 +370,9 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         self.name = name
         self.did = None
         self.notes = None
+        
+        # Initialize document context menu mixin
+        DocumentContextMenuMixin.__init__(self)
 
     def initModel(self, cfg=None):
         """"""

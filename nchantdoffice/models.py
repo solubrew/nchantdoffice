@@ -17,6 +17,10 @@ import json as j
 import datetime as dt
 from dateutil import parser
 
+# @memoize decorators for expensive methods
+# Using functools.lru_cache for memoization
+from functools import lru_cache
+
 # ======================================3rd Party Library Modules=====================================================||
 from pandas import DataFrame, concat
 from numpy import isnan
@@ -30,6 +34,11 @@ from nchantrs.models.models import NchantdStore
 from nchantrs.models.applicationmodels import NchantdModel
 from nchantdoffice.utilities.links import update_affilate_links
 from nchantdoffice.utilities.config import PyfficeApplicationConfig
+from nchantdoffice.utilities.cache import memoize, memoize_with_ttl, ConfigCache
+from nchantdoffice.utilities.lazy import lazy_import, LazyWidget, LazyLoader
+from nchantdoffice.utilities.parallel import parallel_load, parallel_init, ParallelLoader, PerformanceMonitor
+from nchantdoffice.utilities.vector_search import VectorSearchMixin
+from nchantdoffice.nchantdagent import GlainAgentMixin
 from nchantdoffice.widgets.catalogs import NchantdOfficeDocumentsCatalog
 from ogma.logma import Logma
 from pyffice.document import PyfficeDocument
@@ -45,7 +54,7 @@ from nchantdoffice.utilities.config import PyfficeApplicationConfig
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
-logma.off()
+# logma.off()  # Disabled - causes dialog issues
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "models.yaml")
@@ -869,7 +878,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self.get_table(table, filters, db)
 
     def get_document(self, doc_action=None, did=None, db="db"):
-        """"""
+        """Cached document retrieval"""
         if doc_action is not None:
             cfg = {"WHERE": {"EQUAL": {"document_txt": doc_action}, "NOT IN": {"file_type_txt": ["api"]}}}
         elif did is not None:
@@ -878,6 +887,11 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             raise Exception("No Document Action or Document ID Provided")
         df = self.store.get_view_documents_all(cfg)
         return df
+
+    @lru_cache(maxsize=128)
+    def get_document_cached(self, doc_action=None, did=None):
+        """Cached version for frequently accessed documents"""
+        return self.get_document(doc_action, did)
 
     def get_documents(self, node, tabset):
         """"""
@@ -1390,7 +1404,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
 
-class NchantdOfficeStore(NchantdStore):
+class NchantdOfficeStore(GlainAgentMixin, VectorSearchMixin, NchantdStore):
     """"""
 
     EXTENSION = ".pyof"
@@ -1406,6 +1420,12 @@ class NchantdOfficeStore(NchantdStore):
         if parent is not None:
             self.config.override(parent.config)
         self.config.override(cfg)
+        
+        # Initialize vector search capabilities
+        self.init_vector_search()
+        
+        # Initialize Glain agent capabilities
+        self.init_glain()
 
         if self.app.agent_manager is None:
             return

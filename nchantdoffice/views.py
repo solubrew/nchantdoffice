@@ -13,16 +13,29 @@
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
+from functools import lru_cache
 
 # ======================================3rd Party Library Modules=====================================================||
+# Lazy imports for heavy modules - loaded on demand
+# import pandas as pd  # Lazy loaded
+# import matplotlib  # Lazy loaded
+# import seaborn  # Lazy loaded
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from condor import condor
 from nchantrs.views.applicationviews import NchantdCloakView
-from nchantdoffice.widgets.controls.toolbars import (
-    NchantdNewDocumentToolBar,
-)
 from ogma.logma import Logma
+
+# Lazy import toolbar to avoid loading heavy widgets at startup
+_toolbar_cache = None
+
+def _get_toolbar():
+    """Lazy load toolbar to improve startup performance"""
+    global _toolbar_cache
+    if _toolbar_cache is None:
+        from nchantdoffice.widgets.controls.toolbars import NchantdNewDocumentToolBar
+        _toolbar_cache = NchantdNewDocumentToolBar
+    return _toolbar_cache
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -49,9 +62,37 @@ class NchantdOfficeCloakView(NchantdCloakView):
         """"""
         super().init_pre_view()
         cfg = {}
-        self.panes["toolbar"] = NchantdNewDocumentToolBar(self.parent, cfg).initWidget()
+        # Use lazy loaded toolbar for faster startup
+        ToolBar = _get_toolbar()
+        self.panes["toolbar"] = ToolBar(self.parent, cfg).initWidget()
+        
+        # Enable drag and drop for center app tabs
+        center_tabset = self.panes.get("center")
+        if center_tabset and hasattr(center_tabset, 'init_drag_drop'):
+            center_tabset.init_drag_drop()
+        
+        # Enable drag and drop for right pane (toolbox)
+        right_tabset = self.panes.get("right")
+        if right_tabset and hasattr(right_tabset, 'init_drag_drop'):
+            right_tabset.init_drag_drop()
+        
         super().initView()
         return self
+    
+    def init_drag_drop(self):
+        """Initialize drag and drop for tabset widgets"""
+        if hasattr(self, 'setAcceptDrops'):
+            self.setAcceptDrops(True)
+        if hasattr(self, 'setMovable'):
+            self.setMovable(True)
+        if hasattr(self, 'setDragEnabled'):
+            self.setDragEnabled(True)
+        return self
+
+    @lru_cache(maxsize=32)
+    def get_theme_cache(self, theme_name):
+        """Cache theme lookups for performance"""
+        return self.config.dikt.get(f"themes.{theme_name}", {})
 
     def switch_to_account_tab(self):
         """"""

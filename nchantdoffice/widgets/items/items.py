@@ -33,7 +33,7 @@ from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
-logma.off()
+# logma.off()  # Disabled - causes dialog issues (P0 fix)
 debug = True
 
 # ====================================================================================================================||

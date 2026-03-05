@@ -29,17 +29,18 @@ from nchantrs.widgets.media.editors.editors import NchantdEntryBox
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.panes.panes import NchantdPane
 from nchantdoffice.widgets.panes.search import NchantdLLMQueryPane, NchantdWebSearchPane, NchantdApplicationSearchPane
+from nchantdoffice.widgets.menus.context_manager import ToolboxContextMenuMixin
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
-logma.off()
+# logma.off()  # Disabled - causes dialog issues (P0 fix)
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "toolboxes.yaml")
 
 
-class NchantdOfficeApplicationToolBox(NchantdToolBox):
+class NchantdOfficeApplicationToolBox(ToolboxContextMenuMixin, NchantdToolBox):
     """"""
 
     def __init__(self, parent=None, cfg=None):
@@ -50,6 +51,9 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
+        
+        # Initialize context menu mixin for toolbox
+        ToolboxContextMenuMixin.__init__(self)
 
     def initModel(self, cfg=None):
         """"""
@@ -325,33 +329,111 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         return items
 
     def init_drawer_node(self):
-        """"""
+        """""Node drawer - actions for tree nodes"""
         default_action = {"action": "insert_object", "type": "custom"}
-        items = self.config.dikt["toolbox"][10].get("items", {})
+        items = self.config.dikt.get("node_toolbox", {}).get("10", {}).get("items", {})
         cnt = 0
-        return self
+        
+        # Node actions
+        cfg = {"layout": "horizontal"}
+        buttons = {
+            0: {"action": "add_node", "label": "Add Node", "icon": "plus"},
+            1: {"action": "delete_node", "label": "Delete", "icon": "trash"},
+            2: {"action": "rename_node", "label": "Rename", "icon": "edit"},
+        }
+        buttons = condor.Instruct(buttons).override(cfg).dikt
+        self.node_buttonbar = NchantdButtonBar(self, cfg).initWidget(buttons)
+        items[cnt] = {"widget": self.node_buttonbar}
+        cnt += 1
+        
+        # Node navigation
+        cfg = {"layout": "horizontal"}
+        buttons = {
+            0: {"action": "move_up", "label": "Move Up", "icon": "arrow-up"},
+            1: {"action": "move_down", "label": "Move Down", "icon": "arrow-down"},
+            2: {"action": "move_left", "label": "Move Left", "icon": "arrow-left"},
+            3: {"action": "move_right", "label": "Move Right", "icon": "arrow-right"},
+        }
+        buttons = condor.Instruct(buttons).override(cfg).dikt
+        self.node_nav_bar = NchantdButtonBar(self, cfg).initWidget(buttons)
+        items[cnt] = {"widget": self.node_nav_bar}
+        
+        return items
 
     def init_drawer_tabs(self):
-        """"""
+        """""Tabs drawer - actions for tab management"""
         default_action = {"action": "insert_object", "type": "custom"}
-        items = self.config.dikt["toolbox"][20].get("items", {})
+        items = self.config.dikt.get("node_toolbox", {}).get("20", {}).get("items", {})
         cnt = 0
-        return self
+        
+        # Tab actions
+        cfg = {"layout": "horizontal"}
+        buttons = {
+            0: {"action": "new_tab", "label": "New Tab", "icon": "plus"},
+            1: {"action": "close_tab", "label": "Close", "icon": "close"},
+            2: {"action": "duplicate_tab", "label": "Duplicate", "icon": "copy"},
+        }
+        buttons = condor.Instruct(buttons).override(cfg).dikt
+        self.tabs_buttonbar = NchantdButtonBar(self, cfg).initWidget(buttons)
+        items[cnt] = {"widget": self.tabs_buttonbar}
+        cnt += 1
+        
+        # Tab organization
+        cfg = {"layout": "horizontal"}
+        buttons = {
+            0: {"action": "tile_tabs", "label": "Tile", "icon": "grid"},
+            1: {"action": "cascade_tabs", "label": "Cascade", "icon": "stack"},
+            2: {"action": "next_tab", "label": "Next", "icon": "arrow-right"},
+            3: {"action": "prev_tab", "label": "Prev", "icon": "arrow-left"},
+        }
+        buttons = condor.Instruct(buttons).override(cfg).dikt
+        self.tabs_org_bar = NchantdButtonBar(self, cfg).initWidget(buttons)
+        items[cnt] = {"widget": self.tabs_org_bar}
+        
+        return items
 
     def init_drawer_tools(self):
-        """"""
+        """""Tools drawer - utilities and settings"""
         default_action = {"action": "insert_object", "type": "custom"}
-        items = self.config.dikt["toolbox"][30].get("items", {})
+        items = self.config.dikt.get("node_toolbox", {}).get("30", {}).get("items", {})
         cnt = 0
-        return self
+        
+        # Tools actions
+        cfg = {"layout": "horizontal"}
+        buttons = {
+            0: {"action": "record_macro", "label": "Record", "icon": "record"},
+            1: {"action": "play_macro", "label": "Play", "icon": "play"},
+            2: {"action": "stop_macro", "label": "Stop", "icon": "stop"},
+        }
+        buttons = condor.Instruct(buttons).override(cfg).dikt
+        self.tools_buttonbar = NchantdButtonBar(self, cfg).initWidget(buttons)
+        items[cnt] = {"widget": self.tools_buttonbar}
+        cnt += 1
+        
+        # Settings
+        cfg = {"layout": "horizontal"}
+        buttons = {
+            0: {"action": "preferences", "label": "Settings", "icon": "settings"},
+            1: {"action": "shortcuts", "label": "Shortcuts", "icon": "keyboard"},
+            2: {"action": "customize", "label": "Customize", "icon": "customize"},
+        }
+        buttons = condor.Instruct(buttons).override(cfg).dikt
+        self.settings_buttonbar = NchantdButtonBar(self, cfg).initWidget(buttons)
+        items[cnt] = {"widget": self.settings_buttonbar}
+        
+        return items
 
     def init_toolbox(self):
         """"""
         super().init_toolbox()
         self.config.dikt["toolbox"][0]["items"] = self.init_drawer_application()
-        # self.config.dikt["toolbox"][10]["items"] = self.init_drawer_node()
-        # self.config.dikt["toolbox"][20]["items"] = self.init_drawer_tabs()
-        # self.config.dikt["toolbox"][30]["items"] = self.init_drawer_tools()
+        
+        # Initialize node, tabs, and tools drawers if node_toolbox exists
+        if "node_toolbox" in self.config.dikt:
+            self.config.dikt["node_toolbox"][10]["items"] = self.init_drawer_node()
+            self.config.dikt["node_toolbox"][20]["items"] = self.init_drawer_tabs()
+            self.config.dikt["node_toolbox"][30]["items"] = self.init_drawer_tools()
+        
         return self
 
 
