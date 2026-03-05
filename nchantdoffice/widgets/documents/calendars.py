@@ -23,8 +23,6 @@ from pandas import DataFrame
 # ======================================Solutions Brewer Library Modules==============================================||
 from condor import condor
 from ogma.logma import Logma
-from pyffice.calendars.calendars import PyfficeCalendar
-from pyffice.document import PyfficeDocument
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.calendars.calendars import NchantdCalendar, NchantdDateTimeSelect
 from nchantrs.widgets.controls.buttons import NchantdButton
@@ -433,35 +431,32 @@ class NchantdEventRecursionEditPane(NchantdPane):
         return self
 
 
-class NchantdOfficeCalendar(NchantdOfficeDocument, PyfficeCalendar):
-    """NchantdOffice implementation of PyfficeCalendar.
+class NchantdOfficeCalendar(NchantdOfficeDocument):
+    """""Calendar document - implements PyfficeCalendar"""
     
-    This class implements the PyfficeCalendar document type for NchantdOffice,
-    providing calendar/scheduling functionality with full GUI integration.
+    PYTYPE = 'calendar'
     
-    Inherits from:
-        - NchantdOfficeDocument: Base GUI document class
-        - PyfficeCalendar: Pyffice data model for calendars
-    
-    Attributes:
-        events: List of calendar events
-        tasks: List of tasks
-        time_scale: Current time scale (day, week, month, etc.)
-    """
-    
-    PYTYPE = PyfficeCalendar
+    @classmethod
+    def get_pyffice_tools(cls):
+        """Get toolbox tools for calendar documents"""
+        return [
+            {'id': 'views', 'icon': 'calendar', 'label': 'Views', 'method': 'set_scope'},
+            {'id': 'timezone', 'icon': 'globe', 'label': 'Time Zone', 'method': 'set_timezone'},
+            {'id': 'reminders', 'icon': 'bell', 'label': 'Reminders', 'method': 'manage_reminders'},
+            {'id': 'events', 'icon': 'event', 'label': 'Events', 'method': 'manage_events'},
+            {'id': 'tasks', 'icon': 'task', 'label': 'Tasks', 'method': 'manage_tasks'},
+            {'id': 'gantt', 'icon': 'chart', 'label': 'Gantt', 'method': 'show_gantt'},
+        ]
     
     def __init__(self, parent=None, cfg=None):
         """ """
-        NchantdOfficeDocument.__init__(self, "Nchantd Calendar", parent, cfg)
-        PyfficeCalendar.__init__(self, cfg)
+        super().__init__("Nchantd Calendar", parent, cfg)
         self.parent = parent
         self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeCalendar"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
         self.calendar = None
-        self.document_type = "calendar"
 
     def initModel(self):
         """"""
@@ -547,88 +542,6 @@ class NchantdOfficeCalendar(NchantdOfficeDocument, PyfficeCalendar):
         """"""
         value = self.config.dikt.get("calendar_scope_select_value", "Week")
         return value
-
-    def get_pyffice_tools(self):
-        """Get toolbox tools for calendar documents.
-        
-        Returns:
-            list: Toolbox configuration for calendar operations
-        """
-        return [
-            {'id': 'views', 'icon': 'calendar', 'label': 'Views', 'method': 'show_calendar_views'},
-            {'id': 'timezone', 'icon': 'globe', 'label': 'Time Zone', 'method': 'set_timezone'},
-            {'id': 'reminders', 'icon': 'bell', 'label': 'Reminders', 'method': 'manage_reminders'},
-            {'id': 'events', 'icon': 'event', 'label': 'Events', 'method': 'manage_events'},
-            {'id': 'tasks', 'icon': 'task', 'label': 'Tasks', 'method': 'manage_tasks'},
-            {'id': 'gantt', 'icon': 'chart-gantt', 'label': 'Gantt Chart', 'method': 'show_gantt'},
-            {'id': 'sync', 'icon': 'sync', 'label': 'Sync Calendar', 'method': 'sync_calendar'},
-        ]
-    
-    def show_calendar_views(self):
-        """Show calendar view options.
-        
-        Returns:
-            self
-        """
-        logma.info("Show calendar views")
-        return self
-    
-    def set_timezone(self, timezone=None):
-        """Set calendar timezone.
-        
-        Args:
-            timezone: Timezone string
-            
-        Returns:
-            self
-        """
-        logma.info(f"Set timezone: {timezone}")
-        return self
-    
-    def manage_reminders(self):
-        """Manage calendar reminders.
-        
-        Returns:
-            self
-        """
-        logma.info("Manage reminders")
-        return self
-    
-    def manage_events(self):
-        """Manage calendar events.
-        
-        Returns:
-            self
-        """
-        logma.info("Manage events")
-        return self
-    
-    def manage_tasks(self):
-        """Manage calendar tasks.
-        
-        Returns:
-            self
-        """
-        logma.info("Manage tasks")
-        return self
-    
-    def show_gantt(self):
-        """Show Gantt chart view.
-        
-        Returns:
-            self
-        """
-        logma.info("Show Gantt chart")
-        return self
-    
-    def sync_calendar(self):
-        """Sync calendar with external services.
-        
-        Returns:
-            self
-        """
-        logma.info("Sync calendar")
-        return self
 
     def get_calendar_unit_select_value(self):
         """"""

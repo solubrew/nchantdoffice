@@ -35,7 +35,7 @@ from subtrix.utilities import uuid
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
-# logma.off()  # Disabled - causes dialog issues (P0 fix)
+logma.off()
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "new.yaml")

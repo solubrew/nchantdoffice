@@ -42,7 +42,6 @@ from ogma.logma import Logma
 from nchantdoffice.widgets.panes.objects import NchantdNewObjectPane, NchantdHeaderPane, NchantdFooterPane
 from pycurity.pyhash import decode64
 from pycurity.pysan import Sanitized
-from pyffice.text.text import PyfficeScript
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -55,11 +54,21 @@ pxcfg = join(here, "_data_", "scripts.yaml")
 
 
 class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
-    """NchantdOffice Script Document - implements PyfficeScript"""
-    
-    # Pyffice document type this implements
-    PYTYPE = PyfficeScript
 
+    PYTYPE = 'script'  # Pyffice script type
+    
+    @classmethod
+    def get_pyffice_tools(cls):
+        """Get toolbox tools for script documents"""
+        return [
+            {'id': 'run', 'icon': 'play', 'label': 'Run Script', 'method': 'run_script'},
+            {'id': 'debug', 'icon': 'bug', 'label': 'Debug', 'method': 'debug_script'},
+            {'id': 'terminal', 'icon': 'console', 'label': 'Terminal', 'method': 'open_terminal'},
+            {'id': 'format', 'icon': 'format', 'label': 'Format', 'method': 'format_code'},
+            {'id': 'find', 'icon': 'search', 'label': 'Find & Replace', 'method': 'find_replace'},
+            {'id': 'spellcheck', 'icon': 'spell', 'label': 'Spell Check', 'method': 'spell_check'},
+        ]
+    
     def __init__(self, parent=None, cfg=None):
         """Document editor widget built on top of QsciScintilla widget
         I believe this requires PyQt5, not sure what is available as a

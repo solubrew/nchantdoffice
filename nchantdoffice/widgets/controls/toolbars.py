@@ -25,6 +25,13 @@ from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.controls.toolbars import NchantdApplicationToolBar
 from ogma.logma import Logma
 from nchantdoffice.dialogs.documents import NchantdNewDocumentSigil
+from nchantdoffice.widgets.documents import NchantdOfficeDocument
+
+# Import Pyffice types for type hints
+try:
+    from pyffice import PyfficeDocument
+except ImportError:
+    PyfficeDocument = None
 
 
 # ====================================================================================================================||
@@ -101,11 +108,11 @@ class NchantdOfficeNotificationButtonBar(NchantdButtonBar):
 
 
 class NchantdNewDocumentToolBar(NchantdButtonBar):
-    """"""
+    """""Far left toolbar - creates new documents and emits signals"""
     
-    # PyQt Signals for document creation
-    from nchantrs.libraries import pyqt
-    document_created = pyqtSignal(str)  # Emitted when new document is created, passes doc type
+    # Signals for document lifecycle
+    document_created = pyqtSignal(str)  # Emitted when new document created (doc_type string)
+    document_opened = pyqtSignal(object)  # Emitted when document opened (NchantdOfficeDocument instance)
     
     def __init__(self, parent=None, cfg=None):
         """ """
@@ -117,7 +124,6 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         self.config.override(cfg)
         self.actions = None
         self.document_types = None
-        self.created_document = None  # Track the last created document
 
     def initModel(self):
         """"""
@@ -187,16 +193,6 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         # TODO cleanup add_tab, add_document signatures and combine as much code as possible
         self.app.view.panes["left"].tree.model.current_node.updateTabs("center")
         self.app.view.panes["center"].setCurrentIndex(pos)
-        
-        # Track created document and emit signal for toolbox update
-        self.created_document = {
-            'name': name,
-            'widget': widget,
-            'type': doc_type,
-            'did': did,
-        }
-        self.document_created.emit(doc_type)
-        
         return self
 
     def add_node(self, signal=None, *args, **kwargs):
