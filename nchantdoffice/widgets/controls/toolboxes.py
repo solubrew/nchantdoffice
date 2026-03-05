@@ -29,6 +29,7 @@ from nchantrs.widgets.media.editors.editors import NchantdEntryBox
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.panes.panes import NchantdPane
 from nchantdoffice.widgets.panes.search import NchantdLLMQueryPane, NchantdWebSearchPane, NchantdApplicationSearchPane
+from nchantdoffice.widgets.menus.context_manager import ToolboxContextMenuMixin
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -39,7 +40,7 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "toolboxes.yaml")
 
 
-class NchantdOfficeApplicationToolBox(NchantdToolBox):
+class NchantdOfficeApplicationToolBox(ToolboxContextMenuMixin, NchantdToolBox):
     """"""
 
     def __init__(self, parent=None, cfg=None):
@@ -50,6 +51,9 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
+        
+        # Initialize context menu mixin for toolbox
+        ToolboxContextMenuMixin.__init__(self)
 
     def initModel(self, cfg=None):
         """"""

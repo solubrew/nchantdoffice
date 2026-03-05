@@ -122,6 +122,15 @@ class ContextMenuManager:
             ('---', None),
             ('Preferences', 'preferences'),
         ],
+        'pane': [
+            ('Detach', 'detach_pane'),
+            ('Hide', 'hide_pane'),
+            ('---', None),
+            ('Resize', 'resize_pane'),
+            ('---', None),
+            ('Dock Left', 'dock_left'),
+            ('Dock Right', 'dock_right'),
+        ],
     }
     
     def __init__(self, parent=None, cfg=None):
@@ -302,6 +311,49 @@ class CanvasContextMenuMixin:
         }
         
         menu = self.context_menu_manager.get_menu('canvas', context)
+        menu.exec(self.mapToGlobal(position))
+
+
+class PaneContextMenuMixin:
+    """Mixin to add context menu functionality to pane widgets."""
+    
+    def __init__(self):
+        self.context_menu_manager = ContextMenuManager(self)
+        self.setContextMenuPolicy(pyqt.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._show_pane_context_menu)
+    
+    def _show_pane_context_menu(self, position):
+        """Show context menu for pane."""
+        context = {
+            'pane': self,
+            'position': position,
+        }
+        
+        menu = self.context_menu_manager.get_menu('workspace', context)
+        menu.exec(self.mapToGlobal(position))
+
+
+class ToolboxContextMenuMixin:
+    """Mixin to add context menu functionality to toolbox widgets."""
+    
+    def __init__(self):
+        self.context_menu_manager = ContextMenuManager(self)
+        self.setContextMenuPolicy(pyqt.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._show_toolbox_context_menu)
+    
+    def _show_toolbox_context_menu(self, position):
+        """Show context menu for toolbox."""
+        # Get item at position
+        current_index = self.currentIndex()
+        
+        context = {
+            'toolbox': self,
+            'position': position,
+            'current_index': current_index,
+            'current_item': self.currentWidget(),
+        }
+        
+        menu = self.context_menu_manager.get_menu('toolbox_item', context)
         menu.exec(self.mapToGlobal(position))
 
 

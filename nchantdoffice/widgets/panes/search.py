@@ -35,6 +35,7 @@ from nchantrs.widgets.media.editors.editors import NchantdEntryBox
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.panes.panes import NchantdPane
 from nchantrs.widgets.controls.buttons import NchantdButton
+from nchantdoffice.widgets.menus.context_manager import PaneContextMenuMixin
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -45,7 +46,7 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", ".yaml")
 
 
-class NchantdOfficeSearchPane(NchantdPane):
+class NchantdOfficeSearchPane(PaneContextMenuMixin, NchantdPane):
     """"""
 
     def __init__(self, parent=None, cfg=None):
@@ -56,6 +57,9 @@ class NchantdOfficeSearchPane(NchantdPane):
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
+        
+        # Initialize context menu mixin for panes
+        PaneContextMenuMixin.__init__(self)
 
     def initModel(self, cfg=None):
         """"""
@@ -133,7 +137,7 @@ class NchantdOfficeSearchPane(NchantdPane):
         return self
 
 
-class NchantdApplicationSearchPane(NchantdPane):
+class NchantdApplicationSearchPane(PaneContextMenuMixin, NchantdPane):
     """"""
 
     def __init__(self, parent=None, cfg=None):
@@ -145,6 +149,9 @@ class NchantdApplicationSearchPane(NchantdPane):
             self.config.override(parent.config)
         self.config.override(cfg)
         self.handler = self.config.dikt.get("handler", None)
+        
+        # Initialize context menu mixin for panes
+        PaneContextMenuMixin.__init__(self)
 
     def initModel(self, cfg=None):
         """"""
@@ -188,7 +195,7 @@ class NchantdApplicationSearchPane(NchantdPane):
         return self
 
 
-class NchantdLLMQueryPane(NchantdPane):
+class NchantdLLMQueryPane(PaneContextMenuMixin, NchantdPane):
     """"""
 
     def __init__(self, parent=None, cfg=None):
@@ -199,6 +206,9 @@ class NchantdLLMQueryPane(NchantdPane):
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
+        
+        # Initialize context menu mixin for panes
+        PaneContextMenuMixin.__init__(self)
 
     def initModel(self, cfg=None):
         """"""
@@ -235,7 +245,7 @@ class NchantdLLMQueryPane(NchantdPane):
         return self
 
 
-class NchantdWebSearchPane(NchantdPane):
+class NchantdWebSearchPane(PaneContextMenuMixin, NchantdPane):
     """"""
 
     def __init__(self, parent=None, cfg=None):
@@ -246,6 +256,9 @@ class NchantdWebSearchPane(NchantdPane):
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
+        
+        # Initialize context menu mixin for panes
+        PaneContextMenuMixin.__init__(self)
 
     def initModel(self, cfg=None):
         """"""
