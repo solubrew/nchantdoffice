@@ -42,6 +42,7 @@ from ogma.logma import Logma
 from nchantdoffice.widgets.panes.objects import NchantdNewObjectPane, NchantdHeaderPane, NchantdFooterPane
 from pycurity.pyhash import decode64
 from pycurity.pysan import Sanitized
+from pyffice.text.text import PyfficeScript
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -54,6 +55,10 @@ pxcfg = join(here, "_data_", "scripts.yaml")
 
 
 class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
+    """NchantdOffice Script Document - implements PyfficeScript"""
+    
+    # Pyffice document type this implements
+    PYTYPE = PyfficeScript
 
     def __init__(self, parent=None, cfg=None):
         """Document editor widget built on top of QsciScintilla widget
