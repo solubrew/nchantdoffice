@@ -30,6 +30,9 @@ from nchantrs.models.models import NchantdStore
 from nchantrs.models.applicationmodels import NchantdModel
 from nchantdoffice.utilities.links import update_affilate_links
 from nchantdoffice.utilities.config import PyfficeApplicationConfig
+from nchantdoffice.utilities.cache import memoize, memoize_with_ttl, ConfigCache
+from nchantdoffice.utilities.lazy import lazy_import, LazyWidget, LazyLoader
+from nchantdoffice.utilities.parallel import parallel_load, parallel_init, ParallelLoader, PerformanceMonitor
 from nchantdoffice.widgets.catalogs import NchantdOfficeDocumentsCatalog
 from ogma.logma import Logma
 from pyffice.document import PyfficeDocument
