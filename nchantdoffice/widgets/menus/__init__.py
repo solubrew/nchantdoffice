@@ -24,6 +24,8 @@ from .context_manager import (
     TreeContextMenuMixin,
     TabContextMenuMixin,
     CanvasContextMenuMixin,
+    ToolboxContextMenuMixin,
+    DocumentContextMenuMixin,
     create_context_menu,
 )
 
@@ -32,6 +34,8 @@ __all__ = [
     'TreeContextMenuMixin', 
     'TabContextMenuMixin',
     'CanvasContextMenuMixin',
+    'ToolboxContextMenuMixin',
+    'DocumentContextMenuMixin',
     'create_context_menu',
 ]
 

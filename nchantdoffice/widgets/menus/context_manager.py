@@ -131,6 +131,19 @@ class ContextMenuManager:
             ('Dock Left', 'dock_left'),
             ('Dock Right', 'dock_right'),
         ],
+        'document': [
+            ('Save', 'save_document'),
+            ('Save As...', 'save_as'),
+            ('Export...', 'export_document'),
+            ('---', None),
+            ('Close', 'close_document'),
+            ('---', None),
+            ('Cut', 'cut'),
+            ('Copy', 'copy'),
+            ('Paste', 'paste'),
+            ('---', None),
+            ('Properties', 'show_properties'),
+        ],
     }
     
     def __init__(self, parent=None, cfg=None):
@@ -355,6 +368,45 @@ class ToolboxContextMenuMixin:
         
         menu = self.context_menu_manager.get_menu('toolbox_item', context)
         menu.exec(self.mapToGlobal(position))
+
+
+class DocumentContextMenuMixin:
+    """Mixin to add context menu functionality to document widgets."""
+    
+    DOCUMENT_MENU_ACTIONS = [
+        ('Save', 'save_document'),
+        ('Save As...', 'save_as'),
+        ('Export...', 'export_document'),
+        ('---', None),
+        ('Close', 'close_document'),
+        ('---', None),
+        ('Cut', 'cut'),
+        ('Copy', 'copy'),
+        ('Paste', 'paste'),
+        ('---', None),
+        ('Properties', 'show_properties'),
+    ]
+    
+    def __init__(self):
+        self.context_menu_manager = ContextMenuManager(self)
+        self.setContextMenuPolicy(pyqt.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._show_document_context_menu)
+    
+    def _show_document_context_menu(self, position):
+        """Show context menu for document."""
+        context = {
+            'document': self,
+            'document_name': getattr(self, 'name', 'Untitled'),
+            'document_type': type(self).__name__,
+        }
+        
+        menu = self.context_menu_manager.get_menu('document', context)
+        menu.exec(self.mapToGlobal(position))
+    
+    def get_document_menu_items(self):
+        """Get custom menu items for specific document types.
+        Override in subclasses to add custom items."""
+        return self.DOCUMENT_MENU_ACTIONS
 
 
 # Convenience function to create context menus
