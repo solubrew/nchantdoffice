@@ -20,7 +20,7 @@ NchantdOffice is a document-based productivity application that combines Pyffice
 
 ## Internal Project Integrations
 
-### Core Dependencies
+### Core Dependencies (Required)
 
 | Project | Integration | Location | Purpose |
 |---------|-------------|----------|---------|
@@ -29,17 +29,20 @@ NchantdOffice is a document-based productivity application that combines Pyffice
 | **micromole** | Via NchantdStore | `micromole.micromole.MicroMole` | Data collection (RSS feeds) |
 | **squirl** | Via NchantdStore | `squirl.squirl.SQuiRL` | Database queries (SQL/NoSQL) |
 | **condor** | Config | `condor.condor` | YAML configuration management |
-| **pycurity** | Via nchantrs | `nchantrs.pycurity` | Security/encryption (optional) |
-| **apig** | Via nchantrs/worldbridge | `nchantrs.apig` | REST API client (optional) |
+| **ogma** | Logging | `ogma.logma.Logma` | Rich logging and debugging |
 | **pyffice** | Composition | `pyffice.pyffice.PyfficeCodex` | Document handling (Excel, PDF, etc.) |
+| **subtrix** | Utilities | `subtrix.utilities.uuid` | UUID generation |
 
-### NchantdOffice Layer Additions
+### Optional Integrations
 
-| Project | Purpose | Status |
-|---------|---------|--------|
-| **worldbridgeserver** | Web2 (HTTP) + Web3 (blockchain) data | ✅ Integrated |
-| **Vector Search** | Semantic search with embeddings | ✅ Added |
-| **GlainMixin** | Agent memory (optional NchantdAgent) | ✅ Available |
+| Project | Integration | Location | Purpose |
+|---------|-------------|----------|---------|
+| **pycurity** | Via nchantrs | `nchantrs.pycurity` | Security/encryption |
+| **apig** | NEW | `nchantdoffice/utilities/apig.py` | REST API client with retry/caching |
+| **worldbridgeserver** | NEW | `nchantdoffice/utilities/worldbridge.py` | Web2 (HTTP) + Web3 (blockchain) data |
+| **elv1r4** | Via worldbridge | `elv1r4.elv1r4` | Blockchain/Web3 interactions |
+| **glain** | NchantdAgent | `nchantdagent/nchantdagent/__init__.py` | Context memory |
+| **sentinel** | NchantdAgent | `nchantdagent/nchantdagent/sentinel/` | Health monitoring |
 
 ---
 
@@ -56,6 +59,15 @@ nchantdoffice (Pyffice + nchantrs GUI)
 ├── NchantdOfficeCloakModel
 │   └── Extends: nchantrs.NchantdCloakModel
 │
+├── utilities/
+│   ├── apig.py              ← NEW: API client with retry/caching
+│   ├── worldbridge.py       ← NEW: Web2/Web3 data integration
+│   ├── vector_search.py     ← NEW: Vector search mixin
+│   ├── cache.py             ← Caching utilities
+│   ├── config.py            ← Configuration
+│   ├── links.py             ← Link management
+│   └── ...
+│
 ├── [OPTIONAL] NchantdAgent Package
 │   ├── GlainMixin (context memory)
 │   ├── sentinel (monitoring/health)
@@ -63,7 +75,6 @@ nchantdoffice (Pyffice + nchantrs GUI)
 │
 └── nchantrs (core framework)
     ├── pycurity (security)
-    ├── apig (API layer)
     ├── micromole + squirl (data storage)
     └── condor (configuration)
 ```
@@ -77,6 +88,7 @@ nchantdoffice (Pyffice + nchantrs GUI)
 - [x] Tab-based interface (TODOs, Notes, Calendar, Concerns)
 - [x] NchantdStore integration (SQL/NoSQL via SQuiRL)
 - [x] YAML configuration via condor
+- [x] Rich logging via ogma
 - [x] Widget composition from nchantrs.widgets
 
 ### Vector Search (v0.3.0)
@@ -87,9 +99,14 @@ nchantdoffice (Pyffice + nchantrs GUI)
 - [x] FAISS indexing with numpy fallback
 - [x] Document embedding storage
 
+### API & External Data (v0.3.0)
+- [x] apig.py - Robust HTTP client with retry/caching
+- [x] worldbridge.py - Web2/Web3 data integration
+- [x] elv1r4 integration ready (web3/blockchain)
+- [x] API key management
+
 ### Optional Features
 - [ ] NchantdAgent package (GlainMixin + sentinel)
-- [ ] WorldBridge integration for web2/web3 data
 - [ ] API authentication via pycurity
 
 ---
@@ -103,7 +120,12 @@ nchantdoffice (Pyffice + nchantrs GUI)
 | condor | latest | ✅ Required |
 | ogma | latest | ✅ Required |
 | subtrix | latest | ✅ Required |
+| micromole | latest | ✅ Required |
+| squirl | latest | ✅ Required |
 | pycurity | latest | ✅ Optional |
+| apig | latest | ✅ Optional |
+| worldbridgeserver | latest | ✅ Optional |
+| elv1r4 | latest | ✅ Optional |
 | sentence-transformers | latest | ✅ Optional (vector search) |
 | faiss-cpu | latest | ✅ Optional (vector search) |
 
@@ -115,6 +137,8 @@ nchantdoffice (Pyffice + nchantrs GUI)
 |----------|--------|
 | Core tests | ⏳ Pending |
 | Vector search tests | ⏳ Pending |
+| API client tests | ⏳ Pending |
+| WorldBridge tests | ⏳ Pending |
 | Widget tests | ⏳ Pending |
 | Integration tests | ⏳ Pending |
 
@@ -128,8 +152,25 @@ nchantdoffice (Pyffice + nchantrs GUI)
 | `nchantdoffice/nchantdoffice.py` | Main application class |
 | `nchantdoffice/views.py` | View classes |
 | `nchantdoffice/utilities/vector_search.py` | Vector search mixin |
+| `nchantdoffice/utilities/apig.py` | API client (NEW) |
+| `nchantdoffice/utilities/worldbridge.py` | Web2/Web3 data (NEW) |
 | `nchantdoffice/widgets/` | Custom widgets |
 | `nchantdoffice/dialogs/` | Dialog classes |
+
+---
+
+## Utility Modules
+
+| Module | Purpose |
+|--------|---------|
+| `utilities/apig.py` | HTTP client with retry, caching, rate limiting |
+| `utilities/worldbridge.py` | Web2 (HTTP) + Web3 (blockchain) data access |
+| `utilities/vector_search.py` | Vector embeddings and semantic search |
+| `utilities/cache.py` | Memoization and caching |
+| `utilities/config.py` | YAML configuration |
+| `utilities/links.py` | Link/affiliate management |
+| `utilities/lazy.py` | Lazy loading for widgets |
+| `utilities/parallel.py` | Parallel loading and performance monitoring |
 
 ---
 
