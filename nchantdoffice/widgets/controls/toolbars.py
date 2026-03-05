@@ -21,6 +21,7 @@ import json as j
 # ======================================Solutions Brewer Library Modules==============================================||
 from condor import condor
 from subtrix.utilities import uuid
+from nchantrs.libraries import pyqt
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.controls.toolbars import NchantdApplicationToolBar
 from ogma.logma import Logma
@@ -36,7 +37,7 @@ except ImportError:
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
-log = False
+log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
@@ -193,6 +194,9 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         # TODO cleanup add_tab, add_document signatures and combine as much code as possible
         self.app.view.panes["left"].tree.model.current_node.updateTabs("center")
         self.app.view.panes["center"].setCurrentIndex(pos)
+        
+        # Emit signal that document was created
+        self.document_created.emit(doc_type)
         return self
 
     def add_node(self, signal=None, *args, **kwargs):
