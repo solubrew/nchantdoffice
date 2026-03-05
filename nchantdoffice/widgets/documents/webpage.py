@@ -2,7 +2,9 @@
 
 from typing import Dict, List, Any, Optional
 from pyffice.documents import PyfficeWebPage as BasePyfficeWebPage
-from nchantrs.logging import logma
+from ogma.logma import Logma
+logma = Logma(__name__)
+logma.off()
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 
 logma.off(__name__)

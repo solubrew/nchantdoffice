@@ -3,7 +3,9 @@
 Pyffice document type implementations for NchantdOffice.
 """
 
-from nchantrs.logging import logma
+from ogma.logma import Logma
+logma = Logma(__name__)
+logma.off()
 logma.off(__name__)
 
 # Base document

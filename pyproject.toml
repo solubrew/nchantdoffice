@@ -146,9 +146,10 @@ Changelog = "CHANGELOG.rst"
 
 [project.scripts]
 nchantdoffice = "nchantdoffice.__main__:main"
+nchantdoffice-cli = "nchantdoffice.cli:cli"
 
 [project.entry-points."console_scripts"]
-nchantdoffice-cli = "nchantdoffice.__main__:main"
+nchantdoffice-cli = "nchantdoffice.cli:cli"
 
 [tool.setuptools]
 include-package-data = true
