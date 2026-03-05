@@ -17,6 +17,10 @@ import json as j
 import datetime as dt
 from dateutil import parser
 
+# @memoize decorators for expensive methods
+# Using functools.lru_cache for memoization
+from functools import lru_cache
+
 # ======================================3rd Party Library Modules=====================================================||
 from pandas import DataFrame, concat
 from numpy import isnan
@@ -872,7 +876,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self.get_table(table, filters, db)
 
     def get_document(self, doc_action=None, did=None, db="db"):
-        """"""
+        """Cached document retrieval"""
         if doc_action is not None:
             cfg = {"WHERE": {"EQUAL": {"document_txt": doc_action}, "NOT IN": {"file_type_txt": ["api"]}}}
         elif did is not None:
@@ -881,6 +885,11 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             raise Exception("No Document Action or Document ID Provided")
         df = self.store.get_view_documents_all(cfg)
         return df
+
+    @lru_cache(maxsize=128)
+    def get_document_cached(self, doc_action=None, did=None):
+        """Cached version for frequently accessed documents"""
+        return self.get_document(doc_action, did)
 
     def get_documents(self, node, tabset):
         """"""

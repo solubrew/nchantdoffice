@@ -14,6 +14,7 @@
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
+from functools import lru_cache
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -23,7 +24,18 @@ from ogma.logma import Logma
 from nchantrs.widgets.tabsets import NchantdTabSet
 from nchantdoffice.models import NchantdOfficeTabSetModel
 from nchantdoffice.widgets.controls.toolboxes import NchantdOfficeApplicationToolBox
-from nchantdoffice.widgets.documents.media.notes import NchantdOfficeNote
+
+# Lazy imports for heavy widgets - loaded on demand
+# Heavy widgets like charts, media, workbooks will be lazy loaded
+_note_cache = None
+
+def _get_note_widget():
+    """Lazy load note widget to improve startup performance"""
+    global _note_cache
+    if _note_cache is None:
+        from nchantdoffice.widgets.documents.media.notes import NchantdOfficeNote
+        _note_cache = NchantdOfficeNote
+    return _note_cache
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -70,9 +82,16 @@ class NchantdOfficeTabSet(NchantdTabSet):
         """"""
         if cfg is None:
             cfg = {}
-        note = NchantdOfficeNote(self.app.main, cfg).initWidget()
+        # Use lazy loaded note widget for faster startup
+        NoteWidget = _get_note_widget()
+        note = NoteWidget(self.app.main, cfg).initWidget()
         self.app.view.panes["center"].model.current_tab.append_note(note)
         return self
+
+    @lru_cache(maxsize=16)
+    def get_widget_config(self, widget_type):
+        """Cache widget configuration lookups for performance"""
+        return self.config.dikt.get(f"widgets.{widget_type}", {})
 
     def create_toolbox(self, parent=None, cfg=None):
         """"""
