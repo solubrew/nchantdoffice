@@ -21,6 +21,7 @@ from shutil import copyfile
 # ======================================Solutions Brewer Library Modules==============================================||
 from condor import condor
 from ogma.logma import Logma
+from nchantrs.libraries import pyqt
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.dialogs.files import NchantdFileOpenSigil
 from nchantrs.widgets.controls.toolboxes import NchantdToolBox
@@ -29,6 +30,7 @@ from nchantrs.widgets.media.editors.editors import NchantdEntryBox
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.panes.panes import NchantdPane
 from nchantdoffice.widgets.panes.search import NchantdLLMQueryPane, NchantdWebSearchPane, NchantdApplicationSearchPane
+from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -352,6 +354,99 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         # self.config.dikt["toolbox"][10]["items"] = self.init_drawer_node()
         # self.config.dikt["toolbox"][20]["items"] = self.init_drawer_tabs()
         # self.config.dikt["toolbox"][30]["items"] = self.init_drawer_tools()
+        
+        # Connect signals for dynamic toolbox population
+        self._connect_pane_signals()
+        return self
+
+    def _connect_pane_signals(self):
+        """Connect to signals from other panes for dynamic toolbox updates"""
+        # Connect to toolbar document_created signal
+        if hasattr(self.app.view, 'toolbar') and hasattr(self.app.view.toolbar, 'document_created'):
+            self.app.view.toolbar.document_created.connect(self._on_document_created)
+        
+        # Connect to tree document_selected signal  
+        if hasattr(self.app.view, 'panes') and hasattr(self.app.view.panes, 'left'):
+            tree = self.app.view.panes['left'].tree if hasattr(self.app.view.panes['left'], 'tree') else None
+            if tree and hasattr(tree, 'document_selected'):
+                tree.document_selected.connect(self._on_document_selected)
+        
+        # Connect to tabs current_document_changed signal
+        if hasattr(self.app.view, 'panes') and hasattr(self.app.view.panes, 'center'):
+            tabs = self.app.view.panes['center'].tabs if hasattr(self.app.view.panes['center'], 'tabs') else None
+            if tabs and hasattr(tabs, 'current_document_changed'):
+                tabs.current_document_changed.connect(self._on_document_changed)
+    
+    def _on_document_created(self, doc_type):
+        """Handle new document created from toolbar"""
+        logma.info(f"Toolbox: Document created - {doc_type}")
+        # Get document class and populate toolbox with its tools
+        doc_class = self._get_document_class_for_type(doc_type)
+        if doc_class and hasattr(doc_class, 'get_pyffice_tools'):
+            tools = doc_class.get_pyffice_tools()
+            self._populate_tools_drawer(tools)
+    
+    def _on_document_selected(self, document):
+        """Handle document selected from tree"""
+        if document and isinstance(document, NchantdOfficeDocument):
+            logma.info(f"Toolbox: Document selected - {document.PYTYPE}")
+            if hasattr(document, 'get_pyffice_tools'):
+                tools = document.get_pyffice_tools()
+                self._populate_tools_drawer(tools)
+    
+    def _on_document_changed(self, document):
+        """Handle active document changed in tabs"""
+        if document and isinstance(document, NchantdOfficeDocument):
+            logma.info(f"Toolbox: Document changed - {document.PYTYPE}")
+            if hasattr(document, 'get_pyffice_tools'):
+                tools = document.get_pyffice_tools()
+                self._populate_tools_drawer(tools)
+    
+    def _get_document_class_for_type(self, doc_type):
+        """Get document class for a given type string"""
+        from nchantdoffice.widgets.documents.calendars import NchantdOfficeCalendar
+        from nchantdoffice.widgets.documents.filesystems import NchantdOfficeFileSystem
+        
+        type_map = {
+            'calendar': NchantdOfficeCalendar,
+            'filesystem': NchantdOfficeFileSystem,
+            'document': NchantdOfficeDocument,
+        }
+        return type_map.get(doc_type, NchantdOfficeDocument)
+    
+    def _populate_tools_drawer(self, tools):
+        """Populate the tools drawer with tools from document's get_pyffice_tools()"""
+        if not tools:
+            return
+        
+        # Ensure tools drawer exists
+        if 30 not in self.config.dikt["toolbox"]:
+            self.config.dikt["toolbox"][30] = {"items": {}}
+        
+        items = self.config.dikt["toolbox"][30].get("items", {})
+        cnt = 0
+        
+        for tool in tools:
+            default_action = {"action": "insert_object", "type": "custom"}
+            if cnt not in items:
+                items[cnt] = default_action
+            
+            cfg = {
+                "text": tool.get('label', 'Tool'),
+                "action": tool.get('id', 'tool'),
+                "layout": "horizontal",
+                "size": ["auto", 30],
+                "handler": getattr(self, f"cmd_{tool.get('method', 'noop')}", self.cmd_noop),
+            }
+            tool_button = NchantdButton(self, cfg).initWidget()
+            items[cnt]["widget"] = tool_button
+            cnt += 1
+        
+        self.config.dikt["toolbox"][30]["items"] = items
+        logma.info(f"Toolbox: Populated {len(tools)} tools")
+    
+    def cmd_noop(self, event, *args, **kwargs):
+        """No-op command placeholder"""
         return self
 
 

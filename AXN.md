@@ -87,45 +87,23 @@ toolbar (document_created)
 
 ## Phase 5: UI Integration
 
-### P0 Issues - COMPLETED
+### P0 Issues
 | Issue | Status |
 |-------|--------|
-| Center app tab dragging | ✅ Implemented in tabs.py |
-| Tree node drag-and-drop | ✅ Implemented in trees.py |
-| Cross-pane tab dragging | ✅ Implemented in tabs.py + trees.py |
-| Tab-to-tree drag-and-drop | ✅ Implemented in tabs.py + trees.py |
-| Right-click context menus | ✅ Implemented via context_manager.py |
+| Center app tab dragging | ❌ Not implemented |
+| Tree node drag-and-drop | ❌ Not implemented |
+| Cross-pane tab dragging | ❌ Not implemented |
+| Tab-to-tree drag-and-drop | ❌ Not implemented |
+| Right-click context menus | ✅ Done |
 
-### P1 Issues - COMPLETED
+### P1 Issues
 | Issue | Status |
 |-------|--------|
-| Right toolbox search | ✅ Implemented in toolboxes.py (_init_search, search_toolbox) |
-| Right toolbox drawer items | ✅ Implemented (node, tabs, tools drawers) |
-
-### Signal Connections - COMPLETED
-```
-toolbar (document_created) 
-    → tree (document_selected) 
-        → tabs (current_document_changed) 
-            → toolbox (on_document_changed - calls get_pyffice_tools())
-```
-
-### Implementation Verification
-
-| File | Component | Verified |
-|------|-----------|----------|
-| widgets/tabs.py | Tab drag-drop | ✅ Lines 67-159 |
-| widgets/trees.py | Tree drag-drop | ✅ Lines 107-215 |
-| widgets/controls/toolboxes.py | Toolbox search | ✅ Lines 59-148 |
-| views.py | Signal connections | ✅ _connect_pane_signals() |
-| widgets/documents/documents.py | PyfficeDocument | ✅ Line ~280 |
-| widgets/documents/text.py | get_pyffice_tools | ✅ Lines 42-52 |
+| Right toolbox search | ❌ Not implemented |
+| Right toolbox drawer items | ✅ Partial (node, tabs, tools drawers) |
 
 ## Phase 6: Build & Deploy
 
-- [x] All P0/P1 issues documented in AXN
-- [x] NchantdOfficeDocument inherits PyfficeDocument (documents.py line ~280)
-- [x] NchantdNewDocumentToolBar has document_created signal (toolbars.py)
 - [ ] Clean build to zuh environment
 - [ ] Test all integrations
 - [ ] Verify Pyffice inheritance in documents

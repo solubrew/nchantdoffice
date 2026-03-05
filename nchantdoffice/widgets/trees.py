@@ -25,6 +25,7 @@ from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.media.images import NchantdImage
 from nchantrs.widgets.trees import NchantdApplicationTree
 from nchantdoffice.widgets.items.items import NchantdOfficeTreeNode
+from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -36,7 +37,19 @@ pxcfg = join(here, "_data_", "trees.yaml")
 
 
 class NchantdOfficeApplicationTree(NchantdWidget):
-    """"""
+    """Left pane tree with drag-drop and document selection signals"""
+    
+    # Signal emitted when a document is selected in the tree
+    document_selected = pyqtSignal(object)  # NchantdOfficeDocument
+    
+    # Signal emitted when item drag starts
+    item_drag_started = pyqtSignal(object)  # tree item
+    
+    # Signal emitted when item is dropped on tree (internal reorder)
+    item_dropped_on_tree = pyqtSignal(object, object)  # source, target
+    
+    # Signal emitted when item is dropped on tabs (open document)
+    item_dropped_on_tabs = pyqtSignal(object)  # tree item
 
     def __init__(self, parent=None, cfg=None):
         """ """
@@ -48,7 +61,14 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         self.config.override(cfg)
         self.tree = None
         self.image = None
-
+        
+        # Setup drag-drop
+        self._setup_drag_drop()
+    
+    def _setup_drag_drop(self):
+        """Setup tree drag and drop"""
+        pass  # Handled by underlying NchantdApplicationTree
+    
     def initModel(self):
         """"""
         super().initModel()
@@ -65,6 +85,20 @@ class NchantdOfficeApplicationTree(NchantdWidget):
             self.tree.setSelectionMode(pyqt.QAbstractItemView.SingleSelection)
         if hasattr(self.tree, "setSelectionBehavior"):
             self.tree.setSelectionBehavior(pyqt.QAbstractItemView.SelectRows)
+        
+        # Connect tree selection to emit document_selected signal
+        if hasattr(self.tree, 'selectionChanged'):
+            self.tree.selectionChanged.connect(self._on_tree_selection_changed)
+        
+        # Setup drag on tree
+        if hasattr(self.tree, 'setDragEnabled'):
+            self.tree.setDragEnabled(True)
+        if hasattr(self.tree, 'setAcceptDrops'):
+            self.tree.setAcceptDrops(True)
+        if hasattr(self.tree, 'setDragDropMode'):
+            self.tree.setDragDropMode(pyqt.QAbstractItemView.DragDrop)
+        if hasattr(self.tree, 'setDefaultDropAction'):
+            self.tree.setDefaultDropAction(pyqt.Qt.MoveAction)
 
         self.layout.addWidget(self.tree)
         cfg = {
@@ -77,6 +111,82 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         self.layout.addWidget(self.image)
         self.layout.setAlignment(pyqt.Qt.AlignTop)
         return self
+    
+    def _on_tree_selection_changed(self, selected, deselected):
+        """Handle tree selection change - emit document_selected signal"""
+        if hasattr(self.tree, 'selectedItems'):
+            items = self.tree.selectedItems()
+            if items:
+                item = items[0]
+                # Get document from tree item
+                doc = item.data(0, pyqt.Qt.UserRole) if hasattr(item, 'data') else None
+                if doc and isinstance(doc, NchantdOfficeDocument):
+                    self.document_selected.emit(doc)
+    
+    def mousePressEvent(self, event):
+        """Start drag tracking"""
+        if event.button() == pyqt.Qt.LeftButton:
+            self._drag_start_pos = event.pos()
+        super().mousePressEvent(event)
+    
+    def mouseMoveEvent(self, event):
+        """Initiate tree item drag"""
+        if event.buttons() & pyqt.Qt.LeftButton:
+            if hasattr(self, '_drag_start_pos'):
+                diff = event.pos() - self._drag_start_pos
+                if diff.manhattanLength() > pyqt.QApplication.startDragDistance():
+                    self._initiate_item_drag()
+        super().mouseMoveEvent(event)
+    
+    def _initiate_item_drag(self):
+        """Start tree item drag"""
+        selected_items = self.tree.selectedItems() if hasattr(self.tree, 'selectedItems') else []
+        if not selected_items:
+            return
+        
+        # Emit drag started signal
+        self.item_drag_started.emit(selected_items[0])
+        
+        # Create drag object
+        drag = pyqt.QDrag(self)
+        mime_data = pyqt.QMimeData()
+        
+        # Store document IDs
+        doc_ids = []
+        for item in selected_items:
+            doc = item.data(0, pyqt.Qt.UserRole) if hasattr(item, 'data') else None
+            if doc and hasattr(doc, 'id'):
+                doc_ids.append(str(doc.id))
+        
+        if doc_ids:
+            mime_data.setData('application/x-nchantd-tree-item', ','.join(doc_ids).encode())
+            drag.setMimeData(mime_data)
+            drag.exec_(pyqt.Qt.MoveAction)
+    
+    def dragEnterEvent(self, event):
+        """Accept drag enter"""
+        mime_data = event.mimeData()
+        if mime_data.hasFormat('application/x-nchantd-tree-item'):
+            event.acceptProposedAction()
+        elif mime_data.hasFormat('application/x-nchantd-tab'):
+            event.acceptProposedAction()
+        super().dragEnterEvent(event)
+    
+    def dropEvent(self, event):
+        """Handle drops on tree"""
+        mime_data = event.mimeData()
+        
+        if mime_data.hasFormat('application/x-nchantd-tab'):
+            # Tab dropped on tree - create reference or open
+            tab_data = mime_data.data('application/x-nchantd-tab')
+            self.item_dropped_on_tabs.emit(tab_data)
+            event.acceptProposedAction()
+            
+        elif mime_data.hasFormat('application/x-nchantd-tree-item'):
+            # Tree item reordered
+            event.acceptProposedAction()
+        
+        super().dropEvent(event)
 
     def initWidget(self, cfg=None):
         """"""
