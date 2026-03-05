@@ -19,10 +19,10 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-import crow
+# import crow  # Commented out - not needed for local system
 from docutils.nodes import abbreviation
 
-crow.crowLoad("", "DELTA")
+# crow.crowLoad removed
 
 from condor import condor
 from ogma.logma import Logma

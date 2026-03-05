@@ -22,7 +22,7 @@ from sys import argv
 # try:
 #     import crow
 #
-#     crow.crowLoad("NchantdOffice", "DELTA")
+#     # crow.crowLoad removed
 # except:
 #     pass
 from condor import condor

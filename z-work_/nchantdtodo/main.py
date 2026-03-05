@@ -18,8 +18,8 @@
 import sys
 from os.path import abspath, dirname, join
 # ===============================================================================||
-import crow
-crow.crowLoad('NchantdTODO', 'DELTA')
+# import crow  # Commented out - not needed for local system
+# crow.crowLoad removed
 
 from condor import condor
 from nchantrs.nchantrs import NchantdCloak

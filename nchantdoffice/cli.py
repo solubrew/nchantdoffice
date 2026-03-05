@@ -62,7 +62,7 @@ def export(filepath, export_format, output):
 
 @cli.command()
 @click.argument('filepath')
-@click.option('--backup', is_flag=True, create_automatic_option=True, help='Create backup before saving')
+@click.option('--backup', is_flag=True, help='Create backup before saving')
 def save(filepath, backup):
     """Save the document"""
     if backup:
@@ -113,8 +113,34 @@ def validate(filepath):
 @cli.command()
 def gui():
     """Launch the GUI application"""
-    from nchantdoffice.__main__ import main
-    main()
+    import sys
+    from pathlib import Path
+    
+    # Add workspace to path for local development
+    workspace = Path(__file__).parent.parent
+    
+    # Add ogma path (from gwenbot workspace)
+    ogma_path = Path("/home/solubrew/EDN/AGTs/gwenbot/workspace/projects/ogma")
+    if ogma_path.exists() and str(ogma_path) not in sys.path:
+        sys.path.insert(0, str(ogma_path))
+    
+    # Add nchantrs path
+    nchantrs_path = Path("/home/solubrew/EDN/AGTs/gwenbot/workspace/projects/nchantrs")
+    if nchantrs_path.exists() and str(nchantrs_path) not in sys.path:
+        sys.path.insert(0, str(nchantrs_path))
+    
+    # Add workspace path for local development
+    if str(workspace) not in sys.path:
+        sys.path.insert(0, str(workspace))
+    
+    # Import and run the main application
+    try:
+        from nchantdoffice.__main__ import main
+        main()
+    except ImportError as e:
+        click.echo(f"Error importing GUI: {e}", err=True)
+        click.echo("Make sure nchantdoffice is properly installed", err=True)
+        sys.exit(1)
 
 
 @cli.command()

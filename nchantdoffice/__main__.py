@@ -19,9 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-import crow
-
-crow.crowLoad("NchantdOffice", "DELTA")
+# import crow
+# # crow.crowLoad removed
 from condor import condor
 from nchantrs.nchantrs import flection, nchantment
 from nchantdoffice.nchantdoffice import NchantdOfficeCloak
