@@ -1,0 +1,66 @@
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
+# NchantdAXN Model Configuration
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
+
+# NchantdAXNModel - Main application model
+NchantdAXNModel:
+  name: NchantdAXNModel
+  description: Main model for NchantdAXN application
+  model_cls: NchantdAXNModel
+  stores:
+    task_store:
+      type: yaml
+      path: /home/solubrew/.arthr/workspace/axn/tasks
+    project_store:
+      type: yaml
+      path: /home/solubrew/.arthr/workspace/axn/projects
+    link_store:
+      type: yaml
+      path: /home/solubrew/.arthr/workspace/axn/links
+  defaults:
+    task:
+      status: pending
+      priority: 2
+      progress: 0
+    project:
+      status: planning
+
+# NchantdAXNTreeModel - Tree view model
+NchantdAXNTreeModel:
+  name: NchantdAXNTreeModel
+  description: Tree model for AXN tasks and projects
+  model_cls: NchantdAXNTreeModel
+  dstruct: nchantdtree
+  root_node: nchantdaxn
+  children:
+    - id: projects
+      label: Projects
+      icon: folder
+      node_type: groupnode
+    - id: tasks
+      label: Tasks
+      icon: checklist
+      node_type: groupnode
+
+# NchantdAXNTabSetModel - Tab set model
+NchantdAXNTabSetModel:
+  name: NchantdAXNTabSetModel
+  description: Tab set for AXN detail views
+  model_cls: NchantdAXNTabSetModel
+  dstruct: nchantdtabset
+  tabs:
+    - id: summary
+      label: Summary
+      icon: home
+    - id: project_list
+      label: Projects
+      icon: folder
+    - id: task_list
+      label: Tasks
+      icon: checklist
+    - id: timeline
+      label: Timeline
+      icon: timeline
+    - id: milestones
+      label: Milestones
+      icon: flag
