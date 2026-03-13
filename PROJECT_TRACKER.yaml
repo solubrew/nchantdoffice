@@ -1,0 +1,740 @@
+schema_version: 1.0.0
+generated: '2026-03-12T23:58:08.396890Z'
+auditor: senbot
+standards_version: V18
+overall_score: 37.45
+dimensions:
+  cli_documentation:
+    score: 0
+    status: fail
+    issues:
+    - rule: CLI.md required
+      severity: critical
+      fix: Create CLI.md with purpose, usage, arguments, examples
+    file: CLI.md
+  structure:
+    score: 20
+    status: partial
+    issues:
+    - rule: Missing project directory
+      severity: high
+      expected: nchantdoffice/
+      fix: Create nchantdoffice/ directory
+    - rule: Missing tests/ directory
+      severity: medium
+      fix: Create tests/ directory
+    - rule: Missing docs/ directory
+      severity: low
+      fix: Create docs/ directory
+  logging:
+    score: 75
+    status: partial
+    issues:
+    - rule: print() statements found but ogma.logma is also used
+      severity: medium
+      count: 16
+      fix: Consider replacing 16 print() with logma calls
+    print_statements: 16
+    uses_logma: true
+  testing:
+    score: 0
+    status: fail
+    issues:
+    - rule: Missing tests/ directory
+      severity: high
+      fix: Create tests/ directory with test files
+  documentation:
+    score: 60
+    status: partial
+    issues:
+    - rule: Missing README.md
+      severity: high
+      fix: Create README.md
+    - rule: Missing docs/ directory
+      severity: low
+      fix: Create docs/ directory
+  git_workflow:
+    score: 75
+    status: partial
+    issues:
+    - rule: Missing .gitignore
+      severity: medium
+      fix: Create .gitignore with common patterns
+  dependency_strategy:
+    score: 17
+    status: partial
+    issues: []
+    internal_projects_used:
+    - condor
+    leverage_percentage: 3.57
+  configuration:
+    score: 0
+    status: fail
+    issues:
+    - rule: Missing config.yaml
+      severity: high
+      fix: Create config.yaml at project root
+    has_config_yaml: false
+  kiss_dry:
+    score: 30
+    status: partial
+    issues:
+    - rule: Magic numbers detected
+      severity: medium
+      count: 45
+      fix: Replace magic numbers with named constants
+  agent_awareness:
+    score: 0
+    status: fail
+    issues:
+    - rule: No CLI file found
+      severity: low
+      fix: Consider adding CLI with --agent support
+  duplicate_files:
+    score: 50
+    status: partial
+    issues:
+    - rule: Duplicate filename found
+      severity: medium
+      filename: widgets.py
+      locations:
+      - nchantdtodo/widgets.py
+      - z-work_/widgets.py
+      fix: Review files for potential code duplication
+    duplicate_count: 1
+  file_sizes:
+    score: 100
+    status: pass
+    issues: []
+    small_file_count: 0
+    large_file_count: 0
+  licenses:
+    score: 50
+    status: partial
+    issues:
+    - rule: Missing pyproject.toml
+      severity: medium
+      fix: Create pyproject.toml with dependencies
+  license_dependencies:
+    score: 25
+    status: partial
+    issues:
+    - rule: 'Non-MIT licenses: 295/560'
+      severity: high
+      packages:
+      - Babel (BSD License)
+      - Flask (BSD-3-Clause)
+      - ImageIO (BSD-2-Clause)
+      - Jinja2 (BSD License)
+      - Jinja2 (BSD License)
+      fix: Replace with MIT-licensed alternatives
+    - rule: 'Unknown licenses: 15/560'
+      severity: high
+      packages:
+      - PyAudio
+      - apturl
+      - command-not-found
+      - cupshelpers
+      - distro-info
+      fix: Verify license manually or remove dependency
+    tools_checked:
+    - fossa
+    - safety
+    - pip-licenses
+    - dependency-check
+    tools_available:
+    - pip-licenses
+    dependencies:
+    - name: APScheduler
+      license: MIT License
+    - name: Automat
+      license: MIT License
+    - name: Babel
+      license: BSD License
+    - name: Flask
+      license: BSD-3-Clause
+    - name: ImageIO
+      license: BSD-2-Clause
+    - name: Jinja2
+      license: BSD License
+    - name: Jinja2
+      license: BSD License
+    - name: Levenshtein
+      license: GPL-2.0-or-later
+    - name: Mako
+      license: MIT License
+    - name: MarkupSafe
+      license: BSD License
+    mit_compliant:
+    - APScheduler
+    - Automat
+    - Mako
+    - PyJWT
+    - PyJWT
+    - PyMySQL
+    - PyScreeze
+    - PyYAML
+    - PyYAML
+    - RapidFuzz
+    - SQLAlchemy
+    - ShopifyAPI
+    - Twisted
+    - aiohttp
+    - alembic
+    - altgraph
+    - annotated-doc
+    - annotated-types
+    - anyio
+    - apig
+    - appdirs
+    - asn1crypto
+    - async-generator
+    - attrs
+    - attrs
+    - audioread
+    - axn
+    - backoff
+    - backports.tarfile
+    - base58
+    - beautifulsoup4
+    - black
+    - blinker
+    - blinker
+    - brotli
+    - bs4
+    - build
+    - cachetools
+    - cffi
+    - cffi
+    - charset-normalizer
+    - coincurve
+    - colored
+    - coloredlogs
+    - condor
+    - constantly
+    - croniter
+    - ctranslate2
+    - dalphin
+    - dbus-python
+    - dictdiffer
+    - dimp
+    - dimsdk
+    - dingtalk-stream
+    - discord.py
+    - dkd
+    - dmtp
+    - docopt
+    - ecdsa
+    - einops
+    - et_xmlfile
+    - eth-account
+    - eth-hash
+    - eth-keyfile
+    - eth-keys
+    - eth-rlp
+    - eth-typing
+    - eth-utils
+    - eth_abi
+    - eurostat
+    - exceptiongroup
+    - falcon
+    - fastapi
+    - faster-whisper
+    - ffmpy
+    - filelock
+    - fonttools
+    - greenlet
+    - groovy
+    - h11
+    - hexbytes
+    - html5lib
+    - httplib2
+    - httptools
+    - httpx-oauth
+    - httpx-sse
+    - humanfriendly
+    - hyperlink
+    - incremental
+    - iniconfig
+    - ipfshttpclient
+    - jaraco.classes
+    - jaraco.context
+    - jaraco.functools
+    - jeepney
+    - jiter
+    - jmespath
+    - json_repair
+    - jsonschema
+    - jsonschema
+    - jsonschema-specifications
+    - keyring
+    - keyring
+    - litellm
+    - loguru
+    - markdown-it-py
+    - maxine
+    - mcp
+    - mdurl
+    - micromole
+    - mindot
+    - minimax-mcp
+    - mkm
+    - mmh3
+    - more-itertools
+    - morphys
+    - moviepy
+    - multiaddr
+    - mypackage
+    - mypy_extensions
+    - narwhals
+    - nasa
+    - nchantdaxn
+    - nchantdsasquatch
+    - nchantrs
+    - netifaces
+    - nh3
+    - noaa
+    - notion
+    - oauth2
+    - ogma
+    - onnxruntime
+    - openpyxl
+    - orjson
+    - outcome
+    - owl
+    - parsimonious
+    - pdfkit
+    - peregrin
+    - pillow
+    - platformdirs
+    - platformdirs
+    - plotly
+    - pluggy
+    - proglog
+    - projectaxn
+    - py-cid
+    - py-multibase
+    - py-multicodec
+    - py-multihash
+    - pyRFC3339
+    - pyactiveresource
+    - pycurity
+    - pydantic
+    - pydantic-settings
+    - pydantic_core
+    - pydataset
+    - pydub
+    - pyffice
+    - pymacaroons
+    - pyodbc
+    - pyparsing
+    - pyparsing
+    - pyproject_hooks
+    - pyrsistent
+    - pystache
+    - pytest
+    - pytest-cov
+    - pytest-order
+    - python-docx
+    - python-engineio
+    - python-magic
+    - python-slugify
+    - python-socketio
+    - pytokens
+    - pytweening
+    - pytz
+    - pytz
+    - pyunormalize
+    - qq-botpy
+    - redis
+    - referencing
+    - rich
+    - rlp
+    - rpds-py
+    - ruamel.yaml
+    - safehttpx
+    - sasquatch
+    - senbot
+    - service-identity
+    - setuptools-rust
+    - shelved-cache
+    - simple-websocket
+    - simplejson
+    - six
+    - six
+    - skillator
+    - slack_sdk
+    - slackclient
+    - slackify_markdown
+    - sniffio
+    - socksio
+    - sounddevice
+    - soupsieve
+    - sqlite-vec
+    - squirl
+    - startrek
+    - stats
+    - stdeb
+    - structlog
+    - stun
+    - subtrix
+    - sweetviz
+    - tabulate
+    - texttable
+    - tiktoken
+    - titan
+    - toml
+    - tomlkit
+    - tqdm
+    - tradebot
+    - trio
+    - trio-typing
+    - triton
+    - twof
+    - typer
+    - typer-slim
+    - typing-inspection
+    - tzlocal
+    - udp
+    - urllib3
+    - urllib3
+    - uuid7
+    - uv
+    - uvloop
+    - varint
+    - virtualenv
+    - watchfiles
+    - web3
+    - webp
+    - webrtcvad
+    - wigumhammer
+    - wikipedia
+    - wordcloud
+    - wsproto
+    - wyoming
+    - wyoming-faster-whisper
+    - wyoming-piper
+    - zipp
+    - zipp
+    non_mit:
+    - Babel (BSD License)
+    - Flask (BSD-3-Clause)
+    - ImageIO (BSD-2-Clause)
+    - Jinja2 (BSD License)
+    - Jinja2 (BSD License)
+    - Levenshtein (GPL-2.0-or-later)
+    - MarkupSafe (BSD License)
+    - MarkupSafe (BSD-3-Clause)
+    - MouseInfo (GNU General Public License v3 or later (GPLv3+))
+    - Pillow (Historical Permission Notice and Disclaimer (HPND))
+    - PyAutoGUI (BSD License)
+    - PyGObject (GNU Lesser General Public License v2 or later (LGPLv2+))
+    - PyGetWindow (BSD License)
+    - PyHamcrest (BSD License)
+    - PyMsgBox (GNU General Public License v3 or later (GPLv3+))
+    - PyNaCl (Apache License 2.0)
+    - PyPDF2 (BSD License)
+    - PyQt5 (GPL v3)
+    - PyQt5-Qt5 (LGPL v3)
+    - PyQt5_sip (BSD-2-Clause)
+    - PyQtWebEngine (GPL v3)
+    - PyQtWebEngine-Qt5 (LGPL v3)
+    - PyRect (BSD License)
+    - PySide6 (LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only)
+    - PySide6_Addons (LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only)
+    - PySide6_Essentials (LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only)
+    - Pygments (BSD License)
+    - Pygments (BSD License)
+    - QScintilla (GPL v3)
+    - SecretStorage (BSD License)
+    - Send2Trash (BSD-3-Clause)
+    - SpeechRecognition (BSD License)
+    - Werkzeug (BSD-3-Clause)
+    - accelerate (Apache Software License)
+    - aiofiles (Apache Software License)
+    - aiohappyeyeballs (Python Software Foundation License)
+    - aiosignal (Apache Software License)
+    - argcomplete (Apache Software License)
+    - arrow (Apache Software License)
+    - astor (BSD License)
+    - async-timeout (Apache Software License)
+    - asyncpg (Apache-2.0)
+    - av (BSD-3-Clause)
+    - backports.asyncio.runner (Python Software Foundation License)
+    - bcrypt (Apache Software License)
+    - bcrypt (Apache Software License)
+    - bidict (Mozilla Public License 2.0 (MPL 2.0))
+    - bitarray (PSF-2.0)
+    - blake3 (CC0-1.0 OR Apache-2.0)
+    - boto3 (Apache-2.0)
+    - botocore (Apache-2.0)
+    - cached-property (BSD License)
+    - casadi (GNU Lesser General Public License v3 or later (LGPLv3+))
+    - catfish (GPL-2+)
+    - certifi (Mozilla Public License 2.0 (MPL 2.0))
+    - certifi (Mozilla Public License 2.0 (MPL 2.0))
+    - chardet (GNU Library or Lesser General Public License (LGPL))
+    - ckzg (Apache-2.0)
+    - click (BSD License)
+    - click (BSD-3-Clause)
+    - cloud-init (Dual-licensed under GPLv3 or Apache 2.0)
+    - colorama (BSD License)
+    - commonmark (BSD License)
+    - configobj (BSD License)
+    - contourpy (BSD License)
+    - coverage (Apache-2.0)
+    - cryptography (Apache Software License; BSD License)
+    - cryptography (Apache-2.0 OR BSD-3-Clause)
+    - cssselect (BSD-3-Clause)
+    - cuda-bindings (LicenseRef-NVIDIA-SOFTWARE-LICENSE)
+    - cuda-pathfinder (Apache-2.0)
+    - cycler (BSD License)
+    - cytoolz (BSD-3-Clause)
+    - datasets (Apache Software License)
+    - dateparser (BSD License)
+    - decorator (BSD License)
+    - defer (GNU General Public License (GPL))
+    - dill (BSD License)
+    - diskcache (Apache Software License)
+    - distlib (Python Software Foundation License)
+    - distro (Apache Software License)
+    - dnspython (ISC License (ISCL))
+    - docker (Apache Software License)
+    - docker (Apache-2.0)
+    - docker-compose (Apache Software License)
+    - dockerpty (Apache Software License)
+    - docutils (BSD License; GNU General Public License (GPL); Public Domain)
+    - ebaysdk (COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0)
+    - evdev (BSD License)
+    - fastjsonschema (BSD License)
+    - fastuuid (BSD License)
+    - feedparser (BSD License)
+    - filelock (Public Domain)
+    - flatbuffers (Apache Software License)
+    - frozenlist (Apache-2.0)
+    - fsspec (BSD-3-Clause)
+    - fuzzywuzzy (GNU General Public License v2 (GPLv2))
+    - googleapis-common-protos (Apache Software License)
+    - gradio (Apache-2.0)
+    - gradio_client (Apache-2.0)
+    - grpcio (Apache-2.0)
+    - h5py (BSD-3-Clause)
+    - hf-xet (Apache-2.0)
+    - httpcore (BSD-3-Clause)
+    - httpx (BSD License)
+    - huggingface_hub (Apache Software License)
+    - id (Apache Software License)
+    - idna (BSD-3-Clause)
+    - idna (BSD License)
+    - imageio-ffmpeg (BSD License)
+    - importlib-metadata (Apache Software License)
+    - importlib_metadata (Apache-2.0)
+    - importlib_resources (Apache Software License)
+    - itsdangerous (BSD License)
+    - joblib (BSD-3-Clause)
+    - jsonpatch (BSD License)
+    - jsonpointer (BSD License)
+    - jupyter_core (BSD-3-Clause)
+    - kiwisolver (BSD License)
+    - launchpadlib (GNU Library or Lesser General Public License (LGPL))
+    - lazr.restfulclient (GNU Library or Lesser General Public License (LGPL))
+    - lazr.uri (GNU Library or Lesser General Public License (LGPL))
+    - lazy_loader (BSD License)
+    - librosa (ISC License (ISCL))
+    - lightdm-gtk-greeter-settings (GPL-3)
+    - llvmlite (BSD-2-Clause AND Apache-2.0 WITH LLVM-exception)
+    - lxml (BSD-3-Clause)
+    - lxml_html_clean (BSD-3-Clause)
+    - macaroonbakery (GNU Lesser General Public License v3 (LGPLv3))
+    - matplotlib (Python Software Foundation License)
+    - memory-profiler (BSD License)
+    - menulibre (GPL-3)
+    - mplfinance (BSD License)
+    - mpmath (BSD License)
+    - msgpack (Apache-2.0)
+    - mugshot (GPL-3+)
+    - multidict (Apache License 2.0)
+    - multiprocess (BSD License)
+    - mysql-connector (GNU General Public License (GPL))
+    - mysql-connector-python (GNU General Public License (GPL))
+    - nbformat (BSD License)
+    - ndsplines (BSD-3-Clause)
+    - neo4j (Apache-2.0 AND Python-2.0)
+    - netaddr (BSD License)
+    - networkx (BSD License)
+    - numba (BSD License)
+    - numpy (BSD License)
+    - nvidia-cublas-cu12 (Other/Proprietary License)
+    - nvidia-cuda-cupti-cu12 (Other/Proprietary License)
+    - nvidia-cuda-nvrtc-cu12 (Other/Proprietary License)
+    - nvidia-cuda-runtime-cu12 (Other/Proprietary License)
+    - nvidia-cudnn-cu12 (Other/Proprietary License)
+    - nvidia-cufft-cu12 (Other/Proprietary License)
+    - nvidia-cufile-cu12 (Other/Proprietary License)
+    - nvidia-curand-cu12 (Other/Proprietary License)
+    - nvidia-cusolver-cu12 (Other/Proprietary License)
+    - nvidia-cusparse-cu12 (Other/Proprietary License)
+    - nvidia-cusparselt-cu12 (NVIDIA Proprietary Software)
+    - nvidia-nccl-cu12 (Other/Proprietary License)
+    - nvidia-nvjitlink-cu12 (Other/Proprietary License)
+    - nvidia-nvshmem-cu12 (LicenseRef-NVIDIA-Proprietary)
+    - nvidia-nvtx-cu12 (Other/Proprietary License)
+    - oauth-cli (Apache Software License)
+    - oauth2cli (Apache Software License)
+    - oauth2client (Apache Software License)
+    - oauthlib (BSD License)
+    - olefile (BSD License)
+    - onboard (GPL-3+)
+    - openai (Apache Software License)
+    - opencv-python (Apache Software License)
+    - opencv-python-headless (Apache Software License)
+    - opentelemetry-api (Apache-2.0)
+    - opentelemetry-sdk (Apache-2.0)
+    - opentelemetry-semantic-conventions (Apache-2.0)
+    - packaging (Apache Software License; BSD License)
+    - packaging (Apache-2.0 OR BSD-2-Clause)
+    - pandas (BSD License)
+    - pathspec (Mozilla Public License 2.0 (MPL 2.0))
+    - pexpect (ISC License (ISCL))
+    - piper-tts (GPL-3.0-or-later)
+    - ply (BSD)
+    - podman-compose (GPL-2.0-only)
+    - pooch (BSD-3-Clause)
+    - prompt_toolkit (BSD License)
+    - propcache (Apache Software License)
+    - protobuf (3-Clause BSD License)
+    - protobuf (3-Clause BSD License)
+    - psutil (BSD License)
+    - psutil (BSD-3-Clause)
+    - psycopg2-binary (GNU Library or Lesser General Public License (LGPL))
+    - ptyprocess (ISC License (ISCL))
+    - pvporcupine (Apache Software License)
+    - pyOpenSSL (Apache Software License)
+    - pyarrow (Apache-2.0)
+    - pyasn1 (BSD License)
+    - pyasn1 (BSD-2-Clause)
+    - pyasn1-modules (BSD License)
+    - pycairo (GNU Lesser General Public License v2 (LGPLv2); Mozilla Public License
+      1.1 (MPL 1.1))
+    - pycparser (BSD License)
+    - pycparser (BSD-3-Clause)
+    - pycryptodome (BSD License; Public Domain)
+    - pycups (GNU General Public License (GPL))
+    - pygame (GNU Library or Lesser General Public License (LGPL))
+    - pyinstaller (GNU General Public License v2 (GPLv2))
+    - pyinstaller-hooks-contrib (Apache Software License; GNU General Public License
+      v2 (GPLv2))
+    - pylnk (GNU Library or Lesser General Public License (LGPL))
+    - pynput (GNU Lesser General Public License v3 (LGPLv3))
+    - pyperclip (BSD License)
+    - pyserial (BSD License)
+    - pytest-asyncio (Apache-2.0)
+    - python-Levenshtein (GPL-2.0-or-later)
+    - python-apt (GNU GPL)
+    - python-baseconv (Python Software Foundation License)
+    - python-dateutil (Apache Software License; BSD License)
+    - python-dateutil (Apache Software License; BSD License)
+    - python-debian (DFSG approved; GNU General Public License v2 or later (GPLv2+))
+    - python-dotenv (BSD License)
+    - python-dotenv (BSD-3-Clause)
+    - python-multipart (Apache-2.0)
+    - python-shopify (LICENSE.txt)
+    - python-socks (Apache Software License)
+    - python-telegram-bot (LGPL-3.0-only)
+    - python-vlc (GNU Lesser General Public License v2 or later (LGPLv2+))
+    - python-xlib (GNU Lesser General Public License v2 or later (LGPLv2+))
+    - python3-xlib (GPLv2)
+    - pytrends (Apache Software License)
+    - pyttsx3 (MPL-2.0)
+    - pyxdg (GNU Lesser General Public License v2 (LGPLv2))
+    - pyyaml-include (GNU General Public License v3 or later (GPLv3+))
+    - pyzmq (BSD License)
+    - qwen-tts (Apache-2.0)
+    - readability-lxml (Apache License 2.0)
+    - readme_renderer (Apache Software License)
+    - regex (Apache-2.0 AND CNRI-Python)
+    - reportlab (BSD License)
+    - requests (Apache Software License)
+    - requests (Apache Software License)
+    - requests-oauthlib (BSD License)
+    - requests-toolbelt (Apache Software License)
+    - resampy (ISC License (ISCL))
+    - rfc3986 (Apache Software License)
+    - rsa (Apache Software License)
+    - s3transfer (Apache Software License)
+    - safetensors (Apache Software License)
+    - scikit-learn (BSD-3-Clause)
+    - scipy (BSD License)
+    - screen-resolution-extra (gpl)
+    - semantic-version (BSD License)
+    - sentence-transformers (Apache Software License)
+    - sentence_stream (Apache Software License)
+    - sgmllib3k (BSD License)
+    - sgt-launcher (GPL-3+)
+    - shellingham (ISC License (ISCL))
+    - shiboken6 (LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only)
+    - sortedcontainers (Apache Software License)
+    - sos (GPLv2+)
+    - soundfile (BSD License)
+    - sox (BSD-3-Clause)
+    - soxr (LGPL-2.1-or-later)
+    - sse-starlette (BSD-3-Clause)
+    - ssh-import-id (GPLv3)
+    - starlette (BSD-3-Clause)
+    - sympy (BSD License)
+    - systemd-python (GNU Lesser General Public License v2 or later (LGPLv2+))
+    - text-unidecode (Artistic License; GNU General Public License (GPL); GNU General
+      Public License v2 or later (GPLv2+))
+    - tflite-runtime-nightly (Apache Software License)
+    - threadpoolctl (BSD License)
+    - tokenizers (Apache Software License)
+    - toolz (BSD-3-Clause)
+    - torch (BSD-3-Clause)
+    - torchaudio (BSD License)
+    - traitlets (BSD License)
+    - transformers (Apache 2.0 License)
+    - twine (Apache-2.0)
+    - types-requests (Apache-2.0)
+    - typing_extensions (PSF-2.0)
+    - tzdata (Apache-2.0)
+    - ubuntu-drivers-common (gpl)
+    - ubuntu-pro-client (GPLv3)
+    - ufw (GPL-3)
+    - uvicorn (BSD-3-Clause)
+    - wadllib (GNU Library or Lesser General Public License (LGPL))
+    - wbdata (GPL-2.0+)
+    - webencodings (BSD License)
+    - websocket-client (Apache Software License)
+    - websocket-client (Apache Software License)
+    - websockets (BSD License)
+    - wyoming-openwakeword (Apache Software License)
+    - xai-sdk (Apache-2.0)
+    - xcffib (Apache Software License)
+    - xkit (GPL v2 or later)
+    - xxhash (BSD License)
+    - yarl (Apache-2.0)
+    - zmq (BSD)
+    - zope.interface (Zope Public License)
+    unknown:
+    - PyAudio
+    - apturl
+    - command-not-found
+    - cupshelpers
+    - distro-info
+    - fredapi
+    - glain
+    - gyp
+    - language-selector
+    - lark-oapi
+    - logma
+    - sandstone
+    - sha3
+    - unattended-upgrades
+    - xdg
+    mit_percentage: 44.6
+summary:
+  total_checks: 14
+  passed: 1
+  failed: 4
+  partial: 9
+  critical_issues: 1
