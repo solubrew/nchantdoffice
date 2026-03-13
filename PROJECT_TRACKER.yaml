@@ -1,5 +1,5 @@
-agent: arthr
-audit_date: '1773363433.6995049'
+agent: delta
+audit_date: '1773418024.8640285'
 dimensions:
   cli_documentation:
     details:
@@ -52,10 +52,10 @@ dimensions:
       internal_imports: 31
       internal_projects_used:
       - condor
-      - projectaxn
-      - ogma
-      - axn
       - nchantrs
+      - projectaxn
+      - axn
+      - ogma
       leverage_score: 35.23
       score: 100
       status: pass
