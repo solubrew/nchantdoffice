@@ -52,10 +52,10 @@ dimensions:
       internal_imports: 31
       internal_projects_used:
       - axn
-      - nchantrs
       - projectaxn
-      - condor
       - ogma
+      - condor
+      - nchantrs
       leverage_score: 35.23
       score: 100
       status: pass
@@ -94,9 +94,9 @@ dimensions:
   logging:
     details:
       print_files:
-      - cmds/runMain.py
-      - cmds/runResources.py
       - cmds/runTab.py
+      - cmds/runResources.py
+      - cmds/runMain.py
       print_statements: 6
       score: 0
       status: fail
