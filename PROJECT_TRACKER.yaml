@@ -51,9 +51,9 @@ dimensions:
         project: condor
       internal_imports: 31
       internal_projects_used:
-      - ogma
-      - nchantrs
       - projectaxn
+      - nchantrs
+      - ogma
       - condor
       - axn
       leverage_score: 35.23
