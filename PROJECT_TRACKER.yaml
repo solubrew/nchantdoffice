@@ -1,5 +1,5 @@
-agent: delta
-audit_date: '1773418024.8640285'
+agent: arthr
+audit_date: '1773363433.6995049'
 dimensions:
   cli_documentation:
     details:
@@ -51,11 +51,11 @@ dimensions:
         project: condor
       internal_imports: 31
       internal_projects_used:
-      - condor
+      - ogma
       - nchantrs
       - projectaxn
+      - condor
       - axn
-      - ogma
       leverage_score: 35.23
       score: 100
       status: pass
@@ -87,15 +87,15 @@ dimensions:
     details:
       duplicate_warnings: 0
       magic_numbers_found: 57
-      score: 50
-      status: partial
-    score: 50
-    status: partial
+      score: 100
+      status: pass
+    score: 100
+    status: pass
   logging:
     details:
       print_files:
-      - cmds/runTab.py
       - cmds/runResources.py
+      - cmds/runTab.py
       - cmds/runMain.py
       print_statements: 6
       score: 0
@@ -140,5 +140,5 @@ project: nchantdoffice
 summary:
   failing: 6
   gitvein_projects_available: 65
-  passing: 2
+  passing: 3
   total_dimensions: 9
