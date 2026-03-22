@@ -10,6 +10,7 @@
     security: seclvl2
     <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
@@ -50,8 +51,8 @@ class NchantdOfficeCloak(NchantdCloak):
     def __init__(self, name, instance=None, parent=None, cfg=None, args=None):
         """ """
         super().__init__(name, instance, parent, None, args)
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeCloak").override(cfg))
-        self.config.override({"apps": ["nchantdoffice"]})
+        self.config.override(pxcfg).select("NchantdOfficeCloak").override(cfg)
+        self.config.override({"app": "nchantdoffice"})
         self.parent = parent
         logma.info(f"NchantdOfficeCloak: {self.config.dikt.get("config", None)}")
         if self.parent is None:

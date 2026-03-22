@@ -41,9 +41,7 @@ class NchantdOfficeCloakView(NchantdCloakView):
         """ """
         super().__init__(parent, None)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeCloakView").override(cfg))
-        if self.parent:
-            self.config.override(parent.config)
+        self.config.override(pxcfg).select("NchantdOfficeCloakView").override(cfg)
 
     def initView(self):
         """"""
