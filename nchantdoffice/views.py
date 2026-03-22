@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
@@ -43,12 +44,12 @@ class NchantdOfficeCloakView(NchantdCloakView):
         self.parent = parent
         self.config.override(pxcfg).select("NchantdOfficeCloakView").override(cfg)
 
-    def initView(self):
+    def initView(self, cfg=None):
         """"""
-        super().init_pre_view()
+        super().init_pre_view(cfg)
         cfg = {}
         self.panes["toolbar"] = NchantdNewDocumentToolBar(self.parent, cfg).initWidget()
-        super().initView()
+        super().initView(cfg)
         return self
 
     def switch_to_account_tab(self):
