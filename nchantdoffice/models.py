@@ -10,6 +10,7 @@
     security: seclvl2
     <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, exists
@@ -40,7 +41,6 @@ from pycurity.pyhash import text_hashing_function, encode64
 from pycurity.pyhash import decode64
 from nchantdoffice.widgets.documents.atnrg.browsers.browsers import NchantdOfficeWebBrowser
 from nchantdoffice.utilities.config import PyfficeApplicationConfig
-
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -1356,10 +1356,16 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.store.store_app_event(state, action, cfg, db)
         return self
 
+    def store_instance(self, instance):
+        """"""
+        self.instance = instance
+        self.store.store_app_instance(instance)
+        return self
+
     def store_instances(self):
         """"""
         for instance in self.instances:
-            self.store.store_app_instance(instance)
+            self.store_instance(instance)
         return self
 
     def store_node(self):
@@ -1437,8 +1443,7 @@ class NchantdOfficeStore(NchantdStore):
             return
         self.docs[db].execute(f"DROP TABLE IF EXISTS vectorized_data")
         DIMENSION = 384  # Adjust based on your embedding model
-        self.docs[db].execute(
-            f"""
+        self.docs[db].execute(f"""
             CREATE VIRTUAL TABLE vectorized_data USING vec0(
                 id INTEGER PRIMARY KEY,
                 version_txt TEXT,
@@ -1453,8 +1458,7 @@ class NchantdOfficeStore(NchantdStore):
                 ARCHIVE_BIT,
                 ACTIVE_BIT
             );
-        """
-        )
+        """)
         self.docs[db].commit()
 
     def get_application_documents(self):
