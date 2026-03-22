@@ -931,6 +931,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """"""
         return self
 
+    def get_node(self, nid):
+        """"""
+        #TODO this likely needs routed through the tree not sure the issue
+
     def get_profiles(self):
         """"""
         profiles = self.store.get_app_profile()["profile_txt"].values.tolist()
