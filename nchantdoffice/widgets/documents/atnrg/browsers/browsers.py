@@ -127,7 +127,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     def add_profile(self, profile, cfg):
         """"""
         profile_limit = 1
-        if self.app.model.user.has_pro:
+        if getattr(self.app.model.user, "has_pro", False) if self.app.model.user else False:
             profile_limit = 10
         if self.profiles.get_count() >= profile_limit:
             return self
@@ -610,10 +610,10 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
         options = self.app.model.get_profiles()
-        if self.app.model.user.user_name not in options:
+        if self.app.model.user and self.app.model.user.user_name not in options:
             cfg = {}
             self.add_profile(self.app.model.user.user_name, cfg)
-        if not self.app.model.user.has_pro:
+        if not getattr(self.app.model.user, "has_pro", False) if self.app.model.user else False:
             options += ["Get Pro"]
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}

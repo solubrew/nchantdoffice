@@ -196,7 +196,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         self.app.view.panes["center"].setCurrentIndex(pos)
         
         # Emit signal that document was created
-        self.document_created.emit(doc_type)
+        self.document_created.emit(self, doc_type)
         return self
 
     def add_node(self, signal=None, *args, **kwargs):
