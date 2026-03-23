@@ -45,7 +45,9 @@ from nchantdoffice.utilities.config import PyfficeApplicationConfig
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
-logma.off()
+log = True
+if not log:
+    logma.off()
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "models.yaml")
@@ -933,7 +935,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def get_node(self, nid):
         """"""
-        #TODO this likely needs routed through the tree not sure the issue
+        # TODO this likely needs routed through the tree not sure the issue
 
     def get_profiles(self):
         """"""
@@ -1965,6 +1967,10 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
     def load_widget(self, cfg, tabset="center", document=None, tab_type="custom_widget"):
         """"""
+        logma.info(f"Load Widget {cfg}")
+        logma.info(f"Tabset {tabset}")
+        logma.info(f"Document {document}")
+        logma.info(f"Tab Type {tab_type}")
         tabW = super().load_widget(cfg, tabset, document, tab_type)
         return tabW
 
