@@ -11,24 +11,12 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:46:29
 """
+
 # 2025-11-06 09:46:29
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
-import json  # 2025-11-06 09:46:29
-import tempfile  # 2025-11-06 09:46:29
-import os  # 2025-11-06 09:46:29
 
 # ======================================3rd Party Library Modules=====================================================||
-from nchantdoffice.widgets.documents.calendars import NchantdEventPane  # 2025-11-06 09:46:29
-from nchantdoffice.widgets.documents.calendars import NchantdAlarmsListPane  # 2025-11-06 09:46:29
-from nchantdoffice.widgets.documents.calendars import NchantdAlarmsEditPane  # 2025-11-06 09:46:29
-from nchantdoffice.widgets.documents.calendars import NchantdEventGroup  # 2025-11-06 09:46:29
-from nchantdoffice.widgets.documents.calendars import NchantdEventsListPane  # 2025-11-06 09:46:29
-from nchantdoffice.widgets.documents.calendars import NchantdRecurrencesListPane  # 2025-11-06 09:46:29
-from nchantdoffice.widgets.documents.calendars import NchantdTasksListPane  # 2025-11-06 09:46:29
-from nchantdoffice.widgets.documents.calendars import NchantdEventRecursionEditPane  # 2025-11-06 09:46:29
-from nchantdoffice.widgets.documents.calendars import NchantdOfficeCalendar  # 2025-11-06 09:46:29
-from nchantdoffice.widgets.documents.calendars import NchantdOfficeJournalEditor  # 2025-11-06 09:46:29
 
 # =========================================Local Library Modules======================================================||
 # 2025-11-06 09:46:29

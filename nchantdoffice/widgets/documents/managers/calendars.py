@@ -10,6 +10,7 @@
     security: seclvl2
     <(WT)>: -32
 """
+
 from copy import deepcopy
 
 # -*- coding: utf-8 -*
@@ -45,7 +46,7 @@ log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", "calendars.yaml")
+pxcfg = join(here, "../_data_", "calendars.yaml")
 pxcfg = {}
 
 
@@ -432,22 +433,22 @@ class NchantdEventRecursionEditPane(NchantdPane):
 
 
 class NchantdOfficeCalendar(NchantdOfficeDocument):
-    """""Calendar document - implements PyfficeCalendar"""
-    
-    PYTYPE = 'calendar'
-    
+    """ ""Calendar document - implements PyfficeCalendar"""
+
+    PYTYPE = "calendar"
+
     @classmethod
     def get_pyffice_tools(cls):
         """Get toolbox tools for calendar documents"""
         return [
-            {'id': 'views', 'icon': 'calendar', 'label': 'Views', 'method': 'set_scope'},
-            {'id': 'timezone', 'icon': 'globe', 'label': 'Time Zone', 'method': 'set_timezone'},
-            {'id': 'reminders', 'icon': 'bell', 'label': 'Reminders', 'method': 'manage_reminders'},
-            {'id': 'events', 'icon': 'event', 'label': 'Events', 'method': 'manage_events'},
-            {'id': 'tasks', 'icon': 'task', 'label': 'Tasks', 'method': 'manage_tasks'},
-            {'id': 'gantt', 'icon': 'chart', 'label': 'Gantt', 'method': 'show_gantt'},
+            {"id": "views", "icon": "calendar", "label": "Views", "method": "set_scope"},
+            {"id": "timezone", "icon": "globe", "label": "Time Zone", "method": "set_timezone"},
+            {"id": "reminders", "icon": "bell", "label": "Reminders", "method": "manage_reminders"},
+            {"id": "events", "icon": "event", "label": "Events", "method": "manage_events"},
+            {"id": "tasks", "icon": "task", "label": "Tasks", "method": "manage_tasks"},
+            {"id": "gantt", "icon": "chart", "label": "Gantt", "method": "show_gantt"},
         ]
-    
+
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__("Nchantd Calendar", parent, cfg)

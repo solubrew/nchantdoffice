@@ -1,0 +1,17 @@
+---
+NchantdExtension:
+  dstruct:
+    file_structure:
+      _data_:
+        imgs:
+        icons:
+        <[extension]>.yaml:
+      models:
+        _data_:
+      widgets:
+        _data_:
+      <[extension]>.py:
+    database:
+      objects:
+        table:
+        view:

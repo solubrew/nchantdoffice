@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
@@ -21,36 +22,37 @@ from nchantrs.libraries import pyqt
 from condor import condor
 from ogma.logma import Logma
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
-from pyffice.document import PyfficeVideo
+from pyffice.document import PyfficeContact
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", "video.yaml")
+pxcfg = join(here, "../_data_", "contacts.yaml")
 
 
-class NchantdOfficeVideo(NchantdOfficeDocument, PyfficeVideo):
-    """Video document - implements PyfficeVideo"""
-    
-    PYTYPE = 'video'
-    
+class NchantdOfficeContact(NchantdOfficeDocument, PyfficeContact):
+    """Contact document - implements PyfficeContact"""
+
+    PYTYPE = "contact"
+
     @classmethod
     def get_pyffice_tools(cls):
-        """Get toolbox tools for video documents"""
+        """Get toolbox tools for contact documents"""
         return [
-            {'id': 'play', 'icon': 'play', 'label': 'Play/Pause', 'method': 'toggle_play'},
-            {'id': 'trim', 'icon': 'cut', 'label': 'Trim', 'method': 'trim_video'},
-            {'id': 'effects', 'icon': 'magic', 'label': 'Effects', 'method': 'add_effects'},
-            {'id': 'export', 'icon': 'download', 'label': 'Export', 'method': 'export_video'},
+            {"id": "add", "icon": "user-plus", "label": "Add Contact", "method": "add_contact"},
+            {"id": "edit", "icon": "edit", "label": "Edit", "method": "edit_contact"},
+            {"id": "delete", "icon": "trash", "label": "Delete", "method": "delete_contact"},
+            {"id": "group", "icon": "users", "label": "Group", "method": "manage_groups"},
+            {"id": "search", "icon": "search", "label": "Search", "method": "search_contacts"},
         ]
-    
-    def __init__(self, name="Nchantd Video", parent=None, cfg=None):
+
+    def __init__(self, name="Nchantd Contact", parent=None, cfg=None):
         """ """
         super().__init__(name, parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeVideo"))
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeContact"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -70,25 +72,30 @@ class NchantdOfficeVideo(NchantdOfficeDocument, PyfficeVideo):
         self.initModel(cfg)
         self.initView(cfg)
         return self
-    
-    def toggle_play(self):
-        """Toggle play/pause"""
-        logma.info("Toggling play/pause...")
+
+    def add_contact(self):
+        """Add contact"""
+        logma.info("Adding contact...")
         return self
-    
-    def trim_video(self):
-        """Trim video"""
-        logma.info("Trimming video...")
+
+    def edit_contact(self):
+        """Edit contact"""
+        logma.info("Editing contact...")
         return self
-    
-    def add_effects(self):
-        """Add effects"""
-        logma.info("Adding effects...")
+
+    def delete_contact(self):
+        """Delete contact"""
+        logma.info("Deleting contact...")
         return self
-    
-    def export_video(self):
-        """Export video"""
-        logma.info("Exporting video...")
+
+    def manage_groups(self):
+        """Manage groups"""
+        logma.info("Managing groups...")
+        return self
+
+    def search_contacts(self):
+        """Search contacts"""
+        logma.info("Searching contacts...")
         return self
 
 

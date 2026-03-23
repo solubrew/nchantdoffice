@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
@@ -21,37 +22,37 @@ from nchantrs.libraries import pyqt
 from condor import condor
 from ogma.logma import Logma
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
-from pyffice.document import PyfficeContact
+from pyffice.document import PyfficeImage
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", "contacts.yaml")
+pxcfg = join(here, "../_data_", "images.yaml")
 
 
-class NchantdOfficeContact(NchantdOfficeDocument, PyfficeContact):
-    """Contact document - implements PyfficeContact"""
-    
-    PYTYPE = 'contact'
-    
+class NchantdOfficeImage(NchantdOfficeDocument, PyfficeImage):
+    """Image document - implements PyfficeImage"""
+
+    PYTYPE = "image"
+
     @classmethod
     def get_pyffice_tools(cls):
-        """Get toolbox tools for contact documents"""
+        """Get toolbox tools for image documents"""
         return [
-            {'id': 'add', 'icon': 'user-plus', 'label': 'Add Contact', 'method': 'add_contact'},
-            {'id': 'edit', 'icon': 'edit', 'label': 'Edit', 'method': 'edit_contact'},
-            {'id': 'delete', 'icon': 'trash', 'label': 'Delete', 'method': 'delete_contact'},
-            {'id': 'group', 'icon': 'users', 'label': 'Group', 'method': 'manage_groups'},
-            {'id': 'search', 'icon': 'search', 'label': 'Search', 'method': 'search_contacts'},
+            {"id": "crop", "icon": "crop", "label": "Crop", "method": "crop_image"},
+            {"id": "rotate", "icon": "rotate", "label": "Rotate", "method": "rotate_image"},
+            {"id": "filters", "icon": "filter", "label": "Filters", "method": "apply_filters"},
+            {"id": "resize", "icon": "resize", "label": "Resize", "method": "resize_image"},
+            {"id": "enhance", "icon": "wand", "label": "Enhance", "method": "auto_enhance"},
         ]
-    
-    def __init__(self, name="Nchantd Contact", parent=None, cfg=None):
+
+    def __init__(self, name="Nchantd Image", parent=None, cfg=None):
         """ """
         super().__init__(name, parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeContact"))
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeImage"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -71,30 +72,30 @@ class NchantdOfficeContact(NchantdOfficeDocument, PyfficeContact):
         self.initModel(cfg)
         self.initView(cfg)
         return self
-    
-    def add_contact(self):
-        """Add contact"""
-        logma.info("Adding contact...")
+
+    def crop_image(self):
+        """Crop image"""
+        logma.info("Cropping image...")
         return self
-    
-    def edit_contact(self):
-        """Edit contact"""
-        logma.info("Editing contact...")
+
+    def rotate_image(self):
+        """Rotate image"""
+        logma.info("Rotating image...")
         return self
-    
-    def delete_contact(self):
-        """Delete contact"""
-        logma.info("Deleting contact...")
+
+    def apply_filters(self):
+        """Apply filters"""
+        logma.info("Applying filters...")
         return self
-    
-    def manage_groups(self):
-        """Manage groups"""
-        logma.info("Managing groups...")
+
+    def resize_image(self):
+        """Resize image"""
+        logma.info("Resizing image...")
         return self
-    
-    def search_contacts(self):
-        """Search contacts"""
-        logma.info("Searching contacts...")
+
+    def auto_enhance(self):
+        """Auto enhance"""
+        logma.info("Auto enhancing...")
         return self
 
 

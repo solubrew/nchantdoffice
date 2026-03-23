@@ -1,0 +1,71 @@
+NchantdOfficeCAD:
+    NchantdDiagram:
+        actions:
+            0: insert_rectangle
+            1: insert_square
+            2: insert_circle
+            3: insert_ellipse
+            4: insert_image
+            5: insert_irregular_shape
+            6: insert_polygon
+            7: insert_triangle
+            8: insert_triangle_right
+            9: insert_canvas
+            10: insert_table
+            11: insert_widget
+            12: insert_line
+            13: insert_text
+            14: insert_arrow
+            15: insert_double_arrow
+    path:
+    toolbox:
+      100:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      200:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      300:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      400:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      500:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      600:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+    dstruct:
+        database:
+            objects:
+                table:
+                    app_action:
+                        records:
+
+                view:
+                    vw_shape_1d:
+                        cmd: >
+                            SELECT
+                            *
+                            FROM vw_app_action aa
+                            WHERE aa.lookup_code_txt LIKE 'add_1d_%'
+                    vw_shape_2d:
+                        cmd: >
+                            SELECT
+                            *
+                            FROM vw_app_action aa
+                            WHERE aa.lookup_code_txt LIKE 'add_2d_%'
+                    vw_shape_3d:
+                        cmd: >
+                            SELECT
+                            *
+                            FROM vw_app_action aa
+                            WHERE aa.lookup_code_txt LIKE 'add_3d_%'

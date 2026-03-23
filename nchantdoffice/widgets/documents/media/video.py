@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
@@ -21,37 +22,36 @@ from nchantrs.libraries import pyqt
 from condor import condor
 from ogma.logma import Logma
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
-from pyffice.document import PyfficeImage
+from pyffice.document import PyfficeVideo
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", "images.yaml")
+pxcfg = join(here, "../_data_", "video.yaml")
 
 
-class NchantdOfficeImage(NchantdOfficeDocument, PyfficeImage):
-    """Image document - implements PyfficeImage"""
-    
-    PYTYPE = 'image'
-    
+class NchantdOfficeVideo(NchantdOfficeDocument, PyfficeVideo):
+    """Video document - implements PyfficeVideo"""
+
+    PYTYPE = "video"
+
     @classmethod
     def get_pyffice_tools(cls):
-        """Get toolbox tools for image documents"""
+        """Get toolbox tools for video documents"""
         return [
-            {'id': 'crop', 'icon': 'crop', 'label': 'Crop', 'method': 'crop_image'},
-            {'id': 'rotate', 'icon': 'rotate', 'label': 'Rotate', 'method': 'rotate_image'},
-            {'id': 'filters', 'icon': 'filter', 'label': 'Filters', 'method': 'apply_filters'},
-            {'id': 'resize', 'icon': 'resize', 'label': 'Resize', 'method': 'resize_image'},
-            {'id': 'enhance', 'icon': 'wand', 'label': 'Enhance', 'method': 'auto_enhance'},
+            {"id": "play", "icon": "play", "label": "Play/Pause", "method": "toggle_play"},
+            {"id": "trim", "icon": "cut", "label": "Trim", "method": "trim_video"},
+            {"id": "effects", "icon": "magic", "label": "Effects", "method": "add_effects"},
+            {"id": "export", "icon": "download", "label": "Export", "method": "export_video"},
         ]
-    
-    def __init__(self, name="Nchantd Image", parent=None, cfg=None):
+
+    def __init__(self, name="Nchantd Video", parent=None, cfg=None):
         """ """
         super().__init__(name, parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeImage"))
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeVideo"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -71,30 +71,25 @@ class NchantdOfficeImage(NchantdOfficeDocument, PyfficeImage):
         self.initModel(cfg)
         self.initView(cfg)
         return self
-    
-    def crop_image(self):
-        """Crop image"""
-        logma.info("Cropping image...")
+
+    def toggle_play(self):
+        """Toggle play/pause"""
+        logma.info("Toggling play/pause...")
         return self
-    
-    def rotate_image(self):
-        """Rotate image"""
-        logma.info("Rotating image...")
+
+    def trim_video(self):
+        """Trim video"""
+        logma.info("Trimming video...")
         return self
-    
-    def apply_filters(self):
-        """Apply filters"""
-        logma.info("Applying filters...")
+
+    def add_effects(self):
+        """Add effects"""
+        logma.info("Adding effects...")
         return self
-    
-    def resize_image(self):
-        """Resize image"""
-        logma.info("Resizing image...")
-        return self
-    
-    def auto_enhance(self):
-        """Auto enhance"""
-        logma.info("Auto enhancing...")
+
+    def export_video(self):
+        """Export video"""
+        logma.info("Exporting video...")
         return self
 
 

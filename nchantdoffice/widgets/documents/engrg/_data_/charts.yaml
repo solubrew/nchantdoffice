@@ -1,0 +1,32 @@
+NchantdChart:
+    path:
+    dstruct:
+        database:
+            objects:
+                table:
+                view:
+    toolbox:
+      100:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      200:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      300:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      400:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      500:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      600:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
