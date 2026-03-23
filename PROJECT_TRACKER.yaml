@@ -1,0 +1,144 @@
+agent: arthr
+audit_date: '1773363433.6995049'
+dimensions:
+  cli_documentation:
+    details:
+      exists: false
+      score: 0
+      status: fail
+    score: 0
+    status: fail
+  configuration:
+    details:
+      config_exists: false
+      score: 0
+      status: fail
+    score: 0
+    status: fail
+  dependency_strategy:
+    details:
+      external_imports: 57
+      internal_import_details:
+      - file: cmds/runNchantdAXN.py
+        module: nchantdaxn.main
+        project: axn
+      - file: cmds/runTab.py
+        module: condor
+        project: condor
+      - file: cmds/runTab.py
+        module: nchantrs.dialogs.dialogs
+        project: nchantrs
+      - file: nchantdtodo/dstruct.py
+        module: condor
+        project: condor
+      - file: nchantdtodo/dialogs.py
+        module: condor
+        project: condor
+      - file: nchantdtodo/main.py
+        module: condor
+        project: condor
+      - file: nchantdtodo/resource.py
+        module: ogma.logma
+        project: ogma
+      - file: nchantdtodo/widgets.py
+        module: condor
+        project: condor
+      - file: nchantdtodo/widgets.py
+        module: condor
+        project: condor
+      - file: nchantdtodo/widgets.py
+        module: condor
+        project: condor
+      internal_imports: 31
+      internal_projects_used:
+      - condor
+      - axn
+      - nchantrs
+      - ogma
+      - projectaxn
+      leverage_score: 35.23
+      score: 100
+      status: pass
+      total_imports: 88
+    score: 100
+    status: pass
+  documentation:
+    details:
+      missing:
+      - README.md
+      - CHANGES.md
+      - STATE.md
+      - CONTRIBUTING.md
+      present: []
+      score: 0
+      status: fail
+    score: 0
+    status: fail
+  git_workflow:
+    details:
+      branch: unknown
+      has_commits: false
+      is_git_repo: true
+      score: 100
+      status: pass
+    score: 100
+    status: pass
+  kiss_dry:
+    details:
+      duplicate_warnings: 0
+      magic_numbers_found: 57
+      score: 50
+      status: partial
+    score: 50
+    status: partial
+  logging:
+    details:
+      print_files:
+      - cmds/runTab.py
+      - cmds/runResources.py
+      - cmds/runMain.py
+      print_statements: 6
+      score: 0
+      status: fail
+      uses_logging: false
+      uses_logma: false
+    score: 0
+    status: fail
+  structure:
+    details:
+      missing_dirs:
+      - nchantdoffice
+      - tests
+      - docs
+      missing_files:
+      - README.md
+      - pyproject.toml
+      - CLI.md
+      - STATE.md
+      present_dirs:
+      - cmds
+      - nchantdtodo
+      - nchantdaxn
+      - z-work_
+      present_files:
+      - requirements
+      - pytest.ini
+      - PROJECT_TRACKER.yaml
+      score: 0
+      status: fail
+    score: 0
+    status: fail
+  testing:
+    details:
+      score: 0
+      status: fail
+      test_dir_exists: false
+    score: 0
+    status: fail
+overall_score: 21.05
+project: nchantdoffice
+summary:
+  failing: 6
+  gitvein_projects_available: 65
+  passing: 2
+  total_dimensions: 9
