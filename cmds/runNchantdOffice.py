@@ -20,9 +20,7 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-import crow  # Commented out - not needed for local system
 
-crow.crowLoad("NchantdOffice", "DELTA")
 
 from condor import condor
 from nchantrs.nchantrs import nchantment
@@ -52,6 +50,9 @@ def run(args):
 
 
 if __name__ == "__main__":
+    import crow  # Commented out - not needed for local system
+
+    crow.crowLoad("NchantdOffice", "DELTA")
     start = dt.datetime.now()
     logma.info("Start")
     run(argv)
