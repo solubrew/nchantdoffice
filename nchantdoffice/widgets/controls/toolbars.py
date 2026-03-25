@@ -46,11 +46,11 @@ pxcfg = {}
 
 
 class NchantdOfficeApplicationToolBar(NchantdApplicationToolBar):
-    """"""
+    """Office application toolbar."""
 
     def __init__(self, parent=None, cfg=None):
-        """ """
-        super().__init__(self, cfg)
+        """Initialize the toolbar."""
+        super().__init__(parent, cfg)
         self.parent = parent
         self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeApplicationToolBar"))
         if self.parent:
@@ -58,41 +58,41 @@ class NchantdOfficeApplicationToolBar(NchantdApplicationToolBar):
         self.config.override(cfg)
 
     def initModel(self):
-        """"""
+        """Initialize the model."""
         super().initModel()
         return self
 
     def initView(self):
-        """"""
+        """Initialize the view."""
         super().initView()
         return self
 
     def initWidget(self):
-        """"""
+        """Initialize the widget."""
         self.initModel()
         self.initView()
         return self
 
 
 class NchantdOfficeNotificationButtonBar(NchantdButtonBar):
-    """"""
+    """Office notification button bar."""
 
     def __init__(self, parent=None, cfg=None):
-        """ """
+        """Initialize the notification bar."""
         self.parent = parent
         self.config = condor.Instruct(pxcfg).select("NchantdOfficeApplicationNotificationButtonBar")
         if self.parent:
             self.config.override(parent.config)
-        super().__init__(self)
         self.config.override(cfg)
+        super().__init__(parent, self.config)
 
     def initModel(self):
-        """"""
+        """Initialize the model."""
         super().initModel()
         return self
 
     def initView(self):
-        """"""
+        """Initialize the view."""
         super().initView()
         # setup a drop down that shows up only when there are application wide notifications
         # The drop down will flash when new notifications are added
@@ -102,21 +102,23 @@ class NchantdOfficeNotificationButtonBar(NchantdButtonBar):
         return self
 
     def initWidget(self):
-        """"""
+        """Initialize the widget."""
         self.initModel()
         self.initView()
         return self
 
 
-class NchantdNewDocumentToolBar(NchantdButtonBar):
-    """""Far left toolbar - creates new documents and emits signals"""
+class NchantdNewDocumentToolBar(NchantdButtonBar, pyqt.QObject):
+    """Far left toolbar - creates new documents and emits signals"""
     
     # Signals for document lifecycle
     document_created = Signal(str)  # Emitted when new document created (doc_type string)
     document_opened = Signal(object)  # Emitted when document opened (NchantdOfficeDocument instance)
     
     def __init__(self, parent=None, cfg=None):
-        """ """
+        """Initialize the toolbar."""
+        # Initialize QObject first for signal support
+        pyqt.QObject.__init__(self)
         super().__init__(parent, cfg)
         self.parent = parent
         self.config.override(condor.Instruct(pxcfg).select("NchantdNewDocumentToolBar"))
@@ -127,7 +129,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         self.document_types = None
 
     def initModel(self):
-        """"""
+        """Initialize the model."""
         self.document_types = self.app.model.get_document_types()
         # self.document_types.drop_duplicates(subset=["name_txt", "widget_txt", "parameters_dict"], inplace=True)
         self.document_types = self.document_types[self.document_types["quick_launch_bit"] == 1]
@@ -138,19 +140,19 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         return self
 
     def initView(self):
-        """"""
+        """Initialize the view."""
         cfg = {"layout": "vertical"}
         super().initView(cfg)
         return self
 
     def initWidget(self):
-        """"""
+        """Initialize the widget."""
         self.initModel()
         self.initView()
         return self
 
     def add_document(self, signal=None, *args, **kwargs):
-        """"""
+        """Add a new document."""
         cfg = args[0]["action"].action
         if isinstance(cfg["parameters_dict"], str):
             cfg["parameters_dict"] = j.loads(cfg["parameters_dict"].replace("'", '"'))
@@ -200,7 +202,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         return self
 
     def add_node(self, signal=None, *args, **kwargs):
-        """"""
+        """Add a new node."""
         cfg = args[0]["action"].action
         name = uuid()[-5:]
         tree = "left"
@@ -230,7 +232,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         return self
 
     def add_note(self, signal=None, *args, **kwargs):
-        """"""
+        """Add a new note."""
         logma.info(f"Launch Note {signal}")
         cfg = args[0]["action"].action
         pid = self.app.view.panes["left"].tree.model.current_node.nid
@@ -243,7 +245,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         return self
 
     def launch_new_document_sigil(self, signal=None, *args, **kwargs):
-        """"""
+        """Launch the sigil dialog."""
         logma.info(f"Launch the Sigil")
         # cfg = {"documents": self.document_types}
         cfg = {}
@@ -251,11 +253,11 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         return self
 
     def set_active_item(self):
-        """"""
+        """Set the active item."""
         return self
 
     def set_actions(self, actions=None):
-        """"""
+        """Set the actions."""
         if actions is None:
             actions = self.actions
         self.actions = {
@@ -265,13 +267,13 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         return self
 
     def set_handlers(self):
-        """"""
+        """Set the handlers."""
         self.set_active_item()
         self.document_types["handler"] = self.document_types["action_txt"].apply(self.set_handler)
         return self
 
     def set_handler(self, value):
-        """"""
+        """Set the handler for a given action value."""
         match value:
             case "add_node_top_app_rootnode":
                 return self.launch_new_document_sigil
@@ -291,10 +293,10 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
 
 
 class NchantdCellFormattingToolBar(NchantdButtonBar):
-    """"""
+    """Cell formatting toolbar."""
 
     def __init__(self, parent=None, cfg=None):
-        """ """
+        """Initialize the toolbar."""
         self.parent = parent
         self.config = condor.Instruct(pxcfg).select("NchantdCellFormattingToolBar")
         if self.parent:
@@ -303,12 +305,12 @@ class NchantdCellFormattingToolBar(NchantdButtonBar):
         super().__init__(self.parent, self.config)
 
     def initModel(self):
-        """"""
+        """Initialize the model."""
         super().initModel()
         return self
 
     def initView(self):
-        """"""
+        """Initialize the view."""
         super().initView()
         for seq, action in self.config.dikt.get("actions", {}).items():
             self.buttons[action] = NchantdButton(self, lookup(self.app, action)).initWidget()
@@ -316,17 +318,17 @@ class NchantdCellFormattingToolBar(NchantdButtonBar):
         return self
 
     def initWidget(self):
-        """"""
+        """Initialize the widget."""
         self.initModel()
         self.initView()
         return self
 
 
 class NchantdDataFormattingToolBar(NchantdButtonBar):
-    """"""
+    """Data formatting toolbar."""
 
     def __init__(self, parent=None, cfg=None):
-        """ """
+        """Initialize the toolbar."""
         self.parent = parent
         self.config = condor.Instruct(pxcfg).select("NchantdTextFormattingToolBar")
         if self.parent:
@@ -335,27 +337,27 @@ class NchantdDataFormattingToolBar(NchantdButtonBar):
         super().__init__(self.parent, self.config)
 
     def initModel(self):
-        """"""
+        """Initialize the model."""
         super().initModel()
         return self
 
     def initView(self):
-        """"""
+        """Initialize the view."""
         super().initView()
         return self
 
     def initWidget(self):
-        """"""
+        """Initialize the widget."""
         self.initModel()
         self.initView()
         return self
 
 
 class NchantdTextFormattingToolBar(NchantdButtonBar):
-    """"""
+    """Text formatting toolbar."""
 
     def __init__(self, parent=None, cfg=None):
-        """ """
+        """Initialize the toolbar."""
         self.parent = parent
         self.config = condor.Instruct(pxcfg).select("NchantdTextFormattingToolBar")
         if self.parent:
@@ -364,17 +366,17 @@ class NchantdTextFormattingToolBar(NchantdButtonBar):
         super().__init__(self.parent, self.config)
 
     def initModel(self):
-        """"""
+        """Initialize the model."""
         super().initModel()
         return self
 
     def initView(self):
-        """"""
+        """Initialize the view."""
         super().initView()
         return self
 
     def initWidget(self):
-        """"""
+        """Initialize the widget."""
         self.initModel()
         self.initView()
         return self
