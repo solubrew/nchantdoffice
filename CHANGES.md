@@ -10,12 +10,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Created STATE.md per CODING_STANDARDS V4
-- Created tests/ directory structure (unit/, integration/, e2e/)
-- Created .gitattributes for proper file handling
+- `.github/workflows/ci.yml` - GitHub Actions CI pipeline (lint, type-check, test, security, build)
+- `.github/workflows/docs.yml` - GitHub Actions documentation deployment
+- `nchantdoffice/config.py` - Centralized configuration module with 100+ constants
+- `tests/unit/__init__.py` - Unit test package
+- `tests/unit/test_config.py` - Configuration module tests
 
 ### Changed
 - Project branch: gamma → orin-ws (per Git workflow)
+- `nchantdoffice/__init__.py` - Added version and config exports
+
+### Fixed
+- Lambda antipattern in toolbar buttons (fixed variable capture)
+- Signal inheritance in NchantdNewDocumentToolBar
+- Incorrect super().__init__() calls in toolbar classes
+
+### Security
+- Added CI security scanning with bandit and safety
+
+### Testing
+- Added pytest configuration and unit tests for config module
+
+---
+
+## [0.0.1.0.1.4] - 2026-03-25
+
+### Phase 7 - Quality & Standards Compliance
+
+#### Added
+- CI/CD pipeline (GitHub Actions)
+- Configuration module with logging and 100+ constants
+- Unit test infrastructure
+- Documentation deployment workflow
+
+#### Fixed
+- Lambda antipattern in buttons
+- Signal inheritance issues
+- super().__init__() parameter errors
 
 ---
 

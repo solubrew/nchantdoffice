@@ -1,0 +1,83 @@
+site_name: Project Documentation
+site_description: Auto-generated documentation
+docs_dir: docs
+plugins:
+- mkdocstrings:
+    handlers:
+      python:
+        options:
+          show_source: true
+          show_root_heading: true
+          show_category_heading: true
+          members_order: source
+nav:
+- Home: index.md
+- API Reference: reference.md
+- Modules:
+  - __main__: api/__main__.md
+  - nchantdoffice: api/nchantdoffice.md
+  - nchantdoffice:
+    - __main__: api/nchantdoffice.__main__.md
+    - cli: api/nchantdoffice.cli.md
+    - models: api/nchantdoffice.models.md
+    - nchantdoffice: api/nchantdoffice.nchantdoffice.md
+    - views: api/nchantdoffice.views.md
+    - widgets: api/nchantdoffice.widgets.md
+    - widgets:
+      - advertisements: api/nchantdoffice.widgets.advertisements.md
+      - catalogs: api/nchantdoffice.widgets.catalogs.md
+      - documents: api/nchantdoffice.widgets.documents.md
+      - documents:
+        - audio: api/nchantdoffice.widgets.documents.audio.md
+        - charts: api/nchantdoffice.widgets.documents.charts.md
+        - documents: api/nchantdoffice.widgets.documents.documents.md
+        - engrg: api/nchantdoffice.widgets.documents.engrg.md
+        - engrg:
+          - cad: api/nchantdoffice.widgets.documents.engrg.cad.md
+          - charts: api/nchantdoffice.widgets.documents.engrg.charts.md
+          - database: api/nchantdoffice.widgets.documents.engrg.database.md
+          - engineering: api/nchantdoffice.widgets.documents.engrg.engineering.md
+          - freecad: api/nchantdoffice.widgets.documents.engrg.freecad.md
+          - process: api/nchantdoffice.widgets.documents.engrg.process.md
+          - tasks: api/nchantdoffice.widgets.documents.engrg.tasks.md
+        - filesystems: api/nchantdoffice.widgets.documents.filesystems.md
+        - finance: api/nchantdoffice.widgets.documents.finance.md
+        - finance:
+          - finance: api/nchantdoffice.widgets.documents.finance.finance.md
+        - forms: api/nchantdoffice.widgets.documents.forms.md
+        - games: api/nchantdoffice.widgets.documents.games.md
+        - games:
+          - games: api/nchantdoffice.widgets.documents.games.games.md
+          - nchantris: api/nchantdoffice.widgets.documents.games.nchantris.md
+        - journal: api/nchantdoffice.widgets.documents.journal.md
+        - managers: api/nchantdoffice.widgets.documents.managers.md
+        - managers:
+          - calendars: api/nchantdoffice.widgets.documents.managers.calendars.md
+          - contacts: api/nchantdoffice.widgets.documents.managers.contacts.md
+          - travel: api/nchantdoffice.widgets.documents.managers.travel.md
+        - media: api/nchantdoffice.widgets.documents.media.md
+        - media:
+          - audio: api/nchantdoffice.widgets.documents.media.audio.md
+          - forms: api/nchantdoffice.widgets.documents.media.forms.md
+          - images: api/nchantdoffice.widgets.documents.media.images.md
+          - notes: api/nchantdoffice.widgets.documents.media.notes.md
+          - pdfs: api/nchantdoffice.widgets.documents.media.pdfs.md
+          - scripts: api/nchantdoffice.widgets.documents.media.scripts.md
+          - shows: api/nchantdoffice.widgets.documents.media.shows.md
+          - video: api/nchantdoffice.widgets.documents.media.video.md
+        - notebooks: api/nchantdoffice.widgets.documents.notebooks.md
+        - pdf: api/nchantdoffice.widgets.documents.pdf.md
+        - presentation: api/nchantdoffice.widgets.documents.presentation.md
+        - spreadsheet: api/nchantdoffice.widgets.documents.spreadsheet.md
+        - surveys: api/nchantdoffice.widgets.documents.surveys.md
+        - text: api/nchantdoffice.widgets.documents.text.md
+        - web: api/nchantdoffice.widgets.documents.web.md
+      - extensions: api/nchantdoffice.widgets.extensions.md
+      - extensions:
+        - extensions: api/nchantdoffice.widgets.extensions.extensions.md
+      - settings: api/nchantdoffice.widgets.settings.md
+      - tabs: api/nchantdoffice.widgets.tabs.md
+      - tags: api/nchantdoffice.widgets.tags.md
+      - timelines: api/nchantdoffice.widgets.timelines.md
+      - trees: api/nchantdoffice.widgets.trees.md
+      - widgets: api/nchantdoffice.widgets.widgets.md
