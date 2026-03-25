@@ -108,7 +108,7 @@ class NchantdOfficeNotificationButtonBar(NchantdButtonBar):
         return self
 
 
-class NchantdNewDocumentToolBar(NchantdButtonBar, pyqt.QObject):
+class NchantdNewDocumentToolBar(NchantdButtonBar):
     """Far left toolbar - creates new documents and emits signals"""
     
     # Signals for document lifecycle
@@ -117,8 +117,6 @@ class NchantdNewDocumentToolBar(NchantdButtonBar, pyqt.QObject):
     
     def __init__(self, parent=None, cfg=None):
         """Initialize the toolbar."""
-        # Initialize QObject first for signal support
-        pyqt.QObject.__init__(self)
         super().__init__(parent, cfg)
         self.parent = parent
         self.config.override(condor.Instruct(pxcfg).select("NchantdNewDocumentToolBar"))
