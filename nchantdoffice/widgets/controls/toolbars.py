@@ -17,7 +17,12 @@ import datetime as dt
 import json as j
 
 # ======================================3rd Party Library Modules=====================================================||
-from PyQt5.QtCore import pyqtSignal as Signal, pyqtSlot as Slot
+# NOTE: Using PySide6 via nchantrs.libraries.pyqt for signal/slot compatibility
+# Changed 2026-03-25: Was using PyQt5 which caused "cannot be converted to QObject" error
+# when mixing PyQt5 signals with PySide6 QWidget (nchantrs uses PySide6)
+from nchantrs.libraries import pyqt
+Signal = pyqt.Signal
+Slot = pyqt.Slot
 # ======================================Solutions Brewer Library Modules==============================================||
 from condor import condor
 from subtrix.utilities import uuid
