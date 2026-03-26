@@ -83,3 +83,14 @@ NchantdOfficeDBUpdate:
           reload: True
         views:
     0.0.1.0.1.5:
+      0.0.1.0.1.6:
+        tables:
+          app_instance:
+            update:
+              - data:
+                  "last_node_nid_txt": None
+                WHERE:
+                  "IS":
+                    "last_node_nid_txt": "NULL"
+        indexes:
+        views:

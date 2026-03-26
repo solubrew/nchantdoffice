@@ -71,12 +71,25 @@ class NchantdOfficeDocumentMixin:
         self.context_menu_name = "context.document"
         if self.context_menu_name is not None:
             self.initialize_context_menu(self.context_menu_name)
+        # Fix: Enable context menu policy for right-click to work
+        self.setContextMenuPolicy(pyqt.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._show_context_menu)
+        return self
+
+    def _show_context_menu(self, pos):
+        """"""
+        # Re-initialize context menu to ensure it's fresh
+        if self.context_menu is None:
+            self.initialize_context_menu(self.context_menu_name)
+        if self.context_menu is not None:
+            global_pos = self.mapToGlobal(pos)
+            self.context_menu.exec(global_pos)
         return self
 
     def initView(self, cfg=None):
         """"""
         super().initView(cfg)
-        if self.config.dikt.get("default_toolbar", "True"):
+        if self.config.dikt.get("default_toolbar", True):
             self.init_toolbar(cfg)
         self.init_toolbox()
         return self

@@ -152,21 +152,10 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         logma.info(f"File Path {self.document.file_path}")
         if self.document.file_path is not None:
             self.open_file(self.document.file_path)
+        
+        # FIX: Add PDF view to existing layout instead of replacing it
+        # The toolbar was already added by super().initView(), so we just add this widget
         self.layout.addWidget(self.view)
-
-        self.setWindowTitle("PDF Viewer with Text Selection")
-        self.layout = pyqt.QVBoxLayout()
-
-        self.pdf_label = pyqt.QLabel()
-        self.pdf_label.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
-        self.pdf_label.mousePressEvent = self.mouse_press_event
-        self.pdf_label.mouseMoveEvent = self.mouse_move_event
-        self.pdf_label.mouseReleaseEvent = self.mouse_release_event
-
-        self.layout.addWidget(self.pdf_label)
-        self.setLayout(self.layout)
-
-        return self
 
     def initWidget(self):
         """"""
