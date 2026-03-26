@@ -194,6 +194,10 @@ class NchantdOfficeDocumentMixin:
         """"""
         if cfg is None:
             cfg = {}
+        # Ensure we have app reference - try to get it from parent if not set
+        if not hasattr(self, 'app') or self.app is None:
+            if hasattr(self, 'parent') and self.parent is not None:
+                self.app = getattr(self.parent, 'app', None)
         buttons = {
             0: {"action": "show_pane_left", "handler": self.cmd_show_pane_left},
             100: {"action": "save", "handler": self.cmd_save_tab},
