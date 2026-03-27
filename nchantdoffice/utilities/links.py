@@ -2,18 +2,20 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
+import json
 
 # ======================================3rd Party Library Modules=====================================================||
 import requests
@@ -30,8 +32,7 @@ log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", ".yaml")
-pxcfg = {}
+pxcfg = join(here, "_data_", "links.yaml")
 
 
 def update_affilate_links(model, last_affilate_update_dttm: str = "2025-01-01 00:00:00", reload=False):

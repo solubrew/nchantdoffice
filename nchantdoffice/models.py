@@ -540,7 +540,21 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
     def add_tab(
         self, name, pid, pos, widget, widgdata=None, did=None, doc_type=None, tabset=None, in_doc=True, db="db"
     ):
-        """"""
+        """
+        Add a tab to the application model.
+
+        :param name: Tab name.
+        :param pid: Parent node ID.
+        :param pos: Tab position.
+        :param widget: Widget to display in the tab.
+        :param widgdata: Initial data for the widget.
+        :param did: Document ID.
+        :param doc_type: Document type.
+        :param tabset: Target tab set.
+        :param in_doc: Whether the tab is part of a document.
+        :param db: Database alias.
+        :return: Created tab object.
+        """
         tab = super().add_tab(name, pid, pos, widget, widgdata, did, doc_type, tabset, in_doc, db)
         self.has_changed = True
         return tab
@@ -581,12 +595,13 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """
         widget = "widgets.calendars.timelines.NchantdWeeklyDashboard"
         widgdata = {}
-        self.parent.app.view.panes["center"].model.add_tab("Weekly Dashboard", pid, 1, widget, widgdata)
+        # TODO: Define pid properly or pass it as an argument
+        # self.parent.app.view.panes["center"].model.add_tab("Weekly Dashboard", pid, 1, widget, widgdata)
         self.has_changed = True
         return self
 
     def backup(self):
-        """"""
+        """Backup the application database."""
         self.store.backup_database()
         return self
 
@@ -714,8 +729,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return self
 
-    def create_doc_media_content(self):
-        """"""
+    def create_doc_media_content(self, document=None):
+        """Create content records for a document media item."""
+        if document is None:
+            return self
         pages = []
         cnt = 0
         entry = 0
@@ -1225,15 +1242,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def import_web_sessions(self, file):
-        """"""
-        if file is not None:
-            if exists(file):
-                pass
-                # parse sessions and tag them
-                for item in dikt:
-                    for window in item["windows"]:
-                        for key in item["windows"][window]:
-                            pass
+        """Import web browser sessions from a file."""
+        if file is not None and exists(file):
+            # TODO: Implement session parsing
+            pass
         return self
 
     def import_text(self, file):
@@ -1278,9 +1290,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return page_n, entry_n
 
     def save_config_document_types(self):
-        """"""
-        data = {}
-        self.store.update_record(data, "app_document_type", {"document_type": document.document_type})
+        """Save document type configuration."""
+        # TODO: Implement this method when the required 'document' object is available.
         return self
 
     def save_config_document(self):
@@ -1697,89 +1708,30 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_tab_document_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def store_app_media(self, document, db="db", how="INSERT"):
-        """"""
-        table = "app_media"
-        if how == "INSERT":
-            payload = []
-        elif how == "UPDATE":
-            payload = [{}]
-        elif how == "DEACTIVATE":
-            payload = []
-        elif how == "DELETE":
-            payload = []
-        elif how == "ARCHIVE":
-            payload = []
-        else:
-            raise Exception(f"{how} is not supported.")
-        payload = [
-            [
-                document["did"],
-                document.get("compatibility", "pyffice"),
-                document["document_type"],
-                document["syntax"],
-                document["name"],
-                document["file_name"],
-                document["description"],
-                document["path"],
-                document["location"],
-                document["encoding"],
-                "|".join(document["tags"]),
-                document["version"],
-                self.parent.instance.version,
-                document["hash"],
-                document["policy"],
-                encode64(j.dumps(document.get("metadata", {}))),
-            ]
-        ]
-        self._store(table, payload, db)
-        # self._archive_versions(table, document["did"], "did", "did", 3)
-        return document["did"]
-
-    def store_datasource(self, data):
-        """
-        TODO: create a table in the document database
-                add datasource to object for use in application
-        :param data:
-        :return:
-        """
-        if how == "INSERT":
-            payload = []
-        elif how == "UPDATE":
-            payload = [{}]
-        elif how == "DEACTIVATE":
-            payload = []
-        elif how == "DELETE":
-            payload = []
-        elif how == "ARCHIVE":
-            payload = []
-        else:
-            raise Exception(f"{how} is not supported.")
-
     def store_doc_media(self, document, db="db", how="INSERT"):
         """
+        Store document creates a new record in the database table doc_media representing a document.
 
-        Store document creates a new record in the database table doc_media representing a document
-
-                    columns: ['UUID', 'file_type_txt', 'file_name_txt', 'path_txt', 'store_location_txt', 'encoding_txt',
-                      'tags_dict', 'policy_FK']
-        limit encoded field to the size of 1GB this is standard for SQLite limitation can be pushed up to 2GB
-
-        :return:
+        :param document: Dictionary containing document metadata.
+        :param db: Database alias.
+        :param how: Action to perform (INSERT, UPDATE, etc.).
+        :return: Document ID.
         """
-        table = "doc_media"
-        if how == "INSERT":
-            payload = []
-        elif how == "UPDATE":
-            payload = [{}]
-        elif how == "DEACTIVATE":
-            payload = []
-        elif how == "DELETE":
-            payload = []
-        elif how == "ARCHIVE":
-            payload = []
-        else:
+        return self.store_app_media(document, db, how, table="doc_media")
+
+    def store_app_media(self, document, db="db", how="INSERT", table="app_media"):
+        """
+        Store application media creates a new record in the specified database table.
+
+        :param document: Dictionary containing media metadata.
+        :param db: Database alias.
+        :param how: Action to perform (INSERT, UPDATE, etc.).
+        :param table: Target database table.
+        :return: Document ID.
+        """
+        if how not in ["INSERT", "UPDATE", "DEACTIVATE", "DELETE", "ARCHIVE"]:
             raise Exception(f"{how} is not supported.")
+
         payload = [
             [
                 document["did"],
@@ -1801,7 +1753,6 @@ class NchantdOfficeStore(NchantdStore):
             ]
         ]
         self._store(table, payload, db)
-        # self._archive_versions(table, document["did"], "did", "did", 3)
         return document["did"]
 
     def store_doc_media_content(self, content, db="db", how="INSERT"):

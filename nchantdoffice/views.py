@@ -32,7 +32,6 @@ logma = Logma(__name__)
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "views.yaml")
-pxcfg = {}
 
 
 class NchantdOfficeCloakView(NchantdCloakView):

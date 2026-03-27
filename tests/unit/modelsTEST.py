@@ -11,12 +11,14 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:19
 """
+
 # 2025-11-06 09:45:19
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 import json  # 2025-11-06 09:45:19
 import tempfile  # 2025-11-06 09:45:19
 import os  # 2025-11-06 09:45:19
+from os.path import join, dirname
 
 # ======================================3rd Party Library Modules=====================================================||
 from nchantdoffice.models import NchantdOfficeInstance  # 2025-11-06 09:43:56
@@ -26,13 +28,15 @@ from nchantdoffice.models import NchantdOfficeTabSetModel  # 2025-11-06 09:43:56
 from nchantdoffice.models import NchantdOfficeSettingsModel  # 2025-11-06 09:43:56
 from nchantdoffice.models import NchantdOfficeImportModel  # 2025-11-06 09:43:56
 
-# 2025-11-06 09:43:56
-
+# ======================================Solutions Brewer Library Modules==============================================||
+from condor import condor
+from ogma.logma import Logma
 
 # =========================================Local Library Modules======================================================||
 # 2025-11-06 09:45:19
 
 # ====================================================================================================================||
+test_000 = False
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:19
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:19
 PXCFG = join(HERE, "_data_", "modelsTEST.yaml")  # 2025-11-06 09:45:19

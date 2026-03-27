@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -26,7 +27,7 @@ from nchantrs.updates.db import DBUpdate
 here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
-logma.off()
+# logma.off()
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "db.yaml")
