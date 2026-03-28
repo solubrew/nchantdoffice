@@ -93,6 +93,11 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         """"""
         if cfg is None:
             cfg = {}
+
+        current_document = self.app.view.panes["center"].currentWidget()
+        if current_document is not None and not hasattr(current_document, "toolbox_config"):
+            current_document.toolbox_config = {}
+
         cfg["toolbox"] = self.config.dikt.get("toolbox", {})
         logma.info(f"cfg {cfg}")
         self.init_toolbox()

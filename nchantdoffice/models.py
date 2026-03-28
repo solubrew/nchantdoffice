@@ -1881,6 +1881,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
                     dummy = pyqt.QWidget(self.parent)
                     dummy.dummy = True
+                    dummy.toolbox_config = {}
                     dummy.position = tabn
                     dummy.name = tab.get("name", tab.get("name_txt", None))
                     _type = tab.get("tab_type", tab.get("tab_type_txt", "custom_widget"))
@@ -1956,7 +1957,9 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             # remove from our internal list so super().load_tab doesn't shift other tabs
             self.tab_widgets.pop(tabn)
 
-        # super().load_tab(self.convert_db_to_doc(tab), tabn, tabset)
+        # super().load_tab calls self.load_widget, which we override.
+        # Ensure we pass the converted document if needed, but nchantrs' load_tab
+        # expects the 'tab' dict which it then passes to parse_widget_data.
         super().load_tab(tab, tabn, tabset, active_tab_position)
         return self
 
@@ -1966,7 +1969,15 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         logma.info(f"Tabset {tabset}")
         logma.info(f"Document {document}")
         logma.info(f"Tab Type {tab_type}")
+        # If document is not None, use it to populate cfg, similar to base load_widget
+        if document:
+            cfg["widget"] = document.get("widget", document.get("widget_txt", cfg.get("widget")))
+            cfg["tid"] = document.get("tid", document.get("tid_txt", cfg.get("tid")))
+            cfg["document"] = document
+
         tabW = super().load_widget(cfg, tabset, document, tab_type)
+        if hasattr(tabW, "initWidget"):
+            tabW.initWidget()
         return tabW
 
     def set_focus(self):
