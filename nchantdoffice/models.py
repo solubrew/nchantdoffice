@@ -1832,76 +1832,69 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
     def buildTabSet(self, node, tabset="center", toolbox=None):
         """"""
-        # logma.inspect_caller()
-        # logma.info(f"Nchantd Office Tabset {tabset} built")
-        # logma.info(f"Show Add Tab {self.show_add_tab}")
-        self.parent.blockSignals(True)
-        self.parent.clear()
-        self.tabsdata = []
-        self.tab_widgets = []
-        if self.show_add_tab or tabset == "center":
-            logma.info(f"New Document {self.new_document}")
-            if self.new_document is None:
-                self.new_document = NchantdOfficeDocumentsCatalog(self.parent, self.config)
-                if self.tabsdata == []:
-                    self.new_document.position = 0
-            else:
-                self.new_document.initWidget()
-                self.new_document.position = len(self.tabsdata) + 1
-        tabsdata = self.get_documents(node, tabset)
-        tabsdata.sort_values(by=["position_int"], ascending=True, inplace=True)
-        logma.info(f"Tabsdata {tabsdata}")
-        if not tabsdata.empty:
-            tabsdata = [self.convert_db_to_doc(tab) for tab in tabsdata.to_dict(orient="records")]
-        else:
-            tabsdata = []
-
-        self.tabset = tabset
-        self.current_node = node
-        self.tabsdata = tabsdata
-
-        # Lazy loading logic
-        active_tab_position = node.parameters.get("active_tab_position", 0)
-        # Ensure it's an integer and within bounds
+        if hasattr(self, "_building") and self._building:
+            return self
+        self._building = True
         try:
-            active_tab_position = int(active_tab_position)
-        except (ValueError, TypeError):
-            active_tab_position = 0
+            self.parent.blockSignals(True)
+            self.parent.clear()
+            self.tabsdata = []
+            self.tab_widgets = []
 
-        if tabsdata:
-            if active_tab_position >= len(tabsdata):
+            tabsdata = self.get_documents(node, tabset)
+            tabsdata.sort_values(by=["position_int"], ascending=True, inplace=True)
+            logma.info(f"Tabsdata {tabsdata}")
+            if not tabsdata.empty:
+                tabsdata = [self.convert_db_to_doc(tab) for tab in tabsdata.to_dict(orient="records")]
+            else:
+                tabsdata = []
+
+            self.tabset = tabset
+            self.current_node = node
+            self.tabsdata = tabsdata
+
+            # Lazy loading logic
+            active_tab_position = node.parameters.get("active_tab_position", 0)
+            # Ensure it's an integer and within bounds
+            try:
+                active_tab_position = int(active_tab_position)
+            except (ValueError, TypeError):
                 active_tab_position = 0
 
-            for tabn, tab in enumerate(self.tabsdata):
-                if tabn == active_tab_position:
-                    self.load_tab(tab, tabn, tabset, active_tab_position)
+            if tabsdata:
+                if active_tab_position >= len(tabsdata):
+                    active_tab_position = 0
+
+                for tabn, tab in enumerate(self.tabsdata):
+                    if tabn == active_tab_position:
+                        self.load_tab(tab, tabn, tabset, active_tab_position)
+                    else:
+                        # Create placeholder
+                        from nchantrs.libraries import pyqt
+
+                        dummy = pyqt.QWidget(self.parent)
+                        dummy.dummy = True
+                        dummy.toolbox_config = {}
+                        dummy.position = tabn
+                        dummy.name = tab.get("name", tab.get("name_txt", None))
+                        _type = tab.get("tab_type", tab.get("tab_type_txt", "custom_widget"))
+                        dummy.type = _type[-len(_type) + _type.rfind("_") + 1 :]
+                        self.tab_widgets.insert(tabn, dummy)
+                        self.parent.insertTab(tabn, dummy, dummy.name)
+
+                self.parent.setCurrentIndex(active_tab_position)
+
+            if self.show_add_tab or tabset == "center":
+                logma.info(f"New Document {self.new_document}")
+                if self.new_document is None:
+                    self.new_document = NchantdOfficeDocumentsCatalog(self.parent, self.config)
                 else:
-                    # Create placeholder
-                    from nchantrs.libraries import pyqt
-
-                    dummy = pyqt.QWidget(self.parent)
-                    dummy.dummy = True
-                    dummy.toolbox_config = {}
-                    dummy.position = tabn
-                    dummy.name = tab.get("name", tab.get("name_txt", None))
-                    _type = tab.get("tab_type", tab.get("tab_type_txt", "custom_widget"))
-                    dummy.type = _type[-len(_type) + _type.rfind("_") + 1 :]
-                    self.tab_widgets.insert(tabn, dummy)
-                    self.parent.insertTab(tabn, dummy, dummy.name)
-
-            self.parent.setCurrentIndex(active_tab_position)
-
-        if self.show_add_tab or tabset == "center":
-            logma.info(f"New Document {self.new_document}")
-            if self.new_document is None:
-                self.new_document = NchantdOfficeDocumentsCatalog(self.parent, self.config)
-                if self.tabsdata == []:
-                    self.new_document.position = 0
-            else:
-                self.new_document.initWidget()
+                    self.new_document.initWidget()
                 self.new_document.position = len(self.tabsdata) + 1
-        self.parent.addTab(self.new_document, " + ")
-        self.parent.blockSignals(False)
+                self.parent.addTab(self.new_document, " + ")
+        finally:
+            self.parent.blockSignals(False)
+            self._building = False
         return self
 
     def convert_db_to_doc(self, document_):
