@@ -1835,6 +1835,9 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         # logma.inspect_caller()
         # logma.info(f"Nchantd Office Tabset {tabset} built")
         # logma.info(f"Show Add Tab {self.show_add_tab}")
+        self.parent.clear()
+        self.tabsdata = []
+        self.tab_widgets = []
         if self.show_add_tab or tabset == "center":
             logma.info(f"New Document {self.new_document}")
             if self.new_document is None:
@@ -1850,11 +1853,42 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         if not tabsdata.empty:
             tabsdata = [self.convert_db_to_doc(tab) for tab in tabsdata.to_dict(orient="records")]
         else:
-            tabsdata = None
-        # if len(tabsdata) > 31:
-        #     pass
-        # TODO:  create child node and split off tabsdata
-        super().buildTabSet(node, tabset, tabsdata, toolbox)
+            tabsdata = []
+
+        self.tabset = tabset
+        self.current_node = node
+        self.tabsdata = tabsdata
+
+        # Lazy loading logic
+        active_tab_position = node.parameters.get("active_tab_position", 0)
+        # Ensure it's an integer and within bounds
+        try:
+            active_tab_position = int(active_tab_position)
+        except (ValueError, TypeError):
+            active_tab_position = 0
+
+        if tabsdata:
+            if active_tab_position >= len(tabsdata):
+                active_tab_position = 0
+
+            for tabn, tab in enumerate(self.tabsdata):
+                if tabn == active_tab_position:
+                    self.load_tab(tab, tabn, tabset, active_tab_position)
+                else:
+                    # Create placeholder
+                    from nchantrs.libraries import pyqt
+
+                    dummy = pyqt.QWidget(self.parent)
+                    dummy.dummy = True
+                    dummy.position = tabn
+                    dummy.name = tab.get("name", tab.get("name_txt", None))
+                    _type = tab.get("tab_type", tab.get("tab_type_txt", "custom_widget"))
+                    dummy.type = _type[-len(_type) + _type.rfind("_") + 1 :]
+                    self.tab_widgets.insert(tabn, dummy)
+                    self.parent.insertTab(tabn, dummy, dummy.name)
+
+            self.parent.setCurrentIndex(active_tab_position)
+
         if self.show_add_tab or tabset == "center":
             logma.info(f"New Document {self.new_document}")
             if self.new_document is None:

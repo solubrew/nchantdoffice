@@ -86,6 +86,30 @@ class NchantdOfficeTabSet(NchantdTabSet):
             cfg = {"name_txt": text}
             self.app.model.update_tab(self.app.model.get_current_tab(), cfg)
 
+    def on_tab_focus(self, tabn=None):
+        """"""
+        if tabn is None:
+            tabn = self.currentIndex()
+
+        # check if it's the " + " tab (it won't be in model.tabsdata)
+        if tabn < len(self.model.tabsdata):
+            widget = self.widget(tabn)
+            if hasattr(widget, "dummy") and widget.dummy:
+                logma.info(f"Loading Lazy Tab {tabn}")
+                self.model.load_tab(self.model.tabsdata[tabn], tabn, self.pane_position)
+
+            # Persist last selected tab
+            if self.model.current_node:
+                self.model.current_node.parameters["active_tab_position"] = tabn
+                import json
+
+                self.app.model.update_node(
+                    self.model.current_node, {"parameters_dict": json.dumps(self.model.current_node.parameters)}
+                )
+
+        super().on_tab_focus(tabn)
+        return self
+
 
 # ====================================================================================================================||
 
