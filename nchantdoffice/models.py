@@ -472,6 +472,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             "context": context,
         }
         self.store.store_doc_media_content(content)
+        # self.add_document_content(document, media_fk, page_n, entry_n, version, hash_, policy)
         return self
 
     def add_note_app(self, document, pid, pos, tabset="center"):
@@ -535,6 +536,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             "context": context,
         }
         self.store.store_doc_media_content(content)
+        # self.add_document_content(
+        #     document, media_fk, page_n, entry_n, version, hash_, policy
+        # )  # TODO: does this need to be moved to the app set of tables
         return self
 
     def add_tab(
@@ -745,6 +749,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             payload.append([uuid(), document.id, cnt, entry, version, hash_, content_part, context])
             cnt += 1
         self.store.store_doc_media_content(payload)
+        # self.add_document_content(document, None, cnt, entry, version, hash_, None)
         self.has_changed = True
         return self
 
@@ -1355,6 +1360,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         :return:
         """
         # logma.info(f"Document {pydoc.to_dict()}")
+        if hasattr(pydoc, "is_changed") and pydoc.is_changed is False:
+            return pydoc
         # check if content or metadata has changed
         # check version of current document
         # increment version based on overall version count...needs a check out process eventually
