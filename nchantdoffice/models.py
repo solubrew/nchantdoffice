@@ -1835,6 +1835,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         # logma.inspect_caller()
         # logma.info(f"Nchantd Office Tabset {tabset} built")
         # logma.info(f"Show Add Tab {self.show_add_tab}")
+        self.parent.blockSignals(True)
         self.parent.clear()
         self.tabsdata = []
         self.tab_widgets = []
@@ -1899,6 +1900,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 self.new_document.initWidget()
                 self.new_document.position = len(self.tabsdata) + 1
         self.parent.addTab(self.new_document, " + ")
+        self.parent.blockSignals(False)
         return self
 
     def convert_db_to_doc(self, document_):
@@ -1946,6 +1948,14 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
     def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0):
         """"""
+        # Workaround for bug in nchantrs.models.tabsetmodels.NchantdTabSetModel.load_tab
+        # which uses 'tabn in self.tab_widgets' incorrectly for a list.
+        if tabn < len(self.tab_widgets):
+            # remove from parent QTabWidget
+            self.parent.removeTab(tabn)
+            # remove from our internal list so super().load_tab doesn't shift other tabs
+            self.tab_widgets.pop(tabn)
+
         # super().load_tab(self.convert_db_to_doc(tab), tabn, tabset)
         super().load_tab(tab, tabn, tabset, active_tab_position)
         return self

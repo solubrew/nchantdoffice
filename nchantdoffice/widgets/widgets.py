@@ -92,7 +92,7 @@ class NchantdOfficeTabSet(NchantdTabSet):
             tabn = self.currentIndex()
 
         # check if it's the " + " tab (it won't be in model.tabsdata)
-        if tabn < len(self.model.tabsdata):
+        if tabn >= 0 and tabn < len(self.model.tabsdata):
             widget = self.widget(tabn)
             if hasattr(widget, "dummy") and widget.dummy:
                 logma.info(f"Loading Lazy Tab {tabn}")
@@ -103,11 +103,16 @@ class NchantdOfficeTabSet(NchantdTabSet):
                 self.model.current_node.parameters["active_tab_position"] = tabn
                 import json
 
-                self.app.model.update_node(
-                    self.model.current_node, {"parameters_dict": json.dumps(self.model.current_node.parameters)}
-                )
+                try:
+                    self.app.model.update_node(
+                        self.model.current_node, {"parameters_dict": json.dumps(self.model.current_node.parameters)}
+                    )
+                except Exception as e:
+                    logma.error(f"Failed to persist active tab position: {e}")
 
-        super().on_tab_focus(tabn)
+        # Ensure tabn is valid for super class to avoid IndexError in set_focus
+        if tabn >= 0 and tabn <= len(self.model.tabsdata):
+            super().on_tab_focus(tabn)
         return self
 
 
