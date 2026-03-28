@@ -1776,7 +1776,7 @@ class NchantdOfficeStore(NchantdStore):
                 content["pUUID"],
                 content["page"],
                 content["entry"],
-                content["version"],
+                content["version"] + 1,
                 content["hash"],
                 content["content"],
                 content["context"],
