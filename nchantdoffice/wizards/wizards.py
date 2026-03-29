@@ -183,9 +183,11 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
             if not hasattr(self.app.view, "panes") or "left" not in self.app.view.panes:
                 return self
 
-            tree = self.app.view.panes["left"]
-            if not hasattr(tree, "parent") or not hasattr(tree.parent, "model"):
+            tree_wrapper = self.app.view.panes["left"]
+            if not hasattr(tree_wrapper, "tree") or tree_wrapper.tree is None:
                 return self
+
+            tree = tree_wrapper.tree
 
             # Get the instance metadata for last node
             instance = self.app.model.instance
@@ -234,37 +236,20 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         Helper to find and select a node by its nid
         """
         try:
-            # Try to find the node in the tree widget
-            if hasattr(tree, "findItem"):
-                node_item = tree.findItem(target_nid, nid_column=0)
-                if node_item:
-                    tree.set_current_node(node_item)
+            # Try finding by iterating through tree items
+            for i in range(tree.topLevelItemCount()):
+                item = tree.topLevelItem(i)
+                found = self._find_node_in_tree(item, target_nid)
+                if found:
+                    tree.setCurrentItem(found)
+                    tree.scrollToItem(found)
+                    # Explicitly update tabs for the selected node to ensure initial catalog renders
+                    if hasattr(found, "updateTabs"):
+                        found.updateTabs("center")
+                    # Trigger the selection change if needed
+                    if hasattr(tree, "itemSelectionChanged"):
+                        tree.itemSelectionChanged.emit()
                     return True
-
-            # Try finding via the model
-            if hasattr(tree, "parent") and hasattr(tree.parent, "model"):
-                model = tree.parent.model
-                if hasattr(model, "getNodeData"):
-                    # Walk through nodes to find the target
-                    nodes = self.app.model.get_nodes()
-                    node_df = nodes[nodes["nid_txt"] == target_nid]
-                    if not node_df.empty:
-                        node_data = node_df.to_dict("records")[0]
-                        # Create a node item if needed
-                        if hasattr(tree, "node_widget"):
-                            node_name = node_data.get("name_txt", "Unknown")
-                            node_item = tree.node_widget(tree.parent, node_name, target_nid, node_data)
-                            if hasattr(node_item, "initWidget"):
-                                node_item.initWidget()
-                            tree.set_current_node(node_item)
-                            return True
-                        elif hasattr(tree, "set_current_node"):
-                            # Try to set current node directly if it's already in the tree
-                            for i in range(tree.parent.topLevelItemCount()):
-                                item = tree.parent.topLevelItem(i)
-                                if self._find_node_in_tree(item, target_nid):
-                                    tree.set_current_node(item)
-                                    return True
 
             logma.warning(f"Could not find node: {target_nid}")
         except Exception as e:
@@ -276,11 +261,12 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         Recursively find a node in the tree by nid
         """
         if hasattr(item, "nid") and item.nid == target_nid:
-            return True
+            return item
         for i in range(item.childCount()):
-            if self._find_node_in_tree(item.child(i), target_nid):
-                return True
-        return False
+            found = self._find_node_in_tree(item.child(i), target_nid)
+            if found:
+                return found
+        return None
 
     def select_home_node(self):
         """
@@ -290,8 +276,9 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
             # Get the tree view from the application
             if hasattr(self.app, "view") and self.app.view:
                 if hasattr(self.app.view, "panes") and "left" in self.app.view.panes:
-                    tree = self.app.view.panes["left"]
-                    if hasattr(tree, "model"):
+                    tree_wrapper = self.app.view.panes["left"]
+                    if hasattr(tree_wrapper, "tree") and tree_wrapper.tree is not None:
+                        tree = tree_wrapper.tree
                         # Try to find Home node - typically named "Home" or at root level
                         nodes = self.app.model.get_nodes()
                         if not nodes.empty:
