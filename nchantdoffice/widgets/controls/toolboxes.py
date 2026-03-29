@@ -104,6 +104,10 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             cfg["toolbox"] = {}
         cfg["toolbox"].update(app_toolbox_cfg)
 
+        # Also merge current document's toolbox config if available
+        if current_document is not None and hasattr(current_document, "toolbox_config"):
+            cfg["toolbox"].update(current_document.toolbox_config)
+
         logma.info(f"cfg {cfg}")
         self.init_toolbox()
         super().build_toolbox(cfg)

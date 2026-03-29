@@ -227,18 +227,25 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
             found = self._select_node_by_nid(tree, target_nid)
             if found:
                 logma.info(f"Selected node: {target_nid}")
-                # Ensure the selection change is processed
-                if hasattr(tree, "itemSelectionChanged"):
-                    tree.itemSelectionChanged.emit()
             else:
-                logma.warning(f"Could not find node in tree: {target_nid}")
-                # Fallback: force update center tabs for the node if we have its data
-                # This might happen if the tree is not fully populated yet
-                from nchantrs.widgets.items.nodes import NchantdTreeNode
-
-                # We need a node object to call updateTabs on.
-                # If we can't find it in tree, we might have to wait or find another way.
-                pass
+                logma.warning(f"Could not find node in tree: {target_nid}. Forcing model-based update.")
+                # Fallback: find node data and force a center pane build even if tree item not yet found
+                try:
+                    target_node_df = nodes[nodes["nid_txt"] == target_nid]
+                    if not target_node_df.empty:
+                        node_data = target_node_df.iloc[0].to_dict()
+                        # Use updateTabs if we can get a reference to the view models
+                        center_pane = self.app.view.panes["center"]
+                        if hasattr(center_pane, "model") and center_pane.model:
+                            # We need a node object to call buildTabSet.
+                            # We can try using the tree's model to get or create a node object
+                            if hasattr(tree, "model") and tree.model:
+                                node_obj = tree.model.get_node(target_nid)
+                                if node_obj:
+                                    center_pane.model.buildTabSet(node_obj, "center")
+                                    logma.info(f"Forced buildTabSet for node: {target_nid}")
+                except Exception as inner_e:
+                    logma.warning(f"Fallback update failed: {inner_e}")
 
         except Exception as e:
             logma.warning(f"Could not restore last node: {e}")
