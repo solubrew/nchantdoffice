@@ -98,7 +98,12 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         if current_document is not None and not hasattr(current_document, "toolbox_config"):
             current_document.toolbox_config = {}
 
-        cfg["toolbox"] = self.config.dikt.get("toolbox", {})
+        # Merge with application-level toolbox config
+        app_toolbox_cfg = self.config.dikt.get("toolbox", {})
+        if "toolbox" not in cfg:
+            cfg["toolbox"] = {}
+        cfg["toolbox"].update(app_toolbox_cfg)
+
         logma.info(f"cfg {cfg}")
         self.init_toolbox()
         super().build_toolbox(cfg)

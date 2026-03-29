@@ -224,8 +224,21 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
                 return self
 
             # Find and select the node in the tree
-            self._select_node_by_nid(tree, target_nid)
-            logma.info(f"Selected node: {target_nid}")
+            found = self._select_node_by_nid(tree, target_nid)
+            if found:
+                logma.info(f"Selected node: {target_nid}")
+                # Ensure the selection change is processed
+                if hasattr(tree, "itemSelectionChanged"):
+                    tree.itemSelectionChanged.emit()
+            else:
+                logma.warning(f"Could not find node in tree: {target_nid}")
+                # Fallback: force update center tabs for the node if we have its data
+                # This might happen if the tree is not fully populated yet
+                from nchantrs.widgets.items.nodes import NchantdTreeNode
+
+                # We need a node object to call updateTabs on.
+                # If we can't find it in tree, we might have to wait or find another way.
+                pass
 
         except Exception as e:
             logma.warning(f"Could not restore last node: {e}")
