@@ -1975,6 +1975,15 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             cfg["tid"] = document.get("tid", document.get("tid_txt", cfg.get("tid")))
             cfg["document"] = document
 
+        # Workaround for KeyError: 'tab' in lookupWidget
+        # This happens when 'widget' is not in cfg, and 'tab' is the first key.
+        if ("widget" not in cfg or cfg["widget"] is None) and "tab" in cfg:
+            # Check if any key in cfg (excluding 'tab' and common ones) is a registered widget
+            # or if we can find a better first key.
+            # For now, if 'widget' is missing, let's see if we can get it from the tab
+            tab_data = cfg["tab"]
+            cfg["widget"] = tab_data.get("widget", tab_data.get("widget_txt", None))
+
         tabW = super().load_widget(cfg, tabset, document, tab_type)
         if hasattr(tabW, "initWidget"):
             tabW.initWidget()
