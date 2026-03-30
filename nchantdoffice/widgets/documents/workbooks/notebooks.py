@@ -10,6 +10,7 @@
     security: seclvl2
     <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, exists
@@ -24,7 +25,8 @@ from nchantdoffice.widgets.documents.atnrg.browsers.browsers import NchantdOffic
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from pyffice.notebooks.notebooks import PyfficeNotebook
-from nchantdoffice.agents.agents import NchantdOfficeAgent
+
+# from nchantdoffice.agents.agents import NchantdOfficeAgent
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -33,7 +35,6 @@ logma = Logma(__name__)
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "notebooks.yaml")
-pxcfg = {}
 
 
 class NchantdOfficeNotebook(NchantdOfficeDocument):

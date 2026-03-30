@@ -110,10 +110,14 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         :param tabset:
         :return:
         """
+        logma.info(f"Add Document {document}")
+        logma.info(f"Document Type {doc_type}")
+        logma.info(f"Document Widget {widget}")
         if isinstance(document, PyfficeDocument):
             tab = document.to_dict()
             logma.info(f"Pyffice Document Provided {tab}")
-            # tab["widget"] = lookup_widget(document.doc_type)
+            # tab["widget"] = lookup_widget(tab["type"])
+            tab["widget"] = self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
             tab["type"] = document.doc_type
             tab["pid"] = pid
             tab["position"] = pos
@@ -127,8 +131,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             tab_new = False
         else:
             tab = document
-        if widget is None:
-            widget = lookup_widget(tab["type"])
+        if widget is None:  # or widget == "":
+            # tab["widget"] = lookup_widget(tab["type"])
+            tab["widget"] = self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
         name = tab["name"]
         if widgdata is None:
             widgdata = {"name": name, "type": tab["type"], "focus": "userapp"}
@@ -224,7 +229,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         if isinstance(document, PyfficeDocument):
             tab = document.to_dict()
             logma.info(f"Pyffice Document Provided {tab}")
-            # tab["widget"] = lookup_widget(document.doc_type)
+            # tab["widget"] = lookup_widget(tab["type"])
+            tab["widget"] = self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
             tab["type"] = document.doc_type
             tab["pid"] = pid
             tab["position"] = pos
@@ -239,7 +245,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         else:
             tab = document
         if widget is None:
-            widget = lookup_widget(tab["type"])
+            # tab["widget"] = lookup_widget(tab["type"])
+            tab["widget"] = self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
         name = tab["name"]
         if widgdata is None:
             widgdata = {"name": name, "type": tab["type"], "focus": "userapp"}
@@ -916,6 +923,14 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning(f"Error getting documents for node {node}: {e}")
             return DataFrame()
 
+    def get_document_type(self, action_code):
+        """"""
+        if action_code is None:
+            return None
+        cfg = {"WHERE": {"EQUAL": {"action_txt": action_code}}}
+        df = self.store.get_view_documents_all(cfg)
+        return df.iloc[0] if not df.empty else None
+
     def get_document_types(self, registered=False, quick_launch=False):
         """"""
         cfg = {"WHERE": {"NOT IN": {"document_txt": ["api"]}}}
@@ -1172,7 +1187,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.info(f"Content {tab['content']}")
             tab["uuid"] = tab["unique_id"]
             logma.info(f"Tab Type {tab['type']}")
-            tab["widget"] = lookup_widget(tab["type"])
+            # tab["widget"] = lookup_widget(tab["type"])
+            tab["widget"] = self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
             tab["did"] = uuid()
             self.add_document(tab, tab["did"], pid, pos)
         return self
@@ -1875,7 +1891,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 for tabn, tab in enumerate(self.tabsdata):
                     if tabn == active_tab_position:
                         self.load_tab(tab, tabn, tabset, active_tab_position)
-                    else:
+                    else:  # TODO: this supports lazy loading probably needs to be moved to nchantrs base library
                         # Create placeholder
                         from nchantrs.libraries import pyqt
 
@@ -1895,8 +1911,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 logma.info(f"New Document {self.new_document}")
                 if self.new_document is None:
                     self.new_document = NchantdOfficeDocumentsCatalog(self.parent, self.config)
-                else:
-                    self.new_document.initWidget()
+                self.new_document.initWidget()
                 self.new_document.position = len(self.tabsdata) + 1
                 self.parent.addTab(self.new_document, " + ")
         finally:
@@ -1969,6 +1984,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         logma.info(f"Tabset {tabset}")
         logma.info(f"Document {document}")
         logma.info(f"Tab Type {tab_type}")
+
         # If document is not None, use it to populate cfg, similar to base load_widget
         if document:
             cfg["widget"] = document.get("widget", document.get("widget_txt", cfg.get("widget")))
@@ -1977,12 +1993,21 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
         # Workaround for KeyError: 'tab' in lookupWidget
         # This happens when 'widget' is not in cfg, and 'tab' is the first key.
-        if ("widget" not in cfg or cfg["widget"] is None) and "tab" in cfg:
-            # Check if any key in cfg (excluding 'tab' and common ones) is a registered widget
-            # or if we can find a better first key.
-            # For now, if 'widget' is missing, let's see if we can get it from the tab
+        widget_name = cfg.get("widget")
+        if (not widget_name) and "tab" in cfg:
             tab_data = cfg["tab"]
-            cfg["widget"] = tab_data.get("widget", tab_data.get("widget_txt", None))
+            widget_name = tab_data.get("widget", tab_data.get("widget_txt", None))
+
+        if widget_name:
+            # Rebuild cfg so the widget name is the FIRST key,
+            # which is what nchantrs.widgets.widgets.lookupWidget expects:
+            # registered_widget = lookupWidget(list(cfg.keys())[0])
+            new_cfg = {widget_name: cfg.get(widget_name, {})}
+            for k, v in cfg.items():
+                if k != widget_name:
+                    new_cfg[k] = v
+            cfg = new_cfg
+            cfg["widget"] = widget_name
 
         tabW = super().load_widget(cfg, tabset, document, tab_type)
         if hasattr(tabW, "initWidget"):

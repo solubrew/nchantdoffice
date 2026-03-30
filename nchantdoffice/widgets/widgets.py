@@ -97,6 +97,7 @@ class NchantdOfficeTabSet(NchantdTabSet):
             if hasattr(widget, "dummy") and widget.dummy:
                 logma.info(f"Loading Lazy Tab {tabn}")
                 self.model.load_tab(self.model.tabsdata[tabn], tabn, self.pane_position)
+                widget = self.widget(tabn)
 
             # Persist last selected tab
             if self.model.current_node:
@@ -109,6 +110,14 @@ class NchantdOfficeTabSet(NchantdTabSet):
                     )
                 except Exception as e:
                     logma.error(f"Failed to persist active tab position: {e}")
+
+            # Update toolbox if it exists in the right pane
+            if (
+                hasattr(self.app.view, "panes")
+                and "right" in self.app.view.panes
+                and hasattr(self.app.view.panes["right"], "toolbox")
+            ):
+                self.app.view.panes["right"].toolbox.build_toolbox()
 
         # Ensure tabn is valid for super class to avoid IndexError in set_focus
         if tabn >= 0 and tabn <= len(self.model.tabsdata):

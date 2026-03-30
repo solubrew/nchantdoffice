@@ -74,6 +74,7 @@ def lookup_widget(doc_type):
         widget = "widgets.documents.media.graphics.sketches.NchantdOfficeSketch"
     else:
         widget = "widgets.documents.media.scripts.NchantdOfficeScript"
+    # TODO: this needs to access the database to get the widget name add a list here is defeating the purpose
     return widget
 
 

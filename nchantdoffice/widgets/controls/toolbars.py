@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -21,6 +22,7 @@ import json as j
 # Changed 2026-03-25: Was using PyQt5 which caused "cannot be converted to QObject" error
 # when mixing PyQt5 signals with PySide6 QWidget (nchantrs uses PySide6)
 from nchantrs.libraries import pyqt
+
 Signal = pyqt.Signal
 Slot = pyqt.Slot
 # ======================================Solutions Brewer Library Modules==============================================||
@@ -32,13 +34,7 @@ from nchantrs.widgets.controls.toolbars import NchantdApplicationToolBar
 from ogma.logma import Logma
 from nchantdoffice.dialogs.documents import NchantdNewDocumentSigil
 from nchantdoffice.widgets.documents import NchantdOfficeDocument
-
-# Import Pyffice types for type hints
-try:
-    from pyffice import PyfficeDocument
-except ImportError:
-    PyfficeDocument = None
-
+from pyffice.document import PyfficeDocument
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -115,11 +111,11 @@ class NchantdOfficeNotificationButtonBar(NchantdButtonBar):
 
 class NchantdNewDocumentToolBar(NchantdButtonBar):
     """Far left toolbar - creates new documents and emits signals"""
-    
+
     # Signals for document lifecycle
     document_created = Signal(str)  # Emitted when new document created (doc_type string)
     document_opened = Signal(object)  # Emitted when document opened (NchantdOfficeDocument instance)
-    
+
     def __init__(self, parent=None, cfg=None):
         """Initialize the toolbar."""
         super().__init__(parent, cfg)
@@ -134,6 +130,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
     def initModel(self):
         """Initialize the model."""
         self.document_types = self.app.model.get_document_types()
+        logma.info(f"Document Types {self.document_types}")
         # self.document_types.drop_duplicates(subset=["name_txt", "widget_txt", "parameters_dict"], inplace=True)
         self.document_types = self.document_types[self.document_types["quick_launch_bit"] == 1]
         self.document_types.sort_values(by=["file_type_txt", "sequence_int", "document_txt", "name_txt"], inplace=True)
@@ -165,6 +162,9 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         did = uuid()
         name = f"{code.lower().replace(' ', '')} {did[-5:]}"
         widget = args[0]["action"].action["widget_txt"]
+        # TODO:0 need to figure out how to look up the widget from the document types table
+        if widget is None or widget == "":
+            widget = self.app.model.get_document_type(cfg["lookup_code_txt"]).get("widget_txt", None)
         logma.info(f"Widget {widget}")
         # db = self.app.model.instance.db  # TODO: Switch to MultiInstance
         db = "db"
@@ -199,7 +199,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         # TODO cleanup add_tab, add_document signatures and combine as much code as possible
         self.app.view.panes["left"].tree.model.current_node.updateTabs("center")
         self.app.view.panes["center"].setCurrentIndex(pos)
-        
+
         # Emit signal that document was created
         self.document_created.emit(doc_type)
         return self
@@ -292,7 +292,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
             return self.add_document
         if "add_http_media" in value:
             return self.add_document
-        return self
+        return self.add_document
 
 
 class NchantdCellFormattingToolBar(NchantdButtonBar):
