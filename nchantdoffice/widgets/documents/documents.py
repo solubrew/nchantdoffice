@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
@@ -112,6 +113,14 @@ class NchantdOfficeDocumentMixin:
         """"""
         return self
 
+    def cmd_cancel(self):
+        """"""
+        pass
+
+    def cmd_delete_tab(self):
+        """"""
+        self.app.model.delete_tab(self)
+
     def cmd_open_local_file(self, event=None, *args, **kwargs):
         """"""
         cfg = {}
@@ -160,6 +169,10 @@ class NchantdOfficeDocumentMixin:
         """"""
         return self
 
+    def cmd_save_tab(self, event=None, *args, **kwargs):
+        """"""
+        self.save()
+
     def create_data_table(self):
         """"""
         df = DataFrame()
@@ -195,9 +208,9 @@ class NchantdOfficeDocumentMixin:
         if cfg is None:
             cfg = {}
         # Ensure we have app reference - try to get it from parent if not set
-        if not hasattr(self, 'app') or self.app is None:
-            if hasattr(self, 'parent') and self.parent is not None:
-                self.app = getattr(self.parent, 'app', None)
+        if not hasattr(self, "app") or self.app is None:
+            if hasattr(self, "parent") and self.parent is not None:
+                self.app = getattr(self.parent, "app", None)
         buttons = {
             0: {"action": "show_pane_left", "handler": self.cmd_show_pane_left},
             100: {"action": "save", "handler": self.cmd_save_tab},
@@ -377,10 +390,10 @@ class NchantdOfficeDocumentMixin:
 
 
 class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab, PyfficeDocument):
-    """""Document base class - implements PyfficeDocument for all document types"""
+    """ ""Document base class - implements PyfficeDocument for all document types"""
 
-    PYTYPE = 'document'  # Default Pyffice type
-    
+    PYTYPE = "document"  # Default Pyffice type
+
     def __init__(self, name, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)

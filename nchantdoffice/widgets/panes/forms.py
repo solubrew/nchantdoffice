@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -22,7 +23,8 @@ from condor import condor
 from ogma.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.panes.panes import NchantdPane
-from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry, NchantdDropDown
+from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
+from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.controls.checkboxes import NchantdCheckboxGroup
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar

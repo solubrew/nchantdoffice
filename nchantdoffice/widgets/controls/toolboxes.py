@@ -110,6 +110,15 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
 
         logma.info(f"cfg {cfg}")
         self.init_toolbox()
+
+        # Update tools drawer if current document has tools
+        if current_document and hasattr(current_document, "get_pyffice_tools"):
+            tools = current_document.get_pyffice_tools()
+            self._populate_tools_drawer(tools)
+
+        # Ensure the drawer state is reflected in the config passed to super().build_toolbox
+        cfg["toolbox"].update(self.config.dikt["toolbox"])
+
         super().build_toolbox(cfg)
         return self
 
@@ -359,9 +368,9 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         """"""
         super().init_toolbox()
         self.config.dikt["toolbox"][0]["items"] = self.init_drawer_application()
-        # self.config.dikt["toolbox"][10]["items"] = self.init_drawer_node()
-        # self.config.dikt["toolbox"][20]["items"] = self.init_drawer_tabs()
-        # self.config.dikt["toolbox"][30]["items"] = self.init_drawer_tools()
+        self.config.dikt["toolbox"][10]["items"] = self.init_drawer_node()
+        self.config.dikt["toolbox"][20]["items"] = self.init_drawer_tabs()
+        self.config.dikt["toolbox"][30]["items"] = self.init_drawer_tools()
 
         # Connect signals for dynamic toolbox population
         self._connect_pane_signals()
@@ -431,13 +440,12 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         if 30 not in self.config.dikt["toolbox"]:
             self.config.dikt["toolbox"][30] = {"items": {}}
 
-        items = self.config.dikt["toolbox"][30].get("items", {})
+        items = {}  # Start with fresh items for the tools drawer
         cnt = 0
 
         for tool in tools:
             default_action = {"action": "insert_object", "type": "custom"}
-            if cnt not in items:
-                items[cnt] = default_action
+            items[cnt] = default_action
 
             cfg = {
                 "text": tool.get("label", "Tool"),
@@ -452,6 +460,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
 
         self.config.dikt["toolbox"][30]["items"] = items
         logma.info(f"Toolbox: Populated {len(tools)} tools")
+        return self
 
     def cmd_noop(self, event, *args, **kwargs):
         """No-op command placeholder"""

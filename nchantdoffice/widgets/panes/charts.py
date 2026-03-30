@@ -10,6 +10,7 @@
     security: seclvl2
     <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
@@ -28,7 +29,8 @@ from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons, Nchant
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.controls.checkboxes import NchantdCheckboxGroup, NchantdCheckbox
 from nchantrs.widgets.groups import NchantdVScrollGroupBox
-from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry, NchantdDropDown
+from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
+from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.media.editors.entries import NchantdCheckboxEditor
 from nchantrs.widgets.panes.panes import NchantdPane
 from nchantrs.widgets.groups import NchantdCollapsableGroup, NchantdGroup

@@ -111,13 +111,12 @@ class NchantdOfficeTabSet(NchantdTabSet):
                 except Exception as e:
                     logma.error(f"Failed to persist active tab position: {e}")
 
-            # Update toolbox if it exists in the right pane
-            if (
-                hasattr(self.app.view, "panes")
-                and "right" in self.app.view.panes
-                and hasattr(self.app.view.panes["right"], "toolbox")
-            ):
-                self.app.view.panes["right"].toolbox.build_toolbox()
+            # WE want it to break if the toolbox is not in the right pane
+            # this is a required functionality
+            if self.app.view.panes["right"].toolbox is None:
+                # TODO: this should be happening at this point
+                self.app.view.panes["right"].toolbox = self.create_toolbox(self.app.view.panes["right"])
+            self.app.view.panes["right"].toolbox.build_toolbox()
 
         # Ensure tabn is valid for super class to avoid IndexError in set_focus
         if tabn >= 0 and tabn <= len(self.model.tabsdata):
