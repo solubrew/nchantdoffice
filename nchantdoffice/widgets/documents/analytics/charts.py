@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join, exists
@@ -27,7 +28,6 @@ from pyffice.charts.charts import PyfficeChart
 from nchantdoffice.widgets.panes.charts import NchantdChartConfigPane
 from nchantrs.widgets.media.charts.charts import NchantdChart
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
-from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.panes.panes import NchantdPane
 from nchantrs.widgets.tables.lists import NchantdList
@@ -44,7 +44,6 @@ logma.off()
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "charts.yaml")
-pxcfg = {}
 
 
 class NchantdSourcesListPane(NchantdPane):

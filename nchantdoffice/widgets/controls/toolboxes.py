@@ -93,23 +93,35 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         """"""
         if cfg is None:
             cfg = {}
-
-        current_document = self.app.view.panes["center"].currentWidget()
-        if current_document is not None and not hasattr(current_document, "toolbox_config"):
-            current_document.toolbox_config = {}
-
-        # Merge with application-level toolbox config
-        app_toolbox_cfg = self.config.dikt.get("toolbox", {})
-        if "toolbox" not in cfg:
-            cfg["toolbox"] = {}
-        cfg["toolbox"].update(app_toolbox_cfg)
-
-        # Also merge current document's toolbox config if available
-        if current_document is not None and hasattr(current_document, "toolbox_config"):
-            cfg["toolbox"].update(current_document.toolbox_config)
-
+        cfg["toolbox"] = self.config.dikt.get("toolbox", {})
         logma.info(f"cfg {cfg}")
-        self.init_toolbox()
+        # TODO: cleanup this mess
+
+        # current_document = self.app.view.panes["center"].currentWidget()
+        # if current_document is not None and not hasattr(current_document, "toolbox_config"):
+        #     current_document.toolbox_config = {}
+        #
+        # # Merge with application-level toolbox config
+        # app_toolbox_cfg = self.config.dikt.get("toolbox", {})
+        # if "toolbox" not in cfg:
+        #     cfg["toolbox"] = {}
+        # cfg["toolbox"].update(app_toolbox_cfg)
+        #
+        # # Also merge current document's toolbox config if available
+        # if current_document is not None and hasattr(current_document, "toolbox_config"):
+        #     cfg["toolbox"].update(current_document.toolbox_config)
+        #
+        # logma.info(f"cfg {cfg}")
+        # self.init_toolbox()
+        #
+        # # Update tools drawer if current document has tools
+        # if current_document and hasattr(current_document, "get_pyffice_tools"):
+        #     tools = current_document.get_pyffice_tools()
+        #     self._populate_tools_drawer(tools)
+        #
+        # # Ensure the drawer state is reflected in the config passed to super().build_toolbox
+        # cfg["toolbox"].update(self.config.dikt["toolbox"])
+
         super().build_toolbox(cfg)
         return self
 
@@ -431,13 +443,12 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         if 30 not in self.config.dikt["toolbox"]:
             self.config.dikt["toolbox"][30] = {"items": {}}
 
-        items = self.config.dikt["toolbox"][30].get("items", {})
+        items = {}  # Start with fresh items for the tools drawer
         cnt = 0
 
         for tool in tools:
             default_action = {"action": "insert_object", "type": "custom"}
-            if cnt not in items:
-                items[cnt] = default_action
+            items[cnt] = default_action
 
             cfg = {
                 "text": tool.get("label", "Tool"),
@@ -452,6 +463,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
 
         self.config.dikt["toolbox"][30]["items"] = items
         logma.info(f"Toolbox: Populated {len(tools)} tools")
+        return self
 
     def cmd_noop(self, event, *args, **kwargs):
         """No-op command placeholder"""
