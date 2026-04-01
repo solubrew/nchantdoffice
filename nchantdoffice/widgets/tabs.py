@@ -31,7 +31,7 @@ log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", ".yaml")
+pxcfg = join(here, "_data_", "tabs.yaml")
 
 
 class NchantdOfficeTab(NchantdTab):
@@ -41,10 +41,7 @@ class NchantdOfficeTab(NchantdTab):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeTab"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(pxcfg).select("NchantdOfficeTab").override(cfg)
 
     def initModel(self, cfg=None):
         """"""

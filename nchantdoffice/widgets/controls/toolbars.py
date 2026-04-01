@@ -119,10 +119,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         """Initialize the toolbar."""
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdNewDocumentToolBar"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(pxcfg).select("NchantdNewDocumentToolBar").override(cfg)
         self.actions = None
         self.document_types = None
 
