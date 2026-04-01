@@ -116,11 +116,6 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         """"""
         self.downloaded = 1
 
-    def run_application(self):
-        """"""
-        super().run_application()
-        return self
-
     def run_application_install(self, paths):
         """"""
         super().run_application_install(paths)
@@ -175,6 +170,15 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         """
         Restore the last selected node on app startup, or default to Home node
         """
+        from nchantrs.libraries import pyqt
+
+        pyqt.QTimer.singleShot(500, self._delayed_restore_last_node)
+        return self
+
+    def _delayed_restore_last_node(self):
+        """
+        Delayed version of restore_last_node to ensure tree is populated
+        """
         try:
             # Get the tree view from the application
             if not hasattr(self.app, "view") or not self.app.view:
@@ -214,16 +218,19 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
                 home_df = nodes[nodes["nid_txt"] == home_nid]
                 if not home_df.empty:
                     target_nid = home_nid
+                    logma.info(f"Defaulting to Home node by NID: {target_nid}")
                 else:
                     # Fallback to name-based lookup
                     home_df = nodes[nodes["name_txt"] == "Home"]
                     if not home_df.empty:
                         target_nid = home_df["nid_txt"].values[0]
+                        logma.info(f"Defaulting to Home node by name: {target_nid}")
                     else:
                         # Get first root node as fallback
                         root_df = nodes[nodes["pid_txt"] == "0"]
                         if not root_df.empty:
                             target_nid = root_df["nid_txt"].values[0]
+                            logma.info(f"Defaulting to first root node: {target_nid}")
 
             if not target_nid:
                 return self
@@ -261,22 +268,30 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         Helper to find and select a node by its nid
         """
         try:
+            logma.info(f"_select_node_by_nid: target_nid={target_nid}, topLevelItemCount={tree.topLevelItemCount()}")
             # Try finding by iterating through tree items
             for i in range(tree.topLevelItemCount()):
                 item = tree.topLevelItem(i)
                 found = self._find_node_in_tree(item, target_nid)
                 if found:
+                    logma.info(f"Found node in tree: {target_nid}")
                     tree.setCurrentItem(found)
                     tree.scrollToItem(found)
+
+                    # Update model's current node to match selection
+                    if hasattr(tree, "model"):
+                        tree.model.current_node = found
+
                     # Explicitly update tabs for the selected node to ensure initial catalog renders
                     if hasattr(found, "updateTabs"):
                         found.updateTabs("center")
+
                     # Trigger the selection change if needed
                     if hasattr(tree, "itemSelectionChanged"):
                         tree.itemSelectionChanged.emit()
                     return True
 
-            logma.warning(f"Could not find node: {target_nid}")
+            logma.warning(f"Could not find node: {target_nid} in tree with {tree.topLevelItemCount()} items")
         except Exception as e:
             logma.warning(f"Error selecting node {target_nid}: {e}")
         return False
@@ -285,8 +300,25 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         """
         Recursively find a node in the tree by nid
         """
-        if hasattr(item, "nid") and item.nid == target_nid:
+        nid = None
+        if hasattr(item, "nid"):
+            nid = item.nid
+        elif hasattr(item, "nid_txt"):
+            nid = item.nid_txt
+
+        if nid == target_nid:
             return item
+
+        # Also check data(0, Qt.UserRole) if nid is not an attribute
+        try:
+            from nchantrs.libraries import pyqt
+
+            role_nid = item.data(0, pyqt.Qt.UserRole)
+            if role_nid == target_nid:
+                return item
+        except:
+            pass
+
         for i in range(item.childCount()):
             found = self._find_node_in_tree(item.child(i), target_nid)
             if found:
@@ -297,6 +329,15 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         """
         Find and select the Home node in the tree (for new installs)
         """
+        from nchantrs.libraries import pyqt
+
+        pyqt.QTimer.singleShot(500, self._delayed_select_home_node)
+        return self
+
+    def _delayed_select_home_node(self):
+        """
+        Delayed version of select_home_node
+        """
         try:
             # Get the tree view from the application
             if hasattr(self.app, "view") and self.app.view:
@@ -304,6 +345,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
                     tree_wrapper = self.app.view.panes["left"]
                     if hasattr(tree_wrapper, "tree") and tree_wrapper.tree is not None:
                         tree = tree_wrapper.tree
+                        logma.info("Attempting to select Home node (delayed)")
                         # Try to find Home node - typically named "Home" or at root level
                         nodes = self.app.model.get_nodes()
                         if not nodes.empty:
@@ -316,17 +358,20 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
                                 home_df = nodes[nodes["name_txt"] == "Home"]
                                 if not home_df.empty:
                                     home_nid = home_df["nid_txt"].values[0]
+                                    logma.info(f"Setting Home node by name: {home_nid}")
                                 else:
                                     # Get first root node (pid = '0')
                                     root_df = nodes[nodes["pid_txt"] == "0"]
                                     if not root_df.empty:
                                         home_nid = root_df["nid_txt"].values[0]
+                                        logma.info(f"Setting first root node as Home: {home_nid}")
                                     else:
                                         return self
+                            else:
+                                logma.info(f"Setting Home node by NID: {home_nid}")
 
                             # Select the node using helper method
                             self._select_node_by_nid(tree, home_nid)
-                            logma.info(f"Selected Home node: {home_nid}")
         except Exception as e:
             logma.warning(f"Could not select Home node: {e}")
         return self
