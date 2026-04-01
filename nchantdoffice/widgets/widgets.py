@@ -101,16 +101,16 @@ class NchantdOfficeTabSet(NchantdTabSet):
                 widget = self.widget(tabn)
 
             # Persist last selected tab
-            if self.model.current_node:
-                self.model.current_node.parameters["active_tab_position"] = tabn
-                import json
-
-                try:
-                    self.app.model.update_node(
-                        self.model.current_node, {"parameters_dict": json.dumps(self.model.current_node.parameters)}
-                    )
-                except Exception as e:
-                    logma.error(f"Failed to persist active tab position: {e}")
+            # if self.model.current_node:
+            #     self.model.current_node.parameters["active_tab_position"] = tabn
+            #     import json
+            #
+            #     try:
+            #         self.app.model.update_node(
+            #             self.model.current_node, {"parameters_dict": json.dumps(self.model.current_node.parameters)}
+            #         )
+            #     except Exception as e:
+            #         logma.error(f"Failed to persist active tab position: {e}")
 
             # WE want it to break if the toolbox is not in the right pane
             # this is a required functionality

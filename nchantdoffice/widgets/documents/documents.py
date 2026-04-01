@@ -235,9 +235,12 @@ class NchantdOfficeDocumentMixin:
     def init_toolbox(self, cfg=None):
         """"""
         self.config.override(cfg)
-        if self.toolbox_config is not None:
-            logma.info(f"Toolbox Config {self.toolbox_config.keys()}")
-            self.toolbox_config[50]["items"] = self.init_drawer_file_config()
+        if self.toolbox_config is None:
+            self.toolbox_config = self.app.model.toolbox_config.get("document", None)
+        if self.toolbox_config is None:
+            raise Exception("No toolbox config found for document")
+        logma.info(f"Toolbox Config {self.toolbox_config.keys()}")
+        self.toolbox_config[50]["items"] = self.init_drawer_file_config()
         return self
 
     def init_drawer_file_config(self):

@@ -13,9 +13,11 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
-from os.path import dirname, join
+from os.path import abspath, dirname, join
+import datetime as dt
 
 # ======================================3rd Party Library Modules=====================================================||
+from shutil import copyfile
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from condor import condor
@@ -23,16 +25,167 @@ from ogma.logma import Logma
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.dialogs.files import NchantdFileOpenSigil
 from nchantrs.widgets.controls.toolboxes import NchantdToolBox
+from nchantrs.widgets.media.editors.selectors import NchantdDropDown
+from nchantrs.widgets.media.editors.editors import NchantdEntryBox
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
-from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
+from nchantrs.widgets.panes.panes import NchantdPane
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
-log = True
 logma = Logma(__name__)
+logma.off()
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "toolboxes.yaml")
+
+
+class NchantdApplicationSearchPane(NchantdPane):
+    """"""
+
+    def __init__(self, parent=None, cfg=None):
+        """ """
+        super().__init__(parent, cfg)
+        self.parent = parent
+        self.config.override(condor.Instruct(pxcfg).select("NchantdApplicationSearchPane"))
+        if self.parent:
+            self.config.override(parent.config)
+        self.config.override(cfg)
+        self.handler = self.config.dikt.get("handler", None)
+
+    def initModel(self, cfg=None):
+        """"""
+        super().initModel(cfg)
+        return self
+
+    def initView(self, cfg=None):
+        """"""
+        if cfg is None:
+            cfg = {}
+        cfg["layout"] = "vertical"
+        super().initView(cfg)
+        options = ["This Tab", "This Node", "This Instance", "Journal", "Web", "LLM"]
+        cfg = {"label": "Search Focus", "layout": "horizontal", "options": options}
+        self.search_area_select = NchantdDropDown(self, cfg).initWidget()
+        self.layout.addWidget(self.search_area_select)
+        cfg = {
+            "layout": "vertical",
+            "size": ["auto", 100],
+        }
+        self.application_search_entry = NchantdEntryBox(self, cfg).initWidget()
+        logma.info(f"application_search_entry {self.application_search_entry.size().height()}")
+        self.application_search_entry.setMinimumHeight(self.application_search_entry.size().height())
+        self.layout.addWidget(self.application_search_entry)
+        cfg = {"text": "Run Search", "layout": "horizontal"}
+        self.search_button = NchantdButton(self, cfg).initWidget()
+        self.layout.addWidget(self.search_button)
+        cfg = {
+            "layout": "vertical",
+            "size": ["auto", 450],
+        }
+        self.application_response_area = NchantdEntryBox(self, cfg).initWidget()
+        self.application_response_area.setMinimumHeight(cfg["size"][1])
+        self.layout.addWidget(self.application_response_area)
+        return self
+
+    def initWidget(self):
+        """"""
+        self.initModel()
+        self.initView()
+        return self
+
+
+class NchantdLLMQueryPane(NchantdPane):
+    """"""
+
+    def __init__(self, parent=None, cfg=None):
+        """ """
+        super().__init__(self)
+        self.parent = parent
+        self.config.override(condor.Instruct(pxcfg).select("NchantdLLMQueryPane"))
+        if self.parent:
+            self.config.override(parent.config)
+        self.config.override(cfg)
+
+    def initModel(self, cfg=None):
+        """"""
+        super().initModel(cfg)
+        return self
+
+    def initView(self, cfg=None):
+        """"""
+        if cfg is None:
+            cfg = {}
+        cfg["layout"] = "vertical"
+        super().initView(cfg)
+        options = ["Open Ai", "Grok", "Gemini", "Claude"]
+        cfg = {"label": "Set Default LLM", "layout": "horizontal", "options": options}
+        self.default_llm_engine_select = NchantdDropDown(self, cfg).initWidget()
+        self.layout.addWidget(self.default_llm_engine_select)
+        cfg = {
+            "label": "Query Model: ",
+            "layout": "vertical",
+            "options": options,
+            "size": ["auto", 150],
+        }
+        self.llm_query_entry = NchantdEntryBox(self, cfg).initWidget()
+        self.layout.addWidget(self.llm_query_entry)
+        cfg = {"text": "Query", "layout": "horizontal"}
+        self.search_llm_button = NchantdButton(self, cfg).initWidget()
+        self.layout.addWidget(self.search_llm_button)
+        return self
+
+    def initWidget(self):
+        """"""
+        self.initModel()
+        self.initView()
+        return self
+
+
+class NchantdWebSearchPane(NchantdPane):
+    """"""
+
+    def __init__(self, parent=None, cfg=None):
+        """ """
+        super().__init__(self)
+        self.parent = parent
+        self.config.override(condor.Instruct(pxcfg).select("NchantdWebSearchPane"))
+        if self.parent:
+            self.config.override(parent.config)
+        self.config.override(cfg)
+
+    def initModel(self, cfg=None):
+        """"""
+        super().initModel(cfg)
+        return self
+
+    def initView(self, cfg=None):
+        """"""
+        if cfg is None:
+            cfg = {}
+        cfg["layout"] = "vertical"
+        super().initView(cfg)
+        options = ["Google", "DuckDuckGo", "Bing", "Yahoo", "Yandex", "PreSearch", "Shodan"]
+        cfg = {"label": "Set Default Search", "layout": "horizontal", "options": options}
+        self.default_search_engine_select = NchantdDropDown(self, cfg).initWidget()
+        self.layout.addWidget(self.default_search_engine_select)
+        cfg = {
+            "label": "Search Web: ",
+            "layout": "vertical",
+            "options": options,
+            "size": ["auto", 50],
+        }
+        self.application_search_entry = NchantdEntryBox(self, cfg).initWidget()
+        self.layout.addWidget(self.application_search_entry)
+        cfg = {"text": "Search Web", "layout": "horizontal"}
+        self.search_web_button = NchantdButton(self, cfg).initWidget()
+        self.layout.addWidget(self.search_web_button)
+        return self
+
+    def initWidget(self):
+        """"""
+        self.initModel()
+        self.initView()
+        return self
 
 
 class NchantdOfficeApplicationToolBox(NchantdToolBox):
@@ -95,33 +248,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             cfg = {}
         cfg["toolbox"] = self.config.dikt.get("toolbox", {})
         logma.info(f"cfg {cfg}")
-        # TODO: cleanup this mess
-
-        # current_document = self.app.view.panes["center"].currentWidget()
-        # if current_document is not None and not hasattr(current_document, "toolbox_config"):
-        #     current_document.toolbox_config = {}
-        #
-        # # Merge with application-level toolbox config
-        # app_toolbox_cfg = self.config.dikt.get("toolbox", {})
-        # if "toolbox" not in cfg:
-        #     cfg["toolbox"] = {}
-        # cfg["toolbox"].update(app_toolbox_cfg)
-        #
-        # # Also merge current document's toolbox config if available
-        # if current_document is not None and hasattr(current_document, "toolbox_config"):
-        #     cfg["toolbox"].update(current_document.toolbox_config)
-        #
-        # logma.info(f"cfg {cfg}")
-        # self.init_toolbox()
-        #
-        # # Update tools drawer if current document has tools
-        # if current_document and hasattr(current_document, "get_pyffice_tools"):
-        #     tools = current_document.get_pyffice_tools()
-        #     self._populate_tools_drawer(tools)
-        #
-        # # Ensure the drawer state is reflected in the config passed to super().build_toolbox
-        # cfg["toolbox"].update(self.config.dikt["toolbox"])
-
+        self.init_toolbox()
         super().build_toolbox(cfg)
         return self
 
@@ -346,127 +473,10 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         # cnt += 1
         return items
 
-    def init_drawer_node(self):
-        """"""
-        default_action = {"action": "insert_object", "type": "custom"}
-        items = self.config.dikt["toolbox"][10].get("items", {})
-        cnt = 0
-        return self
-
-    def init_drawer_tabs(self):
-        """"""
-        default_action = {"action": "insert_object", "type": "custom"}
-        items = self.config.dikt["toolbox"][20].get("items", {})
-        cnt = 0
-        return self
-
-    def init_drawer_tools(self):
-        """"""
-        default_action = {"action": "insert_object", "type": "custom"}
-        items = self.config.dikt["toolbox"][30].get("items", {})
-        cnt = 0
-        return self
-
     def init_toolbox(self):
         """"""
         super().init_toolbox()
         self.config.dikt["toolbox"][0]["items"] = self.init_drawer_application()
-        # self.config.dikt["toolbox"][10]["items"] = self.init_drawer_node()
-        # self.config.dikt["toolbox"][20]["items"] = self.init_drawer_tabs()
-        # self.config.dikt["toolbox"][30]["items"] = self.init_drawer_tools()
-
-        # Connect signals for dynamic toolbox population
-        self._connect_pane_signals()
-        return self
-
-    def _connect_pane_signals(self):
-        """Connect to signals from other panes for dynamic toolbox updates"""
-        # Connect to toolbar document_created signal
-        if hasattr(self.app.view, "toolbar") and hasattr(self.app.view.toolbar, "document_created"):
-            self.app.view.toolbar.document_created.connect(self._on_document_created)
-
-        # Connect to tree document_selected signal
-        if hasattr(self.app.view, "panes") and hasattr(self.app.view.panes, "left"):
-            tree = self.app.view.panes["left"].tree if hasattr(self.app.view.panes["left"], "tree") else None
-            if tree and hasattr(tree, "document_selected"):
-                tree.document_selected.connect(self._on_document_selected)
-
-        # Connect to tabs current_document_changed signal
-        if hasattr(self.app.view, "panes") and hasattr(self.app.view.panes, "center"):
-            tabs = self.app.view.panes["center"].tabs if hasattr(self.app.view.panes["center"], "tabs") else None
-            if tabs and hasattr(tabs, "current_document_changed"):
-                tabs.current_document_changed.connect(self._on_document_changed)
-
-    def _on_document_created(self, doc_type):
-        """Handle new document created from toolbar"""
-        logma.info(f"Toolbox: Document created - {doc_type}")
-        # Get document class and populate toolbox with its tools
-        doc_class = self._get_document_class_for_type(doc_type)
-        if doc_class and hasattr(doc_class, "get_pyffice_tools"):
-            tools = doc_class.get_pyffice_tools()
-            self._populate_tools_drawer(tools)
-
-    def _on_document_selected(self, document):
-        """Handle document selected from tree"""
-        if document and isinstance(document, NchantdOfficeDocument):
-            logma.info(f"Toolbox: Document selected - {document.PYTYPE}")
-            if hasattr(document, "get_pyffice_tools"):
-                tools = document.get_pyffice_tools()
-                self._populate_tools_drawer(tools)
-
-    def _on_document_changed(self, document):
-        """Handle active document changed in tabs"""
-        if document and isinstance(document, NchantdOfficeDocument):
-            logma.info(f"Toolbox: Document changed - {document.PYTYPE}")
-            if hasattr(document, "get_pyffice_tools"):
-                tools = document.get_pyffice_tools()
-                self._populate_tools_drawer(tools)
-
-    def _get_document_class_for_type(self, doc_type):
-        """Get document class for a given type string"""
-        from nchantdoffice.widgets.documents.managers.calendars import NchantdOfficeCalendar
-        from nchantdoffice.widgets.documents.filesystems import NchantdOfficeFileSystem
-
-        type_map = {
-            "calendar": NchantdOfficeCalendar,
-            "filesystem": NchantdOfficeFileSystem,
-            "document": NchantdOfficeDocument,
-        }
-        return type_map.get(doc_type, NchantdOfficeDocument)
-
-    def _populate_tools_drawer(self, tools):
-        """Populate the tools drawer with tools from document's get_pyffice_tools()"""
-        if not tools:
-            return
-
-        # Ensure tools drawer exists
-        if 30 not in self.config.dikt["toolbox"]:
-            self.config.dikt["toolbox"][30] = {"items": {}}
-
-        items = {}  # Start with fresh items for the tools drawer
-        cnt = 0
-
-        for tool in tools:
-            default_action = {"action": "insert_object", "type": "custom"}
-            items[cnt] = default_action
-
-            cfg = {
-                "text": tool.get("label", "Tool"),
-                "action": tool.get("id", "tool"),
-                "layout": "horizontal",
-                "size": ["auto", 30],
-                "handler": getattr(self, f"cmd_{tool.get('method', 'noop')}", self.cmd_noop),
-            }
-            tool_button = NchantdButton(self, cfg).initWidget()
-            items[cnt]["widget"] = tool_button
-            cnt += 1
-
-        self.config.dikt["toolbox"][30]["items"] = items
-        logma.info(f"Toolbox: Populated {len(tools)} tools")
-        return self
-
-    def cmd_noop(self, event, *args, **kwargs):
-        """No-op command placeholder"""
         return self
 
 

@@ -47,7 +47,6 @@ logma = Logma(__name__)
 
 # ====================================================================================================================||
 pxcfg = join(here, "../_data_", "calendars.yaml")
-pxcfg = {}
 
 
 class NchantdEventPane(NchantdPane):

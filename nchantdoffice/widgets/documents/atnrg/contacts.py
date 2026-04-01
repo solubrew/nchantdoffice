@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -23,7 +24,7 @@ from ogma.logma import Logma
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.managers import NchantdManager
 from nchantrs.widgets.groups import NchantdHScrollGroupBox, NchantdVScrollGroupBox
-from pyffice.contacts.contacts import PyfficeContact, PyfficeContactManager
+from pyffice.contacts.contacts import PyfficeContact, PyfficeRolodex
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -32,7 +33,6 @@ logma = Logma(__name__)
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "contacts.yaml")
-pxcfg = {}
 
 
 class NchantdOfficeContact(NchantdWidget):
@@ -71,19 +71,17 @@ class NchantdOfficeRolodex(NchantdManager):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        icfg = {}
+        super().__init__(parent, icfg)
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeRolodex")
-        if self.parent:
-            self.config.override(parent.config)
-        super().__init__(self)
-        self.config.override(cfg)
+        self.config = condor.Instruct(pxcfg).select("NchantdOfficeRolodex").override(cfg)
         self.contacts_group = None
         self.contact_likely_group = None
 
     def initModel(self):
         """"""
         super().initModel()
-        self.document = PyfficeContactManager(self.app.model.store)
+        self.document = PyfficeRolodex()  # self.app.model.store)
         return self
 
     def initView(self):
@@ -92,12 +90,13 @@ class NchantdOfficeRolodex(NchantdManager):
         self.contact_likely_group = NchantdHScrollGroupBox()
         self.contact_likely_group.setTitle(f"Most Likely Contacts")
         self.layout.addLayout(self.contact_likely_group.layout)
-        self.contacts_group = NchantdVScrollGroupBox()
+        self.contacts_group = NchantdVScrollGroupBox(self)
         self.contacts_group.setTitle(f"All Contacts")
         self.layout.addLayout(self.contacts_group.layout)
-        for contact in self.document.contacts:
-            contact_pane = self.add_contact(contact)
-            self.contacts_group.addWidget(contact_pane)
+        if self.document.contacts is not None:
+            for contact in self.document.contacts:
+                contact_pane = self.add_contact(contact)
+                self.contacts_group.addWidget(contact_pane)
         return self
 
     def initWidget(self):

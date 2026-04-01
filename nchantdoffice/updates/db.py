@@ -21,28 +21,34 @@ import datetime as dt
 # ======================================Solutions Brewer Library Modules==============================================||
 from condor import condor
 from ogma.logma import Logma
-from nchantrs.updates.db import DBUpdate
+from nchantrs.updates.db import NchantdDBUpdate
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
-# logma.off()
+if not log:
+    logma.off()
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "db.yaml")
 
 
-class NchantdOfficeDBUpdate(DBUpdate):
+class NchantdOfficeDBUpdate(NchantdDBUpdate):
     """"""
 
     def __init__(self, parent, cfg=None):
         """"""
         super().__init__(parent, cfg)
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeDBUpdate")).override(cfg)
+        self.config.override(pxcfg).select("NchantdOfficeDBUpdate").override(cfg)
         logma.info(f"Config: {self.config.dikt}")
         self.versions = self.config.select("versions")
         logma.info(f"Versions: {self.versions.dikt}")
+
+    def update_pyffice_document(self):
+        """need to track and upgrade pyffice document versioning that are stored in the database"""
+        logma.info(f"Updating pyffice document")
+        self.parent.pyffice_document.update(self.versions.dikt)
 
 
 # ====================================================================================================================||

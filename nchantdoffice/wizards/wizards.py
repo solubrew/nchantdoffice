@@ -40,7 +40,6 @@ logma = Logma(__name__)
 # logma.off()
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "wizards.yaml")
-pxcfg = {}
 
 
 class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):

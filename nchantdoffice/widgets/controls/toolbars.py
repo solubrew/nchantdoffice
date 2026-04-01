@@ -43,7 +43,6 @@ logma = Logma(__name__)
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "toolbars.yaml")
-pxcfg = {}
 
 
 class NchantdOfficeApplicationToolBar(NchantdApplicationToolBar):

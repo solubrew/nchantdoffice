@@ -37,7 +37,6 @@ logma = Logma(__name__)
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "forms.yaml")
-pxcfg = {}
 
 
 class NchantdNewFormItemPane(NchantdPane):

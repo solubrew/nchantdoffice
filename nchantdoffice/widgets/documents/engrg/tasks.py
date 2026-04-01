@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -24,9 +25,9 @@ from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument, NchantdOfficeDocumentManager
 from nchantrs.widgets.calendars.days import NchantdDayCalendar
 from nchantrs.widgets.groups import NchantdVScrollGroupBox
-from nchantrs.widgets.tables import NchantdTable
+from nchantrs.widgets.tables.tables import NchantdTable
 from nchantdoffice.widgets.panes.tasks import NchantdOfficeTaskEntryPane
-from pyffice.workflows.tasks import PyfficeTasksManager, PyfficeProjectsManager
+from pyffice.items.tasks import PyfficeTasksManager, PyfficeProjectsManager
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -37,6 +38,7 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "tasks.yaml")
 
 
+# TODO: leverage NchantdAXN  and AXN tasks to replace the below
 class NchantdOfficeTasksManager(NchantdOfficeDocumentManager):
     """"""
 

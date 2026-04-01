@@ -38,7 +38,6 @@ logma = Logma(__name__)
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "tasks.yaml")
-pxcfg = {}
 
 
 class NchantdOfficeTaskEntryPane(NchantdPane):

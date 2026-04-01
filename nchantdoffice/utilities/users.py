@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -23,7 +24,6 @@ from nchantdoffice.services.services import Bridge
 from nchantrs.utilities.utils import User
 from ogma.logma import Logma
 
-
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
@@ -31,7 +31,6 @@ logma = Logma(__name__)
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "users.yaml")
-pxcfg = {}
 
 
 class NchantdOfficeUser(User):

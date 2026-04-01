@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, exists
@@ -152,9 +153,10 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         logma.info(f"File Path {self.document.file_path}")
         if self.document.file_path is not None:
             self.open_file(self.document.file_path)
-        
+
         # FIX: Add PDF view to existing layout instead of replacing it
         # The toolbar was already added by super().initView(), so we just add this widget
+
         self.layout.addWidget(self.view)
 
     def initWidget(self):
