@@ -208,16 +208,22 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
                     target_nid = last_node_nid
                     logma.info(f"Restoring last node: {target_nid}")
 
-            # If no last node, default to Home node
+            # If no last node, default to Home node (using specified NID)
             if not target_nid:
-                home_df = nodes[nodes["name_txt"] == "Home"]
+                home_nid = "067ca837-17f6-74e7-8000-f7de9b7927f1"
+                home_df = nodes[nodes["nid_txt"] == home_nid]
                 if not home_df.empty:
-                    target_nid = home_df["nid_txt"].values[0]
+                    target_nid = home_nid
                 else:
-                    # Get first root node as fallback
-                    root_df = nodes[nodes["pid_txt"] == "0"]
-                    if not root_df.empty:
-                        target_nid = root_df["nid_txt"].values[0]
+                    # Fallback to name-based lookup
+                    home_df = nodes[nodes["name_txt"] == "Home"]
+                    if not home_df.empty:
+                        target_nid = home_df["nid_txt"].values[0]
+                    else:
+                        # Get first root node as fallback
+                        root_df = nodes[nodes["pid_txt"] == "0"]
+                        if not root_df.empty:
+                            target_nid = root_df["nid_txt"].values[0]
 
             if not target_nid:
                 return self
@@ -301,17 +307,23 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
                         # Try to find Home node - typically named "Home" or at root level
                         nodes = self.app.model.get_nodes()
                         if not nodes.empty:
-                            # Find Home node by name or get first root node
-                            home_df = nodes[nodes["name_txt"] == "Home"]
-                            if not home_df.empty:
-                                home_nid = home_df["nid_txt"].values[0]
-                            else:
-                                # Get first root node (pid = '0')
-                                root_df = nodes[nodes["pid_txt"] == "0"]
-                                if not root_df.empty:
-                                    home_nid = root_df["nid_txt"].values[0]
+                            # Use specified NID for Home node
+                            home_nid = "067ca837-17f6-74e7-8000-f7de9b7927f1"
+                            home_df = nodes[nodes["nid_txt"] == home_nid]
+
+                            if home_df.empty:
+                                # Fallback to name-based lookup
+                                home_df = nodes[nodes["name_txt"] == "Home"]
+                                if not home_df.empty:
+                                    home_nid = home_df["nid_txt"].values[0]
                                 else:
-                                    return self
+                                    # Get first root node (pid = '0')
+                                    root_df = nodes[nodes["pid_txt"] == "0"]
+                                    if not root_df.empty:
+                                        home_nid = root_df["nid_txt"].values[0]
+                                    else:
+                                        return self
+
                             # Select the node using helper method
                             self._select_node_by_nid(tree, home_nid)
                             logma.info(f"Selected Home node: {home_nid}")
