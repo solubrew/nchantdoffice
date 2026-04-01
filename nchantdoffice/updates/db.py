@@ -40,7 +40,7 @@ class NchantdOfficeDBUpdate(NchantdDBUpdate):
     def __init__(self, parent, cfg=None):
         """"""
         super().__init__(parent, cfg)
-        self.config.override(pxcfg).select("NchantdOfficeDBUpdate").override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeDBUpdate").override(cfg))
         logma.info(f"Config: {self.config.dikt}")
         self.versions = self.config.select("versions")
         logma.info(f"Versions: {self.versions.dikt}")

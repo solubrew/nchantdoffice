@@ -41,7 +41,7 @@ class NchantdOfficeTab(NchantdTab):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(pxcfg).select("NchantdOfficeTab").override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeTab").override(cfg))
 
     def initModel(self, cfg=None):
         """"""

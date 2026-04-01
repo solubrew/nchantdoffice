@@ -51,7 +51,7 @@ class NchantdOfficeCloak(NchantdCloak):
     def __init__(self, name, instance=None, parent=None, cfg=None, args=None):
         """ """
         super().__init__(name, instance, parent, None, args)
-        self.config.override(pxcfg).select("NchantdOfficeCloak").override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeCloak").override(cfg))
         self.config.override({"app": "nchantdoffice"})
         self.parent = parent
         logma.info(f"NchantdOfficeCloak: {self.config.dikt.get("config", None)}")

@@ -211,7 +211,7 @@ class NchantdOfficeDocumentMixin:
         # if not hasattr(self, "app") or self.app is None:
         #     if hasattr(self, "parent") and self.parent is not None:
         #         self.app = getattr(self.parent, "app", None)
-        buttons = {
+        _buttons = {
             0: {"action": "show_pane_left", "handler": self.cmd_show_pane_left},
             100: {"action": "save", "handler": self.cmd_save_tab},
             150: {"action": "redo", "handler": self.cmd_redo},
@@ -221,11 +221,12 @@ class NchantdOfficeDocumentMixin:
         }
         logma.info(f"CFG {cfg}")
         buttons = (
-            condor.Instruct(buttons)
-            .override(self.config.dikt.get("buttons", None))
+            condor.Instruct(_buttons)
+            .override(self.config.dikt.get("buttons", {}))
             .override(cfg.get("buttons", {}))
             .dikt
         )
+        buttons.update(_buttons)
         cfg = {"layout": "horizontal", "justify": "right"}
         buttons = {k: buttons[k] for k in sorted(buttons)}
         self.document_toolbar = NchantdButtonBar(self, cfg).initWidget(buttons)
@@ -402,7 +403,8 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab, Pyffic
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(pxcfg).select("NchantdOfficeDocument").override(cfg)
+        logma.info(f"Document Config {cfg.get("toolbox", None)}")
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeDocument").override(cfg))
         self.name = name
         self.did = None
         self.notes = None

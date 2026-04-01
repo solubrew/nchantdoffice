@@ -2,13 +2,13 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
 
 # -*- coding: utf-8 -*
@@ -55,30 +55,28 @@ pxcfg = join(here, "_data_", "scripts.yaml")
 
 class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
-    PYTYPE = 'script'  # Pyffice script type
-    
+    PYTYPE = "script"  # Pyffice script type
+
     @classmethod
     def get_pyffice_tools(cls):
         """Get toolbox tools for script documents"""
         return [
-            {'id': 'run', 'icon': 'play', 'label': 'Run Script', 'method': 'run_script'},
-            {'id': 'debug', 'icon': 'bug', 'label': 'Debug', 'method': 'debug_script'},
-            {'id': 'terminal', 'icon': 'console', 'label': 'Terminal', 'method': 'open_terminal'},
-            {'id': 'format', 'icon': 'format', 'label': 'Format', 'method': 'format_code'},
-            {'id': 'find', 'icon': 'search', 'label': 'Find & Replace', 'method': 'find_replace'},
-            {'id': 'spellcheck', 'icon': 'spell', 'label': 'Spell Check', 'method': 'spell_check'},
+            {"id": "run", "icon": "play", "label": "Run Script", "method": "run_script"},
+            {"id": "debug", "icon": "bug", "label": "Debug", "method": "debug_script"},
+            {"id": "terminal", "icon": "console", "label": "Terminal", "method": "open_terminal"},
+            {"id": "format", "icon": "format", "label": "Format", "method": "format_code"},
+            {"id": "find", "icon": "search", "label": "Find & Replace", "method": "find_replace"},
+            {"id": "spellcheck", "icon": "spell", "label": "Spell Check", "method": "spell_check"},
         ]
-    
+
     def __init__(self, parent=None, cfg=None):
         """Document editor widget built on top of QsciScintilla widget
         I believe this requires PyQt5, not sure what is available as a
         substitute for PySide2"""
-        super().__init__("Nchantd Script", parent, cfg)
+        icfg = {}
+        super().__init__("Nchantd Script", parent, icfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeScript"))
-        if parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeScript").override(cfg))
         self.format_type = None
         self.document_editor = None
         self.button_bar = None

@@ -1916,6 +1916,8 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 self.parent.addTab(self.new_document, " + ")
         finally:
             self.parent.blockSignals(False)
+            if hasattr(self.parent, "on_tab_focus"):
+                self.parent.on_tab_focus(active_tab_position)
             self._building = False
         return self
 
