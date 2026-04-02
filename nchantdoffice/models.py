@@ -1054,7 +1054,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         table = "vw_tab_document"
         if node is None:
             return None
-        filters = {"WHERE": {"IN": {"pid_txt": [node], "tabset_type_txt": [tabset]}}}
+        if tabset == "right":
+            filters = {"WHERE": {"IN": {"tabset_type_txt": ["right"]}}}
+        else:
+            filters = {"WHERE": {"IN": {"pid_txt": [node], "tabset_type_txt": [tabset]}}}
         filters["ORDER"] = [5]
         return self.store.get_table(table, filters)
 
@@ -1858,6 +1861,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         if hasattr(self, "_building") and self._building:
             return self
         self._building = True
+        active_tab_position = 0
         try:
             self.parent.blockSignals(True)
             self.parent.clear()
@@ -1919,8 +1923,11 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             if tabset == "center" and hasattr(self.parent, "app"):
                 right_pane = self.parent.app.view.panes.get("right")
                 if right_pane and hasattr(right_pane, "model"):
+
                     logma.info("Building right pane tabs")
                     right_pane.model.buildTabSet(node, "right")
+                    active_tab_position = 0
+
         finally:
             self.parent.blockSignals(False)
             if hasattr(self.parent, "on_tab_focus"):
@@ -1968,7 +1975,11 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
     def get_documents(self, node, tabset):
         """"""
-        tab_docs = self.parent.app.model.get_tab_documents(node.nid, tabset)
+        if isinstance(node, int):
+            nid = node
+        else:
+            nid = node.nid
+        tab_docs = self.parent.app.model.get_tab_documents(nid, tabset)
         return tab_docs
 
     def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0):
