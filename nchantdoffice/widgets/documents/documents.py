@@ -405,7 +405,8 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab, Pyffic
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        logma.info(f"Document Config {cfg.get("toolbox", None)}")
+        if cfg is not None:
+            logma.info(f"Document Config {cfg.get('toolbox', None)}")
         self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeDocument").override(cfg))
         self.name = name
         self.did = None

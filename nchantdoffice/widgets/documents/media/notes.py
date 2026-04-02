@@ -10,6 +10,7 @@
     security: seclvl2
     <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -162,10 +163,7 @@ class NchantdOfficeNoteDocument(NchantdOfficeDocument):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeNoteDocument"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeNoteDocument").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -187,8 +185,8 @@ class NchantdOfficeNoteDocument(NchantdOfficeDocument):
         }
         super().initView(cfg)
         cfg = {"background_color": "lightyellow", "default_text": "", "size": ["auto", "auto"]}
-        self.editor = NchantdDocEditor(self, cfg).initWidget()
-        self.layout.addWidget(self.editor)
+        self.document_editor = NchantdDocEditor(self, cfg).initWidget()
+        self.layout.addWidget(self.document_editor)
         return self
 
     def initWidget(self):

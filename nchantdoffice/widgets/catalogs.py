@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -136,6 +137,10 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
         self.initModel()
         self.initView()
         return self
+
+    def append_note(self, note):
+        """"""
+        self.notes.append(note)
 
     def cmd_node_edit(self, event=None, *args, **kwargs):
         """"""
