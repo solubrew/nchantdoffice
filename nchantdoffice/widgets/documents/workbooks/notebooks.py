@@ -37,19 +37,17 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "notebooks.yaml")
 
 
-class NchantdOfficeNotebook(NchantdOfficeDocument):
+class NchantdOfficeNotebook(NchantdOfficeDocument, PyfficeNotebook):
     """"""
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__("Nchantd Notebook", self, cfg)
+        icfg = {}
+        super().__init__("Nchantd Notebook", self, icfg)
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeNotebook")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeNotebook").override(cfg))
         # self.document = PyfficeNotebook()
-        self.agent = NchantdOfficeAgent()
+        # self.agent = NchantdOfficeAgent()
 
     def initModel(self):
         """"""
@@ -61,7 +59,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         # limit the ability to connect with items in the nchantdoffice application
         #
         cmd = ["jupyter", "notebook", "--no-browser", "--NotebookApp.token=''", "--port=8888"]
-        self.agent.run(cmd)
+        # self.agent.run(cmd)
         return self
 
     def initView(self, cfg=None):

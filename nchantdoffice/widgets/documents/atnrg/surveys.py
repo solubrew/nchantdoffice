@@ -22,13 +22,14 @@ import datetime as dt
 from condor import condor
 from ogma.logma import Logma
 from nchantrs.libraries import pyqt
-from nchantrs.widgets.browsers.browsers import NchantdWebApp
-from nchantrs.widgets.tables import NchantdList
+
+# from nchantrs.widgets.browsers.browsers import NchantdWebApp
+# from nchantrs.widgets.tables import NchantdList
 from nchantrs.widgets.managers import NchantdManager
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.groups import NchantdVScrollGroupBox, NchantdHScrollGroupBox
 from nchantrs.widgets.forms.forms import NchantdDynamicEntryForm, NchantdForm
-from pyffice.workflows.surveys import PyfficeSurveyManager
+from pyffice.forms.surveys import PyfficeSurveyManager
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -75,12 +76,10 @@ class NchantdOfficeSurvey(NchantdOfficeEvaluation):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        icfg = {}
+        super().__init__(parent, icfg)
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("Nchantd")
-        if self.parent:
-            self.config.override(parent.config)
-        super().__init__(self.parent, self.config)
-        self.config.override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeSurvey").override(cfg))
         self.forms = {}
         self.questions = {}
         self.responses = {}

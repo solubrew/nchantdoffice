@@ -315,6 +315,8 @@ class NchantdOfficeDocumentMixin:
         :return:
         """
         # logma.warning("Saving Document")
+        if self.document is None:
+            return self
         logma.info(f"Save Content {self.document.content}")
         self.document.save()  # increments versions and (internal encryption..future)
         logma.info(f"Save Path {path}")
@@ -459,6 +461,11 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab, Pyffic
     def init_toolbar(self, cfg=None):
         """"""
         super().init_toolbar(cfg)
+        return self
+
+    def init_toolbox(self, cfg=None):
+        """"""
+        super().init_toolbox(cfg)
         return self
 
     def jump_to_account_tab(self):

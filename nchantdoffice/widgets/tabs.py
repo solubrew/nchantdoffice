@@ -79,11 +79,7 @@ class NchantdOfficeTabs(NchantdTabSet):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeTabs"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeTabs").override(cfg))
         # Enable drag-drop
         self._setup_drag_drop()
 
