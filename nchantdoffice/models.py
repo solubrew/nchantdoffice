@@ -1914,6 +1914,13 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 self.new_document.initWidget()
                 self.new_document.position = len(self.tabsdata) + 1
                 self.parent.addTab(self.new_document, " + ")
+
+            # When building center pane, also build right pane tabs
+            if tabset == "center" and hasattr(self.parent, "app"):
+                right_pane = self.parent.app.view.panes.get("right")
+                if right_pane and hasattr(right_pane, "model"):
+                    logma.info("Building right pane tabs")
+                    right_pane.model.buildTabSet(node, "right")
         finally:
             self.parent.blockSignals(False)
             if hasattr(self.parent, "on_tab_focus"):
