@@ -92,7 +92,7 @@ class NchantdOfficeDocumentMixin:
         super().initView(cfg)
         if self.config.dikt.get("default_toolbar", True):
             self.init_toolbar(cfg)
-        self.init_toolbox()
+        # self.init_toolbox()
         return self
 
     def initWidget(self, pos=0):
