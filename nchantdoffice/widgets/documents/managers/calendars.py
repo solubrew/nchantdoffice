@@ -38,7 +38,6 @@ from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.tables.lists import NchantdList
 from nchantrs.widgets.groups import NchantdCollapsableGroup, NchantdGroup
 from nchantrs.widgets.annotations import NchantdLabel
-from nchantrs.widgets.calendars.timelines import NchantdJournalEditor
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -730,43 +729,6 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         self.calendar = NchantdCalendar(self, cfg).initWidget()
         self.layout.insertWidget(1, self.calendar)
         self.update()
-
-
-class NchantdOfficeJournalEditor(NchantdJournalEditor):
-    """"""
-
-    def __init__(self, parent=None, cfg=None):
-        """ """
-        super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeJournalEditor"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-
-    def initModel(self, cfg=None):
-        """"""
-        super().initModel(cfg)
-        return self
-
-    def initView(self, cfg=None):
-        """"""
-        super().initView(cfg)
-        return self
-
-    def initWidget(self):
-        """"""
-        self.initModel()
-        self.initView()
-        return self
-
-    def parse(self):
-        """"""
-        for entry in self.entries:
-            # write doc_media entry to table
-            pass
-        # need to identify the entry
-        return self
 
 
 # ====================================================================================================================||

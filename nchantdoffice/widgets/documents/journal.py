@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
@@ -39,17 +40,14 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "journal.yaml")
 
 
-class NchantdJournalEditor(NchantdOfficeDocument):
+class NchantdOfficeJournalEditor(NchantdOfficeDocument):
     """ """
 
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__("Journal", parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdJournalEditor"))
-        if parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdJournalEditor").override(cfg))
         self.context_notes = []
         self.rotate_time = None
         self.current_time = dt.datetime.now()
