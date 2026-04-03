@@ -24,9 +24,6 @@ from ogma.logma import Logma
 from nchantdoffice.widgets.documents.atnrg.browsers.browsers import NchantdOfficeWebBrowser
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
-from pyffice.notebooks.notebooks import PyfficeNotebook
-
-# from nchantdoffice.agents.agents import NchantdOfficeAgent
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -37,7 +34,7 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "notebooks.yaml")
 
 
-class NchantdOfficeNotebook(NchantdOfficeDocument, PyfficeNotebook):
+class NchantdOfficeNotebook(NchantdOfficeDocument):
     """"""
 
     def __init__(self, parent=None, cfg=None):
