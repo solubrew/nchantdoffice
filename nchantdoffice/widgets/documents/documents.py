@@ -398,7 +398,7 @@ class NchantdOfficeDocumentMixin:
         return self
 
 
-class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab, PyfficeDocument):
+class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
     """ ""Document base class - implements PyfficeDocument for all document types"""
 
     PYTYPE = "document"  # Default Pyffice type
