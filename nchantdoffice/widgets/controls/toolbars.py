@@ -18,29 +18,24 @@ import datetime as dt
 import json as j
 
 # ======================================3rd Party Library Modules=====================================================||
-# NOTE: Using PySide6 via nchantrs.libraries.pyqt for signal/slot compatibility
-# Changed 2026-03-25: Was using PyQt5 which caused "cannot be converted to QObject" error
-# when mixing PyQt5 signals with PySide6 QWidget (nchantrs uses PySide6)
-from nchantrs.libraries import pyqt
 
-Signal = pyqt.Signal
-Slot = pyqt.Slot
 # ======================================Solutions Brewer Library Modules==============================================||
 from condor import condor
 from subtrix.utilities import uuid
-from nchantrs.libraries import pyqt
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.controls.toolbars import NchantdApplicationToolBar
 from ogma.logma import Logma
 from nchantdoffice.dialogs.documents import NchantdNewDocumentSigil
-from nchantdoffice.widgets.documents import NchantdOfficeDocument
-from pyffice.document import PyfficeDocument
+from nchantrs.libraries import pyqt
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
-log = True
+log = False
 logma = Logma(__name__)
-
+if not log:
+    logma.off()
+Signal = pyqt.Signal
+Slot = pyqt.Slot
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "toolbars.yaml")
 
@@ -209,6 +204,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         logma.info(f"PID {self.app.view.panes[tree].tree.model.current_node.pid}")
         logma.info(f"Current Node {self.app.view.panes[tree].tree.model.current_node}")
         pos = 0
+        # TODO: there is an issue with the creation of siblings in certain situations
         if cfg["lookup_code_txt"] == "add_node_top_app_rootnode":
             pid = 0
         elif cfg["lookup_code_txt"] in ("add_node_sibling_app_siblingnode"):

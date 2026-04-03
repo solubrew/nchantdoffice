@@ -33,9 +33,10 @@ from nchantrs.widgets.media.editors.selectors import NchantdComboBox, NchantdDro
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
-log = True
+log = False
 logma = Logma(__name__)
-# logma.off()
+if not log:
+    logma.off()
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "journal.yaml")
 

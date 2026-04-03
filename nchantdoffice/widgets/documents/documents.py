@@ -36,7 +36,9 @@ from pyffice.document import PyfficeDocument
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
 debug = True
-# logma.off()
+log = False
+if not log:
+    logma.off()
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "documents.yaml")

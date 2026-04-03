@@ -89,6 +89,7 @@ class NchantdOfficeTabSet(NchantdTabSet):
 
     def on_tab_focus(self, tabn=None):
         """"""
+        logma.inspect_caller()
         if tabn is None:
             tabn = self.currentIndex()
 
@@ -117,15 +118,15 @@ class NchantdOfficeTabSet(NchantdTabSet):
             # WE want it to break if the toolbox is not in the right pane
             # this is a required functionality
             right_pane = self.app.view.panes.get("right")
-            if right_pane:
-                if right_pane.toolbox is None:
-                    # TODO: this should be happening at this point
-                    logma.info("Creating toolbox in right pane")
-                    right_pane.toolbox = self.create_toolbox(right_pane)
-                logma.info("Building toolbox")
-                right_pane.toolbox.build_toolbox()
-            else:
-                logma.warning("Right pane not yet available in on_tab_focus")
+            # if right_pane:
+            # if right_pane.toolbox is None:
+            # TODO: this shouldnt be happening at this point
+            # logma.info("Creating toolbox in right pane")
+            # right_pane.toolbox = self.create_toolbox(right_pane)
+            # logma.info("Building toolbox")
+            # right_pane.toolbox.build_toolbox()
+            # else:
+            #    logma.warning("Right pane not yet available in on_tab_focus")
 
         # Ensure tabn is valid for super class to avoid IndexError in set_focus
         if tabn >= 0 and tabn <= len(self.model.tabsdata):
