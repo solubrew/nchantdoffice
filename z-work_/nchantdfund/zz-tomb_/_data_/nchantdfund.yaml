@@ -1,0 +1,89 @@
+---
+<(META)>:
+  docid:
+  name:
+  description: >
+  expirary: '<[expiration]>'
+  version: '<[version]>'
+  path: '<[LEXIvrs]>panda/LEXI/'
+  outline: '<[outline]>'
+  authority: 'document|this'
+  security: 'sec|lvl2'
+  <(WT)>: -32
+sequence:
+  0:
+    'method': 'setup'
+    'params':
+    'active': 1
+  1:
+    'method': 'view.showSplashScreen'
+    'params':
+    'active': 0
+  2:
+    'method': 'updateDataModels'
+    'params':
+    'active': 1
+gui:
+  desktop:
+    'title': 'Nchantd Fund'
+    'size':
+      'left': 50
+      'top': 50
+      'width': 1850
+      'height': 1100
+    theme: 'original'
+    menubar:
+      0:
+        'admin':
+          '0': 'preferences'
+          '2': 'exit'
+      1:
+        'help':
+          '0': 'about'
+      '2':
+        'lookup':
+          0: 'address'
+    layout:
+      'style': '2Pane' #3VPane, 2VPane, 1V2HPane,
+      'left':
+        'Name': 'Navigation'
+        'widget': 'widgets.NchantdFundTree'
+        'size':
+          'w': 100
+          'h': 1000
+        <(SOURCE)>:
+      center:
+        'Name': Main Tabs Set
+        'widget': 'nchantrs.widgets.tabsets.NchantdTabSet'
+        'size':
+          'w': 1350
+          'h': 1000
+        '<(SOURCE)>':
+dstruct:
+  config:
+    'style': 'single'
+    'chunking': 'custom'
+  store:
+    'db':
+      'path': '{0}/data/db/{1}.db'
+      'name': 'nchantdfund'
+      'config':
+        table:
+          'tabs':
+            description: >
+            columns: ['name', 'widget', 'widgdata', 'parentid', 'position',
+                      'readonly', 'editable', 'visible', 'moveable']
+            records:
+          'details':
+            description: >
+            columns: ['date', 'event', 'start', 'duration', 'end', 'description']
+            records:
+          'events':
+            'description':
+            'columns': ['event', 'recurrance', 'dependance']
+            'records':
+          'recurrance':
+
+
+    'wdir': '/home/solubrew/Design/SB/Projects/Nchantrs/3_Work/1_DELTA/nchantdfund'
+forms:

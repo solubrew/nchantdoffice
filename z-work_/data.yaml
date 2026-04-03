@@ -1,0 +1,83 @@
+cmd: >
+	SELECT
+		docUUID,
+		sectnUUID
+	FROM <[doc]>
+	WHERE
+		Name = '<[name]>' AND
+		State = <[state]>
+cmd: >
+	SELECT
+		sectnUUID,
+		seq,
+		<[content]>,
+	FROM
+inmemdb:
+	Name: fxsquril
+	tables:
+		bigtable:
+			name:
+			size:
+				columns:
+					1_ids:
+						- 'ID'
+						- 'UUID'
+						- 'docUUID'
+						- 'SectnUUID'
+						- 'Name'
+						- 'Seq'
+						- 'SectnSize'
+					3_admins:
+						- '[CreBy] INTEGER'
+						- '[CreOn] FLOAT'
+						- '[ModBY] INTEGER'
+						- '[ModOn] FLOAT'
+						- '[DLT] BOOLEAN NOT NULL DEFAULT (0)'
+						- '[ACTV] BOOLEAN NOT NULL DEFAULT (1)'
+					2_content:
+						min: 15
+						max: 1975
+		bigfunction:
+			name:
+			size:
+				columns:
+					ids:
+					admins:
+					content:
+		msgtable:
+			name:
+			size:
+				columns:
+					ids:
+						- msgID
+						- msgUUID
+					admins:
+					content:
+						- 'From'
+						- 'To'
+						- 'Body'
+						- 'Anchor'
+						- 'Channel'
+						- 'Note'
+						- 'State'
+		opendocs:
+			name:
+			size:
+				columns:
+					ids:
+					admins:
+					content:
+		isolatedtables:
+			name:
+			size:
+				columns:
+					ids:
+					admins:
+					content:
+		run:
+			name:
+			size:
+				columns:
+					ids:
+					admins:
+					content:

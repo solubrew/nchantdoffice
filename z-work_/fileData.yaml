@@ -1,0 +1,142 @@
+---
+'<(META)>':
+	'DOCid': '<^[uuid]^>'
+	'name':
+	'description': >
+	'expirary': '<[expiration]>'
+	'version': '<[version]>'
+	'path': '<[LEXIvrs]>'
+	'outline': '<[outline]>'
+	'authority': 'document|this'
+	'security': 'sec|lvl2'
+	'<(WT)>': -32
+tables:
+	_cache:
+		cmd: >
+			CREATE TABLE _cache (
+				CacheID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+				CacheUUID TEXT UNIQUE, CacheDTID TEXT, DocUUID TEXT, C0 TEXT, Cn TEXT);
+	_opt:
+		cmd: >
+			CREATE TABLE _opt (
+				optID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+				UUID TEXT UNIQUE, "Table", tblOptionID INTEGER, Type TEXT, Name TEXT,
+				Description BLOB);
+	_run:
+		cmd: >
+			CREATE TABLE _run (
+				runID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+				UUID INTEGER, StateID INTEGER, StatusID INTEGER, TypeID INTEGER, pid INTEGER,
+				OP TEXT, uid INTEGER, Path TEXT);
+	m_bgtbl:
+		cmd: >
+			CREATE TABLE m_bgtbl (
+				m_bgtblID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+				UUID TEXT UNIQUE, TableName TEXT, Labels BOOLEAN, C0 TEXT, "C......0" TEXT);
+	m_msg:
+		cmd: >
+			CREATE TABLE m_msg (
+				msgID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+				msgUUID TEXT UNIQUE, "From" TEXT, "To" TEXT, Body TEXT, Anchor TEXT, Channel,
+				Note, State INTEGER);
+	m_odocs:
+		cmd: >
+			CREATE TABLE m_odocs (
+				memOpenDocID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+				UUID TEXT UNIQUE, DocID INTEGER, openMethod TEXT, LastTouch TEXT, SavedHash TEXT,
+				LastHash TEXT, State TEXT);
+	m_rltbl:
+		cmd: >
+	m_run:
+		cmd: >
+			CREATE TABLE m_run (
+				ApplyStackId INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+				runUUID TEXT UNIQUE, Transforms TEXT, DataSetCoords TEXT, State BOOLEAN);
+	t_docs:
+		cmd: >
+			CREATE TABLE t_docs (
+				docID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT NOT NULL UNIQUE,
+				docUUID TEXT, Name TEXT, Seq TEXT, SectnUUID TEXT, DTID TEXT, ownrUUID TEXT,
+				"Group" INTEGER);
+	t_sectns:
+		cmd: >
+			CREATE TABLE t_sectns (
+				SectnID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+				SectnUUID TEXT, sectnSize TEXT, Text BLOB, DTID TEXT, Type INTEGER,
+				State INTEGER);
+indices:
+	t_docs_sectnuuid: >
+		CREATE INDEX t_docs_sectnuuid ON t_docs (SectnUUID);
+	t_docs_seq: >
+		CREATE INDEX t_docs_seq_dex ON t_docs (Seq);
+	_opt_pkey: >
+		CREATE UNIQUE INDEX _opt_pkey_dex ON _opt (optID);
+	t_sectns_sectnsID: >
+		CREATE UNIQUE INDEX t_sectns_sectnsID ON t_sectns (SectnID);
+	_opt_type: >
+		CREATE INDEX _opt_type_dex ON _opt (Type);
+	_opt_table: >
+		CREATE INDEX _opt_table_dex ON _opt (tblOptionID);
+	t_docs_docid: >
+		CREATE UNIQUE INDEX t_docs_docid ON t_docs (DocID);
+	t_sectns_sectnsUUID: >
+		CREATE INDEX t_sectns_sectnsUUID ON t_sectns (SectnUUID);
+	t_docs_dtid: >
+		CREATE INDEX t_docs_dtid ON t_docs (DTID);
+views:
+	FileTypes:
+		cmd: >
+			CREATE VIEW Filetypes AS
+			SELECT
+				*
+			FROM _opt
+			WHERE Type = 'FILE'
+			ORDER BY
+				[Table] ASC,
+				tblOptionID ASC;
+	fullTable:
+		cmd: >
+			CREATE VIEW fullTable AS
+			SELECT
+				*
+			FROM t_docs
+			INNER JOIN t_sectns ON t_docs.sectnUUID = t_sectns.SectnUUID
+			ORDER BY
+				t_docs.DocID ASC,
+				t_docs.Seq ASC;
+	SectnsWLookup:
+		cmd: >
+			CREATE VIEW SectnsWLookup AS
+			SELECT
+				*
+			FROM t_sectns
+			INNER JOIN (
+				SELECT
+					_opt.tblOptionID,
+					_opt.Name
+				FROM _opt
+				WHERE Type = 'File'
+			) AS ftype ON t_sectns.Type = ftype.tblOptionID;
+	shrPair:
+		cmd: >
+			CREATE VIEW shrPair AS
+			SELECT
+				*
+			FROM t_docs;
+	uniqueSectnHASH:
+		cmd: >
+			CREATE VIEW unqiueSectnHASH AS
+			SELECT
+				hex([Text]) AS [HEX]
+			FROM t_sectns
+			GROUP BY
+				[HEX];
+	v_doc:
+		cmd: >
+			CREATE VIEW v_doc AS
+			SELECT
+				*
+			FROM t_docs
+			INNER JOIN t_sectns ON t_docs.sectnUUID = t_sectns.SectnUUID
+			WHERE t_docs.Name = 'tkSheet'
+			ORDER BY t_docs.Seq ASC;

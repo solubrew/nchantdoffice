@@ -1,0 +1,13 @@
+---
+NchantdDeveloperToolsPackage:
+  dstruct:
+    data:
+      app_integration:
+      app_tab_set:
+        - ['base', 'Create Tab Set', '', 0, "{}"]
+        - ['base', 'Create Node', '', 1, "{}"]
+        - ['controlled', 'Create Widget', '', 0, "{}"]
+        - ['controlled', 'Create Theme', '', 1, "{}"]
+        - ['advanced', 'Create Nchantd Extension', '', 0, "{}"]
+        - ['advanced', 'Create Nchantd App', '', 1, "{}"]
+      app_tab:

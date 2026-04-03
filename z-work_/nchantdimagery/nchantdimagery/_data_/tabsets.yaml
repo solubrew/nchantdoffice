@@ -1,0 +1,9 @@
+NIDirectoryManagerTabSet:
+  description: >
+    This is the primary tabset for the application.
+  tabs:
+    0: ['Directory', 'nchantrs.widgets.viewers.NchantdThumbnailViewerPane', "{}"]
+    1: ['Stable Diffusion', 'browsers.NchantdBrowserTab', "{}"]
+  dtabs:
+    '{0}': ['Image Viewer', 'browsers.NchantdImageViewerTab', "{}"]
+  children:

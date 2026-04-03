@@ -1,0 +1,350 @@
+---
+<(META)>:
+	DOCid: <^[uuid]^>
+	name: FxSQuRAIL
+	description: >
+		Fractionally Executed SQL Queued Recursive Interaction Layer
+	expirary: <[expiration]>
+	version: <[version]>
+	path: <[LEXIvrs]>
+	outline: <[outline]>
+	authority: document|this
+	security: sec|lvl2
+	<(WT)>: -32
+sectn:
+	seq:
+		description: >
+			Sequence defines the organizations of the sections
+		codes:
+			000.000:
+				description: >
+					Defines the position of the section within a grid
+				symbol: '.'
+			000,000:
+				description: >
+					Defines the position of the section within a list
+					this provides a posible list of 16,777,216 rows
+					281,474,976,711,000 max length rows
+				symbol: ','
+			000+000:
+				description: >
+					Define position of the section within a document page
+					pageseq+lineseq
+				symbol: '+'
+				tmplt:
+	size:
+		description: >
+			Section size codes are hexidecimal allowing a total of 8191 named
+			chunking methods and a total of 8190 sized chunking methods
+		codes:
+			00|0000:
+				description: >
+					00|0001 -> represents a defined encoding of 000 with a
+					chunk size of 01 256 encoding methods and up to a
+					chunk size of 65536 rows...allow for adhoc encoding using
+					a special rule set config to extend past the 256 if needed
+					and as well this engine should be built so that an overide
+					of sectn definitions is even possible
+				types:
+					defined:
+						Description: >
+							Chunk Data by a set of defined rules
+							i.e. Python method/class seperation
+						options:
+							'Python':
+							'English':
+				symbol: '|'
+			000.000:
+				description: >
+					001.004 -> represents a column and row chunk size
+					up to 4095 columns and 4095 rows
+					can hold 16,769,025 individiual data items in a single chunk
+				types:
+					table:
+						Description: >
+							Chunk Data into a table of x cols by y rows
+						options:
+				symbol: '.'
+			000,000:
+				description: >
+					001,002: ->
+					represents a chunk size of 1,002 rows
+					longest chunk 16,777,216 rows
+				types:
+					line:
+						Description: >
+							Chunk Data into x lines of data
+						options:
+				symbol: ','
+			000^000:
+				description: >
+					001^002: -> implement as a model naming system
+					a purely variable chunk size used for highly optimized storage
+				types:
+					calculated:
+						Description: >
+							Chunk Data by a calculated method using
+							Machine Learning to Optimize Performance
+						options:
+				symbol: '^'
+dbs:
+	AppOnDiskDB:
+		'tables':
+			_cache:
+				'name':
+				'description': >
+				'columns':
+					- 'CacheDTID.: TEXT'
+					- 'DocUUID.: TEXT'
+			'_docs':
+				'name: '_doc'
+				'description': >
+					'Store Entries to Organize Sections into a Document allowing for proper formatting'
+					'and versioning for the document sections'
+					'A Doc is a tree of Sectn sequences...the branches provide for different views'
+					'of the same document like values, formulas, formats'
+				'terms':
+					'<[table]>': '_doc'
+					'<@[columns]@>:
+						- 'histTag.: TEXT'
+						- 'Name.: TEXT'
+						- 'Seq.: TEXT'
+						- 'SectnUUID.: TEXT'
+						- 'DTID.: TEXT'
+						- 'ownrUUID.: TEXT'
+						- '[Group].: TEXT'
+			'_msgs':
+				'name': '_msg'
+				'description': >
+					'Handle in app messages for collaboration purposes both human and
+					'machine commmunication'
+					'A Message will be used to convey information between'
+					'copies of the file and users...a seperate mechism of'
+					'storage will be used for speed to help with concurrency'
+					'syncing across networks'
+				'terms':
+					'<[table]>': '_msg'
+					'<@[columns]@>':
+						- 'From.: TEXT'
+						- 'To.: TEXT'
+						- 'Body.: TEXT'
+						- 'Anchor.: TEXT'
+						- 'Channel.: TEXT'
+						- 'Note.: TEXT'
+						- 'State.: TEXT'
+			'_opts':
+				'name': '_opt'
+				'description': >
+				'terms':
+					'<[table]>': '_opt'
+					'<@[columns]@>':
+						- '<[table]>UUID.: TEXT'
+						- 'Name.: TEXT'
+						- '[Table].: TEXT'
+						- '<[table]>ID.: INT'
+						- 'tblOptionID.: INT'
+						- 'Type.: INT'
+						- 'Description.: BLOB'
+			'_perf':
+				'name': '_perf'
+				'description': >
+					The _perf Table will hold information that tracks and optimizes
+					the performance of the running instance FxSQuRIL
+					Track # of transactions by table and db
+					store the size of the transactions and the overall size of the db
+					try to determine working ranges of data
+					some tables maybe large but typically only work with the first x rows
+					or most recent or specific view
+				'tmplt':
+					'metrics':
+						files:
+							-
+								name:
+								lastOpen:
+								lastPath:
+						bgTbl:
+							size: [cols, rows, versions]
+						state: saved, crashed, closed, cleaned
+						score: <[session_perf]>
+				'terms':
+					'<[table]>': '_perf'
+					'<@[columns]@>':
+						- <[table]>UUID
+						- Data
+			'_sectns':
+				'name':
+				'description': >
+					A Sectn is a chunk of a document.  A chunk can have 2 dimensions
+					rows and columns, these are combinined into a single cell for storage and light
+					consumption
+				'terms':
+					'<[table]>': '_perf'
+					'<@[columns]@>':
+						- <[table.:UUID UNIQUE]>
+			'_usrs':
+				'name':
+				'description': >
+				'terms':
+					'<[table]>': '_usr'
+					'<@[columns]@>':
+						- '<[table.:UUID]>'
+						- Name
+						- sessionUUID
+			'_docbs':
+				'name':
+				'description': >
+				'terms':
+					'<[table]>': '_docbs'
+					'<@[columns]@>':
+						- <[table]>UUID
+						- Name
+						- sessionUUID
+		views:
+				DocGroups:
+				Docs:
+				DocStates:
+				FileTypes:
+				fullDoc:
+	'AppInMemDB':
+		'tables':
+			'm_bgTbl':
+
+	'SharedInMemDB':
+		'tables':
+			'm_bgFx':
+	FileOnDiskDB:
+		tables:
+			_cache:
+				'name':
+				'description': >
+				'columns':
+					- 'CacheDTID.: TEXT'
+					- 'DocUUID.: TEXT'
+			_opt:
+				'name':
+				'description': >
+				'columns':
+					- Table
+					- Type
+					- Name]
+					- tblOptionID
+					- Description
+			_run:
+				'name':
+				'description': >
+				'columns':
+					- OP
+					- Path
+					- StateID
+					- StatusID
+					- TypeID
+					- pid
+					- uid]
+			t_docs:
+			t_sectns:
+		indices:
+			t_docs_sectnuuid: >
+				CREATE INDEX t_docs_sectnuuid ON t_docs (SectnUUID);
+			t_docs_seq: >
+				CREATE INDEX t_docs_seq_dex ON t_docs (Seq);
+			_opt_pkey: >
+				CREATE UNIQUE INDEX _opt_pkey_dex ON _opt (optID);
+			t_sectns_sectnsID: >
+				CREATE UNIQUE INDEX t_sectns_sectnsID ON t_sectns (SectnID);
+			_opt_type: >
+				CREATE INDEX _opt_type_dex ON _opt (Type);
+			_opt_table: >
+				CREATE INDEX _opt_table_dex ON _opt (tblOptionID);
+			t_docs_docid: >
+				CREATE UNIQUE INDEX t_docs_docid ON t_docs (DocID);
+			t_sectns_sectnsUUID: >
+				CREATE INDEX t_sectns_sectnsUUID ON t_sectns (SectnUUID);
+			t_docs_dtid: >
+				CREATE INDEX t_docs_dtid ON t_docs (DTID);
+		views:
+			FileTypes:
+				name: Filetypes
+				cmd: >
+					SELECT
+						*
+					FROM _opt
+					WHERE Type = 'FILE'
+					ORDER BY
+						[Table] ASC,
+						tblOptionID ASC;
+			fullTable:
+				name: fullTable
+				cmd: >
+					SELECT
+						*
+					FROM t_docs
+					INNER JOIN t_sectns ON t_docs.sectnUUID = t_sectns.SectnUUID
+					ORDER BY
+						t_docs.DocID ASC,
+						t_docs.Seq ASC;
+			SectnsWLookup:
+				cmd: >
+					CREATE VIEW SectnsWLookup AS
+					SELECT
+						*
+					FROM t_sectns
+					INNER JOIN (
+						SELECT
+							_opt.tblOptionID,
+							_opt.Name
+						FROM _opt
+						WHERE Type = 'File'
+					) AS ftype ON t_sectns.Type = ftype.tblOptionID;
+			shrPair:
+				cmd: >
+					CREATE VIEW shrPair AS
+					SELECT
+						*
+					FROM t_docs;
+			uniqueSectnHASH:
+				cmd: >
+					CREATE VIEW unqiueSectnHASH AS
+					SELECT
+						hex([Text]) AS [HEX]
+					FROM t_sectns
+					GROUP BY
+						[HEX];
+			v_doc:
+				cmd: >
+					CREATE VIEW v_doc AS
+					SELECT
+						*
+					FROM t_docs
+					INNER JOIN t_sectns ON t_docs.sectnUUID = t_sectns.SectnUUID
+					WHERE t_docs.Name = 'tkSheet'
+					ORDER BY t_docs.Seq ASC;
+	FileInMemDB:
+		tables:
+			m_bgtbl:
+				'name':
+				'description': >
+					'Big table allows for all open/active documents to be stored'
+					'in memory'
+				'columns':
+			m_msg:
+				'name':
+				'description': >
+				'columns':
+			m_odocs:
+				'name':
+				'description': >
+				'columns':
+			m_rltbl:
+				'name':
+				'description': >
+				'columns':
+			m_run:
+				'name':
+				'description': >
+				'columns':
+
+
+
+
+
+

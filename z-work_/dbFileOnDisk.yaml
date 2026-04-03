@@ -1,0 +1,368 @@
+tables:
+  f_cache:
+    'description': >
+      'Use cache table to dump inmemory changes to file quickly parse cache to'
+      'proper tables as available'
+    'columns':
+      'cacheid':
+        'DType': INTEGER
+        'Options': 'AUTOINCREMENT'
+      'cachedtid':
+        'DType': 'TEXT'
+      'docuuid':
+        'DType': 'TEXT'
+      '<@[column]@>':
+        'DType': 'TEXT'
+      'creby':
+        'DType': 'INTEGER'
+        'Options':
+      'creon':
+        'DType': 'TEXT'
+        'Options':
+      'modbY':
+        'DType': 'INTEGER'
+        'Options': INTEGER'
+      'modon':
+        'DType': 'TEXT'
+        'Options':
+      'dlt':
+        'DType': 'BOOLEAN'
+        'Constraints': NOT NULL DEFAULT (0)'
+        'Options':
+      'actv':
+        'DType': 'BOOLEAN'
+        'Options': NOT NULL DEFAULT (1)'
+    cmd: >
+      CREATE TABLE _cache (
+        CacheID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        CacheUUID TEXT UNIQUE, CacheDTID TEXT, DocUUID TEXT, C0 TEXT, Cn TEXT);
+  f_opt:
+    'description': >
+    'columns':
+      'uuid':
+        DType: 'TEXT'
+      'name':
+        DType: 'TEXT'
+      '[table]':
+        DType: 'TEXT'
+      'tbloptionid':
+        DType: 'INTEGER'
+      'type':
+        DType: INTEGER'
+      'description':
+        DType: 'BLOB'
+      'extension':
+        DType: 'TEXT'
+      'creby':
+        'DType': 'INTEGER'
+        'Options':
+      'creon':
+        'DType': 'TEXT'
+        'Options':
+      'modbY':
+        'DType': 'INTEGER'
+        'Options': INTEGER'
+      'modon':
+        'DType': 'TEXT'
+        'Options':
+      'dlt':
+        'DType': 'BOOLEAN'
+        'Constraints': NOT NULL DEFAULT (0)'
+        'Options':
+      'actv':
+        'DType': 'BOOLEAN'
+        'Options': NOT NULL DEFAULT (1)'
+    cmd: >
+      CREATE TABLE _opt (
+        optID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        UUID TEXT UNIQUE, "Table", tblOptionID INTEGER, Type TEXT, Name TEXT,
+        Description BLOB);
+  f_bgtbl:
+    'description': >
+    'columns':
+      'creby':
+        'DType': 'INTEGER'
+        'Options':
+      'creon':
+        'DType': 'TEXT'
+        'Options':
+      'modbY':
+        'DType': 'INTEGER'
+        'Options': INTEGER'
+      'modon':
+        'DType': 'TEXT'
+        'Options':
+      'dlt':
+        'DType': 'BOOLEAN'
+        'Constraints': NOT NULL DEFAULT (0)'
+        'Options':
+      'actv':
+        'DType': 'BOOLEAN'
+        'Options': NOT NULL DEFAULT (1)'
+    cmd: >
+      CREATE TABLE m_bgtbl (
+        m_bgtblID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        UUID TEXT UNIQUE, TableName TEXT, Labels BOOLEAN, C0 TEXT, "C......0" TEXT);
+  f_msg:
+    'description': >
+    'columns':
+      'creby':
+        'DType': 'INTEGER'
+        'Options':
+      'creon':
+        'DType': 'TEXT'
+        'Options':
+      'modbY':
+        'DType': 'INTEGER'
+        'Options': INTEGER'
+      'modon':
+        'DType': 'TEXT'
+        'Options':
+      'dlt':
+        'DType': 'BOOLEAN'
+        'Constraints': NOT NULL DEFAULT (0)'
+        'Options':
+      'actv':
+        'DType': 'BOOLEAN'
+        'Options': NOT NULL DEFAULT (1)'
+    cmd: >
+      CREATE TABLE m_msg (
+        msgID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        msgUUID TEXT UNIQUE, "From" TEXT, "To" TEXT, Body TEXT, Anchor TEXT, Channel,
+        Note, State INTEGER);
+  f_odocs:
+    description: >
+      m_odocs table holds data about the open documents within the workbook file
+    columns:
+      'creby':
+        'DType': 'INTEGER'
+        'Options':
+      'creon':
+        'DType': 'TEXT'
+        'Options':
+      'modbY':
+        'DType': 'INTEGER'
+        'Options': INTEGER'
+      'modon':
+        'DType': 'TEXT'
+        'Options':
+      'dlt':
+        'DType': 'BOOLEAN'
+        'Constraints': NOT NULL DEFAULT (0)'
+        'Options':
+      'actv':
+        'DType': 'BOOLEAN'
+        'Options': NOT NULL DEFAULT (1)'
+    cmd: >
+      CREATE TABLE m_odocs (
+        memOpenDocID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        UUID TEXT UNIQUE, DocID INTEGER, openMethod TEXT, LastTouch TEXT, SavedHash TEXT,
+        LastHash TEXT, State TEXT);
+  f_run:
+    'description': >
+      Run table is a log of cmds ran in the file there will be a mechanism for
+      compaction of the run log to decrease file size but deleting history of
+      the log
+    'columns':
+      'creby':
+        'DType': 'INTEGER'
+        'Options':
+      'creon':
+        'DType': 'TEXT'
+        'Options':
+      'modbY':
+        'DType': 'INTEGER'
+        'Options': INTEGER'
+      'modon':
+        'DType': 'TEXT'
+        'Options':
+      'dlt':
+        'DType': 'BOOLEAN'
+        'Constraints': NOT NULL DEFAULT (0)'
+        'Options':
+      'actv':
+        'DType': 'BOOLEAN'
+        'Options': NOT NULL DEFAULT (1)'
+    'cmd': >
+      CREATE TABLE m_run (
+        ApplyStackId INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        runUUID TEXT UNIQUE, Transforms TEXT, DataSetCoords TEXT, State BOOLEAN);
+  f_docs:
+    'description': >
+      A doc is a tree of sectn sequences...the branches provide for different views
+      of the same document like values, formulas, formats
+    'columns':
+      'f_docid':
+        'DType': 'INTEGER'
+      'docuuid':
+        'DType': 'TEXT'
+      'name':
+        'DType': 'TEXT'
+      'seq':
+        'DType': 'TEXT'
+      'sectnuuid':
+        'DType': 'TEXT'
+      'dtid':
+        'DType': 'TEXT'
+      'ownruuid':
+        'DType': 'TEXT'
+      'group':
+        'DType': 'TEXT'
+      'creby':
+        'DType': 'INTEGER'
+        'Options':
+      'creon':
+        'DType': 'TEXT'
+        'Options':
+      'modbY':
+        'DType': 'INTEGER'
+        'Options': INTEGER'
+      'modon':
+        'DType': 'TEXT'
+        'Options':
+      'dlt':
+        'DType': 'BOOLEAN'
+        'Constraints': NOT NULL DEFAULT (0)'
+        'Options':
+      'actv':
+        'DType': 'BOOLEAN'
+        'Options': NOT NULL DEFAULT (1)'
+    cmd: >
+      CREATE TABLE f_docs (
+        docID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT NOT NULL UNIQUE,
+        docUUID TEXT, Name TEXT, Seq TEXT, SectnUUID TEXT, DTID TEXT, ownrUUID TEXT,
+        "Group" INTEGER);
+  f_sectns:
+    'name':
+    'description': >
+      A sectn is a chunk of a document.  A chunk can have 2 dimensions
+      rows and columns, these are combinined into a single cell for storage and light
+      consumption
+    'columns':
+      'f_sectnid':
+        'DType': 'INTEGER'
+      'sectnuuid':
+        'DType': 'TEXT'
+      'sectnsize':
+        'DType': 'TEXT'
+      'text':
+        'DType': 'TEXT'
+      'dtid':
+        'DType': 'TEXT'
+      'type':
+        'DType': 'TEXT'
+      'state':
+        'DType': 'TEXT'
+      'creby':
+        'DType': 'INTEGER'
+        'Options':
+      'creon':
+        'DType': 'TEXT'
+        'Options':
+      'modbY':
+        'DType': 'INTEGER'
+        'Options': INTEGER'
+      'modon':
+        'DType': 'TEXT'
+        'Options':
+      'dlt':
+        'DType': 'BOOLEAN'
+        'Constraints': NOT NULL DEFAULT (0)'
+        'Options':
+      'actv':
+        'DType': 'BOOLEAN'
+        'Options': NOT NULL DEFAULT (1)'
+    cmd: >
+      CREATE TABLE f_sectns (
+        SectnID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        SectnUUID TEXT, sectnSize TEXT, Text BLOB, DTID TEXT, Type INTEGER,
+        State INTEGER);
+indices:
+  f_docs_sectnuuid: >
+    CREATE INDEX f_docs_sectnuuid ON f_docs (SectnUUID);
+  f_docs_seq: >
+    CREATE INDEX f_docs_seq_dex ON f_docs (Seq);
+  f_opf_pkey: >
+    CREATE UNIQUE INDEX _opf_pkey_dex ON _opt (optID);
+  f_sectns_sectnsID: >
+    CREATE UNIQUE INDEX f_sectns_sectnsID ON f_sectns (SectnID);
+  f_opf_type: >
+    CREATE INDEX _opf_type_dex ON _opt (Type);
+  f_opf_table: >
+    CREATE INDEX _opf_table_dex ON _opt (tblOptionID);
+  f_docs_docid: >
+    CREATE UNIQUE INDEX f_docs_docid ON f_docs (DocID);
+  f_sectns_sectnsUUID: >
+    CREATE INDEX f_sectns_sectnsUUID ON f_sectns (SectnUUID);
+  f_docs_dtid: >
+    CREATE INDEX f_docs_dtid ON f_docs (DTID);
+views:
+  FileTypes:
+    cmd: >
+      CREATE VIEW filetypes AS
+      SELECT
+        *
+      FROM f_opt
+      WHERE Type = 'FILE'
+      ORDER BY
+        [table] ASC,
+        tbloptionid ASC;
+  fullTable:
+    cmd: >
+      CREATE VIEW fullTable AS
+      SELECT
+        *
+      FROM f_doc
+      INNER JOIN f_sectn ON f_doc.sectnuuid = f_sectns.sectnuuid
+      ORDER BY
+        f_doc.docid ASC,
+        f_doc.seq ASC;
+  SectnsWLookup:
+    cmd: >
+      CREATE VIEW sectnswlookup AS
+      SELECT
+        *
+      FROM f_sectn
+      INNER JOIN (
+        SELECT
+          f_opt.tbloptionid,
+          f_opt.name
+        FROM f_opt
+        WHERE Type = 'File'
+      ) AS ftype ON f_sectn.type = ftype.tbloptionid;
+  shrPair:
+    cmd: >
+      CREATE VIEW shrpair AS
+      SELECT
+        *
+      FROM f_doc;
+  uniqueSectnHASH:
+    cmd: >
+      CREATE VIEW unqiuesectnhash AS
+      SELECT
+        hex([text]) AS [hex]
+      FROM f_sectn
+      GROUP BY
+        [hex];
+  v_doc:
+    cmd: >
+      CREATE VIEW v_doc AS
+      SELECT *
+      FROM f_doc
+      INNER JOIN f_sectn ON f_doc.sectnuuid = f_sectn.sectnuuid
+      WHERE f_doc.name = 'tkSheet'
+      ORDER BY f_doc.seq ASC;
+  DocGroups:
+    cmd: >
+
+  Docs:
+    cmd: >
+
+  DocStates:
+    cmd: >
+
+  FileTypes:
+    cmd: >
+
+  fullDoc:
+    cmd: >

@@ -1,0 +1,42 @@
+---
+NchantdVisionToolsPackage:
+  dstruct:
+    data:
+      app_integration:
+        - ['OpenAI', 0, 0, 0, 'open_ai_image', 'ai_mixed_service_site']
+        - ['Gemini', 0, 0, 0, 'gemini_ai_image', 'ai_mixed_service_site']
+        - ['Scenario.ai', 0, 0, 0, 'scenario_ai_image', 'ai_image_service_site']
+        - ['Leonardo.ai', 0, 0, 0, 'leonardo_ai_image', 'ai_image_service_site']
+        - ['Magnific.ai', 0, 0, 0, 'magnific_ai_image', 'ai_image_service_site']
+        - ['Venice.ai', 0, 0, 0, 'venice_ai_image', 'ai_image_service_site']
+      app_tab_set:
+        - ['vision', 'Overview', 'nchantdvision.app.widgets.widgets.NVSOverview', 0, "{}"]
+        - ['vision', 'SketchPad', 'nchantrs.widgets.documents.images.NchantdSketchPad', 1, "{}"]
+        - ['vision', 'Recent', 'nchantrs.widgets.catalogs.NchantdImageCatalog', 2, "{}"]
+        - ['vision_ai_generators', 'Ai Generators', '', 0, "{}"]
+        - ['vision_ai_generators', 'Tools Compare', '', 0, "{}"]
+        - ['vision_ai_generators', 'Add Ai Service', '', 0, "{}"]
+        - ['vision_ai_generators_service', 'Overview', 'nchantrs.widgets.documents.managers.NchantdPromptManager', 0, "{}"]
+        - ['vision_ai_generators_service', 'Prompt', 'nchantrs.widgets.browsers.prompts.NchantdPromptBrowser', 1, "{}"]
+        - ['vision_ai_generators_service', 'Communities', 'nchantrs.widgets.business.atnr.socials.socials.NchantdCommunityOverview', 2, "{}"]
+        - ['vision_ai_generators_service', 'Tips', 'nchantrs.widgets.tables.NchantdBulletedList', 3, "{}"]
+        - ['vision_ai_generators_service', 'Get API Key', 'nchantrs.widgets.browsers.browsers.NchantdWebBrowser', 4, "{}"]
+        - ['design_tools', 'Overview', '', 0, "{}"]
+        - ['design_tools_service', 'Overview', '', 0, "{}"]
+        - ['design_tools_service', 'Layouts', '', 0, "{}"]
+      app_tab:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,52 @@
+'NchantdFundExpenseEntryForm':
+  'name': 'Entry Widget'
+  fields:
+    'name':
+      'label': 'Name'
+      'default':
+      'size':
+        'h': 1
+        'w': 50
+      <(SOURCE)>:
+    'description':
+      'label': 'Description'
+      'default':
+      'size':
+        'h': 1
+        'w': 50
+      <(SOURCE)>:
+    'amount':
+      'label': 'Amount'
+      'default':
+      'size':
+        'h': 1
+        'w': 50
+      <(SOURCE)>:
+    'unit':
+      'label': 'Unit'
+      'default':
+      'size':
+        'h': 1
+        'w': 50
+      <(SOURCE)>:
+    'account':
+      'label': 'Account'
+      'default':
+      'size':
+        'h': 1
+        'w': 50
+      <(SOURCE)>:
+    'accountname':
+      'label': 'Label'
+      'default':
+      'size':
+        'h': 1
+        'w': 50
+      <(SOURCE)>:
+    'tags':
+      'label': 'Tags'
+      'default':
+      'size':
+        'h': 1
+        'w': 50
+      <(SOURCE)>:

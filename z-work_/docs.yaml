@@ -1,0 +1,469 @@
+---
+<(META)>:
+	DOCid: <^[uuid]^>
+	name: Fractionally Executed SQL Queued Recursive Interaction Layer
+	description: >
+	expirary: <[expiration]>
+	version: <[version]>
+	path: <[LEXIvrs]>
+	outline: <[outline]>
+	authority: document|this
+	security: sec|lvl2
+	<(WT)>: -32
+'.pyfl':
+	'Name': 'Pyffice File'
+	'Description': >
+		A Basic Pyffice File will hold the standard combination of
+		spreadsheets, images, documents, and other document content types
+		in a generalized container with no defined actionable workflows
+'.pyan':
+	'Name': 'Pyffice Application'
+	'Description': >
+		A Pyffice Application is a fully automated and structured form of a
+		pyffice file that is capbable of running as a standalone application
+'.pydt':
+	'Name': 'Pyffice Document'
+	'Description': >
+		A Pyffice Document is a specifically organized Pyffice File containing
+		writtent formmated text with possibly embeded tables, images or other
+		static content
+'.pypn:
+	'Name': 'Pyffice Presentation'
+	'Description': >
+		A Pyffice Presentation is a specifically organized Pyffice File containing
+		Presentation content organized as distrbuted image content over a continous
+		timeline.  With the ability to distribute views and interactivity to connected
+		users of the audience
+'.pytb':
+	'Name': 'Pyffice Table'
+	'Description': >
+		A Pyffice Table is a specifically organized Pyffice File containing
+		row and column data combining layers as needed to produce a visual output
+		this same configuration will be used for spreadsheets and database tables
+		with differently selected layer capbabilities
+'.pyds':
+	'Name': 'Pyffice Data Source'
+	'Description': >
+		A Pyffice Data Source is a configuration file for replicating a connection
+		to a non-pyffice contained data source that can be loaded into a new pyffice
+		file to replicate the connection
+'.pydh':
+	'Name': Pyffice DashBoard
+	'Description': >
+		A Pyffice Dashboard is a dynamica interactive collection of content
+		that lies between a Pyffice File and a Simple Pyffice Application
+'.pyfs':
+	'Name': Pyffice FileSystem
+	'Description': >
+		A Pyffice File System has two modes to syncronize with or to monitor
+		a filesystem.  Monitoring a filesystem creates a view of that filesystem
+		within the pyffice file tree this view can be interacted with but it is
+		just transferring the commands to the actual files in the filesystem
+		a synced filesystem creates a copy of the file if possible in the pyffice file
+		this method allows for "virtual files to be created on the pyffice side" and not
+		written automatticlaly to the underlying file system at this point if there is a
+		file on the real file system it would show as versions
+'.pytr':
+	'Name': Pyffice Tree
+	'Description': >
+		A Pyffice Tree
+sectn:
+	seq:
+		description: >
+			Sequence defines the organizations of the sections
+		codes:
+			000.000:
+				name: Grid Sequence
+				charaters: arabic
+				description: >
+					Defines the position of the section within a grid
+				symbol: '.'
+			000,000:
+				name: Simple Linear Sequence
+				charaters: arabic
+				description: >
+					Defines the position of the section within a list
+					this provides a posible list of 16,777,216 rows
+					281,474,976,711,000 max length rows
+				symbol: ','
+			000+000:
+				name: Page Plus Line Linear Sequence
+				charaters: arabic
+				description: >
+					Define position of the section within a document page
+					pageseq+lineseq
+				symbol: '+'
+				tmplt:
+	size:
+		description: >
+			Section size codes are hexidecimal allowing a total of 8191 named
+			chunking methods and a total of 8190 sized chunking methods
+		codes:
+			000|000:
+				name: Templated Defined Chunk
+				charaters: hexidecimal
+				description: >
+					000|001 -> represents a defined encoding of 000 with a
+					chunk size of 001 encoding methods and up to a
+					chunk size of 4096 rows...allow for adhoc encoding using
+					a special rule set config to extend past the 4096 if needed
+					and as well this engine should be built so that an overide
+					of sectn definitions is even possible
+				types:
+					defined:
+						Description: >
+							Chunk Data by a set of defined rules
+							i.e. Python method/class seperation
+						options:
+							'Python':
+							'English':
+				symbol: '|'
+			000.000:
+				name: Grid Chunk
+				charaters: hexidecimal
+				description: >
+					001.004 -> represents a column and row chunk size
+					up to 4095 columns and 4095 rows use hexidecimal identifiers
+					can hold 16,769,025 individiual items in a single chunk
+				types:
+					table:
+						Description: >
+							Chunk Data into a table of x cols by y rows
+						options:
+				symbol: '.'
+			000,000:
+				name: Simple Linear Chunk
+				charaters: arabic
+				description: >
+					01,002: ->
+					represents a chunk size of 1,002 rows
+					longest chunk 99,999 use arabic numeral identifiers
+				types:
+					line:
+						Description: >
+							Chunk Data into x lines of data
+						options:
+				symbol: ','
+			000^000:
+				name: Specialized Named Chunk
+				charaters: hexidecimal
+				description: >
+					001^002: -> implement as a model naming system
+					a purely variable chunk size used for highly optimized
+					storage provides 16,769,025
+					use for things like predefined headers of documents
+					and other boilerplate that is larger than a single
+					Templated Defined Chunk
+				types:
+					calculated:
+						Description: >
+							Chunk Data by a calculated method using
+							Machine Learning to Optimize Performance
+						options:
+				symbol: '^'
+dbs:
+	AppOnDiskDB:
+		'tables':
+			'_doc':
+				'name:
+				'description': >
+					'Store Entries to Organize Sections into a Document'
+					'allowing for proper formatting and versioning for'
+					'the document sections a Doc is a tree of Sectn '
+					'sequences...the branches provide for different views'
+					'of the same document like values, formulas, formats'
+				'columns:
+					- 'histTag.: TEXT'
+					- 'Name.: TEXT'
+					- 'Seq.: TEXT'
+					- 'SectnUUID.: TEXT'
+					- 'DTID.: TEXT'
+					- 'ownrUUID.: TEXT'
+					- '[Group].: TEXT'
+			'_msg':
+				'name':
+				'description': >
+					'Handle in app messages for collaboration purposes'
+					'both human and machine commmunication'
+					'A Message will be used to convey information between'
+					'copies of the file and users...a seperate mechism of'
+					'storage will be used for speed to help with concurrency'
+					'syncing across networks'
+				'columns':
+					- 'From': 'TEXT'
+					- 'To': 'TEXT'
+					- 'Body': 'TEXT'
+					- 'Anchor': 'TEXT'
+					- 'Channel': 'TEXT'
+					- 'Note': 'TEXT'
+					- 'State': 'TEXT'
+			'_opt':
+				'name':
+				'description': >
+				'columns':
+					- '<[table]>UUID.: TEXT'
+					- 'Name.: TEXT'
+					- '[Table].: TEXT'
+					- '<[table]>ID.: INT'
+					- 'tblOptionID.: INT'
+					- 'Type.: INT'
+					- 'Description.: BLOB'
+			'_perf':
+				'name':
+				'description': >
+					The _perf Table will hold information that tracks and optimizes
+					the performance of the running instance FxSQuRIL
+					Track # of transactions by table and db
+					store the size of the transactions and the overall size of the db
+					try to determine working ranges of data
+					some tables maybe large but typically only work with the first x rows
+					or most recent or specific view
+				'tmplt':
+					'metrics':
+						files:
+							-
+								name:
+								lastOpen:
+								lastPath:
+						bgTbl:
+							size: [cols, rows, versions]
+						state: saved, crashed, closed, cleaned
+						score: <[session_perf]>
+				'columns':
+					- <[table]>UUID
+					- Data
+			'_sectn':
+				'name':
+				'description': >
+					A Sectn is a chunk of a document.  A chunk can have 2 dimensions
+					rows and columns, these are combinined into a single cell for storage and light
+					consumption
+				'columns':
+					- <[table.:UUID UNIQUE]>
+			'_usr':
+				'name':
+				'description': >
+				'columns':
+					- '<[table.:UUID]>'
+					- Name
+					- sessionUUID
+			'_docb':
+				'name':
+				'description': >
+				'columns':
+					- <[table]>UUID
+					- Name
+					- sessionUUID
+		views:
+				DocGroups:
+				Docs:
+				DocStates:
+				FileTypes:
+				fullDoc:
+	'AppInMemDB':
+		'tables':
+			'm_bgTbl':
+				'name':
+				'description':
+				'columns':
+	'SharedInMemDB':
+		'tables':
+			'm_bgFx':
+				'name':
+				'description':
+				'columns':
+			'm_bgTbl':
+				'name':
+				'description':
+				'columns':
+	FileOnDiskDB:
+		tables:
+			_cache:
+				'name': Cache Table
+				'description': >
+					'Use cache table to dump inmemory changes to file quickly'
+					'parse cache to proper tables as available'
+				'columns':
+					'CacheDTID': 'TEXT'
+					'DocUUID': 'TEXT'
+			_opt:
+				'name': Options Table
+				'description': >
+				'columns':
+					Table
+					Type
+					Name
+					tblOptionID
+					Description
+			_run:
+				'name':
+				'description': >
+				'columns':
+					OP
+					Path
+					StateID
+					StatusID
+					TypeID
+					pid
+					uid
+			t_doc:
+				'name':
+				'description': >
+				'columns':
+					't_docId': 'AutoIncrement'
+					'docUUID': 'TEXT'
+					'Name': 'TEXT'
+					'Seq': 'TEXT'
+					'SectnUUID': 'TEXT'
+					'DTID': 'TEXT'
+					'ownrUUID': 'TEXT'
+					'Group':
+			t_sectn:
+				'name':
+				'description': >
+				'columns':
+					't_sectnId': 'AutoIncrement'
+					'SectnUUID': TEXT
+					'sectnSize': TEXT
+					'Text': BLOB
+					'DTID': TEXT
+					'Type': INTEGER
+					'State': INTEGER
+		indices:
+			t_doc_sectnuuid: >
+				CREATE INDEX t_doc_sectnuuid ON t_doc (SectnUUID);
+			t_doc_seq: >
+				CREATE INDEX t_doc_seq_dex ON t_doc (Seq);
+			_opt_pkey: >
+				CREATE UNIQUE INDEX _opt_pkey_dex ON _opt (optID);
+			t_sectn_sectnId: >
+				CREATE UNIQUE INDEX t_sectn_sectnId ON t_sectn (SectnID);
+			_opt_type: >
+				CREATE INDEX _opt_type_dex ON _opt (Type);
+			_opt_table: >
+				CREATE INDEX _opt_table_dex ON _opt (tblOptionID);
+			t_doc_docId: >
+				CREATE UNIQUE INDEX t_doc_docid ON t_doc (DocID);
+			t_sectn_sectnUUID: >
+				CREATE INDEX t_sectn_sectnUUID ON t_sectn (SectnUUID);
+			t_doc_dtid: >
+				CREATE INDEX t_doc_dtid ON t_doc (DTID);
+		views:
+			FileTypes:
+				name: Filetypes
+				cmd: |
+					SELECT
+						*
+					FROM _opt
+					WHERE Type = 'FILE'
+					ORDER BY
+						[Table] ASC,
+						tblOptionID ASC;
+			fullTable:
+				name: fullTable
+				cmd: |
+					SELECT
+						*
+					FROM t_docs
+					INNER JOIN t_sectns ON t_docs.sectnUUID = t_sectns.SectnUUID
+					ORDER BY
+						t_docs.DocID ASC,
+						t_docs.Seq ASC;
+			SectnsWLookup:
+				cmd: |
+					CREATE VIEW SectnsWLookup AS
+					SELECT
+						*
+					FROM t_sectns
+					INNER JOIN (
+						SELECT
+							_opt.tblOptionID,
+							_opt.Name
+						FROM _opt
+						WHERE Type = 'File'
+					) AS ftype ON t_sectns.Type = ftype.tblOptionID;
+			shrPair:
+				cmd: |
+					CREATE VIEW shrPair AS
+					SELECT
+						*
+					FROM t_docs;
+			uniqueSectnHASH:
+				cmd: |
+					CREATE VIEW unqiueSectnHASH AS
+					SELECT
+						hex([Text]) AS [HEX]
+					FROM t_sectns
+					GROUP BY
+						[HEX];
+			v_doc:
+				cmd: |
+					CREATE VIEW v_doc AS
+					SELECT
+						*
+					FROM t_docs
+					INNER JOIN t_sectns ON t_docs.sectnUUID = t_sectns.SectnUUID
+					WHERE t_docs.Name = 'tkSheet'
+					ORDER BY t_docs.Seq ASC;
+	FileInMemDB:
+		tables:
+			m_bgtbl:
+				'name': Memory Big Table
+				'description': >
+					'Big table allows for all open/active documents to be stored'
+					'in memory...develop a calculation to determine number of'
+					'columns to use and how and when to recalculate and recreate'
+				'columns':
+					'm_bgtblId':
+					'UUID':
+					'TableName':
+					'Labels':
+					'C0':
+					'C...n':
+			m_msg:
+				'name': Memory Message
+				'description': >
+				'columns':
+					'msgId':
+					'msgUUID':
+					'From':
+					'To':
+					'Body':
+					'Anchor':
+					'Channel':
+					'Note':
+					'State':
+			m_odoc:
+				'name': Memory Open Documents
+				'description': >
+					'Store documents that are currently open from all files'
+					'within the active application'
+				'columns':
+					'm_odocId':
+					'UUID':
+					'DocId':
+					'OpenMethod':
+					'LastTouch':
+					'SavedHash':
+					'LastHash':
+					'State':
+			m_rltbl:
+				'name': Memory Real Table
+				'description': >
+					'Store a data table as a standard table for ability'
+					'to use standard SQL commands on the data'
+				'columns':
+					'm_rltblId':
+					'C0':
+					'C...n':
+			m_run:
+				'name': Memory Run
+				'description': >
+				'columns':
+					'm_runId':
+					'runUUID':
+					'Transforms':
+					'DataSetCoords':
+					'State':
+		views:
+		indicies:

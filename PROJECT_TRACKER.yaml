@@ -1796,8 +1796,8 @@ dimensions:
         unmatched_commits:
         - 2e543a0 Fix lambda antipattern and signal inheritance
         - '3ed0b95 fix: emit doc_type only in document_created signal ('
-        - d27c9fe brought some modules back from zz-work_
-        - b2c2f57 brought some modules back from zz-work_
+        - d27c9fe brought some modules back from z-work_
+        - b2c2f57 brought some modules back from z-work_
         - a334225 add logging
       score: 20
       status: partial

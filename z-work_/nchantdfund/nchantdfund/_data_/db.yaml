@@ -1,0 +1,46 @@
+---
+<(META)>:
+  docid: ''
+  name:
+  description: >
+  expirary: '<[expiration]>'
+  version: '<[version]>'
+  authority: 'document|this'
+  security: 'sec|lvl2'
+  <(WT)>: -32
+name: 'nchantdfund'
+config:
+  table:
+    'accounts':
+      'description':
+      'columns': ['name', 'description', 'account_number', 'balance', 'institutionid']
+      'records':
+    'credits':
+      'description':
+      'columns': ['name', 'description', 'amount', 'recurring', 'occurence']
+      'records':
+    'debits':
+    'entries':
+      'description':
+      'columns': ['name', 'description', 'amount', 'recurring', 'occurence', 'accountsid']
+      'records':
+    'institutions':
+      'description':
+      'columns': ['name', 'description']
+      'records':
+        - ['Old National Bank', '']
+        - ['PNC', '']
+        - ['Ameritrade', '']
+        - ['']
+    'preferences':
+      'description':
+      'columns':
+      'records':
+    'transactions':
+      'description':
+      'columns': ['description', 'amount', 'debit', 'accountsid', '']
+      'records':
+    'transactions_schedule':
+      'description':
+      'columns': ['description', 'date', 'amount', 'debit', '']
+      'records':

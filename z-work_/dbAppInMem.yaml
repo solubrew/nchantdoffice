@@ -1,0 +1,215 @@
+---
+<(META)>:
+  docid: <^[uuid]^>
+  name: Application In Memory Database
+  description: >
+    The Application stores active data in an inmemory database allowing each
+    application running to have an isolated data store....in this way make it
+    possible to run multiple copies of fxsquril from various applications or
+    from multiple copies of pyffice running
+  expirary: <[expiration]>
+  version: <[version]>
+  path: <[LEXIvrs]>
+  outline: <[outline]>
+  authority: document|this
+  security: sec|lvl2
+  <(WT)>: -32
+'tables':
+  'bgtbl':
+    'name':
+    'description':
+    columns:
+      'bgtblid':
+        'DType': 'TEXT'
+        'Options':
+      'uuid':
+        'DType': 'TEXT'
+        'Options':
+      'docuuid':
+        'DType': 'TEXT'
+        'Options':
+      'sectnuuid':
+        'DType': 'TEXT'
+        'Options':
+      'name':
+        'DType': 'TEXT'
+        'Options':
+      'seq':
+        'DType': 'TEXT'
+        'Options':
+      'sectnsize':
+        'DType': 'TEXT'
+        'Options':
+      '<@[column]@>':
+        'DType': 'TEXT'
+        'Options':
+      'creby':
+        'DType': 'INTEGER'
+        'Options':
+      'creon':
+        'DType': 'TEXT'
+        'Options':
+      'modbY':
+        'DType': 'INTEGER'
+        'Options': INTEGER'
+      'modon':
+        'DType': 'TEXT'
+        'Options':
+      'dlt':
+        'DType': 'BOOLEAN'
+        'Constraints': NOT NULL DEFAULT (0)'
+        'Options':
+      'actv':
+        'DType': 'BOOLEAN'
+        'Options':
+        'Constraints': NOT NULL DEFAULT (1)'
+    content:
+      min: 15
+      max: 1975
+    cmd: >
+      DROP TABLE IF EXISTS m_bgTbl;
+      CREATE TABLE m_bgTbl (
+        ID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        UUID TEXT, docUUID TEXT, sectnUUID TEXT, name TEXT, seq TEXT,
+        sectnsize TEXT, <@[columns.:,]@> CreBy INTEGER, CreOn FLOAT,
+        ModBy INTEGER, [DLT] BOOLEAN NOT NULL DEFAULT (0),
+        [ACTV] BOOLEAN NOT NULL DEFAULT (1))
+  fx:
+    name:
+    columns:
+      ids:
+      admins:
+      content:
+  msg:
+    name:
+    columns:
+      msgid:
+        'DType': 'TEXT'
+        'Options':
+      msguuid:
+        'DType': 'TEXT'
+        'Options':
+      'from':
+        'DType': 'TEXT'
+        'Options':
+      'to':
+        'DType': 'TEXT'
+        'Options':
+      'body':
+        'DType': 'TEXT'
+        'Options':
+      'anchor':
+        'DType': 'TEXT'
+        'Options':
+      'channel':
+        'DType': 'TEXT'
+        'Options':
+      'note':
+        'DType': 'TEXT'
+        'Options':
+      'state':
+        'DType': 'TEXT'
+        'Options':
+      'creby':
+        'DType': 'INTEGER'
+        'Options':
+      'creon':
+        'DType': 'TEXT'
+        'Options':
+      'modbY':
+        'DType': 'INTEGER'
+        'Options': INTEGER'
+      'modon':
+        'DType': 'TEXT'
+        'Options':
+      'dlt':
+        'DType': 'BOOLEAN'
+        'Constraints': NOT NULL DEFAULT (0)'
+        'Options':
+      'actv':
+        'DType': 'BOOLEAN'
+        'Options': NOT NULL DEFAULT (1)'
+  odoc:
+    name:
+    size:
+      columns:
+        ids:
+        admins:
+        content:
+'tables':
+  '_doc':
+    'name': '_doc'
+    'cmd': >
+      'DROP TABLE IF EXISTS _doc;'
+      'CREATE TABLE _doc ('
+        'docID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,'
+        'docUUID TEXT, histTag TEXT, Name TEXT, Seq TEXT, SectnUUID TEXT, DTID TEXT,'
+        'ownrUUID  TEXT, [Group]);'
+  '_msg':
+    name': '_msg'
+    cmd': >
+      'DROP TABLE IF EXISTS _msg;'
+      'CREATE TABLE _msg ('
+        'msgID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL);'
+  '_opt':
+    name': '_opt'
+    cmd': >
+      'DROP TABLE IF EXISTS _opt;
+      'CREATE TABLE _opt ('
+        'optID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,'
+        'optUUID TEXT UNIQUE, [Table] TEXT, tblOptionID INTEGER, Type INTEGER, Name TEXT,'
+        'Description BLOB);'
+  '_perf':
+    name': '_perf'
+    description: >
+      The _perf Table will hold information that tracks and optimizes
+      the performance of the running instance FxSQuRIL
+      Track # of transactions by table and db
+      store the size of the transactions and the overall size of the db
+      try to determine working ranges of data
+      some tables maybe large but typically only work with the first x rows
+      or most recent or specific view
+    cmd': >
+      DROP TABLE IF EXISTS _perf;
+      CREATE TABLE _perf (
+        perfID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        perfUUID TEXT UNIQUE);
+  '_sectns':
+    cmd': >
+      DROP TABLE IF EXISTS _sectns;
+      CREATE TABLE _sectns (
+        sectnsID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        sectnUUID TEXT, sectnSize TEXT, Text BLOB, DTID TEXT, Type INTEGER, State);
+  '_usr':
+    cmd': >
+      DROP TABLE IF EXISTS _usr;
+      CREATE TABLE _usr (
+        usrID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        usrUUID TEXT UNIQUE, Name TEXT, sessionUUID TEXT);
+  'docbs':
+    'cmd': >
+      DROP TABLE IF EXISTS docbs;
+      CREATE TABLE docbs (
+        DocBs INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        DocBUUID TEXT, DocUUID TEXT UNIQUE, DocVersion TEXT, DBType TEXT, LOCI TEXT);
+  'm_bgFx':
+    'cmd': >
+      DROP TABLE IF EXISTS m_bgFx;
+      CREATE TABLE m_bgFx (
+        bgFxID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        bgFxUUID TEXT UNIQUE, C0 TEXT, Cn TEXT);
+views:
+    DocGroups:
+      cmd: >
+
+    Docs:
+      cmd: >
+
+    DocStates:
+      cmd: >
+
+    FileTypes:
+      cmd: >
+
+    fullDoc:
+      cmd: >

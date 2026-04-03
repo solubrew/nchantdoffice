@@ -1,0 +1,33 @@
+---
+desktop:
+  title: 'Pyffice 0.0.0.0.0.0'
+  size:
+    left: 960
+    top: 50
+    width: 100
+    height: 1850
+appmenu: <(INCL)>menu.yaml
+toolbar: <(INCL)>toolbar.yaml
+central:
+  tree: <(INCL)>tree.yaml
+  centertabs:
+    <@[workbook]@>:
+  supporttabs: <(INCL)>supporttabs.yaml
+table:
+  column:
+    index:
+      '1': 'I'
+      '5': 'V'
+      '10': 'X'
+      '50': 'L'
+      '100': 'C'
+      '500': 'D'
+      '1000': 'M'
+      '5000': 'F'
+      '10000': 'B'
+      '50000': 'Z'
+      '100000': 'K'
+      '500000': 'T'
+      '1000000': 'A'
+      '5000000': 'Q'
+      '10000000': 'H'

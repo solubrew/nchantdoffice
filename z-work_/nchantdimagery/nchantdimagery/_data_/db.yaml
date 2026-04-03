@@ -1,0 +1,52 @@
+---
+<(META)>:
+  docid: ''
+  name:
+  description: >
+  expirary: '<[expiration]>'
+  version: '<[version]>'
+  authority: 'document|this'
+  security: 'sec|lvl2'
+  <(WT)>: -32
+config:
+  table:
+    'tabs':
+      'description': >
+        Add type column to tabs to keep track of how a tab is generated
+          options:=> usertab, datatab, apptab
+      columns: ['name', 'type', 'widget', 'widgdata', 'parentid', 'sequence',
+                'position', 'readonly', 'visible', 'moveable']
+      'records':
+    tabsets:
+      'columns': ['name', 'description', 'type', 'position', 'tab', 'widget', 'data']
+      'records':
+        - ['NIDirectoryManagerTabSet', '', 'apptab', 0, 'Directory', 'nchantrs.widgets.viewers.NchantdThumbnailViewerPane', '{}']
+        - ['NIDirectoryManagerTabSet', '', 'apptab', 0, 'Stable Diffusion', 'nchantrs.widgets.browsers.NchantdBrowserTab', '{}']
+    texttwoimage:
+      description: >
+      'columns': []
+      'records':
+        - []
+    'trnodes':  #nid should be set to unique
+      'columns': ['nid', 'icon', 'name', 'ntype', 'parentid', 'position',
+                  'tabset', 'treeid', 'readonly', 'visible', 'moveable',
+                  'pregnable', 'isparent', 'expanded', 'tabfocus']
+      'records':
+  view:
+    'vw_last_node':
+      'description': >
+        Return the max nodeid in the nodes table
+      'cmd': >
+        CREATE VIEW vw_last_node AS
+          SELECT
+            max(nid) as lastnode
+          FROM trnodes
+    vw_tabs_right:
+      'description': >
+      'cmd': >
+        CREATE VIEW vw_tabs_right AS
+          SELECT
+            name, widget, widgdata, parentid, sequence, position, readonly,
+            visible, moveable
+          FROM tabs t
+          WHERE t.position = 'right'

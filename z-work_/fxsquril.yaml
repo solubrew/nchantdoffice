@@ -1,0 +1,9 @@
+cfg:
+  Description: >
+    Max attached databases due to limitations of SQLite is 25.  For application
+    use there is 1 attached for on disk application, 1 attached for shared
+    application, 1 for overall sharing.  This is 3 attachd DBs.  Then each file
+    attaches a on disk and an in mem db for each with 10 files creates 23
+    attached leaving one for crashing and one additional db.
+  active_workbooks:
+    max: 10

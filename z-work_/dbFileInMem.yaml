@@ -1,0 +1,61 @@
+tables:
+  m_bgtbl:
+    'name': Memory Big Table
+    'description': >
+      'Big table allows for all open/active documents to be stored'
+      'in memory...develop a calculation to determine number of'
+      'columns to use and how and when to recalculate and recreate'
+    'columns':
+      'm_bgtblId':
+      'UUID':
+      'TableName':
+      'Labels':
+      'C0':
+      'C...n':
+  m_msg:
+    'name': Memory Message
+    'description': >
+    'columns':
+      'msgId':
+      'msgUUID':
+      'From':
+      'To':
+      'Body':
+      'Anchor':
+      'Channel':
+      'Note':
+      'State':
+  m_odoc:
+    'name': Memory Open Documents
+    'description': >
+      'Store documents that are currently open from all files'
+      'within the active application'
+    'columns':
+      'm_odocId':
+      'UUID':
+      'DocId':
+      'OpenMethod':
+      'LastTouch':
+      'SavedHash':
+      'LastHash':
+      'State':
+  m_rltbl:
+    'name': Memory Real Table
+    'description': >
+      'Store a data table as a standard table for ability'
+      'to use standard SQL commands on the data'
+    'columns':
+      'm_rltblId':
+      'C0':
+      'C...n':
+  m_run:
+    'name': Memory Run
+    'description': >
+    'columns':
+      'm_runId':
+      'runUUID':
+      'Transforms':
+      'DataSetCoords':
+      'State':
+views:
+indicies:

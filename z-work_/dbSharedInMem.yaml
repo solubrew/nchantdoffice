@@ -1,0 +1,49 @@
+---
+<(META)>:
+  docid: <^[uuid]^>
+  name: Shared In Memory Database
+  description: >
+    The Shared data store is used specifically for shuttling data between
+    multiple applications
+  expirary: <[expiration]>
+  version: <[version]>
+  path: <[LEXIvrs]>
+  outline: <[outline]>
+  authority: document|this
+  security: sec|lvl2
+  <(WT)>: -32
+'tables':
+  'm_bgfx':
+    'name': Big Function
+    'description': >
+      Big function table
+    'columns':
+      bgfxid:
+        DType:
+        Options:
+      fx:
+        DType:
+        Options:
+      state:
+        DType:
+        Options:
+      status:
+        DType:
+        Options:
+    'cmd': >
+      DROP TABLE IF EXISTS m_bgfx;
+      CREATE TABLE m_bgfx (
+      bgfxid INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+      fx TEXT, state TEXT, status TEXT)
+  'm_bgtbl':
+    'name': Big Table
+    'description': >
+      Uses a Big Table construct in order to allow for arbitrary data storage
+    'columns':
+      'bgtblid':
+    'cmd': >
+      DROP TABLE IF EXISTS m_bgfx;
+      CREATE TABLE m_bgfx (
+      bgtblid INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+      bgtbluuid TEXT UNIQUE, cachedtid TEXT, <@[column.: TEXT,]@>);
+'views':

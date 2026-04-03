@@ -1,0 +1,33 @@
+---
+<(META)>:
+  docid: ''
+  name: 'Nchantd Fund Main YAML Configuration Document'
+  description: >
+  expirary: '<[expiration]>'
+  version: '<[version]>'
+  authority: 'document|this'
+  security: 'sec|lvl2'
+  <(WT)>: -32
+sequence:
+  0:
+    'method': 'setup'
+    'params':
+    'active': 1
+  1:
+    'method': 'view.showSplashScreen'
+    'params':
+    'active': 0
+  2:
+    'method': 'update'
+    'params':
+    'active': 1
+gui:
+  'desktop': <(INCL)>desktop.yaml
+  'dialogs': <(INCL)>dialogs.yaml
+  'widgets': <(INCL)>widgets.yaml
+dstruct:
+  'config':
+    'style': 'single'
+    'chunking': 'custom'
+  store:
+    'db': <(INCL)>db.yaml

@@ -1,0 +1,42 @@
+'assets':
+  'columns': ['name', 'description', 'value', 'unit', 'account', 'accountname', 'tags']
+  'records':
+    - ['BTC', '', 1.5, 'BTC', 'Ox...', 'BTCLedger', '']
+    - ['ETH', '', 1, 'ETH', '0x...', 'ETHLedger', '']
+    - ['USD', '', 1, 'USD', '...', 'OldNationalPersonalChecking', '']
+    - ['USD', '', 1, 'USD', '...', 'OldNationalSolutionsBrewerChecking', '']
+    - ['USD', '', 1, 'USD', '...', 'OldNationalPersonalSavings', '']
+    - ['USD', '', 1, 'USD', '...', 'PNCPersonalChecking', '']
+    - ['USD', '', 1, 'USD', '...', 'AmeritradeHoldingAccount', '']
+'expenses':
+  'columns': ['name', 'description', 'value', 'unit', 'recurance', 'variability', 'enddate', 'tags']
+  'records':
+    - ['4964WKCR_Mortgage', '', 905, 'USD', 'monthly', 'fixed', '20251231', 'Mortgage,4964, WKCR, Kansas Church Rd']
+    - ['4964WKCR_Internet', '', 30.00, 'USD', 'monthly', 'fixed', None, '']
+    - ['4964WKCR_Insurance', '', 700.00, 'USD', 'bi-yearly', 'inflationary', None, '']
+    - ['4964WKCR_Electricity', '', 500.00, 'USD', 'monthly', 'consumption', None, '']
+    - ['4964WKCR_Water', '', 16.47, 'USD', 'monthly', 'consumption', None, '']
+    - ['4964WKCR_PropertyTax', '', 700.00, 'USD', 'bi-yearly', 'inflationary', None, '']
+    - ['7982NPR_Internet', '', 50.00, 'USD', 'monthly', 'fixed', None, '']
+    - ['VerizonGroupAccount', '', 180.00, 'USD', 'monthly', 'fixed+overages', None, '']
+    - ['2018LincolnMKXLoanPayment', '', 750.00, 'USD', 'monthly', 'fixed', '20240930', '']
+    - ['2018LincolnMKXAutoInsurance', '', 0.00, 'USD', 'bi-yearly', 'inflationary', None, '']
+    - ['2019MahindraTractorLoanPayment', '', 550.00, 'USD', 'monthly', 'fixed', '20271231', '']
+    - ['1993HondaDelSolAutoInsurance', '', 0.00, 'USD', 'bi-yearly', 'inflationary', None, '']
+    - ['2003FordF350AutoInsurance', '', 0.00, 'USD', 'bi-yearly', 'inflationary', None, '']
+    - ['Netflix', '', 25.30, 'USD', 'monthly', 'inflationary', None, '']
+    - ['Hulu', '', 15.00, 'USD', 'monthly', 'inflationary', None, '']
+    - ['AmazonPrime', '', 120.00, 'USD', 'yearly', 'inflationary', None, '']
+    - ['Weed', '', 400.00, 'USD', 'monthly', 'fixed', None, '']
+    - ['Groceries', '', 250.00, 'USD', 'monthly', 'inflationary', None, '']
+    - ['Gasoline', '', 100.00, 'USD', 'avgmonthly', 'inflationary+consumption', None, '']
+    - ['Diesel', '', 50.00, 'USD', 'avgmonthly', 'inflationary+consumption', None, '']
+liabilities:
+  'columns': ['name', 'description', value, 'unit', 'tags']
+  'records':
+revenues:
+  'columns': ['name', 'description', value, 'unit', 'tags']
+  'records':
+    - ['4964WKCR_BlueRiverLease', '', 180.00, 'USD', 'monthly', 'fixed', None, '']
+    - ['4964WKCR_BTCMining', '', 0.00, 'BTC', 'avgmonthly', 'deflationary', None, '']
+    - ['4964WKCR_ETHMining', '', 0.00, 'ETH', 'avgmonthly', 'deflationary', None, '']

@@ -1,0 +1,122 @@
+'tables':
+  'bgtbl':
+    'name':
+    'description':
+    columns:
+      'bgtblid':
+        'DType': 'TEXT'
+        'Options':
+      'uuid':
+        'DType': 'TEXT'
+        'Options':
+      'docuuid':
+        'DType': 'TEXT'
+        'Options':
+      'sectnuuid':
+        'DType': 'TEXT'
+        'Options':
+      'name':
+        'DType': 'TEXT'
+        'Options':
+      'seq':
+        'DType': 'TEXT'
+        'Options':
+      'sectnsize':
+        'DType': 'TEXT'
+        'Options':
+      '<@[column]@>':
+        'DType': 'TEXT'
+        'Options':
+      'creby':
+        'DType': 'INTEGER'
+        'Options':
+      'creon':
+        'DType': 'TEXT'
+        'Options':
+      'modbY':
+        'DType': 'INTEGER'
+        'Options': INTEGER'
+      'modon':
+        'DType': 'TEXT'
+        'Options':
+      'dlt':
+        'DType': 'BOOLEAN'
+        'Constraints': NOT NULL DEFAULT (0)'
+        'Options':
+      'actv':
+        'DType': 'BOOLEAN'
+        'Options':
+        'Constraints': NOT NULL DEFAULT (1)'
+    content:
+      min: 15
+      max: 1975
+    cmd: >
+      DROP TABLE IF EXISTS m_bgTbl;
+      CREATE TABLE m_bgTbl (
+        ID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        UUID TEXT, docUUID TEXT, sectnUUID TEXT, name TEXT, seq TEXT,
+        sectnsize TEXT, <@[columns.:,]@> CreBy INTEGER, CreOn FLOAT,
+        ModBy INTEGER, [DLT] BOOLEAN NOT NULL DEFAULT (0),
+        [ACTV] BOOLEAN NOT NULL DEFAULT (1))
+  fx:
+    name:
+    columns:
+      ids:
+      admins:
+      content:
+  msg:
+    name:
+    columns:
+      msgid:
+        'DType': 'TEXT'
+        'Options':
+      msguuid:
+        'DType': 'TEXT'
+        'Options':
+      'from':
+        'DType': 'TEXT'
+        'Options':
+      'to':
+        'DType': 'TEXT'
+        'Options':
+      'body':
+        'DType': 'TEXT'
+        'Options':
+      'anchor':
+        'DType': 'TEXT'
+        'Options':
+      'channel':
+        'DType': 'TEXT'
+        'Options':
+      'note':
+        'DType': 'TEXT'
+        'Options':
+      'state':
+        'DType': 'TEXT'
+        'Options':
+      'creby':
+        'DType': 'INTEGER'
+        'Options':
+      'creon':
+        'DType': 'TEXT'
+        'Options':
+      'modbY':
+        'DType': 'INTEGER'
+        'Options': INTEGER'
+      'modon':
+        'DType': 'TEXT'
+        'Options':
+      'dlt':
+        'DType': 'BOOLEAN'
+        'Constraints': NOT NULL DEFAULT (0)'
+        'Options':
+      'actv':
+        'DType': 'BOOLEAN'
+        'Options': NOT NULL DEFAULT (1)'
+  odoc:
+    name:
+    size:
+      columns:
+        ids:
+        admins:
+        content:

@@ -1,0 +1,45 @@
+---
+<(META)>:
+  DOCid: <^[uuid]^>
+  name: File Types
+  description: >
+    Pyffice application is designed to work with 3 possible file types.
+  expirary: <[expiration]>
+  version: <[version]>
+  path: <[LEXIvrs]>
+  outline: <[outline]>
+  authority: document|this
+  security: sec|lvl2
+  <(WT)>: -32
+'.pyfle':
+  'Name': 'Pyffice File'
+  ids:
+    UUID:
+  'Description': >
+    A Basic Pyffice File will hold the standard combination of spreadsheets,
+    images, documents, and other document content types in a generalized
+    container with no defined actionable workflows.  A Pyffice Document is a
+    specifically organized Pyffice File containing writtent formmated text with
+    possibly embeded tables, images or other static content. A Document can be a
+    Sectn when used in another document. The text is just the UUID of the
+    Document
+'.pyapp':
+  'Name': 'Pyffice Application'
+  ids:
+    UUID:
+  'Description': >
+    A Pyffice Application is a fully automated and structured form of a
+    pyffice file that is capbable of running as a standalone application
+'.pyfs':
+  'Name': Pyffice FileSystem
+  ids:
+    UUID: a9911196-6913-4f5c-a6f7-e48743df6975
+  'Description': >
+    A Pyffice File System has two modes to syncronize with or to monitor a
+    filesystem.  Monitoring a filesystem creates a view of that filesystem
+    within the pyffice file tree this view can be interacted with but it is just
+    transferring the commands to the actual files in the filesystem a synced
+    filesystem creates a copy of the file if possible in the pyffice file this
+    method allows for "virtual files to be created on the pyffice side" and not
+    written automatticlaly to the underlying file system at this point if there
+    is a file on the real file system it would show as versions

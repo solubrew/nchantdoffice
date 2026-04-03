@@ -1,0 +1,116 @@
+'title': 'Nchantd TODOs'
+'size':
+  'left': 50
+  'top': 50
+  'width': 1850
+  'height': 1100
+theme: 'original'
+menubar:
+  0:
+    'admin':
+      '0': 'preferences'
+      '2': 'exit'
+  1:
+    'help':
+      '0': 'about'
+  '2':
+    'lookup':
+      0: 'address'
+layout:
+  'style': '3Pane' #3VPane, 2VPane, 1V2HPane,
+  'left':
+    'Name': 'Navigation'
+    'widget': 'nchantdtodo.widgets.NTDTree'
+    'size':
+      'w': 100
+      'h': 1000
+    <(SOURCE)>:
+  center:
+    'Name': Main Tabs Set
+    'widget': 'nchantdtodo.widgets.NTDTabSet'
+    'size':
+      'w': 1350
+      'h': 1000
+    '<(SOURCE)>':
+  right:
+    'Name':
+    widget: 'nchantdtodo.widgets.NTDTabSet'
+    size:
+nodes:
+  Timeline: True
+  Concerns: True
+  History: True
+tabsets:
+  NTDAddObjectsTabSet:
+    description:
+    tabs:
+      0: [ 'Tasks', 'nchantdtodo.widgets.NTDInputTaskTab', "{}"]
+      1: [ 'Concerns', 'nchantdtodo.widgets.NTDInputConcernTab', "{}"]
+      2: [ 'Resources', 'nchantdtodo.widgets.NTDInputResourceTab', "{}" ]
+      3: [ 'Events', 'nchantdtodo.widgets.NTDInputEventTab', "{}" ]
+    dtabs:
+    children:
+  NTDConcernTabSet:
+    description:
+    tabs:
+      0: [ 'Concern Tasks', 'nchantdtodo.widgets.NTDConcernAdministrationTab', "{}" ]
+      1: [ 'Operations Summary', 'nchantdtodo.widgets.NTDOperationSummaryTab', "{}" ]
+      2: [ 'Projects Summary', 'nchantdtodo.widgets.NTDProjectsSummaryTab', "{}" ]
+    dtabs:
+    children:
+  NTDHistoryTabSet:
+    description:
+    tabs:
+      0: [ 'Concern Tasks', 'nchantdtodo.widgets.NTDConcernAdministrationTab', "{}" ]
+      1: [ 'Operations Summary', 'nchantdtodo.widgets.NTDOperationSummaryTab', "{}" ]
+      2: [ 'Projects Summary', 'nchantdtodo.widgets.NTDProjectsSummaryTab', "{}" ]
+    dtabs:
+    children:
+  NTDMonthlyTasksTabSet:
+    description:
+    tabs:
+      0: [ 'Monthly Tasks', 'nchantdtodo.widgets.NTDMonthlyTaskListTab', "{}" ]
+      1: [ 'Monthly Calendar', 'nchantdtodo.widgets.NTDMonthCalendarTab', "{}" ]
+    dtabs:
+    children:
+  NTDTimelineTabSet:
+    description:
+    tabs:
+      0: [ 'Daily 15min Tracker', 'nchantdtodo.widgets.NTDDaily15MinTrackerTab', "{}" ]
+      1: [ 'MultiWeek Calendar', 'nchantdtodo.widgets.NTDMultiWeekCalendarTab', "{}" ]
+    dtabs:
+    children:
+  NTDWeeklyTasksTabSet:
+    description:
+    tabs:
+      0: [ 'Weekly Tasks', 'nchantdtodo.widgets.NTDWeeklyTaskListTab', "{}" ]
+      1: [ 'Weekly Calendar', 'nchantdtodo.widgets.NTDWeeklyCalendarTab', "{}" ]
+    dtabs:
+    children:
+  NTDProjectTabSet:
+    description: >
+      Need a way to create a hierachical true under each project with the defined tasks
+    tabs:
+      0: ['Project Overview', 'nchantdtodo.widgets.NTDProjectOverviewTab', "{}" ]
+      1: ['Project Gantt', 'nchantdtodo.widgets.NTDProjectGanttTab', "{}"]
+    dtabs:
+      "{0}": [ "widgets.Task", "" ]
+    children:
+  NTDOperationTabSet:
+    description:
+    tabs:
+      0: ['Operation Overview', 'nchantdtodo.widgets.NTDOperationOverviewTab', "{}" ]
+      1: ['Operation Gantt', 'nchantdtodo.widgets.NTDOperationGanttTab', "{}"]
+    dtabs:
+    children:
+  NTDTaskTabSet():
+    description:
+    tabs:
+      0: [ 'Task Detail', 'nchantdtodo.widgets.NTDTaskDetailTab', "{}" ]
+    dtabs:
+      "{0}": ['Task Gantt', 'nchantdtodo.widgets.NTDGanttTaskTab']
+    children:
+toolbars:
+  filetoolbar:
+  edittoolbar:
+  datatoolbar:

@@ -1,0 +1,210 @@
+---
+<(META)>:
+	DOCid: <^[uuid]^>
+	name:
+	description: >
+	expirary: <[expiration]>
+	version: <[version]>
+	path: <[LEXIvrs]>
+	outline: <[outline]>
+	authority: document|this
+	security: sec|lvl2
+	<(WT)>: -32
+
+FileTypes:
+	-
+		Name: Script
+		ids:
+			UUID: 2c68fbae-d89d-48ca-a7f5-83b3d9334f6a
+			Lookup: 0
+			icon:
+		Desription: >
+		Encoding:
+	-
+		ids:
+			UUID: ae89b8d4-b125-4160-b5a8-67f8a9ae7f84
+			Lookup: 1
+			icon:
+		Name: Table
+		Desription: >
+		Encoding:
+	-
+		ids:
+			UUID: a4afc4ec-b9d9-45e1-a9fe-bc17222358ac
+			Lookup: 2
+			icon:
+		Name: Tree
+		Desription: >
+			A Tree
+		Encoding:
+	-
+		ids:
+			UUID: 34b8424b-aea5-4482-99f8-dc3fc629100c
+			Lookup: 3
+			icon:
+		Name: Document
+		Description: >
+			A Document can be a Sectn when used in another document.
+			The text is just the UUID of the Document
+		Encoding:
+	-
+		ids:
+			UUID: 82a5f250-cb41-4434-8e42-d6ba320b2d31
+			Lookup: 4
+			icon:
+		Name: Message
+		Description: >
+			A Message will be used to convey information between
+			copies of the file and users...a seperate mechism of
+			storage will be used for speed to help with concurrency
+			syncing across networks
+		Encoding:
+	-
+		ids:
+			UUID: 123128dc-ca4c-4edb-84dd-65351a012f96
+			Lookup: 5
+			icon:
+		Name: Form
+		Desription: >
+		Encoding:
+	-
+		ids:
+			UUID: b41d0a65-3d98-49f0-9e61-4538a56325f0
+			Lookup: 6
+			icon:
+		Name: Config
+		Description: >
+			A Config allows for overriding configurations of
+			pyffice interally used heavily by pyfficeApps
+		Encoding:
+	-
+		ids:
+			UUID: 7c6443f3-fe36-4131-9fd6-24fe33e30068
+			Lookup: 7
+			icon:
+		Name: View
+		Encoding:
+	-
+		ids:
+			UUID: f5c293e1-30cb-4992-8a4d-66ab366ac0c6
+			Lookup: 8
+			icon:
+		Name: Tag
+		Description: >
+			A Tag allows for representations of many different
+			organizations the document table represents a
+			special type of tag
+		Encoding:
+	-
+		ids:
+			UUID: a9911196-6913-4f5c-a6f7-e48743df6975
+			Lookup: 9
+			icon:
+		Name: FileSubSystem
+		Desription: >
+			Combine a Tree and And various Documents to be
+			able to write out a file structure
+		Encoding:
+	-
+		ids:
+			UUID: 0ac9677d-3ed9-4cc3-8021-5811906f71ab
+			Lookup: 10
+			icon:
+		Name: Log
+		Desription: >
+		Encoding:
+	-
+		ids:
+			UUID: abe4e66b-1066-46fd-bebf-02d0f763deec
+			Lookup: 11
+			icon:
+		Name: CMD
+		Desription: >
+		Encoding:
+	-
+		ids:
+			UUID: 486de867-e60f-43dd-b673-14c939fb748c
+			Lookup: 12
+			icon:
+		Name: OP
+		Description: >
+			A File for Showing Specially Formated Operations
+			which implement the function inside the system
+		Encoding:
+	-
+		ids:
+			UUID: 3508b216-5e87-44e5-a4b5-e554d2f9ef5d
+			Lookup: 13
+			icon:
+		Name: UnixPath
+		Description: >
+			A Forward Slashed Path with Mounted Roots
+		Encoding:
+	-
+		ids:
+			UUID: 57b78c27-7de5-4919-99ae-2a2660ea1bb1
+			Lookup: 14
+			icon:
+		Name: PythonPath
+		Description: >
+			A Dotted Path for inside Python file importing
+		Encoding:
+	-
+		ids:
+			UUID: 11e4464d-69f1-499b-8ba6-3d5fb2de3892
+			Lookup: 15
+			icon:
+		Name: WinPath
+		Description: >
+			A Back Slashed Path with Mapped Drives
+		Encoding:
+	-
+		ids:
+			UUID: 164fe226-7434-43ff-91f5-4f9634ad86a8
+			Lookup: 16
+			icon:
+		Name: rsectn
+		Description: >
+			A Sectn File of Type Rsectn is used for
+			Resectioning a document for data storage
+			performance to reduce redundant data storage
+		Encoding:
+	-
+		ids:
+			UUID: 1dde3980-7ea2-4953-949a-5662737c72d6
+			Lookup: 17
+			icon:
+		Name: TagTree
+		Description: >
+			A Tag Tree is used to organize documents
+		Encoding:
+	-
+		ids:
+			UUID: 8559f427-3df6-41db-a5d5-9d3d07d1219f
+			Lookup: 18
+			icon:
+		Name: Report
+		Desription: >
+			A Report allows for the organization of other
+			documents with specific viewing parameters
+		Encoding:
+	-
+		ids:
+			UUID: 6ded620a-6bb6-4def-93b8-7b739898ce5a
+			Lookup: 19
+			icon:
+		Name: Comment
+		Description: >
+			A Comment is a connection of a message to a
+			dimensional location within the visual content
+		Encoding:
+	-
+		ids:
+			UUID: a6c211e9-db36-4a3e-86de-79e29ef2f5bf
+			Lookup: 20
+			icon:
+		Name: Presentation
+		Description: >
+			A Presentation Combines a Workflow and Distribution
+			Model with any other Document
+		Encoding:

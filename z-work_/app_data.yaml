@@ -1,0 +1,321 @@
+---
+'<(META)>':
+  'DOCid': '<^[uuid]^>'
+  'name':
+  'description': >
+  'expirary': '<[expiration]>'
+  'version': '<[version]>'
+  'path': '<[LEXIvrs]>'
+  'outline': '<[outline]>'
+  'authority': 'document|this'
+  'security': 'sec|lvl2'
+  '<(WT)>': -32
+'tables':
+  '_doc':
+    'name: '_doc'
+    'cmd': >
+      'DROP TABLE IF EXISTS _doc;'
+      'CREATE TABLE _doc ('
+        'docID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,'
+        'docUUID TEXT, histTag TEXT, Name TEXT, Seq TEXT, SectnUUID TEXT, DTID TEXT,'
+        'ownrUUID  TEXT, [Group]);'
+  '_msg':
+    name': '_msg'
+    cmd': >
+      'DROP TABLE IF EXISTS _msg;'
+      'CREATE TABLE _msg ('
+        'msgID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL);'
+    size:
+      columns:
+        ids: [msgID, msgUUID]
+        admins:
+        content: ['From', 'To', 'Body', 'Anchor', 'Channel', 'Note', 'State']
+  '_opt':
+    name': '_opt'
+    cmd': >
+      'DROP TABLE IF EXISTS _opt;
+      'CREATE TABLE _opt ('
+        'optID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,'
+        'optUUID TEXT UNIQUE, [Table] TEXT, tblOptionID INTEGER, Type INTEGER, Name TEXT,'
+        'Description BLOB);'
+  '_perf':
+    name': '_perf'
+    cmd': >
+      DROP TABLE IF EXISTS _perf;
+      CREATE TABLE _perf (
+        perfID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        perfUUID TEXT UNIQUE);
+  '_sectns':
+    columns:
+      sectnUUID: TEXT
+      sectnSize: TEXT
+      Text: BLOB
+      DTID: TEXT
+      Type: INTEGER
+      State: TEXT
+    cmd': >
+      DROP TABLE IF EXISTS _sectns;
+      CREATE TABLE _sectns (
+        sectnsID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        sectnUUID TEXT, sectnSize TEXT, Text BLOB, DTID TEXT, Type INTEGER, State TEXT);
+  '_usr':
+    cmd': >
+      DROP TABLE IF EXISTS _usr;
+      CREATE TABLE _usr (
+        usrID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        usrUUID TEXT UNIQUE, Name TEXT, sessionUUID TEXT);
+  'docbs':
+    'cmd': >
+      DROP TABLE IF EXISTS docbs;
+      CREATE TABLE docbs (
+        DocBs INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        DocBUUID TEXT, DocUUID TEXT UNIQUE, DocVersion TEXT, DBType TEXT, LOCI TEXT);
+  'm_bgFx':
+    'cmd': >
+      DROP TABLE IF EXISTS m_bgFx;
+      CREATE TABLE m_bgFx (
+        bgFxID INTEGER PRIMARY KEY ON CONFLICT ROLLBACK AUTOINCREMENT UNIQUE NOT NULL,
+        bgFxUUID TEXT UNIQUE, C0 TEXT, Cn TEXT);
+  'm_bgTbl':
+      size:
+        columns:
+          1_ids:
+            - 'ID'
+            - 'UUID'
+            - 'docUUID'
+            - 'SectnUUID'
+            - 'Name'
+            - 'Seq'
+            - 'SectnSize'
+          3_admins:
+            - '[CreBy] INTEGER'
+            - '[CreOn] FLOAT'
+            - '[ModBY] INTEGER'
+            - '[ModOn] FLOAT'
+            - '[DLT] BOOLEAN NOT NULL DEFAULT (0)'
+            - '[ACTV] BOOLEAN NOT NULL DEFAULT (1)'
+          2_content:
+            min: 15
+            max: 1975
+views:
+    DocGroups:
+      cmd: >
+
+    Docs:
+      cmd: >
+
+    DocStates:
+      cmd: >
+
+    FileTypes:
+      cmd: >
+
+    fullDoc:
+      cmd: >
+sectn:
+  seq:
+    description: >
+      Sequence defines the organizations of the sections
+    codes:
+      000.000:
+        name: Grid Sequence
+        charaters: arabic
+        description: >
+          Defines the position of the section within a grid
+        symbol: '.'
+      000,000:
+        name: Simple Linear Sequence
+        charaters: arabic
+        description: >
+          Defines the position of the section within a list
+          this provides a posible list of 16,777,216 rows
+          281,474,976,711,000 max length rows
+        symbol: ','
+      000+000:
+        name: Page Plus Line Linear Sequence
+        charaters: arabic
+        description: >
+          Define position of the section within a document page
+          pageseq+lineseq
+        symbol: '+'
+        tmplt:
+  size:
+    description: >
+      Section size codes are hexidecimal allowing a total of 8191 named
+      chunking methods and a total of 8190 sized chunking methods
+    codes:
+      000|000:
+        name: Templated Defined Chunk
+        charaters: hexidecimal
+        description: >
+          000|001 -> represents a defined encoding of 000 with a
+          chunk size of 001 encoding methods and up to a
+          chunk size of 4096 rows...allow for adhoc encoding using
+          a special rule set config to extend past the 4096 if needed
+          and as well this engine should be built so that an overide
+          of sectn definitions is even possible
+        types:
+          defined:
+            Description: >
+              Chunk Data by a set of defined rules
+              i.e. Python method/class seperation
+            options:
+              'Python':
+              'English':
+        symbol: '|'
+      000.000:
+        name: Grid Chunk
+        charaters: hexidecimal
+        description: >
+          001.004 -> represents a column and row chunk size
+          up to 4095 columns and 4095 rows use hexidecimal identifiers
+          can hold 16,769,025 individiual items in a single chunk
+        types:
+          table:
+            Description: >
+              Chunk Data into a table of x cols by y rows
+            options:
+        symbol: '.'
+      000,000:
+        name: Simple Linear Chunk
+        charaters: arabic
+        description: >
+          01,002: ->
+          represents a chunk size of 1,002 rows
+          longest chunk 99,999 use arabic numeral identifiers
+        types:
+          line:
+            Description: >
+              Chunk Data into x lines of data
+            options:
+        symbol: ','
+      000^000:
+        name: Specialized Named Chunk
+        charaters: hexidecimal
+        description: >
+          001^002: -> implement as a model naming system
+          a purely variable chunk size used for highly optimized
+          storage provides 16,769,025
+          use for things like predefined headers of documents
+          and other boilerplate that is larger than a single
+          Templated Defined Chunk
+        types:
+          calculated:
+            Description: >
+              Chunk Data by a calculated method using
+              Machine Learning to Optimize Performance
+            options:
+        symbol: '^'
+current the place holder for the SQL Queued Recursive Application Interaction Layer
+SQuRAIL
+
+
+
+Fractionally Executed SQL Queued Recursive Interaction Layer
+FxSQuRIL
+https://www.sqlite.org/limits.html
+docs:
+  Description: >
+    A Doc is a tree of Sectn sequences...the branches provide for different views
+    of the same document like values, formulas, formats
+
+sectns:
+  Description: >
+    A Sectn is a chunk of a document.  A chunk can have 2 dimensions
+    rows and columns, these are combinined into a single cell for storage and light
+    consumption
+inmemdb:
+  Name: fxsquril
+  tables:
+    bigtable:
+      name:
+      size:
+        columns:
+          1_ids:
+            - 'ID'
+            - 'UUID'
+            - 'docUUID'
+            - 'SectnUUID'
+            - 'Name'
+            - 'Seq'
+            - 'SectnSize'
+          3_admins:
+            - '[CreBy] INTEGER'
+            - '[CreOn] FLOAT'
+            - '[ModBY] INTEGER'
+            - '[ModOn] FLOAT'
+            - '[DLT] BOOLEAN NOT NULL DEFAULT (0)'
+            - '[ACTV] BOOLEAN NOT NULL DEFAULT (1)'
+          2_content:
+            min: 15
+            max: 1975
+    bigfunction:
+      name:
+      size:
+        columns:
+          ids:
+          admins:
+          content:
+    msgtable:
+      name:
+      size:
+        columns:
+          ids:
+            - msgID
+            - msgUUID
+          admins:
+          content:
+            - 'From'
+            - 'To'
+            - 'Body'
+            - 'Anchor'
+            - 'Channel'
+            - 'Note'
+            - 'State'
+    opendocs:
+      name:
+      size:
+        columns:
+          ids:
+          admins:
+          content:
+    isolatedtables:
+      name:
+      size:
+        columns:
+          ids:
+          admins:
+          content:
+    run:
+      name:
+      size:
+        columns:
+          ids:
+          admins:
+          content:
+appdb:
+  tables:
+    _doc:
+    _opt:
+    _sectns:
+    _usr:
+    _perf:
+      Name:
+      Description: >
+        The _perf Table will hold information that tracks and optimizes
+        the performance of the running instance FxSQuRIL
+        Track # of transactions by table and db
+        store the size of the transactions and the overall size of the db
+        try to determine working ranges of data
+        some tables maybe large but typically only work with the first x rows
+        or most recent or specific view
+    docbs:
+
+    fxs:
+filedb:
+  tables:
+    _cache:
+    _opt:
+    _run:
+    t_docs:
+    t_sectns:
