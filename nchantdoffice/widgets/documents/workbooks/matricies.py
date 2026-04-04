@@ -253,12 +253,18 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return self
 
     def cmd_auto_calculate(self, event, *args, **kwargs):
-        """"""
+        """Enable or disable automatic formula calculation"""
+        if hasattr(self, 'autocalculate_checkbox'):
+            auto_calc = self.autocalculate_checkbox.isChecked()
+            if self.document:
+                self.document.set_auto_calculate(auto_calc)
+                if auto_calc:
+                    self.recalculate_all_formulas()
         return self
 
     def cmd_cell_background_color_select(self, event, *args, **kwargs):
-        """"""
-        cfg = {}
+        """Select background color for selected cells"""
+        cfg = {"callback": self.apply_cell_background_color}
         self.color_select_sigil = NchantdColorSelectSigil(self, cfg).initWidget()
         return self
 
@@ -275,37 +281,92 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return self
 
     def cmd_font_color_select(self, event, *args, **kwargs):
-        """"""
-        cfg = {}
+        """Select font color for selected cells"""
+        cfg = {"callback": self.apply_font_color}
         self.color_select_sigil = NchantdColorSelectSigil(self, cfg).initWidget()
         return self
 
     def cmd_row_spinbox(self, event, *args, **kwargs):
-        """"""
+        """Handle row count change"""
+        if hasattr(self, 'rows_count_entry'):
+            new_row_count = self.rows_count_entry.value()
+            if self.table:
+                self.table.setRowCount(new_row_count)
+                self.num_rows = new_row_count
         return self
 
     def cmd_row_height_spinbox(self, event, *args, **kwargs):
-        """"""
+        """Handle row height change"""
+        if hasattr(self, 'row_height_spin'):
+            new_height = self.row_height_spin.value()
+            if self.table:
+                selected_rows = self.get_selected_rows()
+                if selected_rows:
+                    for row in selected_rows:
+                        self.table.setRowHeight(row, new_height)
+                else:
+                    # Apply to all rows
+                    for row in range(self.table.rowCount()):
+                        self.table.setRowHeight(row, new_height)
         return self
 
     def cmd_column_spinbox(self, event, *args, **kwargs):
-        """"""
+        """Handle column count change"""
+        if hasattr(self, 'columns_count_entry'):
+            new_col_count = self.columns_count_entry.value()
+            if self.table:
+                self.table.setColumnCount(new_col_count)
+                self.num_cols = new_col_count
         return self
 
     def cmd_column_width_spinbox(self, event, *args, **kwargs):
-        """"""
+        """Handle column width change"""
+        if hasattr(self, 'cell_width'):
+            new_width = self.cell_width.value()
+            if self.table:
+                selected_cols = self.get_selected_columns()
+                if selected_cols:
+                    for col in selected_cols:
+                        self.table.setColumnWidth(col, new_width)
+                else:
+                    # Apply to all columns
+                    for col in range(self.table.columnCount()):
+                        self.table.setColumnWidth(col, new_width)
         return self
 
     def cmd_formula_entrybox(self, event, *args, **kwargs):
-        """"""
+        """Handle formula entry"""
+        if hasattr(self, 'formula_bar'):
+            formula_text = self.formula_bar.get_text()
+            selected_cell = self.table.currentItem()
+            if selected_cell and formula_text:
+                # Set formula to selected cell
+                selected_cell.setText(formula_text)
+                # Evaluate if auto-calculate is enabled
+                if hasattr(self, 'autocalculate_checkbox') and self.autocalculate_checkbox.isChecked():
+                    self.evaluate_cell_formula(selected_cell)
         return self
 
     def cmd_merge_cells(self, event, *args, **kwargs):
-        """"""
+        """Merge selected cells"""
+        if self.table:
+            selected_ranges = self.table.selectedRanges()
+            if selected_ranges:
+                for cell_range in selected_ranges:
+                    top_row = cell_range.topRow()
+                    left_col = cell_range.leftColumn()
+                    row_count = cell_range.rowCount()
+                    col_count = cell_range.columnCount()
+                    self.table.setSpan(top_row, left_col, row_count, col_count)
         return self
 
     def cmd_data_source_select(self, event, *args, **kwargs):
-        """"""
+        """Handle data source selection"""
+        if hasattr(self, 'dataset_select'):
+            dataset_name = self.dataset_select.currentText()
+            if dataset_name and dataset_name != "No Data Set Selected":
+                # Load data from selected dataset
+                self.load_dataset(dataset_name)
         return self
 
     def cmd_data_filters_select(self, event, *args, **kwargs):
@@ -313,7 +374,9 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return self
 
     def cmd_on_click_default_cell_background_color_button(self, event, *args, **kwargs):
-        """"""
+        """Set default background color for all cells"""
+        cfg = {"callback": self.apply_default_background_color}
+        self.color_select_sigil = NchantdColorSelectSigil(self, cfg).initWidget()
         return self
 
     def cmd_open_local_file(self, event=None, *args, **kwargs):
@@ -569,16 +632,24 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
     def move_cell(self, addrow, addcol):
-        """Move the cell within a worksheet"""
+        """Move the active cell within the worksheet"""
+        if self.table:
+            current_item = self.table.currentItem()
+            if current_item:
+                current_row = current_item.row()
+                current_col = current_item.column()
 
-        targetrow = (self.row + addrow) % self.num_rows
-        targetcol = (self.col + addcol) % self.num_cols
+                # Calculate target position with wrapping
+                target_row = (current_row + addrow) % self.table.rowCount()
+                target_col = (current_col + addcol) % self.table.columnCount()
 
-        # def focus(event):
-        # 	targetwidget = self.siblings[cellname(targetrow, targetcol)].widget
-        # 	targetwidget.focus()
-
-        return focus
+                # Set the new current cell
+                target_item = self.table.item(target_row, target_col)
+                if not target_item:
+                    target_item = pyqt.QTableWidgetItem()
+                    self.table.setItem(target_row, target_col, target_item)
+                self.table.setCurrentItem(target_item)
+        return self
 
     def populate_document(self):
         """"""
@@ -587,7 +658,606 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.table.update_data(self.document.data)
 
     def set_table(self):
-        """turn the spreadsheet into a table where there is a corresponding database table for it"""
+        """Turn the spreadsheet into a table where there is a corresponding database table for it"""
+        if self.document and self.table:
+            # Extract table data
+            table_data = self.extract_table_data()
+            # Store in database
+            if self.app and hasattr(self.app, 'model'):
+                self.app.model.codex.store_matrix_data(self.file_path, table_data)
+        return self
+
+    # ========== Cell Manipulation Methods ==========
+
+    def copy_cells(self):
+        """Copy selected cells to clipboard"""
+        if self.table:
+            selected_ranges = self.table.selectedRanges()
+            if selected_ranges:
+                clipboard_data = []
+                for cell_range in selected_ranges:
+                    for row in range(cell_range.topRow(), cell_range.bottomRow() + 1):
+                        row_data = []
+                        for col in range(cell_range.leftColumn(), cell_range.rightColumn() + 1):
+                            item = self.table.item(row, col)
+                            row_data.append(item.text() if item else "")
+                        clipboard_data.append("\t".join(row_data))
+                pyqt.QApplication.clipboard().setText("\n".join(clipboard_data))
+        return self
+
+    def cut_cells(self):
+        """Cut selected cells to clipboard"""
+        self.copy_cells()
+        if self.table:
+            selected_ranges = self.table.selectedRanges()
+            if selected_ranges:
+                for cell_range in selected_ranges:
+                    for row in range(cell_range.topRow(), cell_range.bottomRow() + 1):
+                        for col in range(cell_range.leftColumn(), cell_range.rightColumn() + 1):
+                            item = self.table.item(row, col)
+                            if item:
+                                item.setText("")
+        return self
+
+    def paste_cells(self):
+        """Paste cells from clipboard"""
+        if self.table:
+            clipboard_text = pyqt.QApplication.clipboard().text()
+            if clipboard_text:
+                current_item = self.table.currentItem()
+                if current_item:
+                    start_row = current_item.row()
+                    start_col = current_item.column()
+                    rows = clipboard_text.split("\n")
+                    for r_idx, row_text in enumerate(rows):
+                        cols = row_text.split("\t")
+                        for c_idx, cell_text in enumerate(cols):
+                            target_row = start_row + r_idx
+                            target_col = start_col + c_idx
+                            if target_row < self.table.rowCount() and target_col < self.table.columnCount():
+                                item = self.table.item(target_row, target_col)
+                                if not item:
+                                    item = pyqt.QTableWidgetItem()
+                                    self.table.setItem(target_row, target_col, item)
+                                item.setText(cell_text)
+        return self
+
+    def delete_cells(self):
+        """Delete content of selected cells"""
+        if self.table:
+            selected_ranges = self.table.selectedRanges()
+            if selected_ranges:
+                for cell_range in selected_ranges:
+                    for row in range(cell_range.topRow(), cell_range.bottomRow() + 1):
+                        for col in range(cell_range.leftColumn(), cell_range.rightColumn() + 1):
+                            item = self.table.item(row, col)
+                            if item:
+                                item.setText("")
+        return self
+
+    # ========== Helper Methods ==========
+
+    def get_selected_rows(self):
+        """Get list of selected row indices"""
+        if self.table:
+            selected_ranges = self.table.selectedRanges()
+            rows = set()
+            for cell_range in selected_ranges:
+                for row in range(cell_range.topRow(), cell_range.bottomRow() + 1):
+                    rows.add(row)
+            return sorted(list(rows))
+        return []
+
+    def get_selected_columns(self):
+        """Get list of selected column indices"""
+        if self.table:
+            selected_ranges = self.table.selectedRanges()
+            cols = set()
+            for cell_range in selected_ranges:
+                for col in range(cell_range.leftColumn(), cell_range.rightColumn() + 1):
+                    cols.add(col)
+            return sorted(list(cols))
+        return []
+
+    def extract_table_data(self):
+        """Extract all data from table"""
+        data = []
+        if self.table:
+            for row in range(self.table.rowCount()):
+                row_data = []
+                for col in range(self.table.columnCount()):
+                    item = self.table.item(row, col)
+                    row_data.append(item.text() if item else "")
+                data.append(row_data)
+        return data
+
+    # ========== Formatting Methods ==========
+
+    def apply_cell_background_color(self, color):
+        """Apply background color to selected cells"""
+        if self.table and color:
+            selected_ranges = self.table.selectedRanges()
+            if selected_ranges:
+                for cell_range in selected_ranges:
+                    for row in range(cell_range.topRow(), cell_range.bottomRow() + 1):
+                        for col in range(cell_range.leftColumn(), cell_range.rightColumn() + 1):
+                            item = self.table.item(row, col)
+                            if not item:
+                                item = pyqt.QTableWidgetItem()
+                                self.table.setItem(row, col, item)
+                            item.setBackground(pyqt.QColor(color))
+        return self
+
+    def apply_font_color(self, color):
+        """Apply font color to selected cells"""
+        if self.table and color:
+            selected_ranges = self.table.selectedRanges()
+            if selected_ranges:
+                for cell_range in selected_ranges:
+                    for row in range(cell_range.topRow(), cell_range.bottomRow() + 1):
+                        for col in range(cell_range.leftColumn(), cell_range.rightColumn() + 1):
+                            item = self.table.item(row, col)
+                            if not item:
+                                item = pyqt.QTableWidgetItem()
+                                self.table.setItem(row, col, item)
+                            item.setForeground(pyqt.QColor(color))
+        return self
+
+    def apply_default_background_color(self, color):
+        """Apply background color to all cells"""
+        if self.table and color:
+            for row in range(self.table.rowCount()):
+                for col in range(self.table.columnCount()):
+                    item = self.table.item(row, col)
+                    if not item:
+                        item = pyqt.QTableWidgetItem()
+                        self.table.setItem(row, col, item)
+                    item.setBackground(pyqt.QColor(color))
+        return self
+
+    def apply_font_style(self, font_family=None, font_size=None, bold=None, italic=None, underline=None):
+        """Apply font styling to selected cells"""
+        if self.table:
+            selected_ranges = self.table.selectedRanges()
+            if selected_ranges:
+                for cell_range in selected_ranges:
+                    for row in range(cell_range.topRow(), cell_range.bottomRow() + 1):
+                        for col in range(cell_range.leftColumn(), cell_range.rightColumn() + 1):
+                            item = self.table.item(row, col)
+                            if not item:
+                                item = pyqt.QTableWidgetItem()
+                                self.table.setItem(row, col, item)
+                            font = item.font()
+                            if font_family:
+                                font.setFamily(font_family)
+                            if font_size:
+                                font.setPointSize(font_size)
+                            if bold is not None:
+                                font.setBold(bold)
+                            if italic is not None:
+                                font.setItalic(italic)
+                            if underline is not None:
+                                font.setUnderline(underline)
+                            item.setFont(font)
+        return self
+
+    def apply_cell_border(self, side, style, thickness, color):
+        """Apply border to selected cells
+
+        Args:
+            side: 'top', 'left', 'right', 'bottom', or 'all'
+            style: 'solid', 'dashed', 'dotted', 'double'
+            thickness: border thickness in pixels
+            color: border color
+        """
+        # Note: PyQt QTableWidget doesn't have built-in per-cell borders
+        # This would require custom item delegates or stylesheets
+        # Placeholder for future implementation
+        logma.info(f"Apply border: {side} {style} {thickness} {color}")
+        return self
+
+    # ========== Row/Column Operations ==========
+
+    def insert_row(self, position=None):
+        """Insert a new row at the specified position or at current selection"""
+        if self.table:
+            if position is None:
+                current_item = self.table.currentItem()
+                position = current_item.row() if current_item else 0
+            self.table.insertRow(position)
+            self.num_rows = self.table.rowCount()
+        return self
+
+    def insert_rows(self, count, position=None):
+        """Insert multiple rows at the specified position"""
+        for i in range(count):
+            self.insert_row(position)
+        return self
+
+    def delete_row(self, row_index=None):
+        """Delete a row at the specified index or current selection"""
+        if self.table:
+            if row_index is None:
+                current_item = self.table.currentItem()
+                row_index = current_item.row() if current_item else 0
+            self.table.removeRow(row_index)
+            self.num_rows = self.table.rowCount()
+        return self
+
+    def delete_selected_rows(self):
+        """Delete all selected rows"""
+        if self.table:
+            selected_rows = self.get_selected_rows()
+            # Delete in reverse order to avoid index shifting
+            for row in reversed(selected_rows):
+                self.table.removeRow(row)
+            self.num_rows = self.table.rowCount()
+        return self
+
+    def insert_column(self, position=None):
+        """Insert a new column at the specified position or at current selection"""
+        if self.table:
+            if position is None:
+                current_item = self.table.currentItem()
+                position = current_item.column() if current_item else 0
+            self.table.insertColumn(position)
+            self.num_cols = self.table.columnCount()
+        return self
+
+    def insert_columns(self, count, position=None):
+        """Insert multiple columns at the specified position"""
+        for i in range(count):
+            self.insert_column(position)
+        return self
+
+    def delete_column(self, col_index=None):
+        """Delete a column at the specified index or current selection"""
+        if self.table:
+            if col_index is None:
+                current_item = self.table.currentItem()
+                col_index = current_item.column() if current_item else 0
+            self.table.removeColumn(col_index)
+            self.num_cols = self.table.columnCount()
+        return self
+
+    def delete_selected_columns(self):
+        """Delete all selected columns"""
+        if self.table:
+            selected_cols = self.get_selected_columns()
+            # Delete in reverse order to avoid index shifting
+            for col in reversed(selected_cols):
+                self.table.removeColumn(col)
+            self.num_cols = self.table.columnCount()
+        return self
+
+    def resize_row(self, row_index, height):
+        """Resize a specific row to the given height"""
+        if self.table and 0 <= row_index < self.table.rowCount():
+            self.table.setRowHeight(row_index, height)
+        return self
+
+    def resize_column(self, col_index, width):
+        """Resize a specific column to the given width"""
+        if self.table and 0 <= col_index < self.table.columnCount():
+            self.table.setColumnWidth(col_index, width)
+        return self
+
+    def auto_resize_columns(self):
+        """Auto-resize all columns to fit content"""
+        if self.table:
+            for col in range(self.table.columnCount()):
+                self.table.resizeColumnToContents(col)
+        return self
+
+    def auto_resize_rows(self):
+        """Auto-resize all rows to fit content"""
+        if self.table:
+            for row in range(self.table.rowCount()):
+                self.table.resizeRowToContents(row)
+        return self
+
+    # ========== Formula Evaluation and Calculation ==========
+
+    def evaluate_cell_formula(self, cell_item):
+        """Evaluate formula in a cell and update its display value"""
+        if not cell_item:
+            return self
+
+        cell_text = cell_item.text()
+        if cell_text.startswith("="):
+            try:
+                # Get the formula (without the = sign)
+                formula = cell_text[1:]
+                # Evaluate the formula
+                result = self.calculate_formula(formula)
+                # Store the result (keep original formula in data)
+                cell_item.setData(pyqt.Qt.ItemDataRole.DisplayRole, str(result))
+                cell_item.setData(pyqt.Qt.ItemDataRole.UserRole, cell_text)  # Store original formula
+            except Exception as e:
+                logma.error(f"Formula evaluation error: {e}")
+                cell_item.setData(pyqt.Qt.ItemDataRole.DisplayRole, f"#ERROR: {e}")
+        return self
+
+    def calculate_formula(self, formula):
+        """Calculate the result of a formula string
+
+        Supports:
+        - Basic arithmetic: +, -, *, /
+        - Cell references: A1, B2, etc.
+        - Functions: SUM, AVG, MIN, MAX, COUNT
+        """
+        # Replace cell references with their values
+        formula = self.replace_cell_references(formula)
+
+        # Handle common spreadsheet functions
+        formula = self.replace_spreadsheet_functions(formula)
+
+        # Evaluate the expression
+        try:
+            # Use safe evaluation (limited to mathematical operations)
+            result = eval(formula, {"__builtins__": {}}, {
+                "abs": abs, "min": min, "max": max, "sum": sum,
+                "round": round, "pow": pow, "len": len
+            })
+            return result
+        except Exception as e:
+            raise ValueError(f"Invalid formula: {e}")
+
+    def replace_cell_references(self, formula):
+        """Replace cell references (like A1, B2) with their actual values"""
+        import re
+        # Match cell references like A1, AB12, etc.
+        pattern = r'\b([A-Z]+)(\d+)\b'
+
+        def replace_ref(match):
+            col_letter = match.group(1)
+            row_num = int(match.group(2)) - 1  # Convert to 0-based index
+            col_num = self.column_letter_to_index(col_letter)
+
+            if self.table and 0 <= row_num < self.table.rowCount() and 0 <= col_num < self.table.columnCount():
+                item = self.table.item(row_num, col_num)
+                if item:
+                    value = item.text()
+                    # If the cell contains a number, return it; otherwise return 0
+                    try:
+                        return str(float(value))
+                    except ValueError:
+                        return "0"
+            return "0"
+
+        return re.sub(pattern, replace_ref, formula)
+
+    def replace_spreadsheet_functions(self, formula):
+        """Replace spreadsheet functions with Python equivalents"""
+        import re
+
+        # SUM(A1:A10) -> sum([...])
+        def replace_sum(match):
+            range_str = match.group(1)
+            values = self.get_range_values(range_str)
+            return f"sum([{','.join(map(str, values))}])"
+
+        # AVG(A1:A10) -> sum([...])/len([...])
+        def replace_avg(match):
+            range_str = match.group(1)
+            values = self.get_range_values(range_str)
+            values_str = ','.join(map(str, values))
+            return f"(sum([{values_str}])/len([{values_str}]) if len([{values_str}]) > 0 else 0)"
+
+        # COUNT(A1:A10) -> len([...])
+        def replace_count(match):
+            range_str = match.group(1)
+            values = self.get_range_values(range_str)
+            return f"len([{','.join(map(str, values))}])"
+
+        # MIN(A1:A10) -> min([...])
+        def replace_min(match):
+            range_str = match.group(1)
+            values = self.get_range_values(range_str)
+            return f"min([{','.join(map(str, values))}])"
+
+        # MAX(A1:A10) -> max([...])
+        def replace_max(match):
+            range_str = match.group(1)
+            values = self.get_range_values(range_str)
+            return f"max([{','.join(map(str, values))}])"
+
+        formula = re.sub(r'SUM\(([^)]+)\)', replace_sum, formula, flags=re.IGNORECASE)
+        formula = re.sub(r'AVG\(([^)]+)\)', replace_avg, formula, flags=re.IGNORECASE)
+        formula = re.sub(r'COUNT\(([^)]+)\)', replace_count, formula, flags=re.IGNORECASE)
+        formula = re.sub(r'MIN\(([^)]+)\)', replace_min, formula, flags=re.IGNORECASE)
+        formula = re.sub(r'MAX\(([^)]+)\)', replace_max, formula, flags=re.IGNORECASE)
+
+        return formula
+
+    def get_range_values(self, range_str):
+        """Get values from a cell range like 'A1:A10'"""
+        parts = range_str.split(':')
+        if len(parts) != 2:
+            return []
+
+        # Parse start and end cells
+        import re
+        start_match = re.match(r'([A-Z]+)(\d+)', parts[0].strip())
+        end_match = re.match(r'([A-Z]+)(\d+)', parts[1].strip())
+
+        if not start_match or not end_match:
+            return []
+
+        start_col = self.column_letter_to_index(start_match.group(1))
+        start_row = int(start_match.group(2)) - 1
+        end_col = self.column_letter_to_index(end_match.group(1))
+        end_row = int(end_match.group(2)) - 1
+
+        values = []
+        for row in range(start_row, end_row + 1):
+            for col in range(start_col, end_col + 1):
+                if self.table and 0 <= row < self.table.rowCount() and 0 <= col < self.table.columnCount():
+                    item = self.table.item(row, col)
+                    if item:
+                        try:
+                            values.append(float(item.text()))
+                        except ValueError:
+                            pass  # Skip non-numeric values
+        return values
+
+    def column_letter_to_index(self, letter):
+        """Convert column letter (A, B, AA, etc.) to 0-based index"""
+        index = 0
+        for char in letter:
+            index = index * 26 + (ord(char.upper()) - ord('A') + 1)
+        return index - 1
+
+    def column_index_to_letter(self, index):
+        """Convert 0-based column index to letter (A, B, AA, etc.)"""
+        letter = ""
+        index += 1  # Convert to 1-based
+        while index > 0:
+            index -= 1
+            letter = chr(ord('A') + index % 26) + letter
+            index //= 26
+        return letter
+
+    def recalculate_all_formulas(self):
+        """Recalculate all formulas in the spreadsheet"""
+        if self.table:
+            for row in range(self.table.rowCount()):
+                for col in range(self.table.columnCount()):
+                    item = self.table.item(row, col)
+                    if item and item.text().startswith("="):
+                        self.evaluate_cell_formula(item)
+        return self
+
+    def load_dataset(self, dataset_name):
+        """Load data from a named dataset into the table"""
+        if self.app and hasattr(self.app, 'model'):
+            try:
+                dataset = self.app.model.codex.get_dataset(dataset_name)
+                if dataset and self.table:
+                    # Clear existing data
+                    self.table.clearContents()
+                    # Load new data
+                    if hasattr(dataset, 'values'):
+                        data = dataset.values
+                    else:
+                        data = dataset
+
+                    for row_idx, row_data in enumerate(data):
+                        if row_idx >= self.table.rowCount():
+                            self.table.setRowCount(row_idx + 1)
+                        for col_idx, cell_value in enumerate(row_data):
+                            if col_idx >= self.table.columnCount():
+                                self.table.setColumnCount(col_idx + 1)
+                            item = pyqt.QTableWidgetItem(str(cell_value))
+                            self.table.setItem(row_idx, col_idx, item)
+            except Exception as e:
+                logma.error(f"Error loading dataset {dataset_name}: {e}")
+        return self
+
+    # ========== Save and Export Methods ==========
+
+    def save_document(self, file_path=None):
+        """Save the current spreadsheet to a file"""
+        if file_path is None:
+            file_path = self.file_path
+
+        if file_path is None:
+            logma.warning("No file path specified for saving")
+            return self
+
+        # Determine file format from extension
+        file_ext = file_path.split('.')[-1].lower()
+
+        if file_ext in ['xlsx', 'xls']:
+            self.save_as_excel(file_path)
+        elif file_ext == 'ods':
+            self.save_as_ods(file_path)
+        elif file_ext == 'csv':
+            self.save_as_csv(file_path)
+        elif file_ext == 'tsv':
+            self.save_as_tsv(file_path)
+        else:
+            logma.warning(f"Unsupported file format: {file_ext}")
+
+        return self
+
+    def save_as_excel(self, file_path):
+        """Save as Excel file (.xlsx)"""
+        try:
+            if self.document:
+                # Update document data from table
+                self.document.data = self.extract_table_data()
+                # Save using PyfficeMatrix
+                self.document.file_path = file_path
+                self.document.save_file()
+            else:
+                # Fallback: save using basic method
+                import openpyxl
+                wb = openpyxl.Workbook()
+                ws = wb.active
+                data = self.extract_table_data()
+                for row_idx, row_data in enumerate(data, start=1):
+                    for col_idx, cell_value in enumerate(row_data, start=1):
+                        ws.cell(row=row_idx, column=col_idx, value=cell_value)
+                wb.save(file_path)
+            logma.info(f"Saved Excel file: {file_path}")
+        except Exception as e:
+            logma.error(f"Error saving Excel file: {e}")
+        return self
+
+    def save_as_ods(self, file_path):
+        """Save as OpenDocument Spreadsheet (.ods)"""
+        try:
+            if self.document:
+                # Update document data from table
+                self.document.data = self.extract_table_data()
+                # Save using PyfficeMatrix
+                self.document.file_path = file_path
+                self.document.save_as_ods()
+            else:
+                logma.warning("ODS export requires PyfficeMatrix document")
+        except Exception as e:
+            logma.error(f"Error saving ODS file: {e}")
+        return self
+
+    def save_as_csv(self, file_path, delimiter=','):
+        """Save as CSV file"""
+        try:
+            import csv
+            data = self.extract_table_data()
+            with open(file_path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f, delimiter=delimiter)
+                writer.writerows(data)
+            logma.info(f"Saved CSV file: {file_path}")
+        except Exception as e:
+            logma.error(f"Error saving CSV file: {e}")
+        return self
+
+    def save_as_tsv(self, file_path):
+        """Save as TSV (Tab-Separated Values) file"""
+        return self.save_as_csv(file_path, delimiter='\t')
+
+    def export_to_format(self, format_type, file_path=None):
+        """Export spreadsheet to specified format
+
+        Args:
+            format_type: 'xlsx', 'ods', 'csv', 'tsv'
+            file_path: optional file path, otherwise uses current path with new extension
+        """
+        if file_path is None and self.file_path:
+            # Change extension of current file path
+            base_path = '.'.join(self.file_path.split('.')[:-1])
+            file_path = f"{base_path}.{format_type}"
+
+        if file_path:
+            self.save_document(file_path)
+        return self
+
+    def auto_save(self):
+        """Auto-save the current document"""
+        if self.file_path and exists(dirname(self.file_path)):
+            self.save_document()
+        return self
 
 
 # ====================================================================================================================||
