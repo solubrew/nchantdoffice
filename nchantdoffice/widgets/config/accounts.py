@@ -40,7 +40,7 @@ pxcfg = join(here, "_data_", "accounts.yaml")
 
 
 class NchantdOfficeAccountOverview(NchantdAccountOverview):
-    """"""
+    """Account overview widget showing account status and key metrics"""
 
     def __init__(self, parent=None, cfg=None):
         """ """
@@ -51,6 +51,11 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
             self.config.override(parent.config)
         self.config.override(cfg)
         self.account_settings = None
+        self.account_name_label = None
+        self.account_type_label = None
+        self.subscription_label = None
+        self.storage_label = None
+        self.documents_label = None
 
     def initModel(self):
         """"""
@@ -61,6 +66,34 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
     def initView(self):
         """"""
         super().initView()
+
+        # Account name
+        cfg = {"text": f"Account: {self.app.model.user.name}", "size": ["auto", "auto"]}
+        self.account_name_label = NchantdLabel(self, cfg).initWidget()
+        self.layout.addWidget(self.account_name_label)
+
+        # Account type
+        account_type = "Pro" if self.app.model.user.has_pro else "Free"
+        cfg = {"text": f"Type: {account_type}", "size": ["auto", "auto"]}
+        self.account_type_label = NchantdLabel(self, cfg).initWidget()
+        self.layout.addWidget(self.account_type_label)
+
+        # Subscription status
+        subscription_status = "Active" if self.app.model.user.is_paid else "Inactive"
+        cfg = {"text": f"Subscription: {subscription_status}", "size": ["auto", "auto"]}
+        self.subscription_label = NchantdLabel(self, cfg).initWidget()
+        self.layout.addWidget(self.subscription_label)
+
+        # Storage usage (placeholder)
+        cfg = {"text": "Storage: 0 GB / 10 GB", "size": ["auto", "auto"]}
+        self.storage_label = NchantdLabel(self, cfg).initWidget()
+        self.layout.addWidget(self.storage_label)
+
+        # Document count (placeholder)
+        cfg = {"text": "Documents: 0", "size": ["auto", "auto"]}
+        self.documents_label = NchantdLabel(self, cfg).initWidget()
+        self.layout.addWidget(self.documents_label)
+
         return self
 
     def initWidget(self):
@@ -68,6 +101,39 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
         self.initModel()
         self.initView()
         return self
+
+    def refresh_account_info(self):
+        """Refresh account information from server"""
+        try:
+            # Update account name
+            if self.account_name_label:
+                self.account_name_label.setText(f"Account: {self.app.model.user.name}")
+
+            # Update account type
+            if self.account_type_label:
+                account_type = "Pro" if self.app.model.user.has_pro else "Free"
+                self.account_type_label.setText(f"Type: {account_type}")
+
+            # Update subscription
+            if self.subscription_label:
+                subscription_status = "Active" if self.app.model.user.is_paid else "Inactive"
+                self.subscription_label.setText(f"Subscription: {subscription_status}")
+
+            logma.info("Account information refreshed")
+        except Exception as e:
+            logma.error(f"Error refreshing account info: {e}")
+
+        return self
+
+    def get_account_summary(self):
+        """Get account summary as dictionary"""
+        return {
+            "name": self.app.model.user.name,
+            "type": "Pro" if self.app.model.user.has_pro else "Free",
+            "subscription": "Active" if self.app.model.user.is_paid else "Inactive",
+            "has_account": self.app.model.user.has_account,
+            "has_pro": self.app.model.user.has_pro,
+        }
 
 
 class NchantdOfficeAccountSettings(NchantdAccountSettings):
@@ -189,6 +255,149 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         self.initModel()
         self.initView()
         return self
+
+    def save_account_settings(self):
+        """Save account settings to user model"""
+        try:
+            # Update user name if changed
+            if self.user_name and self.user_name.text():
+                new_name = self.user_name.text()
+                if new_name != self.app.model.user.name:
+                    self.app.model.user.name = new_name
+                    logma.info(f"Updated user name to: {new_name}")
+
+            # Save to persistent storage
+            if hasattr(self.app.model, 'save_user_settings'):
+                self.app.model.save_user_settings()
+                logma.info("Account settings saved")
+
+            return True
+
+        except Exception as e:
+            logma.error(f"Error saving account settings: {e}")
+            return False
+
+    def load_account_settings(self):
+        """Load account settings from user model"""
+        try:
+            # Populate user name
+            if self.user_name:
+                self.user_name.setPlaceholderText(f"{self.app.model.user.name}")
+
+            # Populate account status
+            if self.account_status:
+                self.account_status.setPlaceholderText(f"{self.app.model.user.nchantrs_account_status}")
+
+            # Populate credits
+            if self.credits_status:
+                self.credits_status.setPlaceholderText(f"{self.app.model.user.nchantrs_account_credits}")
+
+            logma.info("Account settings loaded")
+            return True
+
+        except Exception as e:
+            logma.error(f"Error loading account settings: {e}")
+            return False
+
+    def validate_account_settings(self):
+        """Validate account settings before saving"""
+        errors = []
+
+        # Validate user name
+        if self.user_name and self.user_name.text():
+            name = self.user_name.text().strip()
+            if len(name) < 2:
+                errors.append("User name must be at least 2 characters")
+            if len(name) > 100:
+                errors.append("User name must be less than 100 characters")
+
+        return {"valid": len(errors) == 0, "errors": errors}
+
+    def update_account_status(self, status):
+        """Update account status display"""
+        if self.account_status:
+            self.account_status.setPlaceholderText(str(status))
+            self.app.model.user.nchantrs_account_status = status
+        return self
+
+    def update_credits(self, credits):
+        """Update credits display"""
+        if self.credits_status:
+            self.credits_status.setPlaceholderText(str(credits))
+            self.app.model.user.nchantrs_account_credits = credits
+        return self
+
+    def refresh_browser(self):
+        """Refresh the embedded browser with appropriate URL"""
+        try:
+            if not self.browser:
+                return self
+
+            # Determine appropriate URL based on user status
+            if self.user.has_pro:
+                url = "https://www.nchantdoffice.com/whats_new"
+            elif self.user.has_account:
+                url = "https://www.nchantdoffice.com/get_pro"
+            else:
+                url = "https://www.nchantdoffice.com/registration"
+
+            # Update browser
+            if hasattr(self.browser, 'load_url'):
+                self.browser.load_url(url)
+            elif hasattr(self.browser, 'setUrl'):
+                self.browser.setUrl(pyqt.QUrl(url))
+
+            logma.info(f"Browser refreshed with URL: {url}")
+
+        except Exception as e:
+            logma.error(f"Error refreshing browser: {e}")
+
+        return self
+
+    def get_account_data(self):
+        """Get current account data as dictionary"""
+        return {
+            "name": self.user_name.text() if self.user_name and self.user_name.text() else self.app.model.user.name,
+            "status": self.app.model.user.nchantrs_account_status,
+            "credits": self.app.model.user.nchantrs_account_credits,
+            "has_pro": self.app.model.user.has_pro,
+            "has_account": self.app.model.user.has_account,
+            "is_paid": self.app.model.user.is_paid,
+            "apikey": self.app.model.user.apikey,
+        }
+
+    def sync_with_server(self):
+        """Synchronize account data with nchantrs.com server"""
+        try:
+            # TODO: Implement actual server sync
+            # This would involve:
+            # 1. Check for API key
+            # 2. Make API request to server
+            # 3. Update local user data
+            # 4. Refresh UI
+
+            if not self.app.model.user.apikey:
+                logma.warning("No API key configured - cannot sync with server")
+                return False
+
+            logma.info("Syncing account data with server...")
+            # Example API call placeholder:
+            # response = requests.get(
+            #     "https://api.nchantrs.com/account",
+            #     headers={"Authorization": f"Bearer {self.app.model.user.apikey}"}
+            # )
+            # if response.status_code == 200:
+            #     data = response.json()
+            #     self.update_account_status(data.get('status'))
+            #     self.update_credits(data.get('credits'))
+            #     return True
+
+            logma.info("Server sync requires API implementation")
+            return False
+
+        except Exception as e:
+            logma.error(f"Error syncing with server: {e}")
+            return False
 
 
 # ====================================================================================================================||
