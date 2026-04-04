@@ -43,7 +43,7 @@ log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", "images.yaml")
+pxcfg = join(here, "graphics/_data_", "images.yaml")
 
 
 class NchantdOfficeLightTable(NchantdBasketManager):

@@ -19,13 +19,13 @@ import tempfile  # 2025-11-06 09:47:04
 import os  # 2025-11-06 09:47:04
 
 # ======================================3rd Party Library Modules=====================================================||
-from nchantdoffice.widgets.documents.media.graphics.images import NchantdOfficeLightTable  # 2025-11-06 09:47:04
-from nchantdoffice.widgets.documents.media.graphics.images import NchantdColorShiftPane  # 2025-11-06 09:47:04
-from nchantdoffice.widgets.documents.media.graphics.images import NchantdConvertFormatPane  # 2025-11-06 09:47:04
-from nchantdoffice.widgets.documents.media.graphics.images import NchantdConvertSizePane  # 2025-11-06 09:47:04
-from nchantdoffice.widgets.documents.media.graphics.images import NchantdImageCropPane  # 2025-11-06 09:47:04
-from nchantdoffice.widgets.documents.media.graphics.images import NchantdImageGeneratorPane  # 2025-11-06 09:47:04
-from nchantdoffice.widgets.documents.media.graphics.images import NchantdOfficeImage  # 2025-11-06 09:47:04
+from nchantdoffice.widgets.documents.media.sketches.images import NchantdOfficeLightTable  # 2025-11-06 09:47:04
+from nchantdoffice.widgets.documents.media.sketches.images import NchantdColorShiftPane  # 2025-11-06 09:47:04
+from nchantdoffice.widgets.documents.media.sketches.images import NchantdConvertFormatPane  # 2025-11-06 09:47:04
+from nchantdoffice.widgets.documents.media.sketches.images import NchantdConvertSizePane  # 2025-11-06 09:47:04
+from nchantdoffice.widgets.documents.media.sketches.images import NchantdImageCropPane  # 2025-11-06 09:47:04
+from nchantdoffice.widgets.documents.media.sketches.images import NchantdImageGeneratorPane  # 2025-11-06 09:47:04
+from nchantdoffice.widgets.documents.media.sketches.images import NchantdOfficeImage  # 2025-11-06 09:47:04
 
 # =========================================Local Library Modules======================================================||
 # 2025-11-06 09:47:04

@@ -14,23 +14,8 @@
 # 2025-11-06 09:46:59
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
-import json  # 2025-11-06 09:46:59
-import tempfile  # 2025-11-06 09:46:59
-import os  # 2025-11-06 09:46:59
 
 # ======================================3rd Party Library Modules=====================================================||
-from nchantdoffice.widgets.documents.media.graphics.graphics import NchantdLayersListPane  # 2025-11-06 09:46:59
-from nchantdoffice.widgets.documents.media.graphics.graphics import NchantdEditLayerPane  # 2025-11-06 09:46:59
-from nchantdoffice.widgets.documents.media.graphics.graphics import NchantdObjectsPane  # 2025-11-06 09:46:59
-from nchantdoffice.widgets.documents.media.graphics.graphics import NchantdLineToolPane  # 2025-11-06 09:46:59
-from nchantdoffice.widgets.documents.media.graphics.graphics import NchantdCurveToolPane  # 2025-11-06 09:46:59
-from nchantdoffice.widgets.documents.media.graphics.graphics import NchantdSplineToolPane  # 2025-11-06 09:46:59
-from nchantdoffice.widgets.documents.media.graphics.graphics import NchantdPolygonToolPane  # 2025-11-06 09:46:59
-from nchantdoffice.widgets.documents.media.graphics.graphics import NchantdCircleToolPane  # 2025-11-06 09:46:59
-from nchantdoffice.widgets.documents.media.graphics.graphics import NchantdObjectToolPane  # 2025-11-06 09:46:59
-from nchantdoffice.widgets.documents.media.graphics.graphics import NchantdFillToolPane  # 2025-11-06 09:46:59
-from nchantdoffice.widgets.documents.media.graphics.graphics import NchantdOfficeSketch  # 2025-11-06 09:46:59
-from nchantdoffice.widgets.documents.media.graphics.graphics import NchantdOfficePalette  # 2025-11-06 09:46:59
 
 # =========================================Local Library Modules======================================================||
 # 2025-11-06 09:46:59
