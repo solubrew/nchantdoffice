@@ -98,11 +98,54 @@ class NchantdCompressPane(NchantdPane):
         self.initView()
         return self
 
-    def cmd_automate_compress(self):
-        """"""
+    def cmd_automate_compress(self, event=None):
+        """Set up automated compression rules"""
+        logma.info("Setting up compression automation...")
+        # TODO: Implement automation rules
+        return self
 
-    def cmd_compress_files(self):
-        """"""
+    def cmd_compress_files(self, event=None):
+        """Compress selected files"""
+        import zipfile
+        from os.path import basename, exists
+        from os import remove
+
+        try:
+            source_path = self.parent.fs_tree.current_level_path
+            # Get selected files from table if selection exists
+            selected_files = []
+            if hasattr(self.parent, 'file_table_one') and self.parent.file_table_one:
+                # Get all files from current directory
+                for item in self.parent.fs_tree.get_current_level_files():
+                    selected_files.append(item.name)
+
+            if not selected_files:
+                logma.warning("No files selected for compression")
+                return self
+
+            # Create archive name based on folder
+            archive_name = f"{basename(source_path)}_archive.zip"
+            archive_path = join(source_path, archive_name)
+
+            with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file_name in selected_files:
+                    file_path = join(source_path, file_name)
+                    if exists(file_path):
+                        zipf.write(file_path, basename(file_path))
+                        logma.info(f"Added to archive: {file_name}")
+
+                        # Handle options
+                        if self.delete_on_compress.isChecked():
+                            remove(file_path)
+                            logma.info(f"Deleted: {file_name}")
+
+            logma.info(f"Created archive: {archive_path}")
+            if hasattr(self.parent, 'populate_table_one'):
+                self.parent.populate_table_one()
+
+        except Exception as e:
+            logma.error(f"Error compressing files: {e}")
+
         return self
 
     def set_from_folder(self):
@@ -167,11 +210,49 @@ class NchantdImportPane(NchantdPane):
         self.initView()
         return self
 
-    def cmd_automate_compress(self):
-        """"""
+    def cmd_automate_compress(self, event=None):
+        """Set up automated import rules"""
+        logma.info("Setting up import automation...")
+        # TODO: Implement automation rules for importing files
+        return self
 
-    def cmd_compress_files(self):
-        """"""
+    def cmd_compress_files(self, event=None):
+        """Import files from external source"""
+        from shutil import copy2
+        from os.path import exists, basename
+
+        try:
+            source_path = self.parent.fs_tree.current_level_path
+            # Get selected files from table if selection exists
+            selected_files = []
+            if hasattr(self.parent, 'file_table_one') and self.parent.file_table_one:
+                for item in self.parent.fs_tree.get_current_level_files():
+                    selected_files.append(item.name)
+
+            if not selected_files:
+                logma.warning("No files selected for import")
+                return self
+
+            # Import files by copying them to the current directory
+            for file_name in selected_files:
+                source_file = join(source_path, file_name)
+                if exists(source_file):
+                    dest_file = join(source_path, f"imported_{basename(file_name)}")
+                    copy2(source_file, dest_file)
+                    logma.info(f"Imported: {file_name}")
+
+                    # Handle options
+                    if self.delete_on_compress.isChecked():
+                        from os import remove
+                        remove(source_file)
+                        logma.info(f"Deleted original: {file_name}")
+
+            if hasattr(self.parent, 'populate_table_one'):
+                self.parent.populate_table_one()
+
+        except Exception as e:
+            logma.error(f"Error importing files: {e}")
+
         return self
 
     def set_from_folder(self):
@@ -234,12 +315,48 @@ class NchantdMovePane(NchantdPane):
         self.initView()
         return self
 
-    def cmd_automate_move(self):
-        """"""
+    def cmd_automate_move(self, event=None):
+        """Set up automated file moving rules"""
+        logma.info("Setting up move automation...")
         return self
 
-    def cmd_move_files(self):
-        """"""
+    def cmd_move_files(self, event=None):
+        """Move files to destination folder"""
+        from shutil import move
+        from os.path import exists
+
+        try:
+            source_path = self.parent.fs_tree.current_level_path
+            dest_path = self.open_to_folder_entry.get_text() if hasattr(self.open_to_folder_entry, 'get_text') else None
+
+            if not dest_path or not exists(dest_path):
+                logma.warning("Invalid destination path")
+                return self
+
+            # Get files from current directory
+            files = [item.name for item in self.parent.fs_tree.get_current_level_files()]
+
+            for file_name in files:
+                old_path = join(source_path, file_name)
+
+                # Optionally rename on move
+                if self.rename_on_move.isChecked():
+                    from os.path import splitext
+                    name, ext = splitext(file_name)
+                    file_name = f"{name}_moved{ext}"
+
+                new_path = join(dest_path, file_name)
+
+                if exists(old_path):
+                    move(old_path, new_path)
+                    logma.info(f"Moved: {old_path} -> {new_path}")
+
+            if hasattr(self.parent, 'populate_table_one'):
+                self.parent.populate_table_one()
+
+        except Exception as e:
+            logma.error(f"Error moving files: {e}")
+
         return self
 
     def set_from_folder(self):
@@ -297,17 +414,75 @@ class NchantdRenamePane(NchantdPane):
         self.initView()
         return self
 
-    def cmd_automate_rename(self):
-        """"""
+    def cmd_automate_rename(self, event=None):
+        """Set up automated file renaming rules"""
+        logma.info("Setting up rename automation...")
         return self
 
-    def cmd_rename_files(self):
-        """"""
+    def cmd_rename_files(self, event=None):
+        """Rename files based on selected format"""
+        from os import rename as os_rename
+
+        try:
+            source_path = self.parent.fs_tree.current_level_path
+            rename_format = self.rename_format_select.currentText()
+
+            # Get files from current directory
+            files = [item.name for item in self.parent.fs_tree.get_current_level_files()]
+
+            for idx, file_name in enumerate(files):
+                old_path = join(source_path, file_name)
+                new_name = self.apply_rename_format(file_name, idx, rename_format)
+                new_path = join(source_path, new_name)
+
+                if old_path != new_path:
+                    os_rename(old_path, new_path)
+                    logma.info(f"Renamed: {file_name} -> {new_name}")
+
+            if hasattr(self.parent, 'populate_table_one'):
+                self.parent.populate_table_one()
+
+        except Exception as e:
+            logma.error(f"Error renaming files: {e}")
+
         return self
+
+    def apply_rename_format(self, filename, index, format_pattern):
+        """Apply rename format pattern to filename"""
+        from os.path import splitext
+        import datetime as dt
+
+        name, ext = splitext(filename)
+
+        if format_pattern == "Add Prefix":
+            return f"prefix_{filename}"
+        elif format_pattern == "Add Suffix":
+            return f"{name}_suffix{ext}"
+        elif format_pattern == "Sequential Numbers":
+            return f"{index+1:03d}{ext}"
+        elif format_pattern == "Date Prefix":
+            date_str = dt.datetime.now().strftime("%Y%m%d")
+            return f"{date_str}_{filename}"
+        elif format_pattern == "Lowercase":
+            return filename.lower()
+        elif format_pattern == "Uppercase":
+            return filename.upper()
+        elif format_pattern == "Remove Spaces":
+            return filename.replace(" ", "_")
+        else:
+            return filename
 
     def get_file_rename_formats(self):
-        """"""
-        formats = []
+        """Get available rename format patterns"""
+        formats = [
+            "Add Prefix",
+            "Add Suffix",
+            "Sequential Numbers",
+            "Date Prefix",
+            "Lowercase",
+            "Uppercase",
+            "Remove Spaces",
+        ]
         return formats
 
 
@@ -514,6 +689,41 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.compare_fs = not self.compare_fs
         return self
 
+    def cmd_add_storage(self, event=None, *args, **kwargs):
+        """Add cloud storage configuration"""
+        try:
+            # Get storage configuration from storage_edit_pane
+            if not hasattr(self, 'storage_edit_pane'):
+                logma.warning("Storage edit pane not initialized")
+                return self
+
+            # TODO: Implement actual storage configuration
+            # This would involve:
+            # 1. Get storage type (Google Drive, Dropbox, OneDrive, etc.)
+            # 2. Get authentication credentials
+            # 3. Test connection
+            # 4. Save configuration to self.clouds dictionary
+            # 5. Update storage_list widget
+
+            logma.info("Adding cloud storage configuration...")
+
+            # Example placeholder structure:
+            # storage_config = {
+            #     'type': 'google_drive',  # or 'dropbox', 'onedrive', etc.
+            #     'name': 'My Google Drive',
+            #     'credentials': {...},
+            #     'root_path': '/',
+            # }
+            # self.clouds[storage_config['type']] = storage_config
+            # self.storage_list.add_item(storage_config['name'])
+
+            logma.info("Cloud storage configuration requires API setup")
+
+        except Exception as e:
+            logma.error(f"Error adding storage: {e}")
+
+        return self
+
     def create_data_source(self):
         """"""
         self.app.model.add_datasource(self.name, self.create_data_table())
@@ -547,11 +757,54 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         return methods
 
     def get_children_google_drive(self):
-        """"""
+        """Get files from Google Drive"""
+        try:
+            # Check if Google Drive is configured
+            if 'google_drive' not in self.clouds:
+                logma.warning("Google Drive not configured")
+                return self
+
+            # TODO: Implement actual Google Drive API integration
+            # This would require google-api-python-client library
+            # from googleapiclient.discovery import build
+            # from google.oauth2.credentials import Credentials
+
+            logma.info("Fetching Google Drive files...")
+            # service = build('drive', 'v3', credentials=self.clouds['google_drive']['credentials'])
+            # results = service.files().list(pageSize=100, fields="files(id, name, mimeType)").execute()
+            # items = results.get('files', [])
+
+            # For now, return empty placeholder
+            logma.info("Google Drive integration requires API setup")
+
+        except Exception as e:
+            logma.error(f"Error accessing Google Drive: {e}")
+
         return self
 
     def get_children_dropbox(self):
-        """"""
+        """Get files from Dropbox"""
+        try:
+            # Check if Dropbox is configured
+            if 'dropbox' not in self.clouds:
+                logma.warning("Dropbox not configured")
+                return self
+
+            # TODO: Implement actual Dropbox API integration
+            # This would require dropbox library
+            # import dropbox
+
+            logma.info("Fetching Dropbox files...")
+            # dbx = dropbox.Dropbox(self.clouds['dropbox']['access_token'])
+            # result = dbx.files_list_folder('')
+            # entries = result.entries
+
+            # For now, return empty placeholder
+            logma.info("Dropbox integration requires API setup")
+
+        except Exception as e:
+            logma.error(f"Error accessing Dropbox: {e}")
+
         return self
 
     def get_current_path(self):
@@ -593,9 +846,9 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         cnt = 0
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         cfg = {"label": "File Name: ", "layout": "horizontal"}
-        self.file_pane = NchantdFileDetailsPane(self, cfg)
+        self.file_pane = NchantdFileDetailsPane(self, cfg).initWidget()
         items[cnt]["widget"] = self.file_pane
         cnt += 1
         return items
@@ -606,21 +859,21 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         cnt = 0
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         cfg = {"label": "Storage List", "layout": "vertical"}
-        self.storage_list = NchantdList(self, cfg)
+        self.storage_list = NchantdList(self, cfg).initWidget()
         items[cnt]["widget"] = self.storage_list
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         cfg = {"label": "Add Storage"}
-        self.storage_edit_pane = NchantdStorageEditPane(self, cfg)
+        self.storage_edit_pane = NchantdStorageEditPane(self, cfg).initWidget()
         items[cnt]["widget"] = self.storage_edit_pane
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
-        cfg = {"label": "Add Storage"}
-        self.add_storage_button = NchantdButton(self, cfg)
+            items[cnt] = default_action.copy()
+        cfg = {"text": "Add Storage", "handler": self.cmd_add_storage}
+        self.add_storage_button = NchantdButton(self, cfg).initWidget()
         items[cnt]["widget"] = self.add_storage_button
         cnt += 1
         return items
@@ -631,27 +884,27 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         cnt = 0
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         cfg = {"label": "Import Tool", "layout": "vertical"}
-        self.import_pane = NchantdImportPane(self, cfg)
+        self.import_pane = NchantdImportPane(self, cfg).initWidget()
         items[cnt]["widget"] = self.import_pane
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         cfg = {"label": "Rename Tool", "layout": "vertical"}
-        self.rename_pane = NchantdRenamePane(self, cfg)
+        self.rename_pane = NchantdRenamePane(self, cfg).initWidget()
         items[cnt]["widget"] = self.rename_pane
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         cfg = {"label": "Move Tool", "layout": "vertical"}
-        self.move_pane = NchantdMovePane(self, cfg)
+        self.move_pane = NchantdMovePane(self, cfg).initWidget()
         items[cnt]["widget"] = self.move_pane
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         cfg = {"label": "Compress Tool", "layout": "vertical"}
-        self.compress_pane = NchantdCompressPane(self, cfg)
+        self.compress_pane = NchantdCompressPane(self, cfg).initWidget()
         items[cnt]["widget"] = self.compress_pane
         cnt += 1
         return items
