@@ -109,15 +109,15 @@ class NchantdOfficeForm(NchantdForm):
 
 
 class NchantdOfficeContactForm(NchantdForm):
-    """"""
+    """Pre-configured contact information form"""
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        super().__init__(parent, cfg)
         self.parent = parent
         self.config = condor.Instruct(pxcfg).select("NchantdOfficeContactForm")
         if self.parent:
             self.config.override(parent.config)
-        super().__init__(self)
         self.config.override(cfg)
 
     def initModel(self):
@@ -144,10 +144,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeFormManager"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeFormManager").override(cfg))
         self.catalog = self
         self.form = None
         self.button_bar = None
@@ -324,17 +321,227 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
                 col = 0
                 row += 1
 
-    def cmd_select_form_compatibility(self):
-        """"""
+    # ========== Command Handlers ==========
 
-    def cmd_add_form_blank(self):
-        """"""
+    def cmd_select_form_compatibility(self, event=None):
+        """Set form compatibility mode"""
+        if hasattr(self, 'form_compatibility_select'):
+            compatibility = self.form_compatibility_select.currentText()
+            logma.info(f"Setting form compatibility to: {compatibility}")
+            if self.selected_form:
+                self.selected_form.compatibility = compatibility
+        return self
 
-    def cmd_image_file_select(self):
-        """"""
+    def cmd_add_form_blank(self, event=None):
+        """Add a new blank form"""
+        new_form = NchantdOfficeForm(self).initWidget()
+        self.add_form(new_form)
+        self.build_form()
+        logma.info("Added new blank form")
+        return self
 
-    def cmd_on_change_form_title(self):
-        """"""
+    def cmd_image_file_select(self, event=None):
+        """Select image file for form header"""
+        file_dialog = pyqt.QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(
+            self,
+            "Select Header Image",
+            "",
+            "Images (*.png *.jpg *.jpeg *.gif *.bmp);;All Files (*)"
+        )
+        if file_path and hasattr(self, 'form_header_image_entry'):
+            self.form_header_image_entry.set_text(file_path)
+            logma.info(f"Selected header image: {file_path}")
+        return self
+
+    def cmd_on_change_form_title(self, event=None):
+        """Handle form title change"""
+        if hasattr(self, 'form_name_entry') and self.selected_form:
+            title = self.form_name_entry.get_text()
+            self.selected_form.title = title
+            logma.info(f"Form title changed to: {title}")
+        return self
+
+    def cmd_connect_to_service(self, event=None):
+        """Connect to external form service"""
+        if hasattr(self, 'form_service_select') and hasattr(self, 'form_account_name'):
+            service = self.form_service_select.currentText()
+            account = self.form_account_name.get_text()
+            logma.info(f"Connecting to {service} with account: {account}")
+            # TODO: Implement service connection logic
+        return self
+
+    # ========== Form Management Methods ==========
+
+    def add_form_field(self, field_type, label, required=False):
+        """Add a new field to the current form
+
+        Args:
+            field_type: Type of field (text, number, email, dropdown, etc.)
+            label: Field label
+            required: Whether field is required
+        """
+        if not self.selected_form:
+            logma.warning("No form selected")
+            return self
+
+        field_config = {
+            "type": field_type,
+            "label": label,
+            "required": required,
+            "id": f"field_{len(self.selected_form.items)}"
+        }
+
+        # Create field widget based on type
+        field_widget = self.create_form_field_widget(field_config)
+        self.add_form_item(field_widget)
+        logma.info(f"Added {field_type} field: {label}")
+        return self
+
+    def create_form_field_widget(self, field_config):
+        """Create a form field widget from configuration"""
+        field_type = field_config.get("type", "text")
+        label = field_config.get("label", "")
+        required = field_config.get("required", False)
+
+        cfg = {
+            "label": label + (" *" if required else ""),
+            "layout": "horizontal",
+        }
+
+        if field_type in ["text", "email", "url", "phone"]:
+            widget = NchantdLabeledEntry(self, cfg).initWidget()
+        elif field_type == "number":
+            from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
+            widget = NchantdLabeledSpinBox(self, cfg).initWidget()
+        elif field_type == "dropdown":
+            cfg["combobox"] = {"options": field_config.get("options", [])}
+            widget = NchantdDropDown(self, cfg).initWidget()
+        elif field_type == "checkbox":
+            cfg["text"] = label
+            widget = NchantdCheckbox(self, cfg).initWidget()
+        else:
+            widget = NchantdLabeledEntry(self, cfg).initWidget()
+
+        return widget
+
+    def remove_form_field(self, field_id):
+        """Remove a field from the current form"""
+        if not self.selected_form:
+            return self
+
+        # Find and remove field
+        for item in self.selected_form.items:
+            if hasattr(item, 'id') and item.id == field_id:
+                self.selected_form.items.remove(item)
+                item.deleteLater()
+                logma.info(f"Removed field: {field_id}")
+                break
+
+        return self
+
+    def validate_form(self):
+        """Validate all required fields in the form
+
+        Returns:
+            dict with 'valid' bool and 'errors' list
+        """
+        errors = []
+
+        if not self.selected_form:
+            return {"valid": False, "errors": ["No form selected"]}
+
+        for item in self.selected_form.items:
+            if hasattr(item, 'required') and item.required:
+                # Check if field has value
+                value = None
+                if hasattr(item, 'get_text'):
+                    value = item.get_text()
+                elif hasattr(item, 'value'):
+                    value = item.value()
+                elif hasattr(item, 'isChecked'):
+                    value = item.isChecked()
+
+                if not value:
+                    label = getattr(item, 'label', 'Unknown field')
+                    errors.append(f"Required field '{label}' is empty")
+
+        valid = len(errors) == 0
+        logma.info(f"Form validation: {'passed' if valid else 'failed'}")
+
+        return {"valid": valid, "errors": errors}
+
+    def collect_form_data(self):
+        """Collect all form data into a dictionary
+
+        Returns:
+            dict of field_id -> value
+        """
+        form_data = {}
+
+        if not self.selected_form:
+            return form_data
+
+        for item in self.selected_form.items:
+            field_id = getattr(item, 'id', None)
+            if not field_id:
+                continue
+
+            # Get value based on widget type
+            value = None
+            if hasattr(item, 'get_text'):
+                value = item.get_text()
+            elif hasattr(item, 'value'):
+                value = item.value()
+            elif hasattr(item, 'currentText'):
+                value = item.currentText()
+            elif hasattr(item, 'isChecked'):
+                value = item.isChecked()
+
+            form_data[field_id] = value
+
+        return form_data
+
+    def submit_form(self):
+        """Submit form data"""
+        # Validate first
+        validation = self.validate_form()
+        if not validation['valid']:
+            logma.error(f"Form validation failed: {validation['errors']}")
+            # Show error dialog
+            pyqt.QMessageBox.warning(
+                self,
+                "Validation Error",
+                "\n".join(validation['errors'])
+            )
+            return False
+
+        # Collect data
+        form_data = self.collect_form_data()
+
+        # Submit based on compatibility
+        if hasattr(self, 'form_compatibility_select'):
+            compatibility = self.form_compatibility_select.currentText()
+            if compatibility == "Google Forms":
+                return self.submit_to_google_forms(form_data)
+            elif compatibility == "Nchantd Office":
+                return self.submit_to_local_storage(form_data)
+
+        logma.info("Form submitted successfully")
+        return True
+
+    def submit_to_google_forms(self, form_data):
+        """Submit form data to Google Forms"""
+        logma.info("Submitting to Google Forms...")
+        # TODO: Implement Google Forms API integration
+        return True
+
+    def submit_to_local_storage(self, form_data):
+        """Save form data locally"""
+        if self.document:
+            self.document.save_response(form_data)
+            logma.info("Form data saved locally")
+        return True
 
     def create_data_table(self):
         """"""
@@ -355,54 +562,57 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         cnt = 0
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         options = ["Google Forms", "Nchantd Office"]
         cfg = {
             "label": "Form Compatibility: ",
             "layout": "horizontal",
             "combobox": {"size": ["auto", "auto"], "options": options},
+            "handler": self.cmd_select_form_compatibility,
         }
-        self.form_compatibility_select = NchantdDropDown(self, cfg)
+        self.form_compatibility_select = NchantdDropDown(self, cfg).initWidget()
         items[cnt]["widget"] = self.form_compatibility_select
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
+        response_types = ["Text", "Number", "Date", "Multiple Choice", "Checkboxes", "Dropdown"]
         cfg = {
-            "label": "Select Default Response Type",
+            "label": "Default Response Type:",
             "layout": "horizontal",
-            "size": ["auto", "auto"],
+            "combobox": {"size": ["auto", "auto"], "options": response_types},
         }
-        self.form_default_response_check = NchantdDropDown(self, cfg)
+        self.form_default_response_check = NchantdDropDown(self, cfg).initWidget()
         items[cnt]["widget"] = self.form_default_response_check
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
+        triggers = ["On Submit", "On Change", "On Focus"]
         cfg = {
-            "label": "Select Default Response Trigger",
+            "label": "Default Response Trigger:",
             "layout": "horizontal",
-            "size": ["auto", "auto"],
+            "combobox": {"size": ["auto", "auto"], "options": triggers},
         }
-        self.form_default_response_trigger_check = NchantdDropDown(self, cfg)
+        self.form_default_response_trigger_check = NchantdDropDown(self, cfg).initWidget()
         items[cnt]["widget"] = self.form_default_response_trigger_check
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         cfg = {
             "text": "Set Default Answer Required",
             "layout": "horizontal",
             "size": ["auto", "auto"],
         }
-        self.form_default_answer_required_check = NchantdCheckbox(self, cfg)
+        self.form_default_answer_required_check = NchantdCheckbox(self, cfg).initWidget()
         items[cnt]["widget"] = self.form_default_answer_required_check
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         cfg = {
             "text": "Set Default Always Asked",
             "layout": "horizontal",
             "size": ["auto", "auto"],
         }
-        self.form_default_always_asked_check = NchantdCheckbox(self, cfg)
+        self.form_default_always_asked_check = NchantdCheckbox(self, cfg).initWidget()
         items[cnt]["widget"] = self.form_default_always_asked_check
         cnt += 1
         return items
@@ -413,14 +623,14 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         cnt = 0
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
-            items[cnt] = default_action
-        options = []
+            items[cnt] = default_action.copy()
+        validation_options = ["None", "Email", "URL", "Number", "Phone", "Custom Regex"]
         cfg = {
-            "label": "",
+            "label": "Validation Type:",
             "layout": "horizontal",
-            "options": options,
+            "combobox": {"size": ["auto", "auto"], "options": validation_options},
         }
-        self.validation_options_select = NchantdDropDown(self, cfg)
+        self.validation_options_select = NchantdDropDown(self, cfg).initWidget()
         items[cnt]["widget"] = self.validation_options_select
         cnt += 1
         return items
@@ -431,33 +641,35 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         default_action = {"action": "insert_generic_action", "type": "custom"}
         cnt = 0
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         options = ["Google Forms", "YouForm", "Notion Forms", "Nchantd Office"]
         cfg = {
             "label": "Form Service: ",
             "layout": "horizontal",
-            "options": options,
+            "combobox": {"size": ["auto", "auto"], "options": options},
         }
-        self.calendar_service_select = NchantdDropDown(self, cfg)
-        items[cnt]["widget"] = self.calendar_service_select
+        self.form_service_select = NchantdDropDown(self, cfg).initWidget()
+        items[cnt]["widget"] = self.form_service_select
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         cfg = {
-            "label": "Name: ",
+            "label": "Account Name: ",
             "layout": "horizontal",
         }
-        self.calendar_account_name = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.calendar_account_name
+        self.form_account_name = NchantdLabeledEntry(self, cfg).initWidget()
+        items[cnt]["widget"] = self.form_account_name
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = default_action.copy()
         cfg = {
             "text": "Connect to Service",
             "layout": "horizontal",
+            "handler": self.cmd_connect_to_service,
         }
-        self.service_connect_button = NchantdButton(self, cfg)
+        self.service_connect_button = NchantdButton(self, cfg).initWidget()
         items[cnt]["widget"] = self.service_connect_button
+        cnt += 1
         return items
 
     def init_drawer_quickstart(self):
@@ -479,7 +691,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
 
 
 class NchantdOfficeFeedback(NchantdWidget):
-    """"""
+    """Feedback form widget for collecting user feedback"""
 
     def __init__(self, parent=None, cfg=None):
         """ """
@@ -490,6 +702,21 @@ class NchantdOfficeFeedback(NchantdWidget):
             self.config.override(parent.config)
         self.config.override(cfg)
 
+        # Feedback data
+        self.feedback_type = "Bug Report"
+        self.feedback_priority = "Medium"
+        self.feedback_data = {}
+
+        # UI elements
+        self.type_select = None
+        self.priority_select = None
+        self.title_entry = None
+        self.description_entry = None
+        self.email_entry = None
+        self.screenshot_button = None
+        self.submit_button = None
+        self.cancel_button = None
+
     def initModel(self, cfg=None):
         """"""
         super().initModel(cfg)
@@ -497,13 +724,224 @@ class NchantdOfficeFeedback(NchantdWidget):
 
     def initView(self, cfg=None):
         """"""
+        if cfg is None:
+            cfg = {}
+        cfg['layout'] = 'grid'
         super().initView(cfg)
+
+        row = 0
+
+        # Title
+        title_cfg = {
+            "text": "Send Feedback",
+            "font": {"size": 16, "weight": "bold"},
+        }
+        title_label = NchantdLabel(self, title_cfg).initWidget()
+        self.layout.addWidget(title_label, row, 0, 1, 2)
+        row += 1
+
+        # Feedback type
+        type_cfg = {
+            "label": "Feedback Type:",
+            "layout": "horizontal",
+            "combobox": {
+                "options": ["Bug Report", "Feature Request", "Question", "General Feedback"]
+            },
+        }
+        self.type_select = NchantdDropDown(self, type_cfg).initWidget()
+        self.layout.addWidget(self.type_select, row, 0, 1, 2)
+        row += 1
+
+        # Priority
+        priority_cfg = {
+            "label": "Priority:",
+            "layout": "horizontal",
+            "combobox": {
+                "options": ["Low", "Medium", "High", "Critical"]
+            },
+        }
+        self.priority_select = NchantdDropDown(self, priority_cfg).initWidget()
+        self.layout.addWidget(self.priority_select, row, 0, 1, 2)
+        row += 1
+
+        # Title/Summary
+        title_cfg = {
+            "label": "Title:",
+            "layout": "horizontal",
+            "text": "",
+        }
+        self.title_entry = NchantdLabeledEntry(self, title_cfg).initWidget()
+        self.layout.addWidget(self.title_entry, row, 0, 1, 2)
+        row += 1
+
+        # Description
+        desc_label = NchantdLabel(self, {"text": "Description:"}).initWidget()
+        self.layout.addWidget(desc_label, row, 0, 1, 2)
+        row += 1
+
+        from nchantrs.widgets.media.editors.editors import NchantdEntryBox
+        desc_cfg = {"size": ["auto", 150]}
+        self.description_entry = NchantdEntryBox(self, desc_cfg).initWidget()
+        self.layout.addWidget(self.description_entry, row, 0, 1, 2)
+        row += 1
+
+        # Email (optional)
+        email_cfg = {
+            "label": "Email (optional):",
+            "layout": "horizontal",
+            "text": "",
+        }
+        self.email_entry = NchantdLabeledEntry(self, email_cfg).initWidget()
+        self.layout.addWidget(self.email_entry, row, 0, 1, 2)
+        row += 1
+
+        # Buttons
+        button_layout = pyqt.QHBoxLayout()
+
+        screenshot_cfg = {
+            "text": "Attach Screenshot",
+            "handler": self.cmd_attach_screenshot,
+        }
+        self.screenshot_button = NchantdButton(self, screenshot_cfg).initWidget()
+        button_layout.addWidget(self.screenshot_button)
+
+        button_layout.addStretch()
+
+        cancel_cfg = {
+            "text": "Cancel",
+            "handler": self.cmd_cancel,
+        }
+        self.cancel_button = NchantdButton(self, cancel_cfg).initWidget()
+        button_layout.addWidget(self.cancel_button)
+
+        submit_cfg = {
+            "text": "Submit Feedback",
+            "handler": self.cmd_submit_feedback,
+        }
+        self.submit_button = NchantdButton(self, submit_cfg).initWidget()
+        button_layout.addWidget(self.submit_button)
+
+        self.layout.addLayout(button_layout, row, 0, 1, 2)
+
         return self
 
     def initWidget(self):
         """"""
         self.initModel()
         self.initView()
+        return self
+
+    def cmd_attach_screenshot(self, event=None):
+        """Attach a screenshot to the feedback"""
+        file_dialog = pyqt.QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(
+            self,
+            "Select Screenshot",
+            "",
+            "Images (*.png *.jpg *.jpeg *.gif *.bmp);;All Files (*)"
+        )
+        if file_path:
+            self.feedback_data['screenshot'] = file_path
+            logma.info(f"Screenshot attached: {file_path}")
+        return self
+
+    def cmd_submit_feedback(self, event=None):
+        """Submit the feedback"""
+        # Collect feedback data
+        if hasattr(self, 'type_select'):
+            self.feedback_data['type'] = self.type_select.currentText()
+        if hasattr(self, 'priority_select'):
+            self.feedback_data['priority'] = self.priority_select.currentText()
+        if hasattr(self, 'title_entry'):
+            self.feedback_data['title'] = self.title_entry.get_text()
+        if hasattr(self, 'description_entry'):
+            self.feedback_data['description'] = self.description_entry.toPlainText()
+        if hasattr(self, 'email_entry'):
+            self.feedback_data['email'] = self.email_entry.get_text()
+
+        # Validate
+        if not self.feedback_data.get('title'):
+            pyqt.QMessageBox.warning(self, "Validation Error", "Please enter a title")
+            return self
+
+        if not self.feedback_data.get('description'):
+            pyqt.QMessageBox.warning(self, "Validation Error", "Please enter a description")
+            return self
+
+        # Submit
+        success = self.send_feedback(self.feedback_data)
+
+        if success:
+            pyqt.QMessageBox.information(
+                self,
+                "Feedback Sent",
+                "Thank you for your feedback!"
+            )
+            self.close()
+        else:
+            pyqt.QMessageBox.critical(
+                self,
+                "Error",
+                "Failed to send feedback. Please try again later."
+            )
+
+        return self
+
+    def cmd_cancel(self, event=None):
+        """Cancel and close the feedback form"""
+        self.close()
+        return self
+
+    def send_feedback(self, feedback_data):
+        """Send feedback to server or save locally
+
+        Args:
+            feedback_data: Dictionary containing feedback information
+
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            # Add timestamp
+            feedback_data['timestamp'] = dt.datetime.now().isoformat()
+
+            # Save locally
+            self.save_feedback_locally(feedback_data)
+
+            # TODO: Send to remote server/issue tracker
+            # self.send_to_server(feedback_data)
+
+            logma.info(f"Feedback submitted: {feedback_data['type']} - {feedback_data['title']}")
+            return True
+
+        except Exception as e:
+            logma.error(f"Error sending feedback: {e}")
+            return False
+
+    def save_feedback_locally(self, feedback_data):
+        """Save feedback to local file"""
+        import json
+        from os.path import exists, join
+
+        feedback_file = join(here, "feedback_log.json")
+
+        # Load existing feedback
+        all_feedback = []
+        if exists(feedback_file):
+            try:
+                with open(feedback_file, 'r') as f:
+                    all_feedback = json.load(f)
+            except:
+                pass
+
+        # Append new feedback
+        all_feedback.append(feedback_data)
+
+        # Save
+        with open(feedback_file, 'w') as f:
+            json.dump(all_feedback, f, indent=2)
+
+        logma.info(f"Feedback saved to {feedback_file}")
         return self
 
 
