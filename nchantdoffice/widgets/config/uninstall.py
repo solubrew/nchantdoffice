@@ -28,7 +28,7 @@ log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", ".yaml")
+pxcfg = join(here, "_data_", "uninstall.yaml")
 
 
 class NchantdOfficeUninstallSettings(NchantdUninstallSettings):
@@ -38,10 +38,7 @@ class NchantdOfficeUninstallSettings(NchantdUninstallSettings):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeSecuritySettings"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeUninstallSettings").override(cfg))
 
     def initModel(self, cfg=None):
         """"""

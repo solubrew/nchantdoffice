@@ -42,7 +42,7 @@ log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "graphics/_data_", "graphics.yaml")
+pxcfg = join(here, "graphics/_data_", "sketches.yaml")
 
 
 class NchantdLayersListPane(NchantdPane):
