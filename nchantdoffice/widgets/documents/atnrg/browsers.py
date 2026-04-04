@@ -59,7 +59,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """ """
         super().__init__("Nchantd Browser", parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeWebBrowser").override(cfg))       self.config.override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeWebBrowser").override(cfg))
         logma.json(self.config.dikt.get("document", {}))
         self.active_url = None
         self.library = None

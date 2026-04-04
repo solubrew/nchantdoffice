@@ -10,7 +10,7 @@ description = "Your project description"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 license = { file = "LICENSE" }
 authors = [{ name = "Maintainers", email = "solubrew@solutionsbrewer.com" }]
-requires-python = ">=3.6"
+requires-python = ">=3.8"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -136,7 +136,20 @@ dependencies = [
 'et-xmlfile',
 'PyPDF2',
 'python-docx',
-'lxml'
+'lxml',
+    'zmq',
+    'zeroconf',
+    'scikit-learn',
+    'black',
+    'networkx',
+    'jsonschema',
+    'ruamel-yaml',
+    'typer',
+    'RestrictedPython',
+    'bcrypt',
+    'psutil',
+    'scapy',
+
 ]
 
 [project.urls]
