@@ -59,10 +59,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """ """
         super().__init__("Nchantd Browser", parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeWebBrowser"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeWebBrowser").override(cfg))       self.config.override(cfg)
         logma.json(self.config.dikt.get("document", {}))
         self.active_url = None
         self.library = None
@@ -1018,10 +1015,7 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeWebViewer"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeWebViewer").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
