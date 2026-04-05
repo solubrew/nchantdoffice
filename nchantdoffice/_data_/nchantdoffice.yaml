@@ -15,6 +15,7 @@ NchantdOfficeCloak:
   app: "nchantdoffice"
   config:
     path: "<[user_home]>/.config/<[application_NCD]>/config.yaml"
+    requires_auth: True
     has_agents: True
     has_comms: True
     has_services: True
