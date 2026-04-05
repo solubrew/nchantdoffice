@@ -15,6 +15,7 @@
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
+from copy import deepcopy
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -42,8 +43,8 @@ class NchantdOfficeDBUpdate(NchantdDBUpdate):
         super().__init__(parent, cfg)
         self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeDBUpdate").override(cfg))
         logma.info(f"Config: {self.config.dikt}")
-        self.versions = self.config.select("versions")
-        logma.info(f"Versions: {self.versions.dikt}")
+        self.versions = deepcopy(self.config.dikt.get("versions"))
+        logma.info(f"Versions: {self.versions}")
 
     def update_pyffice_document(self):
         """need to track and upgrade pyffice document versioning that are stored in the database"""
