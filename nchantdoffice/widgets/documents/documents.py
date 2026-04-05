@@ -457,6 +457,15 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         """"""
         super().export_file()
 
+    def get_version(self):
+        """returns the current version of the document"""
+        return self.config.dikt.get("version", 1)
+
+    def get_supports_versions(self):
+        """returns true if the document supports versions"""
+        response = {"pyffice": self.config.dikt.get("supports_pyffice_versions", False)}
+        return response
+
     def import_file(self):
         """"""
         super().import_file()
