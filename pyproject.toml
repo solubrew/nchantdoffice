@@ -149,7 +149,56 @@ dependencies = [
     'bcrypt',
     'psutil',
     'scapy',
+    #nchantdsb
+    'colormath',
+    'cairosvg',
+    'furl',
+    'feedparser',
+    'pycel',
+    'nbformat',
+    'bs4',
+        "openpyxl",
+    "python-docx",
+    "python-pptx",
+    "PyPDF2",
+    "PyMuPDF",
+    "nbformat",
 
+     #Data & visualization
+    #"networkx==2.7",
+    "plotly",
+    "pydot",
+    "matplotlib",
+    "seaborn",
+    "graphviz",
+    "colormath",
+    "cairosvg",
+    #"pycel",
+    "solidpython",
+
+    # Database
+    "sqlalchemy",
+
+    # Web & utilities
+    #"twof",
+    "furl",
+    "bs4",
+    "ffmpeg-python",
+    "pydub",
+    "schedule",
+
+    # External services
+    "ultimate-notion",
+    "notion-client",
+
+    # Hardware/IoT (optional)
+    "pyserial",
+    "adafruit-ampy",
+    "esptool",
+
+    # Special formats
+    "floweaver",
+    "opencv-python>=4.13.0.92",
 ]
 
 [project.urls]
