@@ -56,23 +56,17 @@ NchantdOfficeDBUpdate:
           app_media:
             reload: True
             keep-records: True
+            add_columns: ["pyffice_version_txt"]
+            update:
+              - data:
+                  "pyffice_version_txt": "0.0.1.0.1.0"
+                WHERE:
+                  "IS":
+                    "pyffice_version_txt": "NULL"
           doc_media:
             reload: True
             keep-records: True
-        indexes:
-          reload: True
-        views:
-    0.0.1.0.1.4:
-      0.0.1.0.1.4:
-        tables:
-          app_media:
-            reload: True
-            keep-records: True
-          doc_media:
-            reload: True
-            keep-records: True
-            #new column is created on reload but there is only one table config...not sure how this is going to work
-            #need ability to add data to new column by update
+            add_columns: ["pyffice_version_txt"]
             update:
               - data:
                   "pyffice_version_txt": "0.0.1.0.1.0"
@@ -82,8 +76,9 @@ NchantdOfficeDBUpdate:
         indexes:
           reload: True
         views:
-    0.0.1.0.1.5:
-      0.0.1.0.1.6:
+          reload: True
+    0.0.1.0.1.4:
+      0.0.1.0.1.5:
         tables:
           app_instance:
             update:
@@ -92,5 +87,35 @@ NchantdOfficeDBUpdate:
                 WHERE:
                   "IS":
                     "last_node_nid_txt": "NULL"
+        indexes:
+        views:
+    0.0.1.0.1.5:
+      0.0.1.0.1.6:
+        tables:
+          app_document_type:
+            reload: True
+            keep-records: False
+          doc_tab:
+            reload: True
+            keep-records: True
+            column-map: #need to have a way to drop columns after migration
+              is_new:
+              widget_txt: "app_document_type_FK"
+            update:
+              -
+                data:
+                  widget_txt: "widgets.documents.atnrg.pages.NchantdOfficeWebPage"
+                WHERE:
+                  "widget_txt": "widgets.documents.atnrg.browsers.pages.NchantdOfficeWebPage"
+              -
+                data:
+                  widget_txt: "widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
+                WHERE:
+                  "widget_txt": "widgets.documents.atnrg.browsers.browsers.NchantdOfficeWebBrowser"
+              -
+                data:
+                  widget_txt: "widgets.documents.media.images.NchantdOfficeImage"
+                WHERE:
+                  "widget_txt": "widgets.documents.media.graphics.images.NchantdOfficeImage"
         indexes:
         views:
