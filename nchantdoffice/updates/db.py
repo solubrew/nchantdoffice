@@ -49,7 +49,13 @@ class NchantdOfficeDBUpdate(NchantdDBUpdate):
     def update_pyffice_document(self):
         """need to track and upgrade pyffice document versioning that are stored in the database"""
         logma.info(f"Updating pyffice document")
-        self.parent.pyffice_document.update(self.versions.dikt)
+        # self.parent.pyffice_document.update(self.versions.dikt)
+        updater = self.parent.codex.update()
+        for document_type in updater.get_document_types():
+            self.check_current_document_version(document_type)
+
+        # need a schema that can be checked against each doc_media_content and app_media_content entry latest version
+        # this will verify that the document fits the pyffice_version for that document type
 
 
 # ====================================================================================================================||

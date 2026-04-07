@@ -1466,11 +1466,6 @@ class NchantdOfficeStore(NchantdStore):
         }
         # agent.assign_task(task)
 
-    def backup_database(self, instance, db="db"):
-        """"""
-        super().backup_database(instance, db)
-        return self
-
     def convert_database(self, version_from, version_to):
         """"""
         super().convert_database(version_from, version_to)

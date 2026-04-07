@@ -19,7 +19,8 @@ NchantdOfficeCloakModel:
                       {"name": 'parameters_dict', "type": "text"}, {"name": "sequence_int", "type": "integer"},
                       {"name": "document_types_txt", "type": "text"}, {"name": 'local_available_bit', "type": "integer"},
                       {"name": 'feature_plan_int', "type": "integer"}, {"name": 'google_available_bit', "type": "integer"},
-                      {"name": 'registered_bit', "type": "integer"}, {"name": 'quick_launch_bit', "type": "integer"}]
+                      {"name": 'registered_bit', "type": "integer"}, {"name": 'quick_launch_bit', "type": "integer"},
+                      {"name": "pyffice_version_txt", "type": "text"},]
             records:
               - ['066fae58-be2f-723e-8000-6b3eace81a2d', 'superweb', 'custom', 'Nchantd Prompt', 'Create an interactive tab to communicate with an Ai Agent', 'widgets.documents.atnrg.prompts.NchantdOfficePrompt', "{'unique_options': [{'name': 'OpenAI', 'sequence': 1}, {'name': 'Gemini', 'sequence': 2}, {'name': 'Claude', 'sequence': 3}, {'name': 'Grok', 'sequence': 0}]}", 0, "", 0, 0, 0, 0, 1]
               - ['067c113b-cd9e-76e6-8000-315028b7fa90', 'browser', 'document', 'Nchantd Browser', 'A general web browser that can be used to render a remote or local html site', 'widgets.documents.atnrg.browsers.browsers.NchantdOfficeWebBrowser', "{}", 0, "base", 1, 0, 0, 0, 1]

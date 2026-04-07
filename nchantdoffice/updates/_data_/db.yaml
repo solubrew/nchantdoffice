@@ -1,121 +1,145 @@
 NchantdOfficeDBUpdate:
   versions:
     0.0.1.0.1.0:
-      0.0.1.0.1.1:
-        tables:
-          app_tab:
-            update:
-              -
-                data:
-                  widget_txt: "widgets.documents.journal.NchantdJournalEditor"
-                WHERE:
-                  "did_txt": "06875532-6b6d-787b-8000-41ace4c1038a"
-          app_menu:
-            reload: True
-            keep-records: False
-          app_instance:
-            reload: True
-            keep-records: True
-            column-map:
-              is_new:
-              instance_id: "instance_id_txt"
-              name: "name_txt"
-              application_NCD: "application_NCD_txt"
-        indexes:
-        views:
-      0.0.1.0.1.2:
-        tables:
-          app_user:
-            reload: True
-            keep-records: True
-            filter:
-              include:
-                app_user_PK: 1
-        indexes:
-        views:
+      active: True
+      versions:
+        0.0.1.0.1.1:
+          active: True
+          description: "Fix journal"
+          tables:
+            app_tab:
+              update:
+                -
+                  data:
+                    widget_txt: "widgets.documents.journal.NchantdJournalEditor"
+                  WHERE:
+                    "did_txt": "06875532-6b6d-787b-8000-41ace4c1038a"
+            app_menu:
+              reload: True
+              keep-records: False
+            app_instance:
+              reload: True
+              keep-records: True
+              column-map:
+                is_new:
+                instance_id: "instance_id_txt"
+                name: "name_txt"
+                application_NCD: "application_NCD_txt"
+          indexes:
+          views:
+        0.0.1.0.1.2:
+          active: False
+          description: "Fix user"
+          tables:
+            app_user:
+              reload: True
+              keep-records: True
+              filter:
+                include:
+                  app_user_PK: 1
+          indexes:
+          views:
     0.0.1.0.1.1:
-      0.0.1.0.1.2:
-        tables:
-          app_user:
-            reload: True
-            keep-records: True
-            filter:
-              include:
-                app_user_PK: 1
-        indexes:
-        views:
+      active: True
+      versions:
+        0.0.1.0.1.2:
+          tables:
+            app_user:
+              reload: True
+              keep-records: True
+              filter:
+                include:
+                  app_user_PK: 1
+          indexes:
+          views:
     0.0.1.0.1.2:
-      0.0.1.0.1.3:
-        tables:
-        indexes:
-          reload: True
-        views:
+      active: True
+      versions:
+        0.0.1.0.1.3:
+          active: True
+          description: "Index reload test"
+          tables:
+          indexes:
+            reload: True
+          views:
     0.0.1.0.1.3:
-      0.0.1.0.1.4:
-        tables:
-          app_media:
+      active: True
+      versions:
+        0.0.1.0.1.4:
+          active: True
+          description: "Add pyffice_version_txt"
+          tables:
+            app_document_type:
+              reload: True
+              keep-records: True
+              add_columns: ["pyffice_version_txt"]
+              update:
+                - data:
+                    "pyffice_version_txt": "0.0.1.0.1.0"
+                  WHERE:
+                    "IS":
+                      "pyffice_version_txt": "NULL"
+          indexes:
             reload: True
-            keep-records: True
-            add_columns: ["pyffice_version_txt"]
-            update:
-              - data:
-                  "pyffice_version_txt": "0.0.1.0.1.0"
-                WHERE:
-                  "IS":
-                    "pyffice_version_txt": "NULL"
-          doc_media:
+            all: True
+          views:
             reload: True
-            keep-records: True
-            add_columns: ["pyffice_version_txt"]
-            update:
-              - data:
-                  "pyffice_version_txt": "0.0.1.0.1.0"
-                WHERE:
-                  "IS":
-                    "pyffice_version_txt": "NULL"
-        indexes:
-          reload: True
-        views:
-          reload: True
+            all: True
     0.0.1.0.1.4:
-      0.0.1.0.1.5:
-        tables:
-          app_instance:
-            update:
-              - data:
-                  "last_node_nid_txt": None
-                WHERE:
-                  "IS":
-                    "last_node_nid_txt": "NULL"
-        indexes:
-        views:
+      active: True
+      versions:
+        0.0.1.0.1.5:
+          active: True
+          description: "Fix document types"
+          tables:
+            app_document_type:
+              reload: True
+              keep-records: False
+            app_tab:
+              reload: True
+              keep-records: False
+              add_columns: ["app_document_type_FK"]
+              update:
+                -
+                  data:
+                    widget_txt: "widgets.documents.atnrg.NchantdJournalEditor"
+                  WHERE:
+                    "widget_txt": "widgets.documents.atnrg.browsers.pages.NchantdOfficeWebPage"
+            doc_tab:
+              reload: True
+              keep-records: True
+              add_columns: ["app_document_type_FK"]
+              update:
+                -
+                  data:
+                    widget_txt: "widgets.documents.atnrg.pages.NchantdOfficeWebPage"
+                  WHERE:
+                    "widget_txt": "widgets.documents.atnrg.browsers.pages.NchantdOfficeWebPage"
+                -
+                  data:
+                    widget_txt: "widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
+                  WHERE:
+                    "widget_txt": "widgets.documents.atnrg.browsers.browsers.NchantdOfficeWebBrowser"
+                -
+                  data:
+                    widget_txt: "widgets.documents.media.images.NchantdOfficeImage"
+                  WHERE:
+                    "widget_txt": "widgets.documents.media.graphics.images.NchantdOfficeImage"
+          indexes:
+          views:
     0.0.1.0.1.5:
-      0.0.1.0.1.6:
-        tables:
-          app_document_type:
-            reload: True
-            keep-records: False
-          doc_tab:
-            reload: True
-            keep-records: True
-            column-map: #need to have a way to drop columns after migration
-              is_new:
-              widget_txt: "app_document_type_FK"
-            update:
-              -
-                data:
-                  widget_txt: "widgets.documents.atnrg.pages.NchantdOfficeWebPage"
-                WHERE:
-                  "widget_txt": "widgets.documents.atnrg.browsers.pages.NchantdOfficeWebPage"
-              -
-                data:
-                  widget_txt: "widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
-                WHERE:
-                  "widget_txt": "widgets.documents.atnrg.browsers.browsers.NchantdOfficeWebBrowser"
-              -
-                data:
-                  widget_txt: "widgets.documents.media.images.NchantdOfficeImage"
-                WHERE:
-                  "widget_txt": "widgets.documents.media.graphics.images.NchantdOfficeImage"
-        indexes:
-        views:
+      active: False
+      versions:
+        0.0.1.0.1.6:
+          active: False
+          description: "Fix last_node_nid_txt"
+          tables:
+            app_instance:
+              update:
+                - data:
+                    "last_node_nid_txt": None
+                  WHERE:
+                    "IS":
+                      "last_node_nid_txt": "NULL"
+          indexes:
+          views:
