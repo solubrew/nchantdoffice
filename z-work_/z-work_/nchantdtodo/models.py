@@ -24,12 +24,7 @@ import simplejson as j
 from pandas import DataFrame
 
 # Pyffice for document automation
-try:
-    from pyffice.text import PyfficeScript
-    PYFFICE_AVAILABLE = True
-except ImportError:
-    PYFFICE_AVAILABLE = False
-    PyfficeScript = None
+from pyffice.script import PyfficeScript
 
 # ===============================================================================||
 from condor import condor  # ||
