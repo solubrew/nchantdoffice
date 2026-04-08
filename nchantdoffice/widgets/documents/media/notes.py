@@ -23,9 +23,8 @@ from bs4 import BeautifulSoup
 from condor import condor
 from nchantrs.libraries import pyqt
 from ogma.logma import Logma
-from nchantrs.dialogs.dialogs import NchantdSigil, NchantdBroach
-from nchantdoffice.widgets.documents.documents import NchantdOfficeDocumentMixin, NchantdOfficeDocument
-from pyffice.text.text import PyfficeText
+from nchantrs.dialogs.dialogs import NchantdSigil
+from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.media.editors.editors import NchantdDocEditor
 
 # ====================================================================================================================||
