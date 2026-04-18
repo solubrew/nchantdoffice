@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:56
 """
+
 # 2025-11-06 09:45:56
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -28,8 +29,8 @@ from nchantdoffice.widgets.config.storage import NchantdOfficeStorageSettings  #
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:56
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:56
 PXCFG = join(HERE, "_data_", "storageTEST.yaml")  # 2025-11-06 09:45:56
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:56
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:45:56
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:56
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:45:56
 # 2025-11-06 09:45:56
 # ====================================================================================================================||
 

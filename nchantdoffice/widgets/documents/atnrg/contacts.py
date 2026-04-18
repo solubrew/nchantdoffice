@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.managers import NchantdManager
@@ -47,7 +47,7 @@ class NchantdOfficeContact(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeContact")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeContact")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self.parent)
@@ -79,7 +79,7 @@ class NchantdOfficeContact(NchantdWidget):
         """"""
         super().initModel(cfg)
         # Load contact data from document if available
-        if hasattr(self.document, 'data') and self.document.data:
+        if hasattr(self.document, "data") and self.document.data:
             self.load_from_dict(self.document.data)
         return self
 
@@ -96,47 +96,47 @@ class NchantdOfficeContact(NchantdWidget):
 
     def load_from_dict(self, data):
         """Load contact data from dictionary"""
-        self.contact_id = data.get('id')
-        self.first_name = data.get('first_name', '')
-        self.last_name = data.get('last_name', '')
-        self.company = data.get('company', '')
-        self.title = data.get('title', '')
-        self.email = data.get('email', '')
-        self.phone = data.get('phone', '')
-        self.mobile = data.get('mobile', '')
-        self.address = data.get('address', '')
-        self.city = data.get('city', '')
-        self.state = data.get('state', '')
-        self.zip_code = data.get('zip_code', '')
-        self.country = data.get('country', '')
-        self.website = data.get('website', '')
-        self.notes = data.get('notes', '')
-        self.tags = data.get('tags', [])
-        self.avatar_path = data.get('avatar_path')
+        self.contact_id = data.get("id")
+        self.first_name = data.get("first_name", "")
+        self.last_name = data.get("last_name", "")
+        self.company = data.get("company", "")
+        self.title = data.get("title", "")
+        self.email = data.get("email", "")
+        self.phone = data.get("phone", "")
+        self.mobile = data.get("mobile", "")
+        self.address = data.get("address", "")
+        self.city = data.get("city", "")
+        self.state = data.get("state", "")
+        self.zip_code = data.get("zip_code", "")
+        self.country = data.get("country", "")
+        self.website = data.get("website", "")
+        self.notes = data.get("notes", "")
+        self.tags = data.get("tags", [])
+        self.avatar_path = data.get("avatar_path")
         return self
 
     def to_dict(self):
         """Convert contact to dictionary"""
         return {
-            'id': self.contact_id,
-            'first_name': self.first_name,
-            'last_name': self.last_name,
-            'company': self.company,
-            'title': self.title,
-            'email': self.email,
-            'phone': self.phone,
-            'mobile': self.mobile,
-            'address': self.address,
-            'city': self.city,
-            'state': self.state,
-            'zip_code': self.zip_code,
-            'country': self.country,
-            'website': self.website,
-            'notes': self.notes,
-            'tags': self.tags,
-            'avatar_path': self.avatar_path,
-            'created_date': self.created_date.isoformat() if self.created_date else None,
-            'modified_date': self.modified_date.isoformat() if self.modified_date else None,
+            "id": self.contact_id,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "company": self.company,
+            "title": self.title,
+            "email": self.email,
+            "phone": self.phone,
+            "mobile": self.mobile,
+            "address": self.address,
+            "city": self.city,
+            "state": self.state,
+            "zip_code": self.zip_code,
+            "country": self.country,
+            "website": self.website,
+            "notes": self.notes,
+            "tags": self.tags,
+            "avatar_path": self.avatar_path,
+            "created_date": self.created_date.isoformat() if self.created_date else None,
+            "modified_date": self.modified_date.isoformat() if self.modified_date else None,
         }
 
     def get_full_name(self):
@@ -164,7 +164,7 @@ class NchantdOfficeRolodex(NchantdManager):
         icfg = {}
         super().__init__(parent, icfg)
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeRolodex").override(cfg)
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeRolodex").override(cfg)
 
         self.contacts = []  # List of NchantdOfficeContact objects
         self.contact_panes = {}  # Dict of contact_id -> ContactPane widget
@@ -192,7 +192,7 @@ class NchantdOfficeRolodex(NchantdManager):
 
         search_cfg = {"label": "Search:", "layout": "horizontal", "text": ""}
         self.search_entry = NchantdLabeledEntry(self, search_cfg).initWidget()
-        if hasattr(self.search_entry, 'entry'):
+        if hasattr(self.search_entry, "entry"):
             self.search_entry.entry.textChanged.connect(self.cmd_search_contacts)
         toolbar_layout.addWidget(self.search_entry)
 
@@ -200,7 +200,7 @@ class NchantdOfficeRolodex(NchantdManager):
             "label": "Filter:",
             "layout": "horizontal",
             "combobox": {"options": ["All", "Recent", "Favorites", "Company"]},
-            "handler": self.cmd_filter_contacts
+            "handler": self.cmd_filter_contacts,
         }
         self.filter_dropdown = NchantdDropDown(self, filter_cfg).initWidget()
         toolbar_layout.addWidget(self.filter_dropdown)
@@ -245,7 +245,7 @@ class NchantdOfficeRolodex(NchantdManager):
     def load_contacts(self):
         """Load contacts from document/database"""
         try:
-            if self.document and hasattr(self.document, 'contacts') and self.document.contacts:
+            if self.document and hasattr(self.document, "contacts") and self.document.contacts:
                 for contact_data in self.document.contacts:
                     contact = NchantdOfficeContact(self)
                     if isinstance(contact_data, dict):
@@ -348,7 +348,7 @@ class NchantdOfficeRolodex(NchantdManager):
 
     def cmd_search_contacts(self, search_text=None):
         """Search/filter contacts by text"""
-        if search_text is None and hasattr(self.search_entry, 'get_text'):
+        if search_text is None and hasattr(self.search_entry, "get_text"):
             search_text = self.search_entry.get_text()
 
         if not search_text:
@@ -361,11 +361,13 @@ class NchantdOfficeRolodex(NchantdManager):
 
         for contact in self.contacts:
             # Search in name, email, company, phone
-            if (search_text in contact.get_full_name().lower() or
-                search_text in contact.email.lower() or
-                search_text in contact.company.lower() or
-                search_text in contact.phone or
-                search_text in contact.mobile):
+            if (
+                search_text in contact.get_full_name().lower()
+                or search_text in contact.email.lower()
+                or search_text in contact.company.lower()
+                or search_text in contact.phone
+                or search_text in contact.mobile
+            ):
                 filtered.append(contact)
 
         self.display_contacts(filtered)
@@ -374,7 +376,7 @@ class NchantdOfficeRolodex(NchantdManager):
 
     def cmd_filter_contacts(self, event=None):
         """Filter contacts by category"""
-        if not hasattr(self.filter_dropdown, 'currentText'):
+        if not hasattr(self.filter_dropdown, "currentText"):
             return self
 
         filter_type = self.filter_dropdown.currentText()
@@ -387,7 +389,7 @@ class NchantdOfficeRolodex(NchantdManager):
             self.display_contacts(sorted_contacts[:10])
         elif filter_type == "Favorites":
             # Filter favorites (would need favorite flag)
-            favorites = [c for c in self.contacts if hasattr(c, 'is_favorite') and c.is_favorite]
+            favorites = [c for c in self.contacts if hasattr(c, "is_favorite") and c.is_favorite]
             self.display_contacts(favorites)
         elif filter_type == "Company":
             # Group by company
@@ -402,10 +404,7 @@ class NchantdOfficeRolodex(NchantdManager):
 
         file_dialog = pyqt.QFileDialog()
         file_path, _ = file_dialog.getOpenFileName(
-            self,
-            "Import Contacts",
-            "",
-            "CSV Files (*.csv);;JSON Files (*.json);;vCard Files (*.vcf);;All Files (*)"
+            self, "Import Contacts", "", "CSV Files (*.csv);;JSON Files (*.json);;vCard Files (*.vcf);;All Files (*)"
         )
 
         if file_path and exists(file_path):
@@ -417,10 +416,7 @@ class NchantdOfficeRolodex(NchantdManager):
         """Export contacts to file"""
         file_dialog = pyqt.QFileDialog()
         file_path, _ = file_dialog.getSaveFileName(
-            self,
-            "Export Contacts",
-            "contacts.csv",
-            "CSV Files (*.csv);;JSON Files (*.json);;vCard Files (*.vcf)"
+            self, "Export Contacts", "contacts.csv", "CSV Files (*.csv);;JSON Files (*.json);;vCard Files (*.vcf)"
         )
 
         if file_path:
@@ -432,14 +428,14 @@ class NchantdOfficeRolodex(NchantdManager):
 
     def import_from_file(self, file_path):
         """Import contacts from file based on extension"""
-        ext = file_path.split('.')[-1].lower()
+        ext = file_path.split(".")[-1].lower()
 
         try:
-            if ext == 'csv':
+            if ext == "csv":
                 self.import_from_csv(file_path)
-            elif ext == 'json':
+            elif ext == "json":
                 self.import_from_json(file_path)
-            elif ext == 'vcf':
+            elif ext == "vcf":
                 self.import_from_vcard(file_path)
             else:
                 logma.warning(f"Unsupported import format: {ext}")
@@ -454,7 +450,7 @@ class NchantdOfficeRolodex(NchantdManager):
         """Import contacts from CSV file"""
         import csv
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 contact = NchantdOfficeContact(self)
@@ -467,7 +463,7 @@ class NchantdOfficeRolodex(NchantdManager):
         """Import contacts from JSON file"""
         import json
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
             if isinstance(data, list):
                 for contact_data in data:
@@ -485,14 +481,14 @@ class NchantdOfficeRolodex(NchantdManager):
 
     def export_to_file(self, file_path):
         """Export contacts to file based on extension"""
-        ext = file_path.split('.')[-1].lower()
+        ext = file_path.split(".")[-1].lower()
 
         try:
-            if ext == 'csv':
+            if ext == "csv":
                 self.export_to_csv(file_path)
-            elif ext == 'json':
+            elif ext == "json":
                 self.export_to_json(file_path)
-            elif ext == 'vcf':
+            elif ext == "vcf":
                 self.export_to_vcard(file_path)
             else:
                 logma.warning(f"Unsupported export format: {ext}")
@@ -512,7 +508,7 @@ class NchantdOfficeRolodex(NchantdManager):
 
         fieldnames = list(self.contacts[0].to_dict().keys())
 
-        with open(file_path, 'w', newline='', encoding='utf-8') as f:
+        with open(file_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             for contact in self.contacts:
@@ -526,7 +522,7 @@ class NchantdOfficeRolodex(NchantdManager):
 
         contacts_data = [contact.to_dict() for contact in self.contacts]
 
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             json.dump(contacts_data, f, indent=2, ensure_ascii=False)
 
         return self
@@ -534,7 +530,7 @@ class NchantdOfficeRolodex(NchantdManager):
     def export_to_vcard(self, file_path):
         """Export contacts to vCard file"""
         # Basic vCard export
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             for contact in self.contacts:
                 f.write("BEGIN:VCARD\n")
                 f.write("VERSION:3.0\n")
@@ -561,7 +557,7 @@ class NchantdOfficeContactPane(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeContactPane")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeContactPane")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self.parent)
@@ -595,11 +591,11 @@ class NchantdOfficeContactPane(NchantdWidget):
         """"""
         super().initModel(cfg)
         # Create or load contact
-        if cfg and 'contact' in cfg:
-            self.contact = cfg['contact']
-        elif cfg and 'contact_data' in cfg:
+        if cfg and "contact" in cfg:
+            self.contact = cfg["contact"]
+        elif cfg and "contact_data" in cfg:
             self.contact = NchantdOfficeContact(self)
-            self.contact.load_from_dict(cfg['contact_data'])
+            self.contact.load_from_dict(cfg["contact_data"])
         else:
             self.contact = NchantdOfficeContact(self)
         return self
@@ -608,7 +604,7 @@ class NchantdOfficeContactPane(NchantdWidget):
         """"""
         if cfg is None:
             cfg = {}
-        cfg['layout'] = 'grid'
+        cfg["layout"] = "grid"
         super().initView(cfg)
 
         row = 0
@@ -724,33 +720,33 @@ class NchantdOfficeContactPane(NchantdWidget):
         """Enable or disable editing of contact fields"""
         self.is_editing = editable
 
-        if hasattr(self.first_name_entry, 'entry'):
+        if hasattr(self.first_name_entry, "entry"):
             self.first_name_entry.entry.setReadOnly(not editable)
-        if hasattr(self.last_name_entry, 'entry'):
+        if hasattr(self.last_name_entry, "entry"):
             self.last_name_entry.entry.setReadOnly(not editable)
-        if hasattr(self.company_entry, 'entry'):
+        if hasattr(self.company_entry, "entry"):
             self.company_entry.entry.setReadOnly(not editable)
-        if hasattr(self.title_entry, 'entry'):
+        if hasattr(self.title_entry, "entry"):
             self.title_entry.entry.setReadOnly(not editable)
-        if hasattr(self.email_entry, 'entry'):
+        if hasattr(self.email_entry, "entry"):
             self.email_entry.entry.setReadOnly(not editable)
-        if hasattr(self.phone_entry, 'entry'):
+        if hasattr(self.phone_entry, "entry"):
             self.phone_entry.entry.setReadOnly(not editable)
-        if hasattr(self.mobile_entry, 'entry'):
+        if hasattr(self.mobile_entry, "entry"):
             self.mobile_entry.entry.setReadOnly(not editable)
-        if hasattr(self.address_entry, 'entry'):
+        if hasattr(self.address_entry, "entry"):
             self.address_entry.entry.setReadOnly(not editable)
-        if hasattr(self.city_entry, 'entry'):
+        if hasattr(self.city_entry, "entry"):
             self.city_entry.entry.setReadOnly(not editable)
-        if hasattr(self.state_entry, 'entry'):
+        if hasattr(self.state_entry, "entry"):
             self.state_entry.entry.setReadOnly(not editable)
-        if hasattr(self.zip_entry, 'entry'):
+        if hasattr(self.zip_entry, "entry"):
             self.zip_entry.entry.setReadOnly(not editable)
-        if hasattr(self.country_entry, 'entry'):
+        if hasattr(self.country_entry, "entry"):
             self.country_entry.entry.setReadOnly(not editable)
-        if hasattr(self.website_entry, 'entry'):
+        if hasattr(self.website_entry, "entry"):
             self.website_entry.entry.setReadOnly(not editable)
-        if hasattr(self.notes_entry, 'entry'):
+        if hasattr(self.notes_entry, "entry"):
             self.notes_entry.setReadOnly(not editable)
 
         self.edit_button.setEnabled(not editable)
@@ -766,39 +762,39 @@ class NchantdOfficeContactPane(NchantdWidget):
     def cmd_save_contact(self, event=None):
         """Save contact changes"""
         # Update contact object from UI fields
-        if hasattr(self.first_name_entry, 'get_text'):
+        if hasattr(self.first_name_entry, "get_text"):
             self.contact.first_name = self.first_name_entry.get_text()
-        if hasattr(self.last_name_entry, 'get_text'):
+        if hasattr(self.last_name_entry, "get_text"):
             self.contact.last_name = self.last_name_entry.get_text()
-        if hasattr(self.company_entry, 'get_text'):
+        if hasattr(self.company_entry, "get_text"):
             self.contact.company = self.company_entry.get_text()
-        if hasattr(self.title_entry, 'get_text'):
+        if hasattr(self.title_entry, "get_text"):
             self.contact.title = self.title_entry.get_text()
-        if hasattr(self.email_entry, 'get_text'):
+        if hasattr(self.email_entry, "get_text"):
             self.contact.email = self.email_entry.get_text()
-        if hasattr(self.phone_entry, 'get_text'):
+        if hasattr(self.phone_entry, "get_text"):
             self.contact.phone = self.phone_entry.get_text()
-        if hasattr(self.mobile_entry, 'get_text'):
+        if hasattr(self.mobile_entry, "get_text"):
             self.contact.mobile = self.mobile_entry.get_text()
-        if hasattr(self.address_entry, 'get_text'):
+        if hasattr(self.address_entry, "get_text"):
             self.contact.address = self.address_entry.get_text()
-        if hasattr(self.city_entry, 'get_text'):
+        if hasattr(self.city_entry, "get_text"):
             self.contact.city = self.city_entry.get_text()
-        if hasattr(self.state_entry, 'get_text'):
+        if hasattr(self.state_entry, "get_text"):
             self.contact.state = self.state_entry.get_text()
-        if hasattr(self.zip_entry, 'get_text'):
+        if hasattr(self.zip_entry, "get_text"):
             self.contact.zip_code = self.zip_entry.get_text()
-        if hasattr(self.country_entry, 'get_text'):
+        if hasattr(self.country_entry, "get_text"):
             self.contact.country = self.country_entry.get_text()
-        if hasattr(self.website_entry, 'get_text'):
+        if hasattr(self.website_entry, "get_text"):
             self.contact.website = self.website_entry.get_text()
-        if hasattr(self.notes_entry, 'toPlainText'):
+        if hasattr(self.notes_entry, "toPlainText"):
             self.contact.notes = self.notes_entry.toPlainText()
 
         self.contact.update_modified_date()
 
         # Notify parent rolodex
-        if self.parent and hasattr(self.parent, 'save_contact'):
+        if self.parent and hasattr(self.parent, "save_contact"):
             self.parent.save_contact(self.contact)
 
         self.set_fields_editable(False)
@@ -810,14 +806,14 @@ class NchantdOfficeContactPane(NchantdWidget):
         # Confirm deletion
         reply = pyqt.QMessageBox.question(
             self,
-            'Delete Contact',
-            f'Are you sure you want to delete {self.contact.get_full_name()}?',
-            pyqt.QMessageBox.StandardButton.Yes | pyqt.QMessageBox.StandardButton.No
+            "Delete Contact",
+            f"Are you sure you want to delete {self.contact.get_full_name()}?",
+            pyqt.QMessageBox.StandardButton.Yes | pyqt.QMessageBox.StandardButton.No,
         )
 
         if reply == pyqt.QMessageBox.StandardButton.Yes:
             # Notify parent rolodex
-            if self.parent and hasattr(self.parent, 'delete_contact'):
+            if self.parent and hasattr(self.parent, "delete_contact"):
                 self.parent.delete_contact(self.contact)
             logma.info(f"Deleted contact: {self.contact.get_full_name()}")
 

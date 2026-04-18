@@ -22,8 +22,8 @@ import datetime as dt
 from pandas import DataFrame
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.calendars.calendars import NchantdCalendar, NchantdDateTimeSelect
 from nchantrs.widgets.controls.buttons import NchantdButton
@@ -55,7 +55,7 @@ class NchantdEventPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdEventPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -100,7 +100,7 @@ class NchantdAlarmsListPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -137,7 +137,7 @@ class NchantdAlarmsEditPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdEventRecursionEditPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventRecursionEditPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -199,7 +199,7 @@ class NchantdEventGroup(NchantdWidget):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdEventGroup"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventGroup"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -247,7 +247,7 @@ class NchantdEventsListPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdEventsListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventsListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -302,7 +302,7 @@ class NchantdRecurrencesListPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -339,7 +339,7 @@ class NchantdTasksListPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdTasksListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdTasksListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -375,7 +375,7 @@ class NchantdEventRecursionEditPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdEventRecursionEditPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventRecursionEditPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -451,7 +451,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         """ """
         super().__init__("Nchantd Calendar", parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeCalendar"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCalendar"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

@@ -21,8 +21,8 @@ import json as j
 from pandas import DataFrame
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.items.catalogs import NchantdCatalogItem
 from nchantrs.utilities.utils import lookup
@@ -48,7 +48,7 @@ class NchantdOfficeDocumentCatalogItem(NchantdCatalogItem):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeDocumentCatalogItem"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentCatalogItem"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -125,7 +125,7 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeSourceCatalogItem"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSourceCatalogItem"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -163,7 +163,7 @@ class NchantdOfficeTreeNode(NchantdTreeNode):
         """ """
         super().__init__(parent, name, nid, node, children)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeTreeNode"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTreeNode"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

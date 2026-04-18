@@ -20,12 +20,12 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.groups import NchantdVScrollGroupBox, NchantdHScrollGroupBox
 from nchantrs.widgets.media.images import NchantdImage
 from numpy import PyUFunc_f_f
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from pyffice.presentation.presentation import NchantdPresentation
@@ -51,7 +51,7 @@ class NchantdOfficeFilmStrip(NchantdOfficeDocument):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdFilmStrip")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdFilmStrip")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -121,7 +121,7 @@ class NchantdOfficePresentation(NchantdOfficeDocument):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdSlideShow")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdSlideShow")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self.parent, self.config)

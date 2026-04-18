@@ -25,8 +25,8 @@
 HERE = join(dirname(__file__))  # 2025-11-06 09:46:29
 LOGMA = Logma(__name__)  # 2025-11-06 09:46:29
 PXCFG = join(HERE, "_data_", "calendarsTEST.yaml")  # 2025-11-06 09:46:29
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:46:29
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:46:29
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:46:29
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:46:29
 # 2025-11-06 09:46:29
 # ====================================================================================================================||
 

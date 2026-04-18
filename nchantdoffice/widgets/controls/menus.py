@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchants.widgets.controls.menus import NchantdContextMenu
 
 # ====================================================================================================================||
@@ -39,7 +39,7 @@ class NchantdOfficeContextMenu(NchantdContextMenu):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdContextMenu"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdContextMenu"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

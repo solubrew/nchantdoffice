@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -80,7 +80,7 @@ def lookup_widget(doc_type):
 
 def document_lookup(app, action, cfg=None, deep=False, refresh=False):
     """Lookup document types."""
-    pxcfg = condor.Instruct(join(here, "../actions", "_data_", "actions.yaml")).override(cfg).dikt
+    pxcfg = kahndor.Instruct(join(here, "../actions", "_data_", "actions.yaml")).override(cfg).dikt
     table = "app_document_type"
     cfg = next(app.model.store.docs["dbc"].read(table))
     # logma.info(f"Lookups {cfg}")

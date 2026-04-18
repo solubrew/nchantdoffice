@@ -19,9 +19,9 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.widgets.widgets import NchantdWidget
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -38,7 +38,7 @@ class NchantdQuickTagsWidget(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("NchantdQuickTagsWidget")
+        self.config = kahndor.instruct(pxcfg).select("NchantdQuickTagsWidget")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -65,7 +65,7 @@ class NchantdTagsSideBar(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("NchantdTagsSideBar")
+        self.config = kahndor.instruct(pxcfg).select("NchantdTagsSideBar")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

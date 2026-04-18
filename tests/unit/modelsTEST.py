@@ -29,8 +29,8 @@ from nchantdoffice.models import NchantdOfficeSettingsModel  # 2025-11-06 09:43:
 from nchantdoffice.models import NchantdOfficeImportModel  # 2025-11-06 09:43:56
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 
 # =========================================Local Library Modules======================================================||
 # 2025-11-06 09:45:19
@@ -40,8 +40,8 @@ test_000 = False
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:19
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:19
 PXCFG = join(HERE, "_data_", "modelsTEST.yaml")  # 2025-11-06 09:45:19
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:19
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:43:57
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:19
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:43:57
 # 2025-11-06 09:43:56
 
 

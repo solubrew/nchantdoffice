@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:04
 """
+
 # 2025-11-06 09:45:04
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -23,17 +24,16 @@ import os  # 2025-11-06 09:45:04
 
 # ======================================3rd Party Library Modules=====================================================||
 from os.path import abspath, dirname, join
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantdoffice.nchantdoffice import NchantdOfficeCloak
 
 from nchantdoffice.nchantdoffice import NchantdOfficeMainWindow  # 2025-11-06 09:43:45
-
 
 # =========================================Local Library Modules======================================================||
 import pytest
 
 # -*- coding: utf-8 -*
-from condor import condor  # 2025-11-06 09:43:45
+from kahndor import kahndor  # 2025-11-06 09:43:45
 
 # 2025-11-06 09:45:04
 
@@ -47,8 +47,8 @@ pxcfg = join(here, "_data_", ".yaml")
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:04
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:04
 PXCFG = join(HERE, "_data_", "nchantdofficeTEST.yaml")  # 2025-11-06 09:45:04
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:04
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:43:45
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:04
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:43:45
 # 2025-11-06 09:43:45
 
 
@@ -69,7 +69,7 @@ class Test_NchantdOfficeCloak(unittest.TestCase):  # 2025-11-06 09:43:45
         args = {}
         cls.test_NchantdOfficeCloak = NchantdOfficeCloak("Test", cfg, args)
         cfg = {}
-        cls.config = condor.instruct(pxcfg).override(cfg)
+        cls.config = kahndor.instruct(pxcfg).override(cfg)
         return cls()
 
     @classmethod

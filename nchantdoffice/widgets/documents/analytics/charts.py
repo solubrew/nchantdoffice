@@ -21,9 +21,9 @@ import datetime as dt
 # from scipy import sparse as sp
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from pyffice.charts.charts import PyfficeChart
 from nchantdoffice.widgets.panes.charts import NchantdChartConfigPane
 from nchantrs.widgets.media.charts.charts import NchantdChart
@@ -53,7 +53,7 @@ class NchantdSourcesListPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -91,7 +91,7 @@ class NchantdWhereUsedListPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -128,7 +128,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """ """
         super().__init__("Nchantd Chart", parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeChart"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeChart"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -425,7 +425,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     def cmd_set_compatibility(self, event, *args, **kwargs):
         """Set chart compatibility mode"""
-        if hasattr(self, 'compatibility_select'):
+        if hasattr(self, "compatibility_select"):
             compatibility = self.compatibility_select.currentText()
             logma.info(f"Setting chart compatibility to: {compatibility}")
             if self.document:
@@ -434,7 +434,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     def cmd_set_theme(self, event, *args, **kwargs):
         """Set chart theme"""
-        if hasattr(self, 'default_theme_select'):
+        if hasattr(self, "default_theme_select"):
             theme = self.default_theme_select.currentText()
             logma.info(f"Setting chart theme to: {theme}")
             if self.chart:
@@ -443,7 +443,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     def cmd_set_palette(self, event, *args, **kwargs):
         """Set chart color palette"""
-        if hasattr(self, 'default_palette_select'):
+        if hasattr(self, "default_palette_select"):
             palette = self.default_palette_select.currentText()
             logma.info(f"Setting chart palette to: {palette}")
             if self.chart:
@@ -452,7 +452,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     def cmd_set_chart_type(self, event, *args, **kwargs):
         """Set chart type"""
-        if hasattr(self, 'default_type_select'):
+        if hasattr(self, "default_type_select"):
             chart_type = self.default_type_select.currentText()
             logma.info(f"Setting chart type to: {chart_type}")
             self.chart_type = chart_type
@@ -461,7 +461,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     def cmd_select_data_source(self, event, *args, **kwargs):
         """Select data source for chart"""
-        if hasattr(self, 'chart_data_sources_select'):
+        if hasattr(self, "chart_data_sources_select"):
             data_source = self.chart_data_sources_select.currentText()
             logma.info(f"Selecting data source: {data_source}")
             self.load_data_from_source(data_source)
@@ -472,7 +472,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
     def load_data_from_source(self, source_name):
         """Load data from a named source"""
         try:
-            if self.app and hasattr(self.app, 'model'):
+            if self.app and hasattr(self.app, "model"):
                 # Get data from the model/store
                 data = self.app.model.codex.get_data_source(source_name)
                 if data is not None:
@@ -516,17 +516,11 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         headers = table_data[0]
         data_rows = table_data[1:]
 
-        chart_data = {
-            "labels": [row[0] for row in data_rows if row],
-            "datasets": []
-        }
+        chart_data = {"labels": [row[0] for row in data_rows if row], "datasets": []}
 
         # Create datasets for each column (excluding the first label column)
         for col_idx in range(1, len(headers)):
-            dataset = {
-                "label": headers[col_idx],
-                "data": []
-            }
+            dataset = {"label": headers[col_idx], "data": []}
             for row in data_rows:
                 if row and len(row) > col_idx:
                     try:
@@ -545,7 +539,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     # ========== Export and Save Methods ==========
 
-    def save_chart_image(self, file_path, format='png', dpi=300):
+    def save_chart_image(self, file_path, format="png", dpi=300):
         """Save chart as image file"""
         try:
             if self.chart:
@@ -557,7 +551,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"Error saving chart image: {e}")
         return self
 
-    def export_chart_data(self, file_path, format='csv'):
+    def export_chart_data(self, file_path, format="csv"):
         """Export chart data to file"""
         try:
             if self.document:
@@ -598,11 +592,11 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """Apply document configuration to chart"""
         if self.document and self.chart:
             try:
-                if hasattr(self.document, 'chart_type'):
+                if hasattr(self.document, "chart_type"):
                     self.set_type(self.document.chart_type)
-                if hasattr(self.document, 'data'):
+                if hasattr(self.document, "data"):
                     self.set_chart_data(self.document.data)
-                if hasattr(self.document, 'theme'):
+                if hasattr(self.document, "theme"):
                     self.chart.set_theme(self.document.theme)
                 logma.info("Chart configuration applied")
             except Exception as e:

@@ -19,8 +19,8 @@ from os.path import dirname, join
 from nchantrs.libraries import pyqt
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from pyffice.document import PyfficeContact
 
@@ -52,7 +52,7 @@ class NchantdOfficeContact(NchantdOfficeDocument, PyfficeContact):
         """ """
         super().__init__(name, parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeContact"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeContact"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

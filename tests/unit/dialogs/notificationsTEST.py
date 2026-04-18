@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:29
 """
+
 # 2025-11-06 09:45:29
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -31,8 +32,8 @@ from nchantdoffice.dialogs.notifications import NchantdNotificationSigil  # 2025
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:29
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:29
 PXCFG = join(HERE, "_data_", "notificationsTEST.yaml")  # 2025-11-06 09:45:29
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:29
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:44:07
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:29
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:44:07
 # 2025-11-06 09:44:07
 
 

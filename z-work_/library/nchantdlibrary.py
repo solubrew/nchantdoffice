@@ -18,11 +18,11 @@ from os.path import dirname, join
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantrs.packages.packages import NchantdToolsPackage
 from nchantrs.wizards.pages import NchantdWizardPage
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -39,7 +39,7 @@ class NchantdNewNchantdLibraryApplicationPage(NchantdWizardPage):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("NchantdNewAccountNchantdLibraryPage")
+        self.config = kahndor.instruct(pxcfg).select("NchantdNewAccountNchantdLibraryPage")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -72,7 +72,7 @@ class NchantdLibraryToolsPackage(NchantdToolsPackage):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("Nchantd")
+        self.config = kahndor.instruct(pxcfg).select("Nchantd")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

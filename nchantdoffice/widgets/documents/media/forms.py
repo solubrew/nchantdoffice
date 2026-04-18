@@ -20,13 +20,13 @@ import datetime as dt
 from pandas import DataFrame
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.groups import NchantdGridScrollGroupBox, NchantdGroup
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument, NchantdOfficeDocumentManager
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.items.catalogs import NchantdCatalogItem
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.forms.forms import NchantdForm
 from nchantdoffice.widgets.panes.forms import NchantdNewFormItemPane
@@ -51,7 +51,7 @@ class NchantdOfficeForm(NchantdForm):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdForm"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdForm"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -115,7 +115,7 @@ class NchantdOfficeContactForm(NchantdForm):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeContactForm")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeContactForm")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -144,7 +144,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeFormManager").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeFormManager").override(cfg))
         self.catalog = self
         self.form = None
         self.button_bar = None
@@ -325,7 +325,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
 
     def cmd_select_form_compatibility(self, event=None):
         """Set form compatibility mode"""
-        if hasattr(self, 'form_compatibility_select'):
+        if hasattr(self, "form_compatibility_select"):
             compatibility = self.form_compatibility_select.currentText()
             logma.info(f"Setting form compatibility to: {compatibility}")
             if self.selected_form:
@@ -344,19 +344,16 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         """Select image file for form header"""
         file_dialog = pyqt.QFileDialog()
         file_path, _ = file_dialog.getOpenFileName(
-            self,
-            "Select Header Image",
-            "",
-            "Images (*.png *.jpg *.jpeg *.gif *.bmp);;All Files (*)"
+            self, "Select Header Image", "", "Images (*.png *.jpg *.jpeg *.gif *.bmp);;All Files (*)"
         )
-        if file_path and hasattr(self, 'form_header_image_entry'):
+        if file_path and hasattr(self, "form_header_image_entry"):
             self.form_header_image_entry.set_text(file_path)
             logma.info(f"Selected header image: {file_path}")
         return self
 
     def cmd_on_change_form_title(self, event=None):
         """Handle form title change"""
-        if hasattr(self, 'form_name_entry') and self.selected_form:
+        if hasattr(self, "form_name_entry") and self.selected_form:
             title = self.form_name_entry.get_text()
             self.selected_form.title = title
             logma.info(f"Form title changed to: {title}")
@@ -364,7 +361,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
 
     def cmd_connect_to_service(self, event=None):
         """Connect to external form service"""
-        if hasattr(self, 'form_service_select') and hasattr(self, 'form_account_name'):
+        if hasattr(self, "form_service_select") and hasattr(self, "form_account_name"):
             service = self.form_service_select.currentText()
             account = self.form_account_name.get_text()
             logma.info(f"Connecting to {service} with account: {account}")
@@ -389,7 +386,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             "type": field_type,
             "label": label,
             "required": required,
-            "id": f"field_{len(self.selected_form.items)}"
+            "id": f"field_{len(self.selected_form.items)}",
         }
 
         # Create field widget based on type
@@ -413,6 +410,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             widget = NchantdLabeledEntry(self, cfg).initWidget()
         elif field_type == "number":
             from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
+
             widget = NchantdLabeledSpinBox(self, cfg).initWidget()
         elif field_type == "dropdown":
             cfg["combobox"] = {"options": field_config.get("options", [])}
@@ -432,7 +430,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
 
         # Find and remove field
         for item in self.selected_form.items:
-            if hasattr(item, 'id') and item.id == field_id:
+            if hasattr(item, "id") and item.id == field_id:
                 self.selected_form.items.remove(item)
                 item.deleteLater()
                 logma.info(f"Removed field: {field_id}")
@@ -452,18 +450,18 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             return {"valid": False, "errors": ["No form selected"]}
 
         for item in self.selected_form.items:
-            if hasattr(item, 'required') and item.required:
+            if hasattr(item, "required") and item.required:
                 # Check if field has value
                 value = None
-                if hasattr(item, 'get_text'):
+                if hasattr(item, "get_text"):
                     value = item.get_text()
-                elif hasattr(item, 'value'):
+                elif hasattr(item, "value"):
                     value = item.value()
-                elif hasattr(item, 'isChecked'):
+                elif hasattr(item, "isChecked"):
                     value = item.isChecked()
 
                 if not value:
-                    label = getattr(item, 'label', 'Unknown field')
+                    label = getattr(item, "label", "Unknown field")
                     errors.append(f"Required field '{label}' is empty")
 
         valid = len(errors) == 0
@@ -483,19 +481,19 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             return form_data
 
         for item in self.selected_form.items:
-            field_id = getattr(item, 'id', None)
+            field_id = getattr(item, "id", None)
             if not field_id:
                 continue
 
             # Get value based on widget type
             value = None
-            if hasattr(item, 'get_text'):
+            if hasattr(item, "get_text"):
                 value = item.get_text()
-            elif hasattr(item, 'value'):
+            elif hasattr(item, "value"):
                 value = item.value()
-            elif hasattr(item, 'currentText'):
+            elif hasattr(item, "currentText"):
                 value = item.currentText()
-            elif hasattr(item, 'isChecked'):
+            elif hasattr(item, "isChecked"):
                 value = item.isChecked()
 
             form_data[field_id] = value
@@ -506,21 +504,17 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         """Submit form data"""
         # Validate first
         validation = self.validate_form()
-        if not validation['valid']:
+        if not validation["valid"]:
             logma.error(f"Form validation failed: {validation['errors']}")
             # Show error dialog
-            pyqt.QMessageBox.warning(
-                self,
-                "Validation Error",
-                "\n".join(validation['errors'])
-            )
+            pyqt.QMessageBox.warning(self, "Validation Error", "\n".join(validation["errors"]))
             return False
 
         # Collect data
         form_data = self.collect_form_data()
 
         # Submit based on compatibility
-        if hasattr(self, 'form_compatibility_select'):
+        if hasattr(self, "form_compatibility_select"):
             compatibility = self.form_compatibility_select.currentText()
             if compatibility == "Google Forms":
                 return self.submit_to_google_forms(form_data)
@@ -697,7 +691,7 @@ class NchantdOfficeFeedback(NchantdWidget):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeFeedback"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeFeedback"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -726,7 +720,7 @@ class NchantdOfficeFeedback(NchantdWidget):
         """"""
         if cfg is None:
             cfg = {}
-        cfg['layout'] = 'grid'
+        cfg["layout"] = "grid"
         super().initView(cfg)
 
         row = 0
@@ -744,9 +738,7 @@ class NchantdOfficeFeedback(NchantdWidget):
         type_cfg = {
             "label": "Feedback Type:",
             "layout": "horizontal",
-            "combobox": {
-                "options": ["Bug Report", "Feature Request", "Question", "General Feedback"]
-            },
+            "combobox": {"options": ["Bug Report", "Feature Request", "Question", "General Feedback"]},
         }
         self.type_select = NchantdDropDown(self, type_cfg).initWidget()
         self.layout.addWidget(self.type_select, row, 0, 1, 2)
@@ -756,9 +748,7 @@ class NchantdOfficeFeedback(NchantdWidget):
         priority_cfg = {
             "label": "Priority:",
             "layout": "horizontal",
-            "combobox": {
-                "options": ["Low", "Medium", "High", "Critical"]
-            },
+            "combobox": {"options": ["Low", "Medium", "High", "Critical"]},
         }
         self.priority_select = NchantdDropDown(self, priority_cfg).initWidget()
         self.layout.addWidget(self.priority_select, row, 0, 1, 2)
@@ -780,6 +770,7 @@ class NchantdOfficeFeedback(NchantdWidget):
         row += 1
 
         from nchantrs.widgets.media.editors.editors import NchantdEntryBox
+
         desc_cfg = {"size": ["auto", 150]}
         self.description_entry = NchantdEntryBox(self, desc_cfg).initWidget()
         self.layout.addWidget(self.description_entry, row, 0, 1, 2)
@@ -835,36 +826,33 @@ class NchantdOfficeFeedback(NchantdWidget):
         """Attach a screenshot to the feedback"""
         file_dialog = pyqt.QFileDialog()
         file_path, _ = file_dialog.getOpenFileName(
-            self,
-            "Select Screenshot",
-            "",
-            "Images (*.png *.jpg *.jpeg *.gif *.bmp);;All Files (*)"
+            self, "Select Screenshot", "", "Images (*.png *.jpg *.jpeg *.gif *.bmp);;All Files (*)"
         )
         if file_path:
-            self.feedback_data['screenshot'] = file_path
+            self.feedback_data["screenshot"] = file_path
             logma.info(f"Screenshot attached: {file_path}")
         return self
 
     def cmd_submit_feedback(self, event=None):
         """Submit the feedback"""
         # Collect feedback data
-        if hasattr(self, 'type_select'):
-            self.feedback_data['type'] = self.type_select.currentText()
-        if hasattr(self, 'priority_select'):
-            self.feedback_data['priority'] = self.priority_select.currentText()
-        if hasattr(self, 'title_entry'):
-            self.feedback_data['title'] = self.title_entry.get_text()
-        if hasattr(self, 'description_entry'):
-            self.feedback_data['description'] = self.description_entry.toPlainText()
-        if hasattr(self, 'email_entry'):
-            self.feedback_data['email'] = self.email_entry.get_text()
+        if hasattr(self, "type_select"):
+            self.feedback_data["type"] = self.type_select.currentText()
+        if hasattr(self, "priority_select"):
+            self.feedback_data["priority"] = self.priority_select.currentText()
+        if hasattr(self, "title_entry"):
+            self.feedback_data["title"] = self.title_entry.get_text()
+        if hasattr(self, "description_entry"):
+            self.feedback_data["description"] = self.description_entry.toPlainText()
+        if hasattr(self, "email_entry"):
+            self.feedback_data["email"] = self.email_entry.get_text()
 
         # Validate
-        if not self.feedback_data.get('title'):
+        if not self.feedback_data.get("title"):
             pyqt.QMessageBox.warning(self, "Validation Error", "Please enter a title")
             return self
 
-        if not self.feedback_data.get('description'):
+        if not self.feedback_data.get("description"):
             pyqt.QMessageBox.warning(self, "Validation Error", "Please enter a description")
             return self
 
@@ -872,18 +860,10 @@ class NchantdOfficeFeedback(NchantdWidget):
         success = self.send_feedback(self.feedback_data)
 
         if success:
-            pyqt.QMessageBox.information(
-                self,
-                "Feedback Sent",
-                "Thank you for your feedback!"
-            )
+            pyqt.QMessageBox.information(self, "Feedback Sent", "Thank you for your feedback!")
             self.close()
         else:
-            pyqt.QMessageBox.critical(
-                self,
-                "Error",
-                "Failed to send feedback. Please try again later."
-            )
+            pyqt.QMessageBox.critical(self, "Error", "Failed to send feedback. Please try again later.")
 
         return self
 
@@ -903,7 +883,7 @@ class NchantdOfficeFeedback(NchantdWidget):
         """
         try:
             # Add timestamp
-            feedback_data['timestamp'] = dt.datetime.now().isoformat()
+            feedback_data["timestamp"] = dt.datetime.now().isoformat()
 
             # Save locally
             self.save_feedback_locally(feedback_data)
@@ -929,7 +909,7 @@ class NchantdOfficeFeedback(NchantdWidget):
         all_feedback = []
         if exists(feedback_file):
             try:
-                with open(feedback_file, 'r') as f:
+                with open(feedback_file, "r") as f:
                     all_feedback = json.load(f)
             except:
                 pass
@@ -938,7 +918,7 @@ class NchantdOfficeFeedback(NchantdWidget):
         all_feedback.append(feedback_data)
 
         # Save
-        with open(feedback_file, 'w') as f:
+        with open(feedback_file, "w") as f:
             json.dump(all_feedback, f, indent=2)
 
         logma.info(f"Feedback saved to {feedback_file}")

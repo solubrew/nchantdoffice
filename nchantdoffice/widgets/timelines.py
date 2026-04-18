@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -37,7 +37,7 @@ class NchantdOfficeTodayOverview(NchantdTodayOverview):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("Nchantd")
+        self.config = kahndor.instruct(pxcfg).select("Nchantd")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

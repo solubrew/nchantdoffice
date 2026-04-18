@@ -27,13 +27,13 @@ from pandas import DataFrame
 from pyffice.script import PyfficeScript
 
 # ===============================================================================||
-from condor import condor  # ||
+from kahndor import kahndor  # ||
 from nchantrs.models.applicationmodels import NchantdCloakModel
 from nchantrs.models import models, treemodels
 from nchantrs.models.tabsetmodels import NchantdTabSetModel
 from nchantrs.dstruct.trees import NchantdTreeGenerator
 from nchantrs.libraries import qpandas
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ===============================================================================||
 here = join(dirname(__file__), '')  # ||
@@ -62,7 +62,7 @@ class NTDAppModel(NchantdCloakModel):
 
 		"""
 		self.parent = parent
-		self.config = condor.instruct(pxcfg).select('NTDAppModel')
+		self.config = kahndor.instruct(pxcfg).select('NTDAppModel')
 		self.config.override(cfg)
 		if parent:
 			self.config.override(parent.config)
@@ -91,7 +91,7 @@ class NTDTreeModel(treemodels.NchantdTreeModel):
 		:param cfg: The configuration dictionary. Defaults to an empty dictionary.
 		:type cfg: dict, optional
 		"""
-		self.config = condor.instruct(pxcfg).select('NTDTreeModel')
+		self.config = kahndor.instruct(pxcfg).select('NTDTreeModel')
 		self.config.override(cfg)
 		if parent:
 			self.config.override(parent.config)
@@ -150,7 +150,7 @@ class NTDTabSetModel(NchantdTabSetModel):
 	""""""
 	def __init__(self, parent, cfg):
 		""""""
-		self.config = condor.instruct(pxcfg).select('NTDTabSetModel')
+		self.config = kahndor.instruct(pxcfg).select('NTDTabSetModel')
 		self.config.override(cfg)
 		if parent:
 			self.config.override(parent.config)

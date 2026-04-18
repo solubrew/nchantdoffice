@@ -2,70 +2,72 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
+
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.wizards.pages import NchantdWizardPage
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
-here = join(dirname(__file__), '')  # ||
+here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, '_data_', '.yaml')
+pxcfg = join(here, "_data_", ".yaml")
+
 
 class NchantdNewNchantdActionApplicationPage(NchantdWizardPage):
-	""""""
-	def __init__(self, parent=None, cfg=None):
-		""" """
-		self.parent = parent
-		self.config = condor.instruct(pxcfg).select('NchantdNewAccountNchantdActionPage')
-		if self.parent:
-			self.config.override(parent.config)
-		self.config.override(cfg)
-		super(NchantdNewNchantdActionApplicationPage, self).__init__(self.parent, self.config)
+    """"""
 
-	def initModel(self):
-		""""""
-		super().initModel()
-		return self
+    def __init__(self, parent=None, cfg=None):
+        """ """
+        self.parent = parent
+        self.config = kahndor.instruct(pxcfg).select("NchantdNewAccountNchantdActionPage")
+        if self.parent:
+            self.config.override(parent.config)
+        self.config.override(cfg)
+        super(NchantdNewNchantdActionApplicationPage, self).__init__(self.parent, self.config)
 
-	def initView(self):
-		""""""
-		super().initView()
+    def initModel(self):
+        """"""
+        super().initModel()
+        return self
 
-		# Basic TODO tracking
-			#services
-			#Monday
-			#Calendy
-			#
+    def initView(self):
+        """"""
+        super().initView()
 
-		# Full Project Tracking
+        # Basic TODO tracking
+        # services
+        # Monday
+        # Calendy
+        #
 
+        # Full Project Tracking
 
+        return self
 
+    def initWidget(self):
+        """"""
+        self.initModel()
+        self.initView()
+        return self
 
-		return self
-
-	def initWidget(self):
-		""""""
-		self.initModel()
-		self.initView()
-		return self
 
 # ====================================================================================================================||
 

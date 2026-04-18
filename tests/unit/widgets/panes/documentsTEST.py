@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:47:25
 """
+
 # 2025-11-06 09:47:25
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -30,8 +31,8 @@ from nchantdoffice.widgets.panes.documents import NchantdOfficeTabEditPane  # 20
 HERE = join(dirname(__file__))  # 2025-11-06 09:47:25
 LOGMA = Logma(__name__)  # 2025-11-06 09:47:25
 PXCFG = join(HERE, "_data_", "documentsTEST.yaml")  # 2025-11-06 09:47:26
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:47:26
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:47:26
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:47:26
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:47:26
 # 2025-11-06 09:47:25
 # ====================================================================================================================||
 

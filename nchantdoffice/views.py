@@ -18,12 +18,12 @@ from os.path import dirname, join
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.views.applicationviews import NchantdCloakView
 from nchantdoffice.widgets.controls.toolbars import (
     NchantdNewDocumentToolBar,
 )
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -41,7 +41,7 @@ class NchantdOfficeCloakView(NchantdCloakView):
         """ """
         super().__init__(parent, None)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeCloakView").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCloakView").override(cfg))
 
     def initView(self, cfg=None):
         """"""

@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.widgets.config.storage import NchantdStorageSettings
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.button_groups import NchantdSaveButtons
@@ -42,7 +42,7 @@ class NchantdOfficeStorageSettings(NchantdStorageSettings):
     def __init__(self, parent, cfg=None):
         """"""
         super().__init__(parent, cfg)
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeStorageSettings"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeStorageSettings"))
         self.parent = parent
         if self.parent is not None:
             self.config.override(self.parent.config)

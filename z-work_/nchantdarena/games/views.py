@@ -17,8 +17,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), '')  # ||
@@ -33,7 +33,7 @@ class :
 	""""""
 	def __init__(self, cfg=None):
 		""""""
-		self.config = condor.instruct(pxcfg).select('').override(cfg)
+		self.config = kahndor.instruct(pxcfg).select('').override(cfg)
 		dark_grey = (26, 31, 40)
 		green = (47, 230, 23)
 		red = (232, 18, 18)

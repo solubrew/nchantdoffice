@@ -21,7 +21,7 @@ import json as j
 from pandas import DataFrame
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.catalogs import NchantdCatalog
 from nchantdoffice.widgets.items.items import NchantdOfficeDocumentCatalogItem
@@ -32,7 +32,7 @@ from nchantdoffice.widgets.panes.sources import NchantdSourcePane
 from nchantdoffice.widgets.panes.documents import NchantdOfficeTabEditPane, NchantdOfficeNoteEditPane
 from nchantdoffice.widgets.panes.documents import NchantdOfficeNodeEditPane
 from nchantdoffice.widgets.items.items import NchantdOfficeSourceCatalogItem
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -51,7 +51,7 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeDocumentsCatalog"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentsCatalog"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -196,7 +196,7 @@ class NchantdOfficeExtensionsCatalog(NchantdCatalog):
 
     def __init__(self, parent, cfg=None):
         """"""
-        self.config = condor.instruct(pxcfg).select("NchantdDataSourcesSettingsTab")
+        self.config = kahndor.instruct(pxcfg).select("NchantdDataSourcesSettingsTab")
         self.parent = parent
         if self.parent is not None:
             self.config.override(self.parent.config)
@@ -229,7 +229,7 @@ class NchantdOfficeServicesCatalog(NchantdCatalog):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("NchantdServiceCatalog")
+        self.config = kahndor.instruct(pxcfg).select("NchantdServiceCatalog")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self)
@@ -270,7 +270,7 @@ class NchantdDataSourcesCatalog(NchantdCatalog):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdDataSourceCatalog"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSourceCatalog"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

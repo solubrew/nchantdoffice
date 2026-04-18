@@ -23,7 +23,7 @@ from pandas import DataFrame, concat
 from numpy import isnan
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from micromole.micromole import MicroMole
 from nchantrs.models.tabsetmodels import NchantdTabSetModel
 from nchantrs.models.applicationmodels import NchantdCloakModel
@@ -31,7 +31,7 @@ from nchantrs.models.models import NchantdStore
 from nchantrs.models.applicationmodels import NchantdModel
 from nchantdoffice.utilities.links import update_affilate_links
 from nchantdoffice.widgets.catalogs import NchantdOfficeDocumentsCatalog
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from pyffice.document import PyfficeDocument
 from pyffice.pyffice import PyfficeCodex
 from subtrix.utilities import uuid
@@ -56,7 +56,7 @@ class NchantdOfficeInstance(object):
     def __init__(self, cfg=None):
         """"""
         super().__init__(cfg)
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeInstance").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeInstance").override(cfg))
 
 
 class NchantdOfficeCloakModel(NchantdCloakModel):
@@ -67,7 +67,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
     def __init__(self, name, instance=None, parent=None, cfg=None):
         """ """
         super().__init__(parent, None)
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeCloakModel").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCloakModel").override(cfg))
         self.parent = parent
         self.store = NchantdOfficeStore(name, self)
         self.codex = PyfficeCodex()
@@ -601,7 +601,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         be duplicated across months - label them based on their week number of year
         :return:
         """
-        widget = "widgets.calendars.timelines.NchantdWeeklyDashboard"
+        widget = "nchantrs.widgets.calendars.timelines.NchantdWeeklyDashboard"
         widgdata = {}
         # TODO: Define pid properly or pass it as an argument
         # self.parent.app.view.panes["center"].model.add_tab("Weekly Dashboard", pid, 1, widget, widgdata)
@@ -798,10 +798,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """"""
         if day is None:
             day = self.store.time.get_day(None, "%d - %A")
-        widget = "widgets.calendars.days.NchantdDayCalendar"
+        widget = "nchantrs.widgets.calendars.days.NchantdDayCalendar"
         widgdata = {}
         self.add_tab(str(day), pid, 0, widget, widgdata, uuid(), "day", "center", in_doc=False)
-        widget = "widgets.calendars.days.NchantdDayJournal"
+        widget = "nchantrs.widgets.calendars.days.NchantdDayJournal"
         widgdata = {}
         self.add_tab("Journal", pid, 1, widget, widgdata, uuid(), "day", "center", in_doc=False)
         self.has_changed = True
@@ -818,10 +818,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """
         if month is None:
             month = self.store.time.get_month(None, "%B")
-        widget = "widgets.calendars.months.NchantdMonthDashboard"
+        widget = "nchantrs.widgets.calendars.months.NchantdMonthDashboard"
         widgdata = {}
         self.add_tab(month, pid, 0, widget, widgdata, uuid(), "month", "center", in_doc=False)
-        widget = "widgets.calendars.months.NchantdMonthlyJournal"
+        widget = "nchantrs.widgets.calendars.months.NchantdMonthlyJournal"
         widgdata = {}
         self.add_tab("Journal", pid, 1, widget, widgdata, uuid(), "month", "center", in_doc=False)
         self.has_changed = True
@@ -836,10 +836,11 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """
         if year is None:
             year = self.store.time.get_year()
-        widget = "widgets.calendars.years.NchantdYearCalendar"
+        # TODO: need to refactor how the widget is added to the database using the app_document_type registry
+        widget = "nchantrs.widgets.calendars.years.NchantdYearCalendar"
         widgdata = {}
         self.add_tab(year, pid, 0, widget, widgdata, uuid(), "year", "center", in_doc=False)
-        widget = "widgets.calendars.years.NchantdYearlyJournal"
+        widget = "nchantrs.widgets.calendars.years.NchantdYearlyJournal"
         widgdata = {}
         self.add_tab("Journal", pid, 1, widget, widgdata, uuid(), "year", "center", in_doc=False)
         self.has_changed = True
@@ -1038,7 +1039,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # convert df to list of us using the columns key_text and option_txt
         for row in df.to_dict(records=True):
             for version in row["option_txt"].split(","):
-                slug = condor.slugify(f"{row['key_txt']}_{version}")
+                slug = kahndor.slugify(f"{row['key_txt']}_{version}")
                 self.supported_os.append(slug)
         return self
 
@@ -1446,7 +1447,7 @@ class NchantdOfficeStore(NchantdStore):
         self.name = name.lower().replace(" ", "")  # "nchantdoffice"
         # this controls the location of the database storage on the local drive
         super().__init__(self.name, parent, cfg)
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeStore"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeStore"))
         self.parent = parent
         self.app = self.parent.app
         if parent is not None:
@@ -1834,7 +1835,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeTabSetModel"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTabSetModel"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -2039,7 +2040,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdSettingsModel"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSettingsModel"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -2248,7 +2249,7 @@ class NchantdOfficeImportModel(NchantdModel):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeImportModel"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeImportModel"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:47:04
 """
+
 # 2025-11-06 09:47:04
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -34,8 +35,8 @@ from nchantdoffice.widgets.documents.media.sketches.images import NchantdOfficeI
 HERE = join(dirname(__file__))  # 2025-11-06 09:47:04
 LOGMA = Logma(__name__)  # 2025-11-06 09:47:04
 PXCFG = join(HERE, "_data_", "imagesTEST.yaml")  # 2025-11-06 09:47:04
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:47:04
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:47:04
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:47:04
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:47:04
 # 2025-11-06 09:47:04
 # ====================================================================================================================||
 

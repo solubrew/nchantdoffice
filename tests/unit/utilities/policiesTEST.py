@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:35
 """
+
 # 2025-11-06 09:45:35
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -31,8 +32,8 @@ from nchantdoffice.utilities.policies import NchantdOfficeDataPolicy  # 2025-11-
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:35
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:35
 PXCFG = join(HERE, "_data_", "policiesTEST.yaml")  # 2025-11-06 09:45:35
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:35
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:44:11
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:35
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:44:11
 # 2025-11-06 09:44:10
 
 

@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.tabsets import NchantdTab
@@ -48,7 +48,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         """ """
         super().__init__("Journal", parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdJournalEditor").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdJournalEditor").override(cfg))
         self.context_notes = []
         self.rotate_time = None
         self.current_time = dt.datetime.now()
@@ -163,7 +163,7 @@ class NchantdJournalAppendEditor(NchantdAppendOnlyEditor):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdJournalAppendEditor"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdJournalAppendEditor"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -307,7 +307,7 @@ class NchantdOfficeJournalOverview(NchantdTab):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdJournalOverview")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdJournalOverview")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

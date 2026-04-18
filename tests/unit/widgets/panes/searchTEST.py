@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:47:19
 """
+
 # 2025-11-06 09:47:19
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -31,8 +32,8 @@ from nchantdoffice.widgets.panes.search import NchantdWebSearchPane  # 2025-11-0
 HERE = join(dirname(__file__))  # 2025-11-06 09:47:20
 LOGMA = Logma(__name__)  # 2025-11-06 09:47:20
 PXCFG = join(HERE, "_data_", "searchTEST.yaml")  # 2025-11-06 09:47:20
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:47:20
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:47:20
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:47:20
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:47:20
 # 2025-11-06 09:47:19
 # ====================================================================================================================||
 

@@ -19,9 +19,9 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
@@ -51,7 +51,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         super().__init__(parent, cfg)
         self.name = "Nchantd Data Source"
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeDataSourceManager"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDataSourceManager"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

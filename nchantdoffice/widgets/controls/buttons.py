@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.utilities.utils import lookup
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.controls.buttons import NchantdButton
@@ -40,7 +40,7 @@ class NchantdOfficeNewDocumentAcceptButtons(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOkButtons")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOkButtons")
         if parent:
             self.config.override(self.parent.config)
         self.config.override(cfg)

@@ -18,10 +18,10 @@ from os.path import dirname, join
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.widgets.config.settings import NchantdSettingsWidget
 from nchantrs.widgets.groups import NchantdHScrollGroupBox, NchantdVScrollGroupBox
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -39,7 +39,7 @@ class NchantdDataSourcesSettings(NchantdSettingsWidget):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdDataSourcesSettings"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSourcesSettings"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

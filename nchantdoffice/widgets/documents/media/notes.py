@@ -20,9 +20,9 @@ from bs4 import BeautifulSoup
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantrs.dialogs.dialogs import NchantdSigil
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.media.editors.editors import NchantdDocEditor
@@ -42,7 +42,7 @@ class NchantdOfficeNote(NchantdSigil):
         """ """
         super().__init__("NchantdNote", parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeNote"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNote"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -162,7 +162,7 @@ class NchantdOfficeNoteDocument(NchantdOfficeDocument):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeNoteDocument").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNoteDocument").override(cfg))
 
     def initModel(self, cfg=None):
         """"""

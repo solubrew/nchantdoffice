@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
@@ -17,8 +18,8 @@ from os.path import dirname, join
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantdoffice.widgets.items.diagrams import NchantdDiagram
@@ -39,7 +40,7 @@ class NchantdOfficeControlChart(NchantdOfficeDocument):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("Nchantd")
+        self.config = kahndor.instruct(pxcfg).select("Nchantd")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -75,7 +76,7 @@ class NchantdFishBoneDiagram(NchantdDiagram):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("NchantdFishBoneDiagram")
+        self.config = kahndor.instruct(pxcfg).select("NchantdFishBoneDiagram")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self.parent, self.config)
@@ -102,7 +103,7 @@ class NchantdValueStreamMap(NchantdWorkflow):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("NchantdValueStreamMap")
+        self.config = kahndor.instruct(pxcfg).select("NchantdValueStreamMap")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

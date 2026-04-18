@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.widgets.managers import NchantdManager
 from nchantrs.widgets.config.settings import NchantdSettingsWidget
 
@@ -40,7 +40,7 @@ class NchantdAutomationsManager(NchantdManager):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAutomationsManager"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAutomationsManager"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -69,7 +69,7 @@ class NchantdAutomationSettings(NchantdSettingsWidget):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAutomationSettings"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAutomationSettings"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

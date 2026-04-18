@@ -29,7 +29,7 @@ from pygments.lexers.ruby import RubyLexer
 from pygments.formatters import HtmlFormatter
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.media.editors.editors import NchantdDocEditor, NchantdLabeledEntry
@@ -38,7 +38,7 @@ from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.controls.button_groups import NchantdFontConfigBar
 from nchantrs.dialogs.files import NchantdFileOpenSigil
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantdoffice.widgets.panes.objects import NchantdNewObjectPane, NchantdHeaderPane, NchantdFooterPane
 from pycurity.pyhash import decode64
 from pycurity.pysan import Sanitized
@@ -76,7 +76,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         icfg = {}
         super().__init__("Nchantd Script", parent, icfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeScript").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeScript").override(cfg))
         self.format_type = None
         self.document_editor = None
         self.button_bar = None

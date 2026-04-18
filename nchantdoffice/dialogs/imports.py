@@ -19,9 +19,9 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.dialogs.dialogs import NchantdSigil
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
@@ -41,7 +41,7 @@ class ImportDocumentNchantdSigil(NchantdSigil):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("ImportDocumentNchantdSigil")
+        self.config = kahndor.Instruct(pxcfg).select("ImportDocumentNchantdSigil")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -75,7 +75,7 @@ class ImportExcelNchantdSigil(NchantdSigil):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("ImportExcelNchantdSigil")
+        self.config = kahndor.Instruct(pxcfg).select("ImportExcelNchantdSigil")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -104,7 +104,7 @@ class ImportPDFNchantdSigil(NchantdSigil):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("ImportPDFNchantdSigil")
+        self.config = kahndor.Instruct(pxcfg).select("ImportPDFNchantdSigil")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -133,7 +133,7 @@ class NchantdGoogleDriveSigil(NchantdSigil):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdGoogleDriveSigil")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdGoogleDriveSigil")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

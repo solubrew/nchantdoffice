@@ -20,8 +20,8 @@ import datetime as dt
 
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.media.images import NchantdImage
@@ -57,7 +57,7 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeApplicationTree").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationTree").override(cfg))
         self.tree = None
         self.image = None
 

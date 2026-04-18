@@ -20,8 +20,8 @@ import datetime as dt
 from shutil import copyfile
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.dialogs.files import NchantdFileOpenSigil
 from nchantrs.widgets.controls.toolboxes import NchantdToolBox
@@ -46,7 +46,7 @@ class NchantdApplicationSearchPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdApplicationSearchPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdApplicationSearchPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -101,7 +101,7 @@ class NchantdLLMQueryPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdLLMQueryPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLLMQueryPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -148,7 +148,7 @@ class NchantdWebSearchPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdWebSearchPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdWebSearchPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -195,7 +195,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeApplicationToolBox"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationToolBox"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

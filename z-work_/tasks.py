@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument, NchantdOfficeDocumentManager
 from nchantrs.widgets.calendars.days import NchantdDayCalendar
@@ -45,7 +45,7 @@ class NchantdOfficeTasksManager(NchantdOfficeDocumentManager):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeTasksManager")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeTasksManager")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self)
@@ -84,7 +84,7 @@ class NchantdOfficeProjectsManager(NchantdOfficeDocumentManager):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("Nchantd")
+        self.config = kahndor.Instruct(pxcfg).select("Nchantd")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self)

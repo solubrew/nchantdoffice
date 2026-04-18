@@ -19,9 +19,9 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from dill.pointers import parent
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from pyffice.notebooks.cherrytree import PyfficeCherryTree
 
 # ====================================================================================================================||
@@ -39,7 +39,7 @@ class NchantdImport(object):
     def __init__(self, path, cfg=None):
         """"""
         self.path = path
-        self.config = condor.Instruct(pxcfg).select("NchantdImport")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdImport")
         self.config.override(cfg)
 
     def run(self):
@@ -52,7 +52,7 @@ class NchantdCherrytreeImport(NchantdImport):
 
     def __init__(self, path, cfg=None):
         """"""
-        self.config = condor.Instruct(pxcfg).select("NchantdCherrytreeImport")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdCherrytreeImport")
         super().__init__(path, self.config)
         self.config.override(cfg)
         self.cherrytree = PyfficeCherryTree(path, self.config)

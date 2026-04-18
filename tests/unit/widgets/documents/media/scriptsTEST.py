@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:46:52
 """
+
 # 2025-11-06 09:46:52
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -28,8 +29,8 @@ from nchantdoffice.widgets.documents.media.scripts import NchantdOfficeScript  #
 HERE = join(dirname(__file__))  # 2025-11-06 09:46:53
 LOGMA = Logma(__name__)  # 2025-11-06 09:46:53
 PXCFG = join(HERE, "_data_", "scriptsTEST.yaml")  # 2025-11-06 09:46:53
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:46:53
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:46:53
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:46:53
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:46:53
 # 2025-11-06 09:46:52
 # ====================================================================================================================||
 

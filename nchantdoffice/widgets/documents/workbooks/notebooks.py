@@ -18,8 +18,8 @@ from os.path import dirname, join, exists
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 
 from nchantdoffice.widgets.documents.atnrg.browsers.browsers import NchantdOfficeWebBrowser
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
@@ -46,7 +46,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         icfg = {}
         super().__init__("Nchantd Notebook", parent, icfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeNotebook").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNotebook").override(cfg))
         self.jupyter_process = None
         self.server_port = 8888
         self.server_url = f"http://localhost:{self.server_port}"
@@ -193,30 +193,21 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         if cnt not in items:
             items[cnt] = default_action.copy()
-        cfg = {
-            "text": "1. Click 'Start Server' to launch Jupyter",
-            "layout": "horizontal"
-        }
+        cfg = {"text": "1. Click 'Start Server' to launch Jupyter", "layout": "horizontal"}
         step1_label = NchantdLabel(self, cfg).initWidget()
         items[cnt]["widget"] = step1_label
         cnt += 1
 
         if cnt not in items:
             items[cnt] = default_action.copy()
-        cfg = {
-            "text": "2. Click 'New Notebook' to create a notebook",
-            "layout": "horizontal"
-        }
+        cfg = {"text": "2. Click 'New Notebook' to create a notebook", "layout": "horizontal"}
         step2_label = NchantdLabel(self, cfg).initWidget()
         items[cnt]["widget"] = step2_label
         cnt += 1
 
         if cnt not in items:
             items[cnt] = default_action.copy()
-        cfg = {
-            "text": "3. Or 'Open Local' to load existing .ipynb file",
-            "layout": "horizontal"
-        }
+        cfg = {"text": "3. Or 'Open Local' to load existing .ipynb file", "layout": "horizontal"}
         step3_label = NchantdLabel(self, cfg).initWidget()
         items[cnt]["widget"] = step3_label
         cnt += 1
@@ -245,6 +236,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         """Restart Jupyter notebook server"""
         self.stop_jupyter_server()
         import time
+
         time.sleep(1)  # Wait for server to fully stop
         self.start_jupyter_server()
         return self
@@ -268,7 +260,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def cmd_set_server_port(self, event=None, *args, **kwargs):
         """Set server port number"""
-        if hasattr(self, 'port_spin'):
+        if hasattr(self, "port_spin"):
             new_port = self.port_spin.value()
             if new_port != self.server_port:
                 self.server_port = new_port
@@ -282,7 +274,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def cmd_select_kernel(self, event=None, *args, **kwargs):
         """Select Jupyter kernel"""
-        if hasattr(self, 'kernel_select'):
+        if hasattr(self, "kernel_select"):
             kernel = self.kernel_select.currentText()
             logma.info(f"Selected kernel: {kernel}")
             self.kernel_name = kernel
@@ -307,7 +299,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def cmd_toggle_autostart(self, event=None, *args, **kwargs):
         """Toggle auto-start server setting"""
-        if hasattr(self, 'autostart_checkbox'):
+        if hasattr(self, "autostart_checkbox"):
             autostart = self.autostart_checkbox.isChecked()
             logma.info(f"Auto-start server: {autostart}")
             # Save to config
@@ -333,12 +325,13 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
             # Build command to start Jupyter
             cmd = [
-                "jupyter", "notebook",
+                "jupyter",
+                "notebook",
                 "--no-browser",
                 f"--port={port}",
                 "--NotebookApp.token=''",
                 "--NotebookApp.password=''",
-                "--NotebookApp.disable_check_xsrf=True"
+                "--NotebookApp.disable_check_xsrf=True",
             ]
 
             # Start notebook in specific directory if file_path is set
@@ -347,15 +340,11 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 cwd = dirname(self.file_path)
 
             # Start the subprocess
-            self.jupyter_process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                cwd=cwd
-            )
+            self.jupyter_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
 
             # Wait a bit for server to start
             import time
+
             time.sleep(2)
 
             self.server_running = True
@@ -401,7 +390,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(1)
-            result = sock.connect_ex(('localhost', self.server_port))
+            result = sock.connect_ex(("localhost", self.server_port))
             sock.close()
             return result == 0
         except Exception:
@@ -427,7 +416,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
             save_path = join(dirname(self.file_path) if self.file_path else ".", notebook_name)
 
-            with open(save_path, 'w', encoding='utf-8') as f:
+            with open(save_path, "w", encoding="utf-8") as f:
                 nbformat.write(nb, f)
 
             logma.info(f"Created new notebook: {save_path}")
@@ -454,6 +443,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             # If server is running, open the notebook
             if self.server_running and self.browser:
                 from os.path import basename
+
                 notebook_url = f"{self.server_url}/notebooks/{basename(file_path)}"
                 self.browser.load_url(notebook_url)
                 logma.info(f"Loaded notebook: {file_path}")
@@ -498,6 +488,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             status = "ok"
 
             import time
+
             start_time = time.time()
 
             while True:
@@ -508,20 +499,20 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 try:
                     msg = self.kernel_client.get_iopub_msg(timeout=1)
 
-                    if msg['parent_header'].get('msg_id') == msg_id:
-                        msg_type = msg['header']['msg_type']
-                        content = msg['content']
+                    if msg["parent_header"].get("msg_id") == msg_id:
+                        msg_type = msg["header"]["msg_type"]
+                        content = msg["content"]
 
-                        if msg_type == 'stream':
-                            output.append(content['text'])
-                        elif msg_type == 'execute_result':
-                            output.append(str(content['data']))
-                        elif msg_type == 'display_data':
-                            output.append(str(content['data']))
-                        elif msg_type == 'error':
-                            error = '\n'.join(content['traceback'])
-                            status = 'error'
-                        elif msg_type == 'status' and content['execution_state'] == 'idle':
+                        if msg_type == "stream":
+                            output.append(content["text"])
+                        elif msg_type == "execute_result":
+                            output.append(str(content["data"]))
+                        elif msg_type == "display_data":
+                            output.append(str(content["data"]))
+                        elif msg_type == "error":
+                            error = "\n".join(content["traceback"])
+                            status = "error"
+                        elif msg_type == "status" and content["execution_state"] == "idle":
                             break
 
                 except Exception as e:
@@ -531,11 +522,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                     else:
                         break
 
-            result = {
-                "output": "\n".join(output),
-                "error": error,
-                "status": status
-            }
+            result = {"output": "\n".join(output), "error": error, "status": status}
 
             logma.info(f"Cell executed with status: {status}")
             return result
@@ -561,7 +548,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             import nbformat
 
             # Read the notebook
-            with open(notebook_path, 'r', encoding='utf-8') as f:
+            with open(notebook_path, "r", encoding="utf-8") as f:
                 nb = nbformat.read(f, as_version=4)
 
             # Start kernel if not running
@@ -571,28 +558,26 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             # Execute each code cell
             results = []
             for idx, cell in enumerate(nb.cells):
-                if cell.cell_type == 'code':
+                if cell.cell_type == "code":
                     logma.info(f"Executing cell {idx + 1}/{len(nb.cells)}")
                     result = self.execute_cell(cell.source)
                     results.append(result)
 
                     # Update cell outputs
-                    if result['status'] == 'ok':
-                        cell.outputs = [{
-                            'output_type': 'stream',
-                            'name': 'stdout',
-                            'text': result['output']
-                        }]
-                    elif result['error']:
-                        cell.outputs = [{
-                            'output_type': 'error',
-                            'ename': 'Error',
-                            'evalue': result['error'],
-                            'traceback': [result['error']]
-                        }]
+                    if result["status"] == "ok":
+                        cell.outputs = [{"output_type": "stream", "name": "stdout", "text": result["output"]}]
+                    elif result["error"]:
+                        cell.outputs = [
+                            {
+                                "output_type": "error",
+                                "ename": "Error",
+                                "evalue": result["error"],
+                                "traceback": [result["error"]],
+                            }
+                        ]
 
             # Save notebook with outputs
-            with open(notebook_path, 'w', encoding='utf-8') as f:
+            with open(notebook_path, "w", encoding="utf-8") as f:
                 nbformat.write(nb, f)
 
             logma.info(f"Executed {len(results)} cells")
@@ -609,6 +594,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 logma.info("Restarting kernel...")
                 self.stop_kernel()
                 import time
+
                 time.sleep(1)
                 self.start_kernel()
                 logma.info("Kernel restarted successfully")
@@ -650,6 +636,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
             # Wait for kernel to be ready
             import time
+
             time.sleep(2)
 
             # Check if kernel is alive
@@ -711,14 +698,15 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
             # Wait for response
             import time
+
             timeout = 5
             start_time = time.time()
 
             while time.time() - start_time < timeout:
                 try:
                     msg = self.kernel_client.get_shell_msg(timeout=1)
-                    if msg['parent_header'].get('msg_id') == msg_id:
-                        return msg['content']
+                    if msg["parent_header"].get("msg_id") == msg_id:
+                        return msg["content"]
                 except:
                     continue
 
@@ -747,9 +735,9 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         result = self.execute_cell(code)
 
         output_parts = []
-        if result['output']:
-            output_parts.append(result['output'])
-        if result['error']:
+        if result["output"]:
+            output_parts.append(result["output"])
+        if result["error"]:
             output_parts.append(f"ERROR:\n{result['error']}")
 
         return "\n".join(output_parts) if output_parts else "Execution completed (no output)"
@@ -771,15 +759,16 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             msg_id = self.kernel_client.complete(code, cursor_pos)
 
             import time
+
             timeout = 3
             start_time = time.time()
 
             while time.time() - start_time < timeout:
                 try:
                     msg = self.kernel_client.get_shell_msg(timeout=1)
-                    if msg['parent_header'].get('msg_id') == msg_id:
-                        content = msg['content']
-                        return content.get('matches', [])
+                    if msg["parent_header"].get("msg_id") == msg_id:
+                        content = msg["content"]
+                        return content.get("matches", [])
                 except:
                     continue
 
@@ -807,14 +796,15 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             msg_id = self.kernel_client.inspect(code, cursor_pos, detail_level=detail_level)
 
             import time
+
             timeout = 3
             start_time = time.time()
 
             while time.time() - start_time < timeout:
                 try:
                     msg = self.kernel_client.get_shell_msg(timeout=1)
-                    if msg['parent_header'].get('msg_id') == msg_id:
-                        return msg['content']
+                    if msg["parent_header"].get("msg_id") == msg_id:
+                        return msg["content"]
                 except:
                     continue
 
@@ -833,15 +823,12 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             import json
 
             result = subprocess.run(
-                ['jupyter', 'kernelspec', 'list', '--json'],
-                capture_output=True,
-                text=True,
-                timeout=5
+                ["jupyter", "kernelspec", "list", "--json"], capture_output=True, text=True, timeout=5
             )
 
             if result.returncode == 0:
                 kernel_data = json.loads(result.stdout)
-                kernels = list(kernel_data.get('kernelspecs', {}).keys())
+                kernels = list(kernel_data.get("kernelspecs", {}).keys())
                 return kernels if kernels else ["python3"]
             else:
                 return ["python3"]
@@ -852,11 +839,11 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def update_status_labels(self):
         """Update server and kernel status labels"""
-        if hasattr(self, 'server_status_label'):
+        if hasattr(self, "server_status_label"):
             status = "Running" if self.server_running else "Stopped"
             self.server_status_label.setText(f"Server Status: {status}")
 
-        if hasattr(self, 'kernel_status_label'):
+        if hasattr(self, "kernel_status_label"):
             if self.kernel_running:
                 kernel_status = f"Running ({self.kernel_name})"
             else:

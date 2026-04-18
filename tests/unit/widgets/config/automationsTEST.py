@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:55
 """
+
 # 2025-11-06 09:45:55
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -29,8 +30,8 @@ from nchantdoffice.widgets.config.automations import NchantdAutomationSettings  
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:55
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:55
 PXCFG = join(HERE, "_data_", "automationsTEST.yaml")  # 2025-11-06 09:45:55
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:55
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:45:55
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:55
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:45:55
 # 2025-11-06 09:45:55
 # ====================================================================================================================||
 

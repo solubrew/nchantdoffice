@@ -20,7 +20,7 @@ import json as j
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from ogma.logma import Logma
 from subtrix.subtrix import uuid
 
@@ -42,7 +42,7 @@ class NchantdOfficeDataPolicy(NchantdDataPolicy):
     def __init__(self, parent=None, cfg=None):
         """"""
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeDataPolicy").override(cfg)
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeDataPolicy").override(cfg)
         super().__init__(parent, self.config)
 
 

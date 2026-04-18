@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:20
 """
+
 # 2025-11-06 09:45:20
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -28,8 +29,8 @@ import os  # 2025-11-06 09:45:20
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:20
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:20
 PXCFG = join(HERE, "_data_", "__init__TEST.yaml")  # 2025-11-06 09:45:20
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:20
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:44:00
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:20
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:44:00
 # 2025-11-06 09:44:00
 
 

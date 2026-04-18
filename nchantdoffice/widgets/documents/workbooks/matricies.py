@@ -19,7 +19,7 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.controls.advanced_buttons import NchantdNumberWheelButton, NchantdLabeledSpinBox, NchantdSpinBox
@@ -33,7 +33,7 @@ from nchantrs.widgets.media.editors.selectors import NchantdDropDown, NchantdCom
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
 from pyffice.spreadsheet.spreadsheet import PyfficeMatrix
 from pyffice.workflows.formulas import PyfficeFormulasLibrary
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantrs.widgets.controls.button_groups import NchantdFontConfigBar
 
 # ====================================================================================================================||
@@ -53,7 +53,7 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeCellBorderFormats"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCellBorderFormats"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -187,7 +187,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         """ """
         super().__init__("Nchantd Matrix", parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeMatrix"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeMatrix"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -254,7 +254,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def cmd_auto_calculate(self, event, *args, **kwargs):
         """Enable or disable automatic formula calculation"""
-        if hasattr(self, 'autocalculate_checkbox'):
+        if hasattr(self, "autocalculate_checkbox"):
             auto_calc = self.autocalculate_checkbox.isChecked()
             if self.document:
                 self.document.set_auto_calculate(auto_calc)
@@ -288,7 +288,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def cmd_row_spinbox(self, event, *args, **kwargs):
         """Handle row count change"""
-        if hasattr(self, 'rows_count_entry'):
+        if hasattr(self, "rows_count_entry"):
             new_row_count = self.rows_count_entry.value()
             if self.table:
                 self.table.setRowCount(new_row_count)
@@ -297,7 +297,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def cmd_row_height_spinbox(self, event, *args, **kwargs):
         """Handle row height change"""
-        if hasattr(self, 'row_height_spin'):
+        if hasattr(self, "row_height_spin"):
             new_height = self.row_height_spin.value()
             if self.table:
                 selected_rows = self.get_selected_rows()
@@ -312,7 +312,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def cmd_column_spinbox(self, event, *args, **kwargs):
         """Handle column count change"""
-        if hasattr(self, 'columns_count_entry'):
+        if hasattr(self, "columns_count_entry"):
             new_col_count = self.columns_count_entry.value()
             if self.table:
                 self.table.setColumnCount(new_col_count)
@@ -321,7 +321,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def cmd_column_width_spinbox(self, event, *args, **kwargs):
         """Handle column width change"""
-        if hasattr(self, 'cell_width'):
+        if hasattr(self, "cell_width"):
             new_width = self.cell_width.value()
             if self.table:
                 selected_cols = self.get_selected_columns()
@@ -336,14 +336,14 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def cmd_formula_entrybox(self, event, *args, **kwargs):
         """Handle formula entry"""
-        if hasattr(self, 'formula_bar'):
+        if hasattr(self, "formula_bar"):
             formula_text = self.formula_bar.get_text()
             selected_cell = self.table.currentItem()
             if selected_cell and formula_text:
                 # Set formula to selected cell
                 selected_cell.setText(formula_text)
                 # Evaluate if auto-calculate is enabled
-                if hasattr(self, 'autocalculate_checkbox') and self.autocalculate_checkbox.isChecked():
+                if hasattr(self, "autocalculate_checkbox") and self.autocalculate_checkbox.isChecked():
                     self.evaluate_cell_formula(selected_cell)
         return self
 
@@ -362,7 +362,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def cmd_data_source_select(self, event, *args, **kwargs):
         """Handle data source selection"""
-        if hasattr(self, 'dataset_select'):
+        if hasattr(self, "dataset_select"):
             dataset_name = self.dataset_select.currentText()
             if dataset_name and dataset_name != "No Data Set Selected":
                 # Load data from selected dataset
@@ -663,7 +663,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             # Extract table data
             table_data = self.extract_table_data()
             # Store in database
-            if self.app and hasattr(self.app, 'model'):
+            if self.app and hasattr(self.app, "model"):
                 self.app.model.codex.store_matrix_data(self.file_path, table_data)
         return self
 
@@ -995,10 +995,11 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # Evaluate the expression
         try:
             # Use safe evaluation (limited to mathematical operations)
-            result = eval(formula, {"__builtins__": {}}, {
-                "abs": abs, "min": min, "max": max, "sum": sum,
-                "round": round, "pow": pow, "len": len
-            })
+            result = eval(
+                formula,
+                {"__builtins__": {}},
+                {"abs": abs, "min": min, "max": max, "sum": sum, "round": round, "pow": pow, "len": len},
+            )
             return result
         except Exception as e:
             raise ValueError(f"Invalid formula: {e}")
@@ -1006,8 +1007,9 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
     def replace_cell_references(self, formula):
         """Replace cell references (like A1, B2) with their actual values"""
         import re
+
         # Match cell references like A1, AB12, etc.
-        pattern = r'\b([A-Z]+)(\d+)\b'
+        pattern = r"\b([A-Z]+)(\d+)\b"
 
         def replace_ref(match):
             col_letter = match.group(1)
@@ -1041,7 +1043,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         def replace_avg(match):
             range_str = match.group(1)
             values = self.get_range_values(range_str)
-            values_str = ','.join(map(str, values))
+            values_str = ",".join(map(str, values))
             return f"(sum([{values_str}])/len([{values_str}]) if len([{values_str}]) > 0 else 0)"
 
         # COUNT(A1:A10) -> len([...])
@@ -1062,24 +1064,25 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             values = self.get_range_values(range_str)
             return f"max([{','.join(map(str, values))}])"
 
-        formula = re.sub(r'SUM\(([^)]+)\)', replace_sum, formula, flags=re.IGNORECASE)
-        formula = re.sub(r'AVG\(([^)]+)\)', replace_avg, formula, flags=re.IGNORECASE)
-        formula = re.sub(r'COUNT\(([^)]+)\)', replace_count, formula, flags=re.IGNORECASE)
-        formula = re.sub(r'MIN\(([^)]+)\)', replace_min, formula, flags=re.IGNORECASE)
-        formula = re.sub(r'MAX\(([^)]+)\)', replace_max, formula, flags=re.IGNORECASE)
+        formula = re.sub(r"SUM\(([^)]+)\)", replace_sum, formula, flags=re.IGNORECASE)
+        formula = re.sub(r"AVG\(([^)]+)\)", replace_avg, formula, flags=re.IGNORECASE)
+        formula = re.sub(r"COUNT\(([^)]+)\)", replace_count, formula, flags=re.IGNORECASE)
+        formula = re.sub(r"MIN\(([^)]+)\)", replace_min, formula, flags=re.IGNORECASE)
+        formula = re.sub(r"MAX\(([^)]+)\)", replace_max, formula, flags=re.IGNORECASE)
 
         return formula
 
     def get_range_values(self, range_str):
         """Get values from a cell range like 'A1:A10'"""
-        parts = range_str.split(':')
+        parts = range_str.split(":")
         if len(parts) != 2:
             return []
 
         # Parse start and end cells
         import re
-        start_match = re.match(r'([A-Z]+)(\d+)', parts[0].strip())
-        end_match = re.match(r'([A-Z]+)(\d+)', parts[1].strip())
+
+        start_match = re.match(r"([A-Z]+)(\d+)", parts[0].strip())
+        end_match = re.match(r"([A-Z]+)(\d+)", parts[1].strip())
 
         if not start_match or not end_match:
             return []
@@ -1105,7 +1108,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         """Convert column letter (A, B, AA, etc.) to 0-based index"""
         index = 0
         for char in letter:
-            index = index * 26 + (ord(char.upper()) - ord('A') + 1)
+            index = index * 26 + (ord(char.upper()) - ord("A") + 1)
         return index - 1
 
     def column_index_to_letter(self, index):
@@ -1114,7 +1117,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         index += 1  # Convert to 1-based
         while index > 0:
             index -= 1
-            letter = chr(ord('A') + index % 26) + letter
+            letter = chr(ord("A") + index % 26) + letter
             index //= 26
         return letter
 
@@ -1130,14 +1133,14 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def load_dataset(self, dataset_name):
         """Load data from a named dataset into the table"""
-        if self.app and hasattr(self.app, 'model'):
+        if self.app and hasattr(self.app, "model"):
             try:
                 dataset = self.app.model.codex.get_dataset(dataset_name)
                 if dataset and self.table:
                     # Clear existing data
                     self.table.clearContents()
                     # Load new data
-                    if hasattr(dataset, 'values'):
+                    if hasattr(dataset, "values"):
                         data = dataset.values
                     else:
                         data = dataset
@@ -1166,15 +1169,15 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             return self
 
         # Determine file format from extension
-        file_ext = file_path.split('.')[-1].lower()
+        file_ext = file_path.split(".")[-1].lower()
 
-        if file_ext in ['xlsx', 'xls']:
+        if file_ext in ["xlsx", "xls"]:
             self.save_as_excel(file_path)
-        elif file_ext == 'ods':
+        elif file_ext == "ods":
             self.save_as_ods(file_path)
-        elif file_ext == 'csv':
+        elif file_ext == "csv":
             self.save_as_csv(file_path)
-        elif file_ext == 'tsv':
+        elif file_ext == "tsv":
             self.save_as_tsv(file_path)
         else:
             logma.warning(f"Unsupported file format: {file_ext}")
@@ -1193,6 +1196,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             else:
                 # Fallback: save using basic method
                 import openpyxl
+
                 wb = openpyxl.Workbook()
                 ws = wb.active
                 data = self.extract_table_data()
@@ -1220,12 +1224,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             logma.error(f"Error saving ODS file: {e}")
         return self
 
-    def save_as_csv(self, file_path, delimiter=','):
+    def save_as_csv(self, file_path, delimiter=","):
         """Save as CSV file"""
         try:
             import csv
+
             data = self.extract_table_data()
-            with open(file_path, 'w', newline='', encoding='utf-8') as f:
+            with open(file_path, "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f, delimiter=delimiter)
                 writer.writerows(data)
             logma.info(f"Saved CSV file: {file_path}")
@@ -1235,7 +1240,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def save_as_tsv(self, file_path):
         """Save as TSV (Tab-Separated Values) file"""
-        return self.save_as_csv(file_path, delimiter='\t')
+        return self.save_as_csv(file_path, delimiter="\t")
 
     def export_to_format(self, format_type, file_path=None):
         """Export spreadsheet to specified format
@@ -1246,7 +1251,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         """
         if file_path is None and self.file_path:
             # Change extension of current file path
-            base_path = '.'.join(self.file_path.split('.')[:-1])
+            base_path = ".".join(self.file_path.split(".")[:-1])
             file_path = f"{base_path}.{format_type}"
 
         if file_path:

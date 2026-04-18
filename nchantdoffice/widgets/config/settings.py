@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.config.settings import NchantdInterfaceSettings, NchantdSettingsWidget, NchantdThemeSettings
 from nchantrs.widgets.annotations import NchantdLabel
@@ -54,7 +54,7 @@ class NchantdOfficeSettingsWidget(NchantdSettingsWidget):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeSettingsWidget"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSettingsWidget"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -83,7 +83,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("Nchantd"))
+        self.config.override(kahndor.Instruct(pxcfg).select("Nchantd"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -428,7 +428,7 @@ class NchantdOfficeThemeSettings(NchantdThemeSettings):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeThemeSettings"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeThemeSettings"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

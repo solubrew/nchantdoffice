@@ -124,8 +124,8 @@ nchantdoffice/
 
 ### Internal Framework
 - `nchantrs` - Main application framework (NchantdCloak, etc.)
-- `condor` - Configuration management
-- `ogma.logma` - Logging
+- `kahndor` - Configuration management
+- `kahndor.logma` - Logging
 - `crow` - Framework loader
 
 ### External Libraries

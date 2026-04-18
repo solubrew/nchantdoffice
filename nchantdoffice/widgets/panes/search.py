@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -18,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.panes.panes import NchantdPane
 from nchantrs.widgets.groups import NchantdGroup
@@ -52,7 +53,7 @@ class NchantdOfficeSearchPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeNodeEditPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNodeEditPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -140,7 +141,7 @@ class NchantdApplicationSearchPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdApplicationSearchPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdApplicationSearchPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -195,7 +196,7 @@ class NchantdLLMQueryPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdLLMQueryPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLLMQueryPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -242,7 +243,7 @@ class NchantdWebSearchPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdWebSearchPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdWebSearchPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

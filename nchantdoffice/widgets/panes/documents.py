@@ -19,7 +19,7 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from subtrix.utilities import uuid
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.annotations import NchantdLabel
@@ -29,7 +29,7 @@ from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons, NchantdOkButtons
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.groups import NchantdGroup
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
 from nchantrs.dialogs.files import NchantdFileOpenSigil
 from nchantrs.widgets.controls.button_groups import NchantdFontConfigBar
@@ -51,7 +51,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeNodeEditPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNodeEditPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -241,7 +241,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeTagEditPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTagEditPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -486,7 +486,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeTabEditPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTabEditPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

@@ -19,10 +19,10 @@ from os.path import join, dirname
 from typing import Any, Dict, Optional
 
 # ======================================3rd Party Library Modules=====================================================||
-from condor import condor
+from kahndor import kahndor
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 # Module-level logging setup
@@ -352,72 +352,73 @@ _internal_initialized: bool = False
 # Configuration Functions
 # ====================================================================================================================||
 
+
 def init_config(config_path: Optional[str] = None) -> None:
     """Initialize the configuration system.
-    
+
     Args:
         config_path: Optional path to configuration file.
     """
     global _internal_config, _internal_initialized
-    
+
     logger.info("Initializing NchantdOffice configuration")
     _internal_config = CONFIG_DEFAULTS.copy()
     _internal_initialized = True
-    
+
     if config_path:
         logger.debug(f"Loading config from: {config_path}")
 
 
 def get_config_value(key: str, default: Any = None) -> Any:
     """Get a configuration value by key.
-    
+
     Args:
         key: Configuration key (supports dot notation for nested keys).
         default: Default value if key not found.
-        
+
     Returns:
         Configuration value or default.
     """
     if not _internal_initialized:
         init_config()
-    
+
     keys = key.split(".")
     value = _internal_config
-    
+
     for k in keys:
         if isinstance(value, dict) and k in value:
             value = value[k]
         else:
             return default
-    
+
     return value
 
 
 def set_config_value(key: str, value: Any) -> None:
     """Set a configuration value by key.
-    
+
     Args:
         key: Configuration key (supports dot notation for nested keys).
         value: Value to set.
     """
     if not _internal_initialized:
         init_config()
-    
+
     keys = key.split(".")
     config = _internal_config
-    
+
     for k in keys[:-1]:
         if k not in config:
             config[k] = {}
         config = config[k]
-    
+
     config[keys[-1]] = value
     logger.debug(f"Config set: {key} = {value}")
 
 
 def get_window_geometry() -> Dict[str, int]:
     """Get default window geometry.
-    
+
     Returns:
         Dictionary with width, height, x, y.
     """

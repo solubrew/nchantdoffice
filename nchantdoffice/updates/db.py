@@ -20,8 +20,8 @@ from copy import deepcopy
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.updates.db import NchantdDBUpdate
 
 # ====================================================================================================================||
@@ -41,7 +41,7 @@ class NchantdOfficeDBUpdate(NchantdDBUpdate):
     def __init__(self, parent, cfg=None):
         """"""
         super().__init__(parent, cfg)
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeDBUpdate").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDBUpdate").override(cfg))
         logma.info(f"Config: {self.config.dikt}")
         self.versions = deepcopy(self.config.dikt.get("versions"))
         logma.info(f"Versions: {self.versions}")

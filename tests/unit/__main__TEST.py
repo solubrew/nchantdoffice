@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:06
 """
+
 # 2025-11-06 09:45:06
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -32,8 +33,8 @@ from nchantdoffice.__main__ import main  # 2025-11-06 09:43:46
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:06
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:06
 PXCFG = join(HERE, "_data_", "__main__TEST.yaml")  # 2025-11-06 09:45:06
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:06
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:43:46
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:06
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:43:46
 # 2025-11-06 09:43:46
 
 

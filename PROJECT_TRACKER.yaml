@@ -1909,13 +1909,13 @@ dimensions:
           name: from os.path import abspath
           type: import_from
         - file: __main__.py
-          name: from condor import condor
+          name: from kahndor import kahndor
           type: import_from
         - file: cmds/runNchantdOffice.py
           name: from os.path import abspath
           type: import_from
         - file: cmds/runNchantdOffice.py
-          name: from condor import condor
+          name: from kahndor import kahndor
           type: import_from
         - file: cmds/runNchantdAXN.py
           name: from os.path import join
@@ -1924,7 +1924,7 @@ dimensions:
           name: from os.path import abspath
           type: import_from
         - file: cmds/runNchantdTool.py
-          name: from condor import condor
+          name: from kahndor import kahndor
           type: import_from
         - file: cmds/runTest.py
           name: unittest
@@ -2020,32 +2020,32 @@ dimensions:
         asolutionfor, basicbot, blackacres...'
       internal_import_details:
       - file: __main__.py
-        module: condor
-        project: condor
+        module: kahndor
+        project: kahndor
       - file: cmds/runNchantdOffice.py
-        module: condor
-        project: condor
+        module: kahndor
+        project: kahndor
       - file: cmds/runNchantdAXN.py
         module: nchantdaxn.main
         project: axn
       - file: cmds/runNchantdTool.py
-        module: condor
-        project: condor
+        module: kahndor
+        project: kahndor
       - file: cmds/runNchantdTool.py
-        module: condor
-        project: condor
+        module: kahndor
+        project: kahndor
       - file: cmds/runNchantdTool.py
-        module: condor
-        project: condor
+        module: kahndor
+        project: kahndor
       - file: cmds/runTest.py
-        module: condor
-        project: condor
+        module: kahndor
+        project: kahndor
       - file: cmds/runNchantdOfficePremium.py
-        module: condor
-        project: condor
+        module: kahndor
+        project: kahndor
       - file: cmds/runNchantdOfficePaid.py
-        module: condor
-        project: condor
+        module: kahndor
+        project: kahndor
       - file: cmds/test_runNchantdOffice.py
         module: nchantdoffice.wizards.wizards
         project: nchantdoffice
@@ -2055,7 +2055,7 @@ dimensions:
       - axn
       - nchantrs
       - ogma
-      - condor
+      - kahndor
       leverage_score: 38.41
       score: 100
       status: pass

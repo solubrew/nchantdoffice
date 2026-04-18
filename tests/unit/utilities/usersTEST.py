@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:39
 """
+
 # 2025-11-06 09:45:39
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -31,8 +32,8 @@ from nchantdoffice.utilities.users import NchantdOfficeUser  # 2025-11-06 09:44:
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:39
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:39
 PXCFG = join(HERE, "_data_", "usersTEST.yaml")  # 2025-11-06 09:45:39
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:39
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:44:13
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:39
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:44:13
 # 2025-11-06 09:44:13
 
 

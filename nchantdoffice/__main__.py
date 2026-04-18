@@ -2,22 +2,24 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 import os
 import platform
+
 # Set Qt platform for headless environments
 if platform.system() != "Windows" and os.environ.get("DISPLAY") is None:
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    
+
 from os.path import abspath, dirname, join
 from sys import argv
 import datetime as dt
@@ -27,11 +29,11 @@ import datetime as dt
 # ======================================Solutions Brewer Library Modules==============================================||
 # import crow
 # # crow.crowLoad removed
-from condor import condor
+from kahndor import kahndor
 from nchantrs.nchantrs import flection, nchantment
 from nchantdoffice.nchantdoffice import NchantdOfficeCloak
 from nchantdoffice.wizards.wizards import NchantdOfficeApplicationStartupWizard
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||

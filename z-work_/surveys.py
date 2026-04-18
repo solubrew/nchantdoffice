@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 
 # from nchantrs.widgets.browsers.browsers import NchantdWebApp
@@ -49,7 +49,7 @@ class NchantdOfficeEvaluation(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdEvaluation")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdEvaluation")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self)
@@ -79,7 +79,7 @@ class NchantdOfficeSurvey(NchantdOfficeEvaluation):
         icfg = {}
         super().__init__(parent, icfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeSurvey").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSurvey").override(cfg))
         self.forms = {}
         self.questions = {}
         self.responses = {}
@@ -129,7 +129,7 @@ class NchantdOfficeSurveyManager(NchantdManager):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeSurveyManager")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeSurveyManager")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self)
@@ -199,7 +199,7 @@ class NchantdOfficeSurveyResponder(NchantdManager):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeSurveyResponder")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeSurveyResponder")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self)
@@ -284,7 +284,7 @@ class NchantdOfficeSurveyFormBuilder(NchantdManager):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeSurveyFormBuilder")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeSurveyFormBuilder")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self)

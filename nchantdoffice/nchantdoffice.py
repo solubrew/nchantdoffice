@@ -26,14 +26,14 @@ from sys import argv
 #     # crow.crowLoad removed
 # except:
 #     pass
-from condor import condor
+from kahndor import kahndor
 from nchantrs.nchantrs import nchantment
 from nchantrs.widgets.applications.applications import NchantdCloak, NchantdMainWindow
 from nchantdoffice.models import NchantdOfficeCloakModel
 from nchantdoffice.views import NchantdOfficeCloakView
 from nchantdoffice.wizards.wizards import NchantdOfficeApplicationStartupWizard
 from nchantdoffice.updates.db import NchantdOfficeDBUpdate
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -51,7 +51,7 @@ class NchantdOfficeCloak(NchantdCloak):
     def __init__(self, name, instance=None, parent=None, cfg=None, args=None):
         """ """
         super().__init__(name, instance, parent, None, args)
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeCloak").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCloak").override(cfg))
         self.config.override({"app": "nchantdoffice"})
         self.parent = parent
         logma.info(f"NchantdOfficeCloak: {self.config.dikt.get("config", None)}")
@@ -84,7 +84,7 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeMainWindow"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeMainWindow"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -25,11 +26,11 @@ from nchantdoffice.wizards.wizards import NchantdOfficeApplicationStartupWizard
 
 # crow.crowLoad removed
 
-from condor import condor
+from kahndor import kahndor
 from nchantrs.nchantrs import nchantment
 from nchantdoffice.nchantdoffice import NchantdOfficeCloak
 from nchantdoffice.wizards.wizards import NchantdOfficeApplicationStartupWizard
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||

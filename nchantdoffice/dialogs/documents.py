@@ -20,7 +20,7 @@ import json as j
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantrs.utilities.utils import lookup
 from nchantrs.dialogs.dialogs import NchantdSigil
@@ -29,7 +29,7 @@ from nchantdoffice.dialogs.imports import NchantdGoogleDriveSigil
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons
 from nchantrs.widgets.controls.buttons import NchantdButton
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantdoffice.widgets.controls.buttons import NchantdOfficeNewDocumentAcceptButtons
 from nchantdoffice.widgets.panes.new import NchantdOfficeNewDocumentPane
 
@@ -50,7 +50,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
         """ """
         super().__init__(name, parent)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NewNchantdDocumentSigil"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NewNchantdDocumentSigil"))
         if self.parent:
             self.config.override(parent.config)
         logma.info(f"CFG {cfg}")
@@ -278,7 +278,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
 # 	def __init__(self, parent=None, cfg=None):
 # 		""" """
 # 		self.parent = parent
-# 		self.config = condor.Instruct(pxcfg).select('NewNchantdMatrixSigil')
+# 		self.config = kahndor.Instruct(pxcfg).select('NewNchantdMatrixSigil')
 # 		if self.parent:
 # 			self.config.override(parent.config)
 # 		self.config.override(cfg)

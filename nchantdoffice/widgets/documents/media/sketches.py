@@ -10,6 +10,7 @@
     security: seclvl2
     <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
@@ -17,8 +18,8 @@ from os.path import dirname, join
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
@@ -52,7 +53,7 @@ class NchantdLayersListPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdLayersListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLayersListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -89,7 +90,7 @@ class NchantdEditLayerPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdEditorLayerPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEditorLayerPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -135,7 +136,7 @@ class NchantdObjectsPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdObjectsPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdObjectsPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -172,7 +173,7 @@ class NchantdLineToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdLineToolPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -226,7 +227,7 @@ class NchantdCurveToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdLineToolPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -280,7 +281,7 @@ class NchantdSplineToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdLineToolPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -334,7 +335,7 @@ class NchantdPolygonToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdLineToolPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -382,7 +383,7 @@ class NchantdCircleToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdLineToolPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -430,7 +431,7 @@ class NchantdObjectToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdLineToolPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -472,7 +473,7 @@ class NchantdFillToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdLineToolPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -516,7 +517,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         """"""
         super().__init__("NchantdOfficeSketch", parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeSketch"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSketch"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -548,7 +549,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             "thickness": 3,
             "color": pyqt.QColor(pyqt.Qt.black),
             "end_type_1": None,
-            "end_type_2": None
+            "end_type_2": None,
         }
         self._updating_cursor = False  # Flag to prevent cursor update recursion
         return self
@@ -564,7 +565,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             14: {"action": "add_2d_ellipse", "handler": self.cmd_add_2d_ellipse},
             15: {"action": "insert_object", "handler": self.cmd_insert_object},
             16: {"action": "fill_color", "handler": self.cmd_fill_color},
-            49: "_insert_stretch"
+            49: "_insert_stretch",
         }
         super().initView(cfg)
         canvas_cfg = {"size": ["auto", self.size().height() + self.parent.size().height()]}
@@ -640,7 +641,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.end_point = None
 
         # Get settings from line tool pane if available
-        if hasattr(self, 'line_tools_group'):
+        if hasattr(self, "line_tools_group"):
             self._update_tool_config_from_pane(self.line_tools_group)
 
         # Update cursor based on tool
@@ -656,7 +657,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.end_point = None
 
         # Get settings from curve tool pane if available
-        if hasattr(self, 'curve_tool_pane'):
+        if hasattr(self, "curve_tool_pane"):
             self._update_tool_config_from_pane(self.curve_tool_pane)
 
         # Update cursor based on tool
@@ -672,7 +673,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.end_point = None
 
         # Get settings from spline tool pane if available
-        if hasattr(self, 'splineline_tool_pane'):
+        if hasattr(self, "splineline_tool_pane"):
             self._update_tool_config_from_pane(self.splineline_tool_pane)
 
         # Update cursor based on tool
@@ -688,7 +689,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.end_point = None
 
         # Get settings from polygon tool pane if available
-        if hasattr(self, 'polygon_tool_pane'):
+        if hasattr(self, "polygon_tool_pane"):
             self._update_tool_config_from_pane(self.polygon_tool_pane)
 
         # Update cursor based on tool
@@ -704,7 +705,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.end_point = None
 
         # Get settings from circle tool pane if available
-        if hasattr(self, 'circle_tool_pane'):
+        if hasattr(self, "circle_tool_pane"):
             self._update_tool_config_from_pane(self.circle_tool_pane)
 
         # Update cursor based on tool
@@ -725,7 +726,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.current_tool = "fill"
 
         # Get settings from fill tool pane if available
-        if hasattr(self, 'fill_tool_pane'):
+        if hasattr(self, "fill_tool_pane"):
             self._update_tool_config_from_pane(self.fill_tool_pane)
 
         # Update cursor based on tool
@@ -737,27 +738,45 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         """Update current tool configuration from the tool pane settings."""
         try:
             # Update line style
-            if hasattr(tool_pane, 'line_style_select'):
-                style = tool_pane.line_style_select.currentText() if hasattr(tool_pane.line_style_select, 'currentText') else "Solid"
+            if hasattr(tool_pane, "line_style_select"):
+                style = (
+                    tool_pane.line_style_select.currentText()
+                    if hasattr(tool_pane.line_style_select, "currentText")
+                    else "Solid"
+                )
                 self.current_tool_config["style"] = style
 
             # Update thickness
-            if hasattr(tool_pane, 'line_thickness_spin'):
-                thickness = tool_pane.line_thickness_spin.value() if hasattr(tool_pane.line_thickness_spin, 'value') else 3
+            if hasattr(tool_pane, "line_thickness_spin"):
+                thickness = (
+                    tool_pane.line_thickness_spin.value() if hasattr(tool_pane.line_thickness_spin, "value") else 3
+                )
                 self.current_tool_config["thickness"] = thickness
 
             # Update color
-            if hasattr(tool_pane, 'line_color_select'):
-                color_name = tool_pane.line_color_select.currentText() if hasattr(tool_pane.line_color_select, 'currentText') else "black"
+            if hasattr(tool_pane, "line_color_select"):
+                color_name = (
+                    tool_pane.line_color_select.currentText()
+                    if hasattr(tool_pane.line_color_select, "currentText")
+                    else "black"
+                )
                 self.current_tool_config["color"] = self._get_qcolor_from_name(color_name)
 
             # Update end types for line tools
-            if hasattr(tool_pane, 'line_end_one_type_select'):
-                end_type_1 = tool_pane.line_end_one_type_select.currentText() if hasattr(tool_pane.line_end_one_type_select, 'currentText') else None
+            if hasattr(tool_pane, "line_end_one_type_select"):
+                end_type_1 = (
+                    tool_pane.line_end_one_type_select.currentText()
+                    if hasattr(tool_pane.line_end_one_type_select, "currentText")
+                    else None
+                )
                 self.current_tool_config["end_type_1"] = end_type_1
 
-            if hasattr(tool_pane, 'line_end_two_type_select'):
-                end_type_2 = tool_pane.line_end_two_type_select.currentText() if hasattr(tool_pane.line_end_two_type_select, 'currentText') else None
+            if hasattr(tool_pane, "line_end_two_type_select"):
+                end_type_2 = (
+                    tool_pane.line_end_two_type_select.currentText()
+                    if hasattr(tool_pane.line_end_two_type_select, "currentText")
+                    else None
+                )
                 self.current_tool_config["end_type_2"] = end_type_2
 
         except Exception as e:
@@ -776,7 +795,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             "Magenta": pyqt.Qt.magenta,
             "Cyan": pyqt.Qt.cyan,
             "Orange": pyqt.QColor(255, 165, 0),
-            "Violet": pyqt.QColor(138, 43, 226)
+            "Violet": pyqt.QColor(138, 43, 226),
         }
         return pyqt.QColor(color_map.get(color_name, pyqt.Qt.black))
 
@@ -786,7 +805,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             "Solid": pyqt.Qt.SolidLine,
             "Dashed": pyqt.Qt.DashLine,
             "Dotted": pyqt.Qt.DotLine,
-            "Dash Dotted": pyqt.Qt.DashDotLine
+            "Dash Dotted": pyqt.Qt.DashDotLine,
         }
         return style_map.get(style_string, pyqt.Qt.SolidLine)
 
@@ -810,7 +829,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             layer_name = self.layers[self.active_layer_index]
             if layer_name not in self.layer_properties:
                 self.layer_properties[layer_name] = {}
-            self.layer_properties[layer_name]['transparency'] = max(0.0, min(1.0, transparency))
+            self.layer_properties[layer_name]["transparency"] = max(0.0, min(1.0, transparency))
             self.render_on_canvas()
         return self
 
@@ -820,7 +839,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             layer_name = self.layers[self.active_layer_index]
             if layer_name not in self.layer_properties:
                 self.layer_properties[layer_name] = {}
-            self.layer_properties[layer_name]['color'] = color
+            self.layer_properties[layer_name]["color"] = color
             self.render_on_canvas()
         return self
 
@@ -830,7 +849,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             layer_name = self.layers[self.active_layer_index]
             if layer_name not in self.layer_properties:
                 self.layer_properties[layer_name] = {}
-            self.layer_properties[layer_name]['size'] = max(0.1, size)
+            self.layer_properties[layer_name]["size"] = max(0.1, size)
             self.render_on_canvas()
         return self
 
@@ -890,18 +909,20 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
                 "tool": self.current_tool,
                 "start": self.start_point,
                 "end": self.end_point,
-                "layer": self.layers[self.active_layer_index] if 0 <= self.active_layer_index < len(self.layers) else None,
+                "layer": (
+                    self.layers[self.active_layer_index] if 0 <= self.active_layer_index < len(self.layers) else None
+                ),
                 "config": {
                     "style": self.current_tool_config.get("style", "Solid"),
                     "thickness": self.current_tool_config.get("thickness", 3),
                     "color": self.current_tool_config.get("color", pyqt.QColor(pyqt.Qt.black)),
                     "end_type_1": self.current_tool_config.get("end_type_1"),
-                    "end_type_2": self.current_tool_config.get("end_type_2")
-                }
+                    "end_type_2": self.current_tool_config.get("end_type_2"),
+                },
             }
             self.shapes.append(shape_data)
             # Add to undo stack
-            self.undo_stack.append(('add', shape_data))
+            self.undo_stack.append(("add", shape_data))
             # Clear redo stack when new action is performed
             self.redo_stack.clear()
         return self
@@ -910,7 +931,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         """Remove the last drawn shape and add to redo stack."""
         if self.shapes:
             shape = self.shapes.pop()
-            self.redo_stack.append(('add', shape))
+            self.redo_stack.append(("add", shape))
             if self.undo_stack:
                 self.undo_stack.pop()
             self.render_on_canvas()
@@ -920,7 +941,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         """Redo the last undone shape."""
         if self.redo_stack:
             action, shape = self.redo_stack.pop()
-            if action == 'add':
+            if action == "add":
                 self.shapes.append(shape)
                 self.undo_stack.append((action, shape))
                 self.render_on_canvas()
@@ -929,25 +950,27 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
     def export_sketch(self, file_path):
         """Export the sketch to a file."""
         import json
+
         try:
             sketch_data = {
-                'layers': self.layers,
-                'layer_properties': self.layer_properties,
-                'shapes': [
+                "layers": self.layers,
+                "layer_properties": self.layer_properties,
+                "shapes": [
                     {
-                        'tool': shape['tool'],
-                        'start': {'x': shape['start'].x(), 'y': shape['start'].y()},
-                        'end': {'x': shape['end'].x(), 'y': shape['end'].y()},
-                        'layer': shape.get('layer')
-                    } for shape in self.shapes
+                        "tool": shape["tool"],
+                        "start": {"x": shape["start"].x(), "y": shape["start"].y()},
+                        "end": {"x": shape["end"].x(), "y": shape["end"].y()},
+                        "layer": shape.get("layer"),
+                    }
+                    for shape in self.shapes
                 ],
-                'canvas_size': {
-                    'width': self.canvas.width() if self.canvas else 0,
-                    'height': self.canvas.height() if self.canvas else 0
-                }
+                "canvas_size": {
+                    "width": self.canvas.width() if self.canvas else 0,
+                    "height": self.canvas.height() if self.canvas else 0,
+                },
             }
 
-            with open(file_path, 'w') as f:
+            with open(file_path, "w") as f:
                 json.dump(sketch_data, f, indent=2)
 
             logma.info(f"Sketch exported to {file_path}")
@@ -958,29 +981,30 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
     def import_sketch(self, file_path):
         """Import a sketch from a file."""
         import json
+
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 sketch_data = json.load(f)
 
             # Restore layers
-            self.layers = sketch_data.get('layers', ["Layer 0 - Canvas Layer"])
-            self.layer_properties = sketch_data.get('layer_properties', {})
+            self.layers = sketch_data.get("layers", ["Layer 0 - Canvas Layer"])
+            self.layer_properties = sketch_data.get("layer_properties", {})
 
             # Restore shapes
             self.shapes = []
-            for shape_data in sketch_data.get('shapes', []):
+            for shape_data in sketch_data.get("shapes", []):
                 shape = {
-                    'tool': shape_data['tool'],
-                    'start': pyqt.QPointF(shape_data['start']['x'], shape_data['start']['y']),
-                    'end': pyqt.QPointF(shape_data['end']['x'], shape_data['end']['y']),
-                    'layer': shape_data.get('layer')
+                    "tool": shape_data["tool"],
+                    "start": pyqt.QPointF(shape_data["start"]["x"], shape_data["start"]["y"]),
+                    "end": pyqt.QPointF(shape_data["end"]["x"], shape_data["end"]["y"]),
+                    "layer": shape_data.get("layer"),
                 }
                 self.shapes.append(shape)
 
             # Restore canvas size if available
-            canvas_size = sketch_data.get('canvas_size')
+            canvas_size = sketch_data.get("canvas_size")
             if canvas_size and self.canvas:
-                self.canvas.resize(canvas_size['width'], canvas_size['height'])
+                self.canvas.resize(canvas_size["width"], canvas_size["height"])
 
             self.render_on_canvas()
             logma.info(f"Sketch imported from {file_path}")
@@ -1136,8 +1160,11 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             event_type = event.type()
 
             # Log all mouse events for debugging
-            if event_type in [pyqt.QEvent.MouseButtonPress, pyqt.QEvent.MouseButtonRelease,
-                             pyqt.QEvent.MouseButtonDblClick]:
+            if event_type in [
+                pyqt.QEvent.MouseButtonPress,
+                pyqt.QEvent.MouseButtonRelease,
+                pyqt.QEvent.MouseButtonDblClick,
+            ]:
                 logma.info(f"eventFilter: {event_type}, obj={type(obj).__name__}, current_tool={self.current_tool}")
 
             # Handle cursor on mouse enter and move
@@ -1176,7 +1203,9 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
                     if not self.drawing:
                         expected_cursor = self._get_expected_cursor_shape()
                         if self.canvas.cursor().shape() != expected_cursor:
-                            logma.warning(f"Canvas cursor mismatch! Expected {expected_cursor}, got {self.canvas.cursor().shape()}")
+                            logma.warning(
+                                f"Canvas cursor mismatch! Expected {expected_cursor}, got {self.canvas.cursor().shape()}"
+                            )
                             self._update_canvas_cursor()
                     return True
                 elif event_type == pyqt.QEvent.MouseButtonRelease:
@@ -1220,12 +1249,14 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             self.canvas.setCursor(pyqt.QCursor(cursor))
 
             # If canvas has a viewport (for scroll areas), set it there too
-            if hasattr(self.canvas, 'viewport'):
+            if hasattr(self.canvas, "viewport"):
                 self.canvas.viewport().setCursor(pyqt.QCursor(cursor))
 
             # Force update
             self.canvas.update()
-            logma.info(f"Canvas cursor set successfully. Canvas visible: {self.canvas.isVisible()}, cursor shape: {self.canvas.cursor().shape()}")
+            logma.info(
+                f"Canvas cursor set successfully. Canvas visible: {self.canvas.isVisible()}, cursor shape: {self.canvas.cursor().shape()}"
+            )
         except Exception as e:
             logma.error(f"Failed to set canvas cursor: {e}")
         finally:
@@ -1237,10 +1268,10 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         if event.button() == pyqt.Qt.LeftButton and self.current_tool:
             logma.info(f"Mouse press with tool: {self.current_tool}")
             # Get position relative to canvas
-            if hasattr(event, 'pos'):
+            if hasattr(event, "pos"):
                 pos = event.pos()
             else:
-                pos = event.position().toPoint() if hasattr(event, 'position') else event.pos()
+                pos = event.position().toPoint() if hasattr(event, "position") else event.pos()
 
             self.start_point = pos
             self.end_point = self.start_point
@@ -1255,10 +1286,10 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         """Handle mouse move events for dynamic drawing preview."""
         if self.drawing and (event.buttons() & pyqt.Qt.LeftButton):
             # Get position relative to canvas
-            if hasattr(event, 'pos'):
+            if hasattr(event, "pos"):
                 pos = event.pos()
             else:
-                pos = event.position().toPoint() if hasattr(event, 'position') else event.pos()
+                pos = event.position().toPoint() if hasattr(event, "position") else event.pos()
 
             self.end_point = pos
 
@@ -1272,10 +1303,10 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         if event.button() == pyqt.Qt.LeftButton and self.drawing:
             logma.info(f"Mouse release, saving shape: {self.current_tool}")
             # Get position relative to canvas
-            if hasattr(event, 'pos'):
+            if hasattr(event, "pos"):
                 pos = event.pos()
             else:
-                pos = event.position().toPoint() if hasattr(event, 'position') else event.pos()
+                pos = event.position().toPoint() if hasattr(event, "position") else event.pos()
 
             self.end_point = pos
             self.save_shape()
@@ -1352,9 +1383,9 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
             # Copy shapes belonging to this layer
             for shape in self.shapes:
-                if shape.get('layer') == layer_name:
+                if shape.get("layer") == layer_name:
                     new_shape = shape.copy()
-                    new_shape['layer'] = new_layer_name
+                    new_shape["layer"] = new_layer_name
                     self.shapes.append(new_shape)
 
             self.render_on_canvas()
@@ -1410,7 +1441,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         index, shape = self.get_shape_at_position(pos)
         if index is not None:
             deleted_shape = self.shapes.pop(index)
-            self.undo_stack.append(('delete', deleted_shape))
+            self.undo_stack.append(("delete", deleted_shape))
             self.redo_stack.clear()
             self.render_on_canvas()
             logma.info(f"Deleted shape at index {index}")
@@ -1470,7 +1501,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
                     "tool": self.current_tool,
                     "start": self.start_point,
                     "end": self.end_point,
-                    "config": self.current_tool_config
+                    "config": self.current_tool_config,
                 }
                 self._setup_painter_for_shape(painter, shape_data)
                 self._draw_shape(painter, shape_data)
@@ -1591,12 +1622,10 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             angle2 = angle - math.pi * 0.85
 
             arrow_p1 = pyqt.QPointF(
-                to_point.x() + arrow_size * math.cos(angle1),
-                to_point.y() + arrow_size * math.sin(angle1)
+                to_point.x() + arrow_size * math.cos(angle1), to_point.y() + arrow_size * math.sin(angle1)
             )
             arrow_p2 = pyqt.QPointF(
-                to_point.x() + arrow_size * math.cos(angle2),
-                to_point.y() + arrow_size * math.sin(angle2)
+                to_point.x() + arrow_size * math.cos(angle2), to_point.y() + arrow_size * math.sin(angle2)
             )
 
             painter.drawLine(to_point, arrow_p1)
@@ -1610,7 +1639,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         elif decoration_type == "Square":
             # Draw square at end
             size = 8
-            rect = pyqt.QRectF(to_point.x() - size/2, to_point.y() - size/2, size, size)
+            rect = pyqt.QRectF(to_point.x() - size / 2, to_point.y() - size / 2, size, size)
             painter.drawRect(rect)
 
 
@@ -1621,7 +1650,7 @@ class NchantdOfficePalette(NchantdOfficeDocument):
         """ """
         super().__init__("Nchantd Palette", parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficePalette"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePalette"))
         # if self.parent:
         #     self.config.override(parent.config)
         self.config.override(cfg)

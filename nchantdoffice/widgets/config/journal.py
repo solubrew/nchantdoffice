@@ -19,13 +19,13 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown, NchantdComboBox
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantrs.widgets.groups import NchantdVScrollGroupBox
 from nchantrs.widgets.config.settings import NchantdSettingsWidget
 
@@ -45,7 +45,7 @@ class NchantdJournalSettings(NchantdSettingsWidget):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdJournalSettings"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdJournalSettings"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

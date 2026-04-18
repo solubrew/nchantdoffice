@@ -20,11 +20,11 @@ import json as j
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from subtrix.utilities import uuid
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.controls.toolbars import NchantdApplicationToolBar
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantdoffice.dialogs.documents import NchantdNewDocumentSigil
 from nchantrs.libraries import pyqt
 
@@ -47,7 +47,7 @@ class NchantdOfficeApplicationToolBar(NchantdApplicationToolBar):
         """Initialize the toolbar."""
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeApplicationToolBar"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationToolBar"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -75,7 +75,7 @@ class NchantdOfficeNotificationButtonBar(NchantdButtonBar):
     def __init__(self, parent=None, cfg=None):
         """Initialize the notification bar."""
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeApplicationNotificationButtonBar")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationNotificationButtonBar")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -114,7 +114,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         """Initialize the toolbar."""
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdNewDocumentToolBar").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewDocumentToolBar").override(cfg))
         self.actions = None
         self.document_types = None
 
@@ -293,7 +293,7 @@ class NchantdCellFormattingToolBar(NchantdButtonBar):
     def __init__(self, parent=None, cfg=None):
         """Initialize the toolbar."""
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdCellFormattingToolBar")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdCellFormattingToolBar")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -325,7 +325,7 @@ class NchantdDataFormattingToolBar(NchantdButtonBar):
     def __init__(self, parent=None, cfg=None):
         """Initialize the toolbar."""
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdTextFormattingToolBar")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdTextFormattingToolBar")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -354,7 +354,7 @@ class NchantdTextFormattingToolBar(NchantdButtonBar):
     def __init__(self, parent=None, cfg=None):
         """Initialize the toolbar."""
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdTextFormattingToolBar")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdTextFormattingToolBar")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -18,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantdoffice.dialogs.dialogs import NchantdOfficeDocumentCape
 from nchantrs.widgets.media.images import NchantdImage
 from nchantrs.widgets.browsers.browsers import NchantdWebBrowser
@@ -39,7 +40,7 @@ class NchantdOfficeCADCape(NchantdOfficeDocumentCape):
     def __init__(self, name, instance=None, cfg=None, args=None):
         """ """
         name = "NchantdOfficeCAD"
-        self.config = condor.Instruct(pxcfg).select(name)
+        self.config = kahndor.Instruct(pxcfg).select(name)
         super().__init__(name, instance, None, None, args)
         self.config.override(cfg)
         self.document = None
@@ -81,7 +82,7 @@ class NchantdOfficeChartCape(NchantdOfficeDocumentCape):
         """ """
         self.parent = parent
         name = "NchantdOfficeChart"
-        self.config = condor.Instruct(pxcfg).select(name)
+        self.config = kahndor.Instruct(pxcfg).select(name)
         super().__init__(name, instance, None, None, args)
         self.config.override(cfg)
         self.document = None
@@ -123,7 +124,7 @@ class NchantdOfficeDiagramCape(NchantdOfficeDocumentCape):
         """ """
         self.parent = parent
         name = "NchantdDiagram"
-        self.config = condor.Instruct(pxcfg).select(name)
+        self.config = kahndor.Instruct(pxcfg).select(name)
         super().__init__(name, instance, None, None, args)
         self.config.override(cfg)
         self.document = None
@@ -165,7 +166,7 @@ class NchantdOfficeFormCape(NchantdOfficeDocumentCape):
         """ """
         self.parent = parent
         name = "NchantdForm"
-        self.config = condor.Instruct(pxcfg).select(name)
+        self.config = kahndor.Instruct(pxcfg).select(name)
         super().__init__(name, instance, None, None, args)
         self.config.override(cfg)
         self.document = None
@@ -207,7 +208,7 @@ class NchantdOfficeImageCape(NchantdOfficeDocumentCape):
         """ """
         self.parent = parent
         name = "NchantdImage"
-        self.config = condor.Instruct(pxcfg).select(name)
+        self.config = kahndor.Instruct(pxcfg).select(name)
         super().__init__(name, instance, None, None, args)
         self.config.override(cfg)
         self.document = None
@@ -249,7 +250,7 @@ class NchantdOfficeMatrixCape(NchantdOfficeDocumentCape):
         """ """
         self.parent = parent
         name = "NchantdMatrix"
-        self.config = condor.Instruct(pxcfg).select(name)
+        self.config = kahndor.Instruct(pxcfg).select(name)
         super().__init__(name, instance, None, None, args)
         self.config.override(cfg)
         self.document = None
@@ -292,7 +293,7 @@ class NchantdOfficePDFCape(NchantdOfficeDocumentCape):
         """ """
         self.parent = parent
         name = "NchantdPDF"
-        self.config = condor.Instruct(pxcfg).select(name)
+        self.config = kahndor.Instruct(pxcfg).select(name)
         super().__init__(name, instance, None, None, args)
         self.config.override(cfg)
         self.document = None
@@ -334,7 +335,7 @@ class NchantdOfficePresentationCape(NchantdOfficeDocumentCape):
         """ """
         self.parent = parent
         name = "NchantdPresentation"
-        self.config = condor.Instruct(pxcfg).select(name)
+        self.config = kahndor.Instruct(pxcfg).select(name)
         super().__init__(name, instance, None, None, args)
         self.config.override(cfg)
         self.document = None
@@ -376,7 +377,7 @@ class NchantdOfficePromptCape(NchantdOfficeDocumentCape):
         """ """
         self.parent = parent
         name = "NchantdPrompt"
-        self.config = condor.Instruct(pxcfg).select(name)
+        self.config = kahndor.Instruct(pxcfg).select(name)
         super().__init__(name, instance, None, None, args)
         self.config.override(cfg)
         self.document = None
@@ -418,7 +419,7 @@ class NchantdOfficeScriptCape(NchantdOfficeDocumentCape):
         """ """
         self.parent = parent
         name = "NchantdScript"
-        self.config = condor.Instruct(pxcfg).select(name)
+        self.config = kahndor.Instruct(pxcfg).select(name)
         super().__init__(name, instance, None, None, args)
         self.config.override(cfg)
         self.document = None
@@ -459,7 +460,7 @@ class NchantdOfficeWebBrowserCape(NchantdOfficeDocumentCape):
 
     def __init__(self, name, instance, cfg=None, args=None):
         """ """
-        self.config = condor.Instruct(pxcfg).select(name)
+        self.config = kahndor.Instruct(pxcfg).select(name)
         super().__init__(name, instance, None, None, args)
         self.config.override(cfg)
         self.document = None

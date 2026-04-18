@@ -10,6 +10,7 @@
     security: seclvl2
     <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -18,10 +19,10 @@ from os.path import abspath, dirname, join
 from pandas import DataFrame
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.widgets import NchantdWidget
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -37,7 +38,7 @@ class NchantdCuration:
 
     def __init__(self, parent, name, list=None, cfg=None):
         """ """
-        self.config = condor.instruct(pxcfg).select("NchantdCuration")
+        self.config = kahndor.instruct(pxcfg).select("NchantdCuration")
         self.config.override(parent.config)
         self.config.override(cfg)
         self.app = pyqt.QApplication.instance()
@@ -59,7 +60,7 @@ class NchantdFocus(object):
 
     def __init__(self, name, parent, cfg=None):
         """"""
-        self.config = condor.Instruct(pxcfg).select("NchantdFocus").override(cfg)
+        self.config = kahndor.Instruct(pxcfg).select("NchantdFocus").override(cfg)
         self.name = name
         self.parent = parent
 
@@ -80,7 +81,7 @@ class NchantdToolsPackage(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("NchantdToolsPackage")
+        self.config = kahndor.instruct(pxcfg).select("NchantdToolsPackage")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

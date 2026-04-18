@@ -23,8 +23,8 @@ import platform
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.wizards.apps import NchantdApplicationStartupWizard
 
 from nchantdoffice.updates.db import NchantdOfficeDBUpdate
@@ -48,7 +48,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
     def __init__(self, app=None, cfg=None):
         """ """
         super().__init__(app, cfg)
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeApplicationStartupWizard")).override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationStartupWizard")).override(cfg)
         cfg = {}
         self.db_update = NchantdOfficeDBUpdate(self, cfg)
         self.download_codec = None

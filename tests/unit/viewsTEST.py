@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:07
 """
+
 # 2025-11-06 09:45:07
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -31,8 +32,8 @@ from nchantdoffice.views import NchantdOfficeCloakView  # 2025-11-06 09:43:47
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:07
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:07
 PXCFG = join(HERE, "_data_", "viewsTEST.yaml")  # 2025-11-06 09:45:07
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:07
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:43:47
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:07
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:43:47
 # 2025-11-06 09:43:47
 
 

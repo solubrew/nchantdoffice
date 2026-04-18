@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -46,7 +46,7 @@ class NchantdNEWSTab(tabs.NchantdTab):
     def __init__(self, parent=None, cfg={}):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NMBFTNEWSLTab")
+        self.config = kahndor.Instruct(pxcfg).select("NMBFTNEWSLTab")
         self.config.override(cfg)
         if parent:
             self.config.override(parent.config)

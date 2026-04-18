@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:46:10
 """
+
 # 2025-11-06 09:46:10
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -33,8 +34,8 @@ from nchantdoffice.widgets.controls.toolbars import NchantdTextFormattingToolBar
 HERE = join(dirname(__file__))  # 2025-11-06 09:46:10
 LOGMA = Logma(__name__)  # 2025-11-06 09:46:10
 PXCFG = join(HERE, "_data_", "toolbarsTEST.yaml")  # 2025-11-06 09:46:10
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:46:10
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:46:10
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:46:10
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:46:10
 # 2025-11-06 09:46:10
 # ====================================================================================================================||
 

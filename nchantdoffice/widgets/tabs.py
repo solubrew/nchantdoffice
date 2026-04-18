@@ -21,8 +21,8 @@ from nchantrs.libraries import pyqt
 from nchantrs.libraries.pyqt import Signal, Slot
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.widgets.tabsets import NchantdTab, NchantdTabSet
 
 # ====================================================================================================================||
@@ -41,7 +41,7 @@ class NchantdOfficeTab(NchantdTab):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeTab").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTab").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -79,7 +79,7 @@ class NchantdOfficeTabs(NchantdTabSet):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeTabs").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTabs").override(cfg))
         # Enable drag-drop
         self._setup_drag_drop()
 

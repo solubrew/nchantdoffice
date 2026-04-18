@@ -21,11 +21,11 @@ import json as j
 from pandas import DataFrame
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.managers import NchantdManager
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantrs.dialogs.files import NchantdFileOpenSigil
 from nchantdoffice.widgets.panes.documents import NchantdOfficeTabEditPane, NchantdOfficeNoteEditPane
 from nchantdoffice.widgets.panes.documents import NchantdOfficeNodeEditPane
@@ -223,7 +223,7 @@ class NchantdOfficeDocumentMixin:
         }
         logma.info(f"CFG {cfg}")
         buttons = (
-            condor.Instruct(_buttons)
+            kahndor.Instruct(_buttons)
             .override(self.config.dikt.get("buttons", {}))
             .override(cfg.get("buttons", {}))
             .dikt
@@ -409,7 +409,7 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         self.parent = parent
         if cfg is not None:
             logma.info(f"Document Config {cfg.get('toolbox', None)}")
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeDocument").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocument").override(cfg))
         self.name = name
         self.did = None
         self.notes = None
@@ -528,7 +528,7 @@ class NchantdOfficeDocumentManager(NchantdOfficeDocumentMixin, NchantdManager):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeDocumentManager"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentManager"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

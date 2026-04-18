@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
@@ -45,7 +45,7 @@ class NchantdNewObjectPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdNewObjectPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewObjectPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -105,7 +105,7 @@ class NchantdHeaderPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdNewObjectPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewObjectPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -153,7 +153,7 @@ class NchantdFooterPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdNewObjectPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewObjectPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

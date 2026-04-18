@@ -16,7 +16,7 @@ NchantdOfficeInstall:
     squirl:
       version: 0.0.1
       hash: "sha256:"
-    condor:
+    kahndor:
       version: 0.0.1
       hash: "sha256:"
     subtrix:

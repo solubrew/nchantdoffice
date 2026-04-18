@@ -24,11 +24,11 @@ import datetime as dt
 import crow  # Commented out - not needed for local system
 
 crow.crowLoad("NchantdOffice", "DELTA")
-from condor import condor
+from kahndor import kahndor
 from nchantrs.nchantrs import nchantment
 from nchantdoffice.nchantdoffice import NchantdOfficeCloak
 from nchantdoffice.wizards.wizards import NchantdOfficeApplicationStartupWizard
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||

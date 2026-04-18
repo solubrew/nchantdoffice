@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:47:06
 """
+
 # 2025-11-06 09:47:06
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -28,8 +29,8 @@ from nchantdoffice.widgets.documents.workbooks.notebooks import NchantdOfficeNot
 HERE = join(dirname(__file__))  # 2025-11-06 09:47:06
 LOGMA = Logma(__name__)  # 2025-11-06 09:47:06
 PXCFG = join(HERE, "_data_", "notebooksTEST.yaml")  # 2025-11-06 09:47:06
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:47:06
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:47:06
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:47:06
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:47:06
 # 2025-11-06 09:47:06
 # ====================================================================================================================||
 

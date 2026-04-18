@@ -23,7 +23,7 @@ from datetime import timedelta
 #===============================================================================||
 import crow
 #===============================================================================||
-from condor import condor#										||
+from kahndor import kahndor#										||
 from nchantrs.dstruct import trees as dtrees
 from nchantrs.nchantrs import NchantdCloak
 from nchantrs.models.applicationmodels import NchantdCloakModel

@@ -10,6 +10,7 @@
     security: seclvl2
     <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -23,13 +24,13 @@ import datetime as dt
 
 # crow.crowLoad removed
 
-from condor import condor
+from kahndor import kahndor
 from nchantrs.nchantrs import distortion, nchantment
 from nchantrs.widgets.calculators.calculators import NchantdCalculator, NchantdGraphingCalculator
 from nchantrs.widgets.media.editors.editors import NchantdEntryEditor
 from nchantdoffice.nchantdoffice import NchantdOfficeCloak
 from nchantdoffice.wizards.wizards import NchantdOfficeApplicationStartupWizard
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||

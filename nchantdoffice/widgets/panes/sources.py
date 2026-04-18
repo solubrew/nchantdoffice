@@ -19,9 +19,9 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
@@ -52,7 +52,7 @@ class NchantdSourceEditPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdSourceEditPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourceEditPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -102,7 +102,7 @@ class NchantdSourcesListPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -139,7 +139,7 @@ class NchantdWhereUsedListPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -175,7 +175,7 @@ class NchantdOfficeEDA(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeEDA")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeEDA")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self)
@@ -218,7 +218,7 @@ class NchantdSourcePane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdSourcePane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourcePane"))
         if self.parent:
             self.config.override(parent.config)
             self.catalog = self.parent.catalog
@@ -359,7 +359,7 @@ class NchantdDataSetPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("Nchantd"))
+        self.config.override(kahndor.Instruct(pxcfg).select("Nchantd"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -404,7 +404,7 @@ class NchantdViewPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdViewPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdViewPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -446,7 +446,7 @@ class NchantdViewEditPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdViewEditGroup"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdViewEditGroup"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -579,7 +579,7 @@ class NchantdDataSetConfigPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdSourceConfigPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourceConfigPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -925,7 +925,7 @@ class NchantdSourceDefaultPane(NchantdWidget):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdSourceDefaultPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourceDefaultPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

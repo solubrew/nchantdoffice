@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:47
 """
+
 # 2025-11-06 09:45:47
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -29,8 +30,8 @@ from nchantdoffice.widgets.advertisements import NchantdAdvertisementSlimTab  # 
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:47
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:47
 PXCFG = join(HERE, "_data_", "advertisementsTEST.yaml")  # 2025-11-06 09:45:47
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:47
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:45:47
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:47
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:45:47
 # 2025-11-06 09:45:47
 # ====================================================================================================================||
 

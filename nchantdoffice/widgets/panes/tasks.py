@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.widgets import NchantdWidget
@@ -46,7 +46,7 @@ class NchantdOfficeTaskEntryPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeTaskEntry")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeTaskEntry")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self)

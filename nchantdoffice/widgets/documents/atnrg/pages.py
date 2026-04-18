@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.browsers.pages import NchantdWebEnginePage
 from nchantrs.widgets.browsers.utilities import NchantdURL
@@ -71,7 +71,7 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
         """Initialize the NchantdOfficeWebPage."""
         super().__init__(parent, profile, intercept, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeWebPage"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebPage"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -142,7 +142,7 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
 #         """ """
 #         super().__init__(parent, profile, intercept, cfg)
 #         self.parent = parent
-#         self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeWebPage"))
+#         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebPage"))
 #         if self.parent:
 #             self.config.override(parent.config)
 #         self.config.override(cfg)
@@ -239,7 +239,7 @@ class NchantdOfficeDevPage(NchantdOfficeWebPage):
         """Initialize development page with local security overrides."""
         super().__init__(parent, profile, intercept, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeDevPage"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDevPage"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -296,7 +296,7 @@ class NchantdOfficeSidePage(NchantdWebEnginePage):
         """ """
         super().__init__(parent, profile, intercept, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeSidePage"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSidePage"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -344,7 +344,7 @@ class NchantdOfficeURL(NchantdURL):
         """ """
         super().__init__(url, parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeURL"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeURL"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

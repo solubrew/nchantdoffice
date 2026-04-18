@@ -19,10 +19,10 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.config.accounts import NchantdAccountOverview
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantrs.widgets.config.accounts import NchantdAccountSettings
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
@@ -46,7 +46,7 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeAccountOverview"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAccountOverview"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -143,7 +143,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAccountSettings"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAccountSettings"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -267,7 +267,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
                     logma.info(f"Updated user name to: {new_name}")
 
             # Save to persistent storage
-            if hasattr(self.app.model, 'save_user_settings'):
+            if hasattr(self.app.model, "save_user_settings"):
                 self.app.model.save_user_settings()
                 logma.info("Account settings saved")
 
@@ -342,9 +342,9 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
                 url = "https://www.nchantdoffice.com/registration"
 
             # Update browser
-            if hasattr(self.browser, 'load_url'):
+            if hasattr(self.browser, "load_url"):
                 self.browser.load_url(url)
-            elif hasattr(self.browser, 'setUrl'):
+            elif hasattr(self.browser, "setUrl"):
                 self.browser.setUrl(pyqt.QUrl(url))
 
             logma.info(f"Browser refreshed with URL: {url}")

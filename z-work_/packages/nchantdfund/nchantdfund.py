@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
@@ -17,7 +18,7 @@ from os.path import dirname, join
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.items.catalogs import NchantdAccountCatalogItem
 from nchantrs.widgets.catalogs import NchantdCatalog
@@ -28,7 +29,7 @@ from nchantrs.widgets.media.images import NchantdImage
 from nchantrs.widgets.controls.controls import NchantdCheckboxGroup
 from nchantrs.wizards.pages import NchantdWizardPage
 from nchantrs.widgets.widgets import NchantdWidget
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -45,7 +46,7 @@ class NchantdNewNchantdFundApplicationPage(NchantdWizardPage):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("NchantdNewAccountNchantdFundPage")
+        self.config = kahndor.instruct(pxcfg).select("NchantdNewAccountNchantdFundPage")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -87,7 +88,7 @@ class NchantdFundApplicationIntegration(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("NchantdFundApplicationIntegration")
+        self.config = kahndor.instruct(pxcfg).select("NchantdFundApplicationIntegration")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -120,7 +121,7 @@ class NchantdFundAccounts(NchantdWidget):
     def __init__(self, parent=None, cfg={}):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("NchantdFundAccounts")
+        self.config = kahndor.instruct(pxcfg).select("NchantdFundAccounts")
         self.config.override(cfg)
         if parent:
             self.config.override(parent.config)
@@ -133,7 +134,7 @@ class NchantdFundCashFlowTracker(NchantdWidget):
     def __init__(self, parent=None, cfg={}, root=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg)
+        self.config = kahndor.instruct(pxcfg)
         self.config.select("NchantdFundCashFlowTrackerTab").override(cfg)
         if parent:
             self.config.override(parent.config)
@@ -171,7 +172,7 @@ class NchantdFundAccountsCatalog(NchantdCatalog):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("NchantdFundAccountsCatalog")
+        self.config = kahndor.instruct(pxcfg).select("NchantdFundAccountsCatalog")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -260,7 +261,7 @@ class NchantdOfficeJS(NchantdJS):
 
     def __init__(self, cfg=None):
         """"""
-        self.config = condor.Instruct(pxcfg).select("").override(cfg)
+        self.config = kahndor.Instruct(pxcfg).select("").override(cfg)
 
     def add_script(self, cmd):
         """"""

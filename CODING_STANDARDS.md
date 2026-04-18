@@ -285,9 +285,9 @@ results = engine.query("What fact was shared?")
 
 #### Condor - Configuration Management
 ```python
-import condor
+import kahndor
 
-config = condor.Instruct("config.yaml").select("Production").override("local.yaml")
+config = kahndor.Instruct("config.yaml").select("Production").override("local.yaml")
 ```
 
 **Use when**: Managing multiple environment configs with cascading overrides and YAML includes.

@@ -54,7 +54,7 @@ nchantdoffice/
 
 ## Dependencies
 
-- **Core**: nchantrs, pyffice, condor
+- **Core**: nchantrs, pyffice, kahndor
 - **GUI**: PySide6
 - **Data**: pandas, sqlalchemy
 

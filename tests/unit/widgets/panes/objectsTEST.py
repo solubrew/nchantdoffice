@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:47:39
 """
+
 # 2025-11-06 09:47:39
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -30,8 +31,8 @@ from nchantdoffice.widgets.panes.objects import NchantdFooterPane  # 2025-11-06 
 HERE = join(dirname(__file__))  # 2025-11-06 09:47:39
 LOGMA = Logma(__name__)  # 2025-11-06 09:47:39
 PXCFG = join(HERE, "_data_", "objectsTEST.yaml")  # 2025-11-06 09:47:39
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:47:39
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:47:39
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:47:39
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:47:39
 # 2025-11-06 09:47:39
 # ====================================================================================================================||
 

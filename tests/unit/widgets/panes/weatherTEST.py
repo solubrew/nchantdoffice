@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:47:40
 """
+
 # 2025-11-06 09:47:40
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -28,8 +29,8 @@ from nchantdoffice.widgets.panes.weather import NchantdWeatherPane  # 2025-11-06
 HERE = join(dirname(__file__))  # 2025-11-06 09:47:40
 LOGMA = Logma(__name__)  # 2025-11-06 09:47:40
 PXCFG = join(HERE, "_data_", "weatherTEST.yaml")  # 2025-11-06 09:47:40
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:47:40
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:47:40
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:47:40
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:47:40
 # 2025-11-06 09:47:40
 # ====================================================================================================================||
 

@@ -10,6 +10,7 @@
     security: seclvl2
     <(WT)>: -32
 """
+
 from copy import deepcopy
 
 # -*- coding: utf-8 -*
@@ -19,8 +20,8 @@ from os.path import dirname, join
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.managers import NchantdManager
 from nchantrs.widgets.controls.radios import NchantdRadioButtonGroup
@@ -56,7 +57,7 @@ class NchantdContextListPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdContextListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdContextListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -96,7 +97,7 @@ class NchantdOfficePromptManager(NchantdManager):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config = condor.instruct(pxcfg).select("NchantdOfficePromptManager")
+        self.config = kahndor.instruct(pxcfg).select("NchantdOfficePromptManager")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -159,7 +160,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         """ """
         super().__init__("Nchantd Prompt", self, cfg)  # TODO there is an override issue here
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficePrompt"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePrompt"))
         self.toolbox_config = self.config.dikt.get("toolbox", None)
         logma.info(f"prompt config {self.toolbox_config}")
         if self.parent:
@@ -375,7 +376,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeSuperPromptPane")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeSuperPromptPane")
         if parent:
             self.config.override(parent.config)
         super().__init__(parent, self.config)

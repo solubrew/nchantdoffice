@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, exists
@@ -19,7 +20,7 @@ from copy import deepcopy
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from ogma.logma import Logma
 from nchantrs.widgets.managers import NchantdBasketManager
@@ -53,7 +54,7 @@ class NchantdOfficeLightTable(NchantdBasketManager):
         """ """
         self.parent = parent
         super().__init__(parent)
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeLightTable"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeLightTable"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -105,7 +106,7 @@ class NchantdColorShiftPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdColorShiftPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdColorShiftPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -166,7 +167,7 @@ class NchantdConvertFormatPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdConvertFormatPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertFormatPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -221,7 +222,7 @@ class NchantdConvertSizePane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdConvertSizePane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertSizePane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -284,7 +285,7 @@ class NchantdImageCropPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdConvertSizePane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertSizePane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -335,7 +336,7 @@ class NchantdImageGeneratorPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdConvertSizePane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertSizePane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -392,7 +393,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """ """
         super().__init__("Nchantd Image", parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeImage"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeImage"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

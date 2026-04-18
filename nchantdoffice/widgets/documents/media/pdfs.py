@@ -18,10 +18,10 @@ from os.path import dirname, join, exists
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from pyffice.images.pdfs import PyfficePDF
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.controls.advanced_buttons import NchantdEnableSpinBox
@@ -46,7 +46,7 @@ class NchantdPageAddToolPane(NchantdPane):
         """ """
         super().__init__(self)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdPageAddToolPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdPageAddToolPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -95,7 +95,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
     def __init__(self, parent=None, cfg=None):
         """"""
         super().__init__("Nchantd PDF", parent, cfg)
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficePDF"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePDF"))
         self.parent = parent
         if self.parent is not None:
             self.config.override(self.parent.config)

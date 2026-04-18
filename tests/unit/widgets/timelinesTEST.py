@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:51
 """
+
 # 2025-11-06 09:45:51
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -28,8 +29,8 @@ from nchantdoffice.widgets.timelines import NchantdOfficeTodayOverview  # 2025-1
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:51
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:51
 PXCFG = join(HERE, "_data_", "timelinesTEST.yaml")  # 2025-11-06 09:45:51
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:51
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:45:51
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:51
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:45:51
 # 2025-11-06 09:45:51
 # ====================================================================================================================||
 

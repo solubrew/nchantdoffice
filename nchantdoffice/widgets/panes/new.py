@@ -20,7 +20,7 @@ import json as j
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.utilities.utils import lookup
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.panes.catalogs import NchantdNewNodePane
@@ -30,7 +30,7 @@ from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.controls.checkboxes import NchantdCheckboxGroup, NchantdCheckbox
 from nchantrs.widgets.controls.radios import NchantdRadioButtonGroup
 from pyffice.web.url import PyfficeURL
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from subtrix.utilities import uuid
 
 # ====================================================================================================================||
@@ -49,7 +49,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeNewDocumentPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNewDocumentPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -102,7 +102,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             pos = self.app.view.panes[tabset].model.max_position
             document_nm = self.active_item.document_nm
             widget = self.active_item.widget
-            # widgdata = condor.Instruct().override(widgdata).dikt
+            # widgdata = kahndor.Instruct().override(widgdata).dikt
             # if self.active_item.selected_unique_option is not None:
             #     if self.active_item.selected_unique_option.get("widget_code", None):
             #         widget = lookup_widget(self.active_item.selected_unique_option["widget_code"])
@@ -450,7 +450,7 @@ class NchantdOfficeNewSubtreePane(NchantdOfficeNewDocumentPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdOfficeNewSubtreePane")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeNewSubtreePane")
         if self.parent:
             self.config.override(parent.config)
         super().__init__(self)

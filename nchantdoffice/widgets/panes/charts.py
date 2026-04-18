@@ -18,8 +18,8 @@ from os.path import dirname, join
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from seaborn import palettes
 
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
@@ -51,7 +51,7 @@ class NchantdChartConfigPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdChartConfigPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartConfigPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -505,7 +505,7 @@ class NchantdChartAxisPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdChartAxisPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartAxisPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -618,7 +618,7 @@ class NchantdChartDataSeriesPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdChartTrendlinePane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartTrendlinePane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -804,7 +804,7 @@ class NchantdChartLegendPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdChartTrendlinePane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartTrendlinePane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -983,7 +983,7 @@ class NchantdChartTrendlinePane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdChartTrendlinePane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartTrendlinePane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join, isfile
@@ -24,8 +25,8 @@ from docutils.nodes import abbreviation
 
 # crow.crowLoad removed
 
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantrs.nchantrs import nchantment, distortion
 from nchantdoffice.widgets.documents.atnrg.browsers.browsers import NchantdOfficeWebBrowser
 from nchantdoffice.widgets.documents.media.scripts import NchantdOfficeScript

@@ -11,6 +11,7 @@
     security: <[security]>
     -(WT)-: -32  # 2025-11-06 09:45:43
 """
+
 # 2025-11-06 09:45:43
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
@@ -28,8 +29,8 @@ from nchantdoffice.utilities.config import PyfficeApplicationConfig  # 2025-11-0
 HERE = join(dirname(__file__))  # 2025-11-06 09:45:43
 LOGMA = Logma(__name__)  # 2025-11-06 09:45:43
 PXCFG = join(HERE, "_data_", "configTEST.yaml")  # 2025-11-06 09:45:43
-CFG = condor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:43
-FIXTURES = condor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:45:43
+CFG = kahndor.Instruct(PXCFG).load().dikt  # 2025-11-06 09:45:43
+FIXTURES = kahndor.Instruct(join(HERE, "..", "fixtures", "fixtures.yaml")).load().dikt  # 2025-11-06 09:45:43
 # 2025-11-06 09:45:43
 # ====================================================================================================================||
 

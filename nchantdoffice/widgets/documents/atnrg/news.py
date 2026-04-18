@@ -20,12 +20,12 @@ import datetime as dt
 import feedparser
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
+from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.groups import NchantdVScrollGroupBox
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.annotations import NchantdLabel
-from ogma.logma import Logma
+from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -42,7 +42,7 @@ class NchantdCommunitiesSummary(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         self.parent = parent
-        self.config = condor.Instruct(pxcfg).select("NchantdCommunitiesSummaryTab")
+        self.config = kahndor.Instruct(pxcfg).select("NchantdCommunitiesSummaryTab")
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

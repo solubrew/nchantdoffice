@@ -22,7 +22,7 @@
 | tests/ directory | 🔄 | To be created |
 | Git workflow | ✅ | Using orin-ws branch |
 | tuh environment | ✅ | Required for imports |
-| Internal projects | ✅ | Uses nchantrs, pyffice, condor |
+| Internal projects | ✅ | Uses nchantrs, pyffice, kahndor |
 
 ---
 
@@ -100,7 +100,7 @@ nchantdoffice/
 |---------|---------|--------|
 | nchantrs | Core framework | ✅ Required |
 | pyffice | Document automation | ✅ Integrated |
-| condor | Configuration | ✅ Used |
+| kahndor | Configuration | ✅ Used |
 | pycurity | Security | ✅ Available |
 | ogma | ZMQ messaging | ✅ Available |
 | micromole | Data utilities | ✅ Available |

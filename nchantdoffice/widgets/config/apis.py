@@ -19,8 +19,8 @@ import datetime as dt
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantdoffice.widgets.documents.media.scripts import NchantdOfficeScript
 from nchantrs.widgets.groups import NchantdHScrollGroupBox, NchantdVScrollGroupBox
@@ -43,7 +43,7 @@ class NchantdOfficeAPIFile(NchantdSettingsWidget):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeAPIFile"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAPIFile"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)

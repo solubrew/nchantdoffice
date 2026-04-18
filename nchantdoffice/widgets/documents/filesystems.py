@@ -2,14 +2,15 @@
 """
 ---
 <(META)>:
-	docid:
-	name:
-	description: >
-	version: 0.0.0.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join, getsize, expanduser
@@ -20,8 +21,8 @@ from os import stat
 from pandas import DataFrame
 
 # ======================================Solutions Brewer Library Modules==============================================||
-from condor import condor
-from ogma.logma import Logma
+from kahndor import kahndor
+from kahndor.logma import Logma
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.annotations import NchantdLabel
@@ -54,7 +55,7 @@ class NchantdCompressPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -114,7 +115,7 @@ class NchantdCompressPane(NchantdPane):
             source_path = self.parent.fs_tree.current_level_path
             # Get selected files from table if selection exists
             selected_files = []
-            if hasattr(self.parent, 'file_table_one') and self.parent.file_table_one:
+            if hasattr(self.parent, "file_table_one") and self.parent.file_table_one:
                 # Get all files from current directory
                 for item in self.parent.fs_tree.get_current_level_files():
                     selected_files.append(item.name)
@@ -127,7 +128,7 @@ class NchantdCompressPane(NchantdPane):
             archive_name = f"{basename(source_path)}_archive.zip"
             archive_path = join(source_path, archive_name)
 
-            with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as zipf:
                 for file_name in selected_files:
                     file_path = join(source_path, file_name)
                     if exists(file_path):
@@ -140,7 +141,7 @@ class NchantdCompressPane(NchantdPane):
                             logma.info(f"Deleted: {file_name}")
 
             logma.info(f"Created archive: {archive_path}")
-            if hasattr(self.parent, 'populate_table_one'):
+            if hasattr(self.parent, "populate_table_one"):
                 self.parent.populate_table_one()
 
         except Exception as e:
@@ -166,7 +167,7 @@ class NchantdImportPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdImportPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdImportPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -225,7 +226,7 @@ class NchantdImportPane(NchantdPane):
             source_path = self.parent.fs_tree.current_level_path
             # Get selected files from table if selection exists
             selected_files = []
-            if hasattr(self.parent, 'file_table_one') and self.parent.file_table_one:
+            if hasattr(self.parent, "file_table_one") and self.parent.file_table_one:
                 for item in self.parent.fs_tree.get_current_level_files():
                     selected_files.append(item.name)
 
@@ -244,10 +245,11 @@ class NchantdImportPane(NchantdPane):
                     # Handle options
                     if self.delete_on_compress.isChecked():
                         from os import remove
+
                         remove(source_file)
                         logma.info(f"Deleted original: {file_name}")
 
-            if hasattr(self.parent, 'populate_table_one'):
+            if hasattr(self.parent, "populate_table_one"):
                 self.parent.populate_table_one()
 
         except Exception as e:
@@ -273,7 +275,7 @@ class NchantdMovePane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -327,7 +329,7 @@ class NchantdMovePane(NchantdPane):
 
         try:
             source_path = self.parent.fs_tree.current_level_path
-            dest_path = self.open_to_folder_entry.get_text() if hasattr(self.open_to_folder_entry, 'get_text') else None
+            dest_path = self.open_to_folder_entry.get_text() if hasattr(self.open_to_folder_entry, "get_text") else None
 
             if not dest_path or not exists(dest_path):
                 logma.warning("Invalid destination path")
@@ -342,6 +344,7 @@ class NchantdMovePane(NchantdPane):
                 # Optionally rename on move
                 if self.rename_on_move.isChecked():
                     from os.path import splitext
+
                     name, ext = splitext(file_name)
                     file_name = f"{name}_moved{ext}"
 
@@ -351,7 +354,7 @@ class NchantdMovePane(NchantdPane):
                     move(old_path, new_path)
                     logma.info(f"Moved: {old_path} -> {new_path}")
 
-            if hasattr(self.parent, 'populate_table_one'):
+            if hasattr(self.parent, "populate_table_one"):
                 self.parent.populate_table_one()
 
         except Exception as e:
@@ -377,7 +380,7 @@ class NchantdRenamePane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -439,7 +442,7 @@ class NchantdRenamePane(NchantdPane):
                     os_rename(old_path, new_path)
                     logma.info(f"Renamed: {file_name} -> {new_name}")
 
-            if hasattr(self.parent, 'populate_table_one'):
+            if hasattr(self.parent, "populate_table_one"):
                 self.parent.populate_table_one()
 
         except Exception as e:
@@ -493,7 +496,7 @@ class NchantdStorageEditPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -524,27 +527,27 @@ class NchantdStorageEditPane(NchantdPane):
 
 
 class NchantdOfficeFileSystem(NchantdOfficeDocument):
-    """""File system document - implements PyfficeFileSystem"""
-    
-    PYTYPE = 'filesystem'
-    
+    """ ""File system document - implements PyfficeFileSystem"""
+
+    PYTYPE = "filesystem"
+
     @classmethod
     def get_pyffice_tools(cls):
         """Get toolbox tools for filesystem documents"""
         return [
-            {'id': 'browse', 'icon': 'folder', 'label': 'Browse', 'method': 'browse_files'},
-            {'id': 'search', 'icon': 'search', 'label': 'Search', 'method': 'search_files'},
-            {'id': 'filter', 'icon': 'filter', 'label': 'Filter', 'method': 'filter_files'},
-            {'id': 'sort', 'icon': 'sort', 'label': 'Sort', 'method': 'sort_files'},
-            {'id': 'import', 'icon': 'import', 'label': 'Import', 'method': 'import_files'},
-            {'id': 'export', 'icon': 'export', 'label': 'Export', 'method': 'export_files'},
+            {"id": "browse", "icon": "folder", "label": "Browse", "method": "browse_files"},
+            {"id": "search", "icon": "search", "label": "Search", "method": "search_files"},
+            {"id": "filter", "icon": "filter", "label": "Filter", "method": "filter_files"},
+            {"id": "sort", "icon": "sort", "label": "Sort", "method": "sort_files"},
+            {"id": "import", "icon": "import", "label": "Import", "method": "import_files"},
+            {"id": "export", "icon": "export", "label": "Export", "method": "export_files"},
         ]
-    
+
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__("Nchantd Files", parent, cfg)
         self.parent = parent
-        self.config.override(condor.Instruct(pxcfg).select("NchantdOfficeFileSystem"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeFileSystem"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -693,7 +696,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         """Add cloud storage configuration"""
         try:
             # Get storage configuration from storage_edit_pane
-            if not hasattr(self, 'storage_edit_pane'):
+            if not hasattr(self, "storage_edit_pane"):
                 logma.warning("Storage edit pane not initialized")
                 return self
 
@@ -760,7 +763,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         """Get files from Google Drive"""
         try:
             # Check if Google Drive is configured
-            if 'google_drive' not in self.clouds:
+            if "google_drive" not in self.clouds:
                 logma.warning("Google Drive not configured")
                 return self
 
@@ -786,7 +789,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         """Get files from Dropbox"""
         try:
             # Check if Dropbox is configured
-            if 'dropbox' not in self.clouds:
+            if "dropbox" not in self.clouds:
                 logma.warning("Dropbox not configured")
                 return self
 
