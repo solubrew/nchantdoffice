@@ -14,24 +14,14 @@
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
-import datetime as dt
-from sys import argv
 
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
-# try:
-#     import crow
-#
-#     # crow.crowLoad removed
-# except:
-#     pass
 from kahndor import kahndor
-from nchantrs.nchantrs import nchantment
 from nchantrs.widgets.applications.applications import NchantdCloak, NchantdMainWindow
 from nchantdoffice.models import NchantdOfficeCloakModel
 from nchantdoffice.views import NchantdOfficeCloakView
-from nchantdoffice.wizards.wizards import NchantdOfficeApplicationStartupWizard
 from nchantdoffice.updates.db import NchantdOfficeDBUpdate
 from kahndor.logma import Logma
 
