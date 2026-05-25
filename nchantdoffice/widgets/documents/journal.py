@@ -106,7 +106,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.top_layout.addWidget(self.settings)
         self.layout.addLayout(self.top_layout)
         cfg = {"default_text": self.full_text}
-        self.editor = NchantdJournalAppendEditor(self, cfg).initWidget()
+        self.editor = NchantdOfficeJournalAppendEditor(self, cfg).initWidget()
         self.editor.set_background(hex="#4F5665")
         self.layout.addWidget(self.editor)
         return self
@@ -156,7 +156,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         """"""
 
 
-class NchantdJournalAppendEditor(NchantdAppendOnlyEditor):
+class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
     """"""
 
     def __init__(self, parent=None, cfg=None):

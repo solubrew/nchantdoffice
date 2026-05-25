@@ -42,9 +42,9 @@ class NchantdOfficeDBUpdate(NchantdDBUpdate):
         """"""
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDBUpdate").override(cfg))
-        logma.info(f"Config: {self.config.dikt}")
+        # logma.info(f"Config: {self.config.dikt}")
         self.versions = deepcopy(self.config.dikt.get("versions"))
-        logma.info(f"Versions: {self.versions}")
+        # logma.info(f"Versions: {self.versions}")
 
     def update_pyffice_document(self):
         """need to track and upgrade pyffice document versioning that are stored in the database"""

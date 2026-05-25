@@ -233,6 +233,55 @@ class NchantdOfficeNoteDocument(NchantdOfficeDocument):
         return self
 
 
+class NchantdOfficeScratchEditor(NchantdOfficeDocument):
+    """"""
+
+    def __init__(self, parent=None, cfg=None):
+        """ """
+        super().__init__(parent, cfg)
+        self.parent = parent
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeScratchEditor").override(cfg))
+        self.context_notes = []
+        self.rotate_time = None
+        self.current_time = dt.datetime.now()
+        self.append_only = True
+        self.running_log = False
+        self.journal_notes = {}
+        self.read_only = False
+        self.top_layout = None
+        self.settings = None
+        self.previous = None
+        self.next = None
+        self.editor = None
+        self.layout = None
+        self.app = None
+        self.text = None
+        self.data = None
+        self.document = None
+        self.full_text = None
+
+    def initModel(self, cfg=None):
+        """"""
+        super().initModel(cfg)
+        return self
+
+    def initView(self):
+        """ """
+        cfg = {"default_toolbar": False}
+        super().initView(cfg)
+        cfg = {"default_text": self.full_text}
+        self.editor = NchantdDocEditor(self, cfg).initWidget()
+        self.editor.set_background(hex="#4F5665")
+        self.layout.addWidget(self.editor)
+        return self
+
+    def initWidget(self):
+        """"""
+        self.initModel()
+        self.initView()
+        return self
+
+
 # ====================================================================================================================||
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||

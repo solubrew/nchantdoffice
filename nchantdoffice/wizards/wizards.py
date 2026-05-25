@@ -104,6 +104,10 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         logma.info(f"Settings Document Created: {document}")
         self.app.model.add_document_app(document, did, "0", 0, widget, widgdata, doc_type, "center", "db", False)
 
+    def create_config_file(self):
+        """"""
+        super().create_config_file()
+
     def create_database_application(self):
         """"""
         super().create_database_application()
