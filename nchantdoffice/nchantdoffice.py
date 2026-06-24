@@ -62,7 +62,12 @@ class NchantdOfficeCloak(NchantdCloak):
         self.toolbox = None
 
     def run_on_launch(self):
-        """"""
+        """Called on every application startup."""
+        super().run_on_launch()
+        self.model.set_today()
+        # Select initial node after UI is ready (runs every startup)
+        self.select_initial_node()
+        return self""
         super().run_on_launch()
         self.model.set_today()
 

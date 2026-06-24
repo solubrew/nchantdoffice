@@ -6,8 +6,8 @@
 - **Purpose**: Office automation suite with document management, calendar, contacts
 - **Framework**: Built on nchantrs framework
 - **Location**: `/home/solubrew/.orin/workspace/projects/nchantdoffice`
-- **Branch**: `orin-ws` (per CODING_STANDARDS Git workflow)
-- **Version**: 0.0.1.0.1.3
+- **Branch**: `gamma` (per CODING_STANDARDS Git workflow)
+- **Version**: 0.0.1.0.1.4
 
 ---
 
