@@ -85,10 +85,9 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         if hasattr(self.tree, "setSelectionBehavior"):
             self.tree.setSelectionBehavior(pyqt.QAbstractItemView.SelectRows)
 
-        # TODO:2 selection issue
         # Connect tree selection to emit document_selected signal
-        # if hasattr(self.tree, 'selectionChanged'):
-        # self.tree.selectionChanged.connect(self._on_tree_selection_changed)
+        if hasattr(self.tree, 'selectionModel'):
+            self.tree.selectionModel().selectionChanged.connect(self._on_tree_selection_changed)
 
         # Setup drag on tree
         if hasattr(self.tree, "setDragEnabled"):
