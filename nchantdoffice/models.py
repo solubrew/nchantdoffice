@@ -1294,10 +1294,21 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     # TODO: add import of things like notion and evernote in the future
     def register_document(self, document_type, actions):
-        """"""
-        self._store("app_action", actions)
-        self._update("app_document_type", {"document_type": document_type}, {"registered_bit": 1})
-        self.parent.model.registered_documents = self.get_document_types("registered")
+        """""
+        # Store action using proper store method
+        if isinstance(actions, list):
+            for action in actions:
+                self.store._store("app_action", [action])
+        else:
+            self.store._store("app_action", [actions])
+        # Update document type registration using proper store method
+        self.store.update_record(
+            {"table": {"app_document_type": {"data": {"registered_bit": 1}}}},
+            "document_type_txt",
+            document_type
+        )
+        # Refresh registered documents list
+        self.parent.model.registered_documents = self.get_document_types(registered=True)
 
     def remove_document(self, uuid):
         """"""

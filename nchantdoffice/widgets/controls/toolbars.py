@@ -204,12 +204,16 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         logma.info(f"PID {self.app.view.panes[tree].tree.model.current_node.pid}")
         logma.info(f"Current Node {self.app.view.panes[tree].tree.model.current_node}")
         pos = 0
-        # TODO: there is an issue with the creation of siblings in certain situations
+        # FIX: Sibling creation - need to increment positions of existing siblings after insertion point
         if cfg["lookup_code_txt"] == "add_node_top_app_rootnode":
             pid = 0
         elif cfg["lookup_code_txt"] in ("add_node_sibling_app_siblingnode"):
             pid = self.app.view.panes[tree].tree.model.current_node.pid
-            pos = int(self.app.view.panes[tree].tree.model.current_node.position) + 1
+            current_pos = int(self.app.view.panes[tree].tree.model.current_node.position)
+            pos = current_pos + 1
+            # Update positions of existing siblings that come after the current position
+            self._increment_sibling_positions(pid, current_pos)
+        elif cfg["lookup_code_txt"] in ("add_node_child_app_childnode"):
         elif cfg["lookup_code_txt"] in ("add_node_child_app_childnode"):
             pid = self.app.view.panes[tree].tree.model.current_node.nid
             pos = int(self.app.view.panes[tree].tree.model.current_node.max_position) + 1
