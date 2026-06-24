@@ -65,11 +65,51 @@ class NchantdOfficeCloak(NchantdCloak):
         """Called on every application startup."""
         super().run_on_launch()
         self.model.set_today()
-        # Select initial node after UI is ready (runs every startup)
+        # Restore last selected node or default to Home
         self.select_initial_node()
-        return self""
-        super().run_on_launch()
-        self.model.set_today()
+        return self
+
+    def select_initial_node(self):
+        """Restore last selected node on successive runs, fallback to Home."""
+        # Get last selected node from preferences
+        last_selected_id = self.config.dikt.get("preferences", {}).get("last_selected_node")
+        
+        # Find the tree widget
+        tree = None
+        if hasattr(self.main, "application_tree"):
+            tree = self.main.application_tree.tree if hasattr(self.main.application_tree, "tree") else None
+        
+        if tree and hasattr(tree, "findItems"):
+            # Try to restore last selected node
+            if last_selected_id:
+                items = tree.findItems(last_selected_id, pyqt.Qt.MatchExactly | pyqt.Qt.MatchRecursive, 0)
+                if items:
+                    tree.setCurrentItem(items[0])
+                    return
+            
+            # Fallback to Home node
+            home_items = tree.findItems("Home", pyqt.Qt.MatchExactly, 0)
+            if home_items:
+                tree.setCurrentItem(home_items[0])
+
+    def save_selected_node(self, node_id):
+        """Save selected node to preferences."""
+        if "preferences" not in self.config.dikt:
+            self.config.dikt["preferences"] = {}
+        self.config.dikt["preferences"]["last_selected_node"] = node_id
+        # Persist to storage (config system handles this automatically)
+        if hasattr(self.config, "save"):
+            self.config.save()
+    
+    def _on_tree_selection_changed(self, selected, deselected):
+        """Handle tree selection change - save to preferences."""
+        # Get selected node ID from selection model
+        indexes = selected.indexes() if selected else []
+        if indexes:
+            # Get the node ID from the model
+            node_id = indexes[0].data(pyqt.Qt.UserRole)
+            if node_id:
+                self.save_selected_node(node_id)
 
 
 class NchantdOfficeMainWindow(NchantdMainWindow):
