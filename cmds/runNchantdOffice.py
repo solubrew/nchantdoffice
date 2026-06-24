@@ -16,11 +16,13 @@
 from os.path import abspath, dirname, join
 from sys import argv
 import datetime as dt
+import sys
 
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
 
+sys.path.insert(0, "/home/solubrew/Documents/AIM")
 import crow  # Commented out - not needed for local system
 
 crow.crowLoad("NchantdOffice", "DELTA")
