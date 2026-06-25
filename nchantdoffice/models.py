@@ -82,6 +82,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.enable_datasources = None
         self.show_quick_launch_toolbar = None
         self.today = self.store.time.get_current_datetime_str()
+        # if self.instance is None:
+        # self.get_current_instance()
 
     def initModel(self, reset=None):
         """"""
@@ -1303,9 +1305,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             self.store._store("app_action", [actions])
         # Update document type registration using proper store method
         self.store.update_record(
-            {"table": {"app_document_type": {"data": {"registered_bit": 1}}}},
-            "document_type_txt",
-            document_type
+            {"table": {"app_document_type": {"data": {"registered_bit": 1}}}}, "document_type_txt", document_type
         )
         # Refresh registered documents list
         self.parent.model.registered_documents = self.get_document_types(registered=True)

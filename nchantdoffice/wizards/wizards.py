@@ -37,7 +37,9 @@ from nchantrs.widgets.browsers.codecs.h264 import OpenH264Downloader
 here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
-# logma.off()
+debug = True
+if not log:
+    logma.off()
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "wizards.yaml")
 
@@ -57,7 +59,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
     def initView(self, args=None):
         """"""
         super().initView(args)
-        self.add_journal_document()
+        # self.add_journal_document() TODO: this may be too soon and out of place to create journal document
         return self
 
     def add_journal_document(self):
@@ -297,6 +299,8 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
 
             logma.warning(f"Could not find node: {target_nid} in tree with {tree.topLevelItemCount()} items")
         except Exception as e:
+            if debug:
+                raise e
             logma.warning(f"Error selecting node {target_nid}: {e}")
         return False
 

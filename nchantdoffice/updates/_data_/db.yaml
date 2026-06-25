@@ -13,7 +13,8 @@ NchantdOfficeDBUpdate:
                   data:
                     widget_txt: "widgets.documents.journal.NchantdJournalEditor"
                   WHERE:
-                    "did_txt": "06875532-6b6d-787b-8000-41ace4c1038a"
+                    "EQUAL":
+                      "did_txt": "06875532-6b6d-787b-8000-41ace4c1038a"
             app_menu:
               reload: True
               keep-records: False
@@ -173,17 +174,20 @@ NchantdOfficeDBUpdate:
                   data:
                     widget_txt: "widgets.documents.atnrg.pages.NchantdOfficeWebPage"
                   WHERE:
-                    "widget_txt": "widgets.documents.atnrg.browsers.pages.NchantdOfficeWebPage"
+                    "EQUAL":
+                      "widget_txt": "widgets.documents.atnrg.browsers.pages.NchantdOfficeWebPage"
                 -
                   data:
                     widget_txt: "widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
                   WHERE:
-                    "widget_txt": "widgets.documents.atnrg.browsers.browsers.NchantdOfficeWebBrowser"
+                    "EQUAL":
+                      "widget_txt": "widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
                 -
                   data:
                     widget_txt: "widgets.documents.media.images.NchantdOfficeImage"
                   WHERE:
-                    "widget_txt": "widgets.documents.media.graphics.images.NchantdOfficeImage"
+                    "EQUAL":
+                      "widget_txt": "widgets.documents.media.graphics.images.NchantdOfficeImage"
           indexes:
           views:
     0.0.1.0.1.5:

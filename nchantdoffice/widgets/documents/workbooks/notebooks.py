@@ -21,7 +21,7 @@ from os.path import dirname, join, exists
 from kahndor import kahndor
 from kahndor.logma import Logma
 
-from nchantdoffice.widgets.documents.atnrg.browsers.browsers import NchantdOfficeWebBrowser
+from nchantdoffice.widgets.documents.atnrg.browsers import NchantdOfficeWebBrowser
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown

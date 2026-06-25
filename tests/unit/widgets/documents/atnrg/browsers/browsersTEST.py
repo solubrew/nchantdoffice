@@ -20,9 +20,9 @@ import tempfile  # 2025-11-06 09:48:08
 import os  # 2025-11-06 09:48:08
 
 # ======================================3rd Party Library Modules=====================================================||
-from nchantdoffice.widgets.documents.atnrg.browsers.browsers import NchantdOfficeWebBrowser  # 2025-11-06 09:48:08
-from nchantdoffice.widgets.documents.atnrg.browsers.browsers import NchantdOfficeSlimTabSearch  # 2025-11-06 09:48:08
-from nchantdoffice.widgets.documents.atnrg.browsers.browsers import NchantdOfficeWebViewer  # 2025-11-06 09:48:08
+from nchantdoffice.widgets.documents.atnrg.browsers import NchantdOfficeWebBrowser  # 2025-11-06 09:48:08
+from nchantdoffice.widgets.documents.atnrg.browsers import NchantdOfficeSlimTabSearch  # 2025-11-06 09:48:08
+from nchantdoffice.widgets.documents.atnrg.browsers import NchantdOfficeWebViewer  # 2025-11-06 09:48:08
 
 # =========================================Local Library Modules======================================================||
 # 2025-11-06 09:48:08

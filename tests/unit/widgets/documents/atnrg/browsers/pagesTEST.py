@@ -20,10 +20,10 @@ import tempfile  # 2025-11-06 09:48:15
 import os  # 2025-11-06 09:48:15
 
 # ======================================3rd Party Library Modules=====================================================||
-from nchantdoffice.widgets.documents.atnrg.browsers.pages import NchantdOfficeWebPage  # 2025-11-06 09:48:15
-from nchantdoffice.widgets.documents.atnrg.browsers.pages import NchantdOfficeDevPage  # 2025-11-06 09:48:15
-from nchantdoffice.widgets.documents.atnrg.browsers.pages import NchantdOfficeSidePage  # 2025-11-06 09:48:15
-from nchantdoffice.widgets.documents.atnrg.browsers.pages import NchantdOfficeURL  # 2025-11-06 09:48:15
+from nchantdoffice.widgets.documents.atnrg.pages import NchantdOfficeWebPage  # 2025-11-06 09:48:15
+from nchantdoffice.widgets.documents.atnrg.pages import NchantdOfficeDevPage  # 2025-11-06 09:48:15
+from nchantdoffice.widgets.documents.atnrg.pages import NchantdOfficeSidePage  # 2025-11-06 09:48:15
+from nchantdoffice.widgets.documents.atnrg.pages import NchantdOfficeURL  # 2025-11-06 09:48:15
 
 # =========================================Local Library Modules======================================================||
 # 2025-11-06 09:48:15

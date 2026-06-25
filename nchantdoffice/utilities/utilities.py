@@ -51,7 +51,7 @@ def lookup_widget(doc_type):
     #     case "add_http_media_leonardoai":
     #         widget = "widgets.documents.atnrg.browsers.browsers.NchantdOfficeWebBrowser"
     if doc_type == "browser":
-        widget = "widgets.documents.atnrg.browsers.browsers.NchantdOfficeWebBrowser"
+        widget = "widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
     elif doc_type == "calendar":
         widget = "widgets.documents.calendars.NchantdOfficeCalendar"
     elif doc_type == "chart":

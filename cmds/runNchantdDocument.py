@@ -28,7 +28,7 @@ from docutils.nodes import abbreviation
 from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantrs.nchantrs import nchantment, distortion
-from nchantdoffice.widgets.documents.atnrg.browsers.browsers import NchantdOfficeWebBrowser
+from nchantdoffice.widgets.documents.atnrg.browsers import NchantdOfficeWebBrowser
 from nchantdoffice.widgets.documents.media.scripts import NchantdOfficeScript
 from nchantrs.nchantrs import aberration
 
