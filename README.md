@@ -1,4 +1,5 @@
 # NchantdOffice
+<img width="1919" height="1013" alt="image" src="https://github.com/user-attachments/assets/39435411-3f7e-4dc6-b96a-c0531e6de6c3" />
 
 > Office automation suite built on the nchantrs framework
 
