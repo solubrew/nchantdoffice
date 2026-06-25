@@ -28,19 +28,19 @@ classifiers = [
 # Dependencies - cleaned: removed Python 2 markers, Windows-only, and duplicates (keeping latest versions)
 dependencies = [
     # Core utilities
-    "backoff",
+    # "backoff",  # Unused - no feedparser/RSS handling
     "click",
-    "six==1.16.0",
-    "tqdm==4.68.2",
-    "python-dotenv==1.2.1",
-    "setuptools==82.0.0",
-    "decorator==5.3.0",
-    "diskcache==5.6.1",
-    "dill==0.4.0",
-    "astor==0.8.0",
-    "uuid7==0.1.0",
-    "send2trash==2.1.0",
-    "psutil==7.2.1",
+    "six==1.16.0",  # Compatibility layer
+    # "tqdm==4.68.2",  # Unused - no progress bars in nchantdoffice
+    # "python-dotenv==1.2.1",  # Unused - environment loading handled elsewhere
+    # "setuptools==82.0.0",  # Build tool only
+    "decorator==5.3.0",  # Used by networkx/graphviz
+    "diskcache==5.6.1",  # Caching system
+    "dill>=0.3.9",  # Used in utilities/imports.py
+    # "astor==0.8.0",  # Unused - AST manipulation not used
+    # "uuid7==0.1.0",  # Unused - standard uuid used instead
+    # "send2trash==2.1.0",  # Unused - no trash integration
+    "psutil==7.2.1",  # System monitoring
     
     # Data processing
     "pandas==3.0.3",
@@ -71,9 +71,9 @@ dependencies = [
     "web3==7.16.0",
     "base58==2.1.1",
     "eth-abi==5.2.0",
-    "eth-account==0.13.7",
+    "eth-account==0.13.7",  # eth-keyfile constrained by this package
     "eth-hash==0.7.1",
-    "eth-keyfile==0.9.1",
+    # "eth-keyfile",  # Resolved by eth-account dependency
     "eth-keys==0.7.0",
     "eth-rlp==2.2.0",
     "eth-typing==6.0.0",
@@ -155,7 +155,7 @@ dependencies = [
     "jeepney==0.8.0",
     
     # Parsing
-    # "feedparser==6.0.11",  # Removed - RSS/Atom parsing, rarely core
+    "feedparser>=6.0.11",  # Used in widgets/documents/atnrg/news.py
     # "pycel==1.0b29",  # Removed - Excel formula parser, heavy, rarely used
     "regex==2026.4.4",
     
