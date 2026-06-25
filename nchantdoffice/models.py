@@ -1294,7 +1294,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     # TODO: add import of things like notion and evernote in the future
     def register_document(self, document_type, actions):
-        """""
+        """"""
         # Store action using proper store method
         if isinstance(actions, list):
             for action in actions:
