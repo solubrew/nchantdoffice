@@ -59,9 +59,9 @@ def lookup_widget(doc_type):
     elif doc_type == "dataset":
         widget = "widgets.documents.analytics.sources.NchantdOfficeDataset"
     elif doc_type == "form":
-        widget = "widgets.documents.media.graphics.forms.NchantdOfficeForm"
+        widget = "widgets.documents.media.forms.NchantdOfficeForm"
     elif doc_type == "image":
-        widget = "widgets.documents.media.graphics.images.NchantdOfficeImage"
+        widget = "widgets.documents.media.images.NchantdOfficeImage"
     elif doc_type == "matrix":
         widget = "widgets.documents.workbooks.matrices.NchantdOfficeMatrix"
     elif doc_type == "note":
@@ -71,7 +71,7 @@ def lookup_widget(doc_type):
     elif doc_type == "prompt":
         widget = "widgets.documents.atnrg.prompts.NchantdOfficePrompt"
     elif doc_type == "sketch":
-        widget = "widgets.documents.media.graphics.sketches.NchantdOfficeSketch"
+        widget = "widgets.documents.media.sketches.NchantdOfficeSketch"
     else:
         widget = "widgets.documents.media.scripts.NchantdOfficeScript"
     # TODO: this needs to access the database to get the widget name add a list here is defeating the purpose

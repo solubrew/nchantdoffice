@@ -31,7 +31,7 @@ from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown, NchantdComboBox
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
-from pyffice.spreadsheet.spreadsheet import PyfficeMatrix
+from pyffice.matrix.spreadsheet import PyfficeMatrix
 from pyffice.workflows.formulas import PyfficeFormulasLibrary
 from kahndor.logma import Logma
 from nchantrs.widgets.controls.button_groups import NchantdFontConfigBar

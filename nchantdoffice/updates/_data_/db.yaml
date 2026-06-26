@@ -175,13 +175,13 @@ NchantdOfficeDBUpdate:
                     widget_txt: "widgets.documents.atnrg.pages.NchantdOfficeWebPage"
                   WHERE:
                     "EQUAL":
-                      "widget_txt": "widgets.documents.atnrg.browsers.pages.NchantdOfficeWebPage"
+                      "widget_txt": "widgets.documents.atnrg.browsers.browsers.pages.NchantdOfficeWebPage"
                 -
                   data:
                     widget_txt: "widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
                   WHERE:
                     "EQUAL":
-                      "widget_txt": "widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
+                      "widget_txt": "widgets.documents.atnrg.browsers.browsers.NchantdOfficeWebBrowser"
                 -
                   data:
                     widget_txt: "widgets.documents.media.images.NchantdOfficeImage"

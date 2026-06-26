@@ -1776,7 +1776,7 @@ class NchantdOfficeStore(NchantdStore):
                 document["encoding"],
                 "|".join(document["tags"]),
                 document["version"],
-                self.parent.instance.version,
+                self.app.model.instance.version,
                 document["hash"],
                 document["policy"],
                 encode64(j.dumps(document.get("metadata", {}))),
