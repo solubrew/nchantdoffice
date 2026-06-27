@@ -745,9 +745,15 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
                 nrow = [self.path, "file"] + row
             ndata.append(nrow)
         if self.file_table_two is not None:
+            # FIX (was column mutation bug):
+            #   - list.insert(idx, x) returns None (mutates in place),
+            #     which would have made `columns` None on second call.
+            #   - x.insert(0, "table1") in a comprehension produces a list of
+            #     Nones (since each x[i].insert returns None).
+            # Use list concatenation to create new lists safely.
             data = self.file_table_two.get_data()
-            ndata = [x.insert(0, "table1") for x in ndata]
-            columns = columns.insert(0, "table")
+            ndata = [["table1"] + x for x in ndata]
+            columns = ["table"] + columns
             for row in data:
                 nrow = ["table2", self.path, "file"] + row
                 ndata.append(nrow)

@@ -132,20 +132,30 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         """"""
         content = self.editor.toPlainText()
         logma.info(f"Data {self.document.pages}")
-        # self.document.set_pages(self.pages)
         logma.info(f"Document {self.document.to_dict()}")
         self.document.parse_content(content)
+        # FIX (was double-save bug): Removed redundant super().save() call.
+        # super().save() was nested inside `if content != self.document.content`
+        # which created an inconsistent save path. self.document.save() handles
+        # persistence (versioning + encryption); super().save() was redundant.
         if content != self.document.content:
             self.document.set_content(content)
-            super().save()
         logma.info(f"Save Content {self.document.content}")
-        self.document.save()  # increments versions and (internal encryption..future)
+        # self.document.save() increments versions and (internal encryption..future)
+        self.document.save()
         logma.info(f"Save Path {path}")
-        self.set_file_path(path)
-        pid = self.app.view.panes["left"].tree.model.current_node.nid
-        logma.info(f"Save PID {pid}")
-        pos = self.app.view.panes["center"].model.current_tab.pos
-        logma.info(f"Save Pos {pos}")
+        if path:
+            self.set_file_path(path)
+        try:
+            pid = self.app.view.panes["left"].tree.model.current_node.nid
+            logma.info(f"Save PID {pid}")
+        except (AttributeError, KeyError) as e:
+            logma.warning(f"Could not resolve PID: {e}")
+        try:
+            pos = self.app.view.panes["center"].model.current_tab.pos
+            logma.info(f"Save Pos {pos}")
+        except (AttributeError, KeyError) as e:
+            logma.warning(f"Could not resolve tab pos: {e}")
         logma.info(f"Save DID {self.document.did}")
         logma.info(f"Save Document {self.document.to_dict()}")
         logma.json(self.document.to_dict())

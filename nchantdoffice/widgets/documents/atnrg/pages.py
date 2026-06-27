@@ -107,7 +107,7 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
         """
         self.page().runJavaScript(script)
         if success_message:
-            print(success_message)
+            logma.info(f"JS success: {success_message}")
 
     def autofill_form(self):
         """Inject JavaScript to autofill HTML form fields with predefined data."""
@@ -266,7 +266,7 @@ class NchantdOfficeDevPage(NchantdOfficeWebPage):
         host = url.host()
 
         if self._is_local_host(host) and error.isOverridable():
-            print(f"Accepting certificate error for local dev: {host}:{url.port()}")
+            logma.info(f"Accepting certificate error for local dev: {host}:{url.port()}")
             return True
         return super().certificateError(error)
 
@@ -328,13 +328,13 @@ class NchantdOfficeSidePage(NchantdWebEnginePage):
 
     def javaScriptConsoleMessage(self, level, message, line_number, source_id):
         # Print JavaScript console messages to Python console for debugging
-        print(f"JS Message: {message} (Line: {line_number}, Source: {source_id})")
+        logma.info(f"JS Message: {message} (Line: {line_number}, Source: {source_id})")
 
     def on_load_finished(self):
         if self.form_factor_script is not None:
             # Inject the form factor simulation script into the web page
             self.runJavaScript(self.form_factor_script)
-            print("JavaScript injected to simulate form factor.")
+            logma.info("JavaScript injected to simulate form factor.")
 
 
 class NchantdOfficeURL(NchantdURL):

@@ -308,7 +308,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     def defocus(self):
         """"""
         super().defocus()
-        print(dir(pyqt.QWebEnginePage.LifecycleState))
+        logma.debug(f"LifecycleState: {dir(pyqt.QWebEnginePage.LifecycleState)}")
         self.browser.page.setLifecycleState(pyqt.QWebEnginePage.LifecycleState.Frozen)
         return self
 
