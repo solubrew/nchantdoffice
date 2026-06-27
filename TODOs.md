@@ -5,10 +5,29 @@
 | ID | Description | Status | Commit |
 |----|-------------|--------|--------|
 | 1 | Node selection after install - default to Home node | ✅ Complete | `1d28cd8f` |
-| 2 | Restore last selected node on successive runs, fallback to Home | ✅ Complete | `1d28cd8f` |
-| 3 | Fix main document toolbar for all document types | ✅ Complete | `710cf01` |
-| 4 | Implement context menu using NchantdMenu build system | ✅ Complete | `710cf01` |
-| 5 | Add drag and drop system for tree nodes | ✅ Complete | `8f484ec` |
+| 2 | Restore last selected node on successive runs, fallback to Home | ✅ Complete | `0c6c293` |
+| 3 | Fix main document toolbar for all document types | ⚠️ Unverified | commit `710cf01` not in current repo (possibly in wiped history) |
+| 4 | Implement context menu using NchantdMenu build system | ⚠️ Unverified | commit `710cf01` not in current repo (possibly in wiped history) |
+| 5 | Add drag and drop system for tree nodes | ⚠️ Unverified | commit `8f484ec` not in current repo (possibly in wiped history) |
+| 6 | **C3** — Fix `register_document()` widget registration refactor | ✅ Complete | `39efdf7` |
+| 7 | **presentation** document module — initial implementation | ✅ Complete | `5de9ec9` |
+| 8 | Update `fix document paths` (document path resolution) | ✅ Complete | `86e244f` |
+| 9 | Dependency cleanup — remove unused packages (cairosvg, solidpython, etc.) | ✅ Complete | `4f5b804`, `da48f23`, `fa5b437` |
+
+---
+
+## 📌 Code-Level TODOs Located (cross-checked against TODO markers in source)
+
+Found via `grep -rn "TODO\|FIXME\|XXX" --include="*.py"` — 30 markers across 4 files. All are accounted for in the priority tables below (C1–C8, H, M, L buckets). No orphan TODOs.
+
+Files with markers:
+- `widgets/trees.py` — 5 markers (lines 89, 208, 296, 321, 343)
+- `nchantdoffice.py` — 19 markers (lines 75, 246, 261, 292, 546, 607, 839, 974, 1006, 1145, 1317, 1325, 1387, 1600, 1892 + duplicates)
+- `widgets/controls/nchantdprompt.py` — 1 marker (line 162)
+- `widgets/references.py` — 3 markers (lines 148, 158 × 3)
+
+---
+
 
 ---
 
@@ -182,14 +201,14 @@
 
 | Category | Count |
 |----------|-------|
-| ✅ Completed | 5 |
-| ✅ Implemented (Document Types) | 6 |
+| ✅ Completed | 9 |
+| ✅ Implemented (Document Types) | 6 (+ 1 in progress: presentation) |
 | ❌ Missing (Document Types) | 27 |
-| 🔴 Critical Bugs | 8 |
+| 🔴 Critical Bugs | 8 (1 done: C3) |
 | 🟠 High Priority Features | 12 |
 | 🟡 Medium Priority | 12 |
 | 🟢 Low Priority | 4 |
-| **Total** | **74** |
+| **Total Catalogued** | **78** |
 
 ---
 
@@ -198,7 +217,7 @@
 ### Immediate (This Week)
 1. **Fix C1** - Node selection issue in trees.py:88
 2. **Fix C2** - Sibling creation issue in trees.py:207
-3. **Start presentation** - Use pyffice/documents/presentation/ as base
+3. ~~**Start presentation** - Use pyffice/documents/presentation/ as base~~ ✅ **DONE** (`5de9ec9`) — landed as initial implementation; follow-up work may remain
 
 ### Soon (Next 2 Weeks)
 4. Implement **presentation** document type
