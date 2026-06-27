@@ -279,9 +279,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
                 save_path = f"extracted_image_{image_count}.png"
                 image.save(save_path)
         if image_count == 0:
-            print("No images found in the document.")
+            logma.info("No images found in the document.")
         else:
-            print(f"Total images extracted: {image_count}")
+            logma.info(f"Total images extracted: {image_count}")
 
     def get_compatability_selected(self):
         """"""

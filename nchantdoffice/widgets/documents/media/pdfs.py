@@ -373,7 +373,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
 
             if selected_text.strip():
                 self.selected_text = selected_text
-                print(f"Selected text: {self.selected_text}")
+                logma.info(f"Selected text: {self.selected_text}")
 
                 # Copy to clipboard
                 clipboard = pyqt.QApplication.clipboard()

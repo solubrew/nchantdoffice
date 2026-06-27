@@ -87,7 +87,7 @@ class NchantdNEWSTab(tabs.NchantdTab):
                 try:
                     feeddata = feedparser.parse(feed)
                     if log:
-                        print("Feeds", feeddata["feed"].keys())
+                        logma.info(f"Feeds keys: {list(feeddata['feed'].keys())}")
                     if "title" in feeddata["feed"].keys():
                         cfg = {"text": feeddata["feed"]["title"]}
                         title = annotations.NchantdLabel(self).initWidget(cfg)
@@ -97,7 +97,7 @@ class NchantdNEWSTab(tabs.NchantdTab):
                     else:
                         continue
                         if log:
-                            print("Feed Keys", feeddata["feed"].keys())
+                            logma.info(f"Feed Keys: {list(feeddata['feed'].keys())}")
                 except:
                     cfg = {"text": "Unknown"}
                     title = annotations.NchantdLabel(self).initWidget(cfg)

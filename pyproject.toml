@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nchantdoffice"
-version = "0.0.1.0.1.3"
+version = "0.0.1.0.1.4"
 #dynamic = ["version"]
 description = "Your project description"
 readme = { file = "README.md", content-type = "text/markdown" }
