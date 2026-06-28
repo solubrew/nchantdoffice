@@ -13,6 +13,9 @@
 | 7 | **presentation** document module — initial implementation | ✅ Complete | `5de9ec9` |
 | 8 | Update `fix document paths` (document path resolution) | ✅ Complete | `86e244f` |
 | 9 | Dependency cleanup — remove unused packages (cairosvg, solidpython, etc.) | ✅ Complete | `4f5b804`, `da48f23`, `fa5b437` |
+| 10 | **CLI Commands** — Implement all 9 high-priority CLI commands (new, open, export, save, list, info, search, validate, repair) | ✅ Complete | `898d699` |
+| 10 | **CLI Commands** — Implement all 9 high-priority CLI commands (new, open, export, save, list, info, search, validate, repair) | ✅ Complete | `898d699` |
+| 10 | **CLI Commands** — Implement all 9 high-priority CLI commands (new, open, export, save, list, info, search, validate, repair) | ✅ Complete | `898d699` |
 
 ---
 
