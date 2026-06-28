@@ -5,264 +5,153 @@
 | ID | Description | Status | Commit |
 |----|-------------|--------|--------|
 | 1 | Node selection after install - default to Home node | ✅ Complete | `1d28cd8f` |
-| 2 | Restore last selected node on successive runs, fallback to Home | ✅ Complete | `0c6c293` |
-| 3 | Fix main document toolbar for all document types | ⚠️ Unverified | commit `710cf01` not in current repo (possibly in wiped history) |
-| 4 | Implement context menu using NchantdMenu build system | ⚠️ Unverified | commit `710cf01` not in current repo (possibly in wiped history) |
-| 5 | Add drag and drop system for tree nodes | ⚠️ Unverified | commit `8f484ec` not in current repo (possibly in wiped history) |
-| 6 | **C3** — Fix `register_document()` widget registration refactor | ✅ Complete | `39efdf7` |
-| 7 | **presentation** document module — initial implementation | ✅ Complete | `5de9ec9` |
-| 8 | Update `fix document paths` (document path resolution) | ✅ Complete | `86e244f` |
-| 9 | Dependency cleanup — remove unused packages (cairosvg, solidpython, etc.) | ✅ Complete | `4f5b804`, `da48f23`, `fa5b437` |
-| 10 | **CLI Commands** — Implement all 9 high-priority CLI commands (new, open, export, save, list, info, search, validate, repair) | ✅ Complete | `898d699` |
-| 10 | **CLI Commands** — Implement all 9 high-priority CLI commands (new, open, export, save, list, info, search, validate, repair) | ✅ Complete | `898d699` |
-| 10 | **CLI Commands** — Implement all 9 high-priority CLI commands (new, open, export, save, list, info, search, validate, repair) | ✅ Complete | `898d699` |
+| 2 | Restore last selected node on successive runs | ✅ Complete | `0c6c293` |
+| 3 | **C3** — Widget database registration refactor | ✅ Complete | `39efdf7` |
+| 4 | **presentation** document module - initial implementation | ✅ Complete | `5de9ec9` |
+| 5 | Dependency cleanup - remove unused packages | ✅ Complete | `4f5b804`, `da48f23`, `fa5b437` |
+| 6 | **CLI Commands** - All 9 high-priority CLI commands | ✅ Complete | `898d699` |
 
 ---
 
-## 📌 Code-Level TODOs Located (cross-checked against TODO markers in source)
+## 📊 Document Type Coverage
 
-Found via `grep -rn "TODO\|FIXME\|XXX" --include="*.py"` — 30 markers across 4 files. All are accounted for in the priority tables below (C1–C8, H, M, L buckets). No orphan TODOs.
+### Implemented ✅ (6 + 1)
+| Type | Status | Notes |
+|------|--------|-------|
+| charts | ✅ | Functional |
+| contacts | ✅ | Functional |
+| databases | ✅ | Functional |
+| diagrams | ✅ | Functional |
+| email | ✅ | Functional |
+| images | ✅ | Functional |
+| presentation | ✅ | Initial impl done |
+| **spreadsheet** | ✅ | `workbooks/matricies.py` - `NchantdOfficeMatrix` |
 
-Files with markers:
-- `widgets/trees.py` — 5 markers (lines 89, 208, 296, 321, 343)
-- `nchantdoffice.py` — 19 markers (lines 75, 246, 261, 292, 546, 607, 839, 974, 1006, 1145, 1317, 1325, 1387, 1600, 1892 + duplicates)
-- `widgets/controls/nchantdprompt.py` — 1 marker (line 162)
-- `widgets/references.py` — 3 markers (lines 148, 158 × 3)
-
----
-
-
----
-
-## 📊 Pyffice Gap Analysis - Document Type Coverage
-
-### Overview
-- **pyffice**: 33 document types, 15 missing in nchantdoffice
-- **nchantdoffice**: Only 6 document types implemented, **27 types missing**
-
-### nchantdoffice Document Types (✅ Implemented)
-
-| Document Type | File | Status | pyffice Source |
-|--------------|------|--------|----------------|
-| charts | `charts/` | ✅ Functional | `pyffice/documents/charts/` |
-| contacts | `contacts/` | ✅ Functional | `pyffice/documents/contacts/` |
-| databases | `databases/` | ✅ Functional | `pyffice/documents/databases/` |
-| diagrams | `diagrams/` | ✅ Functional | `pyffice/documents/diagrams/` |
-| email | `email/` | ✅ Functional | `pyffice/documents/email/` |
-| images | `images/` | ✅ Functional | `pyffice/documents/images/` |
+### Missing ❌ (27 types)
+| Priority | Types |
+|----------|-------|
+| 🔴 P1 | text, ebook, audio, video, projects, analytics |
+| 🟠 P2 | calendars, forms, container, web, cad |
+| 🟡 P3 | data, config, filesystems, notebooks, reports, socials, updates |
+| 🟢 P4 | script, skills, tags, workflows, media, ports |
 
 ---
 
-### Missing Document Types (❌ Not Implemented)
+## 🔴 Critical Bugs (C-Series)
 
-#### 🔴 Critical Priority (High-Value, Complex)
-
-| Document Type | pyffice Source | Priority | Notes |
-|--------------|----------------|----------|-------|
-| **presentation** | `pyffice/documents/presentation/` | 🔴 P1 | PPTX, ODP support - core office feature |
-| **spreadsheet** | `pyffice/documents/matrix/` | 🔴 P1 | Matrix operations + spreadsheet - core feature |
-| **projects** | `pyffice/documents/projects/` | 🔴 P1 | PAXN project management - major feature |
-| **text** | `pyffice/documents/text/` | 🔴 P1 | Bibliographies + text messages - core feature |
-| **ebook** | `pyffice/documents/ebook/` | 🔴 P1 | EPUB, AZW, MOBI support |
-| **audio** | `pyffice/documents/audio/` | 🔴 P1 | Audio playback and management |
-| **video** | `pyffice/documents/video/` | 🔴 P1 | Video playback with FFmpeg |
-
-#### 🟠 High Priority (Common Office Use)
-
-| Document Type | pyffice Source | Priority | Notes |
-|--------------|----------------|----------|-------|
-| **analytics** | `pyffice/documents/analytics/` | 🟠 P2 | DataSet, DataView analytics |
-| **cad** | `pyffice/documents/cad/` | 🟠 P2 | 15 files: DXF, DWG, STL, STEP, OBJ, FBX |
-| **calendars** | `pyffice/documents/calendars/` | 🟠 P2 | Event management system |
-| **forms** | `pyffice/documents/forms/` | 🟠 P2 | Form and survey builder |
-| **container** | `pyffice/documents/container/` | 🟠 P2 | Zip, Tar, RAR, 7zip archives |
-| **web** | `pyffice/documents/web/` | 🟠 P2 | Browser, scraping, URL utilities |
-
-#### 🟡 Medium Priority (Specialized)
-
-| Document Type | pyffice Source | Priority | Notes |
-|--------------|----------------|----------|-------|
-| **data** | `pyffice/documents/data/` | 🟡 P3 | CSV, JSON, XML, YAML handlers |
-| **config** | `pyffice/documents/config/` | 🟡 P3 | TOML support, policies |
-| **filesystems** | `pyffice/documents/filesystems/` | 🟡 P3 | Virtual FS abstraction |
-| **notebooks** | `pyffice/documents/notebooks/` | 🟡 P3 | Jupyter notebook support |
-| **reports** | `pyffice/documents/reports/` | 🟡 P3 | Report generation |
-| **socials** | `pyffice/documents/socials/` | 🟡 P3 | Messages + social integration |
-| **updates** | `pyffice/documents/updates/` | 🟡 P3 | PyfficeUpdate system |
-
-#### 🟢 Lower Priority (Niche/Advanced)
-
-| Document Type | pyffice Source | Priority | Notes |
-|--------------|----------------|----------|-------|
-| **script** | `pyffice/documents/script/` | 🟢 P4 | Script document execution |
-| **skills** | `pyffice/documents/skills/` | 🟢 P4 | Skill framework |
-| **tags** | `pyffice/documents/tags/` | 🟢 P4 | Tagging, ratings, references |
-| **workflows** | `pyffice/documents/workflows/` | 🟢 P4 | Alarms + formula automation |
-| **media** | `pyffice/documents/media/` | 🟢 P4 | Media consolidation (audio, video, HEIC, raw) |
-| **ports** | `pyffice/documents/ports/` | 🟢 P4 | Port architecture |
+| ID | File | Line | Description | Status |
+|----|------|------|-------------|--------|
+| C1 | widgets/trees.py | 89 | Node selection not working correctly | 🔴 TODO |
+| C2 | widgets/trees.py | 208 | Sibling creation issue | 🔴 TODO |
+| C4 | models.py | 975 | Tree routing issue | 🔴 TODO |
+| C5 | models.py | 1327 | Document object not available | 🟠 TODO |
+| C6 | atnrg/prompts.py | 161 | Nchantd Prompt override issue | 🟠 TODO |
+| C7 | catalogs.py | 250 | Initial loading data duplicates | 🟠 TODO |
+| C8 | references.py | - | Tag tracking issue | 🟠 TODO |
 
 ---
 
-## 📋 Implementation Plan
+## 🟠 High Priority (H-Series)
 
-### Phase 1: Core Office Features (Week 1-2)
-1. **presentation** - PPTX/ODP viewer/editor
-2. **spreadsheet** - Matrix/spreadsheet support  
-3. **text** - Rich text editor
-4. **ebook** - EPUB/AZW/MOBI reader
-
-### Phase 2: Media & Communication (Week 3-4)
-5. **audio** - Audio playback
-6. **video** - Video playback
-7. **email** - Already present, enhance IMAP/SMTP
-
-### Phase 3: Data & Analysis (Week 5-6)
-8. **analytics** - DataSet/DataView
-9. **data** - CSV/JSON/XML/YAML handlers
-10. **charts** - Already present, enhance
-11. **forms** - Form builder
-
-### Phase 4: Specialized Features (Week 7-8)
-12. **cad** - CAD file support
-13. **calendars** - Event management
-14. **web** - Browser integration
-15. **container** - Archive handling
-
-### Phase 5: Advanced Features (Week 9+)
-16. **projects** - PAXN project management
-17. **reports** - Report generation
-18. **workflows** - Automation
-19. Remaining types...
+| ID | File | Line | Description |
+|----|------|------|-------------|
+| H1 | dialogs/documents.py | 241 | Excel file integration (local file to open excel) |
+| H2 | dialogs/documents.py | 245 | Google Drive integration dialog |
+| H3 | dialogs/documents.py | 260 | Form builder wizard launch |
+| H4 | dialogs/documents.py | 292 | CSV/XLSX/TAB file handling |
+| H5 | models.py | 608 | PID definition/argument handling |
+| H6 | models.py | 1146 | Virtual table relocation |
+| H7 | models.py | 1271 | Session parsing implementation |
+| H8 | models.py | 1297 | Notion/Evernote import |
+| H9 | models.py | 1902 | Lazy loading - move to nchantrs base |
+| H10 | toolboxes.py | 326, 378 | Loading new nchantd office instance |
+| H11 | toolbars.py | 156, 160 | Widget lookup from document types table, MultiInstance db switch |
+| H12 | toolbars.py | 190 | Combine add_tab/add_document signatures |
+| H13 | widgets/new.py | 198 | Widget code override based on unique options selections |
+| H14 | widgets/new.py | 410 | Default pane handlers for root node |
+| H15 | browsers.py | 302 | Web scrapping functions connection |
+| H16 | browsers.py | 671,681,691,701 | Address Input widget (street, city, state, zip) |
+| H17 | filesystems.py | 105, 217 | Automation rules implementation |
+| H18 | filesystems.py | 703 | Actual storage configuration |
+| H19 | spreadsheets.py | 304 | Function dialog implementation |
+| H20 | prompts.py | 422 | Configuration from user or NchantdService |
 
 ---
 
-## 🔴 Critical Priority (Bugs/Issues)
+## 🟡 Medium Priority (M-Series)
 
-| ID | Priority | Location | Description |
-|----|----------|----------|-------------|
-| C1 | 🔴 P1 | `nchantdoffice/widgets/trees.py:88` | TODO #2 selection issue - node selection not working correctly in certain situations |
-| C2 | 🔴 P1 | `nchantdoffice/widgets/trees.py:207` | Sibling creation issue in certain situations - cannot create siblings properly |
-| C3 | 🔴 P1 | `nchantdoffice/nchantdoffice.py:839` | Widget database registration refactor needed |
-| C4 | 🔴 P1 | `nchantdoffice/nchantdoffice.py:973` | Tree routing issue |
-| C5 | 🔴 P2 | `nchantdoffice/nchantdoffice.py:1316` | Document object not available |
-| C6 | 🔴 P2 | `nchantrs/widgets/controls/nchantdprompt.py:161` | Nchantd Prompt override issue |
-| C7 | 🔴 P2 | `nchantrs/nodes.py:250` | Initial loading data duplicates - data loaded multiple times |
-| C8 | 🔴 P2 | `nchantrs/nodes.py:123` | Tag tracking issue across multiple nchantd*.py files |
-
----
-
-## 🟠 High Priority (Core Features)
-
-| ID | Location | Description |
-|----|----------|-------------|
-| H1 | `nchantdoffice/nchantdoffice.py` | Implement document creation |
-| H2 | `nchantdoffice/nchantdoffice.py` | Implement document opening |
-| H3 | `nchantdoffice/nchantdoffice.py` | Implement export functionality |
-| H4 | `nchantdoffice/nchantdoffice.py` | Implement save functionality |
-| H5 | `nchantdoffice/nchantdoffice.py` | Implement list functionality |
-| H6 | `nchantdoffice/nchantdoffice.py` | Implement info display |
-| H7 | `nchantdoffice/nchantdoffice.py` | Implement search functionality |
-| H8 | `nchantdoffice/nchantdoffice.py` | Implement validation |
-| H9 | `nchantdoffice/nchantdoffice.py` | Implement repair functionality |
-| H10 | `nchantdoffice/nchantdoffice.py:1144` | Virtual table relocation |
-| H11 | `nchantdoffice/nchantdoffice.py:1891` | Lazy loading - move to nchantrs base |
-| H12 | `nchantrs/nodes.py:410` | Default pane handlers for root node |
+| ID | File | Line | Description |
+|----|------|------|-------------|
+| M1 | models.py | 547 | App tables relocation question |
+| M2 | models.py | 1007 | Date format conversion |
+| M3 | models.py | 1186 | Tab code, images and tables arrangement |
+| M4 | models.py | 1335 | External notifications approval check |
+| M5 | models.py | 1397 | Version increment logic |
+| M6 | models.py | 1610 | Version handling |
+| M7 | utilities/utilities.py | 77 | Widget database lookup from database |
+| M8 | utilities/links.py | 40 | Link table connection to link_affiliate |
+| M9 | wizards/wizards.py | 62 | Journal document creation timing |
+| M10 | toolbars.py | 238 | Multiple notes position increment |
+| M11 | widgets/widgets.py | 123 | Unexpected state at this point |
+| M12 | widgets/forms.py | 124 | Always asked rate spinbox in survey vs form |
+| M13 | widgets/search.py | 123 | Tag tracking |
+| M14 | widgets/documents.py | 121 | Tag tracking |
+| M15 | browsers.py | 811 | Buttons in drawer handling |
+| M16 | documents.py | 150, 159 | Flip icon |
+| M17 | links.py | - | TODO: get link table where connection to the link_affiliate table |
 
 ---
 
-## 🟡 Medium Priority (Enhancements)
+## 🟢 Lower Priority (L-Series)
 
-| ID | Location | Description |
-|----|----------|-------------|
-| M1 | `nchantdoffice/nchantdoffice.py:245` | Google Drive integration dialog |
-| M2 | `nchantdoffice/nchantdoffice.py:260` | Form builder wizard - currently commented out |
-| M3 | `nchantdoffice/nchantdoffice.py:545` | App tables relocation |
-| M4 | `nchantdoffice/nchantdoffice.py:606` | PID definition/argument handling |
-| M5 | `nchantdoffice/nchantdoffice.py:1005` | Date format conversion |
-| M6 | `nchantdoffice/nchantdoffice.py:1324` | External notifications approval |
-| M7 | `nchantdoffice/nchantdoffice.py:1386` | Version increment logic |
-| M8 | `nchantdoffice/nchantdoffice.py:1599` | Version handling |
-| M9 | `nchantdoffice/nchantdwidget.py:77` | Widget database lookup |
-| M10 | `nchantdoffice/nchantdimage.py:677,687,697,707` | Address input widget |
-| M11 | `nchantdoffice/nchantdchat.py:105,217` | Automation rules |
-| M12 | `nchantdoffice/widgets/trees.py` | Tab duplication issue in nodes.py |
+| ID | File | Line | Description |
+|----|------|------|-------------|
+| L1 | widgets/new.py | 189 | Cross-tool file format integration |
+| L2 | widgets/new.py | 193 | Google Drive browser/API connection |
 
 ---
 
-## 🟢 Low Priority (Nice to Have)
+## 📋 Implementation Phases
 
-| ID | Location | Description |
-|----|----------|-------------|
-| L1 | `nchantdoffice/nchantdoffice.py:292` | CSV/XLSX/TAB file handling |
-| L2 | `nchantdoffice/nchantdoffice.py` | Additional file format support |
-| L3 | | Performance optimization opportunities |
-| L4 | | UI/UX polish and improvements |
+### Phase 1: Bug Fixes (Critical)
+1. **C1** - Fix node selection in trees.py:89
+2. **C2** - Fix sibling creation in trees.py:208
+3. **C4** - Fix tree routing in models.py:975
+
+### Phase 2: Core Document Types
+1. **text** - Rich text editor with bibliography support
+2. **ebook** - EPUB/AZW/MOBI reader
+3. **audio** - Audio playback
+4. **video** - Video playback with FFmpeg
+5. **projects** - PAXN project management
+6. **analytics** - DataSet/DataView
+
+### Phase 3: Productivity Features
+1. **calendars** - Event management
+2. **forms** - Form/survey builder
+3. **container** - Archive handling
+4. **web** - Browser integration
+
+### Phase 4: Data & Advanced
+1. **data** - CSV/JSON/XML/YAML handlers
+2. **config** - TOML support, policies
+3. **cad** - CAD file support
+4. **reports** - Report generation
 
 ---
 
-## 📊 Summary by Category
+## 📊 Summary
 
 | Category | Count |
 |----------|-------|
-| ✅ Completed | 9 |
-| ✅ Implemented (Document Types) | 6 (+ 1 in progress: presentation) |
-| ❌ Missing (Document Types) | 27 |
-| 🔴 Critical Bugs | 8 (1 done: C3) |
-| 🟠 High Priority Features | 12 |
-| 🟡 Medium Priority | 12 |
-| 🟢 Low Priority | 4 |
-| **Total Catalogued** | **78** |
+| ✅ Completed | 6 |
+| 🔴 Critical Bugs | 4 (1 done: C3) |
+| 🟠 High Priority | 20 |
+| 🟡 Medium Priority | 17 |
+| 🟢 Low Priority | 2 |
+| ❌ Missing Document Types | 27 |
+| **Total Active Items** | **70** |
 
 ---
 
-## 🎯 Recommended Next Actions
-
-### Immediate (This Week)
-1. **Fix C1** - Node selection issue in trees.py:88
-2. **Fix C2** - Sibling creation issue in trees.py:207
-3. ~~**Start presentation** - Use pyffice/documents/presentation/ as base~~ ✅ **DONE** (`5de9ec9`) — landed as initial implementation; follow-up work may remain
-
-### Soon (Next 2 Weeks)
-4. Implement **presentation** document type
-5. Implement **spreadsheet** document type  
-6. Implement **text** document type
-
-### Later (This Month)
-7. Audio/video playback integration
-8. Enhanced email support
-9. Form builder wizard
-
----
-
-## 📁 pyffice Source Files for Missing Types
-
-```
-pyffice/documents/
-├── analytics/       → source: pyffice/documents/analytics/sources.py
-├── audio/          → source: pyffice/documents/audio/audio.py
-├── cad/            → source: pyffice/documents/cad/ (15 files)
-├── calendars/      → source: pyffice/documents/calendars/
-├── container/      → source: pyffice/documents/container/
-├── data/           → source: pyffice/documents/data/
-├── ebook/          → source: pyffice/documents/ebook/
-├── forms/          → source: pyffice/documents/forms/forms.py
-├── filesystems/    → source: pyffice/documents/filesystems/filesystems.py
-├── media/          → source: pyffice/documents/media/
-├── notebooks/      → source: pyffice/documents/notebooks/notebooks.py
-├── ports/          → source: pyffice/documents/ports/
-├── presentation/   → source: pyffice/documents/presentation/
-├── projects/       → source: pyffice/documents/projects/
-├── reports/        → source: pyffice/documents/reports/reports.py
-├── script/         → source: pyffice/documents/script/script.py
-├── skills/         → source: pyffice/documents/skills/skills.py
-├── socials/        → source: pyffice/documents/socials/
-├── tags/           → source: pyffice/documents/tags/
-├── text/           → source: pyffice/documents/text/
-├── updates/        → source: pyffice/documents/updates/updates.py
-├── video/          → source: pyffice/documents/video/video.py
-└── web/            → source: pyffice/documents/web/
-```
-
----
-
-*Last Updated: 2026-06-26*
+*Last Updated: 2026-06-28*
