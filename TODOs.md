@@ -41,8 +41,8 @@
 
 | ID | File | Line | Description | Status |
 |----|------|------|-------------|--------|
-| C1 | widgets/trees.py | 89 | Node selection not working correctly | 🔴 TODO |
-| C2 | widgets/trees.py | 208 | Sibling creation issue | 🔴 TODO |
+| C1 | widgets/trees.py | 89 | Node selection signal connection | ✅ Fixed | `6e3f8a1` |
+| C2 | widgets/trees.py | 208 | ~~Sibling creation issue~~ (outdated line) | ✅ Removed | - |
 | C4 | models.py | 975 | Tree routing issue | 🔴 TODO |
 | C5 | models.py | 1327 | Document object not available | 🟠 TODO |
 | C6 | atnrg/prompts.py | 161 | Nchantd Prompt override issue | 🟠 TODO |
