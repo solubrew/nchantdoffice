@@ -84,7 +84,7 @@
 | H19 | spreadsheets.py | 304 | Function dialog implementation | 🔴 TODO |
 | H20 | prompts.py | 422 | Configuration from user or NchantdService | 🔴 TODO |
 | H21 | mixins/documents.py | - | **Toolbar Missing** - Main Document Toolbar missing from PDF, Image document types | 🔴 TODO |
-| H22 | mixins/widgets.py | - | **No Right Click Context Menu** - contextMenuEvent not properly connected | 🔴 TODO |
+| H22 | mixins/widgets.py | - | **No Right Click Context Menu** - contextMenuEvent not properly connected | ✅ Fixed | `9843a94` |
 | H23 | widgets/nodes.py | - | **Tab Duplication Issue** - When creating new tabs, old views are duplicated instead of replaced | 🔴 TODO |
 
 ---
