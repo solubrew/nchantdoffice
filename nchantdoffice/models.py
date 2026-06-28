@@ -597,16 +597,32 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             self.has_changed = True
             return pid
 
-    def add_week_tabs(self):
+    def add_week_tabs(self, pid):
         """
+        Add week tabs to a month node.
+
         when adding a day tab add the week that day is in as a tab to the month node if it doesnt exist some weeks will
         be duplicated across months - label them based on their week number of year
-        :return:
+
+        :param pid: Parent node ID (typically month node) to add the week tab to
+        :return: self
         """
         widget = "nchantrs.widgets.calendars.timelines.NchantdWeeklyDashboard"
         widgdata = {}
-        # TODO: Define pid properly or pass it as an argument
-        # self.parent.app.view.panes["center"].model.add_tab("Weekly Dashboard", pid, 1, widget, widgdata)
+        self.parent.app.view.panes["center"].model.add_tab("Weekly Dashboard", pid, 1, widget, widgdata)
+        self.has_changed = True
+        return self
+
+    def add_day_tabs(self, pid):
+        """
+        Add day tab to a week/month node.
+
+        :param pid: Parent node ID (typically week or month node) to add the day tab to
+        :return: self
+        """
+        widget = "nchantrs.widgets.calendars.days.NchantdDailyJournal"
+        widgdata = {}
+        self.parent.app.view.panes["center"].model.add_tab("Daily Journal", pid, 1, widget, widgdata)
         self.has_changed = True
         return self
 
