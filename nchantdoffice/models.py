@@ -1795,6 +1795,30 @@ class NchantdOfficeStore(NchantdStore):
         if how not in ["INSERT", "UPDATE", "DEACTIVATE", "DELETE", "ARCHIVE"]:
             raise Exception(f"{how} is not supported.")
 
+        # FIX P7 (C5): Ensure all required keys exist with safe defaults
+        # Handle tags - must be a list for join, default to empty string
+        tags = document.get("tags", "")
+        if tags is None:
+            tags = ""
+        elif isinstance(tags, list):
+            tags = "|".join(tags)
+        # else if already string, use as-is
+
+        # Handle metadata - ensure it's a dict
+        metadata = document.get("metadata", {})
+        if metadata is None:
+            metadata = {}
+
+        # Handle instance version safely
+        instance_version = "0.0.0"
+        if hasattr(self, 'app') and self.app is not None:
+            if hasattr(self.app, 'model') and self.app.model is not None:
+                if hasattr(self.app.model, 'instance') and self.app.model.instance is not None:
+                    instance_version = getattr(self.app.model.instance, 'version', "0.0.0")
+
+        # Handle policy - default to None
+        policy = document.get("policy", None)
+
         payload = [
             [
                 document["did"],
@@ -1802,17 +1826,17 @@ class NchantdOfficeStore(NchantdStore):
                 document["document_type"],
                 document["syntax"],
                 document["name"],
-                document["file_name"],
-                document["description"],
-                document["path"],
-                document["location"],
-                document["encoding"],
-                "|".join(document["tags"]),
-                document["version"],
-                self.app.model.instance.version,
-                document["hash"],
-                document["policy"],
-                encode64(j.dumps(document.get("metadata", {}))),
+                document.get("file_name", ""),
+                document.get("description", ""),
+                document.get("path", ""),
+                document.get("location", "internal"),
+                document.get("encoding", "utf-8"),
+                tags,
+                document.get("version", 0.0),
+                instance_version,
+                document.get("hash", ""),
+                policy,
+                encode64(j.dumps(metadata)),
             ]
         ]
         self._store(table, payload, db)

@@ -158,7 +158,8 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__("Nchantd Prompt", self, cfg)  # TODO there is an override issue here
+        # FIX: Pass parent properly to parent class instead of self
+        super().__init__(parent=parent, cfg=cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePrompt"))
         self.toolbox_config = self.config.dikt.get("toolbox", None)
