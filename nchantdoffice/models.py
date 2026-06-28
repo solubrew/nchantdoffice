@@ -971,8 +971,25 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def get_node(self, nid):
-        """"""
-        # TODO this likely needs routed through the tree not sure the issue
+        """""
+        Retrieve a node by its ID.
+        
+        :param nid: Node ID to look up
+        :return: Node row from the nodes DataFrame, or None if not found
+        """"
+        if nid is None:
+            return None
+        try:
+            nodes_df = self.nodes
+            if nodes_df is None or nodes_df.empty:
+                return None
+            node_df = nodes_df[nodes_df["nid_txt"] == nid]
+            if node_df.empty:
+                return None
+            return node_df.iloc[0]
+        except Exception as e:
+            logma.warning(f"Error getting node {nid}: {e}")
+            return None
 
     def get_profiles(self):
         """"""
