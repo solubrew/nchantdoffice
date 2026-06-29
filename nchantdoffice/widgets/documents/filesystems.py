@@ -16,6 +16,7 @@
 from os.path import abspath, dirname, join, getsize, expanduser
 import datetime as dt
 from os import stat
+from pathlib import Path
 
 # ======================================3rd Party Library Modules=====================================================||
 from pandas import DataFrame
@@ -259,8 +260,12 @@ class NchantdImportPane(NchantdPane):
 
     def set_from_folder(self):
         """"""
+        try:
+            path = self.parent.fs_tree.current_level_path
+        except:
+            path = Path.home()
         cfg = {
-            "text": f"From Folder: \n{self.parent.fs_tree.current_level_path}",  # {self.app.active_tab.get_current_path()}",
+            "text": f"From Folder: \n{path}",  # {self.app.active_tab.get_current_path()}",
             "size": ["auto", "auto"],
         }
         self.from_folder_label = NchantdLabel(self, cfg).initWidget()
@@ -364,8 +369,13 @@ class NchantdMovePane(NchantdPane):
 
     def set_from_folder(self):
         """"""
+        try:
+            path = self.parent.fs_tree.current_level_path
+        except Exception as e:
+            logma.warning(e)
+            path = Path.home()
         cfg = {
-            "text": f"From Folder: \n{self.parent.fs_tree.current_level_path}",  # {self.app.active_tab.get_current_path()}",
+            "text": f"From Folder: \n{path}",  # {self.app.active_tab.get_current_path()}",
             "size": ["auto", "auto"],
         }
         self.from_folder_label = NchantdLabel(self, cfg).initWidget()
