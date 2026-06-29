@@ -15,30 +15,49 @@
 | 9 | **C6** — Nchantd Prompt override issue (atnrg/prompts.py:161) | ✅ Complete | - |
 | 10 | **C7** — Initial loading data duplicates (catalogs.py:250) | ✅ Complete | - |
 | 11 | **C8** — Tag tracking issue (references.py) | ✅ Complete | - |
+| 12 | **H22** — Context Menu (right-click) | ✅ Fixed | `9843a94` |
+| 13 | **H23** — Tab Duplication Issue | ✅ Not a Problem | User confirmed |
+| 14 | **Web Browser** — Settings Panel, Privacy Controls, Download Manager | ✅ Complete | `d3c4a76` |
 
 ---
 
 ## 📊 Document Type Coverage
 
-### Implemented ✅ (6 + 1)
-| Type | Status | Notes |
-|------|--------|-------|
-| charts | ✅ | Functional |
-| contacts | ✅ | Functional |
-| databases | ✅ | Functional |
-| diagrams | ✅ | Functional |
-| email | ✅ | Functional |
-| images | ✅ | Functional |
-| presentation | ✅ | Initial impl done |
-| **spreadsheet** | ✅ | `workbooks/matricies.py` - `NchantdOfficeMatrix` |
+### Implemented ✅ (18 types)
+| Type | Status | Module |
+|------|--------|--------|
+| analytics | ✅ | `nchantdoffice/widgets/documents/analytics/` |
+| calendars | ✅ | `nchantdoffice/widgets/documents/calendars/` |
+| charts | ✅ | `nchantdoffice/widgets/documents/charts/` |
+| contacts | ✅ | `nchantdoffice/widgets/documents/contacts/` |
+| databases | ✅ | `nchantdoffice/widgets/documents/databases/` |
+| diagrams | ✅ | `nchantdoffice/widgets/documents/diagrams/` |
+| email | ✅ | `nchantdoffice/widgets/documents/email/` |
+| filesystems | ✅ | `nchantdoffice/widgets/documents/filesystems/` |
+| forms | ✅ | `nchantdoffice/widgets/documents/forms/` |
+| images | ✅ | `nchantdoffice/widgets/documents/images/` |
+| journals | ✅ | `nchantdoffice/widgets/documents/journals/` |
+| notebooks | ✅ | `nchantdoffice/widgets/documents/notebooks/` |
+| pdfs | ✅ | `nchantdoffice/widgets/documents/pdfs/` |
+| presentations | ✅ | `nchantdoffice/widgets/documents/presentations/` |
+| scripts | ✅ | `nchantdoffice/widgets/documents/scripts/` |
+| spreadsheets | ✅ | `nchantdoffice/widgets/documents/spreadsheets/` |
+| text | ✅ | `nchantdoffice/widgets/documents/text/` |
+| web | ✅ | `nchantdoffice/widgets/documents/web/` |
 
-### Missing ❌ (27 types)
+### Missing ❌ (23 types)
 | Priority | Types |
 |----------|-------|
-| 🔴 P1 | text, ebook, audio, video, projects, analytics |
-| 🟠 P2 | calendars, forms, container, web, cad |
-| 🟡 P3 | data, config, filesystems, notebooks, reports, socials, updates |
-| 🟢 P4 | script, skills, tags, workflows, media, ports |
+| 🔴 P1 | ebook, projects |
+| 🟠 P2 | container, cad, reports, data (partial) |
+| 🟡 P3 | config, updates |
+| 🟢 L1 | audio |
+| 🟢 L2 | video |
+| 🟢 L3 | skills |
+| 🟢 L4 | tags |
+| 🟢 L5 | workflows |
+| 🟢 L6 | media |
+| 🟢 L7 | ports |
 
 ---
 
@@ -62,8 +81,8 @@
 ## 🟠 High Priority (H-Series)
 
 | ID | File | Line | Description | Status |
-|----|------|------|-------------|
-| H1 | dialogs/documents.py | 241 | Excel file integration (local file to open excel) | 🔴 TODO |
+|----|------|------|-------------|--------|
+| H1 | spreadsheet/nchantdspreadsheet.py | 240 | Excel file integration with formula preservation | ✅ Complete |
 | H2 | dialogs/documents.py | 245 | Google Drive integration dialog | 🔴 TODO |
 | H3 | dialogs/documents.py | 260 | Form builder wizard launch | 🔴 TODO |
 | H4 | dialogs/documents.py | 292 | CSV/XLSX/TAB file handling | 🔴 TODO |
@@ -84,8 +103,8 @@
 | H19 | spreadsheets.py | 304 | Function dialog implementation | 🔴 TODO |
 | H20 | prompts.py | 422 | Configuration from user or NchantdService | 🔴 TODO |
 | H21 | mixins/documents.py | - | **Toolbar Missing** - Main Document Toolbar missing from PDF, Image document types | 🔴 TODO |
-| H22 | mixins/widgets.py | - | **No Right Click Context Menu** - contextMenuEvent not properly connected | ✅ Fixed | `9843a94` |
-| H23 | widgets/nodes.py | - | **Tab Duplication Issue** - When creating new tabs, old views are duplicated instead of replaced | 🔴 TODO |
+| H22 | mixins/widgets.py | - | **No Right Click Context Menu** | ✅ Fixed | `9843a94` |
+| H23 | widgets/nodes.py | - | **Tab Duplication Issue** | ✅ Not a Problem | User confirmed |
 
 ---
 
@@ -113,41 +132,51 @@
 
 ---
 
-## 🟢 Lower Priority (L-Series)
+## 🟢 Low Priority (L-Series)
 
-| ID | File | Line | Description |
-|----|------|------|-------------|
-| L1 | widgets/new.py | 189 | Cross-tool file format integration |
-| L2 | widgets/new.py | 193 | Google Drive browser/API connection |
+| ID | Priority | File | Line | Description |
+|----|----------|------|------|-------------|
+| L1 | 🟢 L1 | widgets/new.py | 189 | Cross-tool file format integration |
+| L2 | 🟢 L2 | widgets/new.py | 193 | Google Drive browser/API connection |
+| L3 | 🟢 L3 | - | - | Audio playback support |
+| L4 | 🟢 L4 | - | - | Video playback support |
+| L5 | 🟢 L5 | - | - | Skills management module |
+| L6 | 🟢 L6 | - | - | Tags system module |
+| L7 | 🟢 L7 | - | - | Workflows automation |
+| L8 | 🟢 L8 | - | - | Media management |
+| L9 | 🟢 L9 | - | - | Port management |
 
 ---
 
 ## 📋 Implementation Phases
 
 ### Phase 1: Bug Fixes (Critical) - COMPLETED ✅
-1. **C1** - Fix node selection in trees.py:89 ✅
-2. **C2** - Fix sibling creation in trees.py:208 ✅
-3. **C3-C8** - All remaining critical bugs ✅
+1. **C1-C8** - All critical bugs resolved ✅
+2. **H22** - Context Menu fixed ✅
+3. **H23** - Tab Duplication confirmed not a problem ✅
 
-### Phase 2: Core Document Types
-1. **text** - Rich text editor with bibliography support
-2. **ebook** - EPUB/AZW/MOBI reader
-3. **audio** - Audio playback
-4. **video** - Video playback with FFmpeg
-5. **projects** - PAXN project management
-6. **analytics** - DataSet/DataView
+### Phase 2: Core Document Types (P1) - 2 remaining
+1. **ebook** - EPUB/AZW/MOBI reader 🔴
+2. **projects** - PAXN project management 🔴
 
-### Phase 3: Productivity Features
-1. **calendars** - Event management
-2. **forms** - Form/survey builder
-3. **container** - Archive handling
-4. **web** - Browser integration
+### Phase 3: Productivity Features (P2)
+1. **container** - Archive handling
+2. **cad** - CAD file support
+3. **reports** - Report generation
+4. **data** - CSV/JSON/XML/YAML handlers (partial)
 
-### Phase 4: Data & Advanced
-1. **data** - CSV/JSON/XML/YAML handlers
-2. **config** - TOML support, policies
-3. **cad** - CAD file support
-4. **reports** - Report generation
+### Phase 4: Data & Advanced (P3)
+1. **config** - TOML support, policies
+2. **updates** - Update management
+
+### Phase 5: Low Priority (L-Series)
+1. **audio** - Audio playback
+2. **video** - Video playback with FFmpeg
+3. **skills** - Skills management
+4. **tags** - Tags system
+5. **workflows** - Workflows automation
+6. **media** - Media management
+7. **ports** - Port management
 
 ---
 
@@ -155,50 +184,36 @@
 
 | Category | Count |
 |----------|-------|
-| ✅ Completed | 11 |
-| 🔴 Critical Bugs | 0 (8 total: C1-C8 all fixed) |
-| 🟠 High Priority | 23 |
+| ✅ Completed | 14 |
+| 🔴 Critical Bugs | 0 (C1-C8 all fixed) |
+| 🟠 High Priority | 21 (18 pending, 3 done) |
 | 🟡 Medium Priority | 17 |
-| 🟢 Low Priority | 2 |
-| ❌ Missing Document Types | 27 |
-| **Total Active Items** | **69** |
+| 🟢 Low Priority | 9 |
+| ✅ Document Types | 18 implemented |
+| ❌ Missing Document Types | 23 |
+| **Total Active Items** | **68** |
 
 ---
 
-## 🔧 Implementation Notes (from TODO_IMPLEMENTATION_PLAN.md)
+## 🔧 Implementation Notes
 
 ### H21 - Toolbar Missing
-**Problem**: Main Document Toolbar completely missing from PDF, Image, and other document types
+**Problem**: Main Document Toolbar missing from PDF, Image document types
 
 **Root Cause**: `init_toolbar()` method not being called or toolbar widgets not being built
 
 **Fix Plan**:
-1. Check if `NchantdOfficeDocumentMixin.init_toolbar()` is being called for all document types
+1. Check if `NchantdOfficeDocumentMixin.init_toolbar()` is called for all document types
 2. Ensure toolbar data exists in database (nchantd_menu/nchantd_menu_item tables)
 3. Add toolbar to all document type classes that inherit from NchantdOfficeDocumentMixin
 
-### H22 - No Right Click Context Menu
-**Problem**: No right-click functionality at all
-
-**Root Cause**: 
-- Warning: "No app model available for context menu" - widget doesn't have proper app reference
-- `contextMenuEvent` not properly connected
-
-**Fix Plan**:
-1. Ensure all document widgets have proper `app` reference set
-2. Fix `NchantdWidgetMixin.contextMenuEvent` to load menus from database
-3. Verify `NchantdMenu` build system is working
-4. Test that right-click triggers menu display
-
-### H23 - Tab Duplication Issue
-**Problem**: When creating new tabs, old views are duplicated instead of replaced
-
-**Investigation**:
-1. Check `updateTabs()` in nodes.py - verify it clears before building
-2. Check `buildTabSet()` - ensure it's replacing not appending
-3. Verify model/instance references are unique per tab
+### Web Browser Features (COMPLETED ✅)
+- **URL Inspection (Drawer 100)** - URL, domain, subdomain, params, whois ✅
+- **Settings Panel (Drawer 200)** - Privacy controls, home page settings ✅
+- **Download Manager (Drawer 300)** - Open Downloads folder in FileSystem tab ✅
 
 ---
 
 *Last Updated: 2026-06-28*
 *Critical bugs C1-C8 fully resolved*
+*Web Browser feature set complete*

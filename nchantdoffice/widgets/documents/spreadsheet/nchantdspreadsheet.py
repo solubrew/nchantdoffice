@@ -353,24 +353,82 @@ class NchantdSpreadSheet(QWidget, NchantdOfficeWidgetMixin):
                 if row_idx >= self.table.rowCount() - 1:
                     self.table.insertRow(row_idx + 1)
     
-    def load_excel(self, file_path):
-        """Load Excel file into spreadsheet"""
+    def load_excel(self, file_path, sheet_name=None):
+        """Load Excel file into spreadsheet with formula preservation
+        
+        Args:
+            file_path: Path to the Excel file
+            sheet_name: Optional specific sheet to load. If None, loads active sheet.
+        """
         try:
             import openpyxl
-            wb = openpyxl.load_workbook(file_path)
-            ws = wb.active
+            from openpyxl.utils import get_column_letter
+            
+            # Load workbook WITHOUT data_only to preserve formulas
+            wb = openpyxl.load_workbook(file_path, data_only=False)
+            
+            # Select sheet
+            if sheet_name and sheet_name in wb.sheetnames:
+                ws = wb[sheet_name]
+            else:
+                ws = wb.active
             
             self.table.clearContents()
-            for row_idx, row in enumerate(ws.iter_rows(values_only=True)):
-                for col_idx, value in enumerate(row):
-                    if col_idx >= self.table.columnCount():
-                        self.table.insertColumn(col_idx)
-                        self.table.setHorizontalHeaderItem(col_idx, QTableWidgetItem(chr(65 + col_idx)))
-                    item = QTableWidgetItem(str(value) if value is not None else "")
-                    self.table.setItem(row_idx, col_idx, item)
-                
-                if row_idx >= self.table.rowCount() - 1:
-                    self.table.insertRow(row_idx + 1)
+            
+            # Track workbook data for multi-sheet support
+            self._excel_workbook = wb
+            self._excel_sheets = list(wb.sheetnames)
+            
+            # Get dimensions
+            max_row = ws.max_row or 100
+            max_col = ws.max_column or 26
+            
+            # Ensure we have enough rows/columns
+            self.table.setRowCount(max(max_row, 100))
+            self.table.setColumnCount(max(max_col, 26))
+            
+            # Update column headers for columns beyond Z (AA, AB, etc.)
+            for col_idx in range(26, max_col):
+                self.table.setHorizontalHeaderItem(col_idx, QTableWidgetItem(get_column_letter(col_idx + 1)))
+            
+            # Load cells with formulas preserved
+            for row_idx, row in enumerate(ws.iter_rows()):
+                for col_idx, cell in enumerate(row):
+                    value = None
+                    
+                    # Get formula or value - key for H1: preserve formulas!
+                    if cell.data_type == 'f':  # Formula cell
+                        value = cell.value  # Returns the formula string
+                    elif cell.value is not None:
+                        value = cell.value
+                    
+                    # Set cell value (formula or plain value)
+                    if value is not None:
+                        item = QTableWidgetItem(str(value))
+                        
+                        # Preserve number format
+                        if cell.number_format and cell.number_format != 'General':
+                            item.setData(Qt.ItemDataRole.UserRole, {
+                                'number_format': cell.number_format,
+                                'font_bold': cell.font.bold if cell.font else False,
+                                'font_italic': cell.font.italic if cell.font else False,
+                                'fill_color': cell.fill.fgColor.rgb if cell.fill and cell.fill.fgColor else None
+                            })
+                        
+                        self.table.setItem(row_idx, col_idx, item)
+                    
+                    # Preserve column widths
+                    if col_idx < max_col:
+                        col_dim = ws.column_dimensions.get(get_column_letter(col_idx + 1))
+                        if col_dim and col_dim.width:
+                            self.table.setColumnWidth(col_idx, int(col_dim.width * 7))
+            
+            # Update sheet tabs if in workbook mode
+            if self.is_workbook and self.sheet_tabs:
+                self._setup_sheet_tabs()
+            
+            self.current_sheet = ws.title
+            
         except ImportError:
             QMessageBox.warning(self, "Error", "openpyxl not installed. Please install: pip install openpyxl")
         except Exception as e:
