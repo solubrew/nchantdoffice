@@ -19,6 +19,11 @@
 | 13 | **H23** — Tab Duplication Issue | ✅ Not a Problem | User confirmed |
 | 14 | **Web Browser** — Settings Panel, Privacy Controls, Download Manager | ✅ Complete | `d3c4a76` |
 
+
+## New TODOs: (Need review and integration into overall development plan)
+- reduce startup time
+- implement caching for menus
+
 ---
 
 ## 📊 Document Type Coverage
