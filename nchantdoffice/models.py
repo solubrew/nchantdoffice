@@ -987,12 +987,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def get_node(self, nid):
-        """""
+        """"
         Retrieve a node by its ID.
         
         :param nid: Node ID to look up
         :return: Node row from the nodes DataFrame, or None if not found
-        """"
+        """
         if nid is None:
             return None
         try:
