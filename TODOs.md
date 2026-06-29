@@ -23,6 +23,7 @@
 ## New TODOs: (Need review and integration into overall development plan)
 - reduce startup time
 - implement caching for menus
+- Fix tab selection that causes surfacing of the catalog tab on first click. currently requires a second click to surface the correct tab
 
 ---
 
