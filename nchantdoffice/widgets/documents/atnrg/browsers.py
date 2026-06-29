@@ -31,7 +31,7 @@ from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons
 from nchantrs.widgets.annotations import NchantdLabel, NchantdBadgeBar
-from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
+from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry, NchantdLabeledSpinBox
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.tables.lists import NchantdList
@@ -412,104 +412,77 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.default_browser_checkbox = NchantdCheckbox(self, cfg)
         items[cnt]["widget"] = self.default_browser_checkbox
         cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        # cfg = {
-        #     "text": "Pin All Browser Tabs",
-        #     "handler": self.cmd_set_default_browser,
-        #     "value": self.get_current_default_browser(),
-        #     "size": [300, "auto"],
-        # }
-        # self.default_browser_checkbox = NchantdCheckbox(self, cfg)
-        # items[cnt]["widget"] = self.default_browser_checkbox
-        # cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        # cfg = {
-        #     "text": "Save All Browser Tabs",
-        #     "handler": self.cmd_set_default_browser,
-        #     "value": self.get_current_default_browser(),
-        #     "size": [300, "auto"],
-        # }
-        # self.default_browser_checkbox = NchantdCheckbox(self, cfg)
-        # items[cnt]["widget"] = self.default_browser_checkbox
-        # cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        # cfg = {
-        #     "text": "Clear Cookies",
-        #     "layout": "horizontal",
-        #     "size": ["auto", "auto"],
-        #     "handler": self.cmd_clear_cookies,
-        # }
-        # self.clear_cookies_button = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.clear_cookies_button
-        # cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        # cfg = {
-        #     "text": "Clear Cache",
-        #     "layout": "horizontal",
-        #     "size": ["auto", "auto"],
-        #     "handler": self.cmd_clear_cache,
-        # }
-        # self.clear_cache_button = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.clear_cache_button
-        # cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        # cfg = {
-        #     "text": "Clear MetaData",
-        #     "layout": "horizontal",
-        #     "size": ["auto", "auto"],
-        #     "handler": self.cmd_clear_metadata,
-        # }
-        # self.clear_metadata_button = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.clear_metadata_button
-        # cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        # cfg = {
-        #     "label": "Set Browsing History Expiry",
-        #     "layout": "horizontal",
-        #     "handler": self.cmd_set_browsing_history_expiry,
-        #     "value": self.get_browsing_history_expiry(),
-        #     "size": None,
-        #     "stretch": True,
-        # }
-        # self.browsing_history_policy_spinbox = NchantdLabeledSpinBox(self, cfg)
-        # items[cnt]["widget"] = self.browsing_history_policy_spinbox
-        # cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        # cfg = {
-        #     "text": "Clear Browsing History",
-        #     "layout": "horizontal",
-        #     "handler": self.cmd_clear_browsing_history,
-        # }
-        # self.browsing_history_clear_button = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.browsing_history_clear_button
-        # cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        # cfg = {
-        #     "label": "Set Home Page",
-        #     "layout": "horizontal",
-        #     "handler": self.cmd_set_home_page,
-        #     "value": self.get_current_home_page(),
-        #     "options": self.get_search_engines(),
-        #     "size": None,
-        # }
-        # self.default_home_page_entry = NchantdDropDown(self, cfg)
-        # items[cnt]["widget"] = self.default_home_page_entry
-        # cnt += 1
-        # PUSH
-        #   if cnt not in items:
-        #       items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        #   cfg = {"text": "Set as Dark Mode Browser"}
-        #   self.dark_mode_checkbox = NchantdCheckbox
-        #   items[cnt]["widget"] = self.dark_mode_checkbox
-        #   cnt += 1
+        # Privacy Controls Section
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
+        cfg = {
+            "text": "Clear Cookies",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_clear_cookies,
+        }
+        self.clear_cookies_button = NchantdButton(self, cfg)
+        items[cnt]["widget"] = self.clear_cookies_button
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
+        cfg = {
+            "text": "Clear Cache",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_clear_cache,
+        }
+        self.clear_cache_button = NchantdButton(self, cfg)
+        items[cnt]["widget"] = self.clear_cache_button
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
+        cfg = {
+            "text": "Clear MetaData",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_clear_metadata,
+        }
+        self.clear_metadata_button = NchantdButton(self, cfg)
+        items[cnt]["widget"] = self.clear_metadata_button
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
+        cfg = {
+            "text": "Clear Browsing History",
+            "layout": "horizontal",
+            "handler": self.cmd_clear_browsing_history,
+        }
+        self.browsing_history_clear_button = NchantdButton(self, cfg)
+        items[cnt]["widget"] = self.browsing_history_clear_button
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
+        cfg = {
+            "label": "Browsing History Expiry (Days)",
+            "layout": "horizontal",
+            "handler": self.cmd_set_browsing_history_expiry,
+            "value": self.get_browsing_history_expiry(),
+            "size": None,
+            "stretch": True,
+        }
+        self.browsing_history_policy_spinbox = NchantdLabeledSpinBox(self, cfg)
+        items[cnt]["widget"] = self.browsing_history_policy_spinbox
+        cnt += 1
+        # Home Page & Search Section
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
+        cfg = {
+            "label": "Home Page",
+            "layout": "horizontal",
+            "handler": self.cmd_set_home_page,
+            "value": self.get_current_home_page(),
+            "options": self.get_search_engines(),
+            "size": None,
+        }
+        self.default_home_page_entry = NchantdDropDown(self, cfg)
+        items[cnt]["widget"] = self.default_home_page_entry
+        cnt += 1
         return items
 
     def init_drawer_url_inspection(self):
@@ -810,7 +783,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.toolbox_config[100]["items"] = self.init_drawer_url_inspection()
         # TODO: seems something related to having buttons in the drawer?
         #  need to only be rendered on draw selection anyway
-        # self.toolbox_config[200]["items"] = self.init_drawer_browser_config()
+        self.toolbox_config[200]["items"] = self.init_drawer_browser_config()
         # self.toolbox_config[300]["items"] = self.init_drawer_form_control()
         # self.toolbox_config[400]["items"] = self.init_drawer_source_inspection()
         # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
