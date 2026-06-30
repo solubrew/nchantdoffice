@@ -1768,7 +1768,264 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 # Ensure columns exist
                 while target_col >= self.table.columnCount():
                     self.table.insertColumn(self.table.columnCount())
-                    self.table.setHorizontalHeaderItem
+                    self.table.setHorizontalHeaderItem(
+                        self.table.columnCount() - 1,
+                        pyqt.QTableWidgetItem(self.column_index_to_letter(self.table.columnCount() - 1)),
+                    )
+
+                # Set the cell value
+                item = self.table.item(target_row, target_col)
+                if item is None:
+                    item = pyqt.QTableWidgetItem(value)
+                    self.table.setItem(target_row, target_col, item)
+                else:
+                    item.setText(value)
+
+    def clear_selection(self):
+        """Clear the contents of selected cells"""
+        selected = self.table.selectedIndexes()
+        for index in selected:
+            item = self.table.item(index.row(), index.column())
+            if item:
+                item.setText("")
+
+    # ================================ View / Display Toggles ================================
+
+    def toggle_gridlines(self):
+        """Toggle grid lines on/off in the spreadsheet table"""
+        if self.table:
+            current = self.table.showGrid()
+            self.table.setShowGrid(not current)
+            logma.info(f"Gridlines toggled: {not current}")
+        return self
+
+    def toggle_headers(self):
+        """Toggle row/column headers on/off"""
+        if self.table:
+            h_header = self.table.horizontalHeader()
+            v_header = self.table.verticalHeader()
+            h_header.setVisible(not h_header.isVisible())
+            v_header.setVisible(not v_header.isVisible())
+            logma.info(
+                f"Headers toggled: h={h_header.isVisible()}, v={v_header.isVisible()}"
+            )
+        return self
+
+    def fullscreen_mode(self):
+        """Toggle fullscreen mode for the parent window"""
+        window = self.window()
+        if window:
+            if window.isFullScreen():
+                window.showNormal()
+                logma.info("Exited fullscreen mode")
+            else:
+                window.showFullScreen()
+                logma.info("Entered fullscreen mode")
+        return self
+
+    # ================================ Find / Replace ================================
+
+    def find_replace(self):
+        """Open a find and replace dialog"""
+        dialog = pyqt.QDialog(self)
+        dialog.setWindowTitle("Find and Replace")
+        dialog.setMinimumWidth(400)
+
+        layout = pyqt.QFormLayout(dialog)
+
+        find_input = pyqt.QLineEdit()
+        replace_input = pyqt.QLineEdit()
+        layout.addRow("Find:", find_input)
+        layout.addRow("Replace with:", replace_input)
+
+        case_check = pyqt.QCheckBox("Match case")
+        layout.addRow(case_check)
+
+        status_label = pyqt.QLabel("")
+        layout.addRow(status_label)
+
+        def do_replace_all():
+            find_text = find_input.text()
+            replace_text = replace_input.text()
+            if not find_text:
+                status_label.setText("Enter text to find.")
+                return
+
+            count = 0
+            match_case = case_check.isChecked()
+            for row in range(self.table.rowCount()):
+                for col in range(self.table.columnCount()):
+                    item = self.table.item(row, col)
+                    if item:
+                        text = item.text()
+                        if not match_case:
+                            lower_find = find_text.lower()
+                            lower_text = text.lower()
+                            if lower_find in lower_text:
+                                new_text = text
+                                # Case-insensitive replace
+                                idx = lower_text.find(lower_find)
+                                while idx != -1:
+                                    new_text = (
+                                        new_text[:idx] + replace_text + new_text[idx + len(find_text):]
+                                    )
+                                    lower_text = new_text.lower()
+                                    idx = lower_text.find(lower_find, idx + len(replace_text))
+                                item.setText(new_text)
+                                count += 1
+                        else:
+                            if find_text in text:
+                                item.setText(text.replace(find_text, replace_text))
+                                count += 1
+            status_label.setText(f"Replaced in {count} cell(s).")
+
+        def do_find_next():
+            find_text = find_input.text()
+            if not find_text:
+                status_label.setText("Enter text to find.")
+                return
+
+            match_case = case_check.isChecked()
+            current = self.table.currentItem()
+            start_row = current.row() if current else 0
+            start_col = (current.column() + 1) if current else 0
+
+            total_rows = self.table.rowCount()
+            total_cols = self.table.columnCount()
+
+            for row_offset in range(total_rows):
+                row = (start_row + row_offset) % total_rows
+                for col_offset in range(total_cols):
+                    if row_offset == 0 and col_offset < start_col:
+                        continue
+                    col = (start_col + col_offset) % total_cols
+                    if row_offset > 0 and col == 0:
+                        pass
+                    item = self.table.item(row, col)
+                    if item:
+                        text = item.text()
+                        compare_text = text if match_case else text.lower()
+                        search_text = find_text if match_case else find_text.lower()
+                        if search_text in compare_text:
+                            self.table.setCurrentCell(row, col)
+                            self.table.setFocus()
+                            status_label.setText(f"Found at {self.column_index_to_letter(col)}{row + 1}")
+                            return
+            status_label.setText("Not found.")
+
+        btn_layout = pyqt.QHBoxLayout()
+        find_btn = pyqt.QPushButton("Find Next")
+        find_btn.clicked.connect(do_find_next)
+        replace_all_btn = pyqt.QPushButton("Replace All")
+        replace_all_btn.clicked.connect(do_replace_all)
+        close_btn = pyqt.QPushButton("Close")
+        close_btn.clicked.connect(dialog.accept)
+
+        btn_layout.addWidget(find_btn)
+        btn_layout.addWidget(replace_all_btn)
+        btn_layout.addStretch()
+        btn_layout.addWidget(close_btn)
+        layout.addRow(btn_layout)
+
+        dialog.exec()
+        return self
+
+    # ================================ Print ================================
+
+    def print_document(self):
+        """Print the spreadsheet using QPrinter"""
+        try:
+            printer = pyqt.QPrinter(pyqt.QPrinter.PrinterMode.HighResolution)
+            print_dialog = pyqt.QPrintDialog(printer, self)
+
+            if print_dialog.exec() == pyqt.QDialog.DialogCode.Accepted:
+                # Render the table to a QTextDocument for printing
+                doc = pyqt.QTextDocument()
+                cursor = pyqt.QTextCursor(doc)
+
+                cursor.insertHtml("<table border='1' cellspacing='0' cellpadding='4'>")
+
+                # Add header row
+                cursor.insertHtml("<tr>")
+                cursor.insertHtml("<th></th>")
+                for col in range(self.table.columnCount()):
+                    header_item = self.table.horizontalHeaderItem(col)
+                    header_text = header_item.text() if header_item else ""
+                    cursor.insertHtml(f"<th>{header_text}</th>")
+                cursor.insertHtml("</tr>")
+
+                # Add data rows
+                for row in range(self.table.rowCount()):
+                    row_has_data = False
+                    row_html = "<tr>"
+                    # Row header
+                    v_header = self.table.verticalHeaderItem(row)
+                    v_header_text = v_header.text() if v_header else str(row + 1)
+                    row_html += f"<td><b>{v_header_text}</b></td>"
+                    for col in range(self.table.columnCount()):
+                        item = self.table.item(row, col)
+                        cell_text = item.text() if item else ""
+                        if cell_text:
+                            row_has_data = True
+                        # Escape HTML special chars
+                        cell_text = (
+                            cell_text.replace("&", "&amp;")
+                            .replace("<", "&lt;")
+                            .replace(">", "&gt;")
+                        )
+                        row_html += f"<td>{cell_text}</td>"
+                    row_html += "</tr>"
+                    if row_has_data:
+                        cursor.insertHtml(row_html)
+
+                cursor.insertHtml("</table>")
+                doc.print_(printer)
+                logma.info("Document sent to printer.")
+        except Exception as e:
+            logma.error(f"Print error: {e}")
+            pyqt.QMessageBox.warning(self, "Print Error", f"Failed to print: {e}")
+        return self
+
+    # ================================ Font Toggles (Toolbar Fixes) ================================
+
+    def toggle_bold(self):
+        """Toggle bold font on selected cells"""
+        if self.table:
+            selected = self.table.selectedIndexes()
+            if not selected:
+                return
+            # Determine current bold state from first selected cell
+            first_item = self.table.item(selected[0].row(), selected[0].column())
+            if first_item:
+                is_bold = first_item.font().bold()
+            else:
+                is_bold = False
+            self.apply_font_style(bold=not is_bold)
+        return self
+
+    def toggle_italic(self):
+        """Toggle italic font on selected cells"""
+        if self.table:
+            selected = self.table.selectedIndexes()
+            if not selected:
+                return
+            first_item = self.table.item(selected[0].row(), selected[0].column())
+            if first_item:
+                is_italic = first_item.font().italic()
+            else:
+                is_italic = False
+            self.apply_font_style(italic=not is_italic)
+        return self
+
+    def insert_chart(self):
+        """Insert a chart (placeholder - opens info dialog)"""
+        pyqt.QMessageBox.information(
+            self,
+            "Insert Chart",
+            "Chart insertion is a planned feature.\n\n"
+            "This will allow creating bar, line, and pie charts from selected data ranges.",
+        )
+        return self
 
 
 # ====================================================================================================================||
