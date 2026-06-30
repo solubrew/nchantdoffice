@@ -43,7 +43,7 @@ log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "graphics/_data_", "sketches.yaml")
+pxcfg = join(here, "_data_", "sketches.yaml")
 
 
 class NchantdLayersListPane(NchantdPane):
@@ -532,7 +532,8 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
     def initModel(self):
         """Initialize the sketch model with document, context menu, and layers."""
         super().initModel()
-        self.document = self.app.model.codex.init_sketch({})
+        cfg = {"file_path": self.file_path}
+        self.document = self.app.model.codex.init_sketch(cfg)
         self.document.load_document()
         self.context_menu_name = "context.document.sketch"
         self.initialize_context_menu(self.context_menu_name)
@@ -1014,8 +1015,9 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
     def init_canvas_config(self):
         """"""
-        items = self.toolbox_config[100].get("items", {})
+        items = self.toolbox_config.get(100, {}).get("items", {})
         cnt = 0
+        items[cnt] = {}
         cfg = {
             "text": "Canvas Color",
             "layout": "horizontal",
@@ -1024,10 +1026,12 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.canvas_color_sigil_button = NchantdButton(self, cfg)
         items[cnt]["widget"] = self.canvas_color_sigil_button
         cnt += 1
+        items[cnt] = {}
         cfg = {"label": "Canvas Size", "layout": "horizontal"}
         self.canvas_size_set = NchantdLabeledDoubleSpinBox(self, cfg)
         items[cnt]["widget"] = self.canvas_size_set
         cnt += 1
+        items[cnt] = {}
         self.get_layers()
         cfg = {
             "label": "Active Layer",
@@ -1037,15 +1041,16 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.canvas_layer_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.canvas_layer_select
         cnt += 1
+        items[cnt] = {}
         cfg = {"layout": "horizontal", "data": self.layers}
         logma.info(f"Layers {self.layers}")
         self.layers_list_pane = NchantdLayersListPane(self, cfg)
         items[cnt]["widget"] = self.layers_list_pane
         cnt += 1
+        items[cnt] = {}
         cfg = {"layout": "horizontal"}
         self.layers_select = NchantdEditLayerPane(self, cfg)
         items[cnt]["widget"] = self.layers_select
-        cnt += 1
         return items
 
     def init_sketch_tools(self):
@@ -1149,6 +1154,8 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
     def init_toolbox(self):
         """"""
         super().init_toolbox()
+        logma.info(f"Toolbox Config {self.toolbox_config}")
+        logma.info(f"Config {self.config.dikt}")
         self.toolbox_config[100]["items"] = self.init_canvas_config()
         self.toolbox_config[200]["items"] = self.init_sketch_tools()
         self.toolbox_config[300]["items"] = self.init_object_config()
