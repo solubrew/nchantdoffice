@@ -211,12 +211,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.parent_window = parent
         self.app = pyqt.QApplication.instance()
 
-        # Initialize config
-        self.config = kahndor.Instruct(pxcfg)
-        if parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-
         # Spreadsheet state
         self.current_sheet = None
         self.selected_range = None
@@ -232,10 +226,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.setup_ui()
         self.setup_toolbar()
         self.connect_signals()
-
-        # Load initial data if provided
-        if cfg:
-            self.load_from_config(cfg)
 
     def initModel(self):
         """"""
