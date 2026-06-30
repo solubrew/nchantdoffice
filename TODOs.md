@@ -18,12 +18,13 @@
 | 12 | **H22** — Context Menu (right-click) | ✅ Fixed | `9843a94` |
 | 13 | **H23** — Tab Duplication Issue | ✅ Not a Problem | User confirmed |
 | 14 | **Web Browser** — Settings Panel, Privacy Controls, Download Manager | ✅ Complete | `d3c4a76` |
-
+- implement caching for menus - completed
 
 ## New TODOs: (Need review and integration into overall development plan)
 - reduce startup time
-- implement caching for menus
 - Fix tab selection that causes surfacing of the catalog tab on first click. currently requires a second click to surface the correct tab
+- Toolbox is not updating when switching between tabs it does update when switching between nodes
+- 
 
 ---
 
