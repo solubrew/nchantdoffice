@@ -87,23 +87,6 @@ NchantdOfficeCellBorderSigil:
     cell_border_bottom_width:
     cell_border_bottom_style:
 
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
-"""
----
-<(META)>:
-	docid: 100-32-NCHANTDSPREADSHEET
-	name: NchantdOffice Spreadsheet Configuration
-	description: >
-		Configuration for the NchantdOffice Spreadsheet widget
-	version: 0.0.2.0.0.0
-	authority: filesystem
-	security: seclvl2
-	<(WT)>: -32
-"""
-# -*- coding: utf-8 -*-
-
-# ======================================EXCEL CONFIGURATION===========================================================||
-
 # File handling
 excel:
   default_extension: .xlsx
