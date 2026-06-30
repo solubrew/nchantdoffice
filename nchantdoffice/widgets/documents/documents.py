@@ -242,7 +242,7 @@ class NchantdOfficeDocumentMixin:
         if self.toolbox_config is None:
             self.toolbox_config = self.app.model.toolbox_config.get("document", None)
         if self.toolbox_config is None:
-            raise Exception("No toolbox config found for document")
+            logma.warning("No toolbox config found for document, using empty default"); self.toolbox_config = {}
         logma.info(f"Toolbox Config {self.toolbox_config.keys()}")
         self.toolbox_config[50]["items"] = self.init_drawer_file_config()
         return self
