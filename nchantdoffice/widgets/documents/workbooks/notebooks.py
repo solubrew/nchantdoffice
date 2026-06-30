@@ -14,6 +14,7 @@
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, exists
+import subprocess
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -21,7 +22,6 @@ from os.path import dirname, join, exists
 from kahndor import kahndor
 from kahndor.logma import Logma
 
-from nchantdoffice.widgets.documents.atnrg.browsers import NchantdOfficeWebBrowser
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
@@ -420,6 +420,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 nbformat.write(nb, f)
 
             logma.info(f"Created new notebook: {save_path}")
+            self.current_notebook_path = save_path
 
             # Open the new notebook in browser
             if self.browser and self.server_running:
@@ -439,6 +440,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 return self
 
             self.file_path = file_path
+            self.current_notebook_path = file_path
 
             # If server is running, open the notebook
             if self.server_running and self.browser:
