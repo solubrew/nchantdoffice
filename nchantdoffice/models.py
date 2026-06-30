@@ -83,8 +83,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.show_quick_launch_toolbar = None
         self.today = self.store.time.get_current_datetime_str()
         self.toolbox_config = self.config.dikt.get("toolbox", {})
-        # if self.instance is None:
-        # self.get_current_instance()
 
     def initModel(self, reset=None):
         """"""
