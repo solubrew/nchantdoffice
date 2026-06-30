@@ -59,6 +59,10 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.kernel_running = False
         self.current_notebook_path = None
 
+        # Cell & notebook data-model (consolidated from pyffice.notebooks.notebooks)
+        self.cells = []
+        self.notebook = None
+
     def initModel(self):
         """"""
         super().initModel()
@@ -611,6 +615,138 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.stop_kernel()
         self.stop_jupyter_server()
         return self
+
+    # ========== Cell Manipulation Methods ==========
+
+    def set_notebook(self, notebook=None):
+        """Initialize or set the notebook structure.
+
+        Args:
+            notebook: Dict with notebook structure; defaults to {'cells': []}
+        """
+        if notebook is None:
+            notebook = {"cells": []}
+        if notebook != self.notebook:
+            self.notebook = notebook
+            logma.info("Notebook structure updated")
+        return self
+
+    def set_cells(self, cells):
+        """Set the cells list.
+
+        Args:
+            cells: List of cell dicts (each with 'cell_type', 'source', optional 'outputs')
+        """
+        if cells != self.cells:
+            self.cells = cells
+            count = len(cells) if cells else 0
+            logma.info(f"Cells updated: {count} cells")
+        return self
+
+    def add_cell(self, cell):
+        """Append a cell to the notebook.
+
+        Args:
+            cell: Cell dict (must contain 'cell_type' and 'source' keys)
+        """
+        if self.cells is None:
+            self.cells = []
+        self.cells.append(cell)
+        logma.info(f"Cell added; total: {len(self.cells)}")
+        return self
+
+    def del_cell(self, dex):
+        """Delete cell at given index.
+
+        Args:
+            dex: Zero-based cell index
+        """
+        if self.cells is None:
+            logma.warning("No cells to delete")
+            return self
+        if 0 <= dex < len(self.cells):
+            self.cells.pop(dex)
+            logma.info(f"Cell {dex} deleted; remaining: {len(self.cells)}")
+        else:
+            logma.error(f"Cell index {dex} out of range (size={len(self.cells)})")
+        return self
+
+    def clear_cell(self, dex):
+        """Clear outputs of cell at given index.
+
+        Args:
+            dex: Zero-based cell index
+        """
+        if self.cells is None or not (0 <= dex < len(self.cells)):
+            logma.error(f"Invalid cell index: {dex}")
+            return self
+        self.cells[dex]["outputs"] = []
+        logma.info(f"Cell {dex} outputs cleared")
+        return self
+
+    def clear_cells(self):
+        """Clear outputs of all cells."""
+        if self.cells:
+            for cell in self.cells:
+                cell["outputs"] = []
+            logma.info(f"Cleared outputs of {len(self.cells)} cells")
+        return self
+
+    def set_cell_source(self, text, position=0):
+        """Set source code for a cell at given position.
+
+        Args:
+            text: Source code string to assign
+            position: Zero-based cell index (default: 0)
+        """
+        if self.cells is None or not (0 <= position < len(self.cells)):
+            logma.error(f"Invalid cell position: {position}")
+            return self
+        self.cells[position]["source"] = text
+        logma.info(f"Cell {position} source updated")
+        return self
+
+    def to_dict(self):
+        """Serialize notebook state to dict.
+
+        Returns:
+            Dict containing document metadata, notebook structure, and all cells.
+        """
+        doc = {}
+        try:
+            doc = super().to_dict()
+        except Exception:
+            pass
+        doc["document"] = {"notebook": self.notebook or {"cells": []}}
+        cells_list = self.cells if self.cells else []
+        doc["document"]["notebook"]["cells"] = cells_list
+        return doc
+
+    def to_html(self):
+        """Render notebook to basic HTML (fixed from infinite-recursion bug in pyffice).
+
+        Returns:
+            HTML string with all cells and their outputs.
+        """
+        if not self.cells:
+            return "<html><body><p>Empty notebook</p></body></html>"
+
+        html_parts = ["<html><body>"]
+        for idx, cell in enumerate(self.cells):
+            cell_type = cell.get("cell_type", "code")
+            source = cell.get("source", "")
+            html_parts.append(f"<div class='cell' id='cell-{idx}'>")
+            html_parts.append(f"<div class='cell-type'>{cell_type}</div>")
+            html_parts.append(f"<pre class='source'>{source}</pre>")
+            if cell.get("outputs"):
+                html_parts.append("<div class='outputs'>")
+                for output in cell["outputs"]:
+                    if isinstance(output, dict) and "text" in output:
+                        html_parts.append(f"<pre class='output'>{output['text']}</pre>")
+                html_parts.append("</div>")
+            html_parts.append("</div>")
+        html_parts.append("</body></html>")
+        return "\n".join(html_parts)
 
     # ========== Kernel Management Methods ==========
 

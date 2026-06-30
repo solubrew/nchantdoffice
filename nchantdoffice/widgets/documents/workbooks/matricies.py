@@ -1318,7 +1318,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # Table widget
         self.table = pyqt.QTableWidget()
         self.table.setAlternatingRowColors(True)
-        self.table.setSelectionBehavior(pyqt.QTableWidget.SelectionBehavior.SelectCells)
+        self.table.setSelectionBehavior(pyqt.QTableWidget.SelectionBehavior.SelectItems)
         self.table.setSelectionMode(pyqt.QTableWidget.SelectionMode.ExtendedSelection)
 
         # Configure headers
