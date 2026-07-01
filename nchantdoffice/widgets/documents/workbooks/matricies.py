@@ -183,9 +183,6 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
 class NchantdOfficeMatrix(NchantdOfficeDocument):
     """"""
 
-    VERSION = "0.0.1.0.0.0"
-
-    # Signals
     dataChanged = pyqt.Signal(dict)
     cellSelected = pyqt.Signal(str, object)
 
@@ -1807,9 +1804,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             v_header = self.table.verticalHeader()
             h_header.setVisible(not h_header.isVisible())
             v_header.setVisible(not v_header.isVisible())
-            logma.info(
-                f"Headers toggled: h={h_header.isVisible()}, v={v_header.isVisible()}"
-            )
+            logma.info(f"Headers toggled: h={h_header.isVisible()}, v={v_header.isVisible()}")
         return self
 
     def fullscreen_mode(self):
@@ -1867,9 +1862,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                                 # Case-insensitive replace
                                 idx = lower_text.find(lower_find)
                                 while idx != -1:
-                                    new_text = (
-                                        new_text[:idx] + replace_text + new_text[idx + len(find_text):]
-                                    )
+                                    new_text = new_text[:idx] + replace_text + new_text[idx + len(find_text) :]
                                     lower_text = new_text.lower()
                                     idx = lower_text.find(lower_find, idx + len(replace_text))
                                 item.setText(new_text)
@@ -1969,11 +1962,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                         if cell_text:
                             row_has_data = True
                         # Escape HTML special chars
-                        cell_text = (
-                            cell_text.replace("&", "&amp;")
-                            .replace("<", "&lt;")
-                            .replace(">", "&gt;")
-                        )
+                        cell_text = cell_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                         row_html += f"<td>{cell_text}</td>"
                     row_html += "</tr>"
                     if row_has_data:

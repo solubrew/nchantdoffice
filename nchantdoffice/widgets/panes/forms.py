@@ -108,7 +108,7 @@ class NchantdNewFormItemPane(NchantdPane):
             "Submit Form",
             "Cancel Form",
             "Cancel Response",
-            "Proceed to Speicif Inquiry",
+            "Proceed to Specific Inquiry",
         ]
         cfg = {
             "label": "Select Response Trigger: ",

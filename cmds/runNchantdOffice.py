@@ -14,9 +14,12 @@
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
+import os
 from sys import argv
 import datetime as dt
 import sys
+from pathlib import Path
+import shutil
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -41,6 +44,11 @@ log = True
 pxcfg = join(here, "_data_", "runMain.yaml")
 
 
+def restart():
+    """"""
+    shutil.rmtree(Path.home() / ".local" / "share" / "nchantdoffice")
+
+
 def run(args):
     """Run individual tabs with mock data for development purposes
 
@@ -48,6 +56,7 @@ def run(args):
     python runNchantdOffice.py scratch - continue file
     python runNchantdOffice.py - use the wizard to setup
     """
+    # restart()
     app = NchantdOfficeCloak
     wizard = NchantdOfficeApplicationStartupWizard
     nchantment("NchantdOffice", args, app, None, wizard)

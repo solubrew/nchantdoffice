@@ -14,7 +14,9 @@
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, exists
+import os
 import subprocess
+import threading
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -82,12 +84,16 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         cfg["buttons"][1] = {"action": "restart_server", "handler": self.cmd_restart_server}
         cfg["buttons"][2] = {"action": "stop_server", "handler": self.cmd_stop_server}
         cfg["buttons"][3] = {"action": "new_notebook", "handler": self.cmd_new_notebook}
-        cfg["buttons"][4] = {"action": "start_kernel", "handler": self.cmd_start_kernel}
+        cfg["buttons"][4] = {
+            "action": "start_kernel",
+            "handler": self.cmd_start_kernel,
+        }  # TODO consolidate to only restart
         cfg["buttons"][5] = {"action": "interrupt_kernel", "handler": self.cmd_interrupt_kernel}
         cfg["buttons"][8] = "_insert_stretch"
         cfg["buttons"][9] = {"action": "open_local", "handler": self.cmd_open_local_file}
         super().initView(cfg)
         cfg = {"url": self.server_url, "is_app": True}
+        logma.info(f"[notebook] initView: creating web viewer with initial url={self.server_url}")
         self.browser = NchantdWebViewer(self, cfg).initView()
         self.layout.addWidget(self.browser)
 
@@ -98,7 +104,12 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         autostart = True
         if self.config and isinstance(getattr(self.config, "dikt", None), dict):
             autostart = self.config.dikt.get("autostart_server", True)
+        logma.info(
+            f"[notebook] initView: autostart={autostart} | server_running={self.server_running} | "
+            f"target server_url={self.server_url}"
+        )
         if autostart and not self.server_running:
+            logma.info("[notebook] initView: scheduling start_jupyter_server in 500ms (QTimer.singleShot)")
             QTimer.singleShot(500, self.start_jupyter_server)
 
         return self
@@ -327,26 +338,42 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def start_jupyter_server(self, port=None):
         """Start the Jupyter notebook server"""
-        import subprocess
+        import time
 
         if port is None:
             port = self.server_port
 
+        # Keep server_url consistent with the port we are about to launch on so
+        # every log line below references the exact URL the browser will load.
+        self.server_url = f"http://localhost:{port}"
+        logma.info(f"[notebook] start_jupyter_server requested | port={port} | target_url={self.server_url}")
+
         try:
-            # Check if server is already running
+            # Check if the port is already accepting connections (server already up).
             if self.is_server_running():
-                logma.info(f"Jupyter server already running on port {port}")
+                logma.info(
+                    f"[notebook] port {port} already accepting connections; "
+                    f"assuming Jupyter is reachable at {self.server_url}"
+                )
                 self.server_running = True
+                self._navigate_browser(self.server_url)
+                self.update_status_labels()
                 return self
 
-            # Build command to start Jupyter
+            # Build command to start Jupyter.
+            # IMPORTANT: token/password values must NOT be wrapped in quotes here.
+            # subprocess.Popen with a list does not go through a shell, so
+            # "--NotebookApp.token=''" would set the token to the literal
+            # two-character string "''" (auth stays ON -> Jupyter serves a login
+            # page and the embedded browser shows a blank/permission screen).
+            # An empty value after '=' correctly disables the token/password.
             cmd = [
                 "jupyter",
                 "notebook",
                 "--no-browser",
                 f"--port={port}",
-                "--NotebookApp.token=''",
-                "--NotebookApp.password=''",
+                "--NotebookApp.token=",
+                "--NotebookApp.password=",
                 "--NotebookApp.disable_check_xsrf=True",
             ]
 
@@ -355,27 +382,122 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             if self.file_path and exists(dirname(self.file_path)):
                 cwd = dirname(self.file_path)
 
-            # Start the subprocess
-            self.jupyter_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
+            logma.info(
+                f"[notebook] launching Jupyter | argv={cmd} | "
+                f"cmdline={' '.join(cmd)} | cwd={cwd or os.getcwd()}"
+            )
 
-            # Wait a bit for server to start
-            import time
+            # Start the subprocess. Merge stderr into stdout and decode as text so
+            # the output pump can surface Jupyter's own "serving at ..." banner.
+            self.jupyter_process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                cwd=cwd,
+                text=True,
+                bufsize=1,
+            )
+            logma.info(f"[notebook] Jupyter subprocess spawned | pid={self.jupyter_process.pid}")
 
-            time.sleep(2)
+            # Pump the subprocess output into the log so we can VERIFY the exact
+            # URL (host, port and token) Jupyter reports it is serving from.
+            self._start_output_pump(self.jupyter_process)
+
+            # Poll for the port to come up instead of a blind fixed sleep. Jupyter
+            # can take several seconds to bind, and navigating too early yields a
+            # connection-refused / blank page.
+            ready = False
+            max_checks = 40  # ~20s ceiling at 0.5s per check
+            for attempt in range(1, max_checks + 1):
+                # Bail out immediately if the process died during startup.
+                if self.jupyter_process.poll() is not None:
+                    logma.error(
+                        f"[notebook] Jupyter process exited during startup | "
+                        f"returncode={self.jupyter_process.returncode} "
+                        f"(see pumped [jupyter] output above for the reason)"
+                    )
+                    break
+                if self.is_server_running():
+                    ready = True
+                    logma.info(
+                        f"[notebook] port {port} accepting connections after "
+                        f"{attempt} check(s) (~{attempt * 0.5:.1f}s)"
+                    )
+                    break
+                time.sleep(0.5)
+
+            if not ready:
+                logma.error(
+                    f"[notebook] Jupyter server never became reachable on {self.server_url}; "
+                    f"browser will NOT be navigated"
+                )
+                self.server_running = False
+                self.update_status_labels()
+                return self
 
             self.server_running = True
             self.server_url = f"http://localhost:{port}"
+            logma.info(f"[notebook] Jupyter server READY | server_url={self.server_url}")
 
             # Update browser URL
-            if self.browser:
-                self.browser.load_url(self.server_url)
-
-            logma.info(f"Jupyter server started on {self.server_url}")
+            self._navigate_browser(self.server_url)
+            self.update_status_labels()
 
         except Exception as e:
-            logma.error(f"Error starting Jupyter server: {e}")
+            logma.error(f"[notebook] Error starting Jupyter server: {e}", exc_info=True)
             self.server_running = False
+            self.update_status_labels()
 
+        return self
+
+    def _start_output_pump(self, process):
+        """Stream a Jupyter subprocess's merged stdout/stderr into the log.
+
+        Jupyter prints the exact URL it is serving (host, port, token) plus any
+        startup errors to this stream. Reading it lets us verify the browser is
+        being pointed at the same URL Jupyter actually bound to.
+        """
+
+        def _pump():
+            try:
+                for line in iter(process.stdout.readline, ""):
+                    line = line.rstrip("\n")
+                    if not line:
+                        continue
+                    logma.info(f"[jupyter:pid{process.pid}] {line}")
+                    # Surface the authoritative URL Jupyter reports.
+                    low = line.lower()
+                    if "http://" in low or "https://" in low:
+                        logma.info(f"[notebook] Jupyter-reported URL line: {line.strip()}")
+            except Exception as e:
+                logma.error(f"[notebook] output pump error: {e}")
+            finally:
+                try:
+                    process.stdout.close()
+                except Exception:
+                    pass
+
+        thread = threading.Thread(target=_pump, name=f"jupyter-log-pump-{process.pid}", daemon=True)
+        thread.start()
+        logma.info(f"[notebook] output pump started for pid={process.pid}")
+        return thread
+
+    def _navigate_browser(self, url):
+        """Point the embedded web viewer at ``url``.
+
+        NchantdWebViewer exposes navigation via ``goto_page`` (there is no
+        ``load_url`` method); calling the wrong name previously raised an
+        AttributeError that was swallowed, leaving the notebook blank.
+        """
+        if not self.browser:
+            logma.error(f"[notebook] cannot navigate: no browser widget (url={url})")
+            return self
+        logma.info(f"[notebook] navigating embedded browser -> {url}")
+        try:
+            self.browser.goto_page(url)
+            logma.info(f"[notebook] browser.goto_page issued for {url}")
+        except Exception as e:
+            logma.error(f"[notebook] browser navigation failed for {url}: {e}", exc_info=True)
         return self
 
     def stop_jupyter_server(self):
@@ -400,7 +522,12 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         return self
 
     def is_server_running(self):
-        """Check if Jupyter server is running"""
+        """Check if a TCP listener is accepting connections on the server port.
+
+        Note: this only confirms *something* is bound to the port, not that it is
+        our Jupyter instance. The output pump logs the authoritative URL Jupyter
+        reports so the two can be cross-checked.
+        """
         import socket
 
         try:
@@ -408,8 +535,14 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             sock.settimeout(1)
             result = sock.connect_ex(("localhost", self.server_port))
             sock.close()
-            return result == 0
-        except Exception:
+            reachable = result == 0
+            logma.debug(
+                f"[notebook] is_server_running: localhost:{self.server_port} "
+                f"connect_ex={result} -> reachable={reachable}"
+            )
+            return reachable
+        except Exception as e:
+            logma.error(f"[notebook] is_server_running check failed: {e}")
             return False
 
     # ========== Notebook Management Methods ==========
@@ -441,10 +574,16 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             # Open the new notebook in browser
             if self.browser and self.server_running:
                 notebook_url = f"{self.server_url}/notebooks/{notebook_name}"
-                self.browser.load_url(notebook_url)
+                logma.info(f"[notebook] opening new notebook at exact url={notebook_url}")
+                self._navigate_browser(notebook_url)
+            else:
+                logma.warning(
+                    f"[notebook] new notebook created but not opened "
+                    f"(browser={bool(self.browser)}, server_running={self.server_running})"
+                )
 
         except Exception as e:
-            logma.error(f"Error creating new notebook: {e}")
+            logma.error(f"Error creating new notebook: {e}", exc_info=True)
 
         return self
 
@@ -463,13 +602,14 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 from os.path import basename
 
                 notebook_url = f"{self.server_url}/notebooks/{basename(file_path)}"
-                self.browser.load_url(notebook_url)
+                logma.info(f"[notebook] loading notebook at exact url={notebook_url} (file={file_path})")
+                self._navigate_browser(notebook_url)
                 logma.info(f"Loaded notebook: {file_path}")
             else:
                 logma.warning("Jupyter server not running. Start server to view notebook.")
 
         except Exception as e:
-            logma.error(f"Error loading notebook file: {e}")
+            logma.error(f"Error loading notebook file: {e}", exc_info=True)
 
         return self
 

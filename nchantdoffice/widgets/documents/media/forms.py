@@ -51,7 +51,7 @@ class NchantdOfficeForm(NchantdForm):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdForm"))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeForm"))
         if self.parent:
             self.config.override(parent.config)
         self.config.override(cfg)
@@ -202,18 +202,18 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         """"""
         if cfg is None:
             cfg = {}
-        fcs_cfg = {
-            "layout": "horizontal",
-            "size": ["auto", 30],
-            "label": "Select Form Compatibility:",
-            "options": self.get_form_compatibility_options(),
-        }
-        self.form_compatibility_select = NchantdDropDown(self, fcs_cfg)
-        cfg["buttons"] = {
-            0: {"name": "select_form_compatibility", "widget": self.form_compatibility_select},
-            1: {"action": "add_data_source_connection"},
-            2: "_insert_stretch",
-        }
+        # fcs_cfg = {
+        #     "layout": "horizontal",
+        #     "size": ["auto", 30],
+        #     "label": "Select Form Compatibility:",
+        #     "options": self.get_form_compatibility_options(),
+        # }
+        # self.form_compatibility_select = NchantdDropDown(self, fcs_cfg)
+        # cfg["buttons"] = {
+        #     0: {"name": "select_form_compatibility", "widget": self.form_compatibility_select},
+        #     1: {"action": "add_data_source_connection"},
+        #     2: "_insert_stretch",
+        # }
         super().initView(cfg)
         manager_layout = pyqt.QHBoxLayout()
         # self.form_catalog_group = NchantdGridScrollGroupBox()
@@ -297,15 +297,15 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             "entrybox": {"size": ["auto", "auto"]},
         }
         self.form_name_entry = NchantdLabeledEntry(self, cfg).initWidget()
-        form_details_group_layout.addWidget(self.form_name_entry, 1, 0)
+        form_details_group_layout.addWidget(self.form_name_entry, 0, 1)
         cfg = {
             "label": "Enter Form Description: ",
             "size": [100, "auto"],
             "layout": "horizontal",
-            "entrybox": {"size": ["Auto", 90]},
+            "entrybox": {"size": ["Auto", "auto"]},
         }
         self.form_description_entry = NchantdLabeledEntry(self, cfg).initWidget()
-        form_details_group_layout.addWidget(self.form_description_entry, 0, 1, 2, 1)
+        form_details_group_layout.addWidget(self.form_description_entry, 0, 2)
         row += 1
         self.form_view_group.addWidget(form_details_group, row, col)
 
