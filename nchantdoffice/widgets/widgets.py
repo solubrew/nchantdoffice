@@ -120,11 +120,11 @@ class NchantdOfficeTabSet(NchantdTabSet):
             right_pane = self.app.view.panes.get("right")
             # if right_pane:
             # if right_pane.toolbox is None:
-            # TODO: this shouldnt be happening at this point
-            # logma.info("Creating toolbox in right pane")
-            # right_pane.toolbox = self.create_toolbox(right_pane)
-            # logma.info("Building toolbox")
-            # right_pane.toolbox.build_toolbox()
+            # TODO: Fix the toolbox to be refreshed on tab selection
+            logma.info("Creating toolbox in right pane")
+            right_pane.toolbox = self.create_toolbox(right_pane)
+            logma.info("Building toolbox")
+            right_pane.toolbox.build_toolbox()
             # else:
             #    logma.warning("Right pane not yet available in on_tab_focus")
 
