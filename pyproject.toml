@@ -196,6 +196,7 @@ dependencies = [
 
     #upstream dependencies
     "sqlite_vec==0.1.1",
+    "jupyter==1.1.1",
 ]
 
 [project.urls]

@@ -92,9 +92,14 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         cfg["buttons"][8] = "_insert_stretch"
         cfg["buttons"][9] = {"action": "open_local", "handler": self.cmd_open_local_file}
         super().initView(cfg)
-        cfg = {"url": self.server_url, "is_app": True}
-        logma.info(f"[notebook] initView: creating web viewer with initial url={self.server_url}")
+        # Start the embedded viewer on a blank page. Loading the Jupyter URL
+        # before the server is up yields an ERR_CONNECTION_REFUSED error page
+        # that can persist even after a later reload; we navigate explicitly once
+        # the server is confirmed reachable (see start_jupyter_server).
+        cfg = {"url": "about:blank", "is_app": True}
+        logma.info(f"[notebook] initView: creating web viewer (blank until ready; target={self.server_url})")
         self.browser = NchantdWebViewer(self, cfg).initView()
+        self._wire_browser_load_logging()
         self.layout.addWidget(self.browser)
 
         # Auto-start Jupyter server when tab opens (defaults True).
@@ -356,25 +361,29 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                     f"assuming Jupyter is reachable at {self.server_url}"
                 )
                 self.server_running = True
-                self._navigate_browser(self.server_url)
+                self._navigate_browser(f"{self.server_url}/tree")
                 self.update_status_labels()
                 return self
 
             # Build command to start Jupyter.
             # IMPORTANT: token/password values must NOT be wrapped in quotes here.
             # subprocess.Popen with a list does not go through a shell, so
-            # "--NotebookApp.token=''" would set the token to the literal
+            # "--ServerApp.token=''" would set the token to the literal
             # two-character string "''" (auth stays ON -> Jupyter serves a login
             # page and the embedded browser shows a blank/permission screen).
             # An empty value after '=' correctly disables the token/password.
+            #
+            # Modern Jupyter (jupyter-server >= 2, notebook 7) reads these off
+            # ServerApp/IdentityProvider; the old NotebookApp.* aliases still work
+            # but emit deprecation warnings, so we target the current names.
             cmd = [
                 "jupyter",
                 "notebook",
                 "--no-browser",
                 f"--port={port}",
-                "--NotebookApp.token=",
-                "--NotebookApp.password=",
-                "--NotebookApp.disable_check_xsrf=True",
+                "--IdentityProvider.token=",
+                "--ServerApp.password=",
+                "--ServerApp.disable_check_xsrf=True",
             ]
 
             # Start notebook in specific directory if file_path is set
@@ -437,10 +446,11 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
             self.server_running = True
             self.server_url = f"http://localhost:{port}"
-            logma.info(f"[notebook] Jupyter server READY | server_url={self.server_url}")
+            landing_url = f"{self.server_url}/tree"
+            logma.info(f"[notebook] Jupyter server READY | server_url={self.server_url} | landing_url={landing_url}")
 
-            # Update browser URL
-            self._navigate_browser(self.server_url)
+            # Navigate to the tree landing page Jupyter reports it is serving.
+            self._navigate_browser(landing_url)
             self.update_status_labels()
 
         except Exception as e:
@@ -481,6 +491,30 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         thread.start()
         logma.info(f"[notebook] output pump started for pid={process.pid}")
         return thread
+
+    def _wire_browser_load_logging(self):
+        """Attach Qt load-signal logging to the embedded QWebEngineView.
+
+        Reports whether QtWebEngine actually starts and finishes loading the
+        Jupyter URL (loadFinished carries an ``ok`` flag), which distinguishes a
+        failed/refused load from a page that loaded but rendered blank.
+        """
+        try:
+            view = getattr(self.browser, "browser", None)
+            if view is None:
+                logma.error("[notebook] cannot wire load logging: no underlying web view")
+                return self
+            view.loadStarted.connect(lambda: logma.info("[notebook] webview loadStarted"))
+            view.loadProgress.connect(lambda p: logma.info(f"[notebook] webview loadProgress={p}%"))
+            view.loadFinished.connect(
+                lambda ok: logma.info(
+                    f"[notebook] webview loadFinished ok={ok} | current_url={view.url().toString()}"
+                )
+            )
+            logma.info("[notebook] browser load logging wired")
+        except Exception as e:
+            logma.error(f"[notebook] failed to wire browser load logging: {e}", exc_info=True)
+        return self
 
     def _navigate_browser(self, url):
         """Point the embedded web viewer at ``url``.
