@@ -66,6 +66,13 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.cells = []
         self.notebook = None
 
+        # Navigation self-heal state. The embedded viewer defers its initial
+        # about:blank load until it has an on-screen surface; that load can then
+        # commit *after* our real navigation and clobber it back to about:blank.
+        # We remember the intended URL and re-issue it from loadFinished.
+        self._target_url = None
+        self._nav_retries = 0
+
     def initModel(self):
         """"""
         super().initModel()
@@ -506,11 +513,29 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 return self
             view.loadStarted.connect(lambda: logma.info("[notebook] webview loadStarted"))
             view.loadProgress.connect(lambda p: logma.info(f"[notebook] webview loadProgress={p}%"))
-            view.loadFinished.connect(
-                lambda ok: logma.info(
-                    f"[notebook] webview loadFinished ok={ok} | current_url={view.url().toString()}"
+
+            def _on_load_finished(ok):
+                cur = view.url().toString()
+                logma.info(
+                    f"[notebook] webview loadFinished ok={ok} | current_url={cur} | target={self._target_url}"
                 )
-            )
+                # Self-heal the about:blank clobber race: if the load settled on a
+                # blank page but we actually wanted the Jupyter URL, navigate again
+                # now that the view has a real surface (bounded retries prevent loops).
+                if (
+                    self._target_url
+                    and cur in ("about:blank", "")
+                    and self._target_url not in ("about:blank", "")
+                    and self._nav_retries < 3
+                ):
+                    self._nav_retries += 1
+                    logma.info(
+                        f"[notebook] load settled on '{cur}' but target is {self._target_url}; "
+                        f"re-navigating (retry {self._nav_retries}/3)"
+                    )
+                    QTimer.singleShot(200, lambda: self._navigate_browser(self._target_url))
+
+            view.loadFinished.connect(_on_load_finished)
             logma.info("[notebook] browser load logging wired")
         except Exception as e:
             logma.error(f"[notebook] failed to wire browser load logging: {e}", exc_info=True)
@@ -526,6 +551,11 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         if not self.browser:
             logma.error(f"[notebook] cannot navigate: no browser widget (url={url})")
             return self
+        # Reset the self-heal retry budget whenever a genuinely new destination is
+        # requested (e.g. opening a specific notebook after landing on /tree).
+        if url != self._target_url:
+            self._nav_retries = 0
+        self._target_url = url
         logma.info(f"[notebook] navigating embedded browser -> {url}")
         try:
             self.browser.goto_page(url)
