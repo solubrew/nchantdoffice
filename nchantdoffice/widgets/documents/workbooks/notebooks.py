@@ -98,6 +98,10 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         cfg["buttons"][5] = {"action": "interrupt_kernel", "handler": self.cmd_interrupt_kernel}
         cfg["buttons"][8] = "_insert_stretch"
         cfg["buttons"][9] = {"action": "open_local", "handler": self.cmd_open_local_file}
+        # This document hosts a single expanding web view, so opt this container's
+        # layout out of the base AlignTop|AlignLeft (which would otherwise pin the
+        # viewer to its sizeHint and collapse it to a blank strip).
+        cfg["fill"] = True
         super().initView(cfg)
         # Start the embedded viewer on a blank page. Loading the Jupyter URL
         # before the server is up yields an ERR_CONNECTION_REFUSED error page
@@ -105,7 +109,9 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         # the server is confirmed reachable (see start_jupyter_server).
         cfg = {"url": "about:blank", "is_app": True}
         logma.info(f"[notebook] initView: creating web viewer (blank until ready; target={self.server_url})")
-        self.browser = NchantdWebViewer(self, cfg).initView()
+        # initWidget (not initView) so the viewer's initModel runs too: it honours
+        # is_app/url from cfg and seeds the model-side url state before first show.
+        self.browser = NchantdWebViewer(self, cfg).initWidget()
         self._wire_browser_load_logging()
         self.layout.addWidget(self.browser)
 

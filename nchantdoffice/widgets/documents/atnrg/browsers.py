@@ -103,6 +103,10 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.browser = NchantdOfficeWebViewer(self, {"url": self.active_url})
         self.browser.is_simple = False
         cfg["buttons"] = self.build_toolbar()
+        # Host of a single expanding web view: opt this container's layout out of
+        # the base AlignTop|AlignLeft so the viewer fills the pane instead of
+        # collapsing to its sizeHint (root-cause fix, see docs/nchantrs_webview_render_fixes.md).
+        cfg["fill"] = True
         super().initView(cfg)
         self.init_toolbox()
         self.browser.initWidget()
