@@ -31,6 +31,7 @@ from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.libraries.pyqt import QTimer
+from nchantrs.libraries import pyqt
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -39,6 +40,23 @@ logma = Logma(__name__)
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "notebooks.yaml")
+
+
+def _preexec_die_with_parent():
+    """Child preexec (Linux): request SIGTERM when the parent process dies.
+
+    Ensures the Jupyter subprocess is reaped even if the app crashes or is killed
+    without a clean shutdown — the leftover-server problem. No-op off Linux.
+    """
+    try:
+        import ctypes
+        import signal
+
+        libc = ctypes.CDLL("libc.so.6", use_errno=True)
+        PR_SET_PDEATHSIG = 1
+        libc.prctl(PR_SET_PDEATHSIG, signal.SIGTERM)
+    except Exception:
+        pass
 
 
 class NchantdOfficeNotebook(NchantdOfficeDocument):
@@ -370,16 +388,32 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         logma.info(f"[notebook] start_jupyter_server requested | port={port} | target_url={self.server_url}")
 
         try:
-            # Check if the port is already accepting connections (server already up).
-            if self.is_server_running():
-                logma.info(
-                    f"[notebook] port {port} already accepting connections; "
-                    f"assuming Jupyter is reachable at {self.server_url}"
-                )
+            # Reuse the server ONLY if it's the one we started in this process.
+            if self.jupyter_process is not None and self.is_server_running():
+                logma.info(f"[notebook] reusing our Jupyter (pid={self.jupyter_process.pid}) at {self.server_url}")
                 self.server_running = True
                 self._navigate_browser(f"{self.server_url}/tree")
                 self.update_status_labels()
                 return self
+
+            # A server is on our port but it isn't ours (leftover from a previous
+            # run). It was started with whatever flags that run used, so it may
+            # lack the WebSocket/origin flags the kernel connection needs. Replace
+            # it so the flags below actually take effect.
+            if self.is_server_running():
+                logma.warning(
+                    f"[notebook] port {port} held by a foreign/stale Jupyter; killing it so a fresh "
+                    f"server with the required flags can start"
+                )
+                self._kill_port(port)
+                import time
+
+                for _ in range(20):
+                    if not self.is_server_running():
+                        break
+                    time.sleep(0.25)
+                if self.is_server_running():
+                    logma.error(f"[notebook] could not free port {port}; proceeding may reuse the stale server")
 
             # Build command to start Jupyter.
             # IMPORTANT: token/password values must NOT be wrapped in quotes here.
@@ -389,9 +423,10 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             # page and the embedded browser shows a blank/permission screen).
             # An empty value after '=' correctly disables the token/password.
             #
-            # Modern Jupyter (jupyter-server >= 2, notebook 7) reads these off
-            # ServerApp/IdentityProvider; the old NotebookApp.* aliases still work
-            # but emit deprecation warnings, so we target the current names.
+            # allow_origin='*' + disable_check_xsrf make the kernel-channel
+            # WebSocket handshake succeed from the embedded QtWebEngine origin
+            # (Jupyter's tornado check_origin otherwise can reject the WS, causing
+            # the kernel connection to drop and retry -> "running a cell fails").
             cmd = [
                 "jupyter",
                 "notebook",
@@ -400,6 +435,8 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 "--IdentityProvider.token=",
                 "--ServerApp.password=",
                 "--ServerApp.disable_check_xsrf=True",
+                "--ServerApp.allow_origin=*",
+                "--ServerApp.allow_remote_access=True",
             ]
 
             # Start notebook in specific directory if file_path is set
@@ -414,15 +451,23 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
             # Start the subprocess. Merge stderr into stdout and decode as text so
             # the output pump can surface Jupyter's own "serving at ..." banner.
-            self.jupyter_process = subprocess.Popen(
-                cmd,
+            popen_kwargs = dict(
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 cwd=cwd,
                 text=True,
                 bufsize=1,
             )
+            # Die-with-parent so a crash/kill of the app doesn't leave the server
+            # orphaned (the stale-server problem).
+            if os.name == "posix":
+                popen_kwargs["preexec_fn"] = _preexec_die_with_parent
+            self.jupyter_process = subprocess.Popen(cmd, **popen_kwargs)
             logma.info(f"[notebook] Jupyter subprocess spawned | pid={self.jupyter_process.pid}")
+
+            # Ensure the server is shut down when the app quits (aboutToQuit +
+            # atexit), in addition to the die-with-parent signal above.
+            self._setup_shutdown_hooks()
 
             # Pump the subprocess output into the log so we can VERIFY the exact
             # URL (host, port and token) Jupyter reports it is serving from.
@@ -474,6 +519,24 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             self.server_running = False
             self.update_status_labels()
 
+        return self
+
+    def _kill_port(self, port):
+        """Best-effort kill of whatever process is listening on ``port``.
+
+        Used to clear a stale Jupyter left by a previous run so a fresh server
+        with the current flags can bind. Tries fuser, then lsof.
+        """
+        import subprocess
+
+        for cmd in (["fuser", "-k", f"{port}/tcp"], ["bash", "-lc", f"lsof -ti tcp:{port} | xargs -r kill -9"]):
+            try:
+                r = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+                logma.info(f"[notebook] _kill_port {port} via {cmd[0]} rc={r.returncode} out={r.stdout.strip()!r}")
+                if r.returncode == 0:
+                    return self
+            except Exception as e:
+                logma.warning(f"[notebook] _kill_port {port} via {cmd[0]} failed: {e}")
         return self
 
     def _start_output_pump(self, process):
@@ -572,9 +635,77 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                     QTimer.singleShot(200, lambda: self._navigate_browser(self._target_url))
 
             view.loadFinished.connect(_on_load_finished)
+            # Install fetch/WebSocket instrumentation ONCE, at document creation,
+            # so it wraps window.fetch/WebSocket before JupyterLab captures them.
+            self._install_net_instrumentation(view)
             logma.info("[notebook] browser load logging wired")
         except Exception as e:
             logma.error(f"[notebook] failed to wire browser load logging: {e}", exc_info=True)
+        return self
+
+    def _install_net_instrumentation(self, view):
+        """Wrap window.fetch / window.WebSocket to log failures.
+
+        Installed as a persistent QWebEngineScript at DocumentCreation (before
+        page scripts run) so the wrappers are in place BEFORE JupyterLab captures
+        references to fetch/WebSocket — a loadFinished runJavaScript runs too late
+        and sees nothing.
+
+        Surfaces (via the JS console -> `js:` log lines):
+          [netfetch-ERR] <url> :: <reason>   -- a fetch() that threw
+          [netfetch] <status> <url>          -- a non-2xx HTTP response
+          [netws-open] <url>                 -- a WebSocket was opened
+          [netws-close] <url> code=.. reason=.. clean=..  -- WS closed (kernel!)
+          [netws-ERR] <url>                  -- WS error
+        """
+        if getattr(self, "_net_instrumented", False):
+            return self
+        js = r"""
+        (function(){
+          if (window.__nchantd_net_wrap) return;
+          window.__nchantd_net_wrap = true;
+          try {
+            var of = window.fetch;
+            window.fetch = function(){
+              var args = arguments;
+              var u = (args[0] && args[0].url) ? args[0].url : String(args[0]);
+              return of.apply(this, args).then(function(r){
+                if(!r.ok){ console.log('[netfetch] '+r.status+' '+r.url); }
+                return r;
+              }).catch(function(e){ console.log('[netfetch-ERR] '+u+' :: '+e); throw e; });
+            };
+            var OWS = window.WebSocket;
+            var NWS = function(url, protocols){
+              var ws = (protocols !== undefined) ? new OWS(url, protocols) : new OWS(url);
+              console.log('[netws-open] '+url);
+              ws.addEventListener('error', function(){ console.log('[netws-ERR] '+url); });
+              ws.addEventListener('close', function(ev){
+                console.log('[netws-close] '+url+' code='+ev.code+' reason='+(ev.reason||'')+' clean='+ev.wasClean);
+              });
+              return ws;
+            };
+            NWS.prototype = OWS.prototype;
+            NWS.CONNECTING = OWS.CONNECTING; NWS.OPEN = OWS.OPEN;
+            NWS.CLOSING = OWS.CLOSING; NWS.CLOSED = OWS.CLOSED;
+            window.WebSocket = NWS;
+            console.log('[net] instrumentation installed (DocumentCreation)');
+          } catch (e) { console.log('[net] instrumentation failed: '+e); }
+        })();
+        """
+        try:
+            script = pyqt.QWebEngineScript()
+            script.setName("nchantd_net_instrumentation")
+            script.setSourceCode(js)
+            script.setInjectionPoint(pyqt.QWebEngineScript.DocumentCreation)
+            script.setWorldId(pyqt.QWebEngineScript.MainWorld)
+            script.setRunsOnSubFrames(True)
+            page = view.page()
+            if page is not None:
+                page.scripts().insert(script)
+                self._net_instrumented = True
+                logma.info("[notebook] net instrumentation installed at DocumentCreation")
+        except Exception as e:
+            logma.error(f"[notebook] could not install net instrumentation: {e}", exc_info=True)
         return self
 
     def _navigate_browser(self, url):
@@ -598,6 +729,33 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.info(f"[notebook] browser.goto_page issued for {url}")
         except Exception as e:
             logma.error(f"[notebook] browser navigation failed for {url}: {e}", exc_info=True)
+        return self
+
+    def _setup_shutdown_hooks(self):
+        """Guarantee the Jupyter server is stopped when the app exits.
+
+        Registers, once: QApplication.aboutToQuit (clean Qt quit) and an atexit
+        handler (interpreter teardown). Combined with the die-with-parent signal
+        set on the subprocess, this covers clean quit, exceptions, and crashes so
+        no orphaned server is left holding the port.
+        """
+        if getattr(self, "_shutdown_hooks_installed", False):
+            return self
+        self._shutdown_hooks_installed = True
+        try:
+            app = pyqt.QApplication.instance()
+            if app is not None:
+                app.aboutToQuit.connect(self.shutdown)
+                logma.info("[notebook] shutdown hook wired to QApplication.aboutToQuit")
+        except Exception as e:
+            logma.error(f"[notebook] could not wire aboutToQuit shutdown hook: {e}")
+        try:
+            import atexit
+
+            atexit.register(self.stop_jupyter_server)
+            logma.info("[notebook] atexit shutdown hook registered")
+        except Exception as e:
+            logma.error(f"[notebook] could not register atexit shutdown hook: {e}")
         return self
 
     def stop_jupyter_server(self):
