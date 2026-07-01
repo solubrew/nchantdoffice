@@ -42,8 +42,8 @@ NchantdOfficeMatrix:
               2: {"action": "select_font_style", "type": ""}
               3: {"action": "select_font_color", "type": ""}
               4: {"action": "select_background_color", "type": ""}
-              5: {"name": "set_border_formats", "type": ""}
-              6: {"name": "insert_object", "type": ""}
+              5: {"action": "set_border_formats", "type": ""}
+              6: {"action": "insert_object", "type": ""}
       500:
           title: Nchantd Matrix Quickstart
           items:
