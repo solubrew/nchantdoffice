@@ -948,7 +948,7 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
+        super().__init__(parent)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSlimTabSearch"))
         if self.parent:
