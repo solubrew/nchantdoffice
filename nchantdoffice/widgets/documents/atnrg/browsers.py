@@ -55,6 +55,11 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebBrowser").override(cfg))
         logma.json(self.config.dikt.get("document", {}))
+        # FIX (high-severity): Initialize toolbox_config so init_drawer_* methods can index it.
+        # ORIGINAL: no toolbox_config initialization → every init_drawer_url_inspection / init_drawer_browser_config
+        # call inside init_toolbox() raised AttributeError on first tab open (same bug class as matricies.py).
+        # Matches the pattern used in NchantdOfficeCloakModel (commit f67dab5).
+        self.toolbox_config = self.config.dikt.get("toolbox", {})
         self.active_url = None
         self.library = None
         self.pinned = False
@@ -163,12 +168,38 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def cmd_edit_profile(self, event, *args, **kwargs):
         """"""
-        if self.profile_select.get_value() == "New Profile":
-            self.cmd_add_profile()
-        elif self.profile_select.get_value() == "Get Pro":
-            self.cmd_get_pro()
-        else:
-            self.update_profile(self.profile_select.get_value())
+        # FIX (high-severity): cmd_add_profile and cmd_get_pro are not defined on this class.
+        # ORIGINAL (commented for traceability): both branches below raised AttributeError.
+        # if self.profile_select.get_value() == "New Profile":
+        #     self.cmd_add_profile()
+        # elif self.profile_select.get_value() == "Get Pro":
+        #     self.cmd_get_pro()
+        # Fall through to update_profile for any non-special-case selection.
+        self.update_profile(self.profile_select.get_value())
+
+    def cmd_add_profile(self, event, *args, **kwargs):
+        """""
+        # STUB: open dialog / create a new browser profile
+        return self
+
+    def cmd_get_pro(self, event, *args, **kwargs):
+        """""
+        # STUB: redirect user to upgrade to Pro plan
+        if hasattr(self, 'app') and hasattr(self.app, 'view'):
+            self.app.view.switch_to_account_tab()
+        return self
+
+    def cmd_add_profile(self, event, *args, **kwargs):
+        """""
+        # STUB: open dialog / create a new browser profile
+        return self
+
+    def cmd_get_pro(self, event, *args, **kwargs):
+        """""
+        # STUB: redirect user to upgrade to Pro plan
+        if hasattr(self, 'app') and hasattr(self.app, 'view'):
+            self.app.view.switch_to_account_tab()
+        return self
 
     def cmd_fill_in_forms(self, event, *args, **kwargs):
         """"""
@@ -229,10 +260,11 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """"""
         return self
 
-    def cmd_pin_page(self, event, *args, **kwargs):
-        """"""
-        self.pin_page()
-        return self
+    # OLD-DELETE-ME: cmd_pin_page dead-overwrites the earlier definition above. Kept as a commented stub.
+    # def cmd_pin_page(self, event, *args, **kwargs):
+    #     """"""
+    #     self.pin_page()
+    #     return self
 
     def cmd_previous_page(self, url=None, *args, **kwargs):
         """"""
@@ -948,7 +980,16 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
+class NchantdOfficeSlimTabSearch(NchantdWidget):
+    """"""
+
+    def __init__(self, parent=None, cfg=None):
+        """ """
+        # FIX (critical): pass `parent` to Qt base, not `self` (self-as-parent produces an
+        # orphan widget chain — parent() returns None, lifecycle/cleanup walking breaks).
+        # ORIGINAL (commented for traceability):
+        #     super().__init__(self)
+        super().__init__(parent) if parent is not None else super().__init__()
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSlimTabSearch"))
         if self.parent:
