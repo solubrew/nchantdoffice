@@ -28,6 +28,7 @@ from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.annotations import NchantdLabel
+from nchantrs.libraries.pyqt import QTimer
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -89,6 +90,17 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         cfg = {"url": self.server_url, "is_app": True}
         self.browser = NchantdWebViewer(self, cfg).initView()
         self.layout.addWidget(self.browser)
+
+        # Auto-start Jupyter server when tab opens (defaults True).
+        # QTimer.singleShot defers the start until the event loop is idle so
+        # the UI renders first; start_jupyter_server() spawns the subprocess
+        # and loads the URL into self.browser once it's up.
+        autostart = True
+        if self.config and isinstance(getattr(self.config, "dikt", None), dict):
+            autostart = self.config.dikt.get("autostart_server", True)
+        if autostart and not self.server_running:
+            QTimer.singleShot(500, self.start_jupyter_server)
+
         return self
 
     def initWidget(self):
