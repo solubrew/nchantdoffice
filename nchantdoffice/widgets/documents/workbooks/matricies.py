@@ -1362,6 +1362,11 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         """Create the toolbar"""
         self.toolbar = pyqt.QToolBar("Spreadsheet Tools")
 
+        # Pane visibility controls from default document toolbar
+        self.toolbar.addAction("Left Pane", self.cmd_show_pane_left)
+        self.toolbar.addAction("Save", self.cmd_save_tab)
+        self.toolbar.addSeparator()
+
         # File operations
         self.toolbar.addAction("New", self.new_sheet)
         self.toolbar.addAction("Open", self.open_file)
@@ -1377,6 +1382,12 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # Format operations
         self.toolbar.addAction("Bold", self.toggle_bold)
         self.toolbar.addAction("Italic", self.toggle_italic)
+        self.toolbar.addSeparator()
+
+        # Formula operations from formula toolbar
+        if hasattr(self, "cmd_formula_entrybox"):
+            self.toolbar.addAction("Apply Formula", self.cmd_formula_entrybox)
+        self.toolbar.addAction("Auto Calculate", self.cmd_auto_calculate)
         self.toolbar.addSeparator()
 
         # Insert operations
