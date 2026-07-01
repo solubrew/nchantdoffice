@@ -520,10 +520,24 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             view.loadStarted.connect(lambda: logma.info("[notebook] webview loadStarted"))
             view.loadProgress.connect(lambda p: logma.info(f"[notebook] webview loadProgress={p}%"))
 
+            def _fmt_size(w):
+                try:
+                    s = w.size()
+                    return f"{s.width()}x{s.height()} visible={w.isVisible()}"
+                except Exception:
+                    return "?"
+
             def _on_load_finished(ok):
                 cur = view.url().toString()
                 logma.info(
                     f"[notebook] webview loadFinished ok={ok} | current_url={cur} | target={self._target_url}"
+                )
+                # Geometry check: distinguishes a size-collapse (fill/size-policy
+                # problem -> view is ~0 px) from a paint problem (view has real
+                # size but shows nothing -> GPU/compositor issue).
+                logma.info(
+                    f"[notebook] geometry | webview={_fmt_size(view)} | "
+                    f"viewer={_fmt_size(self.browser)} | document={_fmt_size(self)}"
                 )
                 # Self-heal the about:blank clobber race: if the load settled on a
                 # blank page but we actually wanted the Jupyter URL, navigate again

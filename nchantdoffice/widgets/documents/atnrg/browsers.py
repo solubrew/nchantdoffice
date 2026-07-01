@@ -41,7 +41,7 @@ from nchantrs.widgets.tables.lists import NchantdList
 here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
-logma.off()
+# logma.off()  # re-enabled for web-view render debugging
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "browsers.yaml")
