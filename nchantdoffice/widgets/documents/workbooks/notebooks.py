@@ -107,7 +107,10 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         # before the server is up yields an ERR_CONNECTION_REFUSED error page
         # that can persist even after a later reload; we navigate explicitly once
         # the server is confirmed reachable (see start_jupyter_server).
-        cfg = {"url": "about:blank", "is_app": True}
+        # links_in_place: new-window/target=_blank requests (how Jupyter opens a
+        # notebook when a .ipynb is double-clicked in the tree) load in THIS view
+        # instead of being dropped. See NchantdWebEnginePage.createWindow.
+        cfg = {"url": "about:blank", "is_app": True, "links_in_place": True}
         logma.info(f"[notebook] initView: creating web viewer (blank until ready; target={self.server_url})")
         # initWidget (not initView) so the viewer's initModel runs too: it honours
         # is_app/url from cfg and seeds the model-side url state before first show.
@@ -519,6 +522,19 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 return self
             view.loadStarted.connect(lambda: logma.info("[notebook] webview loadStarted"))
             view.loadProgress.connect(lambda p: logma.info(f"[notebook] webview loadProgress={p}%"))
+
+            def _on_url_changed(url):
+                # Keep the self-heal target in sync with user-initiated navigation
+                # (e.g. double-clicking a .ipynb in the tree -> /notebooks/<name>),
+                # so a later stray blank load doesn't yank us back to /tree.
+                cur = url.toString() if hasattr(url, "toString") else str(url)
+                if cur and cur.startswith(self.server_url):
+                    if cur != self._target_url:
+                        logma.info(f"[notebook] user navigation -> tracking target={cur}")
+                        self._target_url = cur
+                        self._nav_retries = 0
+
+            view.urlChanged.connect(_on_url_changed)
 
             def _fmt_size(w):
                 try:
