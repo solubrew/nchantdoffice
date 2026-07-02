@@ -45,7 +45,7 @@ log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "../_data_", "calendars.yaml")
+pxcfg = join(here, "_data_", "calendars.yaml")
 
 
 class NchantdEventPane(NchantdPane):
@@ -451,10 +451,10 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         """ """
         super().__init__("Nchantd Calendar", parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCalendar"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCalendar").override(cfg))
+        # if self.parent:
+        #     self.config.override(parent.config)
+        # self.config.override(cfg)
         self.calendar = None
 
     def initModel(self):
@@ -556,6 +556,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
 
     def init_drawer_events(self):
         """"""
+        logma.info(f"Config {self.config.dikt}")
         logma.info(f"Toolbox {self.toolbox_config}")
         items = self.toolbox_config[100].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}

@@ -183,6 +183,7 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
 class NchantdOfficeMatrix(NchantdOfficeDocument):
     """"""
 
+    PYTYPE = "spreadsheet"
     dataChanged = pyqt.Signal(dict)
     cellSelected = pyqt.Signal(str, object)
 

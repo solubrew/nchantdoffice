@@ -44,7 +44,7 @@ from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
 here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
-
+debug = False
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "filesystems.yaml")
 
@@ -152,10 +152,18 @@ class NchantdCompressPane(NchantdPane):
 
     def set_from_folder(self):
         """"""
-        cfg = {
-            "text": f"From Folder: \n{self.parent.fs_tree.current_level_path}",  # {self.app.active_tab.get_current_path()}",
-            "size": ["auto", "auto"],
-        }
+        #if self.parent.fs_tree is None:
+        #    self.parent.fs_tree =
+        try:
+            cfg = {
+                "text": f"From Folder: \n{self.parent.fs_tree.current_level_path}",  # {self.app.active_tab.get_current_path()}",
+                "size": ["auto", "auto"],
+            }
+        except Exception as e:
+            logma.warning(e)
+            if debug:
+                raise e
+            cfg = {"text": "", "size": ["auto", "auto"]}
         self.from_folder_label = NchantdLabel(self, cfg).initWidget()
         self.group_layout.addWidget(self.from_folder_label)
         return self
