@@ -320,7 +320,7 @@ class NchantdOfficeDocumentMixin:
         if self.document is None:
             return self
         logma.info(f"Save Content {self.document.content}")
-        self.document.save()  # increments versions and (internal encryption..future)
+        #self.document.save()  # increments versions and (internal encryption..future)
         logma.info(f"Save Path {path}")
         self.set_file_path(path)
         if self.app.view.panes["left"].tree.model.current_node is None:

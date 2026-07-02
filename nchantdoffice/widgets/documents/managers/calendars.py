@@ -460,6 +460,9 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
     def initModel(self):
         """"""
         super().initModel()
+        cfg = {}
+        self.document = self.app.model.codex.init_calendar(cfg)
+        self.document.load_document()
         self.context_menu.get_menu("document_calendar_context")
         return self
 
@@ -553,6 +556,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
 
     def init_drawer_events(self):
         """"""
+        logma.info(f"Toolbox {self.toolbox_config}")
         items = self.toolbox_config[100].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
         cnt = 0
