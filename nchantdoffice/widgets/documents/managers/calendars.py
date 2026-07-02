@@ -135,7 +135,7 @@ class NchantdAlarmsEditPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
+        super().__init__(parent, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventRecursionEditPane"))
         if self.parent:
@@ -171,8 +171,8 @@ class NchantdAlarmsEditPane(NchantdPane):
                 "Yearly",
             ],
         }
-        self.scope_select = NchantdDropDown(self, cfg).initWidget()
-        layout.addWidget(self.scope_select)
+        self.alarm_scope_select = NchantdDropDown(self, cfg).initWidget()
+        layout.addWidget(self.alarm_scope_select)
         cfg = {}
         self.end_date_select = NchantdDateTimeSelect(self, cfg).initWidget()
         layout.addWidget(self.end_date_select)
@@ -337,7 +337,7 @@ class NchantdTasksListPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
+        super().__init__(parent, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdTasksListPane"))
         if self.parent:
@@ -589,7 +589,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         default_action = {"action": "insert_generic_action", "type": "custom"}
         cnt = 0
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = deepcopy(default_action)
         cfg = {
             "layout": "horizontal",
         }
@@ -597,7 +597,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         items[cnt]["widget"] = self.event_config_accept_button
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = deepcopy(default_action)
         cfg = {
             "layout": "horizontal",
             "value": self.get_event_datetime_select_value(),
@@ -606,7 +606,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         items[cnt]["widget"] = self.date_select
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = deepcopy(default_action)
         cfg = {
             "text": "Event is Required",
             "layout": "horizontal",
@@ -616,7 +616,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         items[cnt]["widget"] = self.event_required_checkbox
         cnt += 1
         if cnt not in items:
-            items[cnt] = default_action
+            items[cnt] = deepcopy(default_action)
         cfg = {
             "label": "Alarms List: ",
             "layout": "horizontal",
@@ -728,7 +728,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             self.calendar = None
         # Add and display the selected chart
         if scope is None:
-            scope = self.scope
+            scope = self.get_calendar_scope_select_value()
         cfg = {"scope": scope}
         self.calendar = NchantdCalendar(self, cfg).initWidget()
         self.layout.insertWidget(1, self.calendar)
