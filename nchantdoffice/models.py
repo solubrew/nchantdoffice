@@ -1952,24 +1952,10 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 if active_tab_position >= len(tabsdata):
                     active_tab_position = 0
 
-                for tabn, tab in enumerate(self.tabsdata):
-                    if tabn == active_tab_position:
-                        self.load_tab(tab, tabn, tabset, active_tab_position)
-                    else:  # TODO: this supports lazy loading probably needs to be moved to nchantrs base library
-                        # Create placeholder
-                        from nchantrs.libraries import pyqt
-
-                        dummy = pyqt.QWidget(self.parent)
-                        dummy.dummy = True
-                        dummy.toolbox_config = {}
-                        dummy.position = tabn
-                        dummy.name = tab.get("name", tab.get("name_txt", None))
-                        _type = tab.get("tab_type", tab.get("tab_type_txt", "custom_widget"))
-                        dummy.type = _type[-len(_type) + _type.rfind("_") + 1 :]
-                        self.tab_widgets.insert(tabn, dummy)
-                        self.parent.insertTab(tabn, dummy, dummy.name)
-
-                self.parent.setCurrentIndex(active_tab_position)
+                # H9: Use base class lazy-loading loop via load_tab_set instead of
+                # duplicating the for/enumerate/if/else pattern inline here.
+                # The office load_tab override handles widget insertion correctly.
+                self.load_tab_set(tabset, active_tab_position)
 
             if self.show_add_tab or tabset == "center":
                 logma.info(f"New Document {self.new_document}")
