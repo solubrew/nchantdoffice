@@ -195,10 +195,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationToolBox"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationToolBox").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -223,8 +220,8 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
     def add_node_drawer(self):
         """"""
         cfg = {"action": "add_node"}
-        self.add_node = NchantdButton(self, cfg).initWidget()
-        self.add_drawer_item(self.add_node, 0, 0)
+        # self.add_node = NchantdButton(self, cfg).initWidget()
+        # self.add_drawer_item(self.add_node, 0, 0)
         return self
 
     def add_settings_drawer(self):
@@ -234,8 +231,8 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
     def add_tabs_drawer(self):
         """"""
         cfg = {"action": "add_tab"}
-        self.add_tab = NchantdButton(self, cfg).initWidget()
-        self.add_drawer_item(self.add_tab, 0, 0)
+        # self.add_tab = NchantdButton(self, cfg).initWidget()
+        # self.add_drawer_item(self.add_tab, 0, 0)
         return self
 
     def add_tools_drawer(self):

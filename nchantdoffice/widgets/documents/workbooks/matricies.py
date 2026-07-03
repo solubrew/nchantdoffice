@@ -220,22 +220,16 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.toolbar = None
         self.formula_bar = None
         self.sheet_tabs = None
-
-        self.setup_ui()
         self.setup_toolbar()
-        self.connect_signals()
+        # self.connect_signals()
 
     def initModel(self):
         """"""
         super().initModel()
         cfg = {"file_path": self.file_path}
-        # self.document = PyfficeMatrix(cfg)
         self.document = self.app.model.codex.init_matrix(cfg)
         self.document.load_document()
         self.context_menu.get_menu("context.document.matrix")
-        # write document data to database if it is not already stored there
-        # this logic seems like it should be in the same place as the tab creator but then
-        # how does that work with the single document apps
         return self
 
     def initView(self, cfg=None):
@@ -552,8 +546,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {"text": "Set Formulas to Auto-Calculate", "size": ["auto", "auto"]}
-        self.autocalculate_checkbox = NchantdCheckbox(self, cfg)
-        items[cnt]["widget"] = self.autocalculate_checkbox
+        # self.autocalculate_checkbox = NchantdCheckbox(self, cfg)
+        # items[cnt]["widget"] = self.autocalculate_checkbox
         cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
@@ -640,7 +634,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "layout": "horizontal",
             "size": ["auto", "auto"],
         }
-        self.document_compatability = NchantdCheckbox(self, cfg)
+        # self.document_compatability = NchantdCheckbox(self, cfg)
         items[cnt]["widget"] = self.document_compatability
         cnt += 1
 
@@ -1287,48 +1281,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.save_document()
         return self
 
-    def setup_ui(self):
-        """Initialize the user interface"""
-        main_layout = pyqt.QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
-
-        # Sheet tabs (for workbook mode)
-        if self.is_workbook:
-            self.sheet_tabs = pyqt.QTabWidget()
-            self.sheet_tabs.setTabsClosable(False)
-            main_layout.addWidget(self.sheet_tabs)
-
-        # Formula bar
-        self.formula_bar = self.create_formula_bar()
-        main_layout.addWidget(self.formula_bar)
-
-        # Table widget
-        self.table = pyqt.QTableWidget()
-        self.table.setAlternatingRowColors(True)
-        self.table.setSelectionBehavior(pyqt.QTableWidget.SelectionBehavior.SelectItems)
-        self.table.setSelectionMode(pyqt.QTableWidget.SelectionMode.ExtendedSelection)
-
-        # Configure headers
-        header = self.table.horizontalHeader()
-        header.setSectionResizeMode(pyqt.QHeaderView.ResizeMode.Interactive)
-        header.setStretchLastSection(True)
-
-        # Set default size
-        self.table.setRowCount(100)
-        self.table.setColumnCount(26)  # A-Z
-
-        # Add column headers (A-Z)
-        for i in range(26):
-            self.table.setHorizontalHeaderItem(i, pyqt.QTableWidgetItem(chr(65 + i)))
-
-        # Add row headers (1-100)
-        for i in range(100):
-            self.table.setVerticalHeaderItem(i, pyqt.QTableWidgetItem(str(i + 1)))
-
-        main_layout.addWidget(self.table)
-        self.setLayout(main_layout)
-
     def create_formula_bar(self):
         """Create the formula bar widget"""
         bar = pyqt.QWidget()
@@ -1398,10 +1350,10 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # Chart insertion
         self.toolbar.addAction("Insert Chart", self.insert_chart)
 
-    def connect_signals(self):
-        """Connect UI signals to handlers"""
-        self.table.itemChanged.connect(self.on_cell_changed)
-        self.table.itemSelectionChanged.connect(self.on_selection_changed)
+    # def connect_signals(self):
+    #     """Connect UI signals to handlers"""
+    #     self.table.itemChanged.connect(self.on_cell_changed)
+    #     self.table.itemSelectionChanged.connect(self.on_selection_changed)
 
     # ================================ Data Loading ================================
 

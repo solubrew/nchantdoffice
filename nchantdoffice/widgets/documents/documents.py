@@ -242,7 +242,8 @@ class NchantdOfficeDocumentMixin:
         if self.toolbox_config is None:
             self.toolbox_config = self.app.model.toolbox_config.get("document", None)
         if self.toolbox_config is None:
-            logma.warning("No toolbox config found for document, using empty default"); self.toolbox_config = {}
+            logma.warning("No toolbox config found for document, using empty default")
+            self.toolbox_config = {}
         logma.info(f"Toolbox Config {self.toolbox_config.keys()}")
         self.toolbox_config[50]["items"] = self.init_drawer_file_config()
         return self
@@ -320,7 +321,7 @@ class NchantdOfficeDocumentMixin:
         if self.document is None:
             return self
         logma.info(f"Save Content {self.document.content}")
-        #self.document.save()  # increments versions and (internal encryption..future)
+        # self.document.save()  # increments versions and (internal encryption..future)
         logma.info(f"Save Path {path}")
         self.set_file_path(path)
         if self.app.view.panes["left"].tree.model.current_node is None:

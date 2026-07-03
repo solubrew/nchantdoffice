@@ -29,7 +29,7 @@ log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", ".yaml")
+pxcfg = join(here, "_data_", "advertisements.yaml")
 
 
 class NchantdAdvertisementPane(NchantdWidget):
@@ -66,12 +66,9 @@ class NchantdAdvertisementSlimTab(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("Nchantd")
-        if self.parent:
-            self.config.override(parent.config)
         super().__init__(self)
-        self.config.override(cfg)
+        self.parent = parent
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAdvertisementSlimTab").override(cfg))
 
     def initModel(self):
         """"""
