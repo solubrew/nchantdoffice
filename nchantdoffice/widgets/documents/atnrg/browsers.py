@@ -1027,6 +1027,14 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
         return self
 
 
+class NchantdOfficeAdTab(NchantdWidget):
+    """"""
+
+    def __init__(self, cfg=None):
+        """"""
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAdTab").override(cfg))
+
+
 # ====================================================================================================================||
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||

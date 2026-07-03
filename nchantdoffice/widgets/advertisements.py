@@ -37,12 +37,9 @@ class NchantdAdvertisementPane(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        super().__init__(parent)
         self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdAdvertisementPane")
-        if self.parent:
-            self.config.override(parent.config)
-        super().__init__(self)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAdvertisementPane").override(cfg))
 
     def initModel(self):
         """"""
@@ -52,30 +49,6 @@ class NchantdAdvertisementPane(NchantdWidget):
     def initView(self):
         """"""
         super().initView()
-        return self
-
-    def initWidget(self):
-        """"""
-        self.initModel()
-        self.initView()
-        return self
-
-
-class NchantdAdvertisementSlimTab(NchantdWidget):
-    """"""
-
-    def __init__(self, parent=None, cfg=None):
-        """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAdvertisementSlimTab").override(cfg))
-
-    def initModel(self):
-        """"""
-        return self
-
-    def initView(self):
-        """"""
         return self
 
     def initWidget(self):
