@@ -1020,6 +1020,8 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
         if url is not None:
             if isinstance(url, pyqt.QUrl):
                 url = url.toString()
+            if self.url_select_entry is None:
+                return self
             self.url_select_entry.combobox.setCurrentText(url)
             self.url_select_entry.update_options([url], False, False)
         # self.save()
@@ -1027,13 +1029,99 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
         return self
 
 
-class NchantdOfficeAdTab(NchantdWidget):
+class NchantdOfficeAdTab(NchantdOfficeDocument):
     """"""
 
-    def __init__(self, cfg=None):
-        """"""
+    def __init__(self, parent=None, cfg=None):
+        """ """
+        super().__init__("NchantdOfficeAdTab", parent, cfg)
+        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAdTab").override(cfg))
+        self.active_url = None
+        self.library = None
+        self.pinned = False
+        self.profiles = None
+        self.profile = None
+        self.document = None
+        self.page = None
+        self.did = None
+        self.browser = None
+        self.pin = False
 
+    def initModel(self, cfg=None):
+        """"""
+        if cfg is None:
+            cfg = {}
+        if cfg.get("document", None) is None:
+            cfg["document"] = {"data": {"unit": {}}}
+        cfg["url"] = self.config.dikt.get("url", self.config.dikt.get("default_url", "http://www.duckduckgo.com/"))
+        self.config.override(cfg)
+        super().initModel(self.config.dikt)
+
+        # this translates url code from the web app tab catalog
+        if self.config.dikt.get("url_code", None) is not None:
+            cfg["document"]["data"]["unit"]["original_path"] = self.app.model.get_link(
+                name=self.config.dikt["url_code"]
+            )
+        self.config.override(cfg)
+        document = {"document": self.config.dikt["document"]}
+        logma.json(document)
+        self.document = self.app.model.codex.init_browser(document)
+        self.document.load_document()
+        self.context_menu_name = "context.document.browser"
+        if self.context_menu_name is not None:
+            self.initialize_context_menu(self.context_menu_name)
+        cfg = {}
+        self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
+        self.library = self.document.library
+        self.profiles = self.document.profile_manager
+        return self
+
+    def initView(self, cfg=None):
+        """"""
+        if cfg is None:
+            cfg = {}
+        self.browser = NchantdOfficeWebViewer(self, {"url": self.active_url})
+        self.browser.is_simple = False
+        #cfg["buttons"] = self.build_toolbar()
+        # Host of a single expanding web view: opt this container's layout out of
+        # the base AlignTop|AlignLeft so the viewer fills the pane instead of
+        # collapsing to its sizeHint (root-cause fix, see docs/nchantrs_webview_render_fixes.md).
+        cfg["fill"] = True
+        cfg["default_toolbar"] = False
+        super().initView(cfg)
+        self.browser.initWidget()
+        self.layout.addWidget(self.browser)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(3)
+        self.populate_document()
+        return self
+
+    def initWidget(self):
+        """"""
+        self.initModel()
+        self.initView()
+        return self
+
+    def get_active_url(self):
+        """"""
+        if self.document.active_page.active_url.active_url is None:
+            logma.info("No active url")
+            return None
+        url = self.document.active_page.active_url.active_url
+        logma.info(f"URL {url}")
+        return url
+
+    def populate_document(self, url=None):
+        """"""
+        if url is None:
+            url = self.get_active_url()
+        logma.info(f"Populate Document {url}")
+        if self.pinned is False:
+            self.browser.populate_document(url)
+        self.save()
+        self.document.save()
+        return self
 
 # ====================================================================================================================||
 
