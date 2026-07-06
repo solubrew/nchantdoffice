@@ -244,7 +244,12 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.formula_bar = NchantdLabeledEntry(self, cfg)
         if self.file_path is None or not exists(self.file_path):
             cfg = {"buttons": {49: "_insert_stretch"}, "layout": "vertical"}
-        cfg["buttons"][0] = {"name": "formula_bar", "type": "entry_editor", "widget": self.formula_bar}
+        cfg["buttons"][10] = {
+            "action": "formula_bar",
+            "name": "formula_bar",
+            "type": "entry_editor",
+            "widget": self.formula_bar,
+        }
         dscfg = {
             "label": "Select Data Set: ",
             "layout": "horizontal",
@@ -252,9 +257,10 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "options": self.get_datasets(),
         }
         self.dataset_select = NchantdDropDown(self.parent, dscfg)
-        cfg["buttons"][1] = {"action": "select_data_set", "widget": self.dataset_select}
-        if self.document.is_saved:  # is_data_set
-            cfg["buttons"][200] = {"action": "show_data_set"}
+        cfg["buttons"][11] = {"action": "select_data_set", "widget": self.dataset_select}
+
+        # if self.document.is_saved:  # is_data_set
+        #     cfg["buttons"][200] = {"action": "show_data_set"}
         super().initView(cfg)
         cfg = {"num_rows": 100, "num_columns": 40, "min_column_width": 30}
         self.table = NchantdTable(self.parent, self.config.override(cfg)).initWidget()

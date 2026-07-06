@@ -517,10 +517,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         """"""
         super().__init__("NchantdOfficeSketch", parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSketch"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSketch").override(cfg))
         self.canvas = None
         self.layers = None
         self.setMouseTracking(True)
@@ -558,15 +555,17 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
     def initView(self, cfg=None):
         """Initialize the sketch view with canvas and tool buttons."""
         cfg = cfg or {}
-        cfg["buttons"] = {
-            10: {"action": "add_1d_line", "handler": self.cmd_add_1d_line},
-            11: {"action": "add_1d_curve", "handler": self.cmd_add_1d_curve},
-            12: {"action": "add_1d_spline", "handler": self.cmd_add_1d_spline},
-            13: {"action": "add_2d_polygon", "handler": self.cmd_add_2d_polygon},
-            14: {"action": "add_2d_ellipse", "handler": self.cmd_add_2d_ellipse},
-            15: {"action": "insert_object", "handler": self.cmd_insert_object},
-            16: {"action": "fill_color", "handler": self.cmd_fill_color},
-            49: "_insert_stretch",
+        cfg = {
+            "buttons": {
+                10: {"action": "add_1d_line", "handler": self.cmd_add_1d_line},
+                11: {"action": "add_1d_curve", "handler": self.cmd_add_1d_curve},
+                12: {"action": "add_1d_spline", "handler": self.cmd_add_1d_spline},
+                13: {"action": "add_2d_polygon", "handler": self.cmd_add_2d_polygon},
+                14: {"action": "add_2d_ellipse", "handler": self.cmd_add_2d_ellipse},
+                15: {"action": "insert_object", "handler": self.cmd_insert_object},
+                16: {"action": "fill_color", "handler": self.cmd_fill_color},
+                49: "_insert_stretch",
+            }
         }
         super().initView(cfg)
         canvas_cfg = {"size": ["auto", self.size().height() + self.parent.size().height()]}

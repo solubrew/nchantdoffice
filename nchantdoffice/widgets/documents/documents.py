@@ -231,6 +231,7 @@ class NchantdOfficeDocumentMixin:
         buttons.update(_buttons)
         cfg = {"layout": "horizontal", "justify": "right"}
         buttons = {k: buttons[k] for k in sorted(buttons)}
+        logma.warning(f"Buttons {buttons}")
         self.document_toolbar = NchantdButtonBar(self, cfg).initWidget(buttons)
         self.document_toolbar.setFixedHeight(30)
         self.layout.addWidget(self.document_toolbar)

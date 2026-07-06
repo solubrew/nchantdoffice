@@ -1,3234 +1,1302 @@
-agent: arthr
+agent: seuss
 analysis:
   counts:
-    directories: 98
-    file_sizes:
-      __main__.py: 2146
-      cmds/run/install.py: 1848
-      cmds/run/launch.py: 2033
-      cmds/run/run.py: 2503
-      cmds/runNchantdAXN.py: 817
-      cmds/runNchantdDocument.py: 3884
-      cmds/runNchantdOffice.py: 2298
-      cmds/runNchantdOfficePaid.py: 1774
-      cmds/runNchantdOfficePremium.py: 1774
-      cmds/runNchantdTool.py: 2823
-      cmds/runTest.py: 1942
-      cmds/test_runNchantdOffice.py: 2308
-      nchantdoffice/__init__.py: 28
-      nchantdoffice/__main__.py: 2609
-      nchantdoffice/cli.py: 4581
-      nchantdoffice/dialogs/dialogs.py: 3665
-      nchantdoffice/dialogs/documents.py: 14248
-      nchantdoffice/dialogs/imports.py: 5370
-      nchantdoffice/dialogs/notifications.py: 2013
-      nchantdoffice/models.py: 79126
-      nchantdoffice/nchantdoffice.py: 4217
-      nchantdoffice/updates/db.py: 1823
-      nchantdoffice/utilities/config.py: 4653
-      nchantdoffice/utilities/constants.py: 969
-      nchantdoffice/utilities/imports.py: 3065
-      nchantdoffice/utilities/links.py: 4641
-      nchantdoffice/utilities/policies.py: 1854
-      nchantdoffice/utilities/users.py: 2549
-      nchantdoffice/utilities/utilities.py: 4505
-      nchantdoffice/views.py: 2361
-      nchantdoffice/widgets/__init__.py: 0
-      nchantdoffice/widgets/advertisements.py: 2669
-      nchantdoffice/widgets/catalogs.py: 11198
-      nchantdoffice/widgets/config/accounts.py: 7821
-      nchantdoffice/widgets/config/apis.py: 3396
-      nchantdoffice/widgets/config/automations.py: 2934
-      nchantdoffice/widgets/config/config.py: 3221
-      nchantdoffice/widgets/config/help.py: 2819
-      nchantdoffice/widgets/config/journal.py: 14162
-      nchantdoffice/widgets/config/security.py: 2168
-      nchantdoffice/widgets/config/settings.py: 19215
-      nchantdoffice/widgets/config/sources.py: 2675
-      nchantdoffice/widgets/config/storage.py: 5415
-      nchantdoffice/widgets/config/uninstall.py: 2153
-      nchantdoffice/widgets/controls/buttons.py: 3300
-      nchantdoffice/widgets/controls/menus.py: 2132
-      nchantdoffice/widgets/controls/toolbars.py: 14229
-      nchantdoffice/widgets/controls/toolboxes.py: 18886
-      nchantdoffice/widgets/documents/__init__.py: 659
-      nchantdoffice/widgets/documents/analytics/analytics.py: 1382
-      nchantdoffice/widgets/documents/analytics/charts.py: 15604
-      nchantdoffice/widgets/documents/analytics/comparison.py: 2164
-      nchantdoffice/widgets/documents/analytics/sources.py: 14380
-      nchantdoffice/widgets/documents/atnrg/attentioneering.py: 4384
-      nchantdoffice/widgets/documents/atnrg/browsers/browsers.py: 37468
-      nchantdoffice/widgets/documents/atnrg/browsers/pages.py: 12702
-      nchantdoffice/widgets/documents/atnrg/contacts.py: 4449
-      nchantdoffice/widgets/documents/atnrg/email.py: 4337
-      nchantdoffice/widgets/documents/atnrg/news.py: 2411
-      nchantdoffice/widgets/documents/atnrg/prompts.py: 19858
-      nchantdoffice/widgets/documents/atnrg/surveys.py: 9973
-      nchantdoffice/widgets/documents/audio.py: 3166
-      nchantdoffice/widgets/documents/charts.py: 3750
-      nchantdoffice/widgets/documents/documents.py: 15074
-      nchantdoffice/widgets/documents/engrg/__init__.py: 0
-      nchantdoffice/widgets/documents/engrg/cad.py: 10762
-      nchantdoffice/widgets/documents/engrg/charts.py: 13152
-      nchantdoffice/widgets/documents/engrg/database.py: 2127
-      nchantdoffice/widgets/documents/engrg/engineering.py: 2072
-      nchantdoffice/widgets/documents/engrg/freecad.py: 3503
-      nchantdoffice/widgets/documents/engrg/process.py: 3689
-      nchantdoffice/widgets/documents/engrg/tasks.py: 3735
-      nchantdoffice/widgets/documents/filesystems.py: 27066
-      nchantdoffice/widgets/documents/finance/__init__.py: 0
-      nchantdoffice/widgets/documents/finance/finance.py: 4116
-      nchantdoffice/widgets/documents/forms.py: 3177
-      nchantdoffice/widgets/documents/games/__init__.py: 0
-      nchantdoffice/widgets/documents/games/games.py: 1362
-      nchantdoffice/widgets/documents/games/nchantris.py: 5138
-      nchantdoffice/widgets/documents/journal.py: 13096
-      nchantdoffice/widgets/documents/managers/__init__.py: 0
-      nchantdoffice/widgets/documents/managers/calendars.py: 26032
-      nchantdoffice/widgets/documents/managers/contacts.py: 3437
-      nchantdoffice/widgets/documents/managers/travel.py: 2005
-      nchantdoffice/widgets/documents/media/__init__.py: 0
-      nchantdoffice/widgets/documents/media/audio.py: 2175
-      nchantdoffice/widgets/documents/media/forms.py: 17386
-      nchantdoffice/widgets/documents/media/graphics/graphics.py: 31380
-      nchantdoffice/widgets/documents/media/graphics/images.py: 22449
-      nchantdoffice/widgets/documents/media/images.py: 3394
-      nchantdoffice/widgets/documents/media/notes.py: 8442
-      nchantdoffice/widgets/documents/media/pdfs.py: 21187
-      nchantdoffice/widgets/documents/media/scripts.py: 33763
-      nchantdoffice/widgets/documents/media/shows.py: 6253
-      nchantdoffice/widgets/documents/media/video.py: 3185
-      nchantdoffice/widgets/documents/notebooks.py: 3438
-      nchantdoffice/widgets/documents/pdf.py: 3150
-      nchantdoffice/widgets/documents/presentation.py: 3350
-      nchantdoffice/widgets/documents/spreadsheet.py: 5720
-      nchantdoffice/widgets/documents/surveys.py: 4931
-      nchantdoffice/widgets/documents/text.py: 5282
-      nchantdoffice/widgets/documents/web.py: 5329
-      nchantdoffice/widgets/documents/workbooks/matricies.py: 22324
-      nchantdoffice/widgets/documents/workbooks/notebooks.py: 4246
-      nchantdoffice/widgets/documents/workbooks/utilities.py: 1374
-      nchantdoffice/widgets/extensions/__init__.py: 0
-      nchantdoffice/widgets/extensions/extensions.py: 2628
-      nchantdoffice/widgets/items/diagrams.py: 6995
-      nchantdoffice/widgets/items/items.py: 7789
-      nchantdoffice/widgets/library/nchantdlibrary.py: 3840
-      nchantdoffice/widgets/panes/charts.py: 39726
-      nchantdoffice/widgets/panes/documents.py: 26429
-      nchantdoffice/widgets/panes/files.py: 5005
-      nchantdoffice/widgets/panes/forms.py: 7556
-      nchantdoffice/widgets/panes/models.py: 3172
-      nchantdoffice/widgets/panes/new.py: 18468
-      nchantdoffice/widgets/panes/objects.py: 6640
-      nchantdoffice/widgets/panes/panes.py: 1347
-      nchantdoffice/widgets/panes/quickstart.py: 2451
-      nchantdoffice/widgets/panes/search.py: 11053
-      nchantdoffice/widgets/panes/sources.py: 34191
-      nchantdoffice/widgets/panes/tasks.py: 4887
-      nchantdoffice/widgets/panes/weather.py: 2376
-      nchantdoffice/widgets/settings.py: 6074
-      nchantdoffice/widgets/tabs.py: 7179
-      nchantdoffice/widgets/tags.py: 2765
-      nchantdoffice/widgets/timelines.py: 2131
-      nchantdoffice/widgets/trees.py: 7929
-      nchantdoffice/widgets/widgets.py: 3185
-      nchantdoffice/wizards/wizards.py: 5644
-      tests/unit/__init__TEST.py: 2335
-      tests/unit/__main__TEST.py: 2686
-      tests/unit/dialogs/dialogsTEST.py: 5489
-      tests/unit/dialogs/documentsTEST.py: 4544
-      tests/unit/dialogs/importsTEST.py: 6741
-      tests/unit/dialogs/notificationsTEST.py: 3413
-      tests/unit/modelsTEST.py: 29688
-      tests/unit/nchantdofficeTEST.py: 4901
-      tests/unit/updates/dbTEST.py: 3064
-      tests/unit/utilities/configTEST.py: 3957
-      tests/unit/utilities/importsTEST.py: 4161
-      tests/unit/utilities/linksTEST.py: 3659
-      tests/unit/utilities/policiesTEST.py: 3082
-      tests/unit/utilities/usersTEST.py: 3524
-      tests/unit/utilities/utilitiesTEST.py: 2751
-      tests/unit/viewsTEST.py: 3401
-      tests/unit/widgets/advertisementsTEST.py: 4424
-      tests/unit/widgets/catalogsTEST.py: 7189
-      tests/unit/widgets/config/accountsTEST.py: 4430
-      tests/unit/widgets/config/apisTEST.py: 3572
-      tests/unit/widgets/config/automationsTEST.py: 4427
-      tests/unit/widgets/config/configTEST.py: 3506
-      tests/unit/widgets/config/helpTEST.py: 4382
-      tests/unit/widgets/config/journalTEST.py: 3568
-      tests/unit/widgets/config/securityTEST.py: 3372
-      tests/unit/widgets/config/settingsTEST.py: 7341
-      tests/unit/widgets/config/sourcesTEST.py: 3364
-      tests/unit/widgets/config/storageTEST.py: 3368
-      tests/unit/widgets/config/uninstallTEST.py: 3376
-      tests/unit/widgets/controls/buttonsTEST.py: 3280
-      tests/unit/widgets/controls/menusTEST.py: 3358
-      tests/unit/widgets/controls/toolbarsTEST.py: 9580
-      tests/unit/widgets/controls/toolboxesTEST.py: 6168
-      tests/unit/widgets/documents/analytics/analyticsTEST.py: 2312
-      tests/unit/widgets/documents/analytics/chartsTEST.py: 7425
-      tests/unit/widgets/documents/analytics/comparisonTEST.py: 3383
-      tests/unit/widgets/documents/analytics/sourcesTEST.py: 5923
-      tests/unit/widgets/documents/atnrg/attentioneeringTEST.py: 3890
-      tests/unit/widgets/documents/atnrg/browsers/browsersTEST.py: 14293
-      tests/unit/widgets/documents/atnrg/browsers/pagesTEST.py: 7486
-      tests/unit/widgets/documents/atnrg/contactsTEST.py: 5586
-      tests/unit/widgets/documents/atnrg/emailTEST.py: 4415
-      tests/unit/widgets/documents/atnrg/newsTEST.py: 3365
-      tests/unit/widgets/documents/atnrg/promptsTEST.py: 9683
-      tests/unit/widgets/documents/atnrg/surveysTEST.py: 9781
-      tests/unit/widgets/documents/calendarsTEST.py: 13532
-      tests/unit/widgets/documents/diagramsTEST.py: 3189
-      tests/unit/widgets/documents/documentsTEST.py: 11450
-      tests/unit/widgets/documents/filesystemsTEST.py: 13263
-      tests/unit/widgets/documents/journalTEST.py: 6806
-      tests/unit/widgets/documents/media/audioTEST.py: 3341
-      tests/unit/widgets/documents/media/formsTEST.py: 9112
-      tests/unit/widgets/documents/media/graphics/graphicsTEST.py: 18498
-      tests/unit/widgets/documents/media/graphics/imagesTEST.py: 12409
-      tests/unit/widgets/documents/media/notesTEST.py: 5936
-      tests/unit/widgets/documents/media/pdfsTEST.py: 8084
-      tests/unit/widgets/documents/media/scriptsTEST.py: 10059
-      tests/unit/widgets/documents/media/showsTEST.py: 5074
-      tests/unit/widgets/documents/workbooks/matriciesTEST.py: 7856
-      tests/unit/widgets/documents/workbooks/notebooksTEST.py: 3975
-      tests/unit/widgets/documents/workbooks/utilitiesTEST.py: 2312
-      tests/unit/widgets/items/diagramsTEST.py: 4640
-      tests/unit/widgets/items/itemsTEST.py: 5690
-      tests/unit/widgets/library/nchantdlibraryTEST.py: 5544
-      tests/unit/widgets/panes/chartsTEST.py: 17564
-      tests/unit/widgets/panes/documentsTEST.py: 13386
-      tests/unit/widgets/panes/filesTEST.py: 4132
-      tests/unit/widgets/panes/formsTEST.py: 5106
-      tests/unit/widgets/panes/modelsTEST.py: 3347
-      tests/unit/widgets/panes/newTEST.py: 7634
-      tests/unit/widgets/panes/objectsTEST.py: 5423
-      tests/unit/widgets/panes/panesTEST.py: 2308
-      tests/unit/widgets/panes/quickstartTEST.py: 3359
-      tests/unit/widgets/panes/searchTEST.py: 6492
-      tests/unit/widgets/panes/sourcesTEST.py: 19958
-      tests/unit/widgets/panes/tasksTEST.py: 3583
-      tests/unit/widgets/panes/weatherTEST.py: 3347
-      tests/unit/widgets/settingsTEST.py: 5479
-      tests/unit/widgets/tabsTEST.py: 3331
-      tests/unit/widgets/tagsTEST.py: 4372
-      tests/unit/widgets/timelinesTEST.py: 3475
-      tests/unit/widgets/treesTEST.py: 3357
-      tests/unit/widgets/widgetsTEST.py: 3672
-      tests/unit/wizards/wizardsTEST.py: 4348
-      z-work_/cmds/runMain.py: 1384
-      z-work_/cmds/runResources.py: 1383
-      z-work_/cmds/runTab.py: 2973
-      z-work_/nchantdtodo/dialogs.py: 1327
-      z-work_/nchantdtodo/dstruct.py: 7942
-      z-work_/nchantdtodo/main.py: 2695
-      z-work_/nchantdtodo/models.py: 20847
-      z-work_/nchantdtodo/resource.py: 4428
-      z-work_/nchantdtodo/widgets.py: 44491
-      z-work_/tabsets.py: 802
-      z-work_/widgets.py: 7150
-    files_by_type:
-      (no extension): 2
-      .bmp: 1
-      .csv: 1
-      .ctd: 1
-      .dia: 1
-      .doc: 1
-      .docx: 1
-      .gif: 1
-      .html: 4
-      .iml: 1
-      .ini: 1
-      .jpeg: 1
-      .json: 4
-      .log: 2
-      .md: 67
-      .mkv: 1
-      .mm: 1
-      .mp3: 1
-      .pdf: 1
-      .png: 2
-      .py: 225
-      .scad: 1
-      .sh: 1
-      .sqlite: 1
-      .stl: 1
-      .svg: 1
-      .toml: 1
-      .txt: 4
-      .xlsx: 1
-      .xml: 5
-      .yaml: 116
-      .yml: 1
-    per_file:
-      __main__.py:
-        class_count: 0
-        file_size: 2146
-        function_count: 1
-        import_count: 8
-        word_count: 158
-      cmds/run/install.py:
-        class_count: 1
-        file_size: 1848
-        function_count: 0
-        import_count: 5
-        word_count: 120
-      cmds/run/launch.py:
-        class_count: 1
-        file_size: 2033
-        function_count: 0
-        import_count: 5
-        word_count: 125
-      cmds/run/run.py:
-        class_count: 1
-        file_size: 2503
-        function_count: 0
-        import_count: 9
-        word_count: 175
-      cmds/runNchantdAXN.py:
-        class_count: 0
-        file_size: 817
-        function_count: 0
-        import_count: 3
-        word_count: 63
-      cmds/runNchantdDocument.py:
-        class_count: 0
-        file_size: 3884
-        function_count: 1
-        import_count: 10
-        word_count: 325
-      cmds/runNchantdOffice.py:
-        class_count: 0
-        file_size: 2298
-        function_count: 1
-        import_count: 9
-        word_count: 171
-      cmds/runNchantdOfficePaid.py:
-        class_count: 0
-        file_size: 1774
-        function_count: 1
-        import_count: 6
-        word_count: 132
-      cmds/runNchantdOfficePremium.py:
-        class_count: 0
-        file_size: 1774
-        function_count: 1
-        import_count: 6
-        word_count: 132
-      cmds/runNchantdTool.py:
-        class_count: 0
-        file_size: 2823
-        function_count: 1
-        import_count: 10
-        word_count: 212
-      cmds/runTest.py:
-        class_count: 0
-        file_size: 1942
-        function_count: 1
-        import_count: 8
-        word_count: 141
-      cmds/test_runNchantdOffice.py:
-        class_count: 0
-        file_size: 2308
-        function_count: 1
-        import_count: 9
-        word_count: 176
-      nchantdoffice/__init__.py:
-        class_count: 0
-        file_size: 28
-        function_count: 0
-        import_count: 0
-        word_count: 3
-      nchantdoffice/__main__.py:
-        class_count: 0
-        file_size: 2609
-        function_count: 2
-        import_count: 10
-        word_count: 212
-      nchantdoffice/cli.py:
-        class_count: 0
-        file_size: 4581
-        function_count: 11
-        import_count: 4
-        word_count: 401
-      nchantdoffice/dialogs/dialogs.py:
-        class_count: 3
-        file_size: 3665
-        function_count: 0
-        import_count: 6
-        word_count: 225
-      nchantdoffice/dialogs/documents.py:
-        class_count: 1
-        file_size: 14248
-        function_count: 0
-        import_count: 15
-        word_count: 1117
-      nchantdoffice/dialogs/imports.py:
-        class_count: 4
-        file_size: 5370
-        function_count: 0
-        import_count: 8
-        word_count: 330
-      nchantdoffice/dialogs/notifications.py:
-        class_count: 1
-        file_size: 2013
-        function_count: 0
-        import_count: 4
-        word_count: 122
-      nchantdoffice/models.py:
-        class_count: 6
-        file_size: 79126
-        function_count: 0
-        import_count: 24
-        word_count: 6043
-      nchantdoffice/nchantdoffice.py:
-        class_count: 2
-        file_size: 4217
-        function_count: 0
-        import_count: 11
-        word_count: 285
-      nchantdoffice/updates/db.py:
-        class_count: 1
-        file_size: 1823
-        function_count: 0
-        import_count: 5
-        word_count: 103
-      nchantdoffice/utilities/config.py:
-        class_count: 1
-        file_size: 4653
-        function_count: 0
-        import_count: 5
-        word_count: 271
-      nchantdoffice/utilities/constants.py:
-        class_count: 0
-        file_size: 969
-        function_count: 0
-        import_count: 0
-        word_count: 82
-      nchantdoffice/utilities/imports.py:
-        class_count: 2
-        file_size: 3065
-        function_count: 1
-        import_count: 6
-        word_count: 188
-      nchantdoffice/utilities/links.py:
-        class_count: 1
-        file_size: 4641
-        function_count: 2
-        import_count: 7
-        word_count: 374
-      nchantdoffice/utilities/policies.py:
-        class_count: 1
-        file_size: 1854
-        function_count: 0
-        import_count: 8
-        word_count: 115
-      nchantdoffice/utilities/users.py:
-        class_count: 1
-        file_size: 2549
-        function_count: 0
-        import_count: 6
-        word_count: 164
-      nchantdoffice/utilities/utilities.py:
-        class_count: 0
-        file_size: 4505
-        function_count: 2
-        import_count: 4
-        word_count: 288
-      nchantdoffice/views.py:
-        class_count: 1
-        file_size: 2361
-        function_count: 0
-        import_count: 5
-        word_count: 146
-      nchantdoffice/widgets/__init__.py:
-        class_count: 0
-        file_size: 0
-        function_count: 0
-        import_count: 0
-        word_count: 0
-      nchantdoffice/widgets/advertisements.py:
-        class_count: 2
-        file_size: 2669
-        function_count: 0
-        import_count: 5
-        word_count: 163
-      nchantdoffice/widgets/catalogs.py:
-        class_count: 4
-        file_size: 11198
-        function_count: 0
-        import_count: 16
-        word_count: 696
-      nchantdoffice/widgets/config/accounts.py:
-        class_count: 2
-        file_size: 7821
-        function_count: 0
-        import_count: 12
-        word_count: 508
-      nchantdoffice/widgets/config/apis.py:
-        class_count: 1
-        file_size: 3396
-        function_count: 0
-        import_count: 9
-        word_count: 201
-      nchantdoffice/widgets/config/automations.py:
-        class_count: 2
-        file_size: 2934
-        function_count: 0
-        import_count: 6
-        word_count: 171
-      nchantdoffice/widgets/config/config.py:
-        class_count: 1
-        file_size: 3221
-        function_count: 0
-        import_count: 5
-        word_count: 184
-      nchantdoffice/widgets/config/help.py:
-        class_count: 2
-        file_size: 2819
-        function_count: 0
-        import_count: 5
-        word_count: 168
-      nchantdoffice/widgets/config/journal.py:
-        class_count: 1
-        file_size: 14162
-        function_count: 0
-        import_count: 11
-        word_count: 860
-      nchantdoffice/widgets/config/security.py:
-        class_count: 1
-        file_size: 2168
-        function_count: 0
-        import_count: 5
-        word_count: 127
-      nchantdoffice/widgets/config/settings.py:
-        class_count: 3
-        file_size: 19215
-        function_count: 0
-        import_count: 20
-        word_count: 1205
-      nchantdoffice/widgets/config/sources.py:
-        class_count: 1
-        file_size: 2675
-        function_count: 0
-        import_count: 5
-        word_count: 179
-      nchantdoffice/widgets/config/storage.py:
-        class_count: 1
-        file_size: 5415
-        function_count: 0
-        import_count: 9
-        word_count: 345
-      nchantdoffice/widgets/config/uninstall.py:
-        class_count: 1
-        file_size: 2153
-        function_count: 0
-        import_count: 5
-        word_count: 124
-      nchantdoffice/widgets/controls/buttons.py:
-        class_count: 1
-        file_size: 3300
-        function_count: 0
-        import_count: 7
-        word_count: 177
-      nchantdoffice/widgets/controls/menus.py:
-        class_count: 1
-        file_size: 2132
-        function_count: 0
-        import_count: 5
-        word_count: 127
-      nchantdoffice/widgets/controls/toolbars.py:
-        class_count: 6
-        file_size: 14229
-        function_count: 0
-        import_count: 12
-        word_count: 1006
-      nchantdoffice/widgets/controls/toolboxes.py:
-        class_count: 1
-        file_size: 18886
-        function_count: 0
-        import_count: 8
-        word_count: 1311
-      nchantdoffice/widgets/documents/__init__.py:
-        class_count: 0
-        file_size: 659
-        function_count: 0
-        import_count: 1
-        word_count: 42
-      nchantdoffice/widgets/documents/analytics/analytics.py:
-        class_count: 0
-        file_size: 1382
-        function_count: 0
-        import_count: 4
-        word_count: 83
-      nchantdoffice/widgets/documents/analytics/charts.py:
-        class_count: 3
-        file_size: 15604
-        function_count: 0
-        import_count: 17
-        word_count: 1138
-      nchantdoffice/widgets/documents/analytics/comparison.py:
-        class_count: 1
-        file_size: 2164
-        function_count: 0
-        import_count: 6
-        word_count: 130
-      nchantdoffice/widgets/documents/analytics/sources.py:
-        class_count: 1
-        file_size: 14380
-        function_count: 0
-        import_count: 16
-        word_count: 1082
-      nchantdoffice/widgets/documents/atnrg/attentioneering.py:
-        class_count: 2
-        file_size: 4384
-        function_count: 0
-        import_count: 4
-        word_count: 248
-      nchantdoffice/widgets/documents/atnrg/browsers/browsers.py:
-        class_count: 3
-        file_size: 37468
-        function_count: 0
-        import_count: 20
-        word_count: 2750
-      nchantdoffice/widgets/documents/atnrg/browsers/pages.py:
-        class_count: 4
-        file_size: 12702
-        function_count: 0
-        import_count: 8
-        word_count: 1016
-      nchantdoffice/widgets/documents/atnrg/contacts.py:
-        class_count: 3
-        file_size: 4449
-        function_count: 0
-        import_count: 8
-        word_count: 260
-      nchantdoffice/widgets/documents/atnrg/email.py:
-        class_count: 2
-        file_size: 4337
-        function_count: 0
-        import_count: 9
-        word_count: 284
-      nchantdoffice/widgets/documents/atnrg/news.py:
-        class_count: 1
-        file_size: 2411
-        function_count: 0
-        import_count: 9
-        word_count: 146
-      nchantdoffice/widgets/documents/atnrg/prompts.py:
-        class_count: 4
-        file_size: 19858
-        function_count: 0
-        import_count: 22
-        word_count: 1423
-      nchantdoffice/widgets/documents/atnrg/surveys.py:
-        class_count: 5
-        file_size: 9973
-        function_count: 0
-        import_count: 12
-        word_count: 697
-      nchantdoffice/widgets/documents/audio.py:
-        class_count: 1
-        file_size: 3166
-        function_count: 0
-        import_count: 6
-        word_count: 210
-      nchantdoffice/widgets/documents/charts.py:
-        class_count: 1
-        file_size: 3750
-        function_count: 0
-        import_count: 6
-        word_count: 261
-      nchantdoffice/widgets/documents/documents.py:
-        class_count: 3
-        file_size: 15074
-        function_count: 0
-        import_count: 14
-        word_count: 1148
-      nchantdoffice/widgets/documents/engrg/__init__.py:
-        class_count: 0
-        file_size: 0
-        function_count: 0
-        import_count: 0
-        word_count: 0
-      nchantdoffice/widgets/documents/engrg/cad.py:
-        class_count: 1
-        file_size: 10762
-        function_count: 0
-        import_count: 22
-        word_count: 897
-      nchantdoffice/widgets/documents/engrg/charts.py:
-        class_count: 1
-        file_size: 13152
-        function_count: 0
-        import_count: 4
-        word_count: 1248
-      nchantdoffice/widgets/documents/engrg/database.py:
-        class_count: 1
-        file_size: 2127
-        function_count: 0
-        import_count: 5
-        word_count: 123
-      nchantdoffice/widgets/documents/engrg/engineering.py:
-        class_count: 1
-        file_size: 2072
-        function_count: 0
-        import_count: 5
-        word_count: 123
-      nchantdoffice/widgets/documents/engrg/freecad.py:
-        class_count: 1
-        file_size: 3503
-        function_count: 0
-        import_count: 6
-        word_count: 239
-      nchantdoffice/widgets/documents/engrg/process.py:
-        class_count: 3
-        file_size: 3689
-        function_count: 0
-        import_count: 6
-        word_count: 218
-      nchantdoffice/widgets/documents/engrg/tasks.py:
-        class_count: 2
-        file_size: 3735
-        function_count: 0
-        import_count: 11
-        word_count: 236
-      nchantdoffice/widgets/documents/filesystems.py:
-        class_count: 6
-        file_size: 27066
-        function_count: 0
-        import_count: 21
-        word_count: 1828
-      nchantdoffice/widgets/documents/finance/__init__.py:
-        class_count: 0
-        file_size: 0
-        function_count: 0
-        import_count: 0
-        word_count: 0
-      nchantdoffice/widgets/documents/finance/finance.py:
-        class_count: 6
-        file_size: 4116
-        function_count: 0
-        import_count: 7
-        word_count: 253
-      nchantdoffice/widgets/documents/forms.py:
-        class_count: 1
-        file_size: 3177
-        function_count: 0
-        import_count: 6
-        word_count: 215
-      nchantdoffice/widgets/documents/games/__init__.py:
-        class_count: 0
-        file_size: 0
-        function_count: 0
-        import_count: 0
-        word_count: 0
-      nchantdoffice/widgets/documents/games/games.py:
-        class_count: 0
-        file_size: 1362
-        function_count: 0
-        import_count: 4
-        word_count: 80
-      nchantdoffice/widgets/documents/games/nchantris.py:
-        class_count: 2
-        file_size: 5138
-        function_count: 0
-        import_count: 5
-        word_count: 410
-      nchantdoffice/widgets/documents/journal.py:
-        class_count: 3
-        file_size: 13096
-        function_count: 0
-        import_count: 13
-        word_count: 913
-      nchantdoffice/widgets/documents/managers/__init__.py:
-        class_count: 0
-        file_size: 0
-        function_count: 0
-        import_count: 0
-        word_count: 0
-      nchantdoffice/widgets/documents/managers/calendars.py:
-        class_count: 10
-        file_size: 26032
-        function_count: 0
-        import_count: 21
-        word_count: 1800
-      nchantdoffice/widgets/documents/managers/contacts.py:
-        class_count: 1
-        file_size: 3437
-        function_count: 0
-        import_count: 6
-        word_count: 227
-      nchantdoffice/widgets/documents/managers/travel.py:
-        class_count: 1
-        file_size: 2005
-        function_count: 0
-        import_count: 4
-        word_count: 119
-      nchantdoffice/widgets/documents/media/__init__.py:
-        class_count: 0
-        file_size: 0
-        function_count: 0
-        import_count: 0
-        word_count: 0
-      nchantdoffice/widgets/documents/media/audio.py:
-        class_count: 1
-        file_size: 2175
-        function_count: 0
-        import_count: 6
-        word_count: 133
-      nchantdoffice/widgets/documents/media/forms.py:
-        class_count: 4
-        file_size: 17386
-        function_count: 0
-        import_count: 17
-        word_count: 1228
-      nchantdoffice/widgets/documents/media/graphics/graphics.py:
-        class_count: 12
-        file_size: 31380
-        function_count: 0
-        import_count: 19
-        word_count: 2193
-      nchantdoffice/widgets/documents/media/graphics/images.py:
-        class_count: 7
-        file_size: 22449
-        function_count: 0
-        import_count: 20
-        word_count: 1608
-      nchantdoffice/widgets/documents/media/images.py:
-        class_count: 1
-        file_size: 3394
-        function_count: 0
-        import_count: 6
-        word_count: 226
-      nchantdoffice/widgets/documents/media/notes.py:
-        class_count: 2
-        file_size: 8442
-        function_count: 0
-        import_count: 10
-        word_count: 555
-      nchantdoffice/widgets/documents/media/pdfs.py:
-        class_count: 3
-        file_size: 21187
-        function_count: 0
-        import_count: 13
-        word_count: 1628
-      nchantdoffice/widgets/documents/media/scripts.py:
-        class_count: 1
-        file_size: 33763
-        function_count: 0
-        import_count: 25
-        word_count: 2554
-      nchantdoffice/widgets/documents/media/shows.py:
-        class_count: 2
-        file_size: 6253
-        function_count: 0
-        import_count: 11
-        word_count: 469
-      nchantdoffice/widgets/documents/media/video.py:
-        class_count: 1
-        file_size: 3185
-        function_count: 0
-        import_count: 6
-        word_count: 210
-      nchantdoffice/widgets/documents/notebooks.py:
-        class_count: 1
-        file_size: 3438
-        function_count: 0
-        import_count: 6
-        word_count: 236
-      nchantdoffice/widgets/documents/pdf.py:
-        class_count: 1
-        file_size: 3150
-        function_count: 0
-        import_count: 6
-        word_count: 210
-      nchantdoffice/widgets/documents/presentation.py:
-        class_count: 1
-        file_size: 3350
-        function_count: 0
-        import_count: 6
-        word_count: 217
-      nchantdoffice/widgets/documents/spreadsheet.py:
-        class_count: 2
-        file_size: 5720
-        function_count: 0
-        import_count: 6
-        word_count: 390
-      nchantdoffice/widgets/documents/surveys.py:
-        class_count: 2
-        file_size: 4931
-        function_count: 0
-        import_count: 6
-        word_count: 329
-      nchantdoffice/widgets/documents/text.py:
-        class_count: 2
-        file_size: 5282
-        function_count: 0
-        import_count: 6
-        word_count: 368
-      nchantdoffice/widgets/documents/web.py:
-        class_count: 2
-        file_size: 5329
-        function_count: 0
-        import_count: 6
-        word_count: 369
-      nchantdoffice/widgets/documents/workbooks/matricies.py:
-        class_count: 2
-        file_size: 22324
-        function_count: 0
-        import_count: 18
-        word_count: 1673
-      nchantdoffice/widgets/documents/workbooks/notebooks.py:
-        class_count: 1
-        file_size: 4246
-        function_count: 0
-        import_count: 8
-        word_count: 279
-      nchantdoffice/widgets/documents/workbooks/utilities.py:
-        class_count: 0
-        file_size: 1374
-        function_count: 0
-        import_count: 4
-        word_count: 83
-      nchantdoffice/widgets/extensions/__init__.py:
-        class_count: 0
-        file_size: 0
-        function_count: 0
-        import_count: 0
-        word_count: 0
-      nchantdoffice/widgets/extensions/extensions.py:
-        class_count: 1
-        file_size: 2628
-        function_count: 5
-        import_count: 6
-        word_count: 164
-      nchantdoffice/widgets/items/diagrams.py:
-        class_count: 2
-        file_size: 6995
-        function_count: 0
-        import_count: 13
-        word_count: 494
-      nchantdoffice/widgets/items/items.py:
-        class_count: 3
-        file_size: 7789
-        function_count: 0
-        import_count: 12
-        word_count: 539
-      nchantdoffice/widgets/library/nchantdlibrary.py:
-        class_count: 3
-        file_size: 3840
-        function_count: 0
-        import_count: 6
-        word_count: 247
-      nchantdoffice/widgets/panes/charts.py:
-        class_count: 5
-        file_size: 39726
-        function_count: 0
-        import_count: 15
-        word_count: 2606
-      nchantdoffice/widgets/panes/documents.py:
-        class_count: 3
-        file_size: 26429
-        function_count: 0
-        import_count: 17
-        word_count: 1907
-      nchantdoffice/widgets/panes/files.py:
-        class_count: 1
-        file_size: 5005
-        function_count: 0
-        import_count: 6
-        word_count: 347
-      nchantdoffice/widgets/panes/forms.py:
-        class_count: 1
-        file_size: 7556
-        function_count: 0
-        import_count: 11
-        word_count: 507
-      nchantdoffice/widgets/panes/models.py:
-        class_count: 1
-        file_size: 3172
-        function_count: 0
-        import_count: 10
-        word_count: 201
-      nchantdoffice/widgets/panes/new.py:
-        class_count: 2
-        file_size: 18468
-        function_count: 0
-        import_count: 15
-        word_count: 1305
-      nchantdoffice/widgets/panes/objects.py:
-        class_count: 3
-        file_size: 6640
-        function_count: 0
-        import_count: 11
-        word_count: 423
-      nchantdoffice/widgets/panes/panes.py:
-        class_count: 0
-        file_size: 1347
-        function_count: 0
-        import_count: 3
-        word_count: 79
-      nchantdoffice/widgets/panes/quickstart.py:
-        class_count: 1
-        file_size: 2451
-        function_count: 0
-        import_count: 5
-        word_count: 173
-      nchantdoffice/widgets/panes/search.py:
-        class_count: 4
-        file_size: 11053
-        function_count: 0
-        import_count: 19
-        word_count: 715
-      nchantdoffice/widgets/panes/sources.py:
-        class_count: 10
-        file_size: 34191
-        function_count: 0
-        import_count: 18
-        word_count: 2184
-      nchantdoffice/widgets/panes/tasks.py:
-        class_count: 1
-        file_size: 4887
-        function_count: 0
-        import_count: 12
-        word_count: 325
-      nchantdoffice/widgets/panes/weather.py:
-        class_count: 1
-        file_size: 2376
-        function_count: 0
-        import_count: 5
-        word_count: 142
-      nchantdoffice/widgets/settings.py:
-        class_count: 3
-        file_size: 6074
-        function_count: 0
-        import_count: 9
-        word_count: 358
-      nchantdoffice/widgets/tabs.py:
-        class_count: 2
-        file_size: 7179
-        function_count: 0
-        import_count: 7
-        word_count: 475
-      nchantdoffice/widgets/tags.py:
-        class_count: 2
-        file_size: 2765
-        function_count: 0
-        import_count: 5
-        word_count: 167
-      nchantdoffice/widgets/timelines.py:
-        class_count: 1
-        file_size: 2131
-        function_count: 0
-        import_count: 4
-        word_count: 127
-      nchantdoffice/widgets/trees.py:
-        class_count: 1
-        file_size: 7929
-        function_count: 0
-        import_count: 11
-        word_count: 532
-      nchantdoffice/widgets/widgets.py:
-        class_count: 1
-        file_size: 3185
-        function_count: 0
-        import_count: 8
-        word_count: 195
-      nchantdoffice/wizards/wizards.py:
-        class_count: 1
-        file_size: 5644
-        function_count: 0
-        import_count: 13
-        word_count: 390
-      tests/unit/__init__TEST.py:
-        class_count: 1
-        file_size: 2335
-        function_count: 0
-        import_count: 3
-        word_count: 168
-      tests/unit/__main__TEST.py:
-        class_count: 1
-        file_size: 2686
-        function_count: 0
-        import_count: 5
-        word_count: 203
-      tests/unit/dialogs/dialogsTEST.py:
-        class_count: 4
-        file_size: 5489
-        function_count: 0
-        import_count: 6
-        word_count: 447
-      tests/unit/dialogs/documentsTEST.py:
-        class_count: 2
-        file_size: 4544
-        function_count: 0
-        import_count: 4
-        word_count: 353
-      tests/unit/dialogs/importsTEST.py:
-        class_count: 5
-        file_size: 6741
-        function_count: 0
-        import_count: 7
-        word_count: 557
-      tests/unit/dialogs/notificationsTEST.py:
-        class_count: 2
-        file_size: 3413
-        function_count: 0
-        import_count: 4
-        word_count: 263
-      tests/unit/modelsTEST.py:
-        class_count: 7
-        file_size: 29688
-        function_count: 0
-        import_count: 9
-        word_count: 2334
-      tests/unit/nchantdofficeTEST.py:
-        class_count: 3
-        file_size: 4901
-        function_count: 0
-        import_count: 11
-        word_count: 398
-      tests/unit/updates/dbTEST.py:
-        class_count: 2
-        file_size: 3064
-        function_count: 0
-        import_count: 4
-        word_count: 236
-      tests/unit/utilities/configTEST.py:
-        class_count: 2
-        file_size: 3957
-        function_count: 0
-        import_count: 4
-        word_count: 302
-      tests/unit/utilities/importsTEST.py:
-        class_count: 3
-        file_size: 4161
-        function_count: 0
-        import_count: 6
-        word_count: 329
-      tests/unit/utilities/linksTEST.py:
-        class_count: 2
-        file_size: 3659
-        function_count: 0
-        import_count: 6
-        word_count: 286
-      tests/unit/utilities/policiesTEST.py:
-        class_count: 2
-        file_size: 3082
-        function_count: 0
-        import_count: 4
-        word_count: 236
-      tests/unit/utilities/usersTEST.py:
-        class_count: 2
-        file_size: 3524
-        function_count: 0
-        import_count: 4
-        word_count: 272
-      tests/unit/utilities/utilitiesTEST.py:
-        class_count: 1
-        file_size: 2751
-        function_count: 0
-        import_count: 5
-        word_count: 203
-      tests/unit/viewsTEST.py:
-        class_count: 2
-        file_size: 3401
-        function_count: 0
-        import_count: 4
-        word_count: 263
-      tests/unit/widgets/advertisementsTEST.py:
-        class_count: 3
-        file_size: 4424
-        function_count: 0
-        import_count: 5
-        word_count: 349
-      tests/unit/widgets/catalogsTEST.py:
-        class_count: 5
-        file_size: 7189
-        function_count: 0
-        import_count: 7
-        word_count: 587
-      tests/unit/widgets/config/accountsTEST.py:
-        class_count: 3
-        file_size: 4430
-        function_count: 0
-        import_count: 5
-        word_count: 349
-      tests/unit/widgets/config/apisTEST.py:
-        class_count: 2
-        file_size: 3572
-        function_count: 0
-        import_count: 4
-        word_count: 275
-      tests/unit/widgets/config/automationsTEST.py:
-        class_count: 3
-        file_size: 4427
-        function_count: 0
-        import_count: 5
-        word_count: 349
-      tests/unit/widgets/config/configTEST.py:
-        class_count: 2
-        file_size: 3506
-        function_count: 0
-        import_count: 4
-        word_count: 266
-      tests/unit/widgets/config/helpTEST.py:
-        class_count: 3
-        file_size: 4382
-        function_count: 0
-        import_count: 5
-        word_count: 349
-      tests/unit/widgets/config/journalTEST.py:
-        class_count: 2
-        file_size: 3568
-        function_count: 0
-        import_count: 4
-        word_count: 275
-      tests/unit/widgets/config/securityTEST.py:
-        class_count: 2
-        file_size: 3372
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/config/settingsTEST.py:
-        class_count: 4
-        file_size: 7341
-        function_count: 0
-        import_count: 6
-        word_count: 576
-      tests/unit/widgets/config/sourcesTEST.py:
-        class_count: 2
-        file_size: 3364
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/config/storageTEST.py:
-        class_count: 2
-        file_size: 3368
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/config/uninstallTEST.py:
-        class_count: 2
-        file_size: 3376
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/controls/buttonsTEST.py:
-        class_count: 2
-        file_size: 3280
-        function_count: 0
-        import_count: 4
-        word_count: 248
-      tests/unit/widgets/controls/menusTEST.py:
-        class_count: 2
-        file_size: 3358
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/controls/toolbarsTEST.py:
-        class_count: 7
-        file_size: 9580
-        function_count: 0
-        import_count: 9
-        word_count: 789
-      tests/unit/widgets/controls/toolboxesTEST.py:
-        class_count: 2
-        file_size: 6168
-        function_count: 0
-        import_count: 4
-        word_count: 473
-      tests/unit/widgets/documents/analytics/analyticsTEST.py:
-        class_count: 1
-        file_size: 2312
-        function_count: 0
-        import_count: 3
-        word_count: 165
-      tests/unit/widgets/documents/analytics/chartsTEST.py:
-        class_count: 4
-        file_size: 7425
-        function_count: 0
-        import_count: 6
-        word_count: 594
-      tests/unit/widgets/documents/analytics/comparisonTEST.py:
-        class_count: 2
-        file_size: 3383
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/documents/analytics/sourcesTEST.py:
-        class_count: 2
-        file_size: 5923
-        function_count: 0
-        import_count: 4
-        word_count: 455
-      tests/unit/widgets/documents/atnrg/attentioneeringTEST.py:
-        class_count: 3
-        file_size: 3890
-        function_count: 0
-        import_count: 5
-        word_count: 304
-      tests/unit/widgets/documents/atnrg/browsers/browsersTEST.py:
-        class_count: 4
-        file_size: 14293
-        function_count: 0
-        import_count: 6
-        word_count: 1116
-      tests/unit/widgets/documents/atnrg/browsers/pagesTEST.py:
-        class_count: 5
-        file_size: 7486
-        function_count: 0
-        import_count: 7
-        word_count: 605
-      tests/unit/widgets/documents/atnrg/contactsTEST.py:
-        class_count: 4
-        file_size: 5586
-        function_count: 0
-        import_count: 6
-        word_count: 450
-      tests/unit/widgets/documents/atnrg/emailTEST.py:
-        class_count: 3
-        file_size: 4415
-        function_count: 0
-        import_count: 5
-        word_count: 349
-      tests/unit/widgets/documents/atnrg/newsTEST.py:
-        class_count: 2
-        file_size: 3365
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/documents/atnrg/promptsTEST.py:
-        class_count: 5
-        file_size: 9683
-        function_count: 0
-        import_count: 7
-        word_count: 776
-      tests/unit/widgets/documents/atnrg/surveysTEST.py:
-        class_count: 6
-        file_size: 9781
-        function_count: 0
-        import_count: 8
-        word_count: 796
-      tests/unit/widgets/documents/calendarsTEST.py:
-        class_count: 11
-        file_size: 13532
-        function_count: 0
-        import_count: 0
-        word_count: 1135
-      tests/unit/widgets/documents/diagramsTEST.py:
-        class_count: 0
-        file_size: 3189
-        function_count: 0
-        import_count: 8
-        word_count: 275
-      tests/unit/widgets/documents/documentsTEST.py:
-        class_count: 4
-        file_size: 11450
-        function_count: 0
-        import_count: 6
-        word_count: 927
-      tests/unit/widgets/documents/filesystemsTEST.py:
-        class_count: 7
-        file_size: 13263
-        function_count: 0
-        import_count: 9
-        word_count: 1077
-      tests/unit/widgets/documents/journalTEST.py:
-        class_count: 4
-        file_size: 6806
-        function_count: 0
-        import_count: 6
-        word_count: 549
-      tests/unit/widgets/documents/media/audioTEST.py:
-        class_count: 2
-        file_size: 3341
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/documents/media/formsTEST.py:
-        class_count: 5
-        file_size: 9112
-        function_count: 0
-        import_count: 7
-        word_count: 731
-      tests/unit/widgets/documents/media/graphics/graphicsTEST.py:
-        class_count: 13
-        file_size: 18498
-        function_count: 0
-        import_count: 15
-        word_count: 1539
-      tests/unit/widgets/documents/media/graphics/imagesTEST.py:
-        class_count: 8
-        file_size: 12409
-        function_count: 0
-        import_count: 10
-        word_count: 1016
-      tests/unit/widgets/documents/media/notesTEST.py:
-        class_count: 3
-        file_size: 5936
-        function_count: 0
-        import_count: 5
-        word_count: 475
-      tests/unit/widgets/documents/media/pdfsTEST.py:
-        class_count: 4
-        file_size: 8084
-        function_count: 0
-        import_count: 6
-        word_count: 648
-      tests/unit/widgets/documents/media/scriptsTEST.py:
-        class_count: 2
-        file_size: 10059
-        function_count: 0
-        import_count: 4
-        word_count: 770
-      tests/unit/widgets/documents/media/showsTEST.py:
-        class_count: 3
-        file_size: 5074
-        function_count: 0
-        import_count: 5
-        word_count: 403
-      tests/unit/widgets/documents/workbooks/matriciesTEST.py:
-        class_count: 3
-        file_size: 7856
-        function_count: 0
-        import_count: 5
-        word_count: 610
-      tests/unit/widgets/documents/workbooks/notebooksTEST.py:
-        class_count: 2
-        file_size: 3975
-        function_count: 0
-        import_count: 4
-        word_count: 302
-      tests/unit/widgets/documents/workbooks/utilitiesTEST.py:
-        class_count: 1
-        file_size: 2312
-        function_count: 0
-        import_count: 3
-        word_count: 165
-      tests/unit/widgets/items/diagramsTEST.py:
-        class_count: 3
-        file_size: 4640
-        function_count: 0
-        import_count: 5
-        word_count: 367
-      tests/unit/widgets/items/itemsTEST.py:
-        class_count: 4
-        file_size: 5690
-        function_count: 0
-        import_count: 6
-        word_count: 459
-      tests/unit/widgets/library/nchantdlibraryTEST.py:
-        class_count: 4
-        file_size: 5544
-        function_count: 0
-        import_count: 6
-        word_count: 441
-      tests/unit/widgets/panes/chartsTEST.py:
-        class_count: 6
-        file_size: 17564
-        function_count: 0
-        import_count: 8
-        word_count: 1417
-      tests/unit/widgets/panes/documentsTEST.py:
-        class_count: 4
-        file_size: 13386
-        function_count: 0
-        import_count: 6
-        word_count: 1062
-      tests/unit/widgets/panes/filesTEST.py:
-        class_count: 2
-        file_size: 4132
-        function_count: 0
-        import_count: 4
-        word_count: 320
-      tests/unit/widgets/panes/formsTEST.py:
-        class_count: 2
-        file_size: 5106
-        function_count: 0
-        import_count: 4
-        word_count: 383
-      tests/unit/widgets/panes/modelsTEST.py:
-        class_count: 2
-        file_size: 3347
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/panes/newTEST.py:
-        class_count: 3
-        file_size: 7634
-        function_count: 0
-        import_count: 5
-        word_count: 601
-      tests/unit/widgets/panes/objectsTEST.py:
-        class_count: 4
-        file_size: 5423
-        function_count: 0
-        import_count: 6
-        word_count: 441
-      tests/unit/widgets/panes/panesTEST.py:
-        class_count: 1
-        file_size: 2308
-        function_count: 0
-        import_count: 3
-        word_count: 165
-      tests/unit/widgets/panes/quickstartTEST.py:
-        class_count: 2
-        file_size: 3359
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/panes/searchTEST.py:
-        class_count: 5
-        file_size: 6492
-        function_count: 0
-        import_count: 7
-        word_count: 533
-      tests/unit/widgets/panes/sourcesTEST.py:
-        class_count: 11
-        file_size: 19958
-        function_count: 0
-        import_count: 13
-        word_count: 1652
-      tests/unit/widgets/panes/tasksTEST.py:
-        class_count: 2
-        file_size: 3583
-        function_count: 0
-        import_count: 4
-        word_count: 275
-      tests/unit/widgets/panes/weatherTEST.py:
-        class_count: 2
-        file_size: 3347
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/settingsTEST.py:
-        class_count: 4
-        file_size: 5479
-        function_count: 0
-        import_count: 6
-        word_count: 441
-      tests/unit/widgets/tabsTEST.py:
-        class_count: 2
-        file_size: 3331
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/tagsTEST.py:
-        class_count: 3
-        file_size: 4372
-        function_count: 0
-        import_count: 5
-        word_count: 349
-      tests/unit/widgets/timelinesTEST.py:
-        class_count: 2
-        file_size: 3475
-        function_count: 0
-        import_count: 4
-        word_count: 266
-      tests/unit/widgets/treesTEST.py:
-        class_count: 2
-        file_size: 3357
-        function_count: 0
-        import_count: 4
-        word_count: 257
-      tests/unit/widgets/widgetsTEST.py:
-        class_count: 2
-        file_size: 3672
-        function_count: 0
-        import_count: 4
-        word_count: 284
-      tests/unit/wizards/wizardsTEST.py:
-        class_count: 2
-        file_size: 4348
-        function_count: 0
-        import_count: 4
-        word_count: 329
-      z-work_/cmds/runMain.py:
-        class_count: 0
-        file_size: 1384
-        function_count: 1
-        import_count: 5
-        word_count: 119
-      z-work_/cmds/runResources.py:
-        class_count: 0
-        file_size: 1383
-        function_count: 1
-        import_count: 5
-        word_count: 130
-      z-work_/cmds/runTab.py:
-        class_count: 1
-        file_size: 2973
-        function_count: 1
-        import_count: 7
-        word_count: 324
-      z-work_/nchantdtodo/dialogs.py:
-        class_count: 0
-        file_size: 1327
-        function_count: 0
-        import_count: 3
-        word_count: 73
-      z-work_/nchantdtodo/dstruct.py:
-        class_count: 0
-        file_size: 7942
-        function_count: 3
-        import_count: 3
-        word_count: 779
-      z-work_/nchantdtodo/main.py:
-        class_count: 1
-        file_size: 2695
-        function_count: 0
-        import_count: 5
-        word_count: 287
-      z-work_/nchantdtodo/models.py:
-        class_count: 12
-        file_size: 20847
-        function_count: 0
-        import_count: 12
-        word_count: 2118
-      z-work_/nchantdtodo/resource.py:
-        class_count: 4
-        file_size: 4428
-        function_count: 0
-        import_count: 3
-        word_count: 498
-      z-work_/nchantdtodo/widgets.py:
-        class_count: 31
-        file_size: 44491
-        function_count: 0
-        import_count: 7
-        word_count: 3638
-      z-work_/tabsets.py:
-        class_count: 4
-        file_size: 802
-        function_count: 0
-        import_count: 0
-        word_count: 63
-      z-work_/widgets.py:
-        class_count: 14
-        file_size: 7150
-        function_count: 0
-        import_count: 0
-        word_count: 528
-audit_date: '1774150860.110541'
+    files: 768
+    python_files: 319
+    python_lines: 69082
+    test_files: 86
+audit_date: '1783050003.8544347'
 dimensions:
-  agent_awareness:
-    details:
-      score: 0
-      status: fail
-    score: 0
-    status: fail
   base_class_duplication:
     details:
-      base_class_duplication_count: 45
-      issues:
-      - fix: Consider creating a shared base class or mixin for common methods
-        patterns:
-        - arg_count: 3
-          base: NchantdSigil
-          classes:
-          - NchantdNodeNameEditSigil
-          - NchantdTabNameEditSigil
-          - ImportDocumentNchantdSigil
-          - ImportExcelNchantdSigil
-          - ImportPDFNchantdSigil
-          - NchantdGoogleDriveSigil
-          - NchantdOfficeNote
-          method: __init__
-        - arg_count: 1
-          base: NchantdSigil
-          classes:
-          - NchantdNodeNameEditSigil
-          - NchantdTabNameEditSigil
-          - ImportDocumentNchantdSigil
-          - ImportExcelNchantdSigil
-          - ImportPDFNchantdSigil
-          - NchantdGoogleDriveSigil
-          - NchantdOfficeNote
-          method: initWidget
-        - arg_count: 1
-          base: NchantdSigil
-          classes:
-          - ImportDocumentNchantdSigil
-          - ImportExcelNchantdSigil
-          - ImportPDFNchantdSigil
-          - NchantdGoogleDriveSigil
-          - NchantdOfficeNote
-          method: initModel
-        - arg_count: 1
-          base: NchantdSigil
-          classes:
-          - ImportDocumentNchantdSigil
-          - ImportExcelNchantdSigil
-          - ImportPDFNchantdSigil
-          - NchantdGoogleDriveSigil
-          - NchantdNewDocumentSigil
-          - NchantdOfficeNote
-          method: initView
-        - arg_count: 3
-          base: NchantdWidget
-          classes:
-          - NchantdNotificationSigil
-          - NchantdAdvertisementPane
-          - NchantdAdvertisementSlimTab
-          - NchantdQuickTagsWidget
-          - NchantdTagsSideBar
-          - NchantdOfficeApplicationTree
-          - NchantdOfficeDataSourcesSettings
-          - NchantdOfficeExtensionsSettings
-          - NchantdIntegrationSettings
-          - NchantdOfficeEDA
-          - NchantdSourceDefaultPane
-          - NchantdOfficeExtension
-          - NchantdOfficeNewDocumentAcceptButtons
-          - Nchantd
-          - NchantdEventGroup
-          - NchantdOfficeContact
-          - NchantdCommunitiesSummary
-          - NchantdOfficeEvaluation
-          - NchantdOfficeContactPane
-          - NchantrisPiece
-          - NchantdOfficeFeedback
-          - NchantdOfficeCellBorderFormats
-          - NchantdOfficeSlimTabSearch
-          method: __init__
-        - arg_count: 1
-          base: NchantdWidget
-          classes:
-          - NchantdNotificationSigil
-          - NchantdAdvertisementPane
-          - NchantdAdvertisementSlimTab
-          - NchantdQuickTagsWidget
-          - NchantdTagsSideBar
-          - NchantdOfficeApplicationTree
-          - NchantdOfficeDataSourcesSettings
-          - NchantdOfficeExtensionsSettings
-          - NchantdIntegrationSettings
-          - NchantdOfficeEDA
-          - NchantdOfficeExtension
-          - NchantdOfficeNewDocumentAcceptButtons
-          - Nchantd
-          - NchantdOfficeContact
-          - NchantdCommunitiesSummary
-          - NchantdOfficeEvaluation
-          - NchantdOfficeContactPane
-          - NchantrisPiece
-          method: initModel
-        - arg_count: 1
-          base: NchantdWidget
-          classes:
-          - NchantdNotificationSigil
-          - NchantdAdvertisementPane
-          - NchantdAdvertisementSlimTab
-          - NchantdQuickTagsWidget
-          - NchantdTagsSideBar
-          - NchantdOfficeApplicationTree
-          - NchantdOfficeDataSourcesSettings
-          - NchantdOfficeExtensionsSettings
-          - NchantdIntegrationSettings
-          - NchantdOfficeEDA
-          - NchantdOfficeExtension
-          - NchantdOfficeNewDocumentAcceptButtons
-          - Nchantd
-          - NchantdOfficeContact
-          - NchantdCommunitiesSummary
-          - NchantdOfficeEvaluation
-          - NchantdOfficeContactPane
-          - NchantrisPiece
-          method: initView
-        - arg_count: 1
-          base: NchantdWidget
-          classes:
-          - NchantdNotificationSigil
-          - NchantdAdvertisementPane
-          - NchantdAdvertisementSlimTab
-          - NchantdQuickTagsWidget
-          - NchantdTagsSideBar
-          - NchantdOfficeDataSourcesSettings
-          - NchantdOfficeExtensionsSettings
-          - NchantdIntegrationSettings
-          - NchantdOfficeEDA
-          - NchantdSourceDefaultPane
-          - NchantdOfficeExtension
-          - Nchantd
-          - NchantdEventGroup
-          - NchantdOfficeContact
-          - NchantdCommunitiesSummary
-          - NchantdOfficeEvaluation
-          - NchantdOfficeContactPane
-          - NchantrisPiece
-          - NchantdOfficeFeedback
-          - NchantdOfficeCellBorderFormats
-          - NchantdOfficeSlimTabSearch
-          method: initWidget
-        - arg_count: 2
-          base: NchantdWidget
-          classes:
-          - NchantdSourceDefaultPane
-          - NchantdEventGroup
-          - NchantdOfficeFeedback
-          - NchantdOfficeCellBorderFormats
-          - NchantdOfficeSlimTabSearch
-          method: initModel
-        - arg_count: 2
-          base: NchantdWidget
-          classes:
-          - NchantdSourceDefaultPane
-          - NchantdEventGroup
-          - NchantdOfficeFeedback
-          - NchantdOfficeCellBorderFormats
-          - NchantdOfficeSlimTabSearch
-          method: initView
-        rule: 'Base class duplication detected: 45 patterns'
-        severity: medium
-      score: 0
-      status: fail
-    score: 0
-    status: fail
+      details:
+        issues: []
+        score: 100
+      score: 100
+      status: pass
+    score: 100
+    status: pass
   changelog_tracking:
     details:
-      issues:
-      - fix: Add entries to CHANGES.md for recent changes
-        rule: 'Low changelog coverage: 16%'
-        severity: high
-        unmatched_commits:
-        - 2e543a0 Fix lambda antipattern and signal inheritance
-        - '3ed0b95 fix: emit doc_type only in document_created signal ('
-        - d27c9fe brought some modules back from z-work_
-        - b2c2f57 brought some modules back from z-work_
-        - a334225 add logging
-      score: 20
-      status: partial
-    score: 20
-    status: partial
+      details:
+        issues: []
+        score: 100
+        status: pass
+      score: 100
+      status: pass
+    score: 100
+    status: pass
   ci_cd_config:
     details:
-      ci_cd_found: []
-      issues:
-      - fix: Add CI/CD configuration (GitHub Actions, GitLab CI, etc.)
-        rule: No CI/CD configuration found
-        severity: high
-      score: 0
-      status: fail
-    score: 0
-    status: fail
+      details:
+        branch: gamma
+        ci_files_found:
+        - .github/workflows
+        has_commits: true
+        is_git_repo: true
+        score: 100
+        status: pass
+      score: 100
+      status: pass
+    score: 100
+    status: pass
   ci_cd_documentation:
     details:
-      ci_cd_docs_found: []
-      issues:
-      - fix: Create CONTRIBUTING.md or docs/ci-cd.md with CI/CD pipeline documentation
-        rule: No CI/CD documentation found
-        severity: high
+      details:
+        ci_cd_docs_found: 0
+        issues:
+        - rule: Missing CI/CD documentation
+          severity: low
+        score: 0
+        status: fail
       score: 0
       status: fail
     score: 0
     status: fail
   circular_dependencies:
     details:
-      cycles: []
-      import_cycle_count: 0
-      issues: []
+      details:
+        cycles: []
+        score: 100
+        status: pass
       score: 100
       status: pass
     score: 100
     status: pass
   cli_documentation:
     details:
-      exists: true
-      score: 100
-      sections_found:
-      - Usage
-      - Arguments
-      - Examples
-      sections_missing: []
-      status: pass
-    score: 100
-    status: pass
-  code_quality_pylint:
-    details:
-      issues: []
-      score: 100
-      status: pass
-    score: 100
-    status: pass
+      details:
+        file: CLI.md
+        issues:
+        - details: 'Missing: Purpose'
+          fix: 'Add sections: Purpose'
+          rule: Missing sections
+          severity: medium
+        score: 66
+        status: partial
+      score: 66
+      status: partial
+    score: 66
+    status: partial
   configuration:
     details:
-      config_exists: false
+      details:
+        config_exists: false
+        score: 0
+        status: fail
       score: 0
       status: fail
     score: 0
     status: fail
   data_clumps:
     details:
-      data_clump_count: 7
-      issues:
-      - clumps:
-        - locations: 207
-          params:
-          - cfg
-          - parent
-          - self
-        - locations: 6
-          params:
-          - node
-          - pid
-          - pos
-          - self
-        - locations: 20
-          params:
-          - cfg
-          - name
-          - parent
-          - self
-        - locations: 23
-          params:
-          - cfg
-          - db
-          - self
-        - locations: 7
-          params:
-          - checked
-          - handler
-          - params
-          - self
-        fix: Consider creating a class or dataclass to group these parameters
-        rule: 'Data clumps detected: 7 parameter combinations'
-        severity: medium
+      details:
+        data_clump_count: 11
+        issues:
+        - clumps:
+          - locations: 21
+            params:
+            - cfg
+            - name
+            - parent
+            - self
+          - locations: 273
+            params:
+            - cfg
+            - parent
+            - self
+          - locations: 6
+            params:
+            - node
+            - pid
+            - pos
+            - self
+          - locations: 23
+            params:
+            - cfg
+            - db
+            - self
+          - locations: 7
+            params:
+            - checked
+            - handler
+            - params
+            - self
+          fix: Consider creating a dataclass to group these parameters
+          rule: 'Data clumps detected: 11 combinations'
+          severity: medium
+        score: 0
+        status: fail
       score: 0
       status: fail
     score: 0
     status: fail
-  dead_code:
-    details:
-      issues:
-      - fix: Remove unused imports
-        items:
-        - file: __main__.py
-          name: from os.path import abspath
-          type: import_from
-        - file: __main__.py
-          name: from kahndor import kahndor
-          type: import_from
-        - file: cmds/runNchantdOffice.py
-          name: from os.path import abspath
-          type: import_from
-        - file: cmds/runNchantdOffice.py
-          name: from kahndor import kahndor
-          type: import_from
-        - file: cmds/runNchantdAXN.py
-          name: from os.path import join
-          type: import_from
-        - file: cmds/runNchantdTool.py
-          name: from os.path import abspath
-          type: import_from
-        - file: cmds/runNchantdTool.py
-          name: from kahndor import kahndor
-          type: import_from
-        - file: cmds/runTest.py
-          name: unittest
-          type: import
-        - file: cmds/runTest.py
-          name: pytest
-          type: import
-        - file: cmds/runTest.py
-          name: from os.path import abspath
-          type: import_from
-        rule: 'Unused imports: 479'
-        severity: medium
-      - fix: Remove or export unused functions
-        items:
-        - file: nchantdoffice/utilities/links.py
-          name: update_affilate_links
-          type: function
-        - file: nchantdoffice/utilities/links.py
-          name: example_with_client
-          type: function
-        - file: nchantdoffice/utilities/utilities.py
-          name: lookup_widget
-          type: function
-        - file: nchantdoffice/utilities/utilities.py
-          name: document_lookup
-          type: function
-        - file: nchantdoffice/widgets/extensions/extensions.py
-          name: load_extension
-          type: function
-        - file: nchantdoffice/widgets/extensions/extensions.py
-          name: load_extensions
-          type: function
-        - file: nchantdoffice/widgets/extensions/extensions.py
-          name: decompress_extension
-          type: function
-        - file: nchantdoffice/widgets/extensions/extensions.py
-          name: register_extension
-          type: function
-        - file: nchantdoffice/widgets/extensions/extensions.py
-          name: remove_extension
-          type: function
-        - file: z-work_/nchantdtodo/dstruct.py
-          name: setupNodes
-          type: function
-        rule: 'Unused functions: 12'
-        severity: medium
-      - fix: Remove or export unused classes
-        items:
-        - file: nchantdoffice/views.py
-          name: NchantdOfficeCloakView
-          type: class
-        - file: nchantdoffice/nchantdoffice.py
-          name: NchantdOfficeCloak
-          type: class
-        - file: nchantdoffice/models.py
-          name: NchantdOfficeInstance
-          type: class
-        - file: nchantdoffice/models.py
-          name: NchantdOfficeCloakModel
-          type: class
-        - file: nchantdoffice/models.py
-          name: NchantdOfficeTabSetModel
-          type: class
-        - file: nchantdoffice/models.py
-          name: NchantdOfficeSettingsModel
-          type: class
-        - file: nchantdoffice/models.py
-          name: NchantdOfficeImportModel
-          type: class
-        - file: z-work_/tabsets.py
-          name: NTDConcernTabSet
-          type: class
-        - file: z-work_/tabsets.py
-          name: NTDHistoryTabSet
-          type: class
-        - file: z-work_/tabsets.py
-          name: NTDTimeLineTabSet
-          type: class
-        rule: 'Unused classes: 456'
-        severity: medium
-      score: 40
-      status: partial
-      total_unused: 947
-      unused_class_count: 456
-      unused_function_count: 12
-      unused_import_count: 479
-    score: 40
-    status: partial
   dependency_strategy:
     details:
-      external_imports: 680
-      info: 'Hint: 63 GitVein projects available but not used: PyQt5Pandas, apig,
-        asolutionfor, basicbot, blackacres...'
-      internal_import_details:
-      - file: __main__.py
-        module: kahndor
-        project: kahndor
-      - file: cmds/runNchantdOffice.py
-        module: kahndor
-        project: kahndor
-      - file: cmds/runNchantdAXN.py
-        module: nchantdaxn.main
-        project: axn
-      - file: cmds/runNchantdTool.py
-        module: kahndor
-        project: kahndor
-      - file: cmds/runNchantdTool.py
-        module: kahndor
-        project: kahndor
-      - file: cmds/runNchantdTool.py
-        module: kahndor
-        project: kahndor
-      - file: cmds/runTest.py
-        module: kahndor
-        project: kahndor
-      - file: cmds/runNchantdOfficePremium.py
-        module: kahndor
-        project: kahndor
-      - file: cmds/runNchantdOfficePaid.py
-        module: kahndor
-        project: kahndor
-      - file: cmds/test_runNchantdOffice.py
-        module: nchantdoffice.wizards.wizards
-        project: nchantdoffice
-      internal_imports: 424
-      internal_projects_used:
-      - nchantdoffice
-      - axn
-      - nchantrs
-      - ogma
-      - kahndor
-      leverage_score: 38.41
-      score: 100
-      status: pass
-      total_imports: 1104
-    score: 100
-    status: pass
+      details:
+        issues: []
+        leverage_percent: 0
+        score: 0
+        status: fail
+      score: 0
+      status: fail
+    score: 0
+    status: fail
   documentation:
     details:
-      missing:
-      - CONTRIBUTING.md
-      present:
-      - README.md
-      - CHANGES.md
-      - STATE.md
-      score: 75
+      details:
+        issues: []
+        score: 100
+        status: pass
+      score: 100
       status: pass
-    score: 75
+    score: 100
     status: pass
-  duplicate_files:
+  duplicate_filenames:
     details:
-      duplicate_count: 30
-      duplicates:
-        __main__.py:
-        - __main__.py
-        - nchantdoffice/__main__.py
-        audio.py:
-        - nchantdoffice/widgets/documents/audio.py
-        - nchantdoffice/widgets/documents/media/audio.py
-        charts.py:
-        - nchantdoffice/widgets/documents/charts.py
-        - nchantdoffice/widgets/panes/charts.py
-        - nchantdoffice/widgets/documents/engrg/charts.py
-        - nchantdoffice/widgets/documents/analytics/charts.py
-        chartsTEST.py:
-        - tests/unit/widgets/panes/chartsTEST.py
-        - tests/unit/widgets/documents/analytics/chartsTEST.py
-        config.py:
-        - nchantdoffice/utilities/config.py
-        - nchantdoffice/widgets/config/config.py
-        configTEST.py:
-        - tests/unit/utilities/configTEST.py
-        - tests/unit/widgets/config/configTEST.py
-        contacts.py:
-        - nchantdoffice/widgets/documents/managers/contacts.py
-        - nchantdoffice/widgets/documents/atnrg/contacts.py
-        diagramsTEST.py:
-        - tests/unit/widgets/documents/diagramsTEST.py
-        - tests/unit/widgets/items/diagramsTEST.py
-        dialogs.py:
-        - nchantdoffice/dialogs/dialogs.py
-        - z-work_/nchantdtodo/dialogs.py
-        documents.py:
-        - nchantdoffice/dialogs/documents.py
-        - nchantdoffice/widgets/documents/documents.py
-        - nchantdoffice/widgets/panes/documents.py
-        documentsTEST.py:
-        - tests/unit/dialogs/documentsTEST.py
-        - tests/unit/widgets/documents/documentsTEST.py
-        - tests/unit/widgets/panes/documentsTEST.py
-        forms.py:
-        - nchantdoffice/widgets/documents/forms.py
-        - nchantdoffice/widgets/panes/forms.py
-        - nchantdoffice/widgets/documents/media/forms.py
-        formsTEST.py:
-        - tests/unit/widgets/panes/formsTEST.py
-        - tests/unit/widgets/documents/media/formsTEST.py
-        images.py:
-        - nchantdoffice/widgets/documents/media/images.py
-        - nchantdoffice/widgets/documents/media/graphics/images.py
-        imports.py:
-        - nchantdoffice/utilities/imports.py
-        - nchantdoffice/dialogs/imports.py
-        importsTEST.py:
-        - tests/unit/utilities/importsTEST.py
-        - tests/unit/dialogs/importsTEST.py
-        journal.py:
-        - nchantdoffice/widgets/documents/journal.py
-        - nchantdoffice/widgets/config/journal.py
-        journalTEST.py:
-        - tests/unit/widgets/documents/journalTEST.py
-        - tests/unit/widgets/config/journalTEST.py
-        models.py:
-        - nchantdoffice/models.py
-        - nchantdoffice/widgets/panes/models.py
-        - z-work_/nchantdtodo/models.py
-        modelsTEST.py:
-        - tests/unit/modelsTEST.py
-        - tests/unit/widgets/panes/modelsTEST.py
-        notebooks.py:
-        - nchantdoffice/widgets/documents/notebooks.py
-        - nchantdoffice/widgets/documents/workbooks/notebooks.py
-        settings.py:
-        - nchantdoffice/widgets/settings.py
-        - nchantdoffice/widgets/config/settings.py
-        settingsTEST.py:
-        - tests/unit/widgets/settingsTEST.py
-        - tests/unit/widgets/config/settingsTEST.py
-        sources.py:
-        - nchantdoffice/widgets/panes/sources.py
-        - nchantdoffice/widgets/config/sources.py
-        - nchantdoffice/widgets/documents/analytics/sources.py
-        sourcesTEST.py:
-        - tests/unit/widgets/panes/sourcesTEST.py
-        - tests/unit/widgets/config/sourcesTEST.py
-        - tests/unit/widgets/documents/analytics/sourcesTEST.py
-        surveys.py:
-        - nchantdoffice/widgets/documents/surveys.py
-        - nchantdoffice/widgets/documents/atnrg/surveys.py
-        tasks.py:
-        - nchantdoffice/widgets/panes/tasks.py
-        - nchantdoffice/widgets/documents/engrg/tasks.py
-        utilities.py:
-        - nchantdoffice/utilities/utilities.py
-        - nchantdoffice/widgets/documents/workbooks/utilities.py
-        utilitiesTEST.py:
-        - tests/unit/utilities/utilitiesTEST.py
-        - tests/unit/widgets/documents/workbooks/utilitiesTEST.py
-        widgets.py:
-        - z-work_/widgets.py
-        - nchantdoffice/widgets/widgets.py
-        - z-work_/nchantdtodo/widgets.py
-      issues:
-      - filename: __main__.py
-        fix: 'Review files for potential code duplication or rename: __main__.py'
-        location_count: 2
-        locations:
-        - __main__.py
-        - nchantdoffice/__main__.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: audio.py
-        fix: 'Review files for potential code duplication or rename: audio.py'
-        location_count: 2
-        locations:
-        - nchantdoffice/widgets/documents/audio.py
-        - nchantdoffice/widgets/documents/media/audio.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: charts.py
-        fix: 'Review files for potential code duplication or rename: charts.py'
-        location_count: 4
-        locations:
-        - nchantdoffice/widgets/documents/charts.py
-        - nchantdoffice/widgets/panes/charts.py
-        - nchantdoffice/widgets/documents/engrg/charts.py
-        - nchantdoffice/widgets/documents/analytics/charts.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: chartsTEST.py
-        fix: 'Review files for potential code duplication or rename: chartsTEST.py'
-        location_count: 2
-        locations:
-        - tests/unit/widgets/panes/chartsTEST.py
-        - tests/unit/widgets/documents/analytics/chartsTEST.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: config.py
-        fix: 'Review files for potential code duplication or rename: config.py'
-        location_count: 2
-        locations:
-        - nchantdoffice/utilities/config.py
-        - nchantdoffice/widgets/config/config.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: configTEST.py
-        fix: 'Review files for potential code duplication or rename: configTEST.py'
-        location_count: 2
-        locations:
-        - tests/unit/utilities/configTEST.py
-        - tests/unit/widgets/config/configTEST.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: contacts.py
-        fix: 'Review files for potential code duplication or rename: contacts.py'
-        location_count: 2
-        locations:
-        - nchantdoffice/widgets/documents/managers/contacts.py
-        - nchantdoffice/widgets/documents/atnrg/contacts.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: diagramsTEST.py
-        fix: 'Review files for potential code duplication or rename: diagramsTEST.py'
-        location_count: 2
-        locations:
-        - tests/unit/widgets/documents/diagramsTEST.py
-        - tests/unit/widgets/items/diagramsTEST.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: dialogs.py
-        fix: 'Review files for potential code duplication or rename: dialogs.py'
-        location_count: 2
-        locations:
-        - nchantdoffice/dialogs/dialogs.py
-        - z-work_/nchantdtodo/dialogs.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: documents.py
-        fix: 'Review files for potential code duplication or rename: documents.py'
-        location_count: 3
-        locations:
-        - nchantdoffice/dialogs/documents.py
-        - nchantdoffice/widgets/documents/documents.py
-        - nchantdoffice/widgets/panes/documents.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: documentsTEST.py
-        fix: 'Review files for potential code duplication or rename: documentsTEST.py'
-        location_count: 3
-        locations:
-        - tests/unit/dialogs/documentsTEST.py
-        - tests/unit/widgets/documents/documentsTEST.py
-        - tests/unit/widgets/panes/documentsTEST.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: forms.py
-        fix: 'Review files for potential code duplication or rename: forms.py'
-        location_count: 3
-        locations:
-        - nchantdoffice/widgets/documents/forms.py
-        - nchantdoffice/widgets/panes/forms.py
-        - nchantdoffice/widgets/documents/media/forms.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: formsTEST.py
-        fix: 'Review files for potential code duplication or rename: formsTEST.py'
-        location_count: 2
-        locations:
-        - tests/unit/widgets/panes/formsTEST.py
-        - tests/unit/widgets/documents/media/formsTEST.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: images.py
-        fix: 'Review files for potential code duplication or rename: images.py'
-        location_count: 2
-        locations:
-        - nchantdoffice/widgets/documents/media/images.py
-        - nchantdoffice/widgets/documents/media/graphics/images.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: imports.py
-        fix: 'Review files for potential code duplication or rename: imports.py'
-        location_count: 2
-        locations:
-        - nchantdoffice/utilities/imports.py
-        - nchantdoffice/dialogs/imports.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: importsTEST.py
-        fix: 'Review files for potential code duplication or rename: importsTEST.py'
-        location_count: 2
-        locations:
-        - tests/unit/utilities/importsTEST.py
-        - tests/unit/dialogs/importsTEST.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: journal.py
-        fix: 'Review files for potential code duplication or rename: journal.py'
-        location_count: 2
-        locations:
-        - nchantdoffice/widgets/documents/journal.py
-        - nchantdoffice/widgets/config/journal.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: journalTEST.py
-        fix: 'Review files for potential code duplication or rename: journalTEST.py'
-        location_count: 2
-        locations:
-        - tests/unit/widgets/documents/journalTEST.py
-        - tests/unit/widgets/config/journalTEST.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: models.py
-        fix: 'Review files for potential code duplication or rename: models.py'
-        location_count: 3
-        locations:
-        - nchantdoffice/models.py
-        - nchantdoffice/widgets/panes/models.py
-        - z-work_/nchantdtodo/models.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: modelsTEST.py
-        fix: 'Review files for potential code duplication or rename: modelsTEST.py'
-        location_count: 2
-        locations:
-        - tests/unit/modelsTEST.py
-        - tests/unit/widgets/panes/modelsTEST.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: notebooks.py
-        fix: 'Review files for potential code duplication or rename: notebooks.py'
-        location_count: 2
-        locations:
-        - nchantdoffice/widgets/documents/notebooks.py
-        - nchantdoffice/widgets/documents/workbooks/notebooks.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: settings.py
-        fix: 'Review files for potential code duplication or rename: settings.py'
-        location_count: 2
-        locations:
-        - nchantdoffice/widgets/settings.py
-        - nchantdoffice/widgets/config/settings.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: settingsTEST.py
-        fix: 'Review files for potential code duplication or rename: settingsTEST.py'
-        location_count: 2
-        locations:
-        - tests/unit/widgets/settingsTEST.py
-        - tests/unit/widgets/config/settingsTEST.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: sources.py
-        fix: 'Review files for potential code duplication or rename: sources.py'
-        location_count: 3
-        locations:
-        - nchantdoffice/widgets/panes/sources.py
-        - nchantdoffice/widgets/config/sources.py
-        - nchantdoffice/widgets/documents/analytics/sources.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: sourcesTEST.py
-        fix: 'Review files for potential code duplication or rename: sourcesTEST.py'
-        location_count: 3
-        locations:
-        - tests/unit/widgets/panes/sourcesTEST.py
-        - tests/unit/widgets/config/sourcesTEST.py
-        - tests/unit/widgets/documents/analytics/sourcesTEST.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: surveys.py
-        fix: 'Review files for potential code duplication or rename: surveys.py'
-        location_count: 2
-        locations:
-        - nchantdoffice/widgets/documents/surveys.py
-        - nchantdoffice/widgets/documents/atnrg/surveys.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: tasks.py
-        fix: 'Review files for potential code duplication or rename: tasks.py'
-        location_count: 2
-        locations:
-        - nchantdoffice/widgets/panes/tasks.py
-        - nchantdoffice/widgets/documents/engrg/tasks.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: utilities.py
-        fix: 'Review files for potential code duplication or rename: utilities.py'
-        location_count: 2
-        locations:
-        - nchantdoffice/utilities/utilities.py
-        - nchantdoffice/widgets/documents/workbooks/utilities.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: utilitiesTEST.py
-        fix: 'Review files for potential code duplication or rename: utilitiesTEST.py'
-        location_count: 2
-        locations:
-        - tests/unit/utilities/utilitiesTEST.py
-        - tests/unit/widgets/documents/workbooks/utilitiesTEST.py
-        rule: Duplicate filename found
-        severity: high
-      - filename: widgets.py
-        fix: 'Review files for potential code duplication or rename: widgets.py'
-        location_count: 3
-        locations:
-        - z-work_/widgets.py
-        - nchantdoffice/widgets/widgets.py
-        - z-work_/nchantdtodo/widgets.py
-        rule: Duplicate filename found
-        severity: high
+      details:
+        duplicate_count: 35
+        issues:
+        - paths:
+          - zz-tomb_/notebooks.py
+          - nchantdoffice/widgets/documents/workbooks/notebooks.py
+          rule: 'Duplicate filename: notebooks.py'
+          severity: medium
+        - paths:
+          - zz-tomb_/surveys.py
+          - zz-work_/z-work_/surveys.py
+          rule: 'Duplicate filename: surveys.py'
+          severity: medium
+        - paths:
+          - zz-tomb_/forms.py
+          - nchantdoffice/widgets/panes/forms.py
+          - nchantdoffice/widgets/documents/media/forms.py
+          rule: 'Duplicate filename: forms.py'
+          severity: medium
+        - paths:
+          - zz-tomb_/charts.py
+          - nchantdoffice/widgets/panes/charts.py
+          - nchantdoffice/widgets/documents/analytics/charts.py
+          - zz-work_/z-work_/charts.py
+          rule: 'Duplicate filename: charts.py'
+          severity: medium
+        - paths:
+          - zz-tomb_/audio.py
+          - zz-work_/z-work_/audio.py
+          rule: 'Duplicate filename: audio.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/views.py
+          - zz-work_/z-work_/nchantdarena/games/views.py
+          rule: 'Duplicate filename: views.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/config.py
+          - nchantdoffice/utilities/config.py
+          - nchantdoffice/widgets/config/config.py
+          rule: 'Duplicate filename: config.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/models.py
+          - nchantdoffice/widgets/panes/models.py
+          - zz-work_/z-work_/nchantdfund/zz-tomb_/models.py
+          - zz-work_/z-work_/nchantdfund/nchantdfund/models.py
+          - zz-work_/z-work_/nchantdarena/games/models.py
+          - zz-work_/z-work_/z-work_/nchantdtodo/models.py
+          - zz-work_/z-work_/nchantdimagery/nchantdimagery/models.py
+          rule: 'Duplicate filename: models.py'
+          severity: medium
+        - paths:
+          - tests/unit/modelsTEST.py
+          - tests/unit/widgets/panes/modelsTEST.py
+          rule: 'Duplicate filename: modelsTEST.py'
+          severity: medium
+        - paths:
+          - tests/unit/widgets/settingsTEST.py
+          - tests/unit/widgets/config/settingsTEST.py
+          rule: 'Duplicate filename: settingsTEST.py'
+          severity: medium
+        - paths:
+          - tests/unit/utilities/utilitiesTEST.py
+          - tests/unit/widgets/documents/workbooks/utilitiesTEST.py
+          rule: 'Duplicate filename: utilitiesTEST.py'
+          severity: medium
+        - paths:
+          - tests/unit/utilities/importsTEST.py
+          - tests/unit/dialogs/importsTEST.py
+          rule: 'Duplicate filename: importsTEST.py'
+          severity: medium
+        - paths:
+          - tests/unit/utilities/configTEST.py
+          - tests/unit/widgets/config/configTEST.py
+          rule: 'Duplicate filename: configTEST.py'
+          severity: medium
+        - paths:
+          - tests/unit/dialogs/documentsTEST.py
+          - tests/unit/widgets/panes/documentsTEST.py
+          - tests/unit/widgets/documents/documentsTEST.py
+          rule: 'Duplicate filename: documentsTEST.py'
+          severity: medium
+        - paths:
+          - tests/unit/widgets/items/diagramsTEST.py
+          - tests/unit/widgets/documents/diagramsTEST.py
+          rule: 'Duplicate filename: diagramsTEST.py'
+          severity: medium
+        - paths:
+          - tests/unit/widgets/panes/sourcesTEST.py
+          - tests/unit/widgets/config/sourcesTEST.py
+          - tests/unit/widgets/documents/analytics/sourcesTEST.py
+          rule: 'Duplicate filename: sourcesTEST.py'
+          severity: medium
+        - paths:
+          - tests/unit/widgets/panes/formsTEST.py
+          - tests/unit/widgets/documents/media/formsTEST.py
+          rule: 'Duplicate filename: formsTEST.py'
+          severity: medium
+        - paths:
+          - tests/unit/widgets/panes/chartsTEST.py
+          - tests/unit/widgets/documents/analytics/chartsTEST.py
+          rule: 'Duplicate filename: chartsTEST.py'
+          severity: medium
+        - paths:
+          - tests/unit/widgets/documents/journalTEST.py
+          - tests/unit/widgets/config/journalTEST.py
+          rule: 'Duplicate filename: journalTEST.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/widgets/widgets.py
+          - zz-work_/z-work_/z-work_/widgets.py
+          - zz-work_/z-work_/nchantdfund/zz-tomb_/widgets.py
+          - zz-work_/z-work_/nchantdfund/nchantdfund/widgets.py
+          - zz-work_/z-work_/z-work_/nchantdtodo/widgets.py
+          - zz-work_/z-work_/nchantdimagery/nchantdimagery/widgets.py
+          rule: 'Duplicate filename: widgets.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/widgets/timelines.py
+          - zz-work_/z-work_/packages/nchantdfund/timelines.py
+          rule: 'Duplicate filename: timelines.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/widgets/settings.py
+          - nchantdoffice/widgets/config/settings.py
+          rule: 'Duplicate filename: settings.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/utilities/utilities.py
+          - nchantdoffice/widgets/documents/workbooks/utilities.py
+          rule: 'Duplicate filename: utilities.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/utilities/imports.py
+          - nchantdoffice/dialogs/imports.py
+          rule: 'Duplicate filename: imports.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/dialogs/documents.py
+          - nchantdoffice/widgets/panes/documents.py
+          - nchantdoffice/widgets/documents/documents.py
+          rule: 'Duplicate filename: documents.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/dialogs/dialogs.py
+          - zz-work_/z-work_/nchantdfund/nchantdfund/dialogs.py
+          - zz-work_/z-work_/z-work_/nchantdtodo/dialogs.py
+          rule: 'Duplicate filename: dialogs.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/widgets/items/diagrams.py
+          - zz-work_/z-work_/diagrams.py
+          rule: 'Duplicate filename: diagrams.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/widgets/panes/tasks.py
+          - zz-work_/z-work_/tasks.py
+          rule: 'Duplicate filename: tasks.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/widgets/panes/sources.py
+          - nchantdoffice/widgets/config/sources.py
+          - zz-work_/z-work_/sources.py
+          rule: 'Duplicate filename: sources.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/widgets/documents/journal.py
+          - nchantdoffice/widgets/config/journal.py
+          rule: 'Duplicate filename: journal.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/widgets/config/accounts.py
+          - zz-work_/z-work_/accounts.py
+          - zz-work_/z-work_/packages/nchantdfund/accounts.py
+          rule: 'Duplicate filename: accounts.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/widgets/documents/atnrg/contacts.py
+          - zz-work_/z-work_/contacts.py
+          rule: 'Duplicate filename: contacts.py'
+          severity: medium
+        - paths:
+          - nchantdoffice/widgets/documents/media/images.py
+          - zz-work_/z-work_/images.py
+          rule: 'Duplicate filename: images.py'
+          severity: medium
+        - paths:
+          - zz-work_/z-work_/games/games.py
+          - zz-work_/z-work_/nchantdarena/games/games.py
+          rule: 'Duplicate filename: games.py'
+          severity: medium
+        - paths:
+          - zz-work_/z-work_/nchantdfund/zz-tomb_/main.py
+          - zz-work_/z-work_/nchantdfund/nchantdfund/main.py
+          - zz-work_/z-work_/z-work_/nchantdtodo/main.py
+          - zz-work_/z-work_/nchantdimagery/nchantdimagery/main.py
+          rule: 'Duplicate filename: main.py'
+          severity: medium
+        score: 0
+        status: fail
       score: 0
       status: fail
     score: 0
     status: fail
   error_handling:
     details:
-      bare_excepts: 2
-      generic_excepts: 2
-      issues:
-      - fix: Replace bare except with specific exception types
-        rule: 'Bare excepts found: 2'
-        severity: high
-      proper_try_except: 8
-      score: 80
-      status: pass
-    score: 80
-    status: pass
+      details:
+        bare_except_count: 8
+        broad_except_count: 0
+        issues:
+        - count: 8
+          rule: bare_except
+          severity: high
+        score: 60
+        status: partial
+      score: 60
+      status: partial
+    score: 60
+    status: partial
   external_dependencies_declared:
     details:
-      declared_count: 95
-      declared_internal: []
-      issues:
-      - fix: Add these packages to [project.dependencies] in pyproject.toml
-        packages:
-        - bs4
-        - crow
-        - dateutil
-        - docutils
-        - feedparser
-        - nchantdaxn
-        - nchantdfund
-        - nchantdtodo
-        - nchants
-        - orange
-        - pygments
-        - pyqt5
-        - pyqtgraph
-        - pyside6pandas
-        - pytest
-        - pythreejs
-        - pyularity
-        - seaborn
-        - simplejson
-        - stl
-        rule: 'External dependencies not declared in pyproject.toml: 22 packages'
-        severity: critical
-      score: 0
-      status: fail
-      undeclared_external:
-      - bs4
-      - crow
-      - dateutil
-      - docutils
-      - feedparser
-      - nchantdaxn
-      - nchantdfund
-      - nchantdtodo
-      - nchants
-      - orange
-      - pygments
-      - pyqt5
-      - pyqtgraph
-      - pyside6pandas
-      - pytest
-      - pythreejs
-      - pyularity
-      - seaborn
-      - simplejson
-      - stl
-      - test_nchantdoffice
-      - vtkmodules
-      used_external_count: 28
-    score: 0
-    status: fail
+      details:
+        issues:
+        - No optional dependencies declared
+        score: 90
+        status: pass
+      score: 90
+      status: pass
+    score: 90
+    status: pass
   feature_envy:
     details:
-      feature_envy_count: 2
-      issues: []
+      details:
+        feature_envy_count: 23
+        issues:
+        - fix: Move method to the class it uses most
+          items:
+          - class: NchantdOfficeCloakModel
+            envy_of: document_
+            file: nchantdoffice/models.py
+            foreign_calls: 9
+            method: convert_db_to_journal
+            own_calls: 2
+          - class: NchantdOfficeCloakModel
+            envy_of: document
+            file: nchantdoffice/models.py
+            foreign_calls: 12
+            method: create_doc_media
+            own_calls: 3
+          - class: NchantdOfficeTabSetModel
+            envy_of: document_
+            file: nchantdoffice/models.py
+            foreign_calls: 7
+            method: convert_db_to_doc
+            own_calls: 0
+          - class: NchantdOfficeExtensionsSettings
+            envy_of: pyqt
+            file: nchantdoffice/widgets/settings.py
+            foreign_calls: 9
+            method: initView
+            own_calls: 4
+          - class: NchantdOfficeRolodex
+            envy_of: contact
+            file: nchantdoffice/widgets/documents/atnrg/contacts.py
+            foreign_calls: 13
+            method: export_to_vcard
+            own_calls: 1
+          rule: 'Feature envy detected: 23 methods'
+          severity: medium
+        score: 0
+        status: fail
+      score: 0
+      status: fail
+    score: 0
+    status: fail
+  file_sizes:
+    details:
+      details:
+        issues: []
+        large_file_count: 0
+        score: 100
+        status: pass
       score: 100
       status: pass
     score: 100
     status: pass
-  file_sizes:
-    details:
-      large_file_count: 0
-      score: 75
-      small_file_count: 2
-      status: partial
-    score: 75
-    status: partial
   git_workflow:
     details:
-      branch: gamma
-      has_commits: true
-      is_git_repo: true
-      score: 100
+      details:
+        details:
+          branch: gamma
+          branches:
+            local: []
+            remote: []
+          commit_count: 230
+          commits: []
+          contributors: []
+          is_repo: true
+          remotes: {}
+          root: /mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice
+          status: {}
+          tags: []
+        issues:
+        - file: null
+          line: null
+          message: No git remote configured
+          type: low
+        score: 85
+        status: pass
+      score: 85
       status: pass
-    score: 100
+    score: 85
     status: pass
   god_class:
     details:
-      god_class_count: 15
-      issues:
-      - fix: Split into smaller, focused classes using SRP
-        items:
-        - class: NchantdOfficeCloakModel
-          file: nchantdoffice/models.py
-          line_count: 1337
-          method_count: 97
-          severity: critical
-        - class: NchantdOfficeSettingsModel
-          file: nchantdoffice/models.py
-          line_count: 206
-          method_count: 57
-          severity: critical
-        - class: Test_NchantdOfficeCloakModel
-          file: tests/unit/modelsTEST.py
-          line_count: 493
-          method_count: 98
-          severity: critical
-        - class: Test_NchantdOfficeStore
-          file: tests/unit/modelsTEST.py
-          line_count: 223
-          method_count: 44
+      details:
+        god_class_count: 18
+        issues:
+        - fix: Split into smaller, focused classes using SRP
+          items:
+          - class: NchantdOfficeCloakModel
+            file: nchantdoffice/models.py
+            line_count: 1418
+            method_count: 99
+          - class: NchantdOfficeSettingsModel
+            file: nchantdoffice/models.py
+            line_count: 206
+            method_count: 57
+          - class: Test_NchantdOfficeCloakModel
+            file: tests/unit/modelsTEST.py
+            line_count: 493
+            method_count: 98
+          - class: Test_NchantdOfficeStore
+            file: tests/unit/modelsTEST.py
+            line_count: 223
+            method_count: 44
+          - class: Test_NchantdOfficeSettingsModel
+            file: tests/unit/modelsTEST.py
+            line_count: 298
+            method_count: 59
+          rule: 'God classes detected: 18'
           severity: high
-        - class: Test_NchantdOfficeSettingsModel
-          file: tests/unit/modelsTEST.py
-          line_count: 298
-          method_count: 59
-          severity: critical
-        rule: 'God classes detected: 15'
-        severity: high
+        score: 0
+        status: fail
       score: 0
       status: fail
     score: 0
     status: fail
   import_cycle:
     details:
-      cycles: []
-      import_cycle_count: 0
-      issues: []
+      details:
+        bad_import_files: 3
+        issues: []
+        score: 100
       score: 100
       status: pass
     score: 100
     status: pass
   import_organization:
     details:
-      has_isort_config: false
-      issues:
-      - fix: Add isort configuration to pyproject.toml or .isort.cfg
-        rule: No isort configuration found
-        severity: low
-      potential_misordered: 0
-      score: 75
-      status: partial
-    score: 75
-    status: partial
-  kiss_dry:
-    details:
-      duplicate_warnings: 0
-      magic_numbers_found: 0
+      details:
+        issues: []
+        score: 100
+        status: pass
       score: 100
       status: pass
     score: 100
     status: pass
+  internal_project_paths:
+    details:
+      details:
+        issues:
+        - fix: Move internal projects out of integration paths
+          rule: 'Internal project path violation: dev/examples/freecad_integration.py'
+          severity: medium
+        score: 90
+        status: pass
+        violations: 1
+      score: 90
+      status: pass
+    score: 90
+    status: pass
   lambda_antipattern:
     details:
-      antipattern_count: 2
-      issues:
-      - antipatterns:
-        - file: z-work_/nchantdtodo/dstruct.py
-          line: 90
-        - file: z-work_/nchantdtodo/dstruct.py
-          line: 138
-        fix: Replace lambda anti-patterns with proper functions or direct calls
-        rule: 'Lambda anti-patterns detected: 2/3 (66.7%)'
-        severity: high
-      score: 0
-      status: fail
-      total_lambdas: 3
-    score: 0
-    status: fail
+      details:
+        issues:
+        - fix: Use named functions instead of complex lambdas
+          items:
+          - file: nchantdoffice/cli.py
+            line: 113
+          - file: nchantdoffice/widgets/items/items.py
+            line: 78
+          - file: nchantdoffice/widgets/documents/workbooks/notebooks.py
+            line: 586
+          - file: nchantdoffice/widgets/documents/workbooks/notebooks.py
+            line: 587
+          - file: nchantdoffice/widgets/documents/workbooks/notebooks.py
+            line: 635
+          rule: 'Lambda anti-patterns detected: 5 instances'
+          severity: medium
+        lambda_count: 5
+        score: 75
+        status: partial
+      score: 75
+      status: partial
+    score: 75
+    status: partial
   license_dependencies:
     details:
-      issues:
-      - fix: Replace with MIT-licensed alternatives
-        packages:
-        - Babel (BSD License)
-        - Flask (BSD-3-Clause)
-        - GitPython (BSD-3-Clause)
-        - ImageIO (BSD-2-Clause)
-        - Jinja2 (BSD License)
-        rule: 'Non-MIT licenses: 317/583'
-        severity: high
-      - fix: Verify license manually or remove dependency
-        packages:
-        - PyAudio
-        - apturl
-        - command-not-found
-        - cupshelpers
-        - distro-info
-        rule: 'Unknown licenses: 16/583'
-        severity: high
-      mit_percentage: 42.9
-      score: 80
-      status: pass
-      tools_available:
-      - pip-licenses
-      tools_checked:
-      - fossa
-      - safety
-      - pip-licenses
-      - dependency-check
-    score: 80
-    status: pass
+      details:
+        issues: []
+        score: 0.0
+        status: fail
+      score: 0.0
+      status: fail
+    score: 0.0
+    status: fail
   licenses:
     details:
-      issues: []
+      details:
+        issues: []
+        score: 100
+        status: pass
       score: 100
       status: pass
     score: 100
     status: pass
   logging:
     details:
-      print_files:
-      - nchantdoffice/utilities/links.py
-      print_statements: 27
-      score: 0
-      status: fail
-      uses_logging: false
-      uses_logma: false
-    score: 0
-    status: fail
+      details:
+        detection_criteria:
+          files_checked: All .py files in project
+          pass_condition: Must have kahndor.logma import (standard logging or print()
+            = fail)
+          pattern: from\s+ogma\.logma\s+import|import\s+ogma\.logma
+        issues:
+        - count: 64
+          fix: Consider replacing 64 print() with logma calls
+          rule: print() statements found but kahndor.logma is also used
+          severity: medium
+        print_statements: 64
+        score: 75
+        status: partial
+        uses_logma: true
+      score: 75
+      status: partial
+    score: 75
+    status: partial
   long_method:
     details:
-      issues:
-      - fix: Extract into smaller helper functions
-        items:
-        - file: nchantdoffice/widgets/config/settings.py
-          function: initView
-          line_count: 196
-          line_start: 137
+      details:
+        issues:
+        - fix: Refactor long methods into smaller functions
+          items:
+          - file: nchantdoffice/widgets/config/settings.py
+            line_count: 196
+            method: initView
+          - file: nchantdoffice/widgets/documents/atnrg/browsers.py
+            line_count: 166
+            method: init_drawer_form_control
+          rule: 'Long methods detected: 2'
           severity: medium
-        - file: nchantdoffice/widgets/documents/atnrg/browsers/browsers.py
-          function: init_drawer_form_control
-          line_count: 166
-          line_start: 606
-          severity: medium
-        rule: 'Long methods detected: 2'
-        severity: medium
-      long_method_count: 2
+        long_method_count: 2
+        score: 80
+        status: pass
       score: 80
       status: pass
     score: 80
     status: pass
-  magic_numbers:
+  memory:
     details:
-      issues:
-      - fix: Replace magic numbers with named constants
-        items:
-        - file: nchantdoffice/models.py
-          line: 2114
-          type: int
-          value: 1111
-        - file: nchantdoffice/widgets/documents/filesystems.py
-          line: 685
-          type: int
-          value: 1024
-        - file: nchantdoffice/widgets/documents/filesystems.py
-          line: 699
-          type: int
-          value: 1024
-        - file: nchantdoffice/widgets/panes/charts.py
-          line: 584
-          type: float
-          value: 1.2
-        - file: nchantdoffice/widgets/panes/sources.py
-          line: 487
-          type: float
-          value: 1.5
-        - file: nchantdoffice/widgets/panes/sources.py
-          line: 523
-          type: float
-          value: 1.5
-        - file: nchantdoffice/widgets/panes/sources.py
-          line: 558
-          type: float
-          value: 1.5
-        - file: nchantdoffice/widgets/panes/sources.py
-          line: 650
-          type: float
-          value: 1.2
-        - file: nchantdoffice/widgets/panes/search.py
-          line: 126
-          type: float
-          value: 1.2
-        - file: nchantdoffice/widgets/panes/documents.py
-          line: 125
-          type: float
-          value: 1.2
-        rule: 'Magic numbers detected: 24'
-        severity: medium
-      magic_number_count: 24
-      score: 30
-      status: partial
-    score: 30
-    status: partial
+      details:
+        checks:
+          efficiency_issues: 0
+          large_objects: 0
+          potential_leaks: 0
+          resource_management: 0
+        issues: []
+        score: 100
+        status: pass
+      score: 100
+      status: pass
+    score: 100
+    status: pass
   message_chains:
     details:
-      chain_count: 0
-      issues: []
+      details:
+        chain_count: 0
+        issues: []
+        score: 100
+        status: pass
       score: 100
       status: pass
     score: 100
     status: pass
   mkdocs_mkdocstrings:
     details:
-      coverage_percentage: 100.0
-      covered_modules: 5
-      docs_directory: true
-      has_index_md: true
-      has_mkdocstrings: true
-      issues: []
-      mkdocs_config: mkdocs.yml
+      details:
+        issues: []
+        score: 100
+        status: pass
       score: 100
       status: pass
-      total_modules: 5
-      uncovered_modules: []
     score: 100
     status: pass
   module_cli_coverage:
     details:
-      cli_commands:
-      - cli
-      - export
-      - gui
-      - info
-      - list
-      - new
-      - open
-      - repair
-      - save
-      - search
-      - validate
-      context:
-        actual: 1/5 modules have CLI commands (20%)
-        description: Ensures every module has a corresponding CLI command for accessibility
-        dimension: module_cli_coverage
-        expected: All modules should have CLI commands (100% coverage at 80% threshold)
-        fix_guidance: 'Add CLI commands for: models, nchantdoffice, views, widgets.
-          Map each module to a CLI command in cli.py using subparsers.add_parser(''views'').'
-        what_it_tests: Whether each Python module in the package has a matching CLI
-          command entry point
-        why_partial_or_fail: 'Modules missing CLI commands: models, nchantdoffice,
-          views, widgets. Available CLI commands found: cli, export, gui, info, list,
-          new, open, repair, save, search, validate. Each module should have either:
-          (1) a matching @cli.command()/@app.command() decorator, (2) a subparsers.add_parser()
-          call matching the module name, or (3) a cmd_XXX function in cli.py that
-          maps to the module.'
-      covered_modules: 1
-      issues:
-      - available_cli_commands:
-        - open
-        - save
-        - new
-        - gui
-        - export
-        - search
-        - validate
-        - cli
-        - list
-        - repair
-        - info
-        covered_modules:
-        - cli
-        fix: 'Add CLI commands for: views, nchantdoffice, models, widgets'
-        rule: 'CLI coverage: 1/5 modules'
-        severity: medium
-        uncovered_modules:
-        - views
-        - nchantdoffice
-        - models
-        - widgets
-      module_list:
-      - cli
-      - models
-      - nchantdoffice
-      - views
-      - widgets
-      score: 20
+      details:
+        issues:
+        - rule: No CLI found
+          severity: low
+        score: 50
+        status: partial
+      score: 50
       status: partial
-      total_modules: 5
-      uncovered_modules: 4
-    score: 20
+    score: 50
     status: partial
   parallel_inheritance:
     details:
-      issues: []
-      parallel_inheritance_count: 0
-      score: 100
-      status: pass
-    score: 100
-    status: pass
+      details:
+        issues:
+        - fix: Consider merging hierarchies or using composition
+          items:
+          - class: NchantdOfficePDF
+            locations:
+            - zz-tomb_/pdf.py
+            - nchantdoffice/widgets/documents/media/pdfs.py
+          - class: NchantdOfficeNotebook
+            locations:
+            - zz-tomb_/notebooks.py
+            - nchantdoffice/widgets/documents/workbooks/notebooks.py
+          - class: NchantdOfficeScript
+            locations:
+            - zz-tomb_/text.py
+            - nchantdoffice/widgets/documents/media/scripts.py
+          - class: NchantdOfficeSurvey
+            locations:
+            - zz-tomb_/surveys.py
+            - zz-work_/z-work_/surveys.py
+          - class: NchantdOfficeForm
+            locations:
+            - zz-tomb_/forms.py
+            - nchantdoffice/widgets/documents/media/forms.py
+          - class: NchantdOfficeWebPage
+            locations:
+            - zz-tomb_/web.py
+            - nchantdoffice/widgets/documents/atnrg/pages.py
+          - class: NchantdOfficeWebBrowser
+            locations:
+            - zz-tomb_/web.py
+            - nchantdoffice/widgets/documents/atnrg/browsers.py
+          - class: NchantdOfficeChart
+            locations:
+            - zz-tomb_/charts.py
+            - nchantdoffice/widgets/documents/analytics/charts.py
+          - class: NchantdOfficePresentation
+            locations:
+            - zz-tomb_/presentation.py
+            - zz-work_/z-work_/shows.py
+          - class: NchantdOfficeMatrix
+            locations:
+            - zz-tomb_/spreadsheet.py
+            - nchantdoffice/widgets/documents/workbooks/matricies.py
+          - class: Test_Functions
+            locations:
+            - tests/unit/viewsTEST.py
+            - tests/unit/__main__TEST.py
+            - tests/unit/modelsTEST.py
+            - tests/unit/__init__TEST.py
+            - tests/unit/nchantdofficeTEST.py
+            - tests/unit/wizards/wizardsTEST.py
+            - tests/unit/widgets/settingsTEST.py
+            - tests/unit/widgets/advertisementsTEST.py
+            - tests/unit/widgets/tabsTEST.py
+            - tests/unit/widgets/catalogsTEST.py
+            - tests/unit/widgets/treesTEST.py
+            - tests/unit/widgets/timelinesTEST.py
+            - tests/unit/widgets/widgetsTEST.py
+            - tests/unit/widgets/tagsTEST.py
+            - tests/unit/updates/dbTEST.py
+            - tests/unit/utilities/usersTEST.py
+            - tests/unit/utilities/utilitiesTEST.py
+            - tests/unit/utilities/policiesTEST.py
+            - tests/unit/utilities/importsTEST.py
+            - tests/unit/utilities/linksTEST.py
+            - tests/unit/utilities/configTEST.py
+            - tests/unit/dialogs/documentsTEST.py
+            - tests/unit/dialogs/importsTEST.py
+            - tests/unit/dialogs/dialogsTEST.py
+            - tests/unit/dialogs/notificationsTEST.py
+            - tests/unit/widgets/items/itemsTEST.py
+            - tests/unit/widgets/items/diagramsTEST.py
+            - tests/unit/widgets/library/nchantdlibraryTEST.py
+            - tests/unit/widgets/panes/panesTEST.py
+            - tests/unit/widgets/panes/sourcesTEST.py
+            - tests/unit/widgets/panes/newTEST.py
+            - tests/unit/widgets/panes/formsTEST.py
+            - tests/unit/widgets/panes/searchTEST.py
+            - tests/unit/widgets/panes/modelsTEST.py
+            - tests/unit/widgets/panes/objectsTEST.py
+            - tests/unit/widgets/panes/tasksTEST.py
+            - tests/unit/widgets/panes/chartsTEST.py
+            - tests/unit/widgets/panes/filesTEST.py
+            - tests/unit/widgets/panes/weatherTEST.py
+            - tests/unit/widgets/panes/quickstartTEST.py
+            - tests/unit/widgets/panes/documentsTEST.py
+            - tests/unit/widgets/controls/menusTEST.py
+            - tests/unit/widgets/controls/toolbarsTEST.py
+            - tests/unit/widgets/controls/toolboxesTEST.py
+            - tests/unit/widgets/controls/buttonsTEST.py
+            - tests/unit/widgets/documents/journalTEST.py
+            - tests/unit/widgets/documents/calendarsTEST.py
+            - tests/unit/widgets/documents/documentsTEST.py
+            - tests/unit/widgets/documents/filesystemsTEST.py
+            - tests/unit/widgets/config/settingsTEST.py
+            - tests/unit/widgets/config/accountsTEST.py
+            - tests/unit/widgets/config/sourcesTEST.py
+            - tests/unit/widgets/config/automationsTEST.py
+            - tests/unit/widgets/config/uninstallTEST.py
+            - tests/unit/widgets/config/journalTEST.py
+            - tests/unit/widgets/config/securityTEST.py
+            - tests/unit/widgets/config/storageTEST.py
+            - tests/unit/widgets/config/helpTEST.py
+            - tests/unit/widgets/config/apisTEST.py
+            - tests/unit/widgets/config/configTEST.py
+            - tests/unit/widgets/documents/atnrg/newsTEST.py
+            - tests/unit/widgets/documents/atnrg/emailTEST.py
+            - tests/unit/widgets/documents/atnrg/attentioneeringTEST.py
+            - tests/unit/widgets/documents/atnrg/contactsTEST.py
+            - tests/unit/widgets/documents/atnrg/promptsTEST.py
+            - tests/unit/widgets/documents/atnrg/surveysTEST.py
+            - tests/unit/widgets/documents/workbooks/notebooksTEST.py
+            - tests/unit/widgets/documents/workbooks/matriciesTEST.py
+            - tests/unit/widgets/documents/workbooks/utilitiesTEST.py
+            - tests/unit/widgets/documents/analytics/sourcesTEST.py
+            - tests/unit/widgets/documents/analytics/comparisonTEST.py
+            - tests/unit/widgets/documents/analytics/chartsTEST.py
+            - tests/unit/widgets/documents/analytics/analyticsTEST.py
+            - tests/unit/widgets/documents/media/scriptsTEST.py
+            - tests/unit/widgets/documents/media/audioTEST.py
+            - tests/unit/widgets/documents/media/formsTEST.py
+            - tests/unit/widgets/documents/media/showsTEST.py
+            - tests/unit/widgets/documents/media/notesTEST.py
+            - tests/unit/widgets/documents/media/pdfsTEST.py
+            - tests/unit/widgets/documents/atnrg/browsers/pagesTEST.py
+            - tests/unit/widgets/documents/atnrg/browsers/browsersTEST.py
+            - tests/unit/widgets/documents/media/graphics/graphicsTEST.py
+            - tests/unit/widgets/documents/media/graphics/imagesTEST.py
+          - class: Test_NchantdSourcesListPane
+            locations:
+            - tests/unit/widgets/panes/sourcesTEST.py
+            - tests/unit/widgets/documents/analytics/chartsTEST.py
+          - class: Test_NchantdWhereUsedListPane
+            locations:
+            - tests/unit/widgets/panes/sourcesTEST.py
+            - tests/unit/widgets/documents/analytics/chartsTEST.py
+          - class: NchantdApplicationSearchPane
+            locations:
+            - nchantdoffice/widgets/panes/search.py
+            - nchantdoffice/widgets/controls/toolboxes.py
+          - class: NchantdLLMQueryPane
+            locations:
+            - nchantdoffice/widgets/panes/search.py
+            - nchantdoffice/widgets/controls/toolboxes.py
+          - class: NchantdWebSearchPane
+            locations:
+            - nchantdoffice/widgets/panes/search.py
+            - nchantdoffice/widgets/controls/toolboxes.py
+          - class: NchantdSourcesListPane
+            locations:
+            - nchantdoffice/widgets/panes/sources.py
+            - nchantdoffice/widgets/documents/analytics/charts.py
+          - class: NchantdWhereUsedListPane
+            locations:
+            - nchantdoffice/widgets/panes/sources.py
+            - nchantdoffice/widgets/documents/analytics/charts.py
+          - class: NchantdOfficeContact
+            locations:
+            - nchantdoffice/widgets/documents/atnrg/contacts.py
+            - zz-work_/z-work_/contacts.py
+          - class: NchantdOfficeImage
+            locations:
+            - nchantdoffice/widgets/documents/media/images.py
+            - zz-work_/z-work_/images.py
+          - class: memDB
+            locations:
+            - zz-work_/z-work_/fxdb.py
+            - zz-work_/z-work_/ngynFxSQuRIL (2).py
+            - zz-work_/z-work_/ngynFxSQuRIL (1).py
+            - zz-work_/z-work_/ngynFxSQuRIL (3).py
+          - class: appDB
+            locations:
+            - zz-work_/z-work_/fxdb.py
+            - zz-work_/z-work_/ngynFxSQuRIL (2).py
+            - zz-work_/z-work_/ngynFxSQuRIL (1).py
+            - zz-work_/z-work_/ngynFxSQuRIL (3).py
+          - class: fileDB
+            locations:
+            - zz-work_/z-work_/fxdb.py
+            - zz-work_/z-work_/ngynFxSQuRIL (2).py
+            - zz-work_/z-work_/ngynFxSQuRIL (1).py
+            - zz-work_/z-work_/ngynFxSQuRIL (3).py
+          - class: fxSQuRILchunker
+            locations:
+            - zz-work_/z-work_/fxsquril.py
+            - zz-work_/z-work_/ngynFxSQuRIL (2).py
+            - zz-work_/z-work_/ngynFxSQuRIL (1).py
+          - class: dataRTR
+            locations:
+            - zz-work_/z-work_/ngynFxSQuRIL (2).py
+            - zz-work_/z-work_/ngynFxSQuRIL (1).py
+            - zz-work_/z-work_/ngynFxSQuRIL (3).py
+          - class: fracExSQL
+            locations:
+            - zz-work_/z-work_/ngynFxSQuRIL (2).py
+            - zz-work_/z-work_/ngynFxSQuRIL (1).py
+            - zz-work_/z-work_/ngynFxSQuRIL (3).py
+          - class: chunk
+            locations:
+            - zz-work_/z-work_/ngynFxSQuRIL (2).py
+            - zz-work_/z-work_/ngynFxSQuRIL (1).py
+            - zz-work_/z-work_/ngynFxSQuRIL (3).py
+          - class: encoder
+            locations:
+            - zz-work_/z-work_/ngynFxSQuRIL (2).py
+            - zz-work_/z-work_/ngynFxSQuRIL (1).py
+            - zz-work_/z-work_/ngynFxSQuRIL (3).py
+          - class: db
+            locations:
+            - zz-work_/z-work_/ngynFxSQuRIL (2).py
+            - zz-work_/z-work_/ngynFxSQuRIL (1).py
+            - zz-work_/z-work_/ngynFxSQuRIL (3).py
+          - class: doc
+            locations:
+            - zz-work_/z-work_/ngynFxSQuRIL (1).py
+            - zz-work_/z-work_/ngynFxSQuRIL (3).py
+          - class: NchantdFund
+            locations:
+            - zz-work_/z-work_/nchantdfund/zz-tomb_/main.py
+            - zz-work_/z-work_/nchantdfund/nchantdfund/main.py
+          - class: Game
+            locations:
+            - zz-work_/z-work_/nchantdarena/games/games.py
+            - zz-work_/z-work_/nchantdarena/ninja_game/game.py
+          rule: 'Parallel inheritance detected: 32 classes'
+          severity: medium
+        parallel_inheritance_count: 32
+        score: 0
+        status: fail
+      score: 0
+      status: fail
+    score: 0
+    status: fail
   pii_secrets:
     details:
-      files_with_secrets: 0
-      findings: []
-      score: 100
-      secrets_found: 0
-      status: pass
-    score: 100
-    status: pass
+      details:
+        details:
+          files_with_secrets: 2
+          findings:
+          - file: nchantdoffice/widgets/documents/workbooks/notebooks.py
+            line: 436
+            matched: "password=\",\n                \""
+            type: password
+          - file: nchantdoffice/widgets/documents/atnrg/_data_/emails.yaml
+            line: 44
+            matched: "Password:\"}\n                5: {\""
+            type: password
+          score: 50
+          secrets_found: 2
+          status: partial
+        score: 50
+        status: partial
+      score: 50
+      status: partial
+    score: 50
+    status: partial
   private_leak:
     details:
-      issues: []
-      private_leak_count: 0
+      details:
+        issues: []
+        private_leak_count: 0
+        score: 100
+        status: pass
       score: 100
       status: pass
     score: 100
     status: pass
   readme_quality:
     details:
-      issues: []
-      score: 60
-      sections_found:
-      - installation
-      - usage
-      - features
-      sections_required:
-      - installation
-      - usage
-      - features
+      details:
+        issues:
+        - rule: 'Missing section: Project overview'
+          severity: medium
+        - rule: 'Missing section: Quick start'
+          severity: medium
+        - rule: 'Missing section: Development'
+          severity: medium
+        score: 40
+        status: partial
+      score: 40
       status: partial
-      word_count: 182
-    score: 60
+    score: 40
     status: partial
   security_bandit:
     details:
       details:
-        files_scanned: 119
-        high: 0
-        low: 12
-        medium: 2
-        total: 14
-      issues: []
-      score: 80
-      status: pass
-    score: 80
-    status: pass
+        issues:
+        - fix: 'Install bandit: pip install bandit'
+          rule: Bandit not installed
+          severity: high
+        score: 0
+        status: fail
+      score: 0
+      status: fail
+    score: 0
+    status: fail
+  security_internal:
+    details:
+      details:
+        findings:
+        - category: getattr_dynamic
+          content: instance_version = getattr(self.app.model.instance, 'version',
+            "0.0.0")
+          file: nchantdoffice/models.py
+          line: 1816
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: exec_calls
+          content: sys.exit(app.exec())
+          file: tests/unit/widgets/documents/diagramsTEST.py
+          line: 57
+          pattern: \bexec\(
+          severity: 100
+        - category: exec_calls
+          content: sys.exit(app.exec())
+          file: tests/unit/widgets/documents/diagramsTEST.py
+          line: 93
+          pattern: \bexec\(
+          severity: 100
+        - category: exec_calls
+          content: app.exec()
+          file: dev/examples/freecad_integration.py
+          line: 18
+          pattern: \bexec\(
+          severity: 100
+        - category: exec_calls
+          content: self.context_menu.exec(global_pos)
+          file: nchantdoffice/widgets/documents/documents.py
+          line: 89
+          pattern: \bexec\(
+          severity: 100
+        - category: getattr_dynamic
+          content: '#         self.app = getattr(self.parent, "app", None)'
+          file: nchantdoffice/widgets/documents/documents.py
+          line: 215
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: url_open
+          content: '# response = requests.get('
+          file: nchantdoffice/widgets/config/accounts.py
+          line: 385
+          pattern: requests\.get\(
+          severity: 50
+        - category: getattr_dynamic
+          content: 'if getattr(self.app.model.user, "has_pro", False) if self.app.model.user
+            else False:'
+          file: nchantdoffice/widgets/documents/atnrg/browsers.py
+          line: 128
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: 'if not getattr(self.app.model.user, "has_pro", False) if self.app.model.user
+            else False:'
+          file: nchantdoffice/widgets/documents/atnrg/browsers.py
+          line: 587
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: 'if self.config and isinstance(getattr(self.config, "dikt", None),
+            dict):'
+          file: nchantdoffice/widgets/documents/workbooks/notebooks.py
+          line: 144
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: view = getattr(self.browser, "browser", None)
+          file: nchantdoffice/widgets/documents/workbooks/notebooks.py
+          line: 582
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: 'if getattr(self, "_net_instrumented", False):'
+          file: nchantdoffice/widgets/documents/workbooks/notebooks.py
+          line: 661
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: 'if getattr(self, "_shutdown_hooks_installed", False):'
+          file: nchantdoffice/widgets/documents/workbooks/notebooks.py
+          line: 742
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: exec_calls
+          content: dialog.exec()
+          file: nchantdoffice/widgets/documents/workbooks/matricies.py
+          line: 1877
+          pattern: \bexec\(
+          severity: 100
+        - category: exec_calls
+          content: 'if print_dialog.exec() == pyqt.QDialog.DialogCode.Accepted:'
+          file: nchantdoffice/widgets/documents/workbooks/matricies.py
+          line: 1888
+          pattern: \bexec\(
+          severity: 100
+        - category: exec_calls
+          content: result = eval(
+          file: nchantdoffice/widgets/documents/workbooks/matricies.py
+          line: 1015
+          pattern: \beval\(
+          severity: 100
+        - category: exec_calls_ast
+          content: eval(...)
+          file: nchantdoffice/widgets/documents/workbooks/matricies.py
+          line: 1015
+          pattern: ast_call
+          severity: 100
+        - category: getattr_dynamic
+          content: label = getattr(item, "label", "Unknown field")
+          file: nchantdoffice/widgets/documents/media/forms.py
+          line: 464
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: field_id = getattr(item, "id", None)
+          file: nchantdoffice/widgets/documents/media/forms.py
+          line: 484
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: unicode_escape
+          content: y = raw.find(b'\x00', x)# Read and validate object size
+          file: zz-work_/z-work_/fxsquril (2).py
+          line: 447
+          pattern: \\x[0-9a-fA-F]{2}
+          severity: 40
+        - category: unicode_escape
+          content: result = obj.fmt + b' ' + str(len(data)).encode() + b'\x00' + data#
+            Add header
+          file: zz-work_/z-work_/fxsquril (2).py
+          line: 463
+          pattern: \\x[0-9a-fA-F]{2}
+          severity: 40
+        - category: unicode_escape
+          content: y = raw.find(b'\x00', x)
+          file: zz-work_/z-work_/fxsquril (2).py
+          line: 598
+          pattern: \\x[0-9a-fA-F]{2}
+          severity: 40
+        - category: unicode_escape
+          content: ret += b'\x00'
+          file: zz-work_/z-work_/fxsquril (2).py
+          line: 622
+          pattern: \\x[0-9a-fA-F]{2}
+          severity: 40
+        - category: unicode_escape
+          content: y = raw.find(b'\x00', x)
+          file: zz-work_/z-work_/fxsquril (2).py
+          line: 928
+          pattern: \\x[0-9a-fA-F]{2}
+          severity: 40
+        - category: unicode_escape
+          content: result = obj.fmt + b' ' + str(len(data)).encode() + b'\x00' + data
+          file: zz-work_/z-work_/fxsquril (2).py
+          line: 945
+          pattern: \\x[0-9a-fA-F]{2}
+          severity: 40
+        - category: unicode_escape
+          content: y = raw.find(b'\x00', x)
+          file: zz-work_/z-work_/fxsquril (2).py
+          line: 1083
+          pattern: \\x[0-9a-fA-F]{2}
+          severity: 40
+        - category: unicode_escape
+          content: ret += b'\x00'
+          file: zz-work_/z-work_/fxsquril (2).py
+          line: 1107
+          pattern: \\x[0-9a-fA-F]{2}
+          severity: 40
+        - category: exec_calls
+          content: hashRE = re.compile(r"^[0-9A-Fa-f]{1,16}$")
+          file: zz-work_/z-work_/fxsquril (2).py
+          line: 725
+          pattern: \bcompile\(
+          severity: 100
+        - category: exec_calls
+          content: smallHashRE = re.compile(r"^[0-9A-Fa-f]{1,16}$")
+          file: zz-work_/z-work_/fxsquril (2).py
+          line: 726
+          pattern: \bcompile\(
+          severity: 100
+        - category: exec_calls
+          content: hashRE = re.compile(r"^[0-9A-Fa-f]{1,16}$")
+          file: zz-work_/z-work_/fxsquril (2).py
+          line: 1208
+          pattern: \bcompile\(
+          severity: 100
+        - category: exec_calls
+          content: smallHashRE = re.compile(r"^[0-9A-Fa-f]{1,16}$")
+          file: zz-work_/z-work_/fxsquril (2).py
+          line: 1209
+          pattern: \bcompile\(
+          severity: 100
+        score: 0
+        status: fail
+      score: 0
+      status: fail
+    score: 0
+    status: fail
   security_ruff:
     details:
-      issues: []
-      score: 80
+      details:
+        issues:
+        - fix: 'Install ruff: pip install ruff'
+          rule: Ruff not installed
+          severity: high
+        score: 0
+        status: fail
+      score: 0
+      status: fail
+    score: 0
+    status: fail
+  speed:
+    details:
+      details:
+        checks:
+          builtin_optimizations: 0
+          efficiency_issues: 0
+          inefficient_loops: 0
+          string_concatenation: 0
+        issues: []
+        score: 100
+        status: pass
+      score: 100
       status: pass
-    score: 80
+    score: 100
     status: pass
   structure:
     details:
-      missing_dirs: []
-      missing_files: []
-      present_dirs:
-      - cmds
-      - docs
-      - tests
-      - nchantdoffice
-      - z-work_
-      present_files:
-      - profile.html
-      - CLI.md
-      - license_dependencies.txt
-      - pyproject.toml
-      - STATE.md
-      - profile.json
-      - README.md
-      - run_gui.sh
-      - mkdocs.yml
-      - CHANGES.md
-      - LICENSE
-      - __main__.py
-      - CODING_STANDARDS.md
-      - PROJECT_TRACKER.yaml
+      details:
+        issues: []
+        score: 100
+        status: pass
       score: 100
       status: pass
     score: 100
     status: pass
   switch_abuse:
     details:
-      issues:
-      - fix: Consider using a dictionary or strategy pattern instead of repeated conditionals
-        patterns:
-        - checks: 11
-          file: nchantdoffice/utilities/utilities.py
-          function: if/elif chain
-          variable: doc_type
-        - checks: 5
-          file: nchantdoffice/widgets/controls/toolbars.py
-          function: match statement
-          variable: value
-        - checks: 8
-          file: nchantdoffice/utilities/utilities.py
-          function: match statement
-          variable: doc_type
-        - checks: 5
-          file: z-work_/nchantdtodo/resource.py
-          function: if/elif chain
-          variable: window
-        - checks: 4
-          file: z-work_/nchantdtodo/models.py
-          function: if/elif chain
-          variable: format
-        - checks: 18
-          file: nchantdoffice/models.py
-          function: if/elif chain
-          variable: how
-        rule: 'Switch abuse detected: 6 patterns'
-        severity: medium
-      score: 10
-      status: partial
-      switch_abuse_count: 6
-    score: 10
-    status: partial
+      details:
+        issues:
+        - fix: Use polymorphism or a mapping instead of complex if-else
+          items:
+          - count: 5
+            file: nchantdoffice/models.py
+            function: store_doc_media_content
+            var: how
+          - count: 11
+            file: nchantdoffice/utilities/utilities.py
+            function: lookup_widget
+            var: doc_type
+          - count: 7
+            file: nchantdoffice/widgets/documents/filesystems.py
+            function: apply_rename_format
+            var: format_pattern
+          - count: 7
+            file: nchantdoffice/widgets/documents/atnrg/browsers.py
+            function: init_drawer_browser_config
+            var: cnt
+          - count: 8
+            file: nchantdoffice/widgets/documents/atnrg/browsers.py
+            function: init_drawer_url_inspection
+            var: cnt
+          rule: 'Switch abuse detected: 24 instances'
+          severity: medium
+        score: 0
+        status: fail
+        switch_abuse_count: 24
+      score: 0
+      status: fail
+    score: 0
+    status: fail
   testing:
     details:
-      coverage: 79.7752808988764
-      files_with_tests: 71
+      details:
+        coverage: 95.52238805970148
+        files_with_tests: 64
+        score: 100
+        status: pass
+        test_dir: tests
+        test_file_count: 85
+        total_source_files: 67
       score: 100
       status: pass
-      test_dir: tests
-      test_file_count: 84
-      total_source_files: 89
-    score: 100
-    status: pass
-  todo_tracking:
-    details:
-      issues:
-      - critical_todos:
-        - &id001
-          content: '#TODO:2 selection issue'
-          file: nchantdoffice/widgets/trees.py
-          has_priority: true
-          line: 89
-          priority: 2
-        fix: Resolve all TODO comments, especially TODO:0 items
-        rule: 'TODO/FIXME comments found: 36 (penalty: -3)'
-        severity: high
-        todos:
-        - *id001
-        - &id002
-          content: '# TODO: Implement document creation'
-          file: nchantdoffice/cli.py
-          has_priority: false
-          line: 38
-          priority: 999
-        - &id003
-          content: '# TODO: Implement document opening'
-          file: nchantdoffice/cli.py
-          has_priority: false
-          line: 48
-          priority: 999
-        - &id004
-          content: '# TODO: Implement export'
-          file: nchantdoffice/cli.py
-          has_priority: false
-          line: 59
-          priority: 999
-        - &id005
-          content: '# TODO: Implement save'
-          file: nchantdoffice/cli.py
-          has_priority: false
-          line: 71
-          priority: 999
-        - &id006
-          content: '# TODO: Implement list'
-          file: nchantdoffice/cli.py
-          has_priority: false
-          line: 79
-          priority: 999
-        - &id007
-          content: '# TODO: Implement info'
-          file: nchantdoffice/cli.py
-          has_priority: false
-          line: 88
-          priority: 999
-        - &id008
-          content: '# TODO: Implement search'
-          file: nchantdoffice/cli.py
-          has_priority: false
-          line: 100
-          priority: 999
-        - &id009
-          content: '# TODO: Implement validation'
-          file: nchantdoffice/cli.py
-          has_priority: false
-          line: 109
-          priority: 999
-        - &id010
-          content: '# TODO: Implement repair'
-          file: nchantdoffice/cli.py
-          has_priority: false
-          line: 151
-          priority: 999
-      penalty: 3
-      score: 11
-      sorted_todos:
-      - *id001
-      - *id002
-      - *id003
-      - *id004
-      - *id005
-      - *id006
-      - *id007
-      - *id008
-      - *id009
-      - *id010
-      - content: '# self.store.create_virtual_table() #TODO: relocat'
-        file: nchantdoffice/models.py
-        has_priority: false
-        line: 1106
-        priority: 999
-      - content: '# TODO: add import of things like notion and evernote in the future'
-        file: nchantdoffice/models.py
-        has_priority: false
-        line: 1261
-        priority: 999
-      - content: '# TODO: increment version'
-        file: nchantdoffice/models.py
-        has_priority: false
-        line: 1351
-        priority: 999
-      - content: '# TODO:  create child node and split off tabsdata'
-        file: nchantdoffice/models.py
-        has_priority: false
-        line: 1905
-        priority: 999
-      - content: '# TODO: how to integrate various formats across tools for specific
-          tool types like a local file to o'
-        file: nchantdoffice/dialogs/documents.py
-        has_priority: false
-        line: 241
-        priority: 999
-      - content: "# \t\t#TODO: Launch form builder wizard"
-        file: nchantdoffice/dialogs/documents.py
-        has_priority: false
-        line: 260
-        priority: 999
-      - content: "# \t\t\t#TODO: needs to be able to handle .csv, .xlsx, .xls, .tab,\
-          \ etc"
-        file: nchantdoffice/dialogs/documents.py
-        has_priority: false
-        line: 292
-        priority: 999
-      - content: '# TODO: fix initial loading of data duplicates'
-        file: nchantdoffice/widgets/catalogs.py
-        has_priority: false
-        line: 245
-        priority: 999
-      - content: '# TODO: how to integrate various formats across tools for specific
-          tool types like a local file to o'
-        file: nchantdoffice/widgets/panes/new.py
-        has_priority: false
-        line: 189
-        priority: 999
-      - content: '# TODO: develop the widget_code override based on unique options
-          selections'
-        file: nchantdoffice/widgets/panes/new.py
-        has_priority: false
-        line: 198
-        priority: 999
-      - content: '# TODO: add tag tracking'
-        file: nchantdoffice/widgets/panes/search.py
-        has_priority: false
-        line: 122
-        priority: 999
-      - content: '# TODO: add tag tracking'
-        file: nchantdoffice/widgets/panes/documents.py
-        has_priority: false
-        line: 121
-        priority: 999
-      - content: '# TODO: connect to service and get details'
-        file: nchantdoffice/widgets/config/accounts.py
-        has_priority: false
-        line: 121
-        priority: 999
-      - content: '# TODO: implement loading new nchantd office instance'
-        file: nchantdoffice/widgets/controls/toolboxes.py
-        has_priority: false
-        line: 173
-        priority: 999
-      - content: '# TODO: implement loading new nchantd office instance'
-        file: nchantdoffice/widgets/controls/toolboxes.py
-        has_priority: false
-        line: 225
-        priority: 999
-      - content: '# db = self.app.model.instance.db  # TODO: Switch to MultiInstance'
-        file: nchantdoffice/widgets/controls/toolbars.py
-        has_priority: false
-        line: 166
-        priority: 999
-      - content: '# TODO: if there are multiple notes then the position will need
-          to increment'
-        file: nchantdoffice/widgets/controls/toolbars.py
-        has_priority: false
-        line: 240
-        priority: 999
-      - content: '}  # TODO: get table fields'
-        file: nchantdoffice/widgets/documents/analytics/sources.py
-        has_priority: false
-        line: 131
-        priority: 999
-      - content: '# TODO:  will need to get configurations from user or NchantdService'
-        file: nchantdoffice/widgets/documents/atnrg/prompts.py
-        has_priority: false
-        line: 421
-        priority: 999
-      - content: 'if self.format_type == "plaintext":  # TODO: change to richtext'
-        file: nchantdoffice/widgets/documents/media/scripts.py
-        has_priority: false
-        line: 134
-        priority: 999
-      - content: '# TODO: need to connect to some basic web scrapping functions'
-        file: nchantdoffice/widgets/documents/atnrg/browsers/browsers.py
-        has_priority: false
-        line: 309
-        priority: 999
-      - content: '# TODO: this needs to be name and parent'
-        file: z-work_/nchantdtodo/dstruct.py
-        has_priority: false
-        line: 94
-        priority: 999
-      - content: '# TODO: This should be a function of a base model in nchantrs and
-          check against already stored tabs'
-        file: z-work_/nchantdtodo/dstruct.py
-        has_priority: false
-        line: 97
-        priority: 999
-      - content: 'df[''uuid''] = df[''nid''].apply(lambda x: uuid.UUID(str(uuid.uuid4())).hex)  #
-          TODO: upgrade to 7 or 8'
-        file: z-work_/nchantdtodo/dstruct.py
-        has_priority: false
-        line: 138
-        priority: 999
-      - content: '# TODO: need to create a node for today and then transfer information
-          to the timeline node for that '
-        file: z-work_/nchantdtodo/dstruct.py
-        has_priority: false
-        line: 143
-        priority: 999
-      - content: '#TODO: 2024-06-23 need to integrate into application configuration'
-        file: z-work_/nchantdtodo/models.py
-        has_priority: false
-        line: 151
-        priority: 999
-      status: partial
-      todo_count: 36
-    score: 11
-    status: partial
-  try_except_imports:
-    details:
-      issues: []
-      score: 100
-      status: pass
-      violation_count: 0
     score: 100
     status: pass
   type_annotations:
     details:
-      annotated_functions: 2
-      annotation_percentage: 0.0
-      issues:
-      - fix: Add type hints to function signatures and return types
-        rule: 'Type annotation coverage: 0.0%'
-        severity: medium
+      details:
+        issues:
+        - rule: low_coverage
+          severity: medium
+          total: 6407
+          typed: 7
+        score: 0
+        status: fail
+        total_functions: 6407
+        typed_functions: 7
+        untyped_functions: 6400
       score: 0
       status: fail
-      total_functions: 5263
     score: 0
     status: fail
-  type_check_pyright:
-    details:
-      issues: []
-      score: 100
-      status: pass
-    score: 100
-    status: pass
   wrapper_antipattern:
     details:
-      issues: []
+      details:
+        issues: []
+        score: 100
+        status: pass
+        wrapper_count: 5
       score: 100
       status: pass
-      total_functions: 5163
-      wrapper_count: 0
     score: 100
     status: pass
-overall_score: 62.93
+overall_score: 60.26
 project: nchantdoffice
 summary:
-  failing: 12
-  gitvein_projects_available: 68
-  passing: 25
-  total_dimensions: 46
+  failing: 14
+  partial: 7
+  passing: 21
+  total_auditors: 9
+  total_dimensions: 42
 versions:
-  project: 2e543a0
-  project_status: dirty
-  project_uncommitted_changes: 1
-  sasquatch: unknown
+  project: 06fe6dd
+  project_status: clean
+  project_uncommitted_changes: 0
+  sasquatch: a0fd9d5

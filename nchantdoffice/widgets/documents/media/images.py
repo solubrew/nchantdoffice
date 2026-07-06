@@ -44,7 +44,7 @@ log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "graphics/_data_", "images.yaml")
+pxcfg = join(here, "_data_", "images.yaml")
 
 
 class NchantdOfficeLightTable(NchantdBasketManager):
@@ -393,10 +393,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """ """
         super().__init__("Nchantd Image", parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeImage"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeImage").override(cfg))
 
     def initModel(self):
         """"""
@@ -414,15 +411,15 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """"""
         cfg = {
             "buttons": {
-                # 10: {"action": "convert_format", "handler": self.cmd_convert_format},
-                # 11: {"action": "convert_size", "handler": self.cmd_convert_size},
-                # 12: {"action": "convert_color", "handler": self.cmd_convert_color},
-                # 13: {"action": "crop_image", "handler": self.cmd_crop_image},
-                # 14: {"action": "generate_image", "handler": self.cmd_generate_image},
-                # 15: {
-                #     "action": "add_palette_document_nchantdpalette",
-                #     "handler": self.cmd_add_palette_document_nchantdpalette,
-                # },
+                10: {"action": "convert_format", "handler": self.cmd_convert_format},
+                11: {"action": "convert_size", "handler": self.cmd_convert_size},
+                12: {"action": "convert_color", "handler": self.cmd_convert_color},
+                13: {"action": "crop_image", "handler": self.cmd_crop_image},
+                14: {"action": "generate_image", "handler": self.cmd_generate_image},
+                15: {
+                    "action": "add_palette_document_nchantdpalette",
+                    "handler": self.cmd_add_palette_document_nchantdpalette,
+                },
                 49: "_insert_stretch",
             }
         }
