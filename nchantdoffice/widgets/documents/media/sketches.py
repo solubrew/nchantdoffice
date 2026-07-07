@@ -1014,43 +1014,43 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
     def init_canvas_config(self):
         """"""
-        items = self.toolbox_config.get(100, {}).get("items", {})
-        cnt = 0
-        items[cnt] = {}
-        cfg = {
-            "text": "Canvas Color",
-            "layout": "horizontal",
-            "handler": self.cmd_launch_color_sigil,
-        }
-        self.canvas_color_sigil_button = NchantdButton(self, cfg)
-        items[cnt]["widget"] = self.canvas_color_sigil_button
-        cnt += 1
-        items[cnt] = {}
-        cfg = {"label": "Canvas Size", "layout": "horizontal"}
-        self.canvas_size_set = NchantdLabeledDoubleSpinBox(self, cfg)
-        items[cnt]["widget"] = self.canvas_size_set
-        cnt += 1
-        items[cnt] = {}
-        self.get_layers()
-        cfg = {
-            "label": "Active Layer",
-            "layout": "horizontal",
-            "options": self.layers,
-        }
-        self.canvas_layer_select = NchantdDropDown(self, cfg)
-        items[cnt]["widget"] = self.canvas_layer_select
-        cnt += 1
-        items[cnt] = {}
-        cfg = {"layout": "horizontal", "data": self.layers}
-        logma.info(f"Layers {self.layers}")
-        self.layers_list_pane = NchantdLayersListPane(self, cfg)
-        items[cnt]["widget"] = self.layers_list_pane
-        cnt += 1
-        items[cnt] = {}
-        cfg = {"layout": "horizontal"}
-        self.layers_select = NchantdEditLayerPane(self, cfg)
-        items[cnt]["widget"] = self.layers_select
-        return items
+        # items = self.toolbox_config.get(100, {}).get("items", {})
+        # cnt = 0
+        # items[cnt] = {}
+        # cfg = {
+        #     "text": "Canvas Color",
+        #     "layout": "horizontal",
+        #     "handler": self.cmd_launch_color_sigil,
+        # }
+        # self.canvas_color_sigil_button = NchantdButton(self, cfg)
+        # items[cnt]["widget"] = self.canvas_color_sigil_button
+        # cnt += 1
+        # items[cnt] = {}
+        # cfg = {"label": "Canvas Size", "layout": "horizontal"}
+        # self.canvas_size_set = NchantdLabeledDoubleSpinBox(self, cfg)
+        # items[cnt]["widget"] = self.canvas_size_set
+        # cnt += 1
+        # items[cnt] = {}
+        # self.get_layers()
+        # cfg = {
+        #     "label": "Active Layer",
+        #     "layout": "horizontal",
+        #     "options": self.layers,
+        # }
+        # self.canvas_layer_select = NchantdDropDown(self, cfg)
+        # items[cnt]["widget"] = self.canvas_layer_select
+        # cnt += 1
+        # items[cnt] = {}
+        # cfg = {"layout": "horizontal", "data": self.layers}
+        # logma.info(f"Layers {self.layers}")
+        # self.layers_list_pane = NchantdLayersListPane(self, cfg)
+        # items[cnt]["widget"] = self.layers_list_pane
+        # cnt += 1
+        # items[cnt] = {}
+        # cfg = {"layout": "horizontal"}
+        # self.layers_select = NchantdEditLayerPane(self, cfg)
+        # items[cnt]["widget"] = self.layers_select
+        # return items
 
     def init_sketch_tools(self):
         """"""

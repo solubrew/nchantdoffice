@@ -31,6 +31,8 @@ from nchantdoffice.widgets.panes.documents import NchantdOfficeTabEditPane, Ncha
 from nchantdoffice.widgets.panes.documents import NchantdOfficeNodeEditPane
 from nchantdoffice.widgets.tabs import NchantdOfficeTab
 from pyffice.document import PyfficeDocument
+from nchantrs.widgets.media.editors.selectors import NchantdDropDown
+from nchantrs.widgets.controls.buttons import NchantdButton
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -64,6 +66,11 @@ class NchantdOfficeDocumentMixin:
         self.file_type = None
         self.toolbox = None
         self.toolbox_config = None
+        self.has_pro = (
+            getattr(self.app.model.user, "has_pro", False)
+            if self.app and self.app.model and self.app.model.user
+            else False
+        )
 
     def initModel(self, cfg=None, objects=None):
         """"""
@@ -215,20 +222,35 @@ class NchantdOfficeDocumentMixin:
         #         self.app = getattr(self.parent, "app", None)
         _buttons = {
             0: {"action": "show_pane_left", "handler": self.cmd_show_pane_left},
-            100: {"action": "save", "handler": self.cmd_save_tab},
+            100: {"action": "open_local", "handler": self.cmd_open_local_file},
+            101: {"action": "save", "handler": self.cmd_save_tab},
             150: {"action": "redo", "handler": self.cmd_redo},
             200: {"action": "undo", "handler": self.cmd_undo},
             400: {"action": "cancel", "handler": self.cmd_delete_tab},
             1000: {"action": "show_pane_right", "handler": self.cmd_show_pane_right},
         }
         logma.info(f"CFG {cfg}")
-        buttons = (
-            kahndor.Instruct(_buttons)
-            .override(self.config.dikt.get("buttons", {}))
-            .override(cfg.get("buttons", {}))
-            .dikt
-        )
+        buttons = kahndor.Instruct(self.config.dikt.get("buttons", {})).override(cfg.get("buttons", {})).dikt
         buttons.update(_buttons)
+        if self.has_pro:
+            cfg = {
+                "label": "Profile",
+                "layout": "horizontal",
+                "size": [10, 20],
+                "drop_down": {"size": [100, 20]},
+                "options": ["default"],
+            }
+            self.profile_select_entry = NchantdDropDown(self, cfg).initWidget()
+            buttons[1] = {"name": "get_pro", "widget": self.profile_select_entry}
+        else:
+            cfg = {
+                "text": "Get Pro",
+                "handler": self.app.view.switch_to_account_tab,
+                "height": 24,
+                "background_color": "green",
+            }
+            self.profile_select_entry = NchantdButton(self, cfg).initWidget()
+            buttons[1] = {"name": "get_pro_features", "widget": self.profile_select_entry}
         cfg = {"layout": "horizontal", "justify": "right"}
         buttons = {k: buttons[k] for k in sorted(buttons)}
         logma.warning(f"Buttons {buttons}")

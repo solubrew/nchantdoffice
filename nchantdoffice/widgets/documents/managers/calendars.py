@@ -505,7 +505,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             "handler": self.cmd_select_calendar_unit,
         }
         self.calendar_unit_select = NchantdDropDown(self, cus_cfg)
-        cfg["buttons"][1] = {
+        cfg["buttons"][10] = {
             "name": "select_calendar_unit",
             "type": "dropdown",
             "widget": self.calendar_unit_select,
@@ -567,11 +567,11 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         self.new_event_date_select = NchantdDateTimeSelect(self, cfg)
         items[cnt]["widget"] = self.new_event_date_select
         cnt += 1
-        if cnt not in items:
-            items[cnt] = deepcopy(default_action)
-        cfg = {"text": "Create New Event", "layout": "horizontal", "justify": "center"}
-        self.new_event_button = NchantdButton(self, cfg)
-        items[cnt]["widget"] = self.new_event_button
+        # if cnt not in items:
+        #     items[cnt] = deepcopy(default_action)
+        # cfg = {"text": "Create New Event", "layout": "horizontal", "justify": "center"}
+        # self.new_event_button = NchantdButton(self, cfg)
+        # items[cnt]["widget"] = self.new_event_button
         cnt += 1
         if cnt not in items:
             items[cnt] = deepcopy(default_action)
@@ -606,15 +606,15 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         self.date_select = NchantdDateTimeSelect(self, cfg)
         items[cnt]["widget"] = self.date_select
         cnt += 1
-        if cnt not in items:
-            items[cnt] = deepcopy(default_action)
-        cfg = {
-            "text": "Event is Required",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-        }
-        self.event_required_checkbox = NchantdCheckbox(self, cfg)
-        items[cnt]["widget"] = self.event_required_checkbox
+        # if cnt not in items:
+        #     items[cnt] = deepcopy(default_action)
+        # cfg = {
+        #     "text": "Event is Required",
+        #     "layout": "horizontal",
+        #     "size": ["auto", "auto"],
+        # }
+        # self.event_required_checkbox = NchantdCheckbox(self, cfg)
+        # items[cnt]["widget"] = self.event_required_checkbox
         cnt += 1
         if cnt not in items:
             items[cnt] = deepcopy(default_action)
@@ -686,15 +686,15 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         }
         self.calendar_account_name = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.calendar_account_name
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "text": "Connect to Service: ",
-            "layout": "horizontal",
-        }
-        self.service_connect_button = NchantdButton(self, cfg)
-        items[cnt]["widget"] = self.service_connect_button
+        # cnt += 1
+        # if cnt not in items:
+        #     items[cnt] = default_action
+        # cfg = {
+        #     "text": "Connect to Service: ",
+        #     "layout": "horizontal",
+        # }
+        # self.service_connect_button = NchantdButton(self, cfg)
+        # items[cnt]["widget"] = self.service_connect_button
         return items
 
     def init_drawer_quickstart(self):

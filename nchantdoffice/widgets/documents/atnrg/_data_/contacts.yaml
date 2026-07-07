@@ -8,15 +8,15 @@ NchantdRolodex:
                 view:
     toolbox:
       100:
-          title: Configuration
+          title: Contact Manager Configuration
           items:
               0: {"action": "", "type": ""}
       200:
-          title: Configuration
+          title: Contact Group Configuration
           items:
               0: {"action": "", "type": ""}
       300:
-          title: Configuration
+          title: Contact Configuration
           items:
               0: {"action": "", "type": ""}
       400:
@@ -24,10 +24,6 @@ NchantdRolodex:
           items:
               0: {"action": "", "type": ""}
       500:
-          title: Configuration
-          items:
-              0: {"action": "", "type": ""}
-      600:
-          title: Configuration
+          title: Quick Start
           items:
               0: {"action": "", "type": ""}

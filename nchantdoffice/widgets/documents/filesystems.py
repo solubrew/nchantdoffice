@@ -152,7 +152,7 @@ class NchantdCompressPane(NchantdPane):
 
     def set_from_folder(self):
         """"""
-        #if self.parent.fs_tree is None:
+        # if self.parent.fs_tree is None:
         #    self.parent.fs_tree =
         try:
             cfg = {
@@ -565,10 +565,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         """ """
         super().__init__("Nchantd Files", parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeFileSystem"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeFileSystem").override(cfg))
         self.cloud_toolbar = None
         self.compare_fs = False
         self.show_automations = False
@@ -603,19 +600,19 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         }
         ffes_cfg = {"handler": self.cmd_on_file_search_method_change, "action": "select_file_method"}
         self.flatten_files_enable_spin = NchantdEnableSpinBox(self, ffes_cfg)
-        # cfg["buttons"][13] = {
-        #     "label": "Flatten Files",
-        #     "action": "flatten_files",
-        #     "handler": self.cmd_flatten_files,
-        #     "widget": self.flatten_files_enable_spin,
-        # }
+        cfg["buttons"][13] = {
+            "label": "Flatten Files",
+            "action": "flatten_files",
+            "handler": self.cmd_flatten_files,
+            "widget": self.flatten_files_enable_spin,
+        }
         fsms_cfg = {"label": "Search Method", "options": self.get_file_search_methods(), "layout": "horizontal"}
         self.file_search_method_select = NchantdComboEditor(self, fsms_cfg)
-        # cfg["buttons"][14] = {
-        #     "action": "select_file_method",
-        #     "widget": self.file_search_method_select,
-        #     "handler": self.cmd_on_file_search_method_change,
-        # }
+        cfg["buttons"][14] = {
+            "action": "select_file_method",
+            "widget": self.file_search_method_select,
+            "handler": self.cmd_on_file_search_method_change,
+        }
         super().initView(cfg)
         self.table_layout = pyqt.QHBoxLayout()
         cfg = {}

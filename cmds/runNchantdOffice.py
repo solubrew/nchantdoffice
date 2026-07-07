@@ -75,7 +75,11 @@ pxcfg = join(here, "_data_", "runMain.yaml")
 
 def restart():
     """"""
-    shutil.rmtree(Path.home() / ".local" / "share" / "nchantdoffice")
+    try:
+        shutil.rmtree(Path.home() / ".local" / "share" / "nchantdoffice")
+        logma.info(f"Removal Complete")
+    except Exception as e:
+        logma.info(f"Removal Failed")
 
 
 def run(args):
@@ -85,7 +89,8 @@ def run(args):
     python runNchantdOffice.py scratch - continue file
     python runNchantdOffice.py - use the wizard to setup
     """
-    # restart()
+    # if len(args) > 2:
+    restart()
     app = NchantdOfficeCloak
     wizard = NchantdOfficeApplicationStartupWizard
     nchantment("NchantdOffice", args, app, None, wizard)

@@ -391,17 +391,17 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
         default_action = {"action": "insert_generic_action", "type": "custom"}
-        if cnt not in items:
-            items[cnt] = default_action
-
-        cfg = {
-            "label": "Pretty Print",
-            "layout": "vertical",
-            "handler": self.cmd_pretty_print_selected_text,
-        }
-        self.pretty_print = NchantdButton(self, cfg)
-        items[cnt]["widget"] = self.pretty_print
-        cnt += 1
+        # if cnt not in items:
+        #     items[cnt] = default_action
+        #
+        # cfg = {
+        #     "label": "Pretty Print",
+        #     "layout": "vertical",
+        #     "handler": self.cmd_pretty_print_selected_text,
+        # }
+        # self.pretty_print = NchantdButton(self, cfg)
+        # items[cnt]["widget"] = self.pretty_print
+        # cnt += 1
         if cnt not in items:
             items[cnt] = default_action
 
@@ -471,7 +471,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.page_layout_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.page_layout_select
         cnt += 1
-
         return items
 
     def init_drawer_selection_config(self):

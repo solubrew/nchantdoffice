@@ -90,6 +90,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         # We remember the intended URL and re-issue it from loadFinished.
         self._target_url = None
         self._nav_retries = 0
+        self.pinned = False
 
     def initModel(self):
         """"""
@@ -101,21 +102,20 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def initView(self, cfg=None):
         """"""
-        if not cfg:
-            cfg = {}
+        cfg = cfg or {}
         if "buttons" not in cfg:
             cfg["buttons"] = {}
-        cfg["buttons"][0] = {"action": "start_server", "handler": self.cmd_start_server}
-        cfg["buttons"][1] = {"action": "restart_server", "handler": self.cmd_restart_server}
-        cfg["buttons"][2] = {"action": "stop_server", "handler": self.cmd_stop_server}
-        cfg["buttons"][3] = {"action": "new_notebook", "handler": self.cmd_new_notebook}
-        cfg["buttons"][4] = {
-            "action": "start_kernel",
-            "handler": self.cmd_start_kernel,
-        }  # TODO consolidate to only restart
-        cfg["buttons"][5] = {"action": "interrupt_kernel", "handler": self.cmd_interrupt_kernel}
-        cfg["buttons"][8] = "_insert_stretch"
-        cfg["buttons"][9] = {"action": "open_local", "handler": self.cmd_open_local_file}
+        # cfg["buttons"][10] = {"action": "start_server", "handler": self.cmd_start_server}
+        # cfg["buttons"][11] = {"action": "restart_server", "handler": self.cmd_restart_server}
+        # cfg["buttons"][12] = {"action": "stop_server", "handler": self.cmd_stop_server}
+        # cfg["buttons"][13] = {"action": "new_notebook", "handler": self.cmd_new_notebook}
+        # cfg["buttons"][14] = {
+        #     "action": "start_kernel",
+        #     "handler": self.cmd_start_kernel,
+        # }  # TODO consolidate to only restart
+        # cfg["buttons"][15] = {"action": "interrupt_kernel", "handler": self.cmd_interrupt_kernel}
+        cfg["buttons"][17] = {"action": "web_page_pin", "handler": self.cmd_pin_page, "value": self.cmd_check_is_pinned}
+        cfg["buttons"][49] = "_insert_stretch"
         # This document hosts a single expanding web view, so opt this container's
         # layout out of the base AlignTop|AlignLeft (which would otherwise pin the
         # viewer to its sizeHint and collapse it to a blank strip).
@@ -159,134 +159,19 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.initView()
         return self
 
-    def init_drawer_document_config(self):
+    def cmd_check_is_pinned(self, event, *args, **kwargs):
         """"""
-        items = self.toolbox_config[100].get("items", {})
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        cnt = 0
+        return self
 
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {
-            "label": "Server Port: ",
-            "layout": "horizontal",
-            "range": [8000, 9999],
-            "default": self.server_port,
-            "handler": self.cmd_set_server_port,
-        }
-        self.port_spin = NchantdLabeledSpinBox(self, cfg).initWidget()
-        items[cnt]["widget"] = self.port_spin
-        cnt += 1
-
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {
-            "label": "Kernel: ",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": self.get_available_kernels()},
-            "handler": self.cmd_select_kernel,
-        }
-        self.kernel_select = NchantdDropDown(self, cfg).initWidget()
-        items[cnt]["widget"] = self.kernel_select
-        cnt += 1
-
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {
-            "text": "Auto-start Server",
-            "layout": "horizontal",
-            "handler": self.cmd_toggle_autostart,
-        }
-        self.autostart_checkbox = NchantdCheckbox(self, cfg).initWidget()
-        items[cnt]["widget"] = self.autostart_checkbox
-        cnt += 1
-
-        return items
-
-    def init_drawer_selection_config(self):
+    def cmd_pin_page(self, event, *args, **kwargs):
         """"""
-        items = self.toolbox_config[200].get("items", {})
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        cnt = 0
-
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {"text": "Server Status: ", "layout": "horizontal"}
-        self.server_status_label = NchantdLabel(self, cfg).initWidget()
-        items[cnt]["widget"] = self.server_status_label
-        cnt += 1
-
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {"text": "Kernel Status: ", "layout": "horizontal"}
-        self.kernel_status_label = NchantdLabel(self, cfg).initWidget()
-        items[cnt]["widget"] = self.kernel_status_label
-        cnt += 1
-
-        return items
-
-    def init_drawer_object_config(self):
+        self.pin_page()
+        return self
+    def cmd_unpin_page(self, event, *args, **kwargs):
         """"""
-        items = self.toolbox_config[300].get("items", {})
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        cnt = 0
-
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {
-            "label": "Cell Type: ",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": ["Code", "Markdown", "Raw"]},
-        }
-        self.cell_type_select = NchantdDropDown(self, cfg).initWidget()
-        items[cnt]["widget"] = self.cell_type_select
-        cnt += 1
-
-        return items
-
-    def init_drawer_quickstart(self):
-        """"""
-        items = self.toolbox_config[400].get("items", {})
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        cnt = 0
-
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {"text": "Quick Start Guide", "layout": "horizontal"}
-        quickstart_label = NchantdLabel(self, cfg).initWidget()
-        items[cnt]["widget"] = quickstart_label
-        cnt += 1
-
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {"text": "1. Click 'Start Server' to launch Jupyter", "layout": "horizontal"}
-        step1_label = NchantdLabel(self, cfg).initWidget()
-        items[cnt]["widget"] = step1_label
-        cnt += 1
-
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {"text": "2. Click 'New Notebook' to create a notebook", "layout": "horizontal"}
-        step2_label = NchantdLabel(self, cfg).initWidget()
-        items[cnt]["widget"] = step2_label
-        cnt += 1
-
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {"text": "3. Or 'Open Local' to load existing .ipynb file", "layout": "horizontal"}
-        step3_label = NchantdLabel(self, cfg).initWidget()
-        items[cnt]["widget"] = step3_label
-        cnt += 1
-
-        return items
-
-    def init_toolbox(self):
-        """"""
-        super().init_toolbox()
-        self.toolbox_config[100]["items"] = self.init_drawer_document_config()
-        self.toolbox_config[200]["items"] = self.init_drawer_selection_config()
-        self.toolbox_config[300]["items"] = self.init_drawer_object_config()
-        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+        super().unpin_page()
+        self.document.unpin_page()
+        return self
 
     # ========== Command Handlers ==========
 
@@ -373,7 +258,144 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 self.config.dikt["autostart_server"] = autostart
         return self
 
+    def init_drawer_document_config(self):
+        """"""
+        items = self.toolbox_config[100].get("items", {})
+        default_action = {"action": "insert_generic_action", "type": "custom"}
+        cnt = 0
+
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {
+            "label": "Server Port: ",
+            "layout": "horizontal",
+            "range": [8000, 9999],
+            "default": self.server_port,
+            "handler": self.cmd_set_server_port,
+        }
+        self.port_spin = NchantdLabeledSpinBox(self, cfg)
+        items[cnt]["widget"] = self.port_spin
+        cnt += 1
+
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {
+            "label": "Kernel: ",
+            "layout": "horizontal",
+            "combobox": {"size": ["auto", "auto"], "options": self.get_available_kernels()},
+            "handler": self.cmd_select_kernel,
+        }
+        self.kernel_select = NchantdDropDown(self, cfg)
+        items[cnt]["widget"] = self.kernel_select
+        cnt += 1
+
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {
+            "text": "Auto-start Server",
+            "layout": "horizontal",
+            "handler": self.cmd_toggle_autostart,
+        }
+        # self.autostart_checkbox = NchantdCheckbox(self, cfg)  # .initWidget()
+        # items[cnt]["widget"] = self.autostart_checkbox
+        cnt += 1
+
+        return items
+
+    def init_drawer_selection_config(self):
+        """"""
+        items = self.toolbox_config[200].get("items", {})
+        default_action = {"action": "insert_generic_action", "type": "custom"}
+        cnt = 0
+
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {"text": "Server Status: ", "layout": "horizontal"}
+        self.server_status_label = NchantdLabel(self, cfg)
+        items[cnt]["widget"] = self.server_status_label
+        cnt += 1
+
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {"text": "Kernel Status: ", "layout": "horizontal"}
+        self.kernel_status_label = NchantdLabel(self, cfg)
+        items[cnt]["widget"] = self.kernel_status_label
+        cnt += 1
+
+        return items
+
+    def init_drawer_object_config(self):
+        """"""
+        items = self.toolbox_config[300].get("items", {})
+        default_action = {"action": "insert_generic_action", "type": "custom"}
+        cnt = 0
+
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {
+            "label": "Cell Type: ",
+            "layout": "horizontal",
+            "combobox": {"size": ["auto", "auto"], "options": ["Code", "Markdown", "Raw"]},
+        }
+        self.cell_type_select = NchantdDropDown(self, cfg)
+        items[cnt]["widget"] = self.cell_type_select
+        cnt += 1
+
+        return items
+
+    def init_drawer_quickstart(self):
+        """"""
+        items = self.toolbox_config[400].get("items", {})
+        default_action = {"action": "insert_generic_action", "type": "custom"}
+        cnt = 0
+
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {"text": "Quick Start Guide", "layout": "horizontal"}
+        quickstart_label = NchantdLabel(self, cfg).initWidget()
+        items[cnt]["widget"] = quickstart_label
+        cnt += 1
+
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {"text": "1. Click 'Start Server' to launch Jupyter", "layout": "horizontal"}
+        step1_label = NchantdLabel(self, cfg).initWidget()
+        items[cnt]["widget"] = step1_label
+        cnt += 1
+
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {"text": "2. Click 'New Notebook' to create a notebook", "layout": "horizontal"}
+        step2_label = NchantdLabel(self, cfg).initWidget()
+        items[cnt]["widget"] = step2_label
+        cnt += 1
+
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {"text": "3. Or 'Open Local' to load existing .ipynb file", "layout": "horizontal"}
+        step3_label = NchantdLabel(self, cfg).initWidget()
+        items[cnt]["widget"] = step3_label
+        cnt += 1
+
+        return items
+
+    def init_toolbox(self):
+        """"""
+        super().init_toolbox()
+        self.toolbox_config[100]["items"] = self.init_drawer_document_config()
+        self.toolbox_config[200]["items"] = self.init_drawer_selection_config()
+        self.toolbox_config[300]["items"] = self.init_drawer_object_config()
+        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+
     # ========== Server Management Methods ==========
+    def pin_page(self):
+        """"""
+        if self.pinned is False:
+            self.pinned = True
+        else:
+            self.pinned = False
+        self.document.set_pinned(self.pinned)
+        return self
 
     def start_jupyter_server(self, port=None):
         """Start the Jupyter notebook server"""
@@ -445,8 +467,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 cwd = dirname(self.file_path)
 
             logma.info(
-                f"[notebook] launching Jupyter | argv={cmd} | "
-                f"cmdline={' '.join(cmd)} | cwd={cwd or os.getcwd()}"
+                f"[notebook] launching Jupyter | argv={cmd} | " f"cmdline={' '.join(cmd)} | cwd={cwd or os.getcwd()}"
             )
 
             # Start the subprocess. Merge stderr into stdout and decode as text so
@@ -608,9 +629,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
             def _on_load_finished(ok):
                 cur = view.url().toString()
-                logma.info(
-                    f"[notebook] webview loadFinished ok={ok} | current_url={cur} | target={self._target_url}"
-                )
+                logma.info(f"[notebook] webview loadFinished ok={ok} | current_url={cur} | target={self._target_url}")
                 # Geometry check: distinguishes a size-collapse (fill/size-policy
                 # problem -> view is ~0 px) from a paint problem (view has real
                 # size but shows nothing -> GPU/compositor issue).

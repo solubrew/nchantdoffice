@@ -212,7 +212,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
             current_pos = int(self.app.view.panes[tree].tree.model.current_node.position)
             pos = current_pos + 1
             # Update positions of existing siblings that come after the current position
-            self._increment_sibling_positions(pid, current_pos)
+            #self._increment_sibling_positions(pid, current_pos)
         elif cfg["lookup_code_txt"] in ("add_node_child_app_childnode"):
             pid = self.app.view.panes[tree].tree.model.current_node.nid
             pos = int(self.app.view.panes[tree].tree.model.current_node.max_position) + 1

@@ -244,12 +244,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.formula_bar = NchantdLabeledEntry(self, cfg)
         if self.file_path is None or not exists(self.file_path):
             cfg = {"buttons": {49: "_insert_stretch"}, "layout": "vertical"}
-        cfg["buttons"][10] = {
-            "action": "formula_bar",
-            "name": "formula_bar",
-            "type": "entry_editor",
-            "widget": self.formula_bar,
-        }
+
         dscfg = {
             "label": "Select Data Set: ",
             "layout": "horizontal",
@@ -257,8 +252,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "options": self.get_datasets(),
         }
         self.dataset_select = NchantdDropDown(self.parent, dscfg)
-        cfg["buttons"][11] = {"action": "select_data_set", "widget": self.dataset_select}
-
+        cfg["buttons"][10] = {"action": "select_data_set", "widget": self.dataset_select}
+        cfg["buttons"][11] = {
+            "action": "formula_bar",
+            "name": "formula_bar",
+            "type": "entry_editor",
+            "widget": self.formula_bar,
+        }
         # if self.document.is_saved:  # is_data_set
         #     cfg["buttons"][200] = {"action": "show_data_set"}
         super().initView(cfg)
@@ -473,17 +473,17 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.font_config_bar = NchantdFontConfigBar(self, cfg)
         items[cnt]["widget"] = self.font_config_bar
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "text": "Set Cell Background Color",
-            "layout": "horizontal",
-            "default": self.config.dikt.get("num_rows", 20),
-            "handler": self.cmd_on_click_default_cell_background_color_button,
-        }
-        self.cell_default_background_color_button = NchantdButton(self, cfg)
-        items[cnt]["widget"] = self.cell_default_background_color_button
-        cnt += 1
+        # if cnt not in items:
+        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        # cfg = {
+        #     "text": "Set Cell Background Color",
+        #     "layout": "horizontal",
+        #     "default": self.config.dikt.get("num_rows", 20),
+        #     "handler": self.cmd_on_click_default_cell_background_color_button,
+        # }
+        # self.cell_default_background_color_button = NchantdButton(self, cfg)
+        # items[cnt]["widget"] = self.cell_default_background_color_button
+        # cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {
@@ -549,12 +549,12 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.formula = NchantdEntryBox(self, cfg)
         items[cnt]["widget"] = self.formula
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {"text": "Set Formulas to Auto-Calculate", "size": ["auto", "auto"]}
-        # self.autocalculate_checkbox = NchantdCheckbox(self, cfg)
-        # items[cnt]["widget"] = self.autocalculate_checkbox
-        cnt += 1
+        # if cnt not in items:
+        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        # cfg = {"text": "Set Formulas to Auto-Calculate", "size": ["auto", "auto"]}
+        # # self.autocalculate_checkbox = NchantdCheckbox(self, cfg)
+        # # items[cnt]["widget"] = self.autocalculate_checkbox
+        # cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {
@@ -567,6 +567,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cnt += 1
         return items
 
+    #
     def init_drawer_cell_config(self):
         """"""
         items = self.toolbox_config[300].get("items", {})
@@ -580,16 +581,16 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.selected_cell_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.selected_cell_entry
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "text": "Merge Cells: ",
-            "layout": "horizontal",
-            "handler": self.cmd_merge_cells,
-        }  #
-        self.selected_cell_merge_button = NchantdButton(self, cfg)
-        items[cnt]["widget"] = self.selected_cell_merge_button
-        cnt += 1
+        # if cnt not in items:
+        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        # cfg = {
+        #     "text": "Merge Cells: ",
+        #     "layout": "horizontal",
+        #     "handler": self.cmd_merge_cells,
+        # }  #
+        # self.selected_cell_merge_button = NchantdButton(self, cfg)
+        # items[cnt]["widget"] = self.selected_cell_merge_button
+        # cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {
@@ -610,16 +611,16 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.font_config_bar = NchantdFontConfigBar(self, cfg)
         items[cnt]["widget"] = self.font_config_bar
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "text": "Set Cell Background Color",
-            "layout": "horizontal",
-            "handler": self.cmd_font_color_select,
-        }
-        self.cell_background_color_button = NchantdButton(self, cfg)
-        items[cnt]["widget"] = self.cell_background_color_button
-        cnt += 1
+        # if cnt not in items:
+        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        # cfg = {
+        #     "text": "Set Cell Background Color",
+        #     "layout": "horizontal",
+        #     "handler": self.cmd_font_color_select,
+        # }
+        # self.cell_background_color_button = NchantdButton(self, cfg)
+        # items[cnt]["widget"] = self.cell_background_color_button
+        # cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {"label": "Border Format"}
@@ -629,19 +630,20 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # TODO show a thumbail of the object
         return items
 
+    #
     def init_drawer_quickstart(self):
         """"""
         items = self.toolbox_config[500].get("items", {})
         cnt = 0
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Quickstart List",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-        }
+        # if cnt not in items:
+        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        # cfg = {
+        #     "label": "Quickstart List",
+        #     "layout": "horizontal",
+        #     "size": ["auto", "auto"],
+        # }
         # self.document_compatability = NchantdCheckbox(self, cfg)
-        items[cnt]["widget"] = self.document_compatability
+        # items[cnt]["widget"] = self.document_compatability
         cnt += 1
 
         return items

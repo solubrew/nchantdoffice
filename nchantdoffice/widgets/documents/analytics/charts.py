@@ -168,26 +168,20 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         self.chart_data_view_select = NchantdDropDown(self, dsvs_cfg).initWidget()
         if cfg.get("buttons", None) is None:
             cfg["buttons"] = {}
-        cfg["buttons"][0] = {"action": "show_config_pane", "type": "custom", "handler": self.cmd_toggle_config_pane}
-        cfg["buttons"][1] = {"action": "show_data_pane", "type": "custom", "handler": self.cmd_toggle_data_pane}
-        cfg["buttons"][2] = {
+        cfg["buttons"][10] = {"action": "show_config_pane", "type": "custom", "handler": self.cmd_toggle_config_pane}
+        cfg["buttons"][11] = {"action": "show_data_pane", "type": "custom", "handler": self.cmd_toggle_data_pane}
+        cfg["buttons"][12] = {
             "action": "show_full_chart_pane",
             "type": "custom",
             "handler": self.cmd_toggle_full_screen_pane,
         }
-        cfg["buttons"][3] = {
-            "action": "insert_generic_action",
+        cfg["buttons"][13] = {
+            "action": "search_data_sources",
             "type": "custom",
-            "widget": self.chart_data_set_select,
+            "handler": self.cmd_search_data_sources,
         }
-        cfg["buttons"][4] = {
-            "action": "insert_generic_action",
-            "type": "custom",
-            "widget": self.chart_data_view_select,
-        }
-        cfg["buttons"][5] = {
-            "action": "add_data_view",
-        }
+        cfg["buttons"][14] = {"action": "select_data_set", "type": "custom", "widget": self.chart_data_set_select}
+        cfg["buttons"][15] = {"action": "select_data_view", "type": "custom", "widget": self.chart_data_view_select}
         cfg["buttons"][49] = "_insert_stretch"
         super().initView(cfg)
         cfg = {}
@@ -206,8 +200,15 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         self.initView()
         return self
 
+    def cmd_add_data_view(self):
+        """"""
+
+    def cmd_search_data_sources(self):
+        """"""
+
     def cmd_toggle_config_pane(self, event, *args, **kwargs):
         """"""
+        # TODO: starts hear but once toggle is used it won't come back to the right size
         self.set_pane("config")
         return self
 
@@ -223,10 +224,14 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     def get_data_sources(self):
         """"""
+        # TODO: need to connect to a starter set of data sources...sample sets and non-key data sets
+        # need to have a download function for datasets that have not been pulled in before
+        #
         return ["Supermarket", "CoinGecko"]
 
     def get_data_views(self):
         """"""
+        # TODO: list out and define various views based on connected data sources
         return ["Supermarket", "CoinGecko"]
 
     def get_themes(self):
@@ -262,10 +267,9 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             "combobox": {"size": ["auto", "auto"], "options": options},
             "handler": self.cmd_set_compatibility,
         }
-        self.compatibility_select = NchantdDropDown(self, cfg).initWidget()
+        self.compatibility_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.compatibility_select
         cnt += 1
-
         if cnt not in items:
             items[cnt] = default_action.copy()
         cfg = {
@@ -274,7 +278,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             "combobox": {"size": ["auto", "auto"], "options": self.get_themes()},
             "handler": self.cmd_set_theme,
         }
-        self.default_theme_select = NchantdDropDown(self, cfg).initWidget()
+        self.default_theme_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.default_theme_select
         cnt += 1
         if cnt not in items:
@@ -285,7 +289,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             "combobox": {"size": ["auto", "auto"], "options": self.get_palettes()},
             "handler": self.cmd_set_palette,
         }
-        self.default_palette_select = NchantdDropDown(self, cfg).initWidget()
+        self.default_palette_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.default_palette_select
         cnt += 1
         if cnt not in items:
@@ -296,13 +300,13 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             "combobox": {"size": ["auto", "auto"], "options": self.get_types()},
             "handler": self.cmd_set_chart_type,
         }
-        self.default_type_select = NchantdDropDown(self, cfg).initWidget()
+        self.default_type_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.default_type_select
         cnt += 1
         if cnt not in items:
             items[cnt] = default_action.copy()
         cfg = {"layout": "horizontal"}
-        self.chart_insert_object_pane = NchantdNewObjectPane(self, cfg).initWidget()
+        self.chart_insert_object_pane = NchantdNewObjectPane(self, cfg)
         items[cnt]["widget"] = self.chart_insert_object_pane
         cnt += 1
         return items
@@ -321,21 +325,22 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             "combobox": {"size": ["auto", "auto"], "options": options},
             "handler": self.cmd_select_data_source,
         }
-        self.chart_data_sources_select = NchantdDropDown(self, cfg).initWidget()
+        self.chart_data_sources_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.chart_data_sources_select
         cnt += 1
         if cnt not in items:
             items[cnt] = default_action.copy()
         cfg = {"layout": "horizontal"}
-        self.chart_data_sources_edit_pane = NchantdSourceEditPane(self, cfg).initWidget()
+        self.chart_data_sources_edit_pane = NchantdSourceEditPane(self, cfg)
         items[cnt]["widget"] = self.chart_data_sources_edit_pane
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        data = [["SuperMarket"]]
-        cfg = {"data": data}
-        self.chart_sample_data = NchantdTable(self, cfg).initWidget()
-        items[cnt]["widget"] = self.chart_sample_data
+        # TODO fix NchantdTable uncontained widget issue
+        # if cnt not in items:
+        #     items[cnt] = default_action.copy()
+        # data = [["SuperMarket"]]
+        # cfg = {"data": data}
+        # self.chart_sample_data = NchantdTable(self, cfg)
+        # items[cnt]["widget"] = self.chart_sample_data
         cnt += 1
         return items
 
@@ -347,13 +352,13 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         if cnt not in items:
             items[cnt] = default_action.copy()
         cfg = {"data": ["Node: Name"]}
-        self.chart_where_used_list = NchantdWhereUsedListPane(self, cfg).initWidget()
+        self.chart_where_used_list = NchantdWhereUsedListPane(self, cfg)
         items[cnt]["widget"] = self.chart_where_used_list
         cnt += 1
         if cnt not in items:
             items[cnt] = default_action.copy()
         cfg = {"data": ["Node: Name"]}
-        self.chart_sources_list = NchantdSourcesListPane(self, cfg).initWidget()
+        self.chart_sources_list = NchantdSourcesListPane(self, cfg)
         items[cnt]["widget"] = self.chart_sources_list
         cnt += 1
         return items

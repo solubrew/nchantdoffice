@@ -31,6 +31,7 @@ from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.tables.lists import NchantdList
 from pyffice.contacts.contacts import PyfficeContact, PyfficeRolodex
+from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -156,16 +157,15 @@ class NchantdOfficeContact(NchantdWidget):
         return self
 
 
-class NchantdOfficeRolodex(NchantdManager):
+class NchantdOfficeRolodex(NchantdOfficeDocument):
     """Manager for all contacts - provides CRUD, search, and import/export"""
 
     def __init__(self, parent=None, cfg=None):
         """ """
         icfg = {}
-        super().__init__(parent, icfg)
+        super().__init__("Nchantd Rolodex", parent, icfg)
         self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeRolodex").override(cfg)
-
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeRolodex").override(cfg))
         self.contacts = []  # List of NchantdOfficeContact objects
         self.contact_panes = {}  # Dict of contact_id -> ContactPane widget
         self.contacts_group = None
@@ -179,53 +179,54 @@ class NchantdOfficeRolodex(NchantdManager):
     def initModel(self, cfg=None):
         """"""
         super().initModel(cfg)
-        self.document = PyfficeRolodex()  # self.app.model.store)
-        self.load_contacts()
+        document = {"document": self.config.dikt.get("document", {})}
+        self.document = self.app.model.codex.init_contacts(document)
+        self.document.load_document()
+        self.context_menu_name = "context.document.files"
+        if self.context_menu_name is not None:
+            self.initialize_context_menu(self.context_menu_name)
+        # self.document = PyfficeRolodex()  # self.app.model.store)
+        # self.load_contacts()
         return self
 
     def initView(self, cfg=None):
         """"""
-        super().initView(cfg)
-
-        # Toolbar
-        toolbar_layout = pyqt.QHBoxLayout()
-
+        cfg = cfg or {}
+        if "buttons" not in cfg:
+            cfg["buttons"] = {}
         search_cfg = {"label": "Search:", "layout": "horizontal", "text": ""}
-        self.search_entry = NchantdLabeledEntry(self, search_cfg).initWidget()
-        if hasattr(self.search_entry, "entry"):
-            self.search_entry.entry.textChanged.connect(self.cmd_search_contacts)
-        toolbar_layout.addWidget(self.search_entry)
-
+        self.search_entry = NchantdLabeledEntry(self, search_cfg)
+        cfg["buttons"][10] = {"action": "search_contacts", "widget": self.search_entry}
         filter_cfg = {
             "label": "Filter:",
             "layout": "horizontal",
             "combobox": {"options": ["All", "Recent", "Favorites", "Company"]},
             "handler": self.cmd_filter_contacts,
         }
-        self.filter_dropdown = NchantdDropDown(self, filter_cfg).initWidget()
-        toolbar_layout.addWidget(self.filter_dropdown)
+        self.filter_dropdown = NchantdDropDown(self, filter_cfg)
+        cfg["buttons"][11] = {"action": "filter_contacts", "widget": self.filter_dropdown}
 
         add_cfg = {"text": "Add Contact", "handler": self.cmd_add_contact}
-        self.add_button = NchantdButton(self, add_cfg).initWidget()
-        toolbar_layout.addWidget(self.add_button)
+        self.add_button = NchantdButton(self, add_cfg)
+        cfg["buttons"][12] = {"action": "add_contact", "widget": self.add_button}
 
         import_cfg = {"text": "Import", "handler": self.cmd_import_contacts}
-        self.import_button = NchantdButton(self, import_cfg).initWidget()
-        toolbar_layout.addWidget(self.import_button)
-
+        self.import_button = NchantdButton(self, import_cfg)
+        cfg["buttons"][13] = {"action": "import_contacts", "widget": self.import_button}
         export_cfg = {"text": "Export", "handler": self.cmd_export_contacts}
-        self.export_button = NchantdButton(self, export_cfg).initWidget()
-        toolbar_layout.addWidget(self.export_button)
-
-        self.layout.addLayout(toolbar_layout)
-
+        self.export_button = NchantdButton(self, export_cfg)
+        cfg["buttons"][14] = {"action": "export_contacts", "widget": self.export_button}
+        cfg["buttons"][49] = "_insert_stretch"
+        super().initView(cfg)
         # Most likely contacts section
         self.contact_likely_group = NchantdHScrollGroupBox()
+        # TODO: create contact Card Widget
         self.contact_likely_group.setTitle(f"Most Likely Contacts")
         self.layout.addLayout(self.contact_likely_group.layout)
 
         # All contacts section
         self.contacts_group = NchantdVScrollGroupBox(self)
+        # TODO: add a table
         self.contacts_group.setTitle(f"All Contacts ({len(self.contacts)})")
         self.layout.addLayout(self.contacts_group.layout)
 
@@ -239,6 +240,27 @@ class NchantdOfficeRolodex(NchantdManager):
         self.initModel()
         self.initView()
         return self
+
+    def init_drawer_document_config(self):
+        """"""
+        items = self.toolbox_config[100].get("items", {})
+        cnt = 0
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+
+    def init_group_manager(self):
+        """"""
+        items = self.toolbox_config[200].get("items", {})
+        cnt = 0
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+
+    def init_contact_manager(self):
+        """"""
+        items = self.toolbox_config[300].get("items", {})
+        cnt = 0
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
 
     # ========== CRUD Operations ==========
 

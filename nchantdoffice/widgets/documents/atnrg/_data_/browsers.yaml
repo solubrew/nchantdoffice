@@ -14,13 +14,13 @@ NchantdOfficeWebBrowser:
           title: Form Control
           items:
               0: {"action": "fill_forms", "type": ""}
-#      400:
-#          title: Developer Tools
-#          items:
-#              0: {"action": "open_document_web_source", "type": "button"}
-#              1: {"action": "crawl_page", "type": "button"}
-#              2: {"name": "page_resource_list", "type": "list"}
-#      500:
-#          title: Nchantd Browser Quickstart
-#          items:
-#              0: {"action": "", "type": ""}
+      400:
+          title: Developer Tools
+          items:
+              0: {"action": "open_document_web_source", "type": "button"}
+              1: {"action": "crawl_page", "type": "button"}
+              2: {"name": "page_resource_list", "type": "list"}
+      500:
+          title: Nchantd Browser Quickstart
+          items:
+              0: {"action": "", "type": ""}
