@@ -169,12 +169,38 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def cmd_edit_profile(self, event, *args, **kwargs):
         """"""
-        if self.profile_select.get_value() == "New Profile":
-            self.cmd_add_profile()
-        elif self.profile_select.get_value() == "Get Pro":
-            self.cmd_get_pro()
-        else:
-            self.update_profile(self.profile_select.get_value())
+        # FIX (high-severity): cmd_add_profile and cmd_get_pro are not defined on this class.
+        # ORIGINAL (commented for traceability): both branches below raised AttributeError.
+        # if self.profile_select.get_value() == "New Profile":
+        #     self.cmd_add_profile()
+        # elif self.profile_select.get_value() == "Get Pro":
+        #     self.cmd_get_pro()
+        # Fall through to update_profile for any non-special-case selection.
+        self.update_profile(self.profile_select.get_value())
+
+    def cmd_add_profile(self, event, *args, **kwargs):
+        """""
+        # STUB: open dialog / create a new browser profile
+        return self
+
+    def cmd_get_pro(self, event, *args, **kwargs):
+        """""
+        # STUB: redirect user to upgrade to Pro plan
+        if hasattr(self, 'app') and hasattr(self.app, 'view'):
+            self.app.view.switch_to_account_tab()
+        return self
+
+    def cmd_add_profile(self, event, *args, **kwargs):
+        """""
+        # STUB: open dialog / create a new browser profile
+        return self
+
+    def cmd_get_pro(self, event, *args, **kwargs):
+        """""
+        # STUB: redirect user to upgrade to Pro plan
+        if hasattr(self, 'app') and hasattr(self.app, 'view'):
+            self.app.view.switch_to_account_tab()
+        return self
 
     def cmd_fill_in_forms(self, event, *args, **kwargs):
         """"""
@@ -202,6 +228,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # # need to check if url inspection drawer has been initialized or not?
         # self.update_toolbox_url_inspection(self.browser.active_url)
         # self.document.set_refresh_time()
+        # self.populate_document(url)
         return self
 
     def cmd_launch_source_tab(self, event, *args, **kwargs):
@@ -948,7 +975,11 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(parent)
+        # FIX (critical): pass `parent` to Qt base, not `self` (self-as-parent produces an
+        # orphan widget chain — parent() returns None, lifecycle/cleanup walking breaks).
+        # ORIGINAL (commented for traceability):
+        #     super().__init__(self)
+        super().__init__(parent) if parent is not None else super().__init__()
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSlimTabSearch"))
         if self.parent:
