@@ -474,14 +474,14 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             cfg["buttons"] = {}
         options = ["Year", "Quarter Year", "Month", "Week", "Day", "Hour", "Quarter Hour"]
         css_cfg = {
-            "label": "Select Calendar Scope: ",
+            "label": "Select Scope:",
             "layout": "horizontal",
             "combobox": {"size": ["auto", "auto"], "options": options},
             "value": self.get_calendar_scope_select_value(),
             "handler": self.cmd_on_change_scope,
         }
         self.calendar_scope_select = NchantdDropDown(self, css_cfg)
-        cfg["buttons"][0] = {
+        cfg["buttons"][10] = {
             "name": "select_calendar_scope",
             "type": "dropdown",
             "widget": self.calendar_scope_select,
@@ -498,14 +498,14 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         ]  # Alter based on scope select ie. year scope can have qy and month
 
         cus_cfg = {
-            "label": "Select Calendar Unit: ",
+            "label": "Select Unit:",
             "layout": "horizontal",
             "combobox": {"size": ["auto", "auto"], "options": options},
             "value": self.get_calendar_unit_select_value(),
             "handler": self.cmd_select_calendar_unit,
         }
         self.calendar_unit_select = NchantdDropDown(self, cus_cfg)
-        cfg["buttons"][10] = {
+        cfg["buttons"][11] = {
             "name": "select_calendar_unit",
             "type": "dropdown",
             "widget": self.calendar_unit_select,

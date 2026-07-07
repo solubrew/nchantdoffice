@@ -219,7 +219,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def cmd_pin_page(self, event, *args, **kwargs):
         """"""
-        self.make_webapp()
+        #self.make_webapp() #TODO: unsure what is needed to make webapp over pinning
         self.pin_page()
         return self
 
