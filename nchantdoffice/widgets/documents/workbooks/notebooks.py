@@ -975,7 +975,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         """"""
         #TODO: need to have a save url location mode so that it can reopen the same file each time
         #  and an internal save mode such that the file data is stored in the database and can be reconstructed to .ipynb file
-        logma.info(f"HTML {self.document_editor.toHtml()}")
+        #logma.info(f"HTML {self.document_editor.toHtml()}")
         if self.document is None:
             self.new_document()
         self.document.syntax = "html"
@@ -984,24 +984,24 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
             <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
             """
-            text = self.document_editor.toHtml()  # .replace("\n", "")
-            soup = BeautifulSoup(text, "html.parser")
-            contents = soup.body.decode_contents()
-            logma.info(f"Contents: {contents}")
-            html = html.replace("<[content]>", contents)
-            logma.info(f"Content: {contents}")
-            content = html.replace("<[content]>", soup.body.decode_contents())
-            logma.info(f"Content: {content}")
-        elif self.document.syntax == "jupyter":
-            pass
-            #TODO: connect to jupyter saving mechanism as and connect the url path to the internal viewer entry
-        else:
-            content = self.document_editor.toPlainText()
-        self.document.parse_content(content)
-        if content != self.document.content:
-            self.document.set_content(content)
-        super().save()
-        logma.json(self.document.to_dict())
+        #     text = self.document_editor.toHtml()  # .replace("\n", "")
+        #     soup = BeautifulSoup(text, "html.parser")
+        #     contents = soup.body.decode_contents()
+        #     logma.info(f"Contents: {contents}")
+        #     html = html.replace("<[content]>", contents)
+        #     logma.info(f"Content: {contents}")
+        #     content = html.replace("<[content]>", soup.body.decode_contents())
+        #     logma.info(f"Content: {content}")
+        # elif self.document.syntax == "jupyter":
+        #     pass
+        #     #TODO: connect to jupyter saving mechanism as and connect the url path to the internal viewer entry
+        # else:
+        #     content = self.document_editor.toPlainText()
+        # self.document.parse_content(content)
+        # if content != self.document.content:
+        #     self.document.set_content(content)
+        # super().save()
+        # logma.json(self.document.to_dict())
         # logma.info(self.document.to_dict())
         return self
 
