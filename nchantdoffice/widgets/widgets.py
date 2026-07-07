@@ -115,18 +115,17 @@ class NchantdOfficeTabSet(NchantdTabSet):
             #     except Exception as e:
             #         logma.error(f"Failed to persist active tab position: {e}")
 
-            # WE want it to break if the toolbox is not in the right pane
-            # this is a required functionality
+            # H24 FIX: Lazy-init toolbox — create once, reuse on subsequent tab switches.
+            # Previously this block ran unconditionally, destroying toolbox state
+            # (search queries, filter results, selected items) on every tab switch.
             right_pane = self.app.view.panes.get("right")
-            # if right_pane:
-            # if right_pane.toolbox is None:
-            # TODO: Fix the toolbox to be refreshed on tab selection
-            logma.info("Creating toolbox in right pane")
-            right_pane.toolbox = self.create_toolbox(right_pane)
-            logma.info("Building toolbox")
-            right_pane.toolbox.build_toolbox()
-            # else:
-            #    logma.warning("Right pane not yet available in on_tab_focus")
+            if not hasattr(right_pane, "toolbox") or right_pane.toolbox is None:
+                logma.info("Creating toolbox in right pane")
+                right_pane.toolbox = self.create_toolbox(right_pane)
+                logma.info("Building toolbox")
+                right_pane.toolbox.build_toolbox()
+            else:
+                logma.info("Reusing existing toolbox in right pane")
 
         # Ensure tabn is valid for super class to avoid IndexError in set_focus
         if tabn >= 0 and tabn <= len(self.model.tabsdata):

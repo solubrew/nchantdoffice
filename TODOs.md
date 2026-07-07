@@ -9,19 +9,18 @@
 ## 🟥 CRITICAL / P0
 
 ### H24 — Toolbox Drawer Stale on Tab Switch
-- **Severity:** P0 (blocks all toolbox interaction)
+- **Severity:** P0 → ✅ Completed
 - **Symptom:** Switching tabs in right pane destroys toolbox state (search queries, filter results, selected items)
-- **Root Cause:** `on_tab_focus()` in `nchantdoffice/widgets/tabs.py` lines 136-138 always executes:
+- **Root Cause:** `on_tab_focus()` in `nchantdoffice/widgets/widgets.py` unconditionally recreated `right_pane.toolbox` on every tab switch, destroying prior state.
+- **Fix Applied:** Lazy-init guard added — toolbox is created once and reused:
   ```python
-  right_pane.toolbox = self.create_toolbox(right_pane)
-  right_pane.toolbox.build_toolbox()
+  if not hasattr(right_pane, "toolbox") or right_pane.toolbox is None:
+      right_pane.toolbox = self.create_toolbox(right_pane)
+      right_pane.toolbox.build_toolbox()
+  else:
+      logma.info("Reusing existing toolbox in right pane")
   ```
-  This creates a brand-new toolbox instance on every tab switch, destroying prior state.
-- **Fix Plan:**
-  1. Add lazy init guard: `if not hasattr(right_pane, 'toolbox') or right_pane.toolbox is None:`
-  2. OR reuse pattern: `right_pane.toolbox.refresh()` if it already exists
-  3. Cache toolbox per tab via `right_pane._tab_toolboxes = {}` dict keyed by tab index
-- **Status:** TODO
+- **Status:** ✅ Completed 2026-07-07
 
 ### H25 — Catalog Tab Wrong Child Count
 - **Severity:** P1
@@ -35,7 +34,7 @@
 ## 🟨 HIGH / P1
 
 ### H26 — Note Tab Popup: Text Input Non-Functional
-- **Severity:** P1
+- **Severity:** P2 (demoted 2026-07-07 — quality-of-life, non-blocking)
 - **Symptom:** Note popup widget moves and resizes correctly but text cannot be typed into it
 - **Root Cause:** Missing Qt focus activation after `show()`. No `activateWindow()`, `raise_()`, or `setFocus()` call after popup is shown in `nchantdoffice/widgets/documents/media/notes.py`
 - **Fix Plan:**
