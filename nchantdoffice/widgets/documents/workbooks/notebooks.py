@@ -158,6 +158,45 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.initModel()
         self.initView()
         return self
+    def add_cell(self, cell):
+        """Append a cell to the notebook.
+
+        Args:
+            cell: Cell dict (must contain 'cell_type' and 'source' keys)
+        """
+        if self.cells is None:
+            self.cells = []
+        self.cells.append(cell)
+        logma.info(f"Cell added; total: {len(self.cells)}")
+        return self
+
+
+    def check_kernel_alive(self):
+        """Check if kernel is alive and responsive"""
+        if self.kernel_client:
+            return self.kernel_client.is_alive()
+        return False
+
+    def clear_cell(self, dex):
+        """Clear outputs of cell at given index.
+
+        Args:
+            dex: Zero-based cell index
+        """
+        if self.cells is None or not (0 <= dex < len(self.cells)):
+            logma.error(f"Invalid cell index: {dex}")
+            return self
+        self.cells[dex]["outputs"] = []
+        logma.info(f"Cell {dex} outputs cleared")
+        return self
+
+    def clear_cells(self):
+        """Clear outputs of all cells."""
+        if self.cells:
+            for cell in self.cells:
+                cell["outputs"] = []
+            logma.info(f"Cleared outputs of {len(self.cells)} cells")
+        return self
 
     def cmd_check_is_pinned(self, event, *args, **kwargs):
         """"""
@@ -257,6 +296,322 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             if self.config:
                 self.config.dikt["autostart_server"] = autostart
         return self
+    def create_new_notebook(self, notebook_name=None):
+        """Create a new Jupyter notebook"""
+        try:
+            import nbformat
+            from nbformat.v4 import new_notebook, new_code_cell
+
+            # Create a new notebook
+            nb = new_notebook()
+
+            # Add a welcome cell
+            nb.cells.append(new_code_cell("# New Notebook\nprint('Hello, World!')"))
+
+            # Save the notebook
+            if notebook_name is None:
+                notebook_name = "Untitled.ipynb"
+
+            save_path = join(dirname(self.file_path) if self.file_path else ".", notebook_name)
+
+            with open(save_path, "w", encoding="utf-8") as f:
+                nbformat.write(nb, f)
+
+            logma.info(f"Created new notebook: {save_path}")
+            self.current_notebook_path = save_path
+
+            # Open the new notebook in browser
+            if self.browser and self.server_running:
+                notebook_url = f"{self.server_url}/notebooks/{notebook_name}"
+                logma.info(f"[notebook] opening new notebook at exact url={notebook_url}")
+                self._navigate_browser(notebook_url)
+            else:
+                logma.warning(
+                    f"[notebook] new notebook created but not opened "
+                    f"(browser={bool(self.browser)}, server_running={self.server_running})"
+                )
+
+        except Exception as e:
+            logma.error(f"Error creating new notebook: {e}", exc_info=True)
+
+        return self
+
+    def del_cell(self, dex):
+        """Delete cell at given index.
+
+        Args:
+            dex: Zero-based cell index
+        """
+        if self.cells is None:
+            logma.warning("No cells to delete")
+            return self
+        if 0 <= dex < len(self.cells):
+            self.cells.pop(dex)
+            logma.info(f"Cell {dex} deleted; remaining: {len(self.cells)}")
+        else:
+            logma.error(f"Cell index {dex} out of range (size={len(self.cells)})")
+        return self
+    def execute_cell(self, cell_code, timeout=60):
+        """Execute a specific cell code in the kernel
+
+        Args:
+            cell_code: Python code to execute
+            timeout: Execution timeout in seconds
+
+        Returns:
+            dict with 'output', 'error', 'status' keys
+        """
+        if not self.kernel_running or not self.kernel_client:
+            logma.error("Kernel not running. Start kernel first.")
+            return {"output": "", "error": "Kernel not running", "status": "error"}
+
+        try:
+            # Execute the code
+            msg_id = self.kernel_client.execute(cell_code)
+
+            # Collect output
+            output = []
+            error = None
+            status = "ok"
+
+            import time
+
+            start_time = time.time()
+
+            while True:
+                if time.time() - start_time > timeout:
+                    logma.error(f"Cell execution timeout after {timeout}s")
+                    return {"output": "\n".join(output), "error": "Execution timeout", "status": "timeout"}
+
+                try:
+                    msg = self.kernel_client.get_iopub_msg(timeout=1)
+
+                    if msg["parent_header"].get("msg_id") == msg_id:
+                        msg_type = msg["header"]["msg_type"]
+                        content = msg["content"]
+
+                        if msg_type == "stream":
+                            output.append(content["text"])
+                        elif msg_type == "execute_result":
+                            output.append(str(content["data"]))
+                        elif msg_type == "display_data":
+                            output.append(str(content["data"]))
+                        elif msg_type == "error":
+                            error = "\n".join(content["traceback"])
+                            status = "error"
+                        elif msg_type == "status" and content["execution_state"] == "idle":
+                            break
+
+                except Exception as e:
+                    # Check if execution is complete
+                    if self.kernel_client.is_alive():
+                        continue
+                    else:
+                        break
+
+            result = {"output": "\n".join(output), "error": error, "status": status}
+
+            logma.info(f"Cell executed with status: {status}")
+            return result
+
+        except Exception as e:
+            logma.error(f"Error executing cell: {e}")
+            return {"output": "", "error": str(e), "status": "error"}
+
+    def execute_code_interactive(self, code):
+        """Execute code and return output for interactive use
+
+        Args:
+            code: Python code to execute
+
+        Returns:
+            Formatted output string
+        """
+        result = self.execute_cell(code)
+
+        output_parts = []
+        if result["output"]:
+            output_parts.append(result["output"])
+        if result["error"]:
+            output_parts.append(f"ERROR:\n{result['error']}")
+
+        return "\n".join(output_parts) if output_parts else "Execution completed (no output)"
+    def execute_all_cells(self, notebook_path=None):
+        """Execute all cells in the notebook
+
+        Args:
+            notebook_path: Path to .ipynb file, or uses current_notebook_path
+        """
+        if notebook_path is None:
+            notebook_path = self.current_notebook_path
+
+        if not notebook_path or not exists(notebook_path):
+            logma.error("No notebook file specified or file not found")
+            return self
+
+        try:
+            import nbformat
+
+            # Read the notebook
+            with open(notebook_path, "r", encoding="utf-8") as f:
+                nb = nbformat.read(f, as_version=4)
+
+            # Start kernel if not running
+            if not self.kernel_running:
+                self.start_kernel()
+
+            # Execute each code cell
+            results = []
+            for idx, cell in enumerate(nb.cells):
+                if cell.cell_type == "code":
+                    logma.info(f"Executing cell {idx + 1}/{len(nb.cells)}")
+                    result = self.execute_cell(cell.source)
+                    results.append(result)
+
+                    # Update cell outputs
+                    if result["status"] == "ok":
+                        cell.outputs = [{"output_type": "stream", "name": "stdout", "text": result["output"]}]
+                    elif result["error"]:
+                        cell.outputs = [
+                            {
+                                "output_type": "error",
+                                "ename": "Error",
+                                "evalue": result["error"],
+                                "traceback": [result["error"]],
+                            }
+                        ]
+
+            # Save notebook with outputs
+            with open(notebook_path, "w", encoding="utf-8") as f:
+                nbformat.write(nb, f)
+
+            logma.info(f"Executed {len(results)} cells")
+
+        except Exception as e:
+            logma.error(f"Error executing all cells: {e}")
+
+        return self
+    def get_available_kernels(self):
+        """Get list of available Jupyter kernels"""
+        try:
+            import subprocess
+            import json
+
+            result = subprocess.run(
+                ["jupyter", "kernelspec", "list", "--json"], capture_output=True, text=True, timeout=5
+            )
+
+            if result.returncode == 0:
+                kernel_data = json.loads(result.stdout)
+                kernels = list(kernel_data.get("kernelspecs", {}).keys())
+                return kernels if kernels else ["python3"]
+            else:
+                return ["python3"]
+
+        except Exception as e:
+            logma.error(f"Error getting kernels: {e}")
+            return ["python3"]
+    def get_kernel_info(self):
+        """Get information about the running kernel"""
+        if not self.kernel_running or not self.kernel_client:
+            return None
+
+        try:
+            # Request kernel info
+            msg_id = self.kernel_client.kernel_info()
+
+            # Wait for response
+            import time
+
+            timeout = 5
+            start_time = time.time()
+
+            while time.time() - start_time < timeout:
+                try:
+                    msg = self.kernel_client.get_shell_msg(timeout=1)
+                    if msg["parent_header"].get("msg_id") == msg_id:
+                        return msg["content"]
+                except:
+                    continue
+
+            logma.warning("Timeout waiting for kernel info")
+            return None
+
+        except Exception as e:
+            logma.error(f"Error getting kernel info: {e}")
+            return None
+
+    def get_completions(self, code, cursor_pos):
+        """Get code completions at cursor position
+
+        Args:
+            code: Code string
+            cursor_pos: Cursor position in code
+
+        Returns:
+            List of completion matches
+        """
+        if not self.kernel_running or not self.kernel_client:
+            return []
+
+        try:
+            msg_id = self.kernel_client.complete(code, cursor_pos)
+
+            import time
+
+            timeout = 3
+            start_time = time.time()
+
+            while time.time() - start_time < timeout:
+                try:
+                    msg = self.kernel_client.get_shell_msg(timeout=1)
+                    if msg["parent_header"].get("msg_id") == msg_id:
+                        content = msg["content"]
+                        return content.get("matches", [])
+                except:
+                    continue
+
+            return []
+
+        except Exception as e:
+            logma.error(f"Error getting completions: {e}")
+            return []
+
+    def inspect_object(self, code, cursor_pos, detail_level=0):
+        """Get object inspection/documentation
+
+        Args:
+            code: Code string
+            cursor_pos: Cursor position
+            detail_level: 0 for brief, 1 for detailed
+
+        Returns:
+            Inspection data dict
+        """
+        if not self.kernel_running or not self.kernel_client:
+            return None
+
+        try:
+            msg_id = self.kernel_client.inspect(code, cursor_pos, detail_level=detail_level)
+
+            import time
+
+            timeout = 3
+            start_time = time.time()
+
+            while time.time() - start_time < timeout:
+                try:
+                    msg = self.kernel_client.get_shell_msg(timeout=1)
+                    if msg["parent_header"].get("msg_id") == msg_id:
+                        return msg["content"]
+                except:
+                    continue
+
+            return None
+
+        except Exception as e:
+            logma.error(f"Error inspecting object: {e}")
+            return None
 
     def init_drawer_document_config(self):
         """"""
@@ -387,7 +742,81 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.toolbox_config[300]["items"] = self.init_drawer_object_config()
         self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
+    def interrupt_kernel(self):
+        """Interrupt the running kernel (like Ctrl+C)"""
+        try:
+            if self.kernel_manager and self.kernel_running:
+                self.kernel_manager.interrupt_kernel()
+                logma.info("Kernel interrupted")
+            else:
+                logma.warning("No running kernel to interrupt")
+        except Exception as e:
+            logma.error(f"Error interrupting kernel: {e}")
+        return self
+
+    def is_server_running(self):
+        """Check if a TCP listener is accepting connections on the server port.
+
+        Note: this only confirms *something* is bound to the port, not that it is
+        our Jupyter instance. The output pump logs the authoritative URL Jupyter
+        reports so the two can be cross-checked.
+        """
+        import socket
+
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(1)
+            result = sock.connect_ex(("localhost", self.server_port))
+            sock.close()
+            reachable = result == 0
+            logma.debug(
+                f"[notebook] is_server_running: localhost:{self.server_port} "
+                f"connect_ex={result} -> reachable={reachable}"
+            )
+            return reachable
+        except Exception as e:
+            logma.error(f"[notebook] is_server_running check failed: {e}")
+            return False
+
+    def load_notebook_file(self, file_path):
+        """Load a notebook file"""
+        try:
+            if not exists(file_path):
+                logma.error(f"Notebook file not found: {file_path}")
+                return self
+
+            self.file_path = file_path
+            self.current_notebook_path = file_path
+
+            # If server is running, open the notebook
+            if self.server_running and self.browser:
+                from os.path import basename
+
+                notebook_url = f"{self.server_url}/notebooks/{basename(file_path)}"
+                logma.info(f"[notebook] loading notebook at exact url={notebook_url} (file={file_path})")
+                self._navigate_browser(notebook_url)
+                logma.info(f"Loaded notebook: {file_path}")
+            else:
+                logma.warning("Jupyter server not running. Start server to view notebook.")
+
+        except Exception as e:
+            logma.error(f"Error loading notebook file: {e}", exc_info=True)
+
+        return self
     # ========== Server Management Methods ==========
+
+    def open_file(self, file=None):
+        """"""
+        if file is None:
+            file = self.file_path
+        cfg = {"file_path": file}
+        document = self.app.model.codex.init_script(cfg)
+        document.load_document()
+        self.set_document(document)
+        self.document.open_file()
+        self.populate_document()
+        return self
+
     def pin_page(self):
         """"""
         if self.pinned is False:
@@ -397,6 +826,236 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.document.set_pinned(self.pinned)
         return self
 
+
+    def populate_document(self):
+        """"""
+        logma.info(f"Populating Document")
+        style = f"background-color: #FFFFFF;"
+        self.document_editor.setStyleSheet(style)
+        if self.document is None:
+            text = self.document_editor.get_text()
+        else:
+            text = self.document.text.to_dict()["unit"].get("value", "")
+        if isinstance(text, bytes):
+            text = decode64(text)
+        if isinstance(text, dict):
+            text = text.get("value", "")
+        text = text.lstrip()
+        logma.info(f"Text: {text}")
+        logma.info(f"Type: {type(text)}")
+        self.document_editor.convert_urls_to_links(text)
+        if self.document is None:
+            return self
+        self.document.file_format = self.config.dikt.get("document", {}).get("syntax", "plain-text")
+        if self.document.file_format is None:
+            self.document.file_format = "plain-text"
+        logma.info(f"Document Format: {self.document.file_format}")
+        logma.info(f"Syntax {self.document.syntax}")
+        theme = "monokai"
+        formatter = HtmlFormatter(style=theme, full=True, noclasses=True)
+        self.document.syntax = "html"  # TODO debug
+        if self.document.syntax == "markdown":
+            self.document_editor.setMarkdown(text)
+            return self
+        elif self.document.syntax in ("plain-text", "plaintext"):
+            self.document_editor.setPlainText(text)
+            return self
+        elif self.document.syntax == "xml":
+            self.document_editor.setXml(text)
+            return self
+        elif self.document.syntax == "latex":
+            self.document_editor.setLatex(text)
+            return self
+        elif self.document.syntax == "html":
+            logma.info(f"HTML {text}")
+            self.document_editor.setHtml(text)
+            return self
+        elif self.document.syntax == "python":
+            text = highlight(text, PythonLexer(), formatter)
+            # text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax == "javascript":
+            text = highlight(text, JavascriptLexer(), formatter)
+            text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax == "ruby":
+            text = highlight(text, RubyLexer(), formatter)
+            text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax == "c":
+            text = highlight(text, CLexer(), formatter)
+            text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax == "cpp":
+            text = highlight(text, CppLexer(), formatter)
+            text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax == "cs":
+            text = highlight(text, CSharpLexer(), formatter)
+            text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax in ("css", "qss"):
+            text = highlight(text, CssLexer(), formatter)
+            text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax == "java":
+            text = highlight(text, JavaLexer(), formatter)
+            text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax == "json":
+            text = highlight(text, JsonLexer(), formatter)
+            text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax == "yaml":
+            text = highlight(text, YamlLexer(), formatter)
+            text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax == "toml":
+            text = highlight(text, IniLexer(), formatter)
+            text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax == "r":
+            text = highlight(text, RLexer(), formatter)
+            text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax == "rmd":
+            pass
+        elif self.document.syntax == "rst":
+            pass
+        elif self.document.syntax == "tex":
+            pass
+        elif self.document.syntax == "texinfo":
+            pass
+        else:
+            raise Exception(f"unknown syntax {self.document.syntax}")
+        return self
+
+    def restart_kernel(self):
+        """Restart the notebook kernel"""
+        try:
+            if self.kernel_manager:
+                logma.info("Restarting kernel...")
+                self.stop_kernel()
+                import time
+
+                time.sleep(1)
+                self.start_kernel()
+                logma.info("Kernel restarted successfully")
+            else:
+                logma.warning("No kernel manager found")
+        except Exception as e:
+            logma.error(f"Error restarting kernel: {e}")
+        return self
+
+    def save(self):
+        """"""
+        #TODO: need to have a save url location mode so that it can reopen the same file each time
+        #  and an internal save mode such that the file data is stored in the database and can be reconstructed to .ipynb file
+        logma.info(f"HTML {self.document_editor.toHtml()}")
+        if self.document is None:
+            self.new_document()
+        self.document.syntax = "html"
+        if self.document.syntax == "html":
+            html = """
+            <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
+            <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
+            """
+            text = self.document_editor.toHtml()  # .replace("\n", "")
+            soup = BeautifulSoup(text, "html.parser")
+            contents = soup.body.decode_contents()
+            logma.info(f"Contents: {contents}")
+            html = html.replace("<[content]>", contents)
+            logma.info(f"Content: {contents}")
+            content = html.replace("<[content]>", soup.body.decode_contents())
+            logma.info(f"Content: {content}")
+        elif self.document.syntax == "jupyter":
+            pass
+            #TODO: connect to jupyter saving mechanism as and connect the url path to the internal viewer entry
+        else:
+            content = self.document_editor.toPlainText()
+        self.document.parse_content(content)
+        if content != self.document.content:
+            self.document.set_content(content)
+        super().save()
+        logma.json(self.document.to_dict())
+        # logma.info(self.document.to_dict())
+        return self
+
+    def save_notebook(self, file_path=None):
+        """Save the current notebook"""
+        # Note: Jupyter handles saving internally through the web interface
+        # This method is mainly for setting the file path
+        if file_path:
+            self.file_path = file_path
+            logma.info(f"Notebook file path set to: {file_path}")
+        return self
+
+    def set_notebook(self, notebook=None):
+        """Initialize or set the notebook structure.
+
+        Args:
+            notebook: Dict with notebook structure; defaults to {'cells': []}
+        """
+        if notebook is None:
+            notebook = {"cells": []}
+        if notebook != self.notebook:
+            self.notebook = notebook
+            logma.info("Notebook structure updated")
+        return self
+
+    def set_cells(self, cells):
+        """Set the cells list.
+
+        Args:
+            cells: List of cell dicts (each with 'cell_type', 'source', optional 'outputs')
+        """
+        if cells != self.cells:
+            self.cells = cells
+            count = len(cells) if cells else 0
+            logma.info(f"Cells updated: {count} cells")
+        return self
+    def set_cell_source(self, text, position=0):
+        """Set source code for a cell at given position.
+
+        Args:
+            text: Source code string to assign
+            position: Zero-based cell index (default: 0)
+        """
+        if self.cells is None or not (0 <= position < len(self.cells)):
+            logma.error(f"Invalid cell position: {position}")
+            return self
+        self.cells[position]["source"] = text
+        logma.info(f"Cell {position} source updated")
+        return self
+    def shutdown(self):
+        """Shutdown the notebook and clean up"""
+        self.stop_kernel()
+        self.stop_jupyter_server()
+        return self
     def start_jupyter_server(self, port=None):
         """Start the Jupyter notebook server"""
         import time
@@ -539,6 +1198,147 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] Error starting Jupyter server: {e}", exc_info=True)
             self.server_running = False
             self.update_status_labels()
+
+        return self
+
+    def stop_jupyter_server(self):
+        """Stop the Jupyter notebook server"""
+        try:
+            if self.jupyter_process:
+                self.jupyter_process.terminate()
+                try:
+                    self.jupyter_process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.jupyter_process.kill()
+                    self.jupyter_process.wait()
+
+                self.jupyter_process = None
+                self.server_running = False
+                logma.info("Jupyter server stopped")
+            else:
+                logma.info("No Jupyter server process to stop")
+        except Exception as e:
+            logma.error(f"Error stopping Jupyter server: {e}")
+
+        return self
+
+    def start_kernel(self, kernel_name=None):
+        """Start a Jupyter kernel for code execution
+
+        Args:
+            kernel_name: Name of kernel to start (e.g., 'python3', 'ir', 'julia')
+        """
+        try:
+            from jupyter_client import KernelManager
+
+            if kernel_name is None:
+                kernel_name = self.kernel_name
+
+            logma.info(f"Starting kernel: {kernel_name}")
+
+            # Create kernel manager
+            self.kernel_manager = KernelManager(kernel_name=kernel_name)
+            self.kernel_manager.start_kernel()
+
+            # Create kernel client
+            self.kernel_client = self.kernel_manager.client()
+            self.kernel_client.start_channels()
+
+            # Wait for kernel to be ready
+            import time
+
+            time.sleep(2)
+
+            # Check if kernel is alive
+            if self.kernel_client.is_alive():
+                self.kernel_running = True
+                self.kernel_name = kernel_name
+                logma.info(f"Kernel {kernel_name} started successfully")
+                self.update_status_labels()
+            else:
+                logma.error("Kernel failed to start")
+                self.kernel_running = False
+
+        except Exception as e:
+            logma.error(f"Error starting kernel: {e}")
+            self.kernel_running = False
+
+        return self
+
+    def stop_kernel(self):
+        """Stop the running kernel"""
+        try:
+            if self.kernel_client:
+                self.kernel_client.stop_channels()
+                self.kernel_client = None
+
+            if self.kernel_manager:
+                self.kernel_manager.shutdown_kernel()
+                self.kernel_manager = None
+
+            self.kernel_running = False
+            logma.info("Kernel stopped")
+            self.update_status_labels()
+
+        except Exception as e:
+            logma.error(f"Error stopping kernel: {e}")
+
+        return self
+
+    def to_dict(self):
+        """Serialize notebook state to dict.
+
+        Returns:
+            Dict containing document metadata, notebook structure, and all cells.
+        """
+        doc = {}
+        try:
+            doc = super().to_dict()
+        except Exception:
+            pass
+        doc["document"] = {"notebook": self.notebook or {"cells": []}}
+        cells_list = self.cells if self.cells else []
+        doc["document"]["notebook"]["cells"] = cells_list
+        return doc
+
+    def to_html(self):
+        """Render notebook to basic HTML (fixed from infinite-recursion bug in pyffice).
+
+        Returns:
+            HTML string with all cells and their outputs.
+        """
+        if not self.cells:
+            return "<html><body><p>Empty notebook</p></body></html>"
+
+        html_parts = ["<html><body>"]
+        for idx, cell in enumerate(self.cells):
+            cell_type = cell.get("cell_type", "code")
+            source = cell.get("source", "")
+            html_parts.append(f"<div class='cell' id='cell-{idx}'>")
+            html_parts.append(f"<div class='cell-type'>{cell_type}</div>")
+            html_parts.append(f"<pre class='source'>{source}</pre>")
+            if cell.get("outputs"):
+                html_parts.append("<div class='outputs'>")
+                for output in cell["outputs"]:
+                    if isinstance(output, dict) and "text" in output:
+                        html_parts.append(f"<pre class='output'>{output['text']}</pre>")
+                html_parts.append("</div>")
+            html_parts.append("</div>")
+        html_parts.append("</body></html>")
+        return "\n".join(html_parts)
+
+    def update_status_labels(self):
+        """Update server and kernel status labels"""
+        if hasattr(self, "server_status_label"):
+            status = "Running" if self.server_running else "Stopped"
+            self.server_status_label.setText(f"Server Status: {status}")
+
+        if hasattr(self, "kernel_status_label"):
+            if self.kernel_running:
+                kernel_status = f"Running ({self.kernel_name})"
+            else:
+                kernel_status = "Stopped"
+            self.kernel_status_label.setText(f"Kernel Status: {kernel_status}")
 
         return self
 
@@ -776,650 +1576,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[notebook] could not register atexit shutdown hook: {e}")
         return self
-
-    def stop_jupyter_server(self):
-        """Stop the Jupyter notebook server"""
-        try:
-            if self.jupyter_process:
-                self.jupyter_process.terminate()
-                try:
-                    self.jupyter_process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    self.jupyter_process.kill()
-                    self.jupyter_process.wait()
-
-                self.jupyter_process = None
-                self.server_running = False
-                logma.info("Jupyter server stopped")
-            else:
-                logma.info("No Jupyter server process to stop")
-        except Exception as e:
-            logma.error(f"Error stopping Jupyter server: {e}")
-
-        return self
-
-    def is_server_running(self):
-        """Check if a TCP listener is accepting connections on the server port.
-
-        Note: this only confirms *something* is bound to the port, not that it is
-        our Jupyter instance. The output pump logs the authoritative URL Jupyter
-        reports so the two can be cross-checked.
-        """
-        import socket
-
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(1)
-            result = sock.connect_ex(("localhost", self.server_port))
-            sock.close()
-            reachable = result == 0
-            logma.debug(
-                f"[notebook] is_server_running: localhost:{self.server_port} "
-                f"connect_ex={result} -> reachable={reachable}"
-            )
-            return reachable
-        except Exception as e:
-            logma.error(f"[notebook] is_server_running check failed: {e}")
-            return False
-
-    # ========== Notebook Management Methods ==========
-
-    def create_new_notebook(self, notebook_name=None):
-        """Create a new Jupyter notebook"""
-        try:
-            import nbformat
-            from nbformat.v4 import new_notebook, new_code_cell
-
-            # Create a new notebook
-            nb = new_notebook()
-
-            # Add a welcome cell
-            nb.cells.append(new_code_cell("# New Notebook\nprint('Hello, World!')"))
-
-            # Save the notebook
-            if notebook_name is None:
-                notebook_name = "Untitled.ipynb"
-
-            save_path = join(dirname(self.file_path) if self.file_path else ".", notebook_name)
-
-            with open(save_path, "w", encoding="utf-8") as f:
-                nbformat.write(nb, f)
-
-            logma.info(f"Created new notebook: {save_path}")
-            self.current_notebook_path = save_path
-
-            # Open the new notebook in browser
-            if self.browser and self.server_running:
-                notebook_url = f"{self.server_url}/notebooks/{notebook_name}"
-                logma.info(f"[notebook] opening new notebook at exact url={notebook_url}")
-                self._navigate_browser(notebook_url)
-            else:
-                logma.warning(
-                    f"[notebook] new notebook created but not opened "
-                    f"(browser={bool(self.browser)}, server_running={self.server_running})"
-                )
-
-        except Exception as e:
-            logma.error(f"Error creating new notebook: {e}", exc_info=True)
-
-        return self
-
-    def load_notebook_file(self, file_path):
-        """Load a notebook file"""
-        try:
-            if not exists(file_path):
-                logma.error(f"Notebook file not found: {file_path}")
-                return self
-
-            self.file_path = file_path
-            self.current_notebook_path = file_path
-
-            # If server is running, open the notebook
-            if self.server_running and self.browser:
-                from os.path import basename
-
-                notebook_url = f"{self.server_url}/notebooks/{basename(file_path)}"
-                logma.info(f"[notebook] loading notebook at exact url={notebook_url} (file={file_path})")
-                self._navigate_browser(notebook_url)
-                logma.info(f"Loaded notebook: {file_path}")
-            else:
-                logma.warning("Jupyter server not running. Start server to view notebook.")
-
-        except Exception as e:
-            logma.error(f"Error loading notebook file: {e}", exc_info=True)
-
-        return self
-
-    def save_notebook(self, file_path=None):
-        """Save the current notebook"""
-        # Note: Jupyter handles saving internally through the web interface
-        # This method is mainly for setting the file path
-        if file_path:
-            self.file_path = file_path
-            logma.info(f"Notebook file path set to: {file_path}")
-        return self
-
-    def execute_cell(self, cell_code, timeout=60):
-        """Execute a specific cell code in the kernel
-
-        Args:
-            cell_code: Python code to execute
-            timeout: Execution timeout in seconds
-
-        Returns:
-            dict with 'output', 'error', 'status' keys
-        """
-        if not self.kernel_running or not self.kernel_client:
-            logma.error("Kernel not running. Start kernel first.")
-            return {"output": "", "error": "Kernel not running", "status": "error"}
-
-        try:
-            # Execute the code
-            msg_id = self.kernel_client.execute(cell_code)
-
-            # Collect output
-            output = []
-            error = None
-            status = "ok"
-
-            import time
-
-            start_time = time.time()
-
-            while True:
-                if time.time() - start_time > timeout:
-                    logma.error(f"Cell execution timeout after {timeout}s")
-                    return {"output": "\n".join(output), "error": "Execution timeout", "status": "timeout"}
-
-                try:
-                    msg = self.kernel_client.get_iopub_msg(timeout=1)
-
-                    if msg["parent_header"].get("msg_id") == msg_id:
-                        msg_type = msg["header"]["msg_type"]
-                        content = msg["content"]
-
-                        if msg_type == "stream":
-                            output.append(content["text"])
-                        elif msg_type == "execute_result":
-                            output.append(str(content["data"]))
-                        elif msg_type == "display_data":
-                            output.append(str(content["data"]))
-                        elif msg_type == "error":
-                            error = "\n".join(content["traceback"])
-                            status = "error"
-                        elif msg_type == "status" and content["execution_state"] == "idle":
-                            break
-
-                except Exception as e:
-                    # Check if execution is complete
-                    if self.kernel_client.is_alive():
-                        continue
-                    else:
-                        break
-
-            result = {"output": "\n".join(output), "error": error, "status": status}
-
-            logma.info(f"Cell executed with status: {status}")
-            return result
-
-        except Exception as e:
-            logma.error(f"Error executing cell: {e}")
-            return {"output": "", "error": str(e), "status": "error"}
-
-    def execute_all_cells(self, notebook_path=None):
-        """Execute all cells in the notebook
-
-        Args:
-            notebook_path: Path to .ipynb file, or uses current_notebook_path
-        """
-        if notebook_path is None:
-            notebook_path = self.current_notebook_path
-
-        if not notebook_path or not exists(notebook_path):
-            logma.error("No notebook file specified or file not found")
-            return self
-
-        try:
-            import nbformat
-
-            # Read the notebook
-            with open(notebook_path, "r", encoding="utf-8") as f:
-                nb = nbformat.read(f, as_version=4)
-
-            # Start kernel if not running
-            if not self.kernel_running:
-                self.start_kernel()
-
-            # Execute each code cell
-            results = []
-            for idx, cell in enumerate(nb.cells):
-                if cell.cell_type == "code":
-                    logma.info(f"Executing cell {idx + 1}/{len(nb.cells)}")
-                    result = self.execute_cell(cell.source)
-                    results.append(result)
-
-                    # Update cell outputs
-                    if result["status"] == "ok":
-                        cell.outputs = [{"output_type": "stream", "name": "stdout", "text": result["output"]}]
-                    elif result["error"]:
-                        cell.outputs = [
-                            {
-                                "output_type": "error",
-                                "ename": "Error",
-                                "evalue": result["error"],
-                                "traceback": [result["error"]],
-                            }
-                        ]
-
-            # Save notebook with outputs
-            with open(notebook_path, "w", encoding="utf-8") as f:
-                nbformat.write(nb, f)
-
-            logma.info(f"Executed {len(results)} cells")
-
-        except Exception as e:
-            logma.error(f"Error executing all cells: {e}")
-
-        return self
-
-    def restart_kernel(self):
-        """Restart the notebook kernel"""
-        try:
-            if self.kernel_manager:
-                logma.info("Restarting kernel...")
-                self.stop_kernel()
-                import time
-
-                time.sleep(1)
-                self.start_kernel()
-                logma.info("Kernel restarted successfully")
-            else:
-                logma.warning("No kernel manager found")
-        except Exception as e:
-            logma.error(f"Error restarting kernel: {e}")
-        return self
-
-    def shutdown(self):
-        """Shutdown the notebook and clean up"""
-        self.stop_kernel()
-        self.stop_jupyter_server()
-        return self
-
-    # ========== Cell Manipulation Methods ==========
-
-    def set_notebook(self, notebook=None):
-        """Initialize or set the notebook structure.
-
-        Args:
-            notebook: Dict with notebook structure; defaults to {'cells': []}
-        """
-        if notebook is None:
-            notebook = {"cells": []}
-        if notebook != self.notebook:
-            self.notebook = notebook
-            logma.info("Notebook structure updated")
-        return self
-
-    def set_cells(self, cells):
-        """Set the cells list.
-
-        Args:
-            cells: List of cell dicts (each with 'cell_type', 'source', optional 'outputs')
-        """
-        if cells != self.cells:
-            self.cells = cells
-            count = len(cells) if cells else 0
-            logma.info(f"Cells updated: {count} cells")
-        return self
-
-    def add_cell(self, cell):
-        """Append a cell to the notebook.
-
-        Args:
-            cell: Cell dict (must contain 'cell_type' and 'source' keys)
-        """
-        if self.cells is None:
-            self.cells = []
-        self.cells.append(cell)
-        logma.info(f"Cell added; total: {len(self.cells)}")
-        return self
-
-    def del_cell(self, dex):
-        """Delete cell at given index.
-
-        Args:
-            dex: Zero-based cell index
-        """
-        if self.cells is None:
-            logma.warning("No cells to delete")
-            return self
-        if 0 <= dex < len(self.cells):
-            self.cells.pop(dex)
-            logma.info(f"Cell {dex} deleted; remaining: {len(self.cells)}")
-        else:
-            logma.error(f"Cell index {dex} out of range (size={len(self.cells)})")
-        return self
-
-    def clear_cell(self, dex):
-        """Clear outputs of cell at given index.
-
-        Args:
-            dex: Zero-based cell index
-        """
-        if self.cells is None or not (0 <= dex < len(self.cells)):
-            logma.error(f"Invalid cell index: {dex}")
-            return self
-        self.cells[dex]["outputs"] = []
-        logma.info(f"Cell {dex} outputs cleared")
-        return self
-
-    def clear_cells(self):
-        """Clear outputs of all cells."""
-        if self.cells:
-            for cell in self.cells:
-                cell["outputs"] = []
-            logma.info(f"Cleared outputs of {len(self.cells)} cells")
-        return self
-
-    def set_cell_source(self, text, position=0):
-        """Set source code for a cell at given position.
-
-        Args:
-            text: Source code string to assign
-            position: Zero-based cell index (default: 0)
-        """
-        if self.cells is None or not (0 <= position < len(self.cells)):
-            logma.error(f"Invalid cell position: {position}")
-            return self
-        self.cells[position]["source"] = text
-        logma.info(f"Cell {position} source updated")
-        return self
-
-    def to_dict(self):
-        """Serialize notebook state to dict.
-
-        Returns:
-            Dict containing document metadata, notebook structure, and all cells.
-        """
-        doc = {}
-        try:
-            doc = super().to_dict()
-        except Exception:
-            pass
-        doc["document"] = {"notebook": self.notebook or {"cells": []}}
-        cells_list = self.cells if self.cells else []
-        doc["document"]["notebook"]["cells"] = cells_list
-        return doc
-
-    def to_html(self):
-        """Render notebook to basic HTML (fixed from infinite-recursion bug in pyffice).
-
-        Returns:
-            HTML string with all cells and their outputs.
-        """
-        if not self.cells:
-            return "<html><body><p>Empty notebook</p></body></html>"
-
-        html_parts = ["<html><body>"]
-        for idx, cell in enumerate(self.cells):
-            cell_type = cell.get("cell_type", "code")
-            source = cell.get("source", "")
-            html_parts.append(f"<div class='cell' id='cell-{idx}'>")
-            html_parts.append(f"<div class='cell-type'>{cell_type}</div>")
-            html_parts.append(f"<pre class='source'>{source}</pre>")
-            if cell.get("outputs"):
-                html_parts.append("<div class='outputs'>")
-                for output in cell["outputs"]:
-                    if isinstance(output, dict) and "text" in output:
-                        html_parts.append(f"<pre class='output'>{output['text']}</pre>")
-                html_parts.append("</div>")
-            html_parts.append("</div>")
-        html_parts.append("</body></html>")
-        return "\n".join(html_parts)
-
-    # ========== Kernel Management Methods ==========
-
-    def start_kernel(self, kernel_name=None):
-        """Start a Jupyter kernel for code execution
-
-        Args:
-            kernel_name: Name of kernel to start (e.g., 'python3', 'ir', 'julia')
-        """
-        try:
-            from jupyter_client import KernelManager
-
-            if kernel_name is None:
-                kernel_name = self.kernel_name
-
-            logma.info(f"Starting kernel: {kernel_name}")
-
-            # Create kernel manager
-            self.kernel_manager = KernelManager(kernel_name=kernel_name)
-            self.kernel_manager.start_kernel()
-
-            # Create kernel client
-            self.kernel_client = self.kernel_manager.client()
-            self.kernel_client.start_channels()
-
-            # Wait for kernel to be ready
-            import time
-
-            time.sleep(2)
-
-            # Check if kernel is alive
-            if self.kernel_client.is_alive():
-                self.kernel_running = True
-                self.kernel_name = kernel_name
-                logma.info(f"Kernel {kernel_name} started successfully")
-                self.update_status_labels()
-            else:
-                logma.error("Kernel failed to start")
-                self.kernel_running = False
-
-        except Exception as e:
-            logma.error(f"Error starting kernel: {e}")
-            self.kernel_running = False
-
-        return self
-
-    def stop_kernel(self):
-        """Stop the running kernel"""
-        try:
-            if self.kernel_client:
-                self.kernel_client.stop_channels()
-                self.kernel_client = None
-
-            if self.kernel_manager:
-                self.kernel_manager.shutdown_kernel()
-                self.kernel_manager = None
-
-            self.kernel_running = False
-            logma.info("Kernel stopped")
-            self.update_status_labels()
-
-        except Exception as e:
-            logma.error(f"Error stopping kernel: {e}")
-
-        return self
-
-    def interrupt_kernel(self):
-        """Interrupt the running kernel (like Ctrl+C)"""
-        try:
-            if self.kernel_manager and self.kernel_running:
-                self.kernel_manager.interrupt_kernel()
-                logma.info("Kernel interrupted")
-            else:
-                logma.warning("No running kernel to interrupt")
-        except Exception as e:
-            logma.error(f"Error interrupting kernel: {e}")
-        return self
-
-    def get_kernel_info(self):
-        """Get information about the running kernel"""
-        if not self.kernel_running or not self.kernel_client:
-            return None
-
-        try:
-            # Request kernel info
-            msg_id = self.kernel_client.kernel_info()
-
-            # Wait for response
-            import time
-
-            timeout = 5
-            start_time = time.time()
-
-            while time.time() - start_time < timeout:
-                try:
-                    msg = self.kernel_client.get_shell_msg(timeout=1)
-                    if msg["parent_header"].get("msg_id") == msg_id:
-                        return msg["content"]
-                except:
-                    continue
-
-            logma.warning("Timeout waiting for kernel info")
-            return None
-
-        except Exception as e:
-            logma.error(f"Error getting kernel info: {e}")
-            return None
-
-    def check_kernel_alive(self):
-        """Check if kernel is alive and responsive"""
-        if self.kernel_client:
-            return self.kernel_client.is_alive()
-        return False
-
-    def execute_code_interactive(self, code):
-        """Execute code and return output for interactive use
-
-        Args:
-            code: Python code to execute
-
-        Returns:
-            Formatted output string
-        """
-        result = self.execute_cell(code)
-
-        output_parts = []
-        if result["output"]:
-            output_parts.append(result["output"])
-        if result["error"]:
-            output_parts.append(f"ERROR:\n{result['error']}")
-
-        return "\n".join(output_parts) if output_parts else "Execution completed (no output)"
-
-    def get_completions(self, code, cursor_pos):
-        """Get code completions at cursor position
-
-        Args:
-            code: Code string
-            cursor_pos: Cursor position in code
-
-        Returns:
-            List of completion matches
-        """
-        if not self.kernel_running or not self.kernel_client:
-            return []
-
-        try:
-            msg_id = self.kernel_client.complete(code, cursor_pos)
-
-            import time
-
-            timeout = 3
-            start_time = time.time()
-
-            while time.time() - start_time < timeout:
-                try:
-                    msg = self.kernel_client.get_shell_msg(timeout=1)
-                    if msg["parent_header"].get("msg_id") == msg_id:
-                        content = msg["content"]
-                        return content.get("matches", [])
-                except:
-                    continue
-
-            return []
-
-        except Exception as e:
-            logma.error(f"Error getting completions: {e}")
-            return []
-
-    def inspect_object(self, code, cursor_pos, detail_level=0):
-        """Get object inspection/documentation
-
-        Args:
-            code: Code string
-            cursor_pos: Cursor position
-            detail_level: 0 for brief, 1 for detailed
-
-        Returns:
-            Inspection data dict
-        """
-        if not self.kernel_running or not self.kernel_client:
-            return None
-
-        try:
-            msg_id = self.kernel_client.inspect(code, cursor_pos, detail_level=detail_level)
-
-            import time
-
-            timeout = 3
-            start_time = time.time()
-
-            while time.time() - start_time < timeout:
-                try:
-                    msg = self.kernel_client.get_shell_msg(timeout=1)
-                    if msg["parent_header"].get("msg_id") == msg_id:
-                        return msg["content"]
-                except:
-                    continue
-
-            return None
-
-        except Exception as e:
-            logma.error(f"Error inspecting object: {e}")
-            return None
-
-    # ========== Helper Methods ==========
-
-    def get_available_kernels(self):
-        """Get list of available Jupyter kernels"""
-        try:
-            import subprocess
-            import json
-
-            result = subprocess.run(
-                ["jupyter", "kernelspec", "list", "--json"], capture_output=True, text=True, timeout=5
-            )
-
-            if result.returncode == 0:
-                kernel_data = json.loads(result.stdout)
-                kernels = list(kernel_data.get("kernelspecs", {}).keys())
-                return kernels if kernels else ["python3"]
-            else:
-                return ["python3"]
-
-        except Exception as e:
-            logma.error(f"Error getting kernels: {e}")
-            return ["python3"]
-
-    def update_status_labels(self):
-        """Update server and kernel status labels"""
-        if hasattr(self, "server_status_label"):
-            status = "Running" if self.server_running else "Stopped"
-            self.server_status_label.setText(f"Server Status: {status}")
-
-        if hasattr(self, "kernel_status_label"):
-            if self.kernel_running:
-                kernel_status = f"Running ({self.kernel_name})"
-            else:
-                kernel_status = "Stopped"
-            self.kernel_status_label.setText(f"Kernel Status: {kernel_status}")
-
-        return self
-
-
 # ====================================================================================================================||
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||

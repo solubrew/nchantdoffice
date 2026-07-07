@@ -245,14 +245,14 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         if self.file_path is None or not exists(self.file_path):
             cfg = {"buttons": {49: "_insert_stretch"}, "layout": "vertical"}
 
-        dscfg = {
-            "label": "Select Data Set: ",
-            "layout": "horizontal",
-            "size": ["auto", 30],
-            "options": self.get_datasets(),
-        }
-        self.dataset_select = NchantdDropDown(self.parent, dscfg)
-        cfg["buttons"][10] = {"action": "select_data_set", "widget": self.dataset_select}
+        # dscfg = {
+        #     "label": "Select Data Set: ",
+        #     "layout": "horizontal",
+        #     "size": ["auto", 30],
+        #     "options": self.get_datasets(),
+        # }
+        # self.dataset_select = NchantdDropDown(self.parent, dscfg)
+        # cfg["buttons"][10] = {"action": "select_data_set", "widget": self.dataset_select}
         cfg["buttons"][11] = {
             "action": "formula_bar",
             "name": "formula_bar",

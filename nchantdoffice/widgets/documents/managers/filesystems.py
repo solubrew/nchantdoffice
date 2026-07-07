@@ -46,7 +46,7 @@ log = True
 logma = Logma(__name__)
 debug = False
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", "filesystems.yaml")
+pxcfg = join(here, "../_data_", "filesystems.yaml")
 
 
 class NchantdCompressPane(NchantdPane):
