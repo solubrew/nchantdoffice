@@ -452,9 +452,6 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         super().__init__("Nchantd Calendar", parent, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCalendar").override(cfg))
-        # if self.parent:
-        #     self.config.override(parent.config)
-        # self.config.override(cfg)
         self.calendar = None
 
     def initModel(self):
@@ -474,7 +471,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             cfg["buttons"] = {}
         options = ["Year", "Quarter Year", "Month", "Week", "Day", "Hour", "Quarter Hour"]
         css_cfg = {
-            "label": "Select Scope:",
+            "label": "Scope:",
             "layout": "horizontal",
             "combobox": {"size": ["auto", "auto"], "options": options},
             "value": self.get_calendar_scope_select_value(),
@@ -498,7 +495,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         ]  # Alter based on scope select ie. year scope can have qy and month
 
         cus_cfg = {
-            "label": "Select Unit:",
+            "label": "Unit:",
             "layout": "horizontal",
             "combobox": {"size": ["auto", "auto"], "options": options},
             "value": self.get_calendar_unit_select_value(),
@@ -525,7 +522,9 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
 
     def cmd_on_change_scope(self, event, *args, **kwargs):
         """"""
-        self.set_scope(self.calendar_scope_select.get_value())
+        scope = self.calendar_scope_select.get_value()
+        self.set_scope(scope)
+        self.update_unit_options(scope)
         return self
 
     def cmd_select_calendar_unit(self, event, *args, **kwargs):
@@ -734,6 +733,20 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         self.calendar = NchantdCalendar(self, cfg).initWidget()
         self.layout.insertWidget(1, self.calendar)
         self.update()
+
+    def update_unit_options(self, scope):
+        """"""
+        options = {
+            "Year": ["Quarter Year", "Month", "BiWeekly"],
+            "Quarter Year": ["Month", "Week", "BiWeekly", "Day"],
+            "Month": ["Week", "Day", "Every 3 Days"],
+            "Week": ["Day", "Hour", "Every 4 Hours"],
+            "Day": ["Hour", "Quarter Hour", "Minute"],
+            "Hour": ["Quarter Hour", "Minute"],
+            "Quarter Hour": ["Minute", "Every 5 Minutes"],
+            "Minute": ["Second", "Quarter Minute", "Every 5 Seconds"],
+        }
+        self.calendar_unit_select.set_options(options[scope])
 
 
 # ====================================================================================================================||
