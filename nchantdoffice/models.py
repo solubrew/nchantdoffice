@@ -1952,9 +1952,9 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 if active_tab_position >= len(tabsdata):
                     active_tab_position = 0
 
-                # H9: Use base class lazy-loading loop via load_tab_set instead of
-                # duplicating the for/enumerate/if/else pattern inline here.
-                # The office load_tab override handles widget insertion correctly.
+                # H9: Delegate to the office load_tab_set override, which builds
+                # the tab set lazily (active tab loaded, others left as dummy
+                # placeholders) instead of duplicating that loop inline here.
                 self.load_tab_set(tabset, active_tab_position)
 
             if self.show_add_tab or tabset == "center":
@@ -2027,6 +2027,37 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             nid = node.nid
         tab_docs = self.parent.app.model.get_tab_documents(nid, tabset)
         return tab_docs
+
+    def load_tab_set(self, tabset="center", active_tab_position=0):
+        """Lazily build the tab set.
+
+        Fully loads only the active tab; every other tab gets a lightweight
+        placeholder (``dummy``) widget. Placeholders are materialized on demand
+        by ``on_tab_focus`` / ``set_focus`` the first time a tab receives focus.
+
+        Overrides ``nchantrs`` base ``load_tab_set``, whose ``load_tab`` never
+        takes its dummy branch (``if tabn == tabn`` is always true) and so loads
+        every widget eagerly, defeating lazy loading.
+        """
+        from nchantrs.libraries import pyqt
+
+        for tabn, tab in enumerate(self.tabsdata):
+            if tabn == active_tab_position:
+                self.load_tab(tab, tabn, tabset, active_tab_position)
+            else:
+                # Placeholder only; the real widget is built lazily on first focus.
+                dummy = pyqt.QWidget(self.parent)
+                dummy.dummy = True
+                dummy.toolbox_config = {}
+                dummy.position = tabn
+                dummy.name = tab.get("name", tab.get("name_txt", None))
+                _type = tab.get("tab_type", tab.get("tab_type_txt", "custom_widget"))
+                dummy.type = _type[-len(_type) + _type.rfind("_") + 1 :]
+                self.tab_widgets.insert(tabn, dummy)
+                self.parent.insertTab(tabn, dummy, dummy.name)
+
+        self.parent.setCurrentIndex(active_tab_position)
+        return self
 
     def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0):
         """"""

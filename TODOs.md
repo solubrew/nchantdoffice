@@ -88,15 +88,19 @@
 - **Status:** TODO
 
 ### P2 — Lazy Tab Loading Audit
-- **Severity:** P2
+- **Severity:** P2 → ✅ Completed
 - **Symptom:** Central pane and right-side tabs both load eagerly, slowing startup
-- **Root Cause:** `create_tab` / `build_tab` called eagerly in `__init__` for all tab types
-- **Fix Plan:**
-  1. Audit `nchantdoffice/widgets/tabs.py` central tab creation
-  2. Audit right-side tab creation in `nchantdoffice/widgets/panes/right.py`
-  3. Only create DOM + content when tab first receives focus
-  4. Use `lazy_tab_content: dict[int, QWidget]` cache
-- **Status:** TODO
+- **Root Cause:** H9 (commit 4ac4e53) replaced the inline lazy-loading loop in
+  `NchantdOfficeTabSetModel.buildTabSet` with `self.load_tab_set(...)`, but the
+  `nchantrs` base `load_tab_set` loads every tab eagerly (its `load_tab` dummy
+  branch is dead code: `if tabn == tabn` is always true). No dummies were
+  created, so the `on_tab_focus`/`set_focus` lazy check never fired.
+- **Fix Applied:** Added `NchantdOfficeTabSetModel.load_tab_set` override in
+  `nchantdoffice/models.py` — fully loads only the active tab and inserts dummy
+  placeholder widgets for the rest. Placeholders are materialized on first focus
+  by `NchantdOfficeTabSet.on_tab_focus` (widgets.py) and the base `set_focus`.
+  Also removed a duplicate `refresh_for_document` call in `on_tab_focus`.
+- **Status:** ✅ Completed 2026-07-08
 
 ---
 

@@ -128,8 +128,6 @@ class NchantdOfficeTabSet(NchantdTabSet):
                 logma.info("Reusing existing toolbox in right pane")
                 # Refresh toolbox drawer items for the active document context
                 right_pane.toolbox.refresh_for_document(widget)
-                # Refresh toolbox drawer items for the active document context
-                right_pane.toolbox.refresh_for_document(widget)
 
         # Ensure tabn is valid for super class to avoid IndexError in set_focus
         if tabn >= 0 and tabn <= len(self.model.tabsdata):
