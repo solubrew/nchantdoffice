@@ -53,7 +53,9 @@ class NchantdSourcesListPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane").override(parent.config).override(cfg))
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane").override(parent.config).override(cfg)
+        )
 
     def initModel(self, cfg=None):
         """"""
@@ -192,6 +194,21 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         self.initView()
         return self
 
+    def apply_chart_config(self):
+        """Apply document configuration to chart"""
+        if self.document and self.chart:
+            try:
+                if hasattr(self.document, "chart_type"):
+                    self.set_type(self.document.chart_type)
+                if hasattr(self.document, "data"):
+                    self.set_chart_data(self.document.data)
+                if hasattr(self.document, "theme"):
+                    self.chart.set_theme(self.document.theme)
+                logma.info("Chart configuration applied")
+            except Exception as e:
+                logma.error(f"Error applying chart config: {e}")
+        return self
+
     def cmd_add_data_view(self):
         """"""
 
@@ -212,6 +229,95 @@ class NchantdOfficeChart(NchantdOfficeDocument):
     def cmd_toggle_full_screen_pane(self, event, *args, **kwargs):
         """"""
         self.set_pane("full")
+        return self
+
+    def cmd_set_compatibility(self, event, *args, **kwargs):
+        """Set chart compatibility mode"""
+        if hasattr(self, "compatibility_select"):
+            compatibility = self.compatibility_select.currentText()
+            logma.info(f"Setting chart compatibility to: {compatibility}")
+            if self.document:
+                self.document.set_compatibility(compatibility)
+        return self
+
+    def cmd_set_theme(self, event, *args, **kwargs):
+        """Set chart theme"""
+        if hasattr(self, "default_theme_select"):
+            theme = self.default_theme_select.currentText()
+            logma.info(f"Setting chart theme to: {theme}")
+            if self.chart:
+                self.chart.set_theme(theme)
+        return self
+
+    def cmd_set_palette(self, event, *args, **kwargs):
+        """Set chart color palette"""
+        if hasattr(self, "default_palette_select"):
+            palette = self.default_palette_select.currentText()
+            logma.info(f"Setting chart palette to: {palette}")
+            if self.chart:
+                self.chart.set_palette(palette)
+        return self
+
+    def cmd_set_chart_type(self, event, *args, **kwargs):
+        """Set chart type"""
+        if hasattr(self, "default_type_select"):
+            chart_type = self.default_type_select.currentText()
+            logma.info(f"Setting chart type to: {chart_type}")
+            self.chart_type = chart_type
+            self.set_type(chart_type)
+        return self
+
+    def cmd_select_data_source(self, event, *args, **kwargs):
+        """Select data source for chart"""
+        if hasattr(self, "chart_data_sources_select"):
+            data_source = self.chart_data_sources_select.currentText()
+            logma.info(f"Selecting data source: {data_source}")
+            self.load_data_from_source(data_source)
+        return self
+
+    def convert_table_to_chart_data(self, table_data):
+        """Convert table data to chart data format"""
+        # This is a basic implementation - can be enhanced based on chart type
+        if not table_data or len(table_data) < 2:
+            return {}
+
+        # Assume first row is headers
+        headers = table_data[0]
+        data_rows = table_data[1:]
+
+        chart_data = {"labels": [row[0] for row in data_rows if row], "datasets": []}
+
+        # Create datasets for each column (excluding the first label column)
+        for col_idx in range(1, len(headers)):
+            dataset = {"label": headers[col_idx], "data": []}
+            for row in data_rows:
+                if row and len(row) > col_idx:
+                    try:
+                        dataset["data"].append(float(row[col_idx]))
+                    except (ValueError, TypeError):
+                        dataset["data"].append(0)
+            chart_data["datasets"].append(dataset)
+
+        return chart_data
+
+    def export_chart_data(self, file_path, format="csv"):
+        """Export chart data to file"""
+        try:
+            if self.document:
+                self.document.export_data(file_path, format=format)
+                logma.info(f"Chart data exported: {file_path}")
+        except Exception as e:
+            logma.error(f"Error exporting chart data: {e}")
+        return self
+
+    def export_to_plotly(self, file_path):
+        """Export chart to Plotly HTML format"""
+        try:
+            if self.chart:
+                self.chart.export_plotly(file_path)
+                logma.info(f"Chart exported to Plotly: {file_path}")
+        except Exception as e:
+            logma.error(f"Error exporting to Plotly: {e}")
         return self
 
     def get_data_sources(self):
@@ -368,6 +474,34 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         self.toolbox_config[300]["items"] = self.init_drawer_connections()
         self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
+    def load_chart_config(self, file_path):
+        """Load chart configuration from file"""
+        try:
+            if self.document:
+                self.document.file_path = file_path
+                self.document.load_document()
+                # Apply loaded configuration to chart
+                self.apply_chart_config()
+                logma.info(f"Chart configuration loaded: {file_path}")
+        except Exception as e:
+            logma.error(f"Error loading chart config: {e}")
+        return self
+
+    def load_data_from_source(self, source_name):
+        """Load data from a named source"""
+        try:
+            if self.app and hasattr(self.app, "model"):
+                # Get data from the model/store
+                data = self.app.model.codex.get_data_source(source_name)
+                if data is not None:
+                    self.set_chart_data(data)
+                    logma.info(f"Loaded data from source: {source_name}")
+                else:
+                    logma.warning(f"No data found for source: {source_name}")
+        except Exception as e:
+            logma.error(f"Error loading data from source {source_name}: {e}")
+        return self
+
     def load_types(self):
         """"""
         table = "vw_chart_types"
@@ -418,69 +552,6 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             self.layout.insertWidget(2, self.chart_config_pane)
         self.update()
 
-    # ========== Command Handlers ==========
-
-    def cmd_set_compatibility(self, event, *args, **kwargs):
-        """Set chart compatibility mode"""
-        if hasattr(self, "compatibility_select"):
-            compatibility = self.compatibility_select.currentText()
-            logma.info(f"Setting chart compatibility to: {compatibility}")
-            if self.document:
-                self.document.set_compatibility(compatibility)
-        return self
-
-    def cmd_set_theme(self, event, *args, **kwargs):
-        """Set chart theme"""
-        if hasattr(self, "default_theme_select"):
-            theme = self.default_theme_select.currentText()
-            logma.info(f"Setting chart theme to: {theme}")
-            if self.chart:
-                self.chart.set_theme(theme)
-        return self
-
-    def cmd_set_palette(self, event, *args, **kwargs):
-        """Set chart color palette"""
-        if hasattr(self, "default_palette_select"):
-            palette = self.default_palette_select.currentText()
-            logma.info(f"Setting chart palette to: {palette}")
-            if self.chart:
-                self.chart.set_palette(palette)
-        return self
-
-    def cmd_set_chart_type(self, event, *args, **kwargs):
-        """Set chart type"""
-        if hasattr(self, "default_type_select"):
-            chart_type = self.default_type_select.currentText()
-            logma.info(f"Setting chart type to: {chart_type}")
-            self.chart_type = chart_type
-            self.set_type(chart_type)
-        return self
-
-    def cmd_select_data_source(self, event, *args, **kwargs):
-        """Select data source for chart"""
-        if hasattr(self, "chart_data_sources_select"):
-            data_source = self.chart_data_sources_select.currentText()
-            logma.info(f"Selecting data source: {data_source}")
-            self.load_data_from_source(data_source)
-        return self
-
-    # ========== Data Loading Methods ==========
-
-    def load_data_from_source(self, source_name):
-        """Load data from a named source"""
-        try:
-            if self.app and hasattr(self.app, "model"):
-                # Get data from the model/store
-                data = self.app.model.codex.get_data_source(source_name)
-                if data is not None:
-                    self.set_chart_data(data)
-                    logma.info(f"Loaded data from source: {source_name}")
-                else:
-                    logma.warning(f"No data found for source: {source_name}")
-        except Exception as e:
-            logma.error(f"Error loading data from source {source_name}: {e}")
-        return self
-
     def set_chart_data(self, data):
         """Set data for the chart"""
         if self.chart:
@@ -491,42 +562,6 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             except Exception as e:
                 logma.error(f"Error setting chart data: {e}")
         return self
-
-    def update_chart_from_table(self, table_data):
-        """Update chart from table data"""
-        if self.chart and table_data:
-            try:
-                # Convert table data to chart-friendly format
-                chart_data = self.convert_table_to_chart_data(table_data)
-                self.set_chart_data(chart_data)
-            except Exception as e:
-                logma.error(f"Error updating chart from table: {e}")
-        return self
-
-    def convert_table_to_chart_data(self, table_data):
-        """Convert table data to chart data format"""
-        # This is a basic implementation - can be enhanced based on chart type
-        if not table_data or len(table_data) < 2:
-            return {}
-
-        # Assume first row is headers
-        headers = table_data[0]
-        data_rows = table_data[1:]
-
-        chart_data = {"labels": [row[0] for row in data_rows if row], "datasets": []}
-
-        # Create datasets for each column (excluding the first label column)
-        for col_idx in range(1, len(headers)):
-            dataset = {"label": headers[col_idx], "data": []}
-            for row in data_rows:
-                if row and len(row) > col_idx:
-                    try:
-                        dataset["data"].append(float(row[col_idx]))
-                    except (ValueError, TypeError):
-                        dataset["data"].append(0)
-            chart_data["datasets"].append(dataset)
-
-        return chart_data
 
     def refresh_chart(self):
         """Refresh the chart display"""
@@ -548,16 +583,6 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"Error saving chart image: {e}")
         return self
 
-    def export_chart_data(self, file_path, format="csv"):
-        """Export chart data to file"""
-        try:
-            if self.document:
-                self.document.export_data(file_path, format=format)
-                logma.info(f"Chart data exported: {file_path}")
-        except Exception as e:
-            logma.error(f"Error exporting chart data: {e}")
-        return self
-
     def save_chart_config(self, file_path=None):
         """Save chart configuration"""
         try:
@@ -572,42 +597,15 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"Error saving chart config: {e}")
         return self
 
-    def load_chart_config(self, file_path):
-        """Load chart configuration from file"""
-        try:
-            if self.document:
-                self.document.file_path = file_path
-                self.document.load_document()
-                # Apply loaded configuration to chart
-                self.apply_chart_config()
-                logma.info(f"Chart configuration loaded: {file_path}")
-        except Exception as e:
-            logma.error(f"Error loading chart config: {e}")
-        return self
-
-    def apply_chart_config(self):
-        """Apply document configuration to chart"""
-        if self.document and self.chart:
+    def update_chart_from_table(self, table_data):
+        """Update chart from table data"""
+        if self.chart and table_data:
             try:
-                if hasattr(self.document, "chart_type"):
-                    self.set_type(self.document.chart_type)
-                if hasattr(self.document, "data"):
-                    self.set_chart_data(self.document.data)
-                if hasattr(self.document, "theme"):
-                    self.chart.set_theme(self.document.theme)
-                logma.info("Chart configuration applied")
+                # Convert table data to chart-friendly format
+                chart_data = self.convert_table_to_chart_data(table_data)
+                self.set_chart_data(chart_data)
             except Exception as e:
-                logma.error(f"Error applying chart config: {e}")
-        return self
-
-    def export_to_plotly(self, file_path):
-        """Export chart to Plotly HTML format"""
-        try:
-            if self.chart:
-                self.chart.export_plotly(file_path)
-                logma.info(f"Chart exported to Plotly: {file_path}")
-        except Exception as e:
-            logma.error(f"Error exporting to Plotly: {e}")
+                logma.error(f"Error updating chart from table: {e}")
         return self
 
     # ====================================================================================================================||
