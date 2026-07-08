@@ -181,9 +181,14 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         cfg = {}
         self.chart = NchantdChart(self, cfg).initWidget()
         self.layout.addWidget(self.chart)
+
+        # TODO: need to wire up the rest of the config options from the config pane to the chart pane...
+        #  currently the select chart type works but everything else is broken
+
         cfg = {"size": ["auto", 350]}
         self.chart_config_pane = NchantdChartConfigPane(self, cfg).initWidget()
         self.layout.addWidget(self.chart_config_pane)
+
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
         return self

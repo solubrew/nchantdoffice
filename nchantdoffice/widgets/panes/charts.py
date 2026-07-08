@@ -118,7 +118,7 @@ class NchantdChartConfigPane(NchantdPane):
         cfg = {
             "label": "Enter Chart Label: ",
             "size": None,
-            "entrybox": {"size": ["auto", 30]},
+            "entrybox": {"size": ["auto", "auto"]},
             "handler": self.cmd_on_name_change,
         }
         self.chart_name_entry = NchantdLabeledEntry(self, cfg).initWidget()
@@ -126,7 +126,7 @@ class NchantdChartConfigPane(NchantdPane):
         cfg = {
             "label": "Enter Chart Description: ",
             "size": None,
-            "entrybox": {"size": ["auto", 60]},
+            "entrybox": {"size": ["auto", "auto"]},
             "handler": self.cmd_on_description_change,
         }
         self.chart_description_entry = NchantdLabeledEntry(self, cfg).initWidget()
@@ -136,6 +136,7 @@ class NchantdChartConfigPane(NchantdPane):
             "size": None,
             "options": self.get_themes(),
             "handler": self.cmd_on_theme_change,
+            "layout": "horizontal",
         }
         self.chart_theme_select = NchantdDropDown(self, cfg).initWidget()
         chart_specifics_layout.addWidget(self.chart_theme_select)
@@ -144,6 +145,7 @@ class NchantdChartConfigPane(NchantdPane):
             "size": None,
             "options": self.get_palettes(),
             "handler": self.cmd_on_palette_change,
+            "layout": "horizontal",
         }
         self.chart_palette_select = NchantdDropDown(self, cfg).initWidget()
         chart_specifics_layout.addWidget(self.chart_palette_select)
@@ -163,8 +165,11 @@ class NchantdChartConfigPane(NchantdPane):
         }
         self.chart_type_select = NchantdDropDown(self, cfg).initWidget()
         chart_details_layout.addWidget(self.chart_type_select)
+
+        # TODO: implement this as button group
+
         cfg = {
-            "text": "Set Chart Background Color: ",
+            "text": "Set Chart Background Color",
             "layout": "horizontal",
             "size": ["auto", "auto"],
             "handler": self.cmd_launch_color_sigil,
@@ -173,7 +178,7 @@ class NchantdChartConfigPane(NchantdPane):
         self.chart_area_color = NchantdButton(self, cfg).initWidget()
         chart_details_layout.addWidget(self.chart_area_color)
         cfg = {
-            "text": "Set Chart Area Color: ",
+            "text": "Set Chart Area Color",
             "layout": "horizontal",
             "size": ["auto", "auto"],
             "handler": self.cmd_launch_color_sigil,
@@ -186,6 +191,7 @@ class NchantdChartConfigPane(NchantdPane):
             "layout": "horizontal",
             "size": ["auto", "auto"],
         }
+        # TODO: BorderConfigBar was a copy of text config and needs to be updated to apply to border styles
         self.chart_border_bar = NchantdBorderConfigBar(self, cfg).initWidget()
         chart_details_layout.addWidget(self.chart_border_bar)
         # cfg = {
