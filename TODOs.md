@@ -134,12 +134,19 @@
      from the real engine (`qWebEngineChromiumVersion()` → `Chrome/140.0.0.0`),
      used for all normal browsing. Exposed `qWebEngineChromiumVersion` in
      `libraries/pyqt.py`. Replaced every legacy UA with it.
-  2. **Google sign-in quirk** (fixes the hard block): `NchantdRequestInterceptor`
-     (`requests.py`) now rewrites the `User-Agent` request header to a **Firefox**
-     UA, scoped ONLY to sign-in hosts (`accounts.google.com`, `accounts.youtube.com`).
-     This is the same site-specific quirk qutebrowser uses (issue #5182). A Firefox
-     UA globally breaks other sites, so it is host-scoped; `mail.google.com` and
-     everything else keep the modern Chrome UA.
+  2. **Google sign-in quirk** (fixes the hard block), host-scoped to
+     `accounts.google.com` / `accounts.youtube.com` — same approach as qutebrowser
+     (#5182). Two layers, because Google checks both the request UA *and* the
+     JS-visible `navigator`:
+       a. `NchantdRequestInterceptor` (`requests.py`) rewrites the `User-Agent`
+          request header to a **Firefox** UA on those hosts.
+       b. `install_google_login_ua_script()` (`profiles.py`) injects a main-world
+          script (DocumentCreation) that overrides `navigator.userAgent`/
+          `appVersion`/`platform`/`vendor`/`productSub`/`userAgentData` to Firefox
+          values, but only when `location.hostname` is a sign-in host. Header-only
+          (layer a) was insufficient — Google still saw `navigator.userAgent` =
+          Chrome and redirected to `signin/rejected`.
+     `mail.google.com` and all other sites keep the modern Chrome UA/navigator.
   3. `_configure_profile` sets `Accept-Language` and enables JS/LocalStorage;
      persistent cookies already `AllowPersistentCookies`.
   4. Added `--disable-blink-features=AutomationControlled` in `graphics.py`
