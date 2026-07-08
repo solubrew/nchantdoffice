@@ -986,9 +986,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def get_node(self, nid):
-        """"
+        """ "
         Retrieve a node by its ID.
-        
+
         :param nid: Node ID to look up
         :return: Node row from the nodes DataFrame, or None if not found
         """
@@ -1452,8 +1452,13 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             self.store_instance(instance)
         return self
 
+    def store_link(self):
+        """"""
+        # TODO: implement method
+
     def store_node(self):
         """"""
+        # TODO: implement method
         return self
 
     def store_rss_feeds(self, df, how=None):
@@ -1810,10 +1815,10 @@ class NchantdOfficeStore(NchantdStore):
 
         # Handle instance version safely
         instance_version = "0.0.0"
-        if hasattr(self, 'app') and self.app is not None:
-            if hasattr(self.app, 'model') and self.app.model is not None:
-                if hasattr(self.app.model, 'instance') and self.app.model.instance is not None:
-                    instance_version = getattr(self.app.model.instance, 'version', "0.0.0")
+        if hasattr(self, "app") and self.app is not None:
+            if hasattr(self.app, "model") and self.app.model is not None:
+                if hasattr(self.app.model, "instance") and self.app.model.instance is not None:
+                    instance_version = getattr(self.app.model.instance, "version", "0.0.0")
 
         # Handle policy - default to None
         policy = document.get("policy", None)
