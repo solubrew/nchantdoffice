@@ -28,6 +28,7 @@
     # the youtube page works directly showing video fine for the first 20-30 seconds then crashes
   - Quick launch new document dialog is failing
     # 2026-07-08 17:36:35,047 - nchantrs.dialogs.dialogs                  494: INFO     - NchantdSigil.initView - layout already exists: <PySide6.QtWidgets.QHBoxLayout(0x2e2202b0) at 0x7d7eb42cf2c0>
+  - Favorites / new-window links open-in-tab: attempted via createWindow hijack (nchantrs pages.py open_new_window hook + office open_web_tab). REVERTED behaviourally — hijacking window.open (returning a self-destructing blocking page) made popups "open then vanish", which Google's sign-in security JS treats as an insecure/automated browser → HARD BLOCK on login. Now gated OFF: `pages.ENABLE_NEW_WINDOW_DELEGATION = False` restores prior createWindow behaviour (login works again; favorites clicks do nothing). Feature code kept, dormant. Safer next attempt: gate on the createWindow `type_` (only WebBrowserTab, leave WebDialog/WebBrowserWindow — Google's probes — untouched), or use the `newWindowRequested` signal, and never engage on `accounts.google.com`.
   - 
 
 
@@ -129,44 +130,45 @@
 - **Status:** TODO
 
 ### F2 — Gmail Browser Compliance (GmailBrowser)
-- **Severity:** P1 → 🟡 In progress (soft-banner baseline restored; banner not yet removed)
-- **Symptom:** (1) Gmail "unsupported browser" **soft banner** (login still works);
-  (2) any attempt to look like modern **Chrome** escalates Google to a **hard block**
-  ("this browser or app may not be secure", redirect to `signin/rejected`).
-- **What we learned (empirical):** installed QtWebEngine is Chromium **140**
-  (PySide6 6.11) — the engine is fine. The determinant is the advertised browser
-  identity:
-  - **Non-Chrome UA** (e.g. `CustomBrowser/1.0`) → soft banner, **login works**.
-  - **Chrome UA** → Google's embedded-browser integrity check **hard-blocks** sign-in.
-  Attempted host-scoped Firefox spoof on `accounts.google.com` (Firefox request
-  header **+** `navigator.*` main-world override) did **NOT** defeat the hard block —
-  Google still rejected. So UA/navigator spoofing alone is insufficient here.
-- **Current state (nchantrs base) — trying consistent Firefox identity:**
-  - Single knob `profiles.DEFAULT_USER_AGENT` drives every profile UA (pool
-    `ProfileConfiguration`, `NchantdWebProfile.set_persistence`,
-    `set_security_policy`, `engines.create_custom_profile`). Now set to
-    `firefox_user_agent()` (a real Firefox 140 UA) — Firefox is a *supported*
-    Google browser, so it should clear both the banner and the hard block. Set at
-    the profile level (not a header rewrite) so Chromium does not emit
-    contradicting Chrome `Sec-CH-UA` client hints — that contradiction is why the
-    earlier per-host Firefox spoof still got hard-blocked. Fallback if it
-    regresses: set the knob back to `"CustomBrowser/1.0"` (banner returns, login
-    keeps working). **Pending live test.**
-  - Google sign-in quirk kept but **gated off** by `requests.ENABLE_GOOGLE_LOGIN_QUIRK
-    = False` (both the interceptor header rewrite and the `navigator` injection in
-    `profiles.install_google_login_ua_script`). Flip to re-arm for experiments.
-  - Reverted the `--disable-blink-features=AutomationControlled` flag in `graphics.py`.
-  - Kept (harmless): `modern_user_agent()`/`qWebEngineChromiumVersion` helpers,
-    `Accept-Language` header, explicit JS/LocalStorage enable.
-- **Next levers to try (to remove the banner without the hard block):**
-  1. **Global Firefox UA** (`DEFAULT_USER_AGENT` = a real Firefox string) — Firefox
-     is a *supported* browser, so likely no banner AND no hard block; cost is some
-     sites serving Firefox code paths. Strongest candidate.
-  2. If staying Chrome-flavoured: also neutralize Chromium `Sec-CH-UA` client-hint
-     headers (they leak Chromium even under a Firefox UA).
-  3. Longer term: real OAuth instead of embedded sign-in (Google's stated intent
-     behind the block).
-- **Status:** 🟡 In progress — baseline (working login + banner) restored 2026-07-08
+- **Severity:** P1 → ✅ **Login working** (2026-07-08). Follow-up open: shortcut links.
+- **Symptom (resolved):** Google sign-in from the embedded browser either showed an
+  "unsupported browser" banner or hard-blocked with "this browser or app may not be
+  secure" (redirect to `signin/rejected`).
+- **✅ CONFIRMED-WORKING CONFIGURATION (do not regress — Google account login
+  succeeds with no error):** a *fully consistent Firefox identity*. A partial
+  Firefox disguise (UA or header only) gets hard-blocked; every Chrome "tell" must
+  be flipped together. All in the `nchantrs` base browser stack:
+  1. `profiles.DEFAULT_USER_AGENT = firefox_user_agent()` — real Firefox 140 UA set
+     at the profile level for every profile (pool `ProfileConfiguration`,
+     `NchantdWebProfile.set_persistence`, `set_security_policy`,
+     `engines.create_custom_profile`).
+  2. `requests.ENABLE_GOOGLE_LOGIN_QUIRK = True` — on `accounts.google.com` /
+     `accounts.youtube.com`: interceptor rewrites the request `User-Agent` to Firefox,
+     and `profiles.install_google_login_ua_script` injects a DocumentCreation main-world
+     script overriding `navigator.userAgent/appVersion/platform/oscpu/vendor(=\"\")/`
+     `vendorSub/productSub(=\"20100101\")/userAgentData(=undefined)` and
+     `window.chrome(=undefined)`.
+  3. `graphics.py` Chromium flags include
+     `--disable-features=…,UserAgentClientHint,UserAgentClientHintFullVersionList` so
+     no Chrome `Sec-CH-UA` client-hint headers are emitted.
+  4. Kept: `Accept-Language: en-US,en;q=0.9`, explicit JS/LocalStorage enable,
+     persistent cookies.
+  - **Reliable fallback** if Google tightens again: `DEFAULT_USER_AGENT =
+    "CustomBrowser/1.0"` → soft "unsupported browser" banner but login still works.
+- **⚠️ Known limitation / open follow-up — shortcut links not handled:** in-page
+  links / Google account "favorites" that open a new window (`target="_blank"` /
+  `window.open`) do not open anywhere. The new-tab handler
+  (`pages.ENABLE_NEW_WINDOW_DELEGATION`, office `open_new_window`/`open_web_tab`)
+  is **gated OFF** because hijacking `window.open` (returning a self-destructing
+  blocking page) made popups "open then vanish", which Google's sign-in security JS
+  flagged as automation → re-broke login. **Login capability must stay active.**
+  Next attempt must not disturb Google's own `window.open`: gate on the
+  createWindow `type_` (handle only `WebBrowserTab`/`WebBrowserBackgroundTab`, leave
+  `WebDialog`/`WebBrowserWindow`), and/or never engage on `accounts.google.com`, and
+  use the `[webpage] createWindow type=…` logs from a real click to confirm before
+  re-enabling.
+- **Status:** ✅ Login working 2026-07-08 (Firefox-identity config above). 🟡 Shortcut
+  link handling still open (delegation gated off to protect login).
 
 ---
 

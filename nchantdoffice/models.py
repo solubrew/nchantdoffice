@@ -1481,10 +1481,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             self.store_instance(instance)
         return self
 
-    def store_link(self, name, url=None, tags=None):
-        """"""
-        # TODO: implement method
-
     def store_node(self):
         """"""
         # TODO: implement method
