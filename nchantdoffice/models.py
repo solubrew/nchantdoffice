@@ -1962,8 +1962,13 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 if self.new_document is None:
                     self.new_document = NchantdOfficeDocumentsCatalog(self.parent, self.config)
                 self.new_document.initWidget()
-                self.new_document.position = len(self.tabsdata) + 1
-                self.parent.addTab(self.new_document, " + ")
+                # Empty tabsets should have catalog as the FIRST tab, not the last
+                if len(self.tabsdata) == 0:
+                    self.new_document.position = 0
+                    self.parent.insertTab(0, self.new_document, " + ")
+                else:
+                    self.new_document.position = len(self.tabsdata) + 1
+                    self.parent.addTab(self.new_document, " + ")
 
             # When building center pane, also build right pane tabs
             if tabset == "center" and hasattr(self.parent, "app"):

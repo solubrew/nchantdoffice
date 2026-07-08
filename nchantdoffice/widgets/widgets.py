@@ -22,6 +22,7 @@ import datetime as dt
 from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantrs.widgets.tabsets import NchantdTabSet
+from nchantrs.libraries.pyqt import QTimer
 from nchantdoffice.models import NchantdOfficeTabSetModel
 from nchantdoffice.widgets.controls.toolboxes import NchantdOfficeApplicationToolBox
 from nchantdoffice.widgets.documents.media.notes import NchantdOfficeNote
@@ -126,8 +127,19 @@ class NchantdOfficeTabSet(NchantdTabSet):
                 right_pane.toolbox.build_toolbox()
             else:
                 logma.info("Reusing existing toolbox in right pane")
-                # Refresh toolbox drawer items for the active document context
-                right_pane.toolbox.refresh_for_document(widget)
+                # H24 FIX: Deferred refresh using QTimer.singleShot to ensure widget is fully initialized
+                # before updating toolbox drawer items for the active document context
+                QTimer.singleShot(0, lambda: right_pane.toolbox.refresh_for_document(widget))
+
+            # H24 FIX: Wire toolbox to current_document_changed signal for automatic refresh
+            # when document changes via other mechanisms (drag-drop, API calls)
+            if not hasattr(right_pane, "toolbox_signal_connected") or not right_pane.toolbox_signal_connected:
+                if hasattr(self.parent, "current_document_changed"):
+                    self.parent.current_document_changed.connect(
+                        lambda doc: QTimer.singleShot(0, lambda: right_pane.toolbox.refresh_for_document(doc))
+                    )
+                    right_pane.toolbox_signal_connected = True
+                    logma.info("Wired toolbox to current_document_changed signal")
 
         # Ensure tabn is valid for super class to avoid IndexError in set_focus
         if tabn >= 0 and tabn <= len(self.model.tabsdata):
