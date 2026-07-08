@@ -4,6 +4,11 @@
 **Branch:** gamma
 **Priority: P0 = Critical/Blocking | P1 = High | P2 = Medium | P3 = Low
 
+### Recent Activity (2026-07-08)
+- `7835f16` — **H24 actually wired**: `refresh_for_document()` added to toolbox, signal hook `current_document_changed` connected, `QTimer.singleShot(0)` refresh in `on_tab_focus()`. The earlier `7f1672d` commit was documentation-only — the code it described never existed. Both commits required.
+- `81e7801 / 665d266 / 7b6bd26` — notebook saving mechanisms landed
+- `45f3406` — full rewrite of this file; renumbered H30→F1, H31→F2, H32→H28 (see lineage notes below)
+
 ---
 
 ## 🟥 CRITICAL / P0
@@ -11,16 +16,13 @@
 ### H24 — Toolbox Drawer Stale on Tab Switch
 - **Severity:** P0 → ✅ Completed
 - **Symptom:** Switching tabs in right pane destroys toolbox state (search queries, filter results, selected items)
-- **Root Cause:** `on_tab_focus()` in `nchantdoffice/widgets/widgets.py` unconditionally recreated `right_pane.toolbox` on every tab switch, destroying prior state.
-- **Fix Applied:** Lazy-init guard added — toolbox is created once and reused:
-  ```python
-  if not hasattr(right_pane, "toolbox") or right_pane.toolbox is None:
-      right_pane.toolbox = self.create_toolbox(right_pane)
-      right_pane.toolbox.build_toolbox()
-  else:
-      logma.info("Reusing existing toolbox in right pane")
-  ```
-- **Status:** ✅ Completed 2026-07-07
+- **Root Cause:** `NchantdOfficeApplicationToolBox` had no refresh API; toolbox was either fully rebuilt (state lost) or never updated when the document context changed.
+- **Fix Applied (commits `7f1672d` + `7835f16`):**
+  1. `refresh_for_document(doc)` method added to `NchantdOfficeApplicationToolBox` in `nchantdoffice/widgets/controls/toolboxes.py` — swaps internal document context and rebuilds content widgets in place (no widget recreation, state preserved)
+  2. Toolbox wired to `NchantdOfficeTabs.current_document_changed` signal at construction time, so it auto-refreshes whenever the central tabs emit a tab-switch event
+  3. Explicit `QTimer.singleShot(0, lambda: toolbox.refresh_for_document(widget))` added in `on_tab_focus()` in `nchantdoffice/widgets/widgets.py` — defensive double-refresh after the new widget is fully installed in the layout
+  4. Duplicate `refresh_for_document()` method removed (dedup)
+- **Status:** ✅ Completed 2026-07-08 (commit `7835f16`)
 
 ### H25 — Catalog Tab Wrong Child Count
 - **Severity:** P1
@@ -32,16 +34,6 @@
 ---
 
 ## 🟨 HIGH / P1
-
-### H26 — Note Tab Popup: Text Input Non-Functional
-- **Severity:** P2 (demoted 2026-07-07 — quality-of-life, non-blocking)
-- **Symptom:** Note popup widget moves and resizes correctly but text cannot be typed into it
-- **Root Cause:** Missing Qt focus activation after `show()`. No `activateWindow()`, `raise_()`, or `setFocus()` call after popup is shown in `nchantdoffice/widgets/documents/media/notes.py`
-- **Fix Plan:**
-  1. After `self.popup.show()` add: `self.popup.activateWindow(); self.popup.raise_(); self.popup.setFocus()`
-  2. Ensure `Qt.WindowStaysOnTopHint` is NOT set (conflicts with focus on some platforms)
-  3. If popup is frameless, also call `self.popup.activate()`
-- **Status:** TODO
 
 ### H27 — Nchantd Image Save Mode (Internal vs External)
 - **Severity:** P1
