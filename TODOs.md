@@ -69,17 +69,17 @@
 
 ## 🟦 MEDIUM / P2
 
-### P1 — Startup Performance (Glain Load)
+### P1 — Startup Performance ()
 - **Severity:** P2
 - **Symptom:** Application startup takes 30+ seconds due to Glain graph loading
 - **Root Cause:** Glain loads entire knowledge graph synchronously on startup; no lazy loading or caching
 - **Fix Plan:**
-  1. Add lazy init: `GlainLoader` class that loads in background thread
+  1. Add lazy init: NchantdOfficeAppModel class that loads in background thread
   2. Show splash screen while loading
   3. Cache frequently-accessed subgraphs
 - **Status:** TODO
 
-### P2 — Lazy Tab Loading Audit
+### P2 — Lazy Tab Loading Audit - ## COMPLETE ##
 - **Severity:** P2 → ✅ Completed
 - **Symptom:** Central pane and right-side tabs both load eagerly, slowing startup
 - **Root Cause:** H9 (commit 4ac4e53) replaced the inline lazy-loading loop in
@@ -109,17 +109,37 @@
 - **Status:** TODO
 
 ### F2 — Gmail Browser Compliance (GmailBrowser)
-- **Severity:** P1 (Gmail blocks legacy browser versions)
+- **Severity:** P1 (Gmail blocks legacy browser versions) → ✅ Completed
 - **Symptom:** Gmail says browser version is no longer supported; user prompted to upgrade
-- **Root Cause:** `NchantdBrowser` / `NchantdOfficeBrowser` using outdated or missing Chromium/Electron version
-- **Fix Plan:**
-  1. Audit `nchantdoffice/widgets/documents/web.py` for browser engine version
-  2. Check `requirements.txt` / `pyproject.toml` for `PyQt6-WebEngine` version
-  3. Update to latest Qt WebEngine (Qt 6.7+) which includes Chromium 114+
-  4. Set `QWebEngineProfile::defaultProfile()->setHttpUserAgent()` to a modern Chrome string
-  5. Add `--disable-blink-features=OutOfBlinkCors` to browser args for Gmail compatibility
-  6. Verify `QWebEngineSettings::Personalizable()` is enabled for cookie/session persistence
-- **Status:** TODO
+- **Root Cause:** NOT the engine — the installed QtWebEngine (PySide6 6.11) is
+  Chromium **140**, plenty modern. The browser advertised a *legacy User-Agent*
+  that overrode the real engine string. The office browser (`atnrg/browsers.py`,
+  not the `web.py` named in the old plan) uses the app-level `ProfileManager`
+  pool, whose default `ProfileConfiguration.user_agent` was `"CustomBrowser/1.0"`
+  (nchantrs `profiles.py`). Additional stale UAs lurked in
+  `NchantdWebProfile.set_persistence` (hardcoded Chrome/122),
+  `set_security_policy` (`"SafeUserAgent"`), and `engines.create_custom_profile`
+  (`"CustomWebBrowser/1.0"`).
+- **Fix Applied (nchantrs base):**
+  1. New `modern_user_agent()` helper in `nchantrs/widgets/browsers/profiles.py`
+     derives the UA's Chrome token from the *actual* engine via
+     `qWebEngineChromiumVersion()` (→ `Chrome/140.0.0.0` here), with a current
+     hardcoded fallback. Exposed `qWebEngineChromiumVersion` in `libraries/pyqt.py`.
+  2. Replaced every legacy UA (ProfileConfiguration default + DEVELOPMENT,
+     `set_persistence`, `set_security_policy`, `engines.create_custom_profile`)
+     with the derived modern UA.
+  3. `_configure_profile` now sets `HttpAcceptLanguage=en-US,en;q=0.9` and
+     explicitly enables JavaScript/LocalStorage; persistent cookies were already
+     `AllowPersistentCookies`.
+  4. Added `--disable-blink-features=AutomationControlled` to the Chromium flags
+     in `graphics.py` (the plan's `OutOfBlinkCors` flag was removed from Chromium
+     long ago; AutomationControlled is the current, effective equivalent).
+  5. Bumped the templated UA fallback `chrome-version` in `profiles.yaml` to 138.
+- **Notes:** No nchantdoffice code change needed (it sets no UA of its own).
+  PySide6 6.11 already satisfies the "Qt 6.7+/Chromium 114+" plan step. Behaviour
+  verified only statically (py_compile + live `qWebEngineChromiumVersion()` probe);
+  in-app Gmail login not yet exercised.
+- **Status:** ✅ Completed 2026-07-08
 
 ---
 
