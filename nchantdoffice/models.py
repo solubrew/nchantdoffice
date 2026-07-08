@@ -17,6 +17,7 @@ from os.path import dirname, join, exists
 import json as j
 import datetime as dt
 from dateutil import parser
+from urllib.parse import urlsplit
 
 # ======================================3rd Party Library Modules=====================================================||
 from pandas import DataFrame, concat
@@ -48,6 +49,34 @@ if not log:
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "models.yaml")
+
+# Fully-qualified widget path used when opening a web page as its own tab.
+OFFICE_WEB_BROWSER_WIDGET = "nchantdoffice.widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
+
+
+def same_web_url(a, b):
+    """True if two URLs point at the same destination (scheme+host+path, ignoring
+    trailing slash / query / fragment). Used to avoid opening duplicate tabs."""
+    try:
+        pa, pb = urlsplit(a), urlsplit(b)
+        return (
+            pa.scheme.lower() == pb.scheme.lower()
+            and pa.netloc.lower() == pb.netloc.lower()
+            and pa.path.rstrip("/") == pb.path.rstrip("/")
+        )
+    except Exception:
+        return a == b
+
+
+def web_url_label(url):
+    """Short human label for a browser tab derived from the URL host."""
+    try:
+        host = urlsplit(url).netloc.lower()
+        if host.startswith("www."):
+            host = host[4:]
+        return host or "New Tab"
+    except Exception:
+        return "New Tab"
 
 
 class NchantdOfficeInstance(object):
@@ -2067,6 +2096,110 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 self.parent.insertTab(tabn, dummy, dummy.name)
 
         self.parent.setCurrentIndex(active_tab_position)
+        return self
+
+    def _widget_current_url(self, widget):
+        """Best-effort current URL for a browser tab widget (live view first,
+        then the persisted document URL)."""
+        try:
+            viewer = getattr(widget, "browser", None)
+            view = getattr(viewer, "browser", None) if viewer is not None else None
+            if view is not None:
+                url = view.url()
+                if url is not None:
+                    text = url.toString()
+                    if text:
+                        return text
+        except Exception:
+            pass
+        try:
+            return widget.get_active_url()
+        except Exception:
+            return None
+
+    def open_web_tab(self, url, name=None):
+        """Open ``url`` as a browser tab in this (center) tabset — or focus the
+        existing tab already showing it.
+
+        Returns self on success, or None to signal the caller to fall back (e.g.
+        no current node to attach the tab to). Used by NchantdOfficeWebBrowser to
+        handle target="_blank" / window.open (e.g. Google account shortcuts).
+        """
+        url_str = url if isinstance(url, str) else url.toString()
+        logma.info(f"[tabset] open_web_tab requested url={url_str}")
+
+        # 1) De-duplicate: focus an existing browser tab pointing at this URL.
+        for pos, widget in enumerate(self.tab_widgets):
+            if type(widget).__name__ != "NchantdOfficeWebBrowser":
+                continue
+            current = self._widget_current_url(widget)
+            logma.info(f"[tabset] existing browser tab pos={pos} url={current}")
+            if current and same_web_url(current, url_str):
+                logma.info(f"[tabset] focusing existing tab pos={pos}")
+                self.parent.setCurrentIndex(pos)
+                return self
+
+        # 2) Otherwise create a new browser tab and insert it LIVE.
+        #
+        # We deliberately do NOT rebuild the tabset (buildTabSet) here: a rebuild
+        # recreates every tab from its persisted state and would wipe the live
+        # navigation/history of the other open browser tabs. Instead we build one
+        # widget and splice it in just before the trailing " + " add-tab.
+        node = self.current_node
+        did = uuid()
+        label = name or web_url_label(url_str)
+        tabn = len(self.tabsdata)  # data tabs occupy 0..N-1; " + " (if any) is at N
+        logma.info(f"[tabset] creating live browser tab did={did} pos={tabn} label={label}")
+
+        try:
+            # Local import avoids a circular import at module load.
+            from nchantdoffice.widgets.documents.atnrg.browsers import NchantdOfficeWebBrowser
+
+            browser = NchantdOfficeWebBrowser(self.parent, {"url": url_str})
+            browser.initWidget()
+            # Attributes the tabset focus machinery (set_focus/on_tab_focus) expects.
+            browser.dummy = False
+            browser.position = tabn
+            browser.name = label
+            browser.type = "browser"
+        except Exception as e:
+            logma.error(f"[tabset] open_web_tab could not build browser widget: {e}", exc_info=True)
+            return None
+
+        try:
+            self.parent.blockSignals(True)
+            self.parent.insertTab(tabn, browser, label)  # pushes " + " to tabn+1 if present
+            self.tab_widgets.insert(tabn, browser)
+            # Minimal tab record so index/lookup bookkeeping stays consistent.
+            self.tabsdata.append(
+                {
+                    "name": label,
+                    "name_txt": label,
+                    "did": did,
+                    "tab_type": "browser",
+                    "tab_type_txt": "browser",
+                    "url": url_str,
+                    "ephemeral": True,
+                }
+            )
+        except Exception as e:
+            logma.error(f"[tabset] open_web_tab could not insert tab: {e}", exc_info=True)
+            return None
+        finally:
+            self.parent.blockSignals(False)
+
+        # Persist the tab so it survives a rebuild / restart (best-effort; a
+        # failure here does not undo the live tab the user can already see).
+        try:
+            if node is not None:
+                self.parent.app.model.add_tab(
+                    label, node.nid, tabn, OFFICE_WEB_BROWSER_WIDGET, {"url": url_str}, did, "browser", "center", True
+                )
+        except Exception as e:
+            logma.warning(f"[tabset] open_web_tab could not persist tab (kept live): {e}")
+
+        logma.info(f"[tabset] focusing new live tab index={tabn} of {len(self.tabsdata)} tabs")
+        self.parent.setCurrentIndex(tabn)
         return self
 
     def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0):

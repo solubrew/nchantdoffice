@@ -19,6 +19,18 @@
 | `ea87f02` | docs-only: rewrite H24 fix description; add Recent Activity log; move H26 to P2; dedupe M2/M4; promote M3 |
 | `45f3406` | full rewrite; renumbered H30→F1, H31→F2, H32→H28 |
 
+
+---
+
+## New TODOs: - unprioritized
+  - browser document tabs are not holding their individual position and history when new browser tab is created
+  - on page video not playing is a long term issue may require significant no programming work in facebook
+    # the youtube page works directly showing video fine for the first 20-30 seconds then crashes
+  - Quick launch new document dialog is failing
+    # 2026-07-08 17:36:35,047 - nchantrs.dialogs.dialogs                  494: INFO     - NchantdSigil.initView - layout already exists: <PySide6.QtWidgets.QHBoxLayout(0x2e2202b0) at 0x7d7eb42cf2c0>
+  - 
+
+
 ---
 
 ## 🟥 CRITICAL / P0

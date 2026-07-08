@@ -819,6 +819,33 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """"""
         return self
 
+    def open_new_window(self, url):
+        """Handle a target="_blank" / window.open request from the page.
+
+        Opens the URL as a browser tab in the center tabset, or focuses the tab
+        already showing it. Called (via a capture page) from
+        NchantdWebEnginePage.createWindow, which otherwise silently dropped these
+        (symptom: Google account "favorites" shortcuts did nothing on click).
+
+        Falls back to loading the URL in this view if the tabset path is
+        unavailable, so a click is never silently dropped.
+        """
+        url_str = url.toString() if isinstance(url, pyqt.QUrl) else str(url)
+        logma.info(f"[browser] open_new_window url={url_str}")
+        try:
+            center = self.app.view.panes.get("center") if self.app and self.app.view else None
+            result = center.model.open_web_tab(url_str) if center is not None else None
+            if result is not None:
+                return self
+            logma.info("[browser] open_web_tab unavailable; loading in current view as fallback")
+        except Exception as e:
+            logma.error(f"[browser] open_new_window failed: {e}; falling back to in-place load", exc_info=True)
+        try:
+            self.populate_document(url_str)
+        except Exception as e:
+            logma.error(f"[browser] open_new_window fallback populate_document failed: {e}", exc_info=True)
+        return self
+
     def pin_page(self):
         """"""
         if self.pinned is False:
