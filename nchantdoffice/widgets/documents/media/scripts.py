@@ -34,7 +34,7 @@ from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.media.editors.editors import NchantdDocEditor, NchantdLabeledEntry
 from nchantrs.widgets.media.editors.selectors import NchantdDropDownActivator, NchantdDropDown
-from nchantrs.widgets.controls.buttons import NchantdButton
+from nchantrs.widgets.controls.buttons import NchantdButtonWidget
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.controls.button_groups import NchantdFontConfigBar
 from nchantrs.dialogs.files import NchantdFileOpenSigil
@@ -189,6 +189,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         """"""
         return self
 
+    def cmd_add_date(self, event, *args, **kwargs):
+        """"""
+
     def cmd_add_image(self, event, *args, **kwargs):
         """"""
         return self
@@ -197,13 +200,16 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         """"""
         return self
 
+    def cmd_add_table(self, event, *args, **kwargs):
+        """"""
+        return self
+
     def cmd_add_textbox(self, event, *args, **kwargs):
         """"""
         return self
 
-    def cmd_add_table(self, event, *args, **kwargs):
+    def cmd_add_time(self, event, *args, **kwargs):
         """"""
-        return self
 
     def cmd_on_compatability_changed(self, event, *args, **kwargs):
         """"""
@@ -260,6 +266,8 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def cmd_toggle_page_view(self, event, *args, **kwargs):
         """"""
+        #TODO: Change between a full screen and a standard 8.5x11/whatever the current page size is set to
+        #view port change
         return self
 
     def extract_images(self):
@@ -391,17 +399,17 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
         default_action = {"action": "insert_generic_action", "type": "custom"}
-        # if cnt not in items:
-        #     items[cnt] = default_action
-        #
-        # cfg = {
-        #     "label": "Pretty Print",
-        #     "layout": "vertical",
-        #     "handler": self.cmd_pretty_print_selected_text,
-        # }
-        # self.pretty_print = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.pretty_print
-        # cnt += 1
+        if cnt not in items:
+            items[cnt] = default_action
+
+        cfg = {
+            "text": "Pretty Print",
+            "layout": "vertical",
+            "handler": self.cmd_pretty_print_selected_text,
+        }
+        self.pretty_print = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.pretty_print
+        cnt += 1
         if cnt not in items:
             items[cnt] = default_action
 
@@ -484,48 +492,48 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
             items[cnt] = default_action
-        # cfg = {
-        #     "label": "Insert Image:",
-        #     "layout": "vertical",
-        #     "handler": self.cmd_add_image,
-        #     "value": None,
-        # }
-        # self.insert_image = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.insert_image
-        # cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = default_action
-        # cfg = {
-        #     "label": "Insert Table:",
-        #     "layout": "vertical",
-        #     "handler": self.cmd_add_table,
-        #     "value": None,
-        # }
-        # self.insert_table = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.insert_table
-        # cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = default_action
-        # cfg = {
-        #     "label": "Insert Date:",
-        #     "layout": "vertical",
-        #     "handler": self.cmd_add_date,
-        #     "value": None,
-        # }
-        # self.insert_date = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.insert_date
-        # cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = default_action
-        # cfg = {
-        #     "label": "Insert Time:",
-        #     "layout": "vertical",
-        #     "handler": self.cmd_add_time,
-        #     "value": None,
-        # }
-        # self.insert_time = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.insert_time
-        # cnt += 1
+        cfg = {
+            "label": "Insert Image:",
+            "layout": "vertical",
+            "handler": self.cmd_add_image,
+            "value": None,
+        }
+        self.insert_image = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.insert_image
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = default_action
+        cfg = {
+            "label": "Insert Table:",
+            "layout": "vertical",
+            "handler": self.cmd_add_table,
+            "value": None,
+        }
+        self.insert_table = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.insert_table
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = default_action
+        cfg = {
+            "label": "Insert Date:",
+            "layout": "vertical",
+            "handler": self.cmd_add_date,
+            "value": None,
+        }
+        self.insert_date = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.insert_date
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = default_action
+        cfg = {
+            "label": "Insert Time:",
+            "layout": "vertical",
+            "handler": self.cmd_add_time,
+            "value": None,
+        }
+        self.insert_time = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.insert_time
+        cnt += 1
         # TODO move inserts to object config
         # TODO add tools here like spell/grammar, etc
         # TODO add analytics tools

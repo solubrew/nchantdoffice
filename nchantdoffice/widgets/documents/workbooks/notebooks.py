@@ -35,9 +35,10 @@ from nchantrs.libraries import pyqt
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
-log = True
+log = False
 logma = Logma(__name__)
-
+if not log:
+    logma.off()
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "notebooks.yaml")
 
@@ -158,6 +159,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.initModel()
         self.initView()
         return self
+
     def add_cell(self, cell):
         """Append a cell to the notebook.
 
@@ -169,7 +171,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.cells.append(cell)
         logma.info(f"Cell added; total: {len(self.cells)}")
         return self
-
 
     def check_kernel_alive(self):
         """Check if kernel is alive and responsive"""
@@ -206,6 +207,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         """"""
         self.pin_page()
         return self
+
     def cmd_unpin_page(self, event, *args, **kwargs):
         """"""
         super().unpin_page()
@@ -296,6 +298,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             if self.config:
                 self.config.dikt["autostart_server"] = autostart
         return self
+
     def create_new_notebook(self, notebook_name=None):
         """Create a new Jupyter notebook"""
         try:
@@ -351,6 +354,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         else:
             logma.error(f"Cell index {dex} out of range (size={len(self.cells)})")
         return self
+
     def execute_cell(self, cell_code, timeout=60):
         """Execute a specific cell code in the kernel
 
@@ -436,6 +440,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             output_parts.append(f"ERROR:\n{result['error']}")
 
         return "\n".join(output_parts) if output_parts else "Execution completed (no output)"
+
     def execute_all_cells(self, notebook_path=None):
         """Execute all cells in the notebook
 
@@ -491,6 +496,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error executing all cells: {e}")
 
         return self
+
     def get_available_kernels(self):
         """Get list of available Jupyter kernels"""
         try:
@@ -511,6 +517,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"Error getting kernels: {e}")
             return ["python3"]
+
     def get_kernel_info(self):
         """Get information about the running kernel"""
         if not self.kernel_running or not self.kernel_client:
@@ -803,6 +810,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error loading notebook file: {e}", exc_info=True)
 
         return self
+
     # ========== Server Management Methods ==========
 
     def open_file(self, file=None):
@@ -825,7 +833,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             self.pinned = False
         self.document.set_pinned(self.pinned)
         return self
-
 
     def populate_document(self):
         """"""
@@ -973,9 +980,9 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def save(self):
         """"""
-        #TODO: need to have a save url location mode so that it can reopen the same file each time
+        # TODO: need to have a save url location mode so that it can reopen the same file each time
         #  and an internal save mode such that the file data is stored in the database and can be reconstructed to .ipynb file
-        #logma.info(f"HTML {self.document_editor.toHtml()}")
+        # logma.info(f"HTML {self.document_editor.toHtml()}")
         if self.document is None:
             self.new_document()
         self.document.syntax = "html"
@@ -1038,6 +1045,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             count = len(cells) if cells else 0
             logma.info(f"Cells updated: {count} cells")
         return self
+
     def set_cell_source(self, text, position=0):
         """Set source code for a cell at given position.
 
@@ -1051,11 +1059,13 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.cells[position]["source"] = text
         logma.info(f"Cell {position} source updated")
         return self
+
     def shutdown(self):
         """Shutdown the notebook and clean up"""
         self.stop_kernel()
         self.stop_jupyter_server()
         return self
+
     def start_jupyter_server(self, port=None):
         """Start the Jupyter notebook server"""
         import time
@@ -1576,6 +1586,8 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[notebook] could not register atexit shutdown hook: {e}")
         return self
+
+
 # ====================================================================================================================||
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
