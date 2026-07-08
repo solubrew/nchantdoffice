@@ -129,10 +129,17 @@
   Attempted host-scoped Firefox spoof on `accounts.google.com` (Firefox request
   header **+** `navigator.*` main-world override) did **NOT** defeat the hard block —
   Google still rejected. So UA/navigator spoofing alone is insufficient here.
-- **Current state (nchantrs base) — reverted to the known-good baseline:**
-  - Single knob `profiles.DEFAULT_USER_AGENT = "CustomBrowser/1.0"` drives every
-    profile UA (pool `ProfileConfiguration`, `NchantdWebProfile.set_persistence`,
-    `set_security_policy`, `engines.create_custom_profile`). Soft banner, login works.
+- **Current state (nchantrs base) — trying consistent Firefox identity:**
+  - Single knob `profiles.DEFAULT_USER_AGENT` drives every profile UA (pool
+    `ProfileConfiguration`, `NchantdWebProfile.set_persistence`,
+    `set_security_policy`, `engines.create_custom_profile`). Now set to
+    `firefox_user_agent()` (a real Firefox 140 UA) — Firefox is a *supported*
+    Google browser, so it should clear both the banner and the hard block. Set at
+    the profile level (not a header rewrite) so Chromium does not emit
+    contradicting Chrome `Sec-CH-UA` client hints — that contradiction is why the
+    earlier per-host Firefox spoof still got hard-blocked. Fallback if it
+    regresses: set the knob back to `"CustomBrowser/1.0"` (banner returns, login
+    keeps working). **Pending live test.**
   - Google sign-in quirk kept but **gated off** by `requests.ENABLE_GOOGLE_LOGIN_QUIRK
     = False` (both the interceptor header rewrite and the `navigator` injection in
     `profiles.install_google_login_ua_script`). Flip to re-arm for experiments.
