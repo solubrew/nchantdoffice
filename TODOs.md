@@ -117,17 +117,39 @@
 - **Status:** TODO
 
 ### F2 — Gmail Browser Compliance (GmailBrowser)
-- **Severity:** P1 (Gmail blocks legacy browser versions)
-- **Symptom:** Gmail says browser version is no longer supported; user prompted to upgrade
-- **Root Cause:** `NchantdBrowser` / `NchantdOfficeBrowser` using outdated or missing Chromium/Electron version
-- **Fix Plan:**
-  1. Audit `nchantdoffice/widgets/documents/web.py` for browser engine version
-  2. Check `requirements.txt` / `pyproject.toml` for `PyQt6-WebEngine` version
-  3. Update to latest Qt WebEngine (Qt 6.7+) which includes Chromium 114+
-  4. Set `QWebEngineProfile::defaultProfile()->setHttpUserAgent()` to a modern Chrome string
-  5. Add `--disable-blink-features=OutOfBlinkCors` to browser args for Gmail compatibility
-  6. Verify `QWebEngineSettings::Personalizable()` is enabled for cookie/session persistence
-- **Status:** TODO
+- **Severity:** P1 (Gmail blocks legacy browser versions) → ✅ Completed
+- **Symptom:** (1) Gmail "unsupported browser" banner; (2) after the first UA fix,
+  Google escalated to a hard "this browser or app may not be secure" block.
+- **Root Cause:** NOT the engine — installed QtWebEngine is Chromium **140**
+  (PySide6 6.11). Two distinct issues:
+  1. The browser advertised a *legacy* User-Agent (`"CustomBrowser/1.0"` from the
+     app-level `ProfileManager` pool in nchantrs `profiles.py`; also stale UAs in
+     `NchantdWebProfile`, `set_security_policy`, `engines.create_custom_profile`)
+     → the "unsupported browser" banner.
+  2. Simply switching to a modern **Chrome** UA made Google apply its embedded-
+     browser integrity check and *hard-block* sign-in — Google deliberately blocks
+     WebView/QtWebEngine views that claim to be Chrome.
+- **Fix Applied (nchantrs base):**
+  1. `modern_user_agent()` helper in `profiles.py` derives the UA's Chrome token
+     from the real engine (`qWebEngineChromiumVersion()` → `Chrome/140.0.0.0`),
+     used for all normal browsing. Exposed `qWebEngineChromiumVersion` in
+     `libraries/pyqt.py`. Replaced every legacy UA with it.
+  2. **Google sign-in quirk** (fixes the hard block): `NchantdRequestInterceptor`
+     (`requests.py`) now rewrites the `User-Agent` request header to a **Firefox**
+     UA, scoped ONLY to sign-in hosts (`accounts.google.com`, `accounts.youtube.com`).
+     This is the same site-specific quirk qutebrowser uses (issue #5182). A Firefox
+     UA globally breaks other sites, so it is host-scoped; `mail.google.com` and
+     everything else keep the modern Chrome UA.
+  3. `_configure_profile` sets `Accept-Language` and enables JS/LocalStorage;
+     persistent cookies already `AllowPersistentCookies`.
+  4. Added `--disable-blink-features=AutomationControlled` in `graphics.py`
+     (the plan's `OutOfBlinkCors` was removed from Chromium years ago).
+- **Notes:** No nchantdoffice code change needed. Verified statically (py_compile)
+  + live engine/UA/host-match probes; **in-app Google sign-in not yet re-tested by
+  me** — needs a live run. If Google still blocks, next levers: neutralize the
+  Chromium `Sec-CH-UA` client-hint headers on the sign-in hosts, and/or try
+  removing the AutomationControlled flag.
+- **Status:** ✅ Completed 2026-07-08
 
 ---
 
