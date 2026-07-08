@@ -117,46 +117,37 @@
 - **Status:** TODO
 
 ### F2 — Gmail Browser Compliance (GmailBrowser)
-- **Severity:** P1 (Gmail blocks legacy browser versions) → ✅ Completed
-- **Symptom:** (1) Gmail "unsupported browser" banner; (2) after the first UA fix,
-  Google escalated to a hard "this browser or app may not be secure" block.
-- **Root Cause:** NOT the engine — installed QtWebEngine is Chromium **140**
-  (PySide6 6.11). Two distinct issues:
-  1. The browser advertised a *legacy* User-Agent (`"CustomBrowser/1.0"` from the
-     app-level `ProfileManager` pool in nchantrs `profiles.py`; also stale UAs in
-     `NchantdWebProfile`, `set_security_policy`, `engines.create_custom_profile`)
-     → the "unsupported browser" banner.
-  2. Simply switching to a modern **Chrome** UA made Google apply its embedded-
-     browser integrity check and *hard-block* sign-in — Google deliberately blocks
-     WebView/QtWebEngine views that claim to be Chrome.
-- **Fix Applied (nchantrs base):**
-  1. `modern_user_agent()` helper in `profiles.py` derives the UA's Chrome token
-     from the real engine (`qWebEngineChromiumVersion()` → `Chrome/140.0.0.0`),
-     used for all normal browsing. Exposed `qWebEngineChromiumVersion` in
-     `libraries/pyqt.py`. Replaced every legacy UA with it.
-  2. **Google sign-in quirk** (fixes the hard block), host-scoped to
-     `accounts.google.com` / `accounts.youtube.com` — same approach as qutebrowser
-     (#5182). Two layers, because Google checks both the request UA *and* the
-     JS-visible `navigator`:
-       a. `NchantdRequestInterceptor` (`requests.py`) rewrites the `User-Agent`
-          request header to a **Firefox** UA on those hosts.
-       b. `install_google_login_ua_script()` (`profiles.py`) injects a main-world
-          script (DocumentCreation) that overrides `navigator.userAgent`/
-          `appVersion`/`platform`/`vendor`/`productSub`/`userAgentData` to Firefox
-          values, but only when `location.hostname` is a sign-in host. Header-only
-          (layer a) was insufficient — Google still saw `navigator.userAgent` =
-          Chrome and redirected to `signin/rejected`.
-     `mail.google.com` and all other sites keep the modern Chrome UA/navigator.
-  3. `_configure_profile` sets `Accept-Language` and enables JS/LocalStorage;
-     persistent cookies already `AllowPersistentCookies`.
-  4. Added `--disable-blink-features=AutomationControlled` in `graphics.py`
-     (the plan's `OutOfBlinkCors` was removed from Chromium years ago).
-- **Notes:** No nchantdoffice code change needed. Verified statically (py_compile)
-  + live engine/UA/host-match probes; **in-app Google sign-in not yet re-tested by
-  me** — needs a live run. If Google still blocks, next levers: neutralize the
-  Chromium `Sec-CH-UA` client-hint headers on the sign-in hosts, and/or try
-  removing the AutomationControlled flag.
-- **Status:** ✅ Completed 2026-07-08
+- **Severity:** P1 → 🟡 In progress (soft-banner baseline restored; banner not yet removed)
+- **Symptom:** (1) Gmail "unsupported browser" **soft banner** (login still works);
+  (2) any attempt to look like modern **Chrome** escalates Google to a **hard block**
+  ("this browser or app may not be secure", redirect to `signin/rejected`).
+- **What we learned (empirical):** installed QtWebEngine is Chromium **140**
+  (PySide6 6.11) — the engine is fine. The determinant is the advertised browser
+  identity:
+  - **Non-Chrome UA** (e.g. `CustomBrowser/1.0`) → soft banner, **login works**.
+  - **Chrome UA** → Google's embedded-browser integrity check **hard-blocks** sign-in.
+  Attempted host-scoped Firefox spoof on `accounts.google.com` (Firefox request
+  header **+** `navigator.*` main-world override) did **NOT** defeat the hard block —
+  Google still rejected. So UA/navigator spoofing alone is insufficient here.
+- **Current state (nchantrs base) — reverted to the known-good baseline:**
+  - Single knob `profiles.DEFAULT_USER_AGENT = "CustomBrowser/1.0"` drives every
+    profile UA (pool `ProfileConfiguration`, `NchantdWebProfile.set_persistence`,
+    `set_security_policy`, `engines.create_custom_profile`). Soft banner, login works.
+  - Google sign-in quirk kept but **gated off** by `requests.ENABLE_GOOGLE_LOGIN_QUIRK
+    = False` (both the interceptor header rewrite and the `navigator` injection in
+    `profiles.install_google_login_ua_script`). Flip to re-arm for experiments.
+  - Reverted the `--disable-blink-features=AutomationControlled` flag in `graphics.py`.
+  - Kept (harmless): `modern_user_agent()`/`qWebEngineChromiumVersion` helpers,
+    `Accept-Language` header, explicit JS/LocalStorage enable.
+- **Next levers to try (to remove the banner without the hard block):**
+  1. **Global Firefox UA** (`DEFAULT_USER_AGENT` = a real Firefox string) — Firefox
+     is a *supported* browser, so likely no banner AND no hard block; cost is some
+     sites serving Firefox code paths. Strongest candidate.
+  2. If staying Chrome-flavoured: also neutralize Chromium `Sec-CH-UA` client-hint
+     headers (they leak Chromium even under a Firefox UA).
+  3. Longer term: real OAuth instead of embedded sign-in (Google's stated intent
+     behind the block).
+- **Status:** 🟡 In progress — baseline (working login + banner) restored 2026-07-08
 
 ---
 
