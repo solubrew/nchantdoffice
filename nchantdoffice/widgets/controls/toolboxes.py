@@ -188,6 +188,8 @@ class NchantdWebSearchPane(NchantdPane):
         return self
 
 
+# TODO: implement search panes
+# TODO: correct spacing of Node Configuration Drawer to tighten up the Node Pane and Tab Pane
 class NchantdOfficeApplicationToolBox(NchantdToolBox):
     """"""
 

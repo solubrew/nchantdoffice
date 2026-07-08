@@ -226,7 +226,8 @@ class NchantdOfficeDocumentMixin:
             101: {"action": "save", "handler": self.cmd_save_tab},
             150: {"action": "redo", "handler": self.cmd_redo},
             200: {"action": "undo", "handler": self.cmd_undo},
-            400: {"action": "cancel", "handler": self.cmd_delete_tab},
+            # TODO: i'm not sure this has any other uses that arent' handled by the toolbox tab trashcan
+            # 400: {"action": "cancel", "handler": self.cmd_delete_tab},
             1000: {"action": "show_pane_right", "handler": self.cmd_show_pane_right},
         }
         logma.info(f"CFG {cfg}")

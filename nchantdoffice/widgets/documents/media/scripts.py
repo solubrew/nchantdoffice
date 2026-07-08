@@ -471,6 +471,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.page_layout_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.page_layout_select
         cnt += 1
+        # TODO: add text justification
+        # TODO: Add text bulleting
+        # TODO: add text spacing
+        #
         return items
 
     def init_drawer_selection_config(self):
@@ -480,52 +484,56 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
             items[cnt] = default_action
-        cfg = {
-            "label": "Insert Image:",
-            "layout": "vertical",
-            "handler": self.cmd_add_image,
-            "value": None,
-        }
-        self.insert_image = NchantdButton(self, cfg)
-        items[cnt]["widget"] = self.insert_image
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Insert Table:",
-            "layout": "vertical",
-            "handler": self.cmd_add_table,
-            "value": None,
-        }
-        self.insert_table = NchantdButton(self, cfg)
-        items[cnt]["widget"] = self.insert_table
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Insert Date:",
-            "layout": "vertical",
-            "handler": self.cmd_add_date,
-            "value": None,
-        }
-        self.insert_date = NchantdButton(self, cfg)
-        items[cnt]["widget"] = self.insert_date
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Insert Time:",
-            "layout": "vertical",
-            "handler": self.cmd_add_time,
-            "value": None,
-        }
-        self.insert_time = NchantdButton(self, cfg)
-        items[cnt]["widget"] = self.insert_time
-        cnt += 1
+        # cfg = {
+        #     "label": "Insert Image:",
+        #     "layout": "vertical",
+        #     "handler": self.cmd_add_image,
+        #     "value": None,
+        # }
+        # self.insert_image = NchantdButton(self, cfg)
+        # items[cnt]["widget"] = self.insert_image
+        # cnt += 1
+        # if cnt not in items:
+        #     items[cnt] = default_action
+        # cfg = {
+        #     "label": "Insert Table:",
+        #     "layout": "vertical",
+        #     "handler": self.cmd_add_table,
+        #     "value": None,
+        # }
+        # self.insert_table = NchantdButton(self, cfg)
+        # items[cnt]["widget"] = self.insert_table
+        # cnt += 1
+        # if cnt not in items:
+        #     items[cnt] = default_action
+        # cfg = {
+        #     "label": "Insert Date:",
+        #     "layout": "vertical",
+        #     "handler": self.cmd_add_date,
+        #     "value": None,
+        # }
+        # self.insert_date = NchantdButton(self, cfg)
+        # items[cnt]["widget"] = self.insert_date
+        # cnt += 1
+        # if cnt not in items:
+        #     items[cnt] = default_action
+        # cfg = {
+        #     "label": "Insert Time:",
+        #     "layout": "vertical",
+        #     "handler": self.cmd_add_time,
+        #     "value": None,
+        # }
+        # self.insert_time = NchantdButton(self, cfg)
+        # items[cnt]["widget"] = self.insert_time
+        # cnt += 1
+        # TODO move inserts to object config
+        # TODO add tools here like spell/grammar, etc
+        # TODO add analytics tools
         return items
 
     def init_drawer_object_config(self):
         """"""
+        # TODO: each of these panes need to have their spacing tightened up
         items = self.toolbox_config[300].get("items", {})
         cnt = 0
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -588,15 +596,17 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
     def init_drawer_quickstart(self):
         """"""
         items = {}
+        # TODO: add template selection/management
+        #
         return items
 
     def init_toolbox(self):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
-        # self.toolbox_config[200]["items"] = self.init_drawer_selection_config()
-        # self.toolbox_config[300]["items"] = self.init_drawer_object_config()
-        # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+        self.toolbox_config[200]["items"] = self.init_drawer_selection_config()
+        self.toolbox_config[300]["items"] = self.init_drawer_object_config()
+        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
     def insert_image(self):
         """

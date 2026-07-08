@@ -32,7 +32,7 @@ from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.panes.panes import NchantdPane
 from nchantrs.widgets.tables.lists import NchantdList
 from nchantdoffice.widgets.panes.objects import NchantdNewObjectPane
-from nchantrs.widgets.tables.tables import NchantdTable
+from nchantrs.widgets.tables.tables import NchantdTableWidget, NchantdTable
 from nchantdoffice.widgets.panes.sources import NchantdSourceEditPane
 from nchantrs.widgets.groups import NchantdGroup
 
@@ -53,15 +53,11 @@ class NchantdSourcesListPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane").override(parent.config).override(cfg))
 
     def initModel(self, cfg=None):
         """"""
         super().initModel(cfg)
-
         return self
 
     def initView(self, cfg=None):
@@ -91,10 +87,9 @@ class NchantdWhereUsedListPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane").override(parent.config).override(cfg)
+        )
 
     def initModel(self, cfg=None):
         """"""
@@ -128,10 +123,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """ """
         super().__init__("Nchantd Chart", parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeChart"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeChart").override(parent.config).override(cfg))
         self.chart = None
         self.chart_type = None
         self.chart_config_pane = None
@@ -335,12 +327,12 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         items[cnt]["widget"] = self.chart_data_sources_edit_pane
         cnt += 1
         # TODO fix NchantdTable uncontained widget issue
-        # if cnt not in items:
-        #     items[cnt] = default_action.copy()
-        # data = [["SuperMarket"]]
-        # cfg = {"data": data}
-        # self.chart_sample_data = NchantdTable(self, cfg)
-        # items[cnt]["widget"] = self.chart_sample_data
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        data = [["SuperMarket"]]
+        cfg = {"data": data}
+        self.chart_sample_data = NchantdTableWidget(self, cfg)
+        items[cnt]["widget"] = self.chart_sample_data
         cnt += 1
         return items
 

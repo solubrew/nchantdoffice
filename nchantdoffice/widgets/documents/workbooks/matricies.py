@@ -28,7 +28,7 @@ from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.tables.tables import NchantdDataFrameTable, NchantdTable
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry, NchantdEntryBox
 from nchantrs.widgets.widgets import NchantdWidget
-from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
+from nchantrs.widgets.controls.checkboxes import NchantdCheckboxGroup
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown, NchantdComboBox
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
 from pyffice.matrix.spreadsheet import PyfficeMatrix
@@ -549,12 +549,12 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.formula = NchantdEntryBox(self, cfg)
         items[cnt]["widget"] = self.formula
         cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        # cfg = {"text": "Set Formulas to Auto-Calculate", "size": ["auto", "auto"]}
-        # # self.autocalculate_checkbox = NchantdCheckbox(self, cfg)
-        # # items[cnt]["widget"] = self.autocalculate_checkbox
-        # cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        cfg = {"text": "Set Formulas to Auto-Calculate", "size": ["auto", "auto"]}
+        self.autocalculate_checkbox = NchantdCheckboxGroup(self, cfg)
+        items[cnt]["widget"] = self.autocalculate_checkbox
+        cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {
@@ -635,15 +635,19 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         """"""
         items = self.toolbox_config[500].get("items", {})
         cnt = 0
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        # cfg = {
-        #     "label": "Quickstart List",
-        #     "layout": "horizontal",
-        #     "size": ["auto", "auto"],
-        # }
-        # self.document_compatability = NchantdCheckbox(self, cfg)
-        # items[cnt]["widget"] = self.document_compatability
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        cfg = {
+            "multi_options": [
+                {
+                    "label": "Quickstart List",
+                    "layout": "horizontal",
+                    "size": ["auto", "auto"],
+                }
+            ]
+        }
+        self.document_compatability = NchantdCheckboxGroup(self, cfg)
+        items[cnt]["widget"] = self.document_compatability
         cnt += 1
 
         return items
