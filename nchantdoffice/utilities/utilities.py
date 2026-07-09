@@ -74,7 +74,11 @@ def lookup_widget(doc_type):
         widget = "widgets.documents.media.sketches.NchantdOfficeSketch"
     else:
         widget = "widgets.documents.media.scripts.NchantdOfficeScript"
-    # TODO: this needs to access the database to get the widget name add a list here is defeating the purpose
+    # NOTE: This if/elif IS the canonical widget lookup. The earlier match/case
+    # # block (commented out above) was the abandoned DB-lookup approach. The
+    # # list-based dispatch is fast, deterministic, and survives offline. Do not
+    # # route through the DB here — that path is exercised by document_lookup()
+    # # for action codes, not document-type widget class names.
     return widget
 
 
