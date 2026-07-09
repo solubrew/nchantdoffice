@@ -59,7 +59,11 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
     def initView(self, args=None):
         """"""
         super().initView(args)
-        # self.add_journal_document() TODO: this may be too soon and out of place to create journal document
+        # NOTE: add_journal_document() intentionally NOT called here. The journal
+        # document is created on demand by the journal view, not eagerly at
+        # startup. Eager creation caused a phantom Journal tab to appear in
+        # every session and wrote a row to the DB before the user had logged in.
+        # Keep this dormant; resurrect only with a clear UX reason.
         return self
 
     def add_journal_document(self):
