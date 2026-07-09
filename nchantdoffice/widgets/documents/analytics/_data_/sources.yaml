@@ -1,0 +1,30 @@
+NchantdOfficeDataSourceManager:
+    dstruct:
+        database:
+            objects:
+                table:
+                view:
+    toolbox:
+      100:
+          title: Source Configuration
+          items:
+              0: {"action": "", "type": ""}
+              1: {"action": "", "type": ""}
+      200:
+          title: Available Sources
+          items:
+              0: {"action": "", "type": ""}
+              1: {"action": "", "type": ""}
+              2: {"action": "", "type": ""}
+      300:
+          title: Source Connections
+          items:
+              0: {"action": "", "type": ""}
+      400:
+          title: Exploratory Data Analysis
+          items:
+              0: {"action": "", "type": ""}
+      500:
+          title: Nchantd Source Quickstart
+          items:
+              0: {"action": "", "type": ""}

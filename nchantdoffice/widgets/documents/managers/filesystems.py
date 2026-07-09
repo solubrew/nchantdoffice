@@ -646,13 +646,9 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.file_pane.get_access_date(path)
         self.file_pane.get_created_date(path)
         self.file_pane.get_modified_date(path)
-
         self.import_pane.set_file_path(path)
-
         self.rename_pane.set_file_path(path)
-
         self.move_pane.set_file_path(path)
-
         self.compress_pane.set_file_path(path)
 
         return self
@@ -704,6 +700,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
     def cmd_toggle_compare_directory(self, event=None, *args, **kwargs):
         """"""
+        # TODO needs to be implemented
         self.compare_fs = not self.compare_fs
         return self
 
