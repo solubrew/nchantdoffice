@@ -1089,6 +1089,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
     def get_sources(self):
         """"""
         sources = self.store.get_active_sources()
+        if sources is None:
+            return DataFrame()
         df = DataFrame(self.config.dikt.get("sources", []), columns=list(sources.columns))
         sources = concat([sources, df])
         return sources
@@ -1574,6 +1576,10 @@ class NchantdOfficeStore(NchantdStore):
             );
         """)
         self.docs[db].commit()
+
+    def get_active_sources(self):
+        """"""
+        #TODO: implement method
 
     def get_application_documents(self):
         """"""

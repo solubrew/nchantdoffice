@@ -1,3 +1,5 @@
+NchantdDataSourcesSettingsTab:
+  default_sources: {}
 NchantdOfficeDataSourceManager:
     dstruct:
         database:

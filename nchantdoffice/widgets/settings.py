@@ -36,53 +36,6 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", ".yaml")
 
 
-class NchantdOfficeDataSourcesSettings(NchantdWidget):
-    """"""
-
-    def __init__(self, parent, cfg=None):
-        """"""
-        self.config = kahndor.instruct(pxcfg).select("NchantdDataSourcesSettingsTab")
-        self.parent = parent
-        if self.parent is not None:
-            self.config.override(self.parent.config)
-        super().__init__(self)
-        self.config.override(cfg)
-        self.data_sources = self.config.dikt["default_sources"]
-
-    def initModel(self):
-        """"""
-        super().initModel()
-        return self
-
-    def initView(self):
-        """"""
-        super().initView()
-        # need to a scroll
-        if len(self.data_sources) != 0:
-            for source in self.data_sources:
-                cfg = {"text": source}
-                source_group = NchantdHGroupBox(self, cfg).initWidget()
-                source_group.setTitle(source)
-                layout = pyqt.QHBoxLayout()
-                label = NchantdLabel(self, cfg).initWidget()
-                layout.addWidget(label)
-                button = pyqt.QPushButton(source)
-                layout.addWidget(button)
-                layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
-                source_group.layout.addLayout(layout)
-                for service in self.data_sources[source]:
-                    cfg = {"text": service}
-                    source_group.addWidget(NchantdLabel(self, cfg).initWidget())
-                self.layout.addWidget(source_group)
-        return self
-
-    def initWidget(self):
-        """"""
-        self.initModel()
-        self.initView()
-        return self
-
-
 class NchantdOfficeExtensionsSettings(NchantdWidget):
     """"""
 
