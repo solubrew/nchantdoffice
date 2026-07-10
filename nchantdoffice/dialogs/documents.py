@@ -238,11 +238,11 @@ class NchantdNewDocumentSigil(NchantdSigil):
         widgdata["doc_type"] = self.document_nm
         # cfg = {"widget": widget}
         # sigil = NewNchantdDocumentSigil(app, app.config.override(cfg)).initWidget()
-        # TODO: how to integrate various formats across tools for specific tool types like a local file to open excel
+        # NOTE: how to integrate various formats across tools for specific tool types like a local file to open excel
         #  and a web app for google sheets...there is value to keeping that interaction native to the google sheet instead
         #  of automatically downloading and converting to a local version but how to integrate this switching
         if self.load_google:
-            # TODO create a load google dialog mimic file open dialog but connect to google drive using a browser/api
+            # NOTE create a load google dialog mimic file open dialog but connect to google drive using a browser/api
             # cfg["widget"] = "nchantrs.widgets.browsers.browsers.NchantdWebApp"
             widgdata["url"] = self.file_path.file_selected
         elif self.open:
@@ -257,7 +257,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
             self.app.view.panes["left"].model.current_node.updateTabs(tabset)
 
 
-# 		#TODO: Launch form builder wizard
+# 		# NOTE: Launch form builder wizard
 # 		# options = ['ChatGPT', 'Gemini', 'LeonardoAI', 'Sora']
 # 		# cfg = {'text': 'Add Form Field: ', 'options': options}
 # 		# self.new_form_field = NchantdLabeledEntry(self, cfg).initWidget()
@@ -289,7 +289,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
 # 		self.run_exploratory_analysis = None
 # 		self.google_available_bit = True
 
-# 			#TODO: needs to be able to handle .csv, .xlsx, .xls, .tab, etc
+# 			# NOTE: needs to be able to handle .csv, .xlsx, .xls, .tab, etc
 # 			#   not sure if that should be built into tblonql or through pyffice
 # 			#   currently squirl is not designed to be application specific but more protocol specific this is loosely implemented around os
 # 			#   a workbook can have mulitple tabs which complicates things as a read/write object

@@ -180,7 +180,7 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
         return options
 
 
-# TODO: implement navigation so that enter moves down one row and tab moves over one column
+# NOTE: implement navigation so that enter moves down one row and tab moves over one column
 #
 class NchantdOfficeMatrix(NchantdOfficeDocument):
     """"""
@@ -578,7 +578,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cfg = {
             "label": "Active Cell: ",
             "layout": "horizontal",
-        }  # TODO readonly and fill in data
+        }  # NOTE readonly and fill in data
         self.selected_cell_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.selected_cell_entry
         cnt += 1
@@ -597,7 +597,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cfg = {
             "label": "Selected Text: ",
             "layout": "horizontal",
-        }  # TODO readonly and fill in data
+        }  # NOTE readonly and fill in data
         self.selected_cell_text_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.selected_cell_text_entry
         cnt += 1
@@ -628,7 +628,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.cell_format = NchantdOfficeCellBorderFormats(self, cfg)
         items[cnt]["widget"] = self.cell_format
         cnt += 1
-        # TODO show a thumbail of the object
+        # NOTE show a thumbail of the object
         return items
 
     #
@@ -683,7 +683,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def populate_document(self):
         """"""
-        # TODO: need to implement calculation capabilities so that formula filled cells get converted to their output
+        # NOTE: need to implement calculation capabilities so that formula filled cells get converted to their output
         #  will need to identify any cell that starts with = as formula and process
         logma.info(f"Populate worksheet {self.document.data}")
         logma.info(f"Populate worksheet {type(self.document.data)}")
@@ -1483,7 +1483,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def show_function_dialog(self):
         """Show function selection dialog"""
-        # TODO: Implement function dialog
+        # NOTE: Implement function dialog
         pyqt.QMessageBox.information(self, "Functions", "Function dialog not yet implemented")
 
     # ================================ Toolbar Actions ================================

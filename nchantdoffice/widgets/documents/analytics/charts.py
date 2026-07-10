@@ -182,7 +182,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         self.chart = NchantdChart(self, cfg).initWidget()
         self.layout.addWidget(self.chart)
 
-        # TODO: need to wire up the rest of the config options from the config pane to the chart pane...
+        # NOTE: need to wire up the rest of the config options from the config pane to the chart pane...
         #  currently the select chart type works but everything else is broken
 
         cfg = {"size": ["auto", 350]}
@@ -222,7 +222,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     def cmd_toggle_config_pane(self, event, *args, **kwargs):
         """"""
-        # TODO: starts hear but once toggle is used it won't come back to the right size
+        # NOTE: starts hear but once toggle is used it won't come back to the right size
         self.set_pane("config")
         return self
 
@@ -327,14 +327,14 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     def get_data_sources(self):
         """"""
-        # TODO: need to connect to a starter set of data sources...sample sets and non-key data sets
+        # NOTE: need to connect to a starter set of data sources...sample sets and non-key data sets
         # need to have a download function for datasets that have not been pulled in before
         #
         return ["Supermarket", "CoinGecko"]
 
     def get_data_views(self):
         """"""
-        # TODO: list out and define various views based on connected data sources
+        # NOTE: list out and define various views based on connected data sources
         return ["Supermarket", "CoinGecko"]
 
     def get_themes(self):
@@ -437,7 +437,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         self.chart_data_sources_edit_pane = NchantdSourceEditPane(self, cfg)
         items[cnt]["widget"] = self.chart_data_sources_edit_pane
         cnt += 1
-        # TODO fix NchantdTable uncontained widget issue
+        # NOTE fix NchantdTable uncontained widget issue
         if cnt not in items:
             items[cnt] = default_action.copy()
         data = [["SuperMarket"]]

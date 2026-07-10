@@ -420,7 +420,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
 
     def add_model(self, name, source):
         """"""
-        # TODO:  will need to get configurations from user or NchantdService
+        # NOTE:  will need to get configurations from user or NchantdService
         #  will need to get apikey if available
 
     def update_pane(self):

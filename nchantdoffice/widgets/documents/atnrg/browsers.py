@@ -246,7 +246,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def cmd_pin_page(self, event, *args, **kwargs):
         """"""
-        #self.make_webapp() #TODO: unsure what is needed to make webapp over pinning
+        #self.make_webapp() # NOTE: unsure what is needed to make webapp over pinning
         self.pin_page()
         return self
 
@@ -326,7 +326,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     def create_data_table(self):
         """"""
         df = super().create_data_table()
-        # TODO: need to connect to some basic web scrapping functions
+        # NOTE: need to connect to some basic web scrapping functions
         columns = []
         data = []
         df = DataFrame(data, columns=columns)
@@ -668,7 +668,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "layout": "horizontal",
             "size": ["auto", "auto"],
         }
-        self.address_street_entry = NchantdLabeledEntry(self, cfg)  # TODO Build an Address Input widget
+        self.address_street_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
         items[cnt]["widget"] = self.address_street_entry
         cnt += 1
         if cnt not in items:
@@ -678,7 +678,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "layout": "horizontal",
             "size": ["auto", "auto"],
         }
-        self.address_city_entry = NchantdLabeledEntry(self, cfg)  # TODO Build an Address Input widget
+        self.address_city_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
         items[cnt]["widget"] = self.address_city_entry
         cnt += 1
         if cnt not in items:
@@ -688,7 +688,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "layout": "horizontal",
             "size": ["auto", "auto"],
         }
-        self.address_state_entry = NchantdLabeledEntry(self, cfg)  # TODO Build an Address Input widget
+        self.address_state_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
         items[cnt]["widget"] = self.address_state_entry
         cnt += 1
         if cnt not in items:
@@ -698,7 +698,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "layout": "horizontal",
             "size": ["auto", "auto"],
         }
-        self.address_zip_entry = NchantdLabeledEntry(self, cfg)  # TODO Build an Address Input widget
+        self.address_zip_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
         items[cnt]["widget"] = self.address_zip_entry
         cnt += 1
         if cnt not in items:
@@ -808,7 +808,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_url_inspection()
-        # TODO: seems something related to having buttons in the drawer?
+        # NOTE: seems something related to having buttons in the drawer?
         #  need to only be rendered on draw selection anyway
         self.toolbox_config[200]["items"] = self.init_drawer_browser_config()
         self.toolbox_config[300]["items"] = self.init_drawer_form_control()

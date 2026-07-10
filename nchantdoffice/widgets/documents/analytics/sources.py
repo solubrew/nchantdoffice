@@ -128,7 +128,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
             "datasource": source,
             "data_table": table,
             "fields": table,
-        }  # TODO: get table fields
+        }  # NOTE: get table fields
         self.data_pane = NchantdDataSetPane(self, cfg).initWidget()
         self.canvas.add_item(self.data_pane, [50, 50])
 

@@ -129,7 +129,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "handler": self.cmd_on_change_document_syntax,
         }
         self.document_syntax_select = NchantdDropDown(self, dfs_cfg)
-        if self.format_type == "plaintext":  # TODO: change to richtext
+        if self.format_type == "plaintext":  # NOTE: change to richtext
             add_image = {"action": "insert_image", "handler": self.cmd_add_image}
             add_table = {"action": "insert_table", "handler": self.cmd_add_table}
             add_chart = {"action": "insert_chart", "handler": self.cmd_add_chart}
@@ -266,7 +266,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def cmd_toggle_page_view(self, event, *args, **kwargs):
         """"""
-        #TODO: Change between a full screen and a standard 8.5x11/whatever the current page size is set to
+        # NOTE: Change between a full screen and a standard 8.5x11/whatever the current page size is set to
         #view port change
         return self
 
@@ -479,9 +479,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.page_layout_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.page_layout_select
         cnt += 1
-        # TODO: add text justification
-        # TODO: Add text bulleting
-        # TODO: add text spacing
+        # NOTE: add text justification
+        # NOTE: Add text bulleting
+        # NOTE: add text spacing
         #
         return items
 
@@ -534,14 +534,14 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.insert_time = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.insert_time
         cnt += 1
-        # TODO move inserts to object config
-        # TODO add tools here like spell/grammar, etc
-        # TODO add analytics tools
+        # NOTE move inserts to object config
+        # NOTE add tools here like spell/grammar, etc
+        # NOTE add analytics tools
         return items
 
     def init_drawer_object_config(self):
         """"""
-        # TODO: each of these panes need to have their spacing tightened up
+        # NOTE: each of these panes need to have their spacing tightened up
         items = self.toolbox_config[300].get("items", {})
         cnt = 0
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -604,7 +604,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
     def init_drawer_quickstart(self):
         """"""
         items = {}
-        # TODO: add template selection/management
+        # NOTE: add template selection/management
         #
         return items
 
@@ -721,7 +721,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         logma.info(f"Syntax {self.document.syntax}")
         theme = "monokai"
         formatter = HtmlFormatter(style=theme, full=True, noclasses=True)
-        self.document.syntax = "html"  # TODO debug
+        self.document.syntax = "html"  # NOTE debug
         if self.document.syntax == "markdown":
             self.document_editor.setMarkdown(text)
             return self
