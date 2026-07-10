@@ -339,50 +339,62 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
 
     def cmd_on_change_journal_focus(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_settings_focus(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_automation(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_data_source(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_show_left_side_pane(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_show_right_side_pane(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_quicklaunch(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_document_catalog(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_default_tab_bit(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_default_tab_select(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_right_side_focus(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_right_side_tab_select(self):
         """"""
+        # TODO implement method
         return self
 
     def get_settings(self):
