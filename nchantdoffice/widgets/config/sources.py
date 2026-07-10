@@ -35,6 +35,7 @@ from nchantdoffice.widgets.panes.sources import NchantdWhereUsedListPane, Nchant
 from nchantdoffice.widgets.panes.sources import NchantdOfficeEDA, NchantdSourcesListPane
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.groups import NchantdVScrollGroupBox, NchantdHGroupBox
+from nchantrs.widgets.annotations import NchantdLabel
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -66,7 +67,12 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         """"""
         super().initView()
         # need to a scroll
-
+        cfg = {
+            "text": "Data Sources Configured",
+            "size": ["auto", "auto"],
+        }  # TODO: build in additional controls for size ["full", "%10"]}
+        title = NchantdLabel(self, cfg).initWidget()
+        self.layout.addWidget(title)
         if len(self.data_sources) != 0:
             for source in self.data_sources:
                 cfg = {"text": source}
@@ -83,6 +89,8 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
                     cfg = {"text": service}
                     source_group.addWidget(NchantdLabel(self, cfg).initWidget())
                 self.layout.addWidget(source_group)
+        else:
+        new_sources =
         return self
 
     def initWidget(self):

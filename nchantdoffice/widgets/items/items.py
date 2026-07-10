@@ -125,10 +125,9 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSourceCatalogItem"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdOfficeSourceCatalogItem").override(parent.config).override(cfg)
+        )
         self.requires_api_key = None
         self.is_data_source_available = None
 
@@ -138,15 +137,22 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         self.requires_api_key = self.config.dikt.get("requires_api_key", True)
         self.is_data_source_available = self.config.dikt.get("is_data_source_available", False)
         action = self.config.dikt.get("action", None)
-        self.action = NchantdAction(action, "base", self)
+        self.action = NchantdAction(action, "base", self)  # TODO: investigate what this is doing
         return self
 
     def initView(self, cfg=None):
         """"""
         super().initView(cfg)
         # add a checkbox to make the datasource available
-        # show indicator of wethere an APIkey is required and if one available
-        # this should also integrate when the user is a pro user and the api is handled through NchantdOffice Servers
+        cfg = {"text": "Activate Data Source"}
+        self.activation_checkbox = NchantdCheckbox(self, cfg).initWidget()
+        cfg = {
+            "options": [{"text": "API Key Required"}, {"text": "API Key Optional"}, {"text": "No API Key"}],
+            "handler": self.cmd_update_api_key_requirements,
+        }
+        self.apikey_radio_buttons = NchantdRadioButtonGroup(self, cfg).initWidget()
+        cfg = {"text": "API Key:", "handler": self.cmd_update_api_key_entry, "value": self.get_api_key}
+        self.apikey = NchantdLabeledEntry(self, cfg).initWidget()
         return self
 
     def initWidget(self):
@@ -154,6 +160,19 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         self.initModel()
         self.initView()
         return self
+
+    def cmd_update_api_key_requirements(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_update_api_key_entry(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+
+    def get_api_key(self):
+        """"""
+        # TODO implement method
 
 
 class NchantdOfficeTreeNode(NchantdTreeNode):
@@ -163,10 +182,9 @@ class NchantdOfficeTreeNode(NchantdTreeNode):
         """ """
         super().__init__(parent, name, nid, node, children)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTreeNode"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdOfficeTreeNode").override(parent.config).override(cfg)
+        )
 
     def initModel(self, cfg=None):
         """"""

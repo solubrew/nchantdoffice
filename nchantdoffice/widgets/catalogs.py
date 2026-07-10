@@ -270,10 +270,9 @@ class NchantdDataSourcesCatalog(NchantdCatalog):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSourceCatalog"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdDataSourceCatalog").override(parent.config).override(cfg)
+        )
         self.bridge = None
         self.search_bar = None
 
