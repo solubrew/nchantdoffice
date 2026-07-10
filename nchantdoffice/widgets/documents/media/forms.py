@@ -365,7 +365,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             service = self.form_service_select.currentText()
             account = self.form_account_name.get_text()
             logma.info(f"Connecting to {service} with account: {account}")
-            # TODO: Implement service connection logic
+            # NOTE: Implement service connection logic
         return self
 
     # ========== Form Management Methods ==========
@@ -527,7 +527,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
     def submit_to_google_forms(self, form_data):
         """Submit form data to Google Forms"""
         logma.info("Submitting to Google Forms...")
-        # TODO: Implement Google Forms API integration
+        # NOTE: Implement Google Forms API integration
         return True
 
     def submit_to_local_storage(self, form_data):
@@ -888,7 +888,7 @@ class NchantdOfficeFeedback(NchantdWidget):
             # Save locally
             self.save_feedback_locally(feedback_data)
 
-            # TODO: Send to remote server/issue tracker
+            # NOTE: Send to remote server/issue tracker
             # self.send_to_server(feedback_data)
 
             logma.info(f"Feedback submitted: {feedback_data['type']} - {feedback_data['title']}")

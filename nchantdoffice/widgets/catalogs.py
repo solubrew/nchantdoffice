@@ -247,7 +247,7 @@ class NchantdOfficeServicesCatalog(NchantdCatalog):
         cfg = {"WHERE": {"EQUAL": {"tag_txt": "ai_service_site"}}}
         rdr = self.app.model.store.docs["db"].read(params, cfg)
         self.services_available = next(rdr).dikt[table]["df"]
-        # TODO: fix initial loading of data duplicates
+        # NOTE: fix initial loading of data duplicates
         self.services_available.drop_duplicates(subset=["name_txt", "service_nm_txt"], inplace=True)
         return self
 

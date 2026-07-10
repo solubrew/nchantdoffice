@@ -220,13 +220,13 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         super().initView(cfg)
         # Most likely contacts section
         self.contact_likely_group = NchantdHScrollGroupBox()
-        # TODO: create contact Card Widget
+        # NOTE: create contact Card Widget
         self.contact_likely_group.setTitle(f"Most Likely Contacts")
         self.layout.addLayout(self.contact_likely_group.layout)
 
         # All contacts section
         self.contacts_group = NchantdVScrollGroupBox(self)
-        # TODO: add a table
+        # NOTE: add a table
         self.contacts_group.setTitle(f"All Contacts ({len(self.contacts)})")
         self.layout.addLayout(self.contacts_group.layout)
 

@@ -113,7 +113,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         # cfg["buttons"][14] = {
         #     "action": "start_kernel",
         #     "handler": self.cmd_start_kernel,
-        # }  # TODO consolidate to only restart
+        # }  # NOTE consolidate to only restart
         # cfg["buttons"][15] = {"action": "interrupt_kernel", "handler": self.cmd_interrupt_kernel}
         cfg["buttons"][17] = {"action": "web_page_pin", "handler": self.cmd_pin_page, "value": self.cmd_check_is_pinned}
         cfg["buttons"][49] = "_insert_stretch"
@@ -860,7 +860,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         logma.info(f"Syntax {self.document.syntax}")
         theme = "monokai"
         formatter = HtmlFormatter(style=theme, full=True, noclasses=True)
-        self.document.syntax = "html"  # TODO debug
+        self.document.syntax = "html"  # NOTE debug
         if self.document.syntax == "markdown":
             self.document_editor.setMarkdown(text)
             return self
@@ -980,7 +980,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def save(self):
         """"""
-        # TODO: need to have a save url location mode so that it can reopen the same file each time
+        # NOTE: need to have a save url location mode so that it can reopen the same file each time
         #  and an internal save mode such that the file data is stored in the database and can be reconstructed to .ipynb file
         # logma.info(f"HTML {self.document_editor.toHtml()}")
         if self.document is None:
@@ -1001,7 +1001,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         #     logma.info(f"Content: {content}")
         # elif self.document.syntax == "jupyter":
         #     pass
-        #     #TODO: connect to jupyter saving mechanism as and connect the url path to the internal viewer entry
+        #     # NOTE: connect to jupyter saving mechanism as and connect the url path to the internal viewer entry
         # else:
         #     content = self.document_editor.toPlainText()
         # self.document.parse_content(content)

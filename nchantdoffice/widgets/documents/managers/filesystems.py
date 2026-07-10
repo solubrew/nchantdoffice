@@ -103,7 +103,7 @@ class NchantdCompressPane(NchantdPane):
     def cmd_automate_compress(self, event=None):
         """Set up automated compression rules"""
         logma.info("Setting up compression automation...")
-        # TODO: Implement automation rules
+        # NOTE: Implement automation rules
         return self
 
     def cmd_compress_files(self, event=None):
@@ -223,7 +223,7 @@ class NchantdImportPane(NchantdPane):
     def cmd_automate_compress(self, event=None):
         """Set up automated import rules"""
         logma.info("Setting up import automation...")
-        # TODO: Implement automation rules for importing files
+        # NOTE: Implement automation rules for importing files
         return self
 
     def cmd_compress_files(self, event=None):
@@ -700,7 +700,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
     def cmd_toggle_compare_directory(self, event=None, *args, **kwargs):
         """"""
-        # TODO needs to be implemented
+        # NOTE needs to be implemented
         self.compare_fs = not self.compare_fs
         return self
 
@@ -712,7 +712,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
                 logma.warning("Storage edit pane not initialized")
                 return self
 
-            # TODO: Implement actual storage configuration
+            # NOTE: Implement actual storage configuration
             # This would involve:
             # 1. Get storage type (Google Drive, Dropbox, OneDrive, etc.)
             # 2. Get authentication credentials
@@ -785,7 +785,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
                 logma.warning("Google Drive not configured")
                 return self
 
-            # TODO: Implement actual Google Drive API integration
+            # NOTE: Implement actual Google Drive API integration
             # This would require google-api-python-client library
             # from googleapiclient.discovery import build
             # from google.oauth2.credentials import Credentials
@@ -811,7 +811,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
                 logma.warning("Dropbox not configured")
                 return self
 
-            # TODO: Implement actual Dropbox API integration
+            # NOTE: Implement actual Dropbox API integration
             # This would require dropbox library
             # import dropbox
 

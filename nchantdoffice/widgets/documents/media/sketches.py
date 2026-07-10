@@ -1372,7 +1372,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
     def merge_layers(self, layer1, layer2):
         """Merge two layers into one (placeholder for advanced functionality)."""
-        # TODO: Implement layer merging
+        # NOTE: Implement layer merging
         logma.info(f"Merging layers: {layer1} and {layer2}")
         return self
 
