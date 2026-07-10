@@ -167,7 +167,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
     def initView(self):
         """"""
         super().initView()
-        top_layout = pyqt.QVBoxLayout()
+        top_layout = pyqt.QHBoxLayout()
         cfg = {
             "label": "Nchantd Account",
             "size": ["auto", "auto"],
@@ -175,23 +175,23 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             "entrybox": {"size": [100, 25]},
         }
         self.user_name = NchantdEntryEditor(self, cfg).initWidget()
+        # TODO: get user name from account api
         self.user_name.setPlaceholderText(f"{self.app.model.user.name}")
         top_layout.addWidget(self.user_name)
 
-        status_layout = pyqt.QHBoxLayout()
+        # status_layout = pyqt.QHBoxLayout()
         cfg = {"label": "Status: ", "size": ["auto", "auto"], "layout": "horizontal", "entrybox": {"size": [50, 25]}}
         self.account_status = NchantdEntryEditor(self, cfg).initWidget()
         self.account_status.setPlaceholderText(f"{self.app.model.user.nchantrs_account_status}")
-        status_layout.addWidget(self.account_status)
+        top_layout.addWidget(self.account_status)
 
         # TODO: connect to service and get details
         cfg = {"label": "Credits: ", "size": ["auto", "auto"], "layout": "horizontal", "entrybox": {"size": [50, 25]}}
         self.credits_status = NchantdEntryEditor(self, cfg).initWidget()
         self.credits_status.setPlaceholderText(f"{self.app.model.user.nchantrs_account_credits}")
-        status_layout.addWidget(self.credits_status)
-        status_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
-
-        top_layout.addLayout(status_layout)
+        top_layout.addWidget(self.credits_status)
+        # top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
+        # top_layout.addLayout(status_layout)
         top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
 
         layout = pyqt.QHBoxLayout()
@@ -212,10 +212,10 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         # layout.addWidget(self.scrolling_ad)
 
         if self.user.apikey is None:  # User has not registered with nchatrs.com
-            cfg = {"label": "Register", "size": [50, 75]}
+            cfg = {"text": "Register", "size": [50, 75]}  # TODO: implement a larger button graphic
             self.register_button = NchantdButton(self, cfg).initWidget()
         elif self.user.is_paid is False:  # User has been registered as a free user
-            cfg = {"label": "Start Subscription", "size": [50, 75]}
+            cfg = {"text": "Start Subscription", "size": [50, 75]}
             self.register_button = NchantdButton(self, cfg).initWidget()
         else:
             cfg = {"text": "Connect to Services", "size": [50, 75]}
@@ -226,19 +226,19 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         self.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft | pyqt.Qt.AlignmentFlag.AlignTop)
 
         layout = pyqt.QHBoxLayout()
-        profile_layout = pyqt.QVBoxLayout()
-        cfg = {"size": [200, 200]}
-        self.profile_image = NchantdImage(self, cfg).initWidget()
-        profile_layout.addWidget(self.profile_image)
+        # profile_layout = pyqt.QVBoxLayout()
+        # cfg = {"size": [200, 200]}
+        # self.profile_image = NchantdImage(self, cfg).initWidget()
+        # profile_layout.addWidget(self.profile_image)
 
-        cfg = {"size": [200, 680], "label": "Profile Details"}
-        self.profile_label = NchantdLabel(self, cfg).initWidget()
-        profile_layout.addWidget(self.profile_label)
-        profile_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-        layout.addLayout(profile_layout)
+        # cfg = {"size": [100, "auto"], "label": "Profile Details"}
+        # self.profile_label = NchantdLabel(self, cfg).initWidget()
+        # profile_layout.addWidget(self.profile_label)
+        # profile_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+        # layout.addLayout(profile_layout)
         cfg = {
             "url": "https://www.nchantdoffice.com/registration",
-            "size": [1200, 750],
+            "size": [1600, 750],
             "is_simple": True,
         }
         if self.user.has_pro:

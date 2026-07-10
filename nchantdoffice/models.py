@@ -1177,6 +1177,11 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             document = self.store.get_view_journal(cfg).to_dict(orient="records")
         return self.convert_db_to_journal(document[0])
 
+    def get_view_options_faqs(self):
+        """"""
+        # TODO: implement view then pull data from it
+        return []
+
     def init_mole(self, db="db"):
         """"""
         self.mole.set_storage_path(self.store_rss_entries)
