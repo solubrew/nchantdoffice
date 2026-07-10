@@ -40,10 +40,9 @@ class NchantdAutomationsManager(NchantdManager):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAutomationsManager"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdAutomationsManager").override(parent.config).override(cfg)
+        )
 
     def initModel(self, cfg=None):
         """"""
@@ -69,10 +68,9 @@ class NchantdAutomationSettings(NchantdSettingsWidget):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAutomationSettings"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdAutomationSettings").override(parent.config).override(cfg)
+        )
 
     def initModel(self, cfg=None):
         """"""
