@@ -1,4 +1,3 @@
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
 """
 ---
 <(META)>:
@@ -137,7 +136,9 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         self.requires_api_key = self.config.dikt.get("requires_api_key", True)
         self.is_data_source_available = self.config.dikt.get("is_data_source_available", False)
         action = self.config.dikt.get("action", None)
-        self.action = NchantdAction(action, "base", self)  # TODO: investigate what this is doing
+        # NOTE: instantiate a base NchantdAction from the config-supplied action string;
+        # mirrors the pattern used in NchantdOfficeDocumentCatalogItem.initModel above.
+        self.action = NchantdAction(action, "base", self)
         return self
 
     def initView(self, cfg=None):
@@ -162,17 +163,55 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         return self
 
     def cmd_update_api_key_requirements(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Handle radio-button selection to update API key requirement mode.
+
+        Maps radio-button index to requires_api_key values:
+            0 = API Key Required  (True,  required=True)
+            1 = API Key Optional (True,  required=False)
+            2 = No API Key        (False, required=False)
+        Persists the new mode to the app model data-source config table.
+        """
+        selected_index = self.apikey_radio_buttons.get_selected_index()
+        if selected_index == 0:
+            required = True
+            required_flag = True
+        elif selected_index == 1:
+            required = True
+            required_flag = False
+        else:
+            required = False
+            required_flag = False
+        self.requires_api_key = required
+        # Persist to data-source config
+        if hasattr(self, "app") and self.app and hasattr(self.app, "model"):
+            self.app.model.update_data_source(self.nid, {"requires_api_key": required, "api_key_required": required_flag})
         return
 
     def cmd_update_api_key_entry(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Handle API key entry widget edits.
+
+        Reads the current value from the NchantdLabeledEntry widget and
+        persists it to the app model data-source config table.
+        Called on every textChanged signal from the entry field.
+        """
+        raw = self.apikey.get_value()
+        api_key = raw if raw else ""
+        # Persist to data-source config
+        if hasattr(self, "app") and self.app and hasattr(self.app, "model"):
+            self.app.model.update_data_source(self.nid, {"api_key_txt": api_key})
+        return
 
     def get_api_key(self):
-        """"""
-        # TODO implement method
+        """Return the stored API key for this data source.
+
+        Pulls the api_key_txt value from the app model data-source config
+        table for this node (self.nid).  Returns empty string if not set.
+        """
+        if hasattr(self, "app") and self.app and hasattr(self.app, "model"):
+            row = self.app.model.get_data_source(self.nid)
+            if row is not None:
+                return row.get("api_key_txt", "")
+        return ""
 
 
 class NchantdOfficeTreeNode(NchantdTreeNode):
@@ -206,7 +245,7 @@ class NchantdOfficeTreeNode(NchantdTreeNode):
 
     def set_as_current(self):
         """Set this node as the current/focused node in the tree"""
-        if hasattr(self, "app") and hasattr(self.app.view.panes["left"], "tree"):
+        if hasattr(self, "app") and hasattr(self.app, "view") and hasattr(self.app.view.panes["left"], "tree"):
             tree = self.app.view.panes["left"].tree
             if tree is None:
                 return self

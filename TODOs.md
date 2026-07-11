@@ -1,9 +1,9 @@
 # NchantdOffice TODOs
 
-**Last Updated:** 2026-07-10
+**Last Updated:** 2026-07-11
 **Branch:** gamma
-**HEAD:** `8bcdbf0` — "refactor data sources configuration and settings"
-**Inline Markers:** 117 total — 63 NOTE, 54 TODO — across 28 files
+**HEAD:** `9e4f008` — "Merge branch 'gamma' of file:///mnt/overse/SBST01/vein/GitVein/nchantdoffice into gamma"
+**Inline Markers:** 113 total — 63 NOTE, 50 TODO — across 27 files *(4 TODO in `widgets/items/items.py` resolved 2026-07-11)*
 **Priority: P0 = Critical/Blocking | P1 = High | P2 = Medium | P3 = Low**
 
 ---
@@ -45,7 +45,7 @@
 ### H25 — Catalog Tab Wrong Child Count
 - **Severity:** P1
 - **Symptom:** Catalog tab shows incorrect number of children in tree
-- **Fix Plan:** Debug `_update_count` in `nchantdoffice/widgets/items.py`; verify signal wiring in `NchantdOfficeDocumentsCatalog` / `on_tab_focus`; check `loadChildren` in `NchantdTreeNode`
+- **Fix Plan:** `_update_count` and `loadChildren` logic lives in the inherited parent class `nchantrs.widgets.items.nodes.NchantdTreeNode`. Also check `NchantdOfficeDocumentsCatalog` signal wiring in `widgets/catalogs.py` (`on_tab_focus`). Once `nchantrs` source is accessible, debug `_update_count` override in `NchantdOfficeTreeNode` if needed.
 - **Status:** TODO
 
 ### H27 — Nchantd Image Save Mode (Internal vs External)
@@ -64,7 +64,7 @@
 ### H29 — Tree Node Drag-and-Drop Regression
 - **Severity:** P1
 - **Symptom:** Dragging tree nodes no longer works; drop targets don't highlight; reordering fails silently
-- **Fix Plan:** Check `startDrag`/`dropEvent` in `nchantdoffice/widgets/items.py`; verify `setDragEnabled(True)`/`setAcceptDrops(True)`; add debug to `dragEnterEvent`/`dragMoveEvent`
+- **Fix Plan:** `startDrag`/`dropEvent`/`setDragEnabled`/`setAcceptDrops` live in the inherited parent class `nchantrs.widgets.items.nodes.NchantdTreeNode`. Once `nchantrs` source is accessible, debug `dragEnterEvent`/`dragMoveEvent` in `NchantdOfficeTreeNode`. May also need to verify `NchantdOfficeTreeView` overrides in `nchantrs.widgets.items.nodes`.
 - **Status:** TODO
 
 ---
@@ -80,9 +80,9 @@
 ### P2 — Lazy Tab Loading Audit
 - **Status:** ✅ **Completed** (`NchantdOfficeTabSetModel.load_tab_set` override in `nchantdoffice/models.py`)
 
-### M1 — Inline TODO Inventory (54 active TODOs across 28 files)
+### M1 — Inline TODO Inventory (50 active TODOs across 27 files)
 - **Severity:** P2 (tech debt)
-- **Total:** 54 TODO, 63 NOTE — 117 markers across 28 files
+- **Total:** 50 TODO, 63 NOTE — 113 markers across 27 files *(4 TODO resolved 2026-07-11 in `widgets/items/items.py`)*
 - **Status:** TODO — see inline inventory below
 
 ### M2 — Affiliate Link Data Updates
@@ -254,11 +254,11 @@
 - `1004` **NOTE**: connect to jupyter saving mechanism as and connect the url path to the internal viewer entry
 - `1017` **NOTE**: Jupyter handles saving internally through the web interface
 
-### `nchantdoffice/widgets/items/items.py` (4 markers — 4 TODO, 0 NOTE)
-- `140` **TODO**: investigate what this is doing
-- `166` **TODO**: implement method
-- `171` **TODO**: implement method
-- `175` **TODO**: implement method
+### `nchantdoffice/widgets/items/items.py` (0 markers — resolved 2026-07-11)
+- ✅ `140` **NOTE**: documented `NchantdAction` instantiation (was: TODO investigate)
+- ✅ `166` **TODO**: `cmd_update_api_key_requirements` — reads radio selection, persists mode to data-source config
+- ✅ `171` **TODO**: `cmd_update_api_key_entry` — reads entry value, persists api_key_txt to data-source config
+- ✅ `175` **TODO**: `get_api_key` — reads api_key_txt from data-source config, returns empty string if unset
 
 ### `nchantdoffice/widgets/panes/charts.py` (2 markers — 2 TODO, 0 NOTE)
 - `169` **TODO**: implement this as button group
