@@ -150,26 +150,26 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         left_side_settings_group.setTitle("Left Pane Settings")
         primary_layout.addLayout(left_side_settings_group.layout)
         cnt = 0
-        cfg = {
-            "text": "Show Journal Node",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.enable_journal_focus_bit,
-            "handler": self.cmd_on_change_journal_focus,
-        }
-        self.enable_journal_focus_entry = NchantdCheckbox(self, cfg).initWidget()
-        left_side_settings_group.addWidget(self.enable_journal_focus_entry, cnt, 0)
-        cnt += 1
-        cfg = {
-            "text": "Show Settings Node",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.enable_settings_focus_bit,
-            "handler": self.cmd_on_change_settings_focus,
-        }
-        self.settings_node = NchantdCheckbox(self, cfg).initWidget()
-        left_side_settings_group.addWidget(self.settings_node, cnt, 0)
-        cnt += 1
+        # cfg = {
+        #     "text": "Show Journal Node",
+        #     "layout": "horizontal",
+        #     "size": ["auto", "auto"],
+        #     "value": self.enable_journal_focus_bit,
+        #     "handler": self.cmd_on_change_journal_focus,
+        # }
+        # self.enable_journal_focus_entry = NchantdCheckbox(self, cfg).initWidget()
+        # left_side_settings_group.addWidget(self.enable_journal_focus_entry, cnt, 0)
+        # cnt += 1
+        # cfg = {
+        #     "text": "Show Settings Node",
+        #     "layout": "horizontal",
+        #     "size": ["auto", "auto"],
+        #     "value": self.enable_settings_focus_bit,
+        #     "handler": self.cmd_on_change_settings_focus,
+        # }
+        # self.settings_node = NchantdCheckbox(self, cfg).initWidget()
+        # left_side_settings_group.addWidget(self.settings_node, cnt, 0)
+        # cnt += 1
         # HOLD
         # cfg = {
         #     "text": "Enable Automation",
@@ -190,29 +190,29 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # }
         # self.data_source_enable = NchantdCheckbox(self, cfg).initWidget()
         # left_side_settings_group.addWidget(self.data_source_enable, cnt, 0)
-        cnt += 1
-        cfg = {
-            "text": "On Startup Show Left Side Pane",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.show_left_pane,
-            "handler": self.cmd_on_change_show_left_side_pane,
-        }
-        self.left_side_pane = NchantdCheckbox(self, cfg).initWidget()
-        left_side_settings_group.addWidget(self.left_side_pane, cnt, 0)
-        cnt += 1
-        cfg = {
-            "text": "On Startup Show Quick Launch Toolbar",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.show_quick_toolbar,
-            "handler": self.cmd_on_change_quicklaunch,
-        }
-        self.quick_launch_toolbar = NchantdCheckbox(self, cfg).initWidget()
+        # cnt += 1
+        # cfg = {
+        #     "text": "On Startup Show Left Side Pane",
+        #     "layout": "horizontal",
+        #     "size": ["auto", "auto"],
+        #     "value": self.show_left_pane,
+        #     "handler": self.cmd_on_change_show_left_side_pane,
+        # }
+        # self.left_side_pane = NchantdCheckbox(self, cfg).initWidget()
+        # left_side_settings_group.addWidget(self.left_side_pane, cnt, 0)
+        # cnt += 1
+        # cfg = {
+        #     "text": "On Startup Show Quick Launch Toolbar",
+        #     "layout": "horizontal",
+        #     "size": ["auto", "auto"],
+        #     "value": self.show_quick_toolbar,
+        #     "handler": self.cmd_on_change_quicklaunch,
+        # }
+        # self.quick_launch_toolbar = NchantdCheckbox(self, cfg).initWidget()
         if self.config.dikt.get("has_quick_launch_toolbar", False) is True:
             self.quick_launch_toolbar.setChecked(True)
-        left_side_settings_group.addWidget(self.quick_launch_toolbar, cnt, 0)
-        cnt += 1
+        # left_side_settings_group.addWidget(self.quick_launch_toolbar, cnt, 0)
+        # cnt += 1
         document_group = pyqt.QGroupBox()
         document_group.setTitle("Quick launch Documents")
         document_group_layout = pyqt.QVBoxLayout()
@@ -222,8 +222,8 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         for i, document in self.document_types_df.iterrows():
             cfg = {"text": document["name_txt"], "layout": "horizontal", "size": ["auto", "auto"]}
             self.quick_launch_document_types[document["name_txt"]] = NchantdCheckbox(self, cfg).initWidget()
-            if not self.quick_launch_toolbar.isChecked():
-                self.quick_launch_document_types[document["name_txt"]].setDisabled(True)
+            # if not self.quick_launch_toolbar.isChecked():
+            #     self.quick_launch_document_types[document["name_txt"]].setDisabled(True)
             if document["quick_launch_bit"] == 1:
                 self.quick_launch_document_types[document["name_txt"]].setChecked(True)
             document_group_layout.addWidget(self.quick_launch_document_types[document["name_txt"]])
@@ -234,40 +234,41 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         center_settings_group.scroll.setHorizontalScrollBarPolicy(pyqt.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         center_settings_group.setTitle("Center Pane Settings")
         primary_layout.addLayout(center_settings_group.layout)
-        cfg = {
-            "text": "Show Document Launch Catalog",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.show_document_catalog,
-            "handler": self.cmd_on_change_document_catalog,
-        }
-        self.document_launch_tab = NchantdCheckbox(self, cfg).initWidget()
-        center_settings_group.addWidget(self.document_launch_tab, 0, 0)
-        cfg = {
-            "text": "Create Default Tab",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.create_default_tab,
-            "handler": self.cmd_on_change_default_tab_bit,
-        }
-        self.default_tab = NchantdCheckbox(self, cfg).initWidget()
-        if self.config.dikt.get("has_default_tab", False) is True:
-            self.default_tab.setChecked(True)
-        center_settings_group.addWidget(self.default_tab, 1, 0)
-        options = self.document_types_df["name_txt"].tolist()
-        cfg = {
-            "label": "Select Default Tab",
-            "layout": "horizontal",
-            "combobox": {"options": options},
-            "value": self.default_tab_select_value,
-            "handler": self.cmd_on_change_default_tab_select,
-        }
-        self.default_tab_switch = NchantdDropDown(self, cfg).initWidget()
-        center_settings_group.addWidget(self.default_tab_switch, 2, 0)
-        if not self.default_tab.isChecked():
-            self.default_tab_switch.setDisabled(True)
-        else:
-            pass  # TODO set current default tab
+        # cfg = {
+        #     "text": "Show Document Launch Catalog",
+        #     "layout": "horizontal",
+        #     "size": ["auto", "auto"],
+        #     "value": self.show_document_catalog,
+        #     "handler": self.cmd_on_change_document_catalog,
+        # }
+        # self.document_launch_tab = NchantdCheckbox(self, cfg).initWidget()
+        # TODO: possiblly only allow pro users to turn off
+        #  center_settings_group.addWidget(self.document_launch_tab, 0, 0)
+        # cfg = {
+        #     "text": "Create Default Tab",
+        #     "layout": "horizontal",
+        #     "size": ["auto", "auto"],
+        #     "value": self.create_default_tab,
+        #     "handler": self.cmd_on_change_default_tab_bit,
+        # }
+        # self.default_tab = NchantdCheckbox(self, cfg).initWidget()
+        # if self.config.dikt.get("has_default_tab", False) is True:
+        #     self.default_tab.setChecked(True)
+        # center_settings_group.addWidget(self.default_tab, 1, 0)
+        # options = self.document_types_df["name_txt"].tolist()
+        # cfg = {
+        #     "label": "Select Default Tab",
+        #     "layout": "horizontal",
+        #     "options": options,
+        #     "value": self.default_tab_select_value,
+        #     "handler": self.cmd_on_change_default_tab_select,
+        # }
+        # self.default_tab_switch = NchantdDropDown(self, cfg).initWidget()
+        # center_settings_group.addWidget(self.default_tab_switch, 2, 0)
+        # if not self.default_tab.isChecked():
+        #     self.default_tab_switch.setDisabled(True)
+        # else:
+        #     pass  # TODO set current default tab
         center_settings_group.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
 
         # Right Side Settings Group
@@ -286,6 +287,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # # TODO add a drop down to replace the word toolbox with alist of right pane tabs
         # right_side_settings_group.addWidget(self.refocus_setting, 0, 0)
         # TODO pull from database combine sequence with name to get a proper sort in the visual and control the actual sequenc of the right side tabs
+        # TODO change right selector to a position changer put a spinbox on each tab
         cfg = {
             "label": "Selected Right Side Tab",
             "layout": "horizontal",
@@ -295,15 +297,15 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         }
         self.refocus_default_document = NchantdDropDown(self, cfg).initWidget()
         right_side_settings_group.addWidget(self.refocus_default_document, 1, 0)
-        cfg = {
-            "text": "On Startup Show Right Side Pane",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.show_right_side_tab,
-            "handler": self.cmd_on_change_show_right_side_pane,
-        }
-        self.right_side_pane = NchantdCheckbox(self, cfg).initWidget()
-        right_side_settings_group.addWidget(self.right_side_pane, 2, 0)
+        # cfg = {
+        #     "text": "On Startup Show Right Side Pane",
+        #     "layout": "horizontal",
+        #     "size": ["auto", "auto"],
+        #     "value": self.show_right_side_tab,
+        #     "handler": self.cmd_on_change_show_right_side_pane,
+        # }
+        # self.right_side_pane = NchantdCheckbox(self, cfg).initWidget()
+        # right_side_settings_group.addWidget(self.right_side_pane, 2, 0)
 
         # group = pyqt.QGroupBox("Right Side Tabs List")
         # layout = pyqt.QVBoxLayout()
@@ -440,10 +442,7 @@ class NchantdOfficeThemeSettings(NchantdThemeSettings):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeThemeSettings"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeThemeSettings").override(cfg))
 
     def initModel(self, cfg=None):
         """"""

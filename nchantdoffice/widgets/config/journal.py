@@ -38,17 +38,16 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "journal.yaml")
 
 
-class NchantdJournalSettings(NchantdSettingsWidget):
+class NchantdOfficeJournalSettings(NchantdSettingsWidget):
     """"""
 
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdJournalSettings"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdOfficeJournalSettings").override(parent.config).override(cfg)
+        )
 
     def initModel(self):
         """"""
@@ -97,72 +96,72 @@ class NchantdJournalSettings(NchantdSettingsWidget):
         today_settings_group.setMinimumHeight(self.today_settings_layout.sizeHint().height() * 1.2)
         self.settings_group.addWidget(today_settings_group)
 
-        history_settings_group = pyqt.QGroupBox(self)
-        history_settings_group.setTitle("Journal History")
-        history_settings_layout = pyqt.QGridLayout()
-        history_settings_layout.setSpacing(0)
-        history_settings_layout.setAlignment(pyqt.Qt.AlignTop | pyqt.Qt.AlignLeft)
-        history_settings_group.setLayout(history_settings_layout)
-        cfg = {"text": "Store Journal Entries Between Sessions", "layout": "horizontal", "size": ["auto", "auto"]}
-        self.journal_history_enable = NchantdCheckbox(self, cfg).initWidget()
-        history_settings_layout.addWidget(self.journal_history_enable, 0, 0)
-
-        journal_history_enabled_group = pyqt.QGroupBox(self)
-        journal_history_enabled_group.setTitle("Journal History Enabled")
-        journal_history_enabled_layout = pyqt.QGridLayout()
-        journal_history_enabled_layout.setSpacing(0)
-        journal_history_enabled_layout.setAlignment(pyqt.Qt.AlignTop | pyqt.Qt.AlignLeft)
-        journal_history_enabled_layout.columnStretch(0)
-        journal_history_enabled_group.setLayout(journal_history_enabled_layout)
-
-        cfg = {"text": "Expire History After X Days: ", "layout": "horizontal", "size": ["auto", "auto"]}
-        self.journal_history_expirary = NchantdCheckbox(self, cfg).initWidget()
-        journal_history_enabled_layout.addWidget(self.journal_history_expirary, 0, 0)
-        options = [str(x) for x in [3, 15, 30, 90, 180, 365, 730, 1825]]
-        cfg = {
-            "label": "Select rolling days to keep Journal: ",
-            "layout": "horizontal",
-            "combobox": {"options": options, "size": [150, 30]},
-            "value": self.journal_history_expirary_length,
-        }
-        self.journal_history_expirary_length = NchantdDropDown(self, cfg).initWidget()
-        journal_history_enabled_layout.addWidget(self.journal_history_expirary_length, 1, 0)
-        journal_history_enabled_group.setMinimumHeight(journal_history_enabled_layout.sizeHint().height() * 1.2)
-        cfg = {
-            "text": "Delete Journal Entries When the Associated Tab is Deleted",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-        }
-        self.journal_share_instance_enable = NchantdCheckbox(self, cfg).initWidget()
-        history_settings_layout.addWidget(self.journal_share_instance_enable, 2, 0)
-        cfg = {"text": "Share Journal Between Instances", "layout": "horizontal", "size": ["auto", "auto"]}
-        self.journal_share_instance_enable = NchantdCheckbox(self, cfg).initWidget()
-        history_settings_layout.addWidget(self.journal_share_instance_enable, 3, 0)
-        history_settings_layout.addWidget(journal_history_enabled_group, 1, 0)
-        history_settings_layout.columnStretch(0)
-        history_settings_group.setMinimumHeight(self.today_settings_layout.sizeHint().height() * 1.2)
-        self.settings_group.addWidget(history_settings_group)
-
-        editor_settings_group = pyqt.QGroupBox(self)
-        editor_settings_group.setTitle("Journal Editor")
-        editor_settings_layout = pyqt.QGridLayout()
-        editor_settings_layout.setAlignment(pyqt.Qt.AlignTop | pyqt.Qt.AlignLeft)
-        editor_settings_group.setLayout(editor_settings_layout)
-        cfg = {"text": "Show Journal Editor in Side Bar", "layout": "horizontal", "size": ["auto", "auto"]}
-        self.journal_editor_enable = NchantdCheckbox(self, cfg).initWidget()
-        editor_settings_layout.addWidget(self.journal_editor_enable, 0, 0)
-        cfg = {"text": "Insert Date Per Focus", "layout": "horizontal", "size": ["auto", "auto"]}
-        self.journal_date_insert_enable = NchantdCheckbox(self, cfg).initWidget()
-        editor_settings_layout.addWidget(self.journal_date_insert_enable, 1, 0)
-        self.settings_group.addWidget(editor_settings_group)
-        cfg = {"text": "Allow Editing on Entry", "layout": "horizontal", "size": ["auto", "auto"]}
-        self.journal_edit_enable = NchantdCheckbox(self, cfg).initWidget()
-        editor_settings_layout.addWidget(self.journal_edit_enable, 2, 0)
-        cfg = {"text": "Allow Editing on Re-Entry", "layout": "horizontal", "size": ["auto", "auto"]}
-        self.journal_reedit_enable = NchantdCheckbox(self, cfg).initWidget()
-        editor_settings_layout.addWidget(self.journal_reedit_enable, 3, 0)
-        editor_settings_group.setMinimumHeight(editor_settings_layout.sizeHint().height() * 1.2)
-        self.settings_group.addWidget(editor_settings_group)
+        # history_settings_group = pyqt.QGroupBox(self)
+        # history_settings_group.setTitle("Journal History")
+        # history_settings_layout = pyqt.QGridLayout()
+        # history_settings_layout.setSpacing(0)
+        # history_settings_layout.setAlignment(pyqt.Qt.AlignTop | pyqt.Qt.AlignLeft)
+        # history_settings_group.setLayout(history_settings_layout)
+        # cfg = {"text": "Store Journal Entries Between Sessions", "layout": "horizontal", "size": ["auto", "auto"]}
+        # self.journal_history_enable = NchantdCheckbox(self, cfg).initWidget()
+        # history_settings_layout.addWidget(self.journal_history_enable, 0, 0)
+        #
+        # journal_history_enabled_group = pyqt.QGroupBox(self)
+        # journal_history_enabled_group.setTitle("Journal History Enabled")
+        # journal_history_enabled_layout = pyqt.QGridLayout()
+        # journal_history_enabled_layout.setSpacing(0)
+        # journal_history_enabled_layout.setAlignment(pyqt.Qt.AlignTop | pyqt.Qt.AlignLeft)
+        # journal_history_enabled_layout.columnStretch(0)
+        # journal_history_enabled_group.setLayout(journal_history_enabled_layout)
+        #
+        # cfg = {"text": "Expire History After X Days: ", "layout": "horizontal", "size": ["auto", "auto"]}
+        # self.journal_history_expirary = NchantdCheckbox(self, cfg).initWidget()
+        # journal_history_enabled_layout.addWidget(self.journal_history_expirary, 0, 0)
+        # options = [str(x) for x in [3, 15, 30, 90, 180, 365, 730, 1825]]
+        # cfg = {
+        #     "label": "Select rolling days to keep Journal: ",
+        #     "layout": "horizontal",
+        #     "combobox": {"options": options, "size": [150, 30]},
+        #     "value": self.journal_history_expirary_length,
+        # }
+        # self.journal_history_expirary_length = NchantdDropDown(self, cfg).initWidget()
+        # journal_history_enabled_layout.addWidget(self.journal_history_expirary_length, 1, 0)
+        # journal_history_enabled_group.setMinimumHeight(journal_history_enabled_layout.sizeHint().height() * 1.2)
+        # cfg = {
+        #     "text": "Delete Journal Entries When the Associated Tab is Deleted",
+        #     "layout": "horizontal",
+        #     "size": ["auto", "auto"],
+        # }
+        # self.journal_share_instance_enable = NchantdCheckbox(self, cfg).initWidget()
+        # history_settings_layout.addWidget(self.journal_share_instance_enable, 2, 0)
+        # cfg = {"text": "Share Journal Between Instances", "layout": "horizontal", "size": ["auto", "auto"]}
+        # self.journal_share_instance_enable = NchantdCheckbox(self, cfg).initWidget()
+        # history_settings_layout.addWidget(self.journal_share_instance_enable, 3, 0)
+        # history_settings_layout.addWidget(journal_history_enabled_group, 1, 0)
+        # history_settings_layout.columnStretch(0)
+        # history_settings_group.setMinimumHeight(self.today_settings_layout.sizeHint().height() * 1.2)
+        # self.settings_group.addWidget(history_settings_group)
+        #
+        # editor_settings_group = pyqt.QGroupBox(self)
+        # editor_settings_group.setTitle("Journal Editor")
+        # editor_settings_layout = pyqt.QGridLayout()
+        # editor_settings_layout.setAlignment(pyqt.Qt.AlignTop | pyqt.Qt.AlignLeft)
+        # editor_settings_group.setLayout(editor_settings_layout)
+        # cfg = {"text": "Show Journal Editor in Side Bar", "layout": "horizontal", "size": ["auto", "auto"]}
+        # self.journal_editor_enable = NchantdCheckbox(self, cfg).initWidget()
+        # editor_settings_layout.addWidget(self.journal_editor_enable, 0, 0)
+        # cfg = {"text": "Insert Date Per Focus", "layout": "horizontal", "size": ["auto", "auto"]}
+        # self.journal_date_insert_enable = NchantdCheckbox(self, cfg).initWidget()
+        # editor_settings_layout.addWidget(self.journal_date_insert_enable, 1, 0)
+        # self.settings_group.addWidget(editor_settings_group)
+        # cfg = {"text": "Allow Editing on Entry", "layout": "horizontal", "size": ["auto", "auto"]}
+        # self.journal_edit_enable = NchantdCheckbox(self, cfg).initWidget()
+        # editor_settings_layout.addWidget(self.journal_edit_enable, 2, 0)
+        # cfg = {"text": "Allow Editing on Re-Entry", "layout": "horizontal", "size": ["auto", "auto"]}
+        # self.journal_reedit_enable = NchantdCheckbox(self, cfg).initWidget()
+        # editor_settings_layout.addWidget(self.journal_reedit_enable, 3, 0)
+        # editor_settings_group.setMinimumHeight(editor_settings_layout.sizeHint().height() * 1.2)
+        # self.settings_group.addWidget(editor_settings_group)
 
         # tree_settings_group = pyqt.QGroupBox(self)
         # tree_settings_group.setTitle("Journal Tree")

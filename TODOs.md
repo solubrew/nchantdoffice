@@ -19,6 +19,15 @@
 | `d21c70c` | chore: regenerate TODOs.md — sync with inline markers |
 | `b91c558` | filling in the missing code and configs for 0.0.2 feature sets |
 
+
+---
+
+# Add TODOs:
+    - Journal entry needs to be made for each major activity this is a bigger development area defining "major" 
+        and integrating the writing entries in the journal 
+
+    - 
+
 ---
 
 ## P0 / CRITICAL

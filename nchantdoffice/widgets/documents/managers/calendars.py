@@ -26,18 +26,20 @@ from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.calendars.calendars import NchantdCalendar, NchantdDateTimeSelect
-from nchantrs.widgets.controls.buttons import NchantdButton
-from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
-from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.panes.panes import NchantdPane
-from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.tables.lists import NchantdList
-from nchantrs.widgets.groups import NchantdCollapsableGroup, NchantdGroup
+from nchantrs.widgets.groups import NchantdGroup
+from nchantrs.widgets.calendars.timelines import NchantdTodayOverview
+from nchantrs.widgets.calendars.days import NchantdDayCalendar
 from nchantrs.widgets.annotations import NchantdLabel
+from nchantrs.widgets.groups import NchantdHScrollGroupBox, NchantdVScrollGroupBox
+from nchantrs.widgets.media.editors.selectors import NchantdDropDown
+from nchantrs.widgets.widgets import NchantdWidget
+from nchantrs.widgets.calendars.days import NchantdDayDashboard
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -747,6 +749,70 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             "Minute": ["Second", "Quarter Minute", "Every 5 Seconds"],
         }
         self.calendar_unit_select.set_options(options[scope])
+
+
+class NchantdOfficeTodayOverview(NchantdTodayOverview):
+    """"""
+
+    def __init__(self, parent=None, cfg=None):
+        """ """
+        super().__init__(parent, cfg)
+        self.parent = parent
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdOfficeJournalSettings").override(parent.config).override(cfg)
+        )
+
+    def initModel(self, cfg=None):
+        """"""
+        super().initModel(cfg)
+
+    def initView(self, cfg=None):
+        """"""
+        super().initView(cfg)
+        logma.info(f"initView")
+        cfg = {"height": 250}
+        scroll = NchantdHScrollGroupBox(self, cfg)
+        scroll.setTitle("Daily Weather")
+        today = dt.datetime.now()
+        days = [today + dt.timedelta(days=x) for x in range(-3, 4)]
+        logma.info(f"Days {days}")
+        for day in days:
+            cfg = {
+                "title": day.strftime("%A %Y-%m-%d"),
+                "humidity": {"high": "80", "low": "50"},
+                "temperature": {"high": "80", "low": "50"},
+                "rain_chance": {"high": "80", "low": "50"},
+            }
+            logma.info(f"Day {day}")
+            cfg = {"day": cfg}
+            if day.strftime("%Y-%m-%d") == today.strftime("%Y-%m-%d"):
+                cfg["font_zoom"] = 1.2  # [DONE]
+            scroll.addWidget(NchantdDayDashboard(self, cfg).initWidget())
+            # scrollbar = scroll.scroll.horizontalScrollBar()
+            # scrollbar = scroll.scroll.horizontalScrollBar()
+            # scrollbar.setSliderPosition(int((scrollbar.maximum() + scrollbar.minimum())/2))
+        scroll.set_scroll_bar_position("center")
+        self.layout.addLayout(scroll.layout)
+        if self.tasks is None:
+            self.tasks = []
+        # self.selected_day = NchantdDayCalendar(self, self.config).initWidget()
+        # if len(self.tasks) == 0:
+        #    self.selected_day.setFixedHeight(75)
+        # self.layout.addWidget(self.selected_day)
+        layout = pyqt.QHBoxLayout()
+        cfg = {"filters": {}}
+        # self.news = NchantdNEWSLSummary(self, cfg).initWidget()
+        # layout.addWidget(self.news)
+        cfg = {"size": ["auto", "auto"]}
+        self.viewer = NchantdVScrollGroupBox(self, cfg)
+        self.viewer.setTitle("Quick View")
+        layout.addLayout(self.viewer.layout)
+        self.layout.addLayout(layout)
+
+    def initWidget(self):
+        """"""
+        self.initModel()
+        self.initView()
 
 
 # ====================================================================================================================||

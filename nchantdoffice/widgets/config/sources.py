@@ -15,6 +15,7 @@
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
+import json
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -57,10 +58,12 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
             kahndor.Instruct(pxcfg).select("NchantdDataSourcesSettingsTab").override(self.parent.config).override(cfg)
         )
         self.data_sources = self.config.get("default_sources", {}) or {}
+        self.apikeys = {}
 
     def initModel(self):
         """"""
         super().initModel()
+        self.data_sources = self.get_sources()
         return self
 
     def initView(self):
@@ -73,24 +76,14 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         }  # TODO: build in additional controls for size ["full", "%10"]}
         title = NchantdLabel(self, cfg).initWidget()
         self.layout.addWidget(title)
-        if len(self.data_sources) != 0:
-            for source in self.data_sources:
-                cfg = {"text": source}
-                source_group = NchantdHGroupBox(self, cfg).initWidget()
-                source_group.setTitle(source)
-                layout = pyqt.QHBoxLayout()
-                label = NchantdLabel(self, cfg).initWidget()
-                layout.addWidget(label)
-                button = pyqt.QPushButton(source)
-                layout.addWidget(button)
-                layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
-                source_group.layout.addLayout(layout)
-                for service in self.data_sources[source]:
-                    cfg = {"text": service}
-                    source_group.addWidget(NchantdLabel(self, cfg).initWidget())
-                self.layout.addWidget(source_group)
-        else:
-        new_sources =
+        logma.info(f"Data Sources {self.data_sources}")
+        sources = [dict(zip(list(self.data_sources.columns), x)) for x in self.data_sources.values.tolist()]
+        nchantdsource = [x for x in sources if x["value_txt"] == "NchantdOffice"]
+        # TODO: implement config changes to make the pane standout
+        self.build_data_source_pane(nchantdsource[0])
+        sources = [x for x in sources if x["value_txt"] != "NchantdOffice"]
+        for source in sources:
+            self.build_data_source_pane(source)
         return self
 
     def initWidget(self):
@@ -98,6 +91,67 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         self.initModel()
         self.initView()
         return self
+
+    def build_data_source_pane(self, source):
+        """"""
+        logma.info(f"Source {source}")
+        cfg = {"text": source["value_txt"]}
+        source_group = NchantdHGroupBox(self, cfg).initWidget()
+        source_group.setTitle(source["value_txt"])
+        full_layout = pyqt.QVBoxLayout()
+        layout = pyqt.QHBoxLayout()
+        apikey = False
+        if not apikey:
+            cfg = {
+                "text": "Get API Key",
+                "handler": self.cmd_launch_site,
+                "url": json.loads(source["parameters_dict"]).get("url"),
+            }
+            button = NchantdButton(self, cfg).initWidget()
+            layout.addWidget(button)
+        full_layout.addLayout(layout)
+        layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
+        # TODO: get apikey from pycurity and populate using an obscured version
+        # key = PYKEYSTORE.get(source["value_txt"].lower()) #need to use the overall model store mechanism
+        key = None
+        cfg = {"label": "Enter API Key", "layout": "horizontal"}
+        if key:
+            cfg["label"] = "Active API Key"
+            cfg["text"] = self.obscure_key(key)
+            cfg["key"] = key
+        self.apikeys[source["app_option_PK"]] = NchantdLabeledEntry(self, cfg).initWidget()
+        layout = pyqt.QHBoxLayout()
+        layout.addWidget(self.apikeys[source["app_option_PK"]])
+        cfg = {"text": "..."}
+        visibility_switch = NchantdButton(self, cfg).initWidget()
+        layout.addWidget(visibility_switch)
+        # TODO: add a visibliity switch at the end of the entry box
+        full_layout.addLayout(layout)
+        source_group.layout.addLayout(full_layout)
+        self.layout.addWidget(source_group)
+
+    def cmd_launch_site(self, event, *args, **kwargs):
+        """"""
+        btn = self.sender()
+        url = btn.config.get("url", None)
+        if url is None:
+            raise Exception("No URL")
+        # TODO: create a new NchantdOfficeWebBrowser Document
+        #  also create a popup in the webbrowser document where the api key can be pasted and saved
+        #  navigate to the url
+        #  switch user to the new tab
+
+    def get_sources(self):
+        """"""
+        return self.app.model.get_sources()
+
+    def obscure_key(self, key):
+        """"""
+        return key[:3] + "..." + key[-3:]
+
+    def show_key(self):
+        """"""
+        # TODO replace obscured key with real key
 
 
 class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
