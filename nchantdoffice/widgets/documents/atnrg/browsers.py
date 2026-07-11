@@ -830,6 +830,11 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         Falls back to loading the URL in this view if the tabset path is
         unavailable, so a click is never silently dropped.
         """
+        # H28 FIX: Skip opening new tab if page is pinned
+        if self.pinned:
+            logma.info("[browser] open_new_window blocked: page is pinned")
+            return self
+
         url_str = url.toString() if isinstance(url, pyqt.QUrl) else str(url)
         logma.info(f"[browser] open_new_window url={url_str}")
         try:
@@ -876,7 +881,8 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # logma.info(f"URL: {url}")
         # self.document.set_url_active(url)
         self.document.save()
-        if self.pin is True:
+        # H28 FIX: Check self.pinned instead of self.pin
+        if self.pinned:
             return self
         # self.document.set_url_active(self.active_url.url)
         content = self.document.active_page.to_dict()
