@@ -43,7 +43,7 @@ from nchantdoffice.utilities.config import PyfficeApplicationConfig
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
-log = False
+log = True
 if not log:
     logma.off()
 
@@ -1088,11 +1088,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def get_sources(self):
         """"""
-        sources = self.store.get_active_sources()
+        sources = self.store.get_view_sources()
+        logma.info(f"Sources {sources}")
         if sources is None:
             return DataFrame()
-        df = DataFrame(self.config.dikt.get("sources", []), columns=list(sources.columns))
-        sources = concat([sources, df])
+        #df = DataFrame(self.config.dikt.get("sources", []), columns=list(sources.columns))
+        #sources = concat([sources, df])
         return sources
 
     def get_supported_os(self):
@@ -1577,10 +1578,6 @@ class NchantdOfficeStore(NchantdStore):
         """)
         self.docs[db].commit()
 
-    def get_active_sources(self):
-        """"""
-        #TODO: implement method
-
     def get_application_documents(self):
         """"""
         data = {"contacts": {}, "settings": {}}
@@ -1787,7 +1784,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_journal_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_sources(self, cfg, db="db"):
+    def get_view_sources(self, cfg=None, db="db"):
         """"""
         table = "vw_sources"
         if self.instance is not None:

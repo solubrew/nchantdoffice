@@ -18,6 +18,15 @@
 | `0a93feb` | chore: convert remaining TODO comments to NOTEs |
 | `b1d62ef` | Merge remote-tracking branch 'local/gamma' into gamma |
 
+
+---
+
+# Add TODOs:
+    - Journal entry needs to be made for each major activity this is a bigger development area defining "major" 
+        and integrating the writing entries in the journal 
+
+    - 
+
 ---
 
 ## P0 / CRITICAL
