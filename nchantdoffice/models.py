@@ -1092,8 +1092,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         logma.info(f"Sources {sources}")
         if sources is None:
             return DataFrame()
-        #df = DataFrame(self.config.dikt.get("sources", []), columns=list(sources.columns))
-        #sources = concat([sources, df])
+        # df = DataFrame(self.config.dikt.get("sources", []), columns=list(sources.columns))
+        # sources = concat([sources, df])
         return sources
 
     def get_supported_os(self):
@@ -1807,6 +1807,24 @@ class NchantdOfficeStore(NchantdStore):
             if self.instance.is_independent:
                 table = f"vwt_tab_document_{self.instance.alias}"
         return self.get_table(table, cfg, db)
+
+    def store_app_instance(self, instance, db="db"):
+        """"""
+
+        payload = [
+            [
+                instance.get("instance_id_txt"),
+                instance.get("name_txt", "db"),
+                instance.get("description_ltxt", ""),
+                instance.get("is_primary_bit", 1),
+                instance.get("application_NCD_txt", ""),
+                instance.get("application_path_txt", ""),
+                instance.get("instance_path_txt", ""),
+                instance.get("version_txt", ""),
+                instance.get("meta_data_dict", "{}"),
+            ]
+        ]
+        self._store("app_instance", payload, db)
 
     def store_doc_media(self, document, db="db", how="INSERT"):
         """

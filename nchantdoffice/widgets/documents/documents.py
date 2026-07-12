@@ -112,21 +112,25 @@ class NchantdOfficeDocumentMixin:
 
     def align_left(self, selection=""):
         """"""
+        # TODO: implement method
         return self
 
     def align_center(self, selection=""):
         """"""
+        # TODO: implement method
         return self
 
     def align_right(self, selection=""):
         """"""
+        # TODO: implement method
         return self
 
     def cmd_cancel(self):
         """"""
+        # TODO: implement method
         pass
 
-    def cmd_delete_tab(self):
+    def cmd_delete_tab(self, event, *args, **kwargs):
         """"""
         self.app.model.delete_tab(self)
 
@@ -142,14 +146,12 @@ class NchantdOfficeDocumentMixin:
 
     def cmd_node_edit(self, event=None, *args, **kwargs):
         """"""
+        # TODO: implement method
         return self
 
     def cmd_redo(self, event=None, *args, **kwargs):
         """"""
-        return self
-
-    def cmd_show_toolbox(self, event=None, *args, **kwargs):
-        """"""
+        # TODO: implement method
         return self
 
     def cmd_show_pane_left(self, event=None, *args, **kwargs):
@@ -172,10 +174,12 @@ class NchantdOfficeDocumentMixin:
 
     def cmd_tag_edit(self, event=None, *args, **kwargs):
         """"""
+        # TODO: implement method
         return self
 
     def cmd_undo(self, event=None, *args, **kwargs):
         """"""
+        # TODO: implement method
         return self
 
     def cmd_save_tab(self, event=None, *args, **kwargs):
@@ -189,14 +193,17 @@ class NchantdOfficeDocumentMixin:
 
     def defocus(self):
         """"""
+        # TODO: implement method
         return self
 
     def export_document(self):
         """Export a single selected document to an external file of the selected format"""
+        # TODO: implement method
         return self
 
     def get_bytes(self):
         """"""
+        # TODO: implement method
         return bytes()
 
     def get_primary_key(self):
@@ -206,10 +213,12 @@ class NchantdOfficeDocumentMixin:
 
     def import_document(self):
         """"""
+        # TODO: implement method
         return self
 
     def init_drawer(self, name):
         """"""
+        # TODO: implement method
         return self
 
     def init_toolbar(self, cfg=None):
@@ -299,9 +308,7 @@ class NchantdOfficeDocumentMixin:
 
     def lock_page(self):
         """"""
-
-    def launch_toolbox(self):
-        """"""
+        # TODO: implement method
 
     def on_document_changed(self):
         """
@@ -319,6 +326,7 @@ class NchantdOfficeDocumentMixin:
             update document when it gains focus to ensure any edits made elsewhere are reflected here
         :return:
         """
+        # TODO: implement method
 
     def on_lost_focus(self):
         """
@@ -327,6 +335,7 @@ class NchantdOfficeDocumentMixin:
 
         :return:
         """
+        # TODO: implement method
         return self
 
     def register(self):
@@ -363,6 +372,7 @@ class NchantdOfficeDocumentMixin:
 
     def save_external(self):
         """"""
+        # TODO: implement method
         return self
 
     def save_internal(self):
@@ -402,18 +412,22 @@ class NchantdOfficeDocumentMixin:
 
     def take_snapshot(self):
         """"""
+        # TODO: implement method
         return self
 
     def unlock_page(self):
         """"""
+        # TODO: implement method
         return self
 
     def update_document(self):
         """"""
+        # TODO: implement method
         return self
 
     def update_document_page(self, page_num):
         """"""
+        # TODO: implement method
         return self
 
     def _store_document(self):
@@ -432,8 +446,6 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        if cfg is not None:
-            logma.info(f"Document Config {cfg.get('toolbox', None)}")
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocument").override(cfg))
         self.name = name
         self.did = None
@@ -515,14 +527,17 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
 
     def open(self):
         """"""
+        # TODO: implement method
         return self
 
     def open_local(self):
         """"""
+        # TODO: implement method
         return self
 
     def open_remote(self):
         """"""
+        # TODO: implement method
         return self
 
     def save(self):

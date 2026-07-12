@@ -26,6 +26,8 @@ from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.calendars.calendars import NchantdCalendar, NchantdDateTimeSelect
+
+from nchantdoffice.widgets.documents.atnrg.browsers import NchantdOfficeWebBrowser
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons
@@ -806,6 +808,9 @@ class NchantdOfficeTodayOverview(NchantdTodayOverview):
         cfg = {"size": ["auto", "auto"]}
         self.viewer = NchantdVScrollGroupBox(self, cfg)
         self.viewer.setTitle("Quick View")
+        cfg = {"url": "https://www.groundnews.com"}
+        browser = NchantdOfficeWebBrowser(self, cfg).initWidget()
+        self.viewer.addWidget(browser)
         layout.addLayout(self.viewer.layout)
         self.layout.addLayout(layout)
 
