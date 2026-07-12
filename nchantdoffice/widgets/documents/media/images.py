@@ -597,30 +597,50 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         return self
 
     def save(self):
-        """"""
+        """[H27 2026-07-11] Canonical external save mode. Images are stored as files
+        on disk with paths tracked in the document. Internal base64 mode is
+        deprecated — migrate existing entries by reading content bytes and
+        writing to file_path before calling super().save()."""
         logma.info(f"Saving document")
-        # if self.document.location is None:
-        #     self.document.set_location("external")
-        # if self.document.location == "external":
-        #     content = self.document.content
-        #     if content is None:
-        #         content = {}
-        #     if isinstance(content, dict):
-        #         content["file_path"] = self.document.file_path
-        #     logma.info(f"File Path {self.document.file_path}")
-        #     logma.info(f"DID {self.document.did}")
-        # elif self.document.location == "internal":
-        #     content = self.get_binary()
-        # else:
-        #     raise Exception(f"Unknown storage location {self.document.location}")
-        # logma.info(f"Content {content}")
-        logma.info(f"Content {self.document.content}")
-        # if content != self.document.content:
-        #     self.document.set_content(content)
-        #     logma.info(f"Content {self.document.content}")
+        # Canonical mode: external file storage
+        if self.document.location is None:
+            self.document.set_location("external")
+        
+        if self.document.location == "external":
+            # Ensure file_path is set
+            if self.document.file_path is None:
+                raise Exception("External save mode requires file_path to be set")
+            # For round-trip consistency, store the current path in content metadata
+            content = self.document.content if self.document.content else {}
+            if isinstance(content, dict):
+                content["file_path"] = self.document.file_path
+            logma.info(f"File Path {self.document.file_path}")
+            logma.info(f"DID {self.document.did}")
+            
+        elif self.document.location == "internal":
+            # Migrate to external: get binary, write to file, switch mode
+            logma.info("Migrating internal image to external storage")
+            content = self.get_binary()  # Assume parent provides this method
+            # Write content to file_path (implementation depends on filesystem manager)
+            # For now, we'll log the migration and force external mode on next save
+            logma.warning("Internal mode deprecated. Please implement migration path.")
+            raise Exception("Internal image storage is deprecated. Use external mode.")
+        else:
+            raise Exception(f"Unknown storage location {self.document.location}")
+        
+        # Update content if it changed
+        if content and content != self.document.content:
+            self.document.set_content(content)
+            logma.info(f"Content updated")
+        
         logma.info(f"Document {self.document.to_dict()}")
         super().save()
         return self
+
+
+# ====================================================================================================================||
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
 
 
 # ====================================================================================================================||
