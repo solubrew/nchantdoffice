@@ -150,15 +150,17 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         drag = pyqt.QDrag(self)
         mime_data = pyqt.QMimeData()
 
-        # Store document IDs
-        doc_ids = []
+        # [H29 2026-07-11] NchantdTreeNode.initModel now stores self.node dict
+        # in UserRole. Nodes don't have .id — they have nid_txt. Read that
+        # directly instead of chasing a non-existent attribute through doc.
+        nids = []
         for item in selected_items:
-            doc = item.data(0, pyqt.Qt.UserRole) if hasattr(item, "data") else None
-            if doc and hasattr(doc, "id"):
-                doc_ids.append(str(doc.id))
+            node_dict = item.data(0, pyqt.Qt.UserRole)
+            if isinstance(node_dict, dict) and "nid_txt" in node_dict:
+                nids.append(str(node_dict["nid_txt"]))
 
-        if doc_ids:
-            mime_data.setData("application/x-nchantd-tree-item", ",".join(doc_ids).encode())
+        if nids:
+            mime_data.setData("application/x-nchantd-tree-item", ",".join(nids).encode())
             drag.setMimeData(mime_data)
             drag.exec_(pyqt.Qt.MoveAction)
 
