@@ -185,8 +185,6 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         self.context_menu_name = "context.document.files"
         if self.context_menu_name is not None:
             self.initialize_context_menu(self.context_menu_name)
-        # self.document = PyfficeRolodex()  # self.app.model.store)
-        # self.load_contacts()
         return self
 
     def initView(self, cfg=None):
@@ -194,7 +192,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         cfg = cfg or {}
         if "buttons" not in cfg:
             cfg["buttons"] = {}
-        search_cfg = {"label": "Search:", "layout": "horizontal", "text": ""}
+        search_cfg = {"label": "Search:", "layout": "horizontal", "text": "", "handler": self.cmd_search_contacts}
         self.search_entry = NchantdLabeledEntry(self, search_cfg)
         cfg["buttons"][10] = {"action": "search_contacts", "widget": self.search_entry}
         filter_cfg = {
@@ -202,6 +200,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
             "layout": "horizontal",
             "combobox": {"options": ["All", "Recent", "Favorites", "Company"]},
             "handler": self.cmd_filter_contacts,
+            "value": self.get_filter_option(),
         }
         self.filter_dropdown = NchantdDropDown(self, filter_cfg)
         cfg["buttons"][11] = {"action": "filter_contacts", "widget": self.filter_dropdown}
@@ -223,13 +222,11 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         # NOTE: create contact Card Widget
         self.contact_likely_group.setTitle(f"Most Likely Contacts")
         self.layout.addLayout(self.contact_likely_group.layout)
-
         # All contacts section
         self.contacts_group = NchantdVScrollGroupBox(self)
         # NOTE: add a table
         self.contacts_group.setTitle(f"All Contacts ({len(self.contacts)})")
         self.layout.addLayout(self.contacts_group.layout)
-
         # Populate contacts
         self.display_contacts(self.contacts)
 
@@ -239,6 +236,11 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         """"""
         self.initModel()
         self.initView()
+        return self
+
+    def get_filter_option(self):
+        """"""
+        # TODO implement method
         return self
 
     def init_drawer_document_config(self):

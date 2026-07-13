@@ -71,10 +71,7 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
         """Initialize the NchantdOfficeWebPage."""
         super().__init__(parent, profile, intercept, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebPage"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebPage").override(cfg))
 
     def initModel(self):
         """Initialize the model and return self for method chaining."""
@@ -135,98 +132,6 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
         self._execute_javascript(js_code, f"Text submitted to element '{element_name}'")
 
 
-# class NchantdOfficeWebPage(NchantdWebPage):
-#     """"""
-#
-#     def __init__(self, parent=None, profile=None, intercept=False, cfg=None):
-#         """ """
-#         super().__init__(parent, profile, intercept, cfg)
-#         self.parent = parent
-#         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebPage"))
-#         if self.parent:
-#             self.config.override(parent.config)
-#         self.config.override(cfg)
-#
-#     def initModel(self):
-#         """"""
-#         super().initModel()
-#         return self
-#
-#     def initView(self):
-#         """"""
-#         super().initView()
-#         return self
-#
-#     def initWidget(self):
-#         """"""
-#         self.initModel()
-#         self.initView()
-#         return self
-#
-#     def acceptNavigationRequest(self, url, request_type, is_main_frame):
-#         """"""
-#         # self.load_url(url)
-#         # self.parent.update_toolbox_url_inspection()
-#         return super().acceptNavigationRequest(url, request_type, is_main_frame)
-#
-#     def autofill_form(self):
-#         """
-#         Injects JavaScript into the page to autofill the HTML form.
-#         """
-#         autofill_script = """
-#         const autofillData = {
-#             name: "<[name]>",
-#             email: "<[email]>",
-#             number: "<[number]>",
-#             street: "<[street]>",
-#             city: "<[city]>",
-#             state: "<[state]>",
-#             zip: "<[zipcode]>",
-#             phone: "<[phone]>",
-#             website: "<[website]>"
-#         };
-#
-#         for (let field in autofillData) {
-#             const inputField = document.querySelector(
-#                 `#${field}, [name=${field}], [placeholder*=${field}]`
-#             );
-#             if (inputField) inputField.value = autofillData[field];
-#         }
-#         console.log("Form Auto-Filled Successfully!");
-#         """
-#         # Execute the JavaScript in the web page
-#         self.page().runJavaScript(autofill_script)
-#
-#     def clear_form(self):
-#         """
-#         Injects JavaScript into the page to clear the form fields.
-#         """
-#         clear_script = """
-#         const inputs = document.querySelectorAll('input');
-#         inputs.forEach(input => input.value = "");
-#         console.log("Form Cleared!");
-#         """
-#         # Execute the JavaScript in the web page
-#         self.page().runJavaScript(clear_script)
-#
-#     def open_new_tab(self):
-#         """"""
-#         super().open_new_tab()
-#         cfg = {}
-#         self.parent.app.model.codex.init_browser(cfg).load_document()
-#         return self
-#
-#     def submit_text_to_webpage(self, element_name: str = "input"):
-#         """
-#         Takes input from QLineEdit and submits it to the webpage in the QWebEngineView.
-#         """
-#         # Get the text from the QTextWidget (QLineEdit in this case)
-#         input_text = self.text_input.text()
-#         # Run JavaScript on the webpage to set the input field's value
-#         js_code = f"document.getElementById('{element_name}').value = '{input_text}';"
-#         self.web_view.page().runJavaScript(js_code)  # Inject JavaScript
-
-
 class NchantdOfficeDevPage(NchantdOfficeWebPage):
     """Development page with relaxed security for local development environments."""
 
@@ -238,11 +143,7 @@ class NchantdOfficeDevPage(NchantdOfficeWebPage):
     def __init__(self, parent=None, profile=None, intercept=False, cfg=None):
         """Initialize development page with local security overrides."""
         super().__init__(parent, profile, intercept, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDevPage"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDevPage").override(cfg))
 
     def initModel(self, cfg=None):
         """Initialize the model component."""
@@ -295,11 +196,7 @@ class NchantdOfficeSidePage(NchantdWebEnginePage):
     def __init__(self, parent=None, profile=None, intercept=None, cfg=None):
         """ """
         super().__init__(parent, profile, intercept, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSidePage"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSidePage").override(cfg))
         self.form_factor_script = None
 
     def initModel(self, cfg=None):
@@ -343,11 +240,7 @@ class NchantdOfficeURL(NchantdURL):
     def __init__(self, url, parent=None, cfg=None):
         """ """
         super().__init__(url, parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeURL"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeURL").override(cfg))
         self.set_url(self.config.dikt.get("url", None))
 
 

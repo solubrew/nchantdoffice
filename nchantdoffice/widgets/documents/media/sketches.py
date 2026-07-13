@@ -1142,7 +1142,12 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         items[cnt]["widget"] = self.canvas_color_sigil_button
         cnt += 1
         items[cnt] = {}
-        cfg = {"label": "Canvas Size", "layout": "horizontal"}
+        cfg = {
+            "label": "Canvas Size",
+            "layout": "horizontal",
+            "handler": self.cmd_canvas_size_change,
+            "value": self.get_canvas_size(),
+        }
         self.canvas_size_set = NchantdLabeledDoubleSpinBox(self, cfg)
         items[cnt]["widget"] = self.canvas_size_set
         cnt += 1
@@ -1152,13 +1157,14 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             "label": "Active Layer",
             "layout": "horizontal",
             "options": self.layers,
+            "handler": self.cmd_layer_change,
+            "value": self.get_canvas_layer(),
         }
         self.canvas_layer_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.canvas_layer_select
         cnt += 1
         items[cnt] = {}
         cfg = {"layout": "horizontal", "data": self.layers}
-        logma.info(f"Layers {self.layers}")
         self.layers_list_pane = NchantdLayersListPane(self, cfg)
         items[cnt]["widget"] = self.layers_list_pane
         cnt += 1

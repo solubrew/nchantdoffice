@@ -634,6 +634,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             "range": [8000, 9999],
             "default": self.server_port,
             "handler": self.cmd_set_server_port,
+            "value": self.get_server_port(),
         }
         self.port_spin = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.port_spin
@@ -646,20 +647,21 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             "layout": "horizontal",
             "combobox": {"size": ["auto", "auto"], "options": self.get_available_kernels()},
             "handler": self.cmd_select_kernel,
+            "value": self.get_kernel(),
         }
         self.kernel_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.kernel_select
         cnt += 1
-
         if cnt not in items:
             items[cnt] = default_action.copy()
         cfg = {
             "text": "Auto-start Server",
             "layout": "horizontal",
             "handler": self.cmd_toggle_autostart,
+            "value": self.get_config_autostart_server(),
         }
-        # self.autostart_checkbox = NchantdCheckbox(self, cfg)  # .initWidget()
-        # items[cnt]["widget"] = self.autostart_checkbox
+        self.autostart_checkbox = NchantdCheckboxWidget(self, cfg)
+        items[cnt]["widget"] = self.autostart_checkbox
         cnt += 1
 
         return items
@@ -669,21 +671,18 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         items = self.toolbox_config[200].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
         cnt = 0
-
         if cnt not in items:
             items[cnt] = default_action.copy()
         cfg = {"text": "Server Status: ", "layout": "horizontal"}
         self.server_status_label = NchantdLabel(self, cfg)
         items[cnt]["widget"] = self.server_status_label
         cnt += 1
-
         if cnt not in items:
             items[cnt] = default_action.copy()
         cfg = {"text": "Kernel Status: ", "layout": "horizontal"}
         self.kernel_status_label = NchantdLabel(self, cfg)
         items[cnt]["widget"] = self.kernel_status_label
         cnt += 1
-
         return items
 
     def init_drawer_object_config(self):
@@ -698,6 +697,8 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             "label": "Cell Type: ",
             "layout": "horizontal",
             "combobox": {"size": ["auto", "auto"], "options": ["Code", "Markdown", "Raw"]},
+            "handler": self.cmd_cell_type_change,
+            "value": self.get_cell_type(),
         }
         self.cell_type_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.cell_type_select

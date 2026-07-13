@@ -52,11 +52,7 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCellBorderFormats"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCellBorderFormats").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -81,12 +77,16 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
             "label": "Select Cell Border Style",
             "layout": "horizontal",
             "options": self.get_border_styles(),
+            "handler": self.cmd_top_border_style_change,
+            "value": self.get_border_style("top"),
         }
         self.cell_border_style_top_select = NchantdComboBox(self, cfg).initWidget()
         self.layout.addWidget(self.cell_border_style_top_select, cnt, 1)
         cfg = {
             "action": "set_text_font_color",
             "type": "custom",
+            "handler": self.cmd_top_border_thickness_change,
+            "value": self.get_border_thickness("top"),
         }
         self.cell_border_thickness_top_spin = NchantdSpinBox(self, cfg).initWidget()
         self.layout.addWidget(self.cell_border_thickness_top_spin, cnt, 2)
@@ -94,6 +94,8 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
             "action": "set_text_font_color",
             "type": "custom",
             "layout": "horizontal",
+            "handler": self.cmd_top_border_color_change,
+            "value": self.get_border_color("top"),
         }
         self.cell_border_color_top_select = NchantdButton(self, cfg).initWidget()
         self.layout.addWidget(self.cell_border_color_top_select, cnt, 3)
@@ -104,18 +106,24 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
             "action": "insert_generic_action",
             "type": "custom",
             "options": self.get_border_styles(),
+            "handler": self.cmd_left_border_style_change,
+            "value": self.get_border_style("left"),
         }
         self.cell_border_style_left_select = NchantdComboBox(self, cfg).initWidget()
         self.layout.addWidget(self.cell_border_style_left_select, cnt, 1)
         cfg = {
             "action": "set_text_font_color",
             "type": "custom",
+            "handler": self.cmd_left_border_thickness_change,
+            "value": self.get_border_color("left"),
         }
         self.cell_border_thickness_left_spin = NchantdSpinBox(self, cfg).initWidget()
         self.layout.addWidget(self.cell_border_thickness_left_spin, cnt, 2)
         cfg = {
             "action": "set_text_font_color",
             "type": "custom",
+            "handler": self.cmd_left_border_color_change,
+            "value": self.get_border_color("left"),
         }
         self.cell_border_color_left_select = NchantdButton(self, cfg).initWidget()
         self.layout.addWidget(self.cell_border_color_left_select, cnt, 3)
@@ -126,18 +134,24 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
             "action": "insert_generic_action",
             "type": "custom",
             "options": self.get_border_styles(),
+            "handler": self.cmd_right_border_style_change,
+            "value": self.get_border_style("right"),
         }
         self.cell_border_style_right_select = NchantdComboBox(self, cfg).initWidget()
         self.layout.addWidget(self.cell_border_style_right_select, cnt, 1)
         cfg = {
             "action": "set_text_font_color",
             "type": "custom",
+            "handler": self.cmd_right_border_thickness_change,
+            "value": self.get_border_thickness("right"),
         }
         self.cell_border_thickness_right_spin = NchantdSpinBox(self, cfg).initWidget()
         self.layout.addWidget(self.cell_border_thickness_right_spin, cnt, 2)
         cfg = {
             "action": "set_text_font_color",
             "type": "custom",
+            "handler": self.cmd_right_border_color_change,
+            "value": self.get_border_color("right"),
         }
         self.cell_border_color_right_select = NchantdButton(self, cfg).initWidget()
         self.layout.addWidget(self.cell_border_color_right_select, cnt, 3)
@@ -148,18 +162,24 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
             "action": "insert_generic_action",
             "type": "custom",
             "options": self.get_border_styles(),
+            "handler": self.cmd_bottom_border_style_change,
+            "value": self.get_border_color("bottom"),
         }
         self.cell_border_style_bottom_select = NchantdComboBox(self, cfg).initWidget()
         self.layout.addWidget(self.cell_border_style_bottom_select, cnt, 1)
         cfg = {
             "action": "set_text_font_color",
             "type": "custom",
+            "handler": self.cmd_bottom_border_thickness_change,
+            "value": self.get_border_thickness("bottom"),
         }
         self.cell_border_thickness_bottom_spin = NchantdSpinBox(self, cfg).initWidget()
         self.layout.addWidget(self.cell_border_thickness_bottom_spin, cnt, 2)
         cfg = {
             "action": "set_text_font_color",
             "type": "custom",
+            "handler": self.cmd_bottom_border_color_change,
+            "value": self.get_border_color("bottom"),
         }
         self.cell_border_color_bottom_select = NchantdButton(self, cfg).initWidget()
         self.layout.addWidget(self.cell_border_color_bottom_select, cnt, 3)
@@ -192,7 +212,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__("Nchantd Matrix", parent, cfg)
-        self.parent = parent
         self.config.override(
             kahndor.Instruct(pxcfg).select("NchantdOfficeMatrix").override(parent.config).override(cfg)
         )
@@ -241,6 +260,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "entrybox": {"text": "=", "size": [600, 30]},
             "justify": "left",
             "layout": "horizontal",
+            "handler": self.cmd_formula_change,
+            "value": self.get_formula(),
         }
         self.formula_bar = NchantdLabeledEntry(self, cfg)
         if self.file_path is None or not exists(self.file_path):
@@ -251,9 +272,16 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "layout": "horizontal",
             "size": ["auto", 30],
             "options": self.get_datasets(),
+            "handler": self.cmd_dataset_select_change,
+            "value": self.get_dataset(),
         }
         self.dataset_select = NchantdDropDown(self.parent, dscfg)
-        cfg["buttons"][10] = {"action": "select_data_set", "widget": self.dataset_select}
+        cfg["buttons"][10] = {
+            "action": "select_data_set",
+            "widget": self.dataset_select,
+            "handler": self.cmd_dataview_select_change,
+            "value": self.get_dataview(),
+        }
         cfg["buttons"][11] = {
             "action": "formula_bar",
             "name": "formula_bar",
@@ -757,6 +785,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         if file_path:
             self.save_document(file_path)
         return self
+
     def extract_table_data(self):
         """Extract all data from table"""
         data = []
@@ -988,30 +1017,40 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             return sorted(list(cols))
         return []
 
+    def get_compatability_options(self):
+        """"""
+        return [".xlsx - Excel", ".ods - OpenOffice", ".csv - Comma-Separated Values", ".tsv - Tab-Separated Values"]
+
+    def get_template_options(self):
+        """"""
+        return ["Blank", "Loan Calculator"]
+
     def init_drawer_document_config(self):
         """"""
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        options = [".xlsx - Excel", ".ods - OpenOffice", ".csv - Comma-Separated Values", ".tsv - Tab-Separated Values"]
+        options = self.get_compatability_options()
         cfg = {
             "label": "Compatability",
             "layout": "horizontal",
             "options": options,
             "handler": self.cmd_compatibility_select,
+            "value": self.get_compatability(),
         }
         self.document_compatability = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.document_compatability
         cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        options = ["Blank", "Loan Calculator"]
+        options = self.get_template_options()
         cfg = {
             "label": "Template",
             "layout": "horizontal",
             "options": options,
             "handler": self.cmd_template_select,
+            "value": self.get_template(),
         }
         self.document_template = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.document_template
@@ -1046,6 +1085,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "range": [1, 10000000],
             "default": self.config.dikt.get("num_rows", 20),
             "handler": self.cmd_row_spinbox,
+            "value": self.get_row_count(),
         }
         self.rows_count_entry = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.rows_count_entry
@@ -1058,6 +1098,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "range": [1, 10000000],
             "default": self.config.dikt.get("num_rows", 20),
             "handler": self.cmd_row_spinbox,
+            "value": self.get_row_height(),
         }
         self.rows_count_entry = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.rows_count_entry
@@ -1070,6 +1111,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "range": [1, 10000000],
             "default": self.config.dikt.get("num_columns", 20),
             "handler": self.cmd_column_spinbox,
+            "value": self.get_column_count(),
         }
         self.columns_count_entry = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.columns_count_entry
@@ -1082,6 +1124,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "range": [10, 600],
             "default": self.config.dikt.get("min_column_width", 30),
             "handler": self.cmd_column_width_spinbox,
+            "value": self.get_column_width(),
         }
         self.cell_width = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.cell_width
@@ -1099,13 +1142,20 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "layout": "horizontal",
             "size": ["auto", 350],
             "justify": "top",
+            "handler": self.cmd_formula_change,
+            "value": self.get_formula(),
         }
         self.formula = NchantdEntryBox(self, cfg)
         items[cnt]["widget"] = self.formula
         cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {"text": "Set Formulas to Auto-Calculate", "size": ["auto", "auto"]}
+        cfg = {
+            "text": "Set Formulas to Auto-Calculate",
+            "size": ["auto", "auto"],
+            "value": self.get_config_autocalcualte(),
+            "handler": self.cmd_autocalculate_change,
+        }
         self.autocalculate_checkbox = NchantdCheckboxGroup(self, cfg)
         items[cnt]["widget"] = self.autocalculate_checkbox
         cnt += 1
@@ -1115,6 +1165,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "label": "Select Formula: ",
             "layout": "horizontal",
             "options": self.get_formulas(),
+            "handler": self.cmd_formula_select_change,
+            "value": self.get_formula()
         }
         self.formula_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.formula_select
@@ -1130,6 +1182,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cfg = {
             "label": "Active Cell: ",
             "layout": "horizontal",
+            "handler": self.cmd_active_cell_change,
+            "value": self.get_active_cell()
         }  # NOTE readonly and fill in data
         self.selected_cell_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.selected_cell_entry
@@ -1143,12 +1197,14 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         }  #
         self.selected_cell_merge_button = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.selected_cell_merge_button
-        # cnt += 1
+        cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {
             "label": "Selected Text: ",
             "layout": "horizontal",
+            "handler": self.selected_cell_change,
+            "value": self.get_selected_cell()
         }  # NOTE readonly and fill in data
         self.selected_cell_text_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.selected_cell_text_entry
@@ -1197,6 +1253,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                     "size": ["auto", "auto"],
                 }
             ]
+            "handler": self.cmd_document_compatability_change,
+            "value": self.get_document_compatability(),
         }
         self.document_compatability = NchantdCheckboxGroup(self, cfg)
         items[cnt]["widget"] = self.document_compatability
@@ -1243,7 +1301,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         for i in range(count):
             self.insert_column(position)
         return self
-
 
     def insert_chart(self):
         """Insert a chart (placeholder - opens info dialog)"""
@@ -1784,7 +1841,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         """Save as TSV (Tab-Separated Values) file"""
         return self.save_as_csv(file_path, delimiter="\t")
 
-
     def save_file(self):
         """Save spreadsheet to file"""
         file_path, _ = pyqt.QFileDialog.getSaveFileName(
@@ -1956,7 +2012,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 is_italic = False
             self.apply_font_style(italic=not is_italic)
         return self
-
 
 
 # ====================================================================================================================||

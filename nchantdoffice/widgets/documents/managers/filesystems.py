@@ -13,10 +13,9 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
-from os.path import abspath, dirname, join, getsize, expanduser
+from os.path import dirname, join, getsize, expanduser
 import datetime as dt
 from os import stat
-from pathlib import Path
 
 # ======================================3rd Party Library Modules=====================================================||
 from pandas import DataFrame
@@ -46,7 +45,7 @@ log = True
 logma = Logma(__name__)
 debug = False
 # ====================================================================================================================||
-pxcfg = join(here, "../_data_", "filesystems.yaml")
+pxcfg = join(here, "_data_", "filesystems.yaml")
 
 
 class NchantdCompressPane(NchantdPane):
@@ -55,11 +54,7 @@ class NchantdCompressPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdCompressPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -74,13 +69,17 @@ class NchantdCompressPane(NchantdPane):
         self.group_layout = pyqt.QVBoxLayout()
         group.setLayout(self.group_layout)
         self.set_from_folder()
-        cfg = {"text": "Move Files on Compress", "size": ["auto", "auto"]}
+        cfg = {"text": "Move Files on Compress", "size": ["auto", "auto"], "handler": self.cmd_move_files_on_compress}
         self.move_on_compress = NchantdCheckbox(self, cfg).initWidget()
         self.group_layout.addWidget(self.move_on_compress)
-        cfg = {"text": "Rename Files on Compress", "size": ["auto", "auto"]}
+        cfg = {"text": "Rename Files on Compress", "size": ["auto", "auto"], "handler": self.cmd_rename_on_compress}
         self.rename_on_compress = NchantdCheckbox(self, cfg).initWidget()
         self.group_layout.addWidget(self.rename_on_compress)
-        cfg = {"text": "Delete Files on Compress", "size": ["auto", "auto"]}
+        cfg = {
+            "text": "Delete Files on Compress",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_delete_files_on_compress,
+        }
         self.delete_on_compress = NchantdCheckbox(self, cfg).initWidget()
         self.group_layout.addWidget(self.delete_on_compress)
         cfg = {
@@ -105,6 +104,10 @@ class NchantdCompressPane(NchantdPane):
         logma.info("Setting up compression automation...")
         # NOTE: Implement automation rules
         return self
+
+    def cmd_delete_files_on_compress(self):
+        """"""
+        # TODO implement method
 
     def cmd_compress_files(self, event=None):
         """Compress selected files"""
@@ -150,6 +153,18 @@ class NchantdCompressPane(NchantdPane):
 
         return self
 
+    def cmd_move_files_on_compress(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+
+    def cmd_rename_on_compress(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+
+    def cmd_delete_files_on_selection(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+
     def set_from_folder(self):
         """"""
         # if self.parent.fs_tree is None:
@@ -176,10 +191,7 @@ class NchantdImportPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdImportPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdImportPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -193,22 +205,7 @@ class NchantdImportPane(NchantdPane):
         group = NchantdGroup(self, cfg)
         self.group_layout = pyqt.QVBoxLayout()
         group.setLayout(self.group_layout)
-        self.set_from_folder()
-        cfg = {"text": "Import Files", "size": ["auto", "auto"]}
-        self.move_on_compress = NchantdCheckbox(self, cfg).initWidget()
-        self.group_layout.addWidget(self.move_on_compress)
-        cfg = {"text": "Rename Files on Compress", "size": ["auto", "auto"]}
-        self.rename_on_compress = NchantdCheckbox(self, cfg).initWidget()
-        self.group_layout.addWidget(self.rename_on_compress)
-        cfg = {"text": "Delete Files on Compress", "size": ["auto", "auto"]}
-        self.delete_on_compress = NchantdCheckbox(self, cfg).initWidget()
-        self.group_layout.addWidget(self.delete_on_compress)
-        cfg = {
-            "actions": {
-                0: {"action": "compress_files", "handler": self.cmd_compress_files},
-                1: {"action": "automate_action", "handler": self.cmd_automate_compress},
-            }
-        }
+        cfg = {}
         self.tool_buttons = NchantdButtonBar(self, cfg).initWidget()
         self.group_layout.addWidget(self.tool_buttons)
         self.layout.addWidget(group)
@@ -220,65 +217,9 @@ class NchantdImportPane(NchantdPane):
         self.initView()
         return self
 
-    def cmd_automate_compress(self, event=None):
-        """Set up automated import rules"""
-        logma.info("Setting up import automation...")
-        # NOTE: Implement automation rules for importing files
-        return self
-
-    def cmd_compress_files(self, event=None):
-        """Import files from external source"""
-        from shutil import copy2
-        from os.path import exists, basename
-
-        try:
-            source_path = self.parent.fs_tree.current_level_path
-            # Get selected files from table if selection exists
-            selected_files = []
-            if hasattr(self.parent, "file_table_one") and self.parent.file_table_one:
-                for item in self.parent.fs_tree.get_current_level_files():
-                    selected_files.append(item.name)
-
-            if not selected_files:
-                logma.warning("No files selected for import")
-                return self
-
-            # Import files by copying them to the current directory
-            for file_name in selected_files:
-                source_file = join(source_path, file_name)
-                if exists(source_file):
-                    dest_file = join(source_path, f"imported_{basename(file_name)}")
-                    copy2(source_file, dest_file)
-                    logma.info(f"Imported: {file_name}")
-
-                    # Handle options
-                    if self.delete_on_compress.isChecked():
-                        from os import remove
-
-                        remove(source_file)
-                        logma.info(f"Deleted original: {file_name}")
-
-            if hasattr(self.parent, "populate_table_one"):
-                self.parent.populate_table_one()
-
-        except Exception as e:
-            logma.error(f"Error importing files: {e}")
-
-        return self
-
-    def set_from_folder(self):
+    def set_file(self, path):
         """"""
-        try:
-            path = self.parent.fs_tree.current_level_path
-        except:
-            path = Path.home()
-        cfg = {
-            "text": f"From Folder: \n{path}",  # {self.app.active_tab.get_current_path()}",
-            "size": ["auto", "auto"],
-        }
-        self.from_folder_label = NchantdLabel(self, cfg).initWidget()
-        self.group_layout.addWidget(self.from_folder_label)
-        return self
+        # TODO implement method
 
 
 class NchantdMovePane(NchantdPane):
@@ -330,65 +271,17 @@ class NchantdMovePane(NchantdPane):
         self.initView()
         return self
 
-    def cmd_automate_move(self, event=None):
-        """Set up automated file moving rules"""
-        logma.info("Setting up move automation...")
-        return self
+    def cmd_automate_move(self, event=None, *args, **kwargs):
+        """"""
+        # TODO: implement method
 
-    def cmd_move_files(self, event=None):
-        """Move files to destination folder"""
-        from shutil import move
-        from os.path import exists
-
-        try:
-            source_path = self.parent.fs_tree.current_level_path
-            dest_path = self.open_to_folder_entry.get_text() if hasattr(self.open_to_folder_entry, "get_text") else None
-
-            if not dest_path or not exists(dest_path):
-                logma.warning("Invalid destination path")
-                return self
-
-            # Get files from current directory
-            files = [item.name for item in self.parent.fs_tree.get_current_level_files()]
-
-            for file_name in files:
-                old_path = join(source_path, file_name)
-
-                # Optionally rename on move
-                if self.rename_on_move.isChecked():
-                    from os.path import splitext
-
-                    name, ext = splitext(file_name)
-                    file_name = f"{name}_moved{ext}"
-
-                new_path = join(dest_path, file_name)
-
-                if exists(old_path):
-                    move(old_path, new_path)
-                    logma.info(f"Moved: {old_path} -> {new_path}")
-
-            if hasattr(self.parent, "populate_table_one"):
-                self.parent.populate_table_one()
-
-        except Exception as e:
-            logma.error(f"Error moving files: {e}")
-
-        return self
+    def cmd_move_files(self):
+        """"""
+        # TODO: implement method
 
     def set_from_folder(self):
         """"""
-        try:
-            path = self.parent.fs_tree.current_level_path
-        except Exception as e:
-            logma.warning(e)
-            path = Path.home()
-        cfg = {
-            "text": f"From Folder: \n{path}",  # {self.app.active_tab.get_current_path()}",
-            "size": ["auto", "auto"],
-        }
-        self.from_folder_label = NchantdLabel(self, cfg).initWidget()
-        self.group_layout.addWidget(self.from_folder_label)
-        return self
+        # TODO: implement method
 
 
 class NchantdRenamePane(NchantdPane):
@@ -415,7 +308,12 @@ class NchantdRenamePane(NchantdPane):
         group = NchantdGroup(self, cfg)
         group_layout = pyqt.QVBoxLayout()
         group.setLayout(group_layout)
-        cfg = {"text": "Rename Format", "options": self.get_file_rename_formats()}
+        cfg = {
+            "text": "Rename Format",
+            "options": self.get_file_rename_formats(),
+            "handler": self.cmd_format_change,
+            "value": self.get_file_rename_format(),
+        }
         self.rename_format_select = NchantdComboEditor(self, cfg).initWidget()
         group_layout.addWidget(self.rename_format_select)
         cfg = {
@@ -434,6 +332,10 @@ class NchantdRenamePane(NchantdPane):
         self.initModel()
         self.initView()
         return self
+
+    def cmd_format_change(self):
+        """"""
+        # TODO implement method
 
     def cmd_automate_rename(self, event=None):
         """Set up automated file renaming rules"""
@@ -506,6 +408,14 @@ class NchantdRenamePane(NchantdPane):
         ]
         return formats
 
+    def get_file_rename_format(self):
+        """"""
+        # TODO implement method
+
+    def set_file(self, path):
+        """"""
+        # TODO implement method
+
 
 class NchantdStorageEditPane(NchantdPane):
     """"""
@@ -542,6 +452,10 @@ class NchantdStorageEditPane(NchantdPane):
         self.initModel()
         self.initView()
         return self
+
+    def set_file(self, path):
+        """"""
+        # TODO implement method
 
 
 class NchantdOfficeFileSystem(NchantdOfficeDocument):
@@ -655,23 +569,27 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
     def cmd_flatten_files(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_file_search_method_change(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_file_search_edit(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_file_search_clear(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_node_expansion(self, event=None, *args, **kwargs):
         """"""
-
+        # TODO implement method
         return self
 
     def cmd_on_node_selection(self, event=None, *args, **kwargs):
@@ -1003,6 +921,10 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         logma.info(f"Document {self.document.to_dict()}")
         super().save()
         return self
+
+    def get_binary(self):
+        """"""
+        # TODO implement method
 
     def show_tree(self, file=None):
         """"""

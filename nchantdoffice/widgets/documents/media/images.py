@@ -29,10 +29,10 @@ from nchantrs.widgets.media.palettes import NchantdPaletteTable
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
-from nchantrs.widgets.controls.buttons import NchantdButton
+from nchantrs.widgets.controls.buttons import NchantdButton, NchantdButtonWidget
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
-from nchantrs.widgets.controls.advanced_buttons import NchantdNumberWheelButton, NchantdLabeledSpinBox, NchantdSpinBox
+from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.panes.panes import NchantdPane
 from nchantrs.widgets.groups import NchantdGroup
 from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
@@ -52,12 +52,8 @@ class NchantdOfficeLightTable(NchantdBasketManager):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        super().__init__(parent)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeLightTable"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeLightTable").override(cfg))
         self.image_viewer = None
         self.path = self.config.dikt.get("path", None)
         self.tag_bar = None
@@ -105,11 +101,7 @@ class NchantdColorShiftPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdColorShiftPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdColorShiftPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -118,15 +110,14 @@ class NchantdColorShiftPane(NchantdPane):
 
     def initView(self, cfg=None):
         """"""
-        if cfg is None:
-            cfg = {}
+        cfg = cfg or {}
         cfg["layout"] = "vertical"
         super().initView(cfg)
         cfg = {"text": "Shift Color: "}
         group = NchantdGroup(self, cfg)
         layout = pyqt.QVBoxLayout()
         group.setLayout(layout)
-        cfg = {"text": "Select Image Color", "layout": "horizontal"}
+        cfg = {"text": "Select Image Color", "layout": "horizontal", "handler": self.cmd_image_color_change}
         self.image_color_button = NchantdButton(self, cfg).initWidget()
         layout.addWidget(self.image_color_button)
         cfg = {"text": "Selected Color: \n RGB: \n HEX:", "size": ["auto", 50], "justify": "left"}
@@ -136,13 +127,14 @@ class NchantdColorShiftPane(NchantdPane):
             "text": "Select New Image Color",
             "layout": "horizontal",
             "options": self.get_image_formats(),
+            "handler": self.cmd_select_new_image_color_change,
         }
         self.image_color_conversion_button = NchantdButton(self, cfg).initWidget()
         layout.addWidget(self.image_color_conversion_button)
         cfg = {"text": "Selected New Color: \n RGB: \n HEX:", "size": ["auto", 50], "justify": "left"}
         self.image_new_color_label = NchantdLabel(self, cfg).initWidget()
         layout.addWidget(self.image_new_color_label)
-        cfg = {"text": "Convert", "layout": "horizontal"}
+        cfg = {"text": "Convert", "layout": "horizontal", "handler": self.cmd_convert_color}
         self.convert_button = NchantdButton(self, cfg).initWidget()
         layout.addWidget(self.convert_button)
         self.layout.addWidget(group)
@@ -153,6 +145,22 @@ class NchantdColorShiftPane(NchantdPane):
         self.initModel()
         self.initView()
         return self
+
+    def cmd_image_color_change(self):
+        """"""
+        # TODO implement method
+
+    def cmd_select_new_image_color(self):
+        """"""
+        # TODO implement method
+
+    def cmd_select_new_image_color_change(self):
+        """"""
+        # TODO implement method
+
+    def cmd_convert_color(self):
+        """"""
+        # TODO implement method
 
     def get_image_formats(self):
         """"""
@@ -166,11 +174,7 @@ class NchantdConvertFormatPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertFormatPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertFormatPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -187,21 +191,52 @@ class NchantdConvertFormatPane(NchantdPane):
         group = NchantdGroup(self, cfg)
         layout = pyqt.QVBoxLayout()
         group.setLayout(layout)
-        cfg = {"label": "Current Format:", "layout": "horizontal"}
+        cfg = {
+            "label": "Current Format:",
+            "layout": "horizontal",
+            "handler": self.cmd_current_format_change,
+            "value": self.get_current_format(),
+        }
         self.image_format_entry = NchantdLabeledEntry(self, cfg).initWidget()
         layout.addWidget(self.image_format_entry)
         cfg = {
             "label": "Convert to Format",
             "layout": "horizontal",
             "options": self.get_image_formats(),
+            "handler": self.cmd_convert_to_format_change,
+            "value": self.get_convert_to_format(),
         }
         self.image_conversion_select = NchantdDropDown(self, cfg).initWidget()
         layout.addWidget(self.image_conversion_select)
-        cfg = {"text": "Convert", "layout": "horizontal"}
+        cfg = {"text": "Convert", "layout": "horizontal", "handler": self.cmd_convert_format}
         self.convert_button = NchantdButton(self, cfg).initWidget()
         layout.addWidget(self.convert_button)
         self.layout.addWidget(group)
         return self
+
+    def cmd_current_format_change(self):
+        """"""
+        # TODO implement method
+
+    def cmd_convert_format(self):
+        """"""
+        # TODO implement method
+
+    def cmd_convert_to_format(self):
+        """"""
+        # TODO implement method
+
+    def cmd_convert_to_format_change(self):
+        """"""
+        # TODO implement method
+
+    def get_current_format(self):
+        """"""
+        # TODO implement method
+
+    def get_convert_to_format(self):
+        """"""
+        # TODO implement method
 
     def initWidget(self):
         """"""
@@ -221,11 +256,7 @@ class NchantdConvertSizePane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertSizePane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertSizePane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -242,7 +273,13 @@ class NchantdConvertSizePane(NchantdPane):
         group = NchantdGroup(self, cfg)
         layout = pyqt.QVBoxLayout()
         group.setLayout(layout)
-        cfg = {"text": "Maintain Aspect Ratio", "layout": "horizontal", "size": ["auto", "auto"], "value": True}
+        cfg = {
+            "text": "Maintain Aspect Ratio",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "value": True,
+            "handler": self.cmd_image_maintain_ratio_change,
+        }
         self.image_maintain_ratio_checkbox = NchantdCheckbox(self, cfg).initWidget()
         layout.addWidget(self.image_maintain_ratio_checkbox)
         cfg = {"label": f"Current Width: {self.get_image_width()}", "layout": "horizontal"}
@@ -254,7 +291,12 @@ class NchantdConvertSizePane(NchantdPane):
         cfg = {"label": f"Current Height: {self.get_image_height()}", "layout": "horizontal"}
         self.image_height_label = NchantdLabel(self, cfg).initWidget()
         layout.addWidget(self.image_height_label)
-        cfg = {"label": "Set Height", "layout": "horizontal"}
+        cfg = {
+            "label": "Set Height",
+            "layout": "horizontal",
+            "handler": self.cmd_image_height_change,
+            "value": self.get_image_height(),
+        }
         self.image_height_select = NchantdLabeledSpinBox(self, cfg).initWidget()
         layout.addWidget(self.image_height_select)
         cfg = {"text": "Resize", "layout": "horizontal"}
@@ -268,6 +310,18 @@ class NchantdConvertSizePane(NchantdPane):
         self.initModel()
         self.initView()
         return self
+
+    def cmd_select_new_image_color_change(self):
+        """"""
+        # TODO implement method
+
+    def cmd_image_maintain_ratio_change(self):
+        """"""
+        # TODO implement method
+
+    def cmd_image_height_change(self):
+        """"""
+        # TODO implement method
 
     def get_image_height(self):
         """"""
@@ -284,11 +338,7 @@ class NchantdImageCropPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertSizePane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdImageCropPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -305,10 +355,14 @@ class NchantdImageCropPane(NchantdPane):
         group = NchantdGroup(self, cfg)
         layout = pyqt.QVBoxLayout()
         group.setLayout(layout)
-        cfg = {"action": "select_screen_area", "layout": "horizontal"}
+        cfg = {
+            "action": "select_screen_area",
+            "layout": "horizontal",
+            "handler": self.cmd_activate_image_section_selection,
+        }
         self.image_section_selection_activator = NchantdButton(self, cfg).initWidget()
         layout.addWidget(self.image_section_selection_activator)
-        cfg = {"text": "Cut", "layout": "horizontal"}
+        cfg = {"text": "Cut", "layout": "horizontal", "handler": self.cmd_cut_selection}
         self.cut_button = NchantdButton(self, cfg).initWidget()
         layout.addWidget(self.cut_button)
         self.layout.addWidget(group)
@@ -319,6 +373,10 @@ class NchantdImageCropPane(NchantdPane):
         self.initModel()
         self.initView()
         return self
+
+    def cmd_activate_image_section_selection(self):
+        """"""
+        # TODO implement method
 
     def get_image_height(self):
         """"""
@@ -335,11 +393,7 @@ class NchantdImageGeneratorPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertSizePane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertSizePane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -356,18 +410,33 @@ class NchantdImageGeneratorPane(NchantdPane):
         group = NchantdGroup(self, cfg)
         layout = pyqt.QVBoxLayout()
         group.setLayout(layout)
-        cfg = {"label": "Set Width", "layout": "horizontal"}
+        cfg = {
+            "label": "Set Width",
+            "layout": "horizontal",
+            "handler": self.cmd_image_width_select_change,
+            "value": self.get_image_width(),
+        }
         self.image_width_select = NchantdLabeledSpinBox(self, cfg).initWidget()
         layout.addWidget(self.image_width_select)
-        cfg = {"label": "Set Height", "layout": "horizontal"}
+        cfg = {
+            "label": "Set Height",
+            "layout": "horizontal",
+            "handler": self.cmd_image_height_select_change,
+            "value": self.get_image_height(),
+        }
         self.image_height_select = NchantdLabeledSpinBox(self, cfg).initWidget()
         layout.addWidget(self.image_height_select)
-        cfg = {"text": "Select Palette", "layout": "horizontal"}
+        cfg = {
+            "text": "Select Palette",
+            "layout": "horizontal",
+            "handler": self.cmd_palette_select_change,
+            "value": self.get_palette(),
+        }
         self.palette_select = NchantdDropDown(self, cfg).initWidget()
         layout.addWidget(self.palette_select)
-        cfg = {"text": "Generate Image", "layout": "horizontal"}
-        self.convert_button = NchantdButton(self, cfg).initWidget()
-        layout.addWidget(self.convert_button)
+        cfg = {"text": "Generate Image", "layout": "horizontal", "handler": self.cmd_generate_image}
+        self.generate_button = NchantdButton(self, cfg).initWidget()
+        layout.addWidget(self.generate_button)
         self.layout.addWidget(group)
         return self
 
@@ -376,6 +445,26 @@ class NchantdImageGeneratorPane(NchantdPane):
         self.initModel()
         self.initView()
         return self
+
+    def cmd_image_width_select_change(self):
+        """"""
+        # TODO implement method
+
+    def cmd_image_height_select_change(self):
+        """"""
+        # TODO implement method
+
+    def cmd_generate_image(self):
+        """"""
+        # TODO implement method
+
+    def get_palette(self):
+        """"""
+        # TODO implement method
+
+    def cmd_palette_select_change(self):
+        """"""
+        # TODO implement method
 
     def get_image_height(self):
         """"""
@@ -492,17 +581,35 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         cnt += 1
         if cnt not in items:
             items[cnt] = default_action
-        cfg = {"label": "Image Width: ", "layout": "horizontal"}
+        cfg = {
+            "label": "Image Width: ",
+            "layout": "horizontal",
+            "handler": self.cmd_image_width_change,
+            "value": self.get_image_width(),
+        }
         self.image_size_width_editor = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.image_size_width_editor
         cnt += 1
         if cnt not in items:
             items[cnt] = default_action
-        cfg = {"label": "Image Height: ", "layout": "horizontal"}
+        cfg = {
+            "label": "Image Height: ",
+            "layout": "horizontal",
+            "handler": self.cmd_image_height_change,
+            "value": self.get_image_height(),
+        }
         self.image_size_height_editor = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.image_size_height_editor
         cnt += 1
         return items
+
+    def cmd_image_height_change(self):
+        """"""
+        # TODO implement method
+
+    def get_image_height(self):
+        """"""
+        # TODO implement method
 
     def init_drawer_image_tools(self):
         """"""
@@ -548,8 +655,8 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
             items[cnt] = deepcopy(default_action)
-        cfg = {"text": "Scan to Extract Palette"}
-        self.image_scan_palette_button = NchantdButton(self, cfg)
+        cfg = {"text": "Scan to Extract Palette", "handler": self.cmd_run_palette_scan}
+        self.image_scan_palette_button = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.image_scan_palette_button
         cnt += 1
         if cnt not in items:
@@ -566,6 +673,18 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         cnt += 1
         return items
 
+    def cmd_run_palette_scan(self):
+        """"""
+        # TODO implement method
+
+    def cmd_image_width_change(self):
+        """"""
+        # TODO implement method
+
+    def get_binary(self):
+        """"""
+        # TODO implement method
+
     def init_drawer_quickstart(self):
         """"""
         items = self.toolbox_config[400].get("items", {})
@@ -579,8 +698,8 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
         self.toolbox_config[200]["items"] = self.init_drawer_image_tools()
-        # self.toolbox_config[300]["items"] = self.init_drawer_palette()
-        # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+        self.toolbox_config[300]["items"] = self.init_drawer_palette()
+        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
         return self
 
     def open_file(self, file=None):
@@ -605,7 +724,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         # Canonical mode: external file storage
         if self.document.location is None:
             self.document.set_location("external")
-        
+
         if self.document.location == "external":
             # Ensure file_path is set
             if self.document.file_path is None:
@@ -616,7 +735,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
                 content["file_path"] = self.document.file_path
             logma.info(f"File Path {self.document.file_path}")
             logma.info(f"DID {self.document.did}")
-            
+
         elif self.document.location == "internal":
             # Migrate to external: get binary, write to file, switch mode
             logma.info("Migrating internal image to external storage")
@@ -627,12 +746,12 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             raise Exception("Internal image storage is deprecated. Use external mode.")
         else:
             raise Exception(f"Unknown storage location {self.document.location}")
-        
+
         # Update content if it changed
         if content and content != self.document.content:
             self.document.set_content(content)
             logma.info(f"Content updated")
-        
+
         logma.info(f"Document {self.document.to_dict()}")
         super().save()
         return self
