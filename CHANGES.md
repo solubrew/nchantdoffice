@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - `nchantdoffice/__init__.py` - Added version and config exports
+  to prevent shadowing `QTreeWidgetItem.parent()`
 
 ### Fixed
 - **H25 — Catalog Tab Wrong Child Count** (`nchantdoffice` consumer of `nchantrs fa05530`):
@@ -39,10 +40,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stores the full node dict in `UserRole` for drag-drop; (2) `nchantdoffice/widgets/trees.py`
   `getNid()` reads `nid_txt` from the `UserRole` dict. Drag-drop, drop targets,
   and reordering restored.
+  `NchantdNode.initModel()` in `nchantrs/widgets/items/nodes.py:380` now calls
+  `(column, role, value)`. Previously the args were inverted, storing the role ID
+  in column 0, which silently failed and produced empty `UserRole` data. This
+  compounded with H29 to break drag-and-drop in nchantdoffice.
+  `QTreeWidgetItem` subclasses in `nchantdoffice/widgets/items/items.py`
+  (`NchantdOfficeDocumentCatalogItem`, `NchantdOfficeSourceCatalogItem`,
+  shadowed Qt's built-in `parent()` method. This caused
+  `TypeError: 'NchantdOfficeTreeNode' object is not callable` whenever Qt called
+  `.parent()` on a tree item — most visibly in drag-and-drop `_is_descendant()`
 - Lambda antipattern in toolbar buttons (fixed variable capture)
 - Signal inheritance in NchantdNewDocumentToolBar
 - Incorrect super().__init__() calls in toolbar classes
-- 4 inline TODOs in `widgets/items/items.py` resolved (2026-07-11)
 
 ### Security
 - Added CI security scanning with bandit and safety

@@ -8,7 +8,7 @@
 - **Location**: `/home/solubrew/.orinbai/workspace/projects/nchantdoffice`
 - **Branch**: `gamma` (per CODING_STANDARDS Git workflow)
 - **Version**: 0.0.1.0.1.5 (working — pending release)
-- **HEAD**: `c45cfc5` — "fix: H27/H29 - image save mode + drag-drop nid retrieval"
+- **HEAD**: `a01714c` — "fix: rename self.parent to self.parent_widget to avoid shadowing Qt.parent() method"
 
 ---
 
@@ -24,8 +24,6 @@
 | H28 | Browser Pin Tab Persistence | ✅ Completed (2026-07-11) | `87a5264` |
 | H29 | Tree Node Drag-and-Drop Regression | ✅ Completed (2026-07-12) | nchantrs `fa05530` + `c45cfc5` |
 
-See `TODOs.md` for the complete task inventory and P0/P1/P2/P3 breakdown.
-
 ---
 
 ## CODING_STANDARDS Compliance (V4)
@@ -33,7 +31,7 @@ See `TODOs.md` for the complete task inventory and P0/P1/P2/P3 breakdown.
 | Standard | Status | Notes |
 |----------|--------|-------|
 | Project structure | ✅ | Uses template |
-| STATE.md | ✅ | This file — updated 2026-07-12 |
+| STATE.md | ✅ | This file — updated 2026-07-13 |
 | tests/ directory | 🔄 | To be created |
 | Git workflow | ✅ | Using gamma branch |
 | tuh environment | ✅ | Required for imports |
@@ -114,7 +112,7 @@ nchantdoffice/
 
 | Project | Purpose | Status |
 |---------|---------|--------|
-| nchantrs | Core framework | ✅ Required — branch `gamma` @ `fa05530` |
+| nchantrs | Core framework | ✅ Required — branch `gamma` @ `5afde9d` |
 | pyffice | Document automation | ✅ Integrated |
 | kahndor | Configuration | ✅ Used |
 | pycurity | Security | ✅ Available |
@@ -136,8 +134,6 @@ nchantdoffice/
 - [x] H29 — Tree Node Drag-and-Drop (via nchantrs)
 - [x] P2 — Lazy Tab Loading Audit
 
-### In Progress
-- [ ] Set up tests/ directory structure
 - [ ] Clean up pyproject.toml dependencies
 - [ ] Resolve 4 inline TODOs in `widgets/items/items.py` *(done 2026-07-11)*
 
@@ -207,8 +203,8 @@ nchantdoffice/
 ---
 
 ## Last Updated
-- **Date**: 2026-07-12
+- **Date**: 2026-07-13
 - **Reviewer**: Orinbai (AI Agent)
 - **Branch**: gamma
-- **HEAD**: `c45cfc5`
+- **HEAD**: `a01714c`
 - **CODING_STANDARDS**: V4 compliant
