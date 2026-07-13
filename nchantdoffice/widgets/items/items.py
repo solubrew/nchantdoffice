@@ -46,9 +46,9 @@ class NchantdOfficeDocumentCatalogItem(NchantdCatalogItem):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
+        self.parent_widget = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentCatalogItem"))
-        if self.parent:
+        if self.parent_widget:
             self.config.override(parent.config)
         self.config.override(cfg)
         self.action = None
@@ -123,7 +123,7 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
+        self.parent_widget = parent
         self.config.override(
             kahndor.Instruct(pxcfg).select("NchantdOfficeSourceCatalogItem").override(parent.config).override(cfg)
         )
@@ -220,7 +220,7 @@ class NchantdOfficeTreeNode(NchantdTreeNode):
     def __init__(self, parent, name, nid, node, children=DataFrame(), cfg=None):
         """ """
         super().__init__(parent, name, nid, node, children)
-        self.parent = parent
+        self.parent_widget = parent
         self.config.override(
             kahndor.Instruct(pxcfg).select("NchantdOfficeTreeNode").override(parent.config).override(cfg)
         )
