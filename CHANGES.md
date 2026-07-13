@@ -17,13 +17,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tests/unit/test_config.py` - Configuration module tests
 
 ### Changed
-- Project branch: gamma → orin-ws (per Git workflow)
 - `nchantdoffice/__init__.py` - Added version and config exports
 
 ### Fixed
+- **H25 — Catalog Tab Wrong Child Count** (`nchantdoffice` consumer of `nchantrs fa05530`):
+  Root cause was in parent library `NchantdNode.loadChildren()` which inconsistently
+  used `parentid` vs `pid_txt` for parent filtering. Fix standardized on `pid_txt`.
+  Visible in catalog tab child counts across all node types.
+- **H27 — Nchantd Image Save Mode (Internal vs External)** (`commit c45cfc5`):
+  Enforced canonical external file storage mode in `widgets/documents/media/images.py`;
+  internal base64 mode now deprecated with runtime warning. Eliminates round-trip
+  corruption and orphan files.
+- **H28 — Browser Pin Tab Persistence** (`commit 87a5264`):
+  Fixed `open_new_window()` routing through pinned-aware center pane tabset in
+  `widgets/documents/atnrg/browsers.py`; corrected `save()` to read `self.pinned`
+  (was checking non-existent `self.pin`); `pin_page()` and `populate_document()`
+  now respect `self.pinned` state. "Pin Tab" action persists; links in pinned
+  tabs no longer open new tabs.
+- **H29 — Tree Node Drag-and-Drop Regression** (`commit c45cfc5` + nchantrs `fa05530`):
+  Two-part fix — (1) `nchantrs/widgets/items/nodes.py` `NchantdNode.initModel()` now
+  stores the full node dict in `UserRole` for drag-drop; (2) `nchantdoffice/widgets/trees.py`
+  `getNid()` reads `nid_txt` from the `UserRole` dict. Drag-drop, drop targets,
+  and reordering restored.
 - Lambda antipattern in toolbar buttons (fixed variable capture)
 - Signal inheritance in NchantdNewDocumentToolBar
 - Incorrect super().__init__() calls in toolbar classes
+- 4 inline TODOs in `widgets/items/items.py` resolved (2026-07-11)
 
 ### Security
 - Added CI security scanning with bandit and safety

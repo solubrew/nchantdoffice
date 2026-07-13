@@ -5,24 +5,40 @@
 - **Type**: Desktop GUI Application (PySide6)
 - **Purpose**: Office automation suite with document management, calendar, contacts
 - **Framework**: Built on nchantrs framework
-- **Location**: `/home/solubrew/.orin/workspace/projects/nchantdoffice`
+- **Location**: `/home/solubrew/.orinbai/workspace/projects/nchantdoffice`
 - **Branch**: `gamma` (per CODING_STANDARDS Git workflow)
-- **Version**: 0.0.1.0.1.4
+- **Version**: 0.0.1.0.1.5 (working — pending release)
+- **HEAD**: `c45cfc5` — "fix: H27/H29 - image save mode + drag-drop nid retrieval"
 
 ---
 
 ## Current Status: ACTIVE DEVELOPMENT
+
+## Recent H## Activity (2026-07)
+
+| ID | Title | Status | Commit |
+|----|-------|--------|--------|
+| H24 | Toolbox Drawer Stale on Tab Switch | ✅ Completed (2026-07-08) | pre-gamma |
+| H25 | Catalog Tab Wrong Child Count | ✅ Completed (2026-07-12) | nchantrs `fa05530` |
+| H27 | Nchantd Image Save Mode (External Storage) | ✅ Completed (2026-07-12) | `c45cfc5` |
+| H28 | Browser Pin Tab Persistence | ✅ Completed (2026-07-11) | `87a5264` |
+| H29 | Tree Node Drag-and-Drop Regression | ✅ Completed (2026-07-12) | nchantrs `fa05530` + `c45cfc5` |
+
+See `TODOs.md` for the complete task inventory and P0/P1/P2/P3 breakdown.
+
+---
 
 ## CODING_STANDARDS Compliance (V4)
 
 | Standard | Status | Notes |
 |----------|--------|-------|
 | Project structure | ✅ | Uses template |
-| STATE.md | ✅ | Created per V4 |
+| STATE.md | ✅ | This file — updated 2026-07-12 |
 | tests/ directory | 🔄 | To be created |
-| Git workflow | ✅ | Using orin-ws branch |
+| Git workflow | ✅ | Using gamma branch |
 | tuh environment | ✅ | Required for imports |
 | Internal projects | ✅ | Uses nchantrs, pyffice, kahndor |
+| Inline TODO hygiene | 🟡 | 50 TODO + 63 NOTE across 27 files (4 resolved 2026-07-11) |
 
 ---
 
@@ -32,23 +48,23 @@
 nchantdoffice/
 ├── nchantdoffice/        # Main package
 │   ├── __init__.py
-│   ├── models.py
+│   ├── config.py         # Centralized configuration (100+ constants)
+│   ├── models.py         # Tabset + document models (incl. lazy-load override)
 │   ├── views.py
-│   ├── nchantdoffice.py
-│   ├── dialogs/
-│   ├── nchantdagent/
-│   ├── updates/
-│   ├── utilities/
-│   ├── widgets/
-│   └── wizards/
+│   ├── nchantdoffice.py  # Main application entry
+│   ├── dialogs/          # Document dialogs
+│   ├── updates/          # Update handlers
+│   ├── utilities/        # Helpers (canonical widget lookup, etc.)
+│   ├── widgets/          # UI widgets (catalogs, documents, trees, etc.)
+│   └── wizards/          # Wizard dialogs
 ├── cmds/                 # CLI commands
-├── test_nchantdoffice/   # Tests
-├── z-work_/              # Work in progress
+├── tests/                # Test suites (unit/integration/e2e)
+├── .github/workflows/    # CI + docs deployment
 ├── docs/                 # Documentation
-├── skills/               # Custom capabilities
 ├── README.md             # Project overview
 ├── STATE.md              # This file
 ├── CHANGES.md            # Changelog
+├── TODOs.md              # Active task inventory (H## + inline markers)
 ├── pyproject.toml        # Package metadata
 └── pytest.ini            # Test config
 ```
@@ -98,7 +114,7 @@ nchantdoffice/
 
 | Project | Purpose | Status |
 |---------|---------|--------|
-| nchantrs | Core framework | ✅ Required |
+| nchantrs | Core framework | ✅ Required — branch `gamma` @ `fa05530` |
 | pyffice | Document automation | ✅ Integrated |
 | kahndor | Configuration | ✅ Used |
 | pycurity | Security | ✅ Available |
@@ -109,15 +125,21 @@ nchantdoffice/
 
 ## Action Items
 
-### Completed ✅
+### Completed ✅ (2026-07)
 - [x] Phase 1-5 implementation per AXN.md
 - [x] Pyffice integration (12 document types)
 - [x] CLI entry point (cmds/)
-- [x] Create STATE.md per CODING_STANDARDS
+- [x] H24 — Toolbox Drawer Stale on Tab Switch
+- [x] H25 — Catalog Tab Wrong Child Count (via nchantrs)
+- [x] H27 — Image Save Mode (external storage)
+- [x] H28 — Browser Pin Tab Persistence
+- [x] H29 — Tree Node Drag-and-Drop (via nchantrs)
+- [x] P2 — Lazy Tab Loading Audit
 
 ### In Progress
 - [ ] Set up tests/ directory structure
 - [ ] Clean up pyproject.toml dependencies
+- [ ] Resolve 4 inline TODOs in `widgets/items/items.py` *(done 2026-07-11)*
 
 ### High Priority
 - [ ] Add unit tests
@@ -127,6 +149,7 @@ nchantdoffice/
 ### Medium Priority
 - [ ] Add remaining 13 PyfficeDocument types
 - [ ] Improve docstrings
+- [ ] M1 — Reduce 50 active inline TODOs
 
 ---
 
@@ -184,7 +207,8 @@ nchantdoffice/
 ---
 
 ## Last Updated
-- **Date**: 2026-03-05
-- **Reviewer**: Orin (AI Agent)
-- **Branch**: orin-ws
+- **Date**: 2026-07-12
+- **Reviewer**: Orinbai (AI Agent)
+- **Branch**: gamma
+- **HEAD**: `c45cfc5`
 - **CODING_STANDARDS**: V4 compliant
