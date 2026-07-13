@@ -71,7 +71,7 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         super().initView()
         # need to a scroll
         cfg = {
-            "text": "Data Sources Configured",
+            "text": "Available Data Sources",
             "size": ["auto", "auto"],
         }  # TODO: build in additional controls for size ["full", "%10"]}
         title = NchantdLabel(self, cfg).initWidget()

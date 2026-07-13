@@ -24,7 +24,7 @@ from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons
-from nchantrs.widgets.controls.buttons import NchantdButton
+from nchantrs.widgets.controls.buttons import NchantdButtonWidget
 from nchantrs.widgets.canvases.canvases import NchantdCanvas
 from nchantrs.widgets.media.palettes import NchantdPalette
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
@@ -51,12 +51,8 @@ class NchantdLayersListPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLayersListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLayersListPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -88,12 +84,9 @@ class NchantdEditLayerPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
+        super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEditorLayerPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEditorLayerPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -107,13 +100,13 @@ class NchantdEditLayerPane(NchantdPane):
         group = NchantdGroup(self, cfg)
         layout = pyqt.QVBoxLayout()
         group.setLayout(layout)
-        cfg = {"label": "Layer Name: "}
+        cfg = {"label": "Layer Name:", "handler": self.cmd_on_layer_name_change}
         self.name_entry = NchantdLabeledEntry(self, cfg).initWidget()
         layout.addWidget(self.name_entry)
-        cfg = {"label": "Transparency: "}
+        cfg = {"label": "Transparency:", "handler": self.cmd_on_transparency_change}
         self.transparency_entry = NchantdLabeledEntry(self, cfg).initWidget()
         layout.addWidget(self.transparency_entry)
-        cfg = {"label": "Size: "}
+        cfg = {"label": "Size:", "handler": self.cmd_on_size_change}
         self.size_set = NchantdLabeledDoubleSpinBox(self, cfg).initWidget()
         layout.addWidget(self.size_set)
         cfg = {}
@@ -127,6 +120,18 @@ class NchantdEditLayerPane(NchantdPane):
         self.initModel()
         self.initView()
         return self
+
+    def cmd_on_layer_name_change(self):
+        """"""
+        # TODO: implement method
+
+    def cmd_on_transparency_change(self):
+        """"""
+        # TODO: implement method
+
+    def cmd_on_size_change(self):
+        """"""
+        # TODO: implement method
 
 
 class NchantdObjectsPane(NchantdPane):
@@ -173,10 +178,7 @@ class NchantdLineToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -184,29 +186,49 @@ class NchantdLineToolPane(NchantdPane):
 
     def initView(self, cfg=None):
         """"""
-        if cfg is None:
-            cfg = {}
+        cfg = cfg or {}
         cfg["text"] = "Line Tool:"
         cfg["layout"] = "vertical"
         super().initView(cfg)
-        cfg["collapsible"] = True
-        cfg["collapsed"] = True
-        group = NchantdGroup(self, cfg).set_open(False)
+        cfg["collapsible"] = False
+        cfg["collapsed"] = False
+        group = NchantdGroup(self, cfg).set_open(True)
         group_layout = pyqt.QVBoxLayout()
         group.setLayout(group_layout)
-        cfg = {"label": "Line Style: ", "layout": "horizontal", "options": ["Solid", "Dashed", "Dotted", "Dash Dotted"]}
+        cfg = {
+            "label": "Line Style: ",
+            "layout": "horizontal",
+            "options": ["Solid", "Dashed", "Dotted", "Dash Dotted"],
+            "handler": self.cmd_change_style,
+        }
         self.line_style_select = NchantdDropDown(self, cfg).initWidget()
         group_layout.addWidget(self.line_style_select)
-        cfg = {"label": "Thickness: ", "layout": "horizontal"}
+        cfg = {
+            "label": "Thickness: ",
+            "layout": "horizontal",
+            "handler": self.cmd_change_thickness,
+        }
         self.line_thickness_spin = NchantdLabeledSpinBox(self, cfg).initWidget()
         group_layout.addWidget(self.line_thickness_spin)
-        cfg = {"label": "Color: ", "layout": "horizontal"}
+        cfg = {
+            "label": "Color: ",
+            "layout": "horizontal",
+            "handler": self.cmd_change_color,
+        }
         self.line_color_select = NchantdDropDown(self, cfg).initWidget()
         group_layout.addWidget(self.line_color_select)
-        cfg = {"label": "End Type One: ", "layout": "horizontal"}
+        cfg = {
+            "label": "End Type One: ",
+            "layout": "horizontal",
+            "handler": self.cmd_change_end_style,
+        }
         self.line_end_one_type_select = NchantdDropDown(self, cfg).initWidget()
         group_layout.addWidget(self.line_end_one_type_select)
-        cfg = {"label": "End Type Two: ", "layout": "horizontal"}
+        cfg = {
+            "label": "End Type Two: ",
+            "layout": "horizontal",
+            "handler": self.cmd_change_end_style,
+        }
         self.line_end_two_type_select = NchantdDropDown(self, cfg).initWidget()
         group_layout.addWidget(self.line_end_two_type_select)
         group.set_height(group_layout.sizeHint().height())
@@ -219,6 +241,26 @@ class NchantdLineToolPane(NchantdPane):
         self.initView()
         return self
 
+    def cmd_change_color(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_thickness(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_end_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
 
 class NchantdCurveToolPane(NchantdPane):
     """"""
@@ -227,10 +269,7 @@ class NchantdCurveToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -243,24 +282,29 @@ class NchantdCurveToolPane(NchantdPane):
         cfg["text"] = "Curve Tool:"
         cfg["layout"] = "vertical"
         super().initView(cfg)
-        cfg["collapsible"] = True
-        cfg["collapsed"] = True
+        cfg["collapsible"] = False
+        cfg["collapsed"] = False
         group = NchantdGroup(self, cfg)
         group_layout = pyqt.QVBoxLayout()
         group.setLayout(group_layout)
-        cfg = {"label": "Line Style: ", "layout": "horizontal", "options": ["Solid", "Dashed", "Dotted", "Dash Dotted"]}
+        cfg = {
+            "label": "Line Style: ",
+            "layout": "horizontal",
+            "options": ["Solid", "Dashed", "Dotted", "Dash Dotted"],
+            "handler": self.cmd_change_style,
+        }
         self.line_style_select = NchantdDropDown(self, cfg).initWidget()
         group_layout.addWidget(self.line_style_select)
-        cfg = {"label": "Thickness: ", "layout": "horizontal"}
+        cfg = {"label": "Thickness: ", "layout": "horizontal", "handler": self.cmd_change_thickness}
         self.line_thickness_spin = NchantdLabeledSpinBox(self, cfg).initWidget()
         group_layout.addWidget(self.line_thickness_spin)
-        cfg = {"label": "Color: ", "layout": "horizontal"}
+        cfg = {"label": "Color: ", "layout": "horizontal", "handler": self.cmd_change_color}
         self.line_color_select = NchantdDropDown(self, cfg).initWidget()
         group_layout.addWidget(self.line_color_select)
-        cfg = {"label": "End Type One: ", "layout": "horizontal"}
+        cfg = {"label": "End Type One: ", "layout": "horizontal", "handler": self.cmd_change_end_style}
         self.line_end_one_type_select = NchantdDropDown(self, cfg).initWidget()
         group_layout.addWidget(self.line_end_one_type_select)
-        cfg = {"label": "End Type Two: ", "layout": "horizontal"}
+        cfg = {"label": "End Type Two: ", "layout": "horizontal", "handler": self.cmd_change_end_style}
         self.line_end_two_type_select = NchantdDropDown(self, cfg).initWidget()
         group_layout.addWidget(self.line_end_two_type_select)
         group.set_height(group_layout.sizeHint().height())
@@ -273,6 +317,26 @@ class NchantdCurveToolPane(NchantdPane):
         self.initView()
         return self
 
+    def cmd_change_color(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_thickness(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_end_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
 
 class NchantdSplineToolPane(NchantdPane):
     """"""
@@ -281,10 +345,7 @@ class NchantdSplineToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -297,8 +358,8 @@ class NchantdSplineToolPane(NchantdPane):
         cfg["text"] = "Spline Tool:"
         cfg["layout"] = "vertical"
         super().initView(cfg)
-        cfg["collapsible"] = True
-        cfg["collapsed"] = True
+        cfg["collapsible"] = False
+        cfg["collapsed"] = False
         group = NchantdGroup(self, cfg)
         group_layout = pyqt.QVBoxLayout()
         group.setLayout(group_layout)
@@ -327,6 +388,26 @@ class NchantdSplineToolPane(NchantdPane):
         self.initView()
         return self
 
+    def cmd_change_color(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_thickness(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_end_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
 
 class NchantdPolygonToolPane(NchantdPane):
     """"""
@@ -335,10 +416,7 @@ class NchantdPolygonToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -351,8 +429,8 @@ class NchantdPolygonToolPane(NchantdPane):
         cfg["text"] = "Polygon Tool:"
         cfg["layout"] = "vertical"
         super().initView(cfg)
-        cfg["collapsible"] = True
-        cfg["collapsed"] = True
+        cfg["collapsible"] = False
+        cfg["collapsed"] = False
         group = NchantdGroup(self, cfg)
         group_layout = pyqt.QVBoxLayout()
         group.setLayout(group_layout)
@@ -375,6 +453,26 @@ class NchantdPolygonToolPane(NchantdPane):
         self.initView()
         return self
 
+    def cmd_change_color(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_thickness(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_end_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
 
 class NchantdCircleToolPane(NchantdPane):
     """"""
@@ -383,10 +481,7 @@ class NchantdCircleToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -399,8 +494,8 @@ class NchantdCircleToolPane(NchantdPane):
         cfg["text"] = "Circle Tool:"
         cfg["layout"] = "vertical"
         super().initView(cfg)
-        cfg["collapsible"] = True
-        cfg["collapsed"] = True
+        cfg["collapsible"] = False
+        cfg["collapsed"] = False
         group = NchantdGroup(self, cfg)
         group_layout = pyqt.QVBoxLayout()
         group.setLayout(group_layout)
@@ -423,6 +518,26 @@ class NchantdCircleToolPane(NchantdPane):
         self.initView()
         return self
 
+    def cmd_change_color(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_thickness(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_end_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
 
 class NchantdObjectToolPane(NchantdPane):
     """"""
@@ -431,10 +546,7 @@ class NchantdObjectToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdObjectToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -447,8 +559,8 @@ class NchantdObjectToolPane(NchantdPane):
         cfg["text"] = "Object Tool"
         cfg["layout"] = "vertical"
         super().initView(cfg)
-        cfg["collapsible"] = True
-        cfg["collapsed"] = True
+        cfg["collapsible"] = False
+        cfg["collapsed"] = False
         group = NchantdGroup(self, cfg)
         group_layout = pyqt.QVBoxLayout()
         group.setLayout(group_layout)
@@ -465,6 +577,26 @@ class NchantdObjectToolPane(NchantdPane):
         self.initView()
         return self
 
+    def cmd_change_color(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_thickness(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_end_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
 
 class NchantdFillToolPane(NchantdPane):
     """"""
@@ -473,10 +605,7 @@ class NchantdFillToolPane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdFillToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -489,8 +618,8 @@ class NchantdFillToolPane(NchantdPane):
         cfg["text"] = "Fill Tool:"
         cfg["layout"] = "vertical"
         super().initView(cfg)
-        cfg["collapsible"] = True
-        cfg["collapsed"] = True
+        cfg["collapsible"] = False
+        cfg["collapsed"] = False
         group = NchantdGroup(self, cfg)
         group_layout = pyqt.QVBoxLayout()
         group.setLayout(group_layout)
@@ -505,6 +634,26 @@ class NchantdFillToolPane(NchantdPane):
         """"""
         self.initModel()
         self.initView()
+        return self
+
+    def cmd_change_color(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_thickness(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return self
+
+    def cmd_change_end_style(self, event, *args, **kwargs):
+        """"""
+        # TODO: implement method
         return self
 
 
@@ -595,42 +744,19 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.layout.addWidget(self.canvas)
         return self
 
-    def _setup_canvas_mouse_handlers(self):
-        """Override canvas mouse handlers to delegate to sketch widget."""
-        # Save original handlers
-        self._original_canvas_mouse_press = self.canvas.mousePressEvent
-        self._original_canvas_mouse_move = self.canvas.mouseMoveEvent
-        self._original_canvas_mouse_release = self.canvas.mouseReleaseEvent
-
-        # Replace with our handlers
-        def canvas_mouse_press(event):
-            if self.current_tool:
-                logma.info(f"Canvas mousePressEvent intercepted, tool={self.current_tool}")
-                self.mousePressEvent(event)
-            else:
-                self._original_canvas_mouse_press(event)
-
-        def canvas_mouse_move(event):
-            if self.current_tool:
-                self.mouseMoveEvent(event)
-            else:
-                self._original_canvas_mouse_move(event)
-
-        def canvas_mouse_release(event):
-            if self.current_tool:
-                logma.info(f"Canvas mouseReleaseEvent intercepted, tool={self.current_tool}")
-                self.mouseReleaseEvent(event)
-            else:
-                self._original_canvas_mouse_release(event)
-
-        self.canvas.mousePressEvent = canvas_mouse_press
-        self.canvas.mouseMoveEvent = canvas_mouse_move
-        self.canvas.mouseReleaseEvent = canvas_mouse_release
-
     def initWidget(self):
         """Initialize the complete sketch widget."""
         self.initModel()
         self.initView()
+        return self
+
+    def clear_canvas(self):
+        """Clear all drawings from the canvas."""
+        self.shapes = []
+        self.start_point = None
+        self.end_point = None
+        self.drawing = False
+        self.render_on_canvas()
         return self
 
     def cmd_add_1d_line(self, checked=None, handler=None, params=None):
@@ -734,81 +860,6 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         logma.info("Fill color tool activated")
         return self
 
-    def _update_tool_config_from_pane(self, tool_pane):
-        """Update current tool configuration from the tool pane settings."""
-        try:
-            # Update line style
-            if hasattr(tool_pane, "line_style_select"):
-                style = (
-                    tool_pane.line_style_select.currentText()
-                    if hasattr(tool_pane.line_style_select, "currentText")
-                    else "Solid"
-                )
-                self.current_tool_config["style"] = style
-
-            # Update thickness
-            if hasattr(tool_pane, "line_thickness_spin"):
-                thickness = (
-                    tool_pane.line_thickness_spin.value() if hasattr(tool_pane.line_thickness_spin, "value") else 3
-                )
-                self.current_tool_config["thickness"] = thickness
-
-            # Update color
-            if hasattr(tool_pane, "line_color_select"):
-                color_name = (
-                    tool_pane.line_color_select.currentText()
-                    if hasattr(tool_pane.line_color_select, "currentText")
-                    else "black"
-                )
-                self.current_tool_config["color"] = self._get_qcolor_from_name(color_name)
-
-            # Update end types for line tools
-            if hasattr(tool_pane, "line_end_one_type_select"):
-                end_type_1 = (
-                    tool_pane.line_end_one_type_select.currentText()
-                    if hasattr(tool_pane.line_end_one_type_select, "currentText")
-                    else None
-                )
-                self.current_tool_config["end_type_1"] = end_type_1
-
-            if hasattr(tool_pane, "line_end_two_type_select"):
-                end_type_2 = (
-                    tool_pane.line_end_two_type_select.currentText()
-                    if hasattr(tool_pane.line_end_two_type_select, "currentText")
-                    else None
-                )
-                self.current_tool_config["end_type_2"] = end_type_2
-
-        except Exception as e:
-            logma.warning(f"Could not update tool config from pane: {e}")
-
-    def _get_qcolor_from_name(self, color_name):
-        """Convert color name to QColor."""
-        color_map = {
-            "Black": pyqt.Qt.black,
-            "Grey": pyqt.Qt.gray,
-            "White": pyqt.Qt.white,
-            "Blue": pyqt.Qt.blue,
-            "Red": pyqt.Qt.red,
-            "Green": pyqt.Qt.green,
-            "Yellow": pyqt.Qt.yellow,
-            "Magenta": pyqt.Qt.magenta,
-            "Cyan": pyqt.Qt.cyan,
-            "Orange": pyqt.QColor(255, 165, 0),
-            "Violet": pyqt.QColor(138, 43, 226),
-        }
-        return pyqt.QColor(color_map.get(color_name, pyqt.Qt.black))
-
-    def _get_pen_style_from_string(self, style_string):
-        """Convert style string to Qt pen style."""
-        style_map = {
-            "Solid": pyqt.Qt.SolidLine,
-            "Dashed": pyqt.Qt.DashLine,
-            "Dotted": pyqt.Qt.DotLine,
-            "Dash Dotted": pyqt.Qt.DashDotLine,
-        }
-        return style_map.get(style_string, pyqt.Qt.SolidLine)
-
     def cmd_launch_color_sigil(self, event, *args, **kwargs):
         """Launch the color selection dialog."""
         self.color_sigil = NchantdColorSelectSigil(self, {}).initWidget()
@@ -853,99 +904,117 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             self.render_on_canvas()
         return self
 
-    def get_layers(self):
-        """Get all available layers, creating default if none exist."""
-        if self.layers is None:
-            # Try to load from document store
-            # layers = self.app.model.store.get_document(self.did)
-            self.layers = ["Layer 0 - Canvas Layer"]
-
-        if "New Layer" not in self.layers:
-            self.layers.append("New Layer")
-
-        return self.layers
-
-    def get_canvas_color(self):
-        """Get the current canvas background color."""
-        if self.canvas:
-            return self.canvas.palette().color(self.canvas.backgroundRole())
-        return None
-
-    def get_canvas_colors(self):
-        """Get available canvas color options."""
-        return ["Black", "Grey", "White", "Blue", "Red", "Green", "Yellow", "Magenta", "Cyan", "Orange", "Violet"]
-
-    def get_canvas_size(self):
-        """Get the current canvas size."""
-        if self.canvas:
-            return self.canvas.size()
-        return self.size()
-
-    def set_canvas_color(self, color):
-        """Set the canvas background color."""
-        if self.canvas and color:
-            self.canvas.setStyleSheet(f"background-color: {color};")
+    def delete_layer(self, layer_name):
+        """Delete a layer by name."""
+        if layer_name in self.layers and layer_name != "Layer 0 - Canvas Layer":
+            self.layers.remove(layer_name)
         return self
 
-    def set_canvas_size(self, width, height):
-        """Set the canvas size."""
-        if self.canvas:
-            self.canvas.resize(width, height)
-        return self
+    def duplicate_layer(self, layer_name):
+        """Duplicate a layer and its shapes."""
+        if layer_name in self.layers and layer_name != "New Layer":
+            new_layer_name = f"{layer_name} (Copy)"
+            # Insert before "New Layer"
+            self.layers.insert(-1, new_layer_name)
 
-    def clear_canvas(self):
-        """Clear all drawings from the canvas."""
-        self.shapes = []
-        self.start_point = None
-        self.end_point = None
-        self.drawing = False
-        self.render_on_canvas()
-        return self
+            # Copy layer properties
+            if layer_name in self.layer_properties:
+                self.layer_properties[new_layer_name] = self.layer_properties[layer_name].copy()
 
-    def save_shape(self):
-        """Save the current shape to the shapes list and clear redo stack."""
-        if self.start_point and self.end_point and self.current_tool:
-            shape_data = {
-                "tool": self.current_tool,
-                "start": self.start_point,
-                "end": self.end_point,
-                "layer": (
-                    self.layers[self.active_layer_index] if 0 <= self.active_layer_index < len(self.layers) else None
-                ),
-                "config": {
-                    "style": self.current_tool_config.get("style", "Solid"),
-                    "thickness": self.current_tool_config.get("thickness", 3),
-                    "color": self.current_tool_config.get("color", pyqt.QColor(pyqt.Qt.black)),
-                    "end_type_1": self.current_tool_config.get("end_type_1"),
-                    "end_type_2": self.current_tool_config.get("end_type_2"),
-                },
-            }
-            self.shapes.append(shape_data)
-            # Add to undo stack
-            self.undo_stack.append(("add", shape_data))
-            # Clear redo stack when new action is performed
-            self.redo_stack.clear()
-        return self
+            # Copy shapes belonging to this layer
+            for shape in self.shapes:
+                if shape.get("layer") == layer_name:
+                    new_shape = shape.copy()
+                    new_shape["layer"] = new_layer_name
+                    self.shapes.append(new_shape)
 
-    def undo_last_shape(self):
-        """Remove the last drawn shape and add to redo stack."""
-        if self.shapes:
-            shape = self.shapes.pop()
-            self.redo_stack.append(("add", shape))
-            if self.undo_stack:
-                self.undo_stack.pop()
             self.render_on_canvas()
         return self
 
-    def redo_shape(self):
-        """Redo the last undone shape."""
-        if self.redo_stack:
-            action, shape = self.redo_stack.pop()
-            if action == "add":
-                self.shapes.append(shape)
-                self.undo_stack.append((action, shape))
-                self.render_on_canvas()
+    def deactivate_tool(self):
+        """Deactivate the current drawing tool."""
+        self.current_tool = None
+        self.drawing = False
+        self.start_point = None
+        self.end_point = None
+        # Update cursor to arrow
+        self._update_canvas_cursor()
+        logma.info("Tool deactivated")
         return self
+
+    def delete_shape_at_position(self, pos):
+        """Delete a shape at the given position."""
+        index, shape = self.get_shape_at_position(pos)
+        if index is not None:
+            deleted_shape = self.shapes.pop(index)
+            self.undo_stack.append(("delete", deleted_shape))
+            self.redo_stack.clear()
+            self.render_on_canvas()
+            logma.info(f"Deleted shape at index {index}")
+            return True
+        return False
+
+    def eventFilter(self, obj, event):
+        """Filter events from the canvas to handle drawing and cursor."""
+        if obj == self.canvas:
+            event_type = event.type()
+
+            # Log all mouse events for debugging
+            if event_type in [
+                pyqt.QEvent.MouseButtonPress,
+                pyqt.QEvent.MouseButtonRelease,
+                pyqt.QEvent.MouseButtonDblClick,
+            ]:
+                logma.info(f"eventFilter: {event_type}, obj={type(obj).__name__}, current_tool={self.current_tool}")
+
+            # Handle cursor on mouse enter and move
+            if event_type == pyqt.QEvent.Enter:
+                logma.info("Mouse entered canvas")
+                self._update_canvas_cursor()
+                return False  # Don't block the event
+
+            # Block CursorChange events when we have an active tool
+            # But avoid recursion by checking if we're already updating the cursor
+            elif event_type == pyqt.QEvent.CursorChange and self.current_tool and not self._updating_cursor:
+                logma.warning("Canvas tried to change cursor - blocking")
+                # Don't call _update_canvas_cursor here as it would cause recursion
+                # Just block the event
+                return True  # Block the cursor change
+
+            # Handle drawing events when tool is active
+            if self.current_tool:
+                if event_type == pyqt.QEvent.MouseButtonPress:
+                    logma.info(f"eventFilter caught MouseButtonPress, button={event.button()}")
+                    self.mousePressEvent(event)
+                    # Immediately restore cursor after press
+                    self._update_canvas_cursor()
+                    return True
+                elif event_type == pyqt.QEvent.MouseButtonDblClick:
+                    # Treat double click as single click for drawing
+                    logma.info(f"eventFilter caught MouseButtonDblClick, treating as press")
+                    self.mousePressEvent(event)
+                    self._update_canvas_cursor()
+                    return True
+                elif event_type == pyqt.QEvent.MouseMove:
+                    if self.drawing:
+                        logma.debug("eventFilter caught MouseMove during drawing")
+                    self.mouseMoveEvent(event)
+                    # Check cursor on move when not drawing
+                    if not self.drawing:
+                        expected_cursor = self._get_expected_cursor_shape()
+                        if self.canvas.cursor().shape() != expected_cursor:
+                            logma.warning(
+                                f"Canvas cursor mismatch! Expected {expected_cursor}, got {self.canvas.cursor().shape()}"
+                            )
+                            self._update_canvas_cursor()
+                    return True
+                elif event_type == pyqt.QEvent.MouseButtonRelease:
+                    logma.info(f"eventFilter caught MouseButtonRelease, drawing={self.drawing}")
+                    self.mouseReleaseEvent(event)
+                    # Restore cursor after release
+                    self._update_canvas_cursor()
+                    return True
+        return super().eventFilter(obj, event)
 
     def export_sketch(self, file_path):
         """Export the sketch to a file."""
@@ -977,6 +1046,53 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"Failed to export sketch: {e}")
         return self
+
+    def get_layers(self):
+        """Get all available layers, creating default if none exist."""
+        if self.layers is None:
+            # Try to load from document store
+            # layers = self.app.model.store.get_document(self.did)
+            self.layers = ["Layer 0 - Canvas Layer"]
+
+        if "New Layer" not in self.layers:
+            self.layers.append("New Layer")
+
+        return self.layers
+
+    def get_canvas_color(self):
+        """Get the current canvas background color."""
+        if self.canvas:
+            return self.canvas.palette().color(self.canvas.backgroundRole())
+        return None
+
+    def get_canvas_colors(self):
+        """Get available canvas color options."""
+        return ["Black", "Grey", "White", "Blue", "Red", "Green", "Yellow", "Magenta", "Cyan", "Orange", "Violet"]
+
+    def get_canvas_size(self):
+        """Get the current canvas size."""
+        if self.canvas:
+            return self.canvas.size()
+        return self.size()
+
+    def get_active_layer(self):
+        """Get the currently active layer."""
+        if self.layers and 0 <= self.active_layer_index < len(self.layers):
+            return self.layers[self.active_layer_index]
+        return None
+
+    def get_layer_properties(self, layer_name):
+        """Get properties for a specific layer."""
+        return self.layer_properties.get(layer_name, {})
+
+    def get_shape_at_position(self, pos):
+        """Get the shape at the given position (for selection)."""
+        # Search in reverse order (top to bottom)
+        for i in range(len(self.shapes) - 1, -1, -1):
+            shape = self.shapes[i]
+            if self._is_point_in_shape(pos, shape):
+                return i, shape
+        return None, None
 
     def import_sketch(self, file_path):
         """Import a sketch from a file."""
@@ -1014,43 +1130,43 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
     def init_canvas_config(self):
         """"""
-        # items = self.toolbox_config.get(100, {}).get("items", {})
-        # cnt = 0
-        # items[cnt] = {}
-        # cfg = {
-        #     "text": "Canvas Color",
-        #     "layout": "horizontal",
-        #     "handler": self.cmd_launch_color_sigil,
-        # }
-        # self.canvas_color_sigil_button = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.canvas_color_sigil_button
-        # cnt += 1
-        # items[cnt] = {}
-        # cfg = {"label": "Canvas Size", "layout": "horizontal"}
-        # self.canvas_size_set = NchantdLabeledDoubleSpinBox(self, cfg)
-        # items[cnt]["widget"] = self.canvas_size_set
-        # cnt += 1
-        # items[cnt] = {}
-        # self.get_layers()
-        # cfg = {
-        #     "label": "Active Layer",
-        #     "layout": "horizontal",
-        #     "options": self.layers,
-        # }
-        # self.canvas_layer_select = NchantdDropDown(self, cfg)
-        # items[cnt]["widget"] = self.canvas_layer_select
-        # cnt += 1
-        # items[cnt] = {}
-        # cfg = {"layout": "horizontal", "data": self.layers}
-        # logma.info(f"Layers {self.layers}")
-        # self.layers_list_pane = NchantdLayersListPane(self, cfg)
-        # items[cnt]["widget"] = self.layers_list_pane
-        # cnt += 1
-        # items[cnt] = {}
-        # cfg = {"layout": "horizontal"}
-        # self.layers_select = NchantdEditLayerPane(self, cfg)
-        # items[cnt]["widget"] = self.layers_select
-        # return items
+        items = self.toolbox_config.get(100, {}).get("items", {})
+        cnt = 0
+        items[cnt] = {}
+        cfg = {
+            "text": "Canvas Color",
+            "layout": "horizontal",
+            "handler": self.cmd_launch_color_sigil,
+        }
+        self.canvas_color_sigil_button = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.canvas_color_sigil_button
+        cnt += 1
+        items[cnt] = {}
+        cfg = {"label": "Canvas Size", "layout": "horizontal"}
+        self.canvas_size_set = NchantdLabeledDoubleSpinBox(self, cfg)
+        items[cnt]["widget"] = self.canvas_size_set
+        cnt += 1
+        items[cnt] = {}
+        self.get_layers()
+        cfg = {
+            "label": "Active Layer",
+            "layout": "horizontal",
+            "options": self.layers,
+        }
+        self.canvas_layer_select = NchantdDropDown(self, cfg)
+        items[cnt]["widget"] = self.canvas_layer_select
+        cnt += 1
+        items[cnt] = {}
+        cfg = {"layout": "horizontal", "data": self.layers}
+        logma.info(f"Layers {self.layers}")
+        self.layers_list_pane = NchantdLayersListPane(self, cfg)
+        items[cnt]["widget"] = self.layers_list_pane
+        cnt += 1
+        items[cnt] = {}
+        cfg = {"layout": "horizontal"}
+        self.layers_select = NchantdEditLayerPane(self, cfg)
+        items[cnt]["widget"] = self.layers_select
+        return items
 
     def init_sketch_tools(self):
         """"""
@@ -1160,114 +1276,11 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.toolbox_config[300]["items"] = self.init_object_config()
         self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
-    def eventFilter(self, obj, event):
-        """Filter events from the canvas to handle drawing and cursor."""
-        if obj == self.canvas:
-            event_type = event.type()
-
-            # Log all mouse events for debugging
-            if event_type in [
-                pyqt.QEvent.MouseButtonPress,
-                pyqt.QEvent.MouseButtonRelease,
-                pyqt.QEvent.MouseButtonDblClick,
-            ]:
-                logma.info(f"eventFilter: {event_type}, obj={type(obj).__name__}, current_tool={self.current_tool}")
-
-            # Handle cursor on mouse enter and move
-            if event_type == pyqt.QEvent.Enter:
-                logma.info("Mouse entered canvas")
-                self._update_canvas_cursor()
-                return False  # Don't block the event
-
-            # Block CursorChange events when we have an active tool
-            # But avoid recursion by checking if we're already updating the cursor
-            elif event_type == pyqt.QEvent.CursorChange and self.current_tool and not self._updating_cursor:
-                logma.warning("Canvas tried to change cursor - blocking")
-                # Don't call _update_canvas_cursor here as it would cause recursion
-                # Just block the event
-                return True  # Block the cursor change
-
-            # Handle drawing events when tool is active
-            if self.current_tool:
-                if event_type == pyqt.QEvent.MouseButtonPress:
-                    logma.info(f"eventFilter caught MouseButtonPress, button={event.button()}")
-                    self.mousePressEvent(event)
-                    # Immediately restore cursor after press
-                    self._update_canvas_cursor()
-                    return True
-                elif event_type == pyqt.QEvent.MouseButtonDblClick:
-                    # Treat double click as single click for drawing
-                    logma.info(f"eventFilter caught MouseButtonDblClick, treating as press")
-                    self.mousePressEvent(event)
-                    self._update_canvas_cursor()
-                    return True
-                elif event_type == pyqt.QEvent.MouseMove:
-                    if self.drawing:
-                        logma.debug("eventFilter caught MouseMove during drawing")
-                    self.mouseMoveEvent(event)
-                    # Check cursor on move when not drawing
-                    if not self.drawing:
-                        expected_cursor = self._get_expected_cursor_shape()
-                        if self.canvas.cursor().shape() != expected_cursor:
-                            logma.warning(
-                                f"Canvas cursor mismatch! Expected {expected_cursor}, got {self.canvas.cursor().shape()}"
-                            )
-                            self._update_canvas_cursor()
-                    return True
-                elif event_type == pyqt.QEvent.MouseButtonRelease:
-                    logma.info(f"eventFilter caught MouseButtonRelease, drawing={self.drawing}")
-                    self.mouseReleaseEvent(event)
-                    # Restore cursor after release
-                    self._update_canvas_cursor()
-                    return True
-        return super().eventFilter(obj, event)
-
-    def _get_expected_cursor_shape(self):
-        """Get the expected cursor shape based on current tool."""
-        if self.current_tool in ["line", "curve", "spline", "polygon", "ellipse"]:
-            return pyqt.Qt.CrossCursor
-        elif self.current_tool in ["object", "fill"]:
-            return pyqt.Qt.PointingHandCursor
-        else:
-            return pyqt.Qt.ArrowCursor
-
-    def _update_canvas_cursor(self):
-        """Update the canvas cursor based on the current tool."""
-        if not self.canvas or self._updating_cursor:
-            return
-
-        # Set flag to prevent recursion
-        self._updating_cursor = True
-
-        try:
-            cursor = None
-            if self.current_tool in ["line", "curve", "spline", "polygon", "ellipse"]:
-                cursor = pyqt.Qt.CrossCursor
-                logma.info(f"Setting CrossCursor on canvas for tool: {self.current_tool}")
-            elif self.current_tool in ["object", "fill"]:
-                cursor = pyqt.Qt.PointingHandCursor
-                logma.info(f"Setting PointingHandCursor on canvas for tool: {self.current_tool}")
-            else:
-                cursor = pyqt.Qt.ArrowCursor
-                logma.info("Setting ArrowCursor on canvas (no tool active)")
-
-            # Set cursor on canvas directly
-            self.canvas.setCursor(pyqt.QCursor(cursor))
-
-            # If canvas has a viewport (for scroll areas), set it there too
-            if hasattr(self.canvas, "viewport"):
-                self.canvas.viewport().setCursor(pyqt.QCursor(cursor))
-
-            # Force update
-            self.canvas.update()
-            logma.info(
-                f"Canvas cursor set successfully. Canvas visible: {self.canvas.isVisible()}, cursor shape: {self.canvas.cursor().shape()}"
-            )
-        except Exception as e:
-            logma.error(f"Failed to set canvas cursor: {e}")
-        finally:
-            # Always reset flag
-            self._updating_cursor = False
+    def merge_layers(self, layer1, layer2):
+        """Merge two layers into one (placeholder for advanced functionality)."""
+        # NOTE: Implement layer merging
+        logma.info(f"Merging layers: {layer1} and {layer2}")
+        return self
 
     def mousePressEvent(self, event):
         """Handle mouse press events for drawing."""
@@ -1335,134 +1348,6 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.layers.insert(-1, layer_name)
         return self
 
-    def delete_layer(self, layer_name):
-        """Delete a layer by name."""
-        if layer_name in self.layers and layer_name != "Layer 0 - Canvas Layer":
-            self.layers.remove(layer_name)
-        return self
-
-    def rename_layer(self, old_name, new_name):
-        """Rename an existing layer."""
-        if old_name in self.layers:
-            index = self.layers.index(old_name)
-            self.layers[index] = new_name
-        return self
-
-    def get_active_layer(self):
-        """Get the currently active layer."""
-        if self.layers and 0 <= self.active_layer_index < len(self.layers):
-            return self.layers[self.active_layer_index]
-        return None
-
-    def set_active_layer(self, layer_name):
-        """Set the active layer by name."""
-        if layer_name in self.layers:
-            self.active_layer_index = self.layers.index(layer_name)
-        return self
-
-    def set_active_layer_by_index(self, index):
-        """Set the active layer by index."""
-        if 0 <= index < len(self.layers):
-            self.active_layer_index = index
-        return self
-
-    def get_layer_properties(self, layer_name):
-        """Get properties for a specific layer."""
-        return self.layer_properties.get(layer_name, {})
-
-    def merge_layers(self, layer1, layer2):
-        """Merge two layers into one (placeholder for advanced functionality)."""
-        # NOTE: Implement layer merging
-        logma.info(f"Merging layers: {layer1} and {layer2}")
-        return self
-
-    def duplicate_layer(self, layer_name):
-        """Duplicate a layer and its shapes."""
-        if layer_name in self.layers and layer_name != "New Layer":
-            new_layer_name = f"{layer_name} (Copy)"
-            # Insert before "New Layer"
-            self.layers.insert(-1, new_layer_name)
-
-            # Copy layer properties
-            if layer_name in self.layer_properties:
-                self.layer_properties[new_layer_name] = self.layer_properties[layer_name].copy()
-
-            # Copy shapes belonging to this layer
-            for shape in self.shapes:
-                if shape.get("layer") == layer_name:
-                    new_shape = shape.copy()
-                    new_shape["layer"] = new_layer_name
-                    self.shapes.append(new_shape)
-
-            self.render_on_canvas()
-        return self
-
-    def deactivate_tool(self):
-        """Deactivate the current drawing tool."""
-        self.current_tool = None
-        self.drawing = False
-        self.start_point = None
-        self.end_point = None
-        # Update cursor to arrow
-        self._update_canvas_cursor()
-        logma.info("Tool deactivated")
-        return self
-
-    def get_shape_at_position(self, pos):
-        """Get the shape at the given position (for selection)."""
-        # Search in reverse order (top to bottom)
-        for i in range(len(self.shapes) - 1, -1, -1):
-            shape = self.shapes[i]
-            if self._is_point_in_shape(pos, shape):
-                return i, shape
-        return None, None
-
-    def _is_point_in_shape(self, pos, shape):
-        """Check if a point is within a shape's bounds."""
-        start = shape.get("start")
-        end = shape.get("end")
-        tool = shape.get("tool")
-
-        if not start or not end:
-            return False
-
-        tolerance = 5  # Click tolerance in pixels
-
-        if tool in ["line", "curve", "spline"]:
-            # For lines, check if point is near the line
-            # Simple bounding box check
-            rect = pyqt.QRectF(start, end).normalized()
-            expanded = rect.adjusted(-tolerance, -tolerance, tolerance, tolerance)
-            return expanded.contains(pos)
-
-        elif tool in ["polygon", "ellipse", "fill"]:
-            # For filled shapes, check if point is inside
-            rect = pyqt.QRectF(start, end).normalized()
-            return rect.contains(pos)
-
-        return False
-
-    def delete_shape_at_position(self, pos):
-        """Delete a shape at the given position."""
-        index, shape = self.get_shape_at_position(pos)
-        if index is not None:
-            deleted_shape = self.shapes.pop(index)
-            self.undo_stack.append(("delete", deleted_shape))
-            self.redo_stack.clear()
-            self.render_on_canvas()
-            logma.info(f"Deleted shape at index {index}")
-            return True
-        return False
-
-    def select_shape_at_position(self, pos):
-        """Select a shape at the given position."""
-        index, shape = self.get_shape_at_position(pos)
-        if index is not None:
-            self.current_shape = shape
-            logma.info(f"Selected shape: {shape.get('tool')}")
-            return shape
-        return None
-
     def paintEvent(self, event):
         """Paint event handler - just update canvas, don't paint here."""
         super().paintEvent(event)
@@ -1522,6 +1407,91 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             logma.info(f"Pixmap set on canvas successfully, size: {pixmap.size()}")
         except Exception as e:
             logma.error(f"Error setting canvas pixmap: {e}", exc_info=True)
+
+    def rename_layer(self, old_name, new_name):
+        """Rename an existing layer."""
+        if old_name in self.layers:
+            index = self.layers.index(old_name)
+            self.layers[index] = new_name
+        return self
+
+    def redo_shape(self):
+        """Redo the last undone shape."""
+        if self.redo_stack:
+            action, shape = self.redo_stack.pop()
+            if action == "add":
+                self.shapes.append(shape)
+                self.undo_stack.append((action, shape))
+                self.render_on_canvas()
+        return self
+
+    def select_shape_at_position(self, pos):
+        """Select a shape at the given position."""
+        index, shape = self.get_shape_at_position(pos)
+        if index is not None:
+            self.current_shape = shape
+            logma.info(f"Selected shape: {shape.get('tool')}")
+            return shape
+        return None
+
+    def save_shape(self):
+        """Save the current shape to the shapes list and clear redo stack."""
+        if self.start_point and self.end_point and self.current_tool:
+            shape_data = {
+                "tool": self.current_tool,
+                "start": self.start_point,
+                "end": self.end_point,
+                "layer": (
+                    self.layers[self.active_layer_index] if 0 <= self.active_layer_index < len(self.layers) else None
+                ),
+                "config": {
+                    "style": self.current_tool_config.get("style", "Solid"),
+                    "thickness": self.current_tool_config.get("thickness", 3),
+                    "color": self.current_tool_config.get("color", pyqt.QColor(pyqt.Qt.black)),
+                    "end_type_1": self.current_tool_config.get("end_type_1"),
+                    "end_type_2": self.current_tool_config.get("end_type_2"),
+                },
+            }
+            self.shapes.append(shape_data)
+            # Add to undo stack
+            self.undo_stack.append(("add", shape_data))
+            # Clear redo stack when new action is performed
+            self.redo_stack.clear()
+        return self
+
+    def set_active_layer(self, layer_name):
+        """Set the active layer by name."""
+        if layer_name in self.layers:
+            self.active_layer_index = self.layers.index(layer_name)
+        return self
+
+    def set_active_layer_by_index(self, index):
+        """Set the active layer by index."""
+        if 0 <= index < len(self.layers):
+            self.active_layer_index = index
+        return self
+
+    def set_canvas_color(self, color):
+        """Set the canvas background color."""
+        if self.canvas and color:
+            self.canvas.setStyleSheet(f"background-color: {color};")
+        return self
+
+    def set_canvas_size(self, width, height):
+        """Set the canvas size."""
+        if self.canvas:
+            self.canvas.resize(width, height)
+        return self
+
+    def undo_last_shape(self):
+        """Remove the last drawn shape and add to redo stack."""
+        if self.shapes:
+            shape = self.shapes.pop()
+            self.redo_stack.append(("add", shape))
+            if self.undo_stack:
+                self.undo_stack.pop()
+            self.render_on_canvas()
+        return self
 
     def _setup_painter_for_shape(self, painter, shape_data):
         """Setup painter with the appropriate pen and brush for the shape."""
@@ -1647,6 +1617,185 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             size = 8
             rect = pyqt.QRectF(to_point.x() - size / 2, to_point.y() - size / 2, size, size)
             painter.drawRect(rect)
+
+    def _get_expected_cursor_shape(self):
+        """Get the expected cursor shape based on current tool."""
+        if self.current_tool in ["line", "curve", "spline", "polygon", "ellipse"]:
+            return pyqt.Qt.CrossCursor
+        elif self.current_tool in ["object", "fill"]:
+            return pyqt.Qt.PointingHandCursor
+        else:
+            return pyqt.Qt.ArrowCursor
+
+    def _get_qcolor_from_name(self, color_name):
+        """Convert color name to QColor."""
+        color_map = {
+            "Black": pyqt.Qt.black,
+            "Grey": pyqt.Qt.gray,
+            "White": pyqt.Qt.white,
+            "Blue": pyqt.Qt.blue,
+            "Red": pyqt.Qt.red,
+            "Green": pyqt.Qt.green,
+            "Yellow": pyqt.Qt.yellow,
+            "Magenta": pyqt.Qt.magenta,
+            "Cyan": pyqt.Qt.cyan,
+            "Orange": pyqt.QColor(255, 165, 0),
+            "Violet": pyqt.QColor(138, 43, 226),
+        }
+        return pyqt.QColor(color_map.get(color_name, pyqt.Qt.black))
+
+    def _get_pen_style_from_string(self, style_string):
+        """Convert style string to Qt pen style."""
+        style_map = {
+            "Solid": pyqt.Qt.SolidLine,
+            "Dashed": pyqt.Qt.DashLine,
+            "Dotted": pyqt.Qt.DotLine,
+            "Dash Dotted": pyqt.Qt.DashDotLine,
+        }
+        return style_map.get(style_string, pyqt.Qt.SolidLine)
+
+    def _is_point_in_shape(self, pos, shape):
+        """Check if a point is within a shape's bounds."""
+        start = shape.get("start")
+        end = shape.get("end")
+        tool = shape.get("tool")
+
+        if not start or not end:
+            return False
+
+        tolerance = 5  # Click tolerance in pixels
+
+        if tool in ["line", "curve", "spline"]:
+            # For lines, check if point is near the line
+            # Simple bounding box check
+            rect = pyqt.QRectF(start, end).normalized()
+            expanded = rect.adjusted(-tolerance, -tolerance, tolerance, tolerance)
+            return expanded.contains(pos)
+
+        elif tool in ["polygon", "ellipse", "fill"]:
+            # For filled shapes, check if point is inside
+            rect = pyqt.QRectF(start, end).normalized()
+            return rect.contains(pos)
+
+        return False
+
+    def _setup_canvas_mouse_handlers(self):
+        """Override canvas mouse handlers to delegate to sketch widget."""
+        # Save original handlers
+        self._original_canvas_mouse_press = self.canvas.mousePressEvent
+        self._original_canvas_mouse_move = self.canvas.mouseMoveEvent
+        self._original_canvas_mouse_release = self.canvas.mouseReleaseEvent
+
+        # Replace with our handlers
+        def canvas_mouse_press(event):
+            if self.current_tool:
+                logma.info(f"Canvas mousePressEvent intercepted, tool={self.current_tool}")
+                self.mousePressEvent(event)
+            else:
+                self._original_canvas_mouse_press(event)
+
+        def canvas_mouse_move(event):
+            if self.current_tool:
+                self.mouseMoveEvent(event)
+            else:
+                self._original_canvas_mouse_move(event)
+
+        def canvas_mouse_release(event):
+            if self.current_tool:
+                logma.info(f"Canvas mouseReleaseEvent intercepted, tool={self.current_tool}")
+                self.mouseReleaseEvent(event)
+            else:
+                self._original_canvas_mouse_release(event)
+
+        self.canvas.mousePressEvent = canvas_mouse_press
+        self.canvas.mouseMoveEvent = canvas_mouse_move
+        self.canvas.mouseReleaseEvent = canvas_mouse_release
+
+    def _update_canvas_cursor(self):
+        """Update the canvas cursor based on the current tool."""
+        if not self.canvas or self._updating_cursor:
+            return
+
+        # Set flag to prevent recursion
+        self._updating_cursor = True
+
+        try:
+            cursor = None
+            if self.current_tool in ["line", "curve", "spline", "polygon", "ellipse"]:
+                cursor = pyqt.Qt.CrossCursor
+                logma.info(f"Setting CrossCursor on canvas for tool: {self.current_tool}")
+            elif self.current_tool in ["object", "fill"]:
+                cursor = pyqt.Qt.PointingHandCursor
+                logma.info(f"Setting PointingHandCursor on canvas for tool: {self.current_tool}")
+            else:
+                cursor = pyqt.Qt.ArrowCursor
+                logma.info("Setting ArrowCursor on canvas (no tool active)")
+
+            # Set cursor on canvas directly
+            self.canvas.setCursor(pyqt.QCursor(cursor))
+
+            # If canvas has a viewport (for scroll areas), set it there too
+            if hasattr(self.canvas, "viewport"):
+                self.canvas.viewport().setCursor(pyqt.QCursor(cursor))
+
+            # Force update
+            self.canvas.update()
+            logma.info(
+                f"Canvas cursor set successfully. Canvas visible: {self.canvas.isVisible()}, cursor shape: {self.canvas.cursor().shape()}"
+            )
+        except Exception as e:
+            logma.error(f"Failed to set canvas cursor: {e}")
+        finally:
+            # Always reset flag
+            self._updating_cursor = False
+
+    def _update_tool_config_from_pane(self, tool_pane):
+        """Update current tool configuration from the tool pane settings."""
+        try:
+            # Update line style
+            if hasattr(tool_pane, "line_style_select"):
+                style = (
+                    tool_pane.line_style_select.currentText()
+                    if hasattr(tool_pane.line_style_select, "currentText")
+                    else "Solid"
+                )
+                self.current_tool_config["style"] = style
+
+            # Update thickness
+            if hasattr(tool_pane, "line_thickness_spin"):
+                thickness = (
+                    tool_pane.line_thickness_spin.value() if hasattr(tool_pane.line_thickness_spin, "value") else 3
+                )
+                self.current_tool_config["thickness"] = thickness
+
+            # Update color
+            if hasattr(tool_pane, "line_color_select"):
+                color_name = (
+                    tool_pane.line_color_select.currentText()
+                    if hasattr(tool_pane.line_color_select, "currentText")
+                    else "black"
+                )
+                self.current_tool_config["color"] = self._get_qcolor_from_name(color_name)
+
+            # Update end types for line tools
+            if hasattr(tool_pane, "line_end_one_type_select"):
+                end_type_1 = (
+                    tool_pane.line_end_one_type_select.currentText()
+                    if hasattr(tool_pane.line_end_one_type_select, "currentText")
+                    else None
+                )
+                self.current_tool_config["end_type_1"] = end_type_1
+
+            if hasattr(tool_pane, "line_end_two_type_select"):
+                end_type_2 = (
+                    tool_pane.line_end_two_type_select.currentText()
+                    if hasattr(tool_pane.line_end_two_type_select, "currentText")
+                    else None
+                )
+                self.current_tool_config["end_type_2"] = end_type_2
+
+        except Exception as e:
+            logma.warning(f"Could not update tool config from pane: {e}")
 
 
 class NchantdOfficePalette(NchantdOfficeDocument):
