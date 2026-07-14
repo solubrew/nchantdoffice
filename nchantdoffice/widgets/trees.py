@@ -56,11 +56,9 @@ class NchantdOfficeApplicationTree(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationTree").override(cfg))
         self.tree = None
         self.image = None
-
         # Setup drag-drop
         self._setup_drag_drop()
 

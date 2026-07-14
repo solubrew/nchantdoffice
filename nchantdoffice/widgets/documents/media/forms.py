@@ -13,7 +13,7 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
-from os.path import abspath, dirname, join
+from os.path import dirname, join
 import datetime as dt
 
 # ======================================3rd Party Library Modules=====================================================||
@@ -23,7 +23,7 @@ from pandas import DataFrame
 from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.groups import NchantdGridScrollGroupBox, NchantdGroup
-from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument, NchantdOfficeDocumentManager
+from nchantdoffice.widgets.documents.documents import NchantdOfficeDocumentManager
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.items.catalogs import NchantdCatalogItem
 from kahndor.logma import Logma
@@ -50,11 +50,7 @@ class NchantdOfficeForm(NchantdForm):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeForm"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeForm").override(cfg))
 
     def initModel(self):
         """"""
@@ -114,11 +110,7 @@ class NchantdOfficeContactForm(NchantdForm):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeContactForm")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeContactForm").override(cfg))
 
     def initModel(self):
         """"""
@@ -202,26 +194,26 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         """"""
         if cfg is None:
             cfg = {}
-        # fcs_cfg = {
-        #     "layout": "horizontal",
-        #     "size": ["auto", 30],
-        #     "label": "Select Form Compatibility:",
-        #     "options": self.get_form_compatibility_options(),
-        # }
-        # self.form_compatibility_select = NchantdDropDown(self, fcs_cfg)
-        # cfg["buttons"] = {
-        #     0: {"name": "select_form_compatibility", "widget": self.form_compatibility_select},
-        #     1: {"action": "add_data_source_connection"},
-        #     2: "_insert_stretch",
-        # }
+        fcs_cfg = {
+            "layout": "horizontal",
+            "size": ["auto", 30],
+            "label": "Select Form Compatibility:",
+            "options": self.get_form_compatibility_options(),
+        }
+        self.form_compatibility_select = NchantdDropDown(self, fcs_cfg)
+        cfg["buttons"] = {
+            0: {"name": "select_form_compatibility", "widget": self.form_compatibility_select},
+            1: {"action": "add_data_source_connection"},
+            2: "_insert_stretch",
+        }
         super().initView(cfg)
         manager_layout = pyqt.QHBoxLayout()
-        # self.form_catalog_group = NchantdGridScrollGroupBox()
-        # self.form_catalog_group.setTitle("Select Form Item")
-        # self.form_catalog_group.set_size(300)
-        # self.form_catalog_group.limit_horizontal()
-        # self.build_form_catalog()
-        # manager_layout.addLayout(self.form_catalog_group.layout)
+        self.form_catalog_group = NchantdGridScrollGroupBox()
+        self.form_catalog_group.setTitle("Select Form Item")
+        self.form_catalog_group.set_size(300)
+        self.form_catalog_group.limit_horizontal()
+        self.build_form_catalog()
+        manager_layout.addLayout(self.form_catalog_group.layout)
         self.form_view_group = NchantdGridScrollGroupBox()
         self.form_view_group.setTitle("View or Modify Form")
         self.form_view_group.limit_horizontal()
@@ -242,6 +234,31 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         """"""
         self.selected_form = form
         self.forms.append(form)
+
+    def add_form_field(self, field_type, label, required=False):
+        """Add a new field to the current form
+
+        Args:
+            field_type: Type of field (text, number, email, dropdown, etc.)
+            label: Field label
+            required: Whether field is required
+        """
+        if not self.selected_form:
+            logma.warning("No form selected")
+            return self
+
+        field_config = {
+            "type": field_type,
+            "label": label,
+            "required": required,
+            "id": f"field_{len(self.selected_form.items)}",
+        }
+
+        # Create field widget based on type
+        field_widget = self.create_form_field_widget(field_config)
+        self.add_form_item(field_widget)
+        logma.info(f"Added {field_type} field: {label}")
+        return self
 
     def add_form_item(self, item):
         """"""
@@ -368,106 +385,8 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             # NOTE: Implement service connection logic
         return self
 
-    # ========== Form Management Methods ==========
-
-    def add_form_field(self, field_type, label, required=False):
-        """Add a new field to the current form
-
-        Args:
-            field_type: Type of field (text, number, email, dropdown, etc.)
-            label: Field label
-            required: Whether field is required
-        """
-        if not self.selected_form:
-            logma.warning("No form selected")
-            return self
-
-        field_config = {
-            "type": field_type,
-            "label": label,
-            "required": required,
-            "id": f"field_{len(self.selected_form.items)}",
-        }
-
-        # Create field widget based on type
-        field_widget = self.create_form_field_widget(field_config)
-        self.add_form_item(field_widget)
-        logma.info(f"Added {field_type} field: {label}")
-        return self
-
-    def create_form_field_widget(self, field_config):
-        """Create a form field widget from configuration"""
-        field_type = field_config.get("type", "text")
-        label = field_config.get("label", "")
-        required = field_config.get("required", False)
-
-        cfg = {
-            "label": label + (" *" if required else ""),
-            "layout": "horizontal",
-        }
-
-        if field_type in ["text", "email", "url", "phone"]:
-            widget = NchantdLabeledEntry(self, cfg).initWidget()
-        elif field_type == "number":
-            from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
-
-            widget = NchantdLabeledSpinBox(self, cfg).initWidget()
-        elif field_type == "dropdown":
-            cfg["combobox"] = {"options": field_config.get("options", [])}
-            widget = NchantdDropDown(self, cfg).initWidget()
-        elif field_type == "checkbox":
-            cfg["text"] = label
-            widget = NchantdCheckbox(self, cfg).initWidget()
-        else:
-            widget = NchantdLabeledEntry(self, cfg).initWidget()
-
-        return widget
-
-    def remove_form_field(self, field_id):
-        """Remove a field from the current form"""
-        if not self.selected_form:
-            return self
-
-        # Find and remove field
-        for item in self.selected_form.items:
-            if hasattr(item, "id") and item.id == field_id:
-                self.selected_form.items.remove(item)
-                item.deleteLater()
-                logma.info(f"Removed field: {field_id}")
-                break
-
-        return self
-
-    def validate_form(self):
-        """Validate all required fields in the form
-
-        Returns:
-            dict with 'valid' bool and 'errors' list
-        """
-        errors = []
-
-        if not self.selected_form:
-            return {"valid": False, "errors": ["No form selected"]}
-
-        for item in self.selected_form.items:
-            if hasattr(item, "required") and item.required:
-                # Check if field has value
-                value = None
-                if hasattr(item, "get_text"):
-                    value = item.get_text()
-                elif hasattr(item, "value"):
-                    value = item.value()
-                elif hasattr(item, "isChecked"):
-                    value = item.isChecked()
-
-                if not value:
-                    label = getattr(item, "label", "Unknown field")
-                    errors.append(f"Required field '{label}' is empty")
-
-        valid = len(errors) == 0
-        logma.info(f"Form validation: {'passed' if valid else 'failed'}")
-
-        return {"valid": valid, "errors": errors}
+    def cmd_validation_option_change(self, event=None, *args, **kwargs):
+        """"""
 
     def collect_form_data(self):
         """Collect all form data into a dictionary
@@ -499,6 +418,279 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             form_data[field_id] = value
 
         return form_data
+
+    def create_data_table(self):
+        """"""
+        df = super().create_data_table()
+        columns = []
+        data = []
+        df = DataFrame(data, columns=columns)
+        return df
+
+    def create_form_field_widget(self, field_config):
+        """Create a form field widget from configuration"""
+        field_type = field_config.get("type", "text")
+        label = field_config.get("label", "")
+        required = field_config.get("required", False)
+
+        cfg = {
+            "label": label + (" *" if required else ""),
+            "layout": "horizontal",
+        }
+
+        if field_type in ["text", "email", "url", "phone"]:
+            widget = NchantdLabeledEntry(self, cfg).initWidget()
+        elif field_type == "number":
+            from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
+
+            widget = NchantdLabeledSpinBox(self, cfg).initWidget()
+        elif field_type == "dropdown":
+            cfg["combobox"] = {"options": field_config.get("options", [])}
+            widget = NchantdDropDown(self, cfg).initWidget()
+        elif field_type == "checkbox":
+            cfg["text"] = label
+            widget = NchantdCheckbox(self, cfg).initWidget()
+        else:
+            widget = NchantdLabeledEntry(self, cfg).initWidget()
+
+        return widget
+
+    def get_form_compatibility_options(self):
+        """"""
+        options = ["Google Forms", "Nchantd Office", ""]
+        return options
+
+    def get_validation_options(self):
+        """"""
+        return ["None", "Email", "URL", "Number", "Phone", "Custom Regex"]
+
+    def get_validation_option(self):
+        """"""
+
+    def init_drawer_document_config(self):
+        """"""
+        items = self.toolbox_config[100].get("items", {})
+        cnt = 0
+        default_action = {"action": "insert_generic_action", "type": "custom"}
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        options = ["Google Forms", "Nchantd Office"]
+        cfg = {
+            "label": "Form Compatibility: ",
+            "layout": "horizontal",
+            "combobox": {"size": ["auto", "auto"], "options": options},
+            "handler": self.cmd_select_form_compatibility,
+        }
+        self.form_compatibility_select = NchantdDropDown(self, cfg).initWidget()
+        items[cnt]["widget"] = self.form_compatibility_select
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        response_types = ["Text", "Number", "Date", "Multiple Choice", "Checkboxes", "Dropdown"]
+        cfg = {
+            "label": "Default Response Type:",
+            "layout": "horizontal",
+            "combobox": {"size": ["auto", "auto"], "options": response_types},
+            "handler": self.cmd_default_response_type_change,
+            "value": self.get_default_response(),
+        }
+        self.form_default_response_check = NchantdDropDown(self, cfg).initWidget()
+        items[cnt]["widget"] = self.form_default_response_check
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        triggers = ["On Submit", "On Change", "On Focus"]
+        cfg = {
+            "label": "Default Response Trigger:",
+            "layout": "horizontal",
+            "combobox": {"size": ["auto", "auto"], "options": triggers},
+            "handler": self.cmd_default_response_trigger_type_change,
+            "value": self.get_default_response_trigger(),
+        }
+        self.form_default_response_trigger_check = NchantdDropDown(self, cfg).initWidget()
+        items[cnt]["widget"] = self.form_default_response_trigger_check
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {
+            "text": "Set Default Answer Required",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_default_answer_required,
+            "value": self.get_default_answer_required(),
+        }
+        self.form_default_answer_required_check = NchantdCheckbox(self, cfg).initWidget()
+        items[cnt]["widget"] = self.form_default_answer_required_check
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {
+            "text": "Set Default Always Asked",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_default_always_asked,
+            "value": self.get_always_asked(),
+        }
+        self.form_default_always_asked_check = NchantdCheckbox(self, cfg).initWidget()
+        items[cnt]["widget"] = self.form_default_always_asked_check
+        cnt += 1
+        return items
+
+    def cmd_default_response_type_change(self):
+        """"""
+        # TODO implement method
+
+    def cmd_default_answer_required(self):
+        """"""
+        # TODO implement method
+
+    def cmd_default_response_trigger_type_change(self):
+        """"""
+        # TODO implement method
+
+    def get_default_response(self):
+        """"""
+        # TODO implement method
+
+    def get_default_response_trigger(self):
+        """"""
+        # TODO implement method
+
+    def get_default_always_asked(self):
+        """"""
+        # TODO implement method
+
+    def get_default_answer_required(self):
+        """"""
+        # TODO implement method
+
+    def cmd_default_always_asked(self):
+        """"""
+        # TODO implement method
+
+    def get_always_asked(self):
+        """"""
+        # TODO implement method
+
+    def get_form_connection_options(self):
+        """"""
+        # TODO implement method
+
+    def cmd_form_connection_change(self):
+        """"""
+        # TODO implement method
+
+    def cmd_form_connection_option(self):
+        """"""
+        # TODO implement method
+
+    def get_form_connection_option(self):
+        """"""
+        # TODO implement method
+
+    def cmd_connection_account_name_change(self):
+        """"""
+        # TODO implement method
+
+    def get_connection_form_account_name(self):
+        """"""
+        # TODO implement method
+
+    def init_drawer_input_config(self):
+        """"""
+        items = self.toolbox_config[200].get("items", {})
+        cnt = 0
+        default_action = {"action": "insert_generic_action", "type": "custom"}
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        validation_options = self.get_validation_options()
+        cfg = {
+            "label": "Validation Type:",
+            "layout": "horizontal",
+            "combobox": {"size": ["auto", "auto"], "options": validation_options},
+            "handler": self.cmd_validation_option_change,
+            "value": self.get_validation_option(),
+        }
+        self.validation_options_select = NchantdDropDown(self, cfg).initWidget()
+        items[cnt]["widget"] = self.validation_options_select
+        cnt += 1
+        return items
+
+    def init_drawer_connections(self):
+        """"""
+        items = self.toolbox_config[300].get("items", {})
+        default_action = {"action": "insert_generic_action", "type": "custom"}
+        cnt = 0
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        options = ["Google Forms", "YouForm", "Notion Forms", "Nchantd Office"]
+        cfg = {
+            "label": "Form Service: ",
+            "layout": "horizontal",
+            "combobox": {
+                "size": ["auto", "auto"],
+                "options": self.get_form_connection_options(),
+                "handler": self.cmd_form_connection_change,
+                "value": self.get_form_connection_option(),
+            },
+        }
+        self.form_service_select = NchantdDropDown(self, cfg).initWidget()
+        items[cnt]["widget"] = self.form_service_select
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {
+            "label": "Account Name: ",
+            "layout": "horizontal",
+            "handler": self.cmd_connection_account_name_change,
+            "value": self.get_connection_form_account_name(),
+        }
+        self.form_account_name = NchantdLabeledEntry(self, cfg).initWidget()
+        items[cnt]["widget"] = self.form_account_name
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = default_action.copy()
+        cfg = {
+            "text": "Connect to Service",
+            "layout": "horizontal",
+            "handler": self.cmd_connect_to_service,
+        }
+        self.service_connect_button = NchantdButton(self, cfg).initWidget()
+        items[cnt]["widget"] = self.service_connect_button
+        cnt += 1
+        return items
+
+    def init_drawer_quickstart(self):
+        """"""
+        items = {}
+        return items
+
+    def init_toolbox(self):
+        """"""
+        super().init_toolbox()
+        self.toolbox_config[100]["items"] = self.init_drawer_document_config()
+        self.toolbox_config[200]["items"] = self.init_drawer_input_config()
+        self.toolbox_config[300]["items"] = self.init_drawer_connections()
+        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+
+    def remove_form_field(self, field_id):
+        """Remove a field from the current form"""
+        if not self.selected_form:
+            return self
+
+        # Find and remove field
+        for item in self.selected_form.items:
+            if hasattr(item, "id") and item.id == field_id:
+                self.selected_form.items.remove(item)
+                item.deleteLater()
+                logma.info(f"Removed field: {field_id}")
+                break
+
+        return self
+
+    def select_form(self, form_name):
+        """"""
+        self.selected_form = self.forms[form_name]
 
     def submit_form(self):
         """Submit form data"""
@@ -537,151 +729,36 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             logma.info("Form data saved locally")
         return True
 
-    def create_data_table(self):
-        """"""
-        df = super().create_data_table()
-        columns = []
-        data = []
-        df = DataFrame(data, columns=columns)
-        return df
+    def validate_form(self):
+        """Validate all required fields in the form
 
-    def get_form_compatibility_options(self):
-        """"""
-        options = ["Google Forms", "Nchantd Office", ""]
-        return options
+        Returns:
+            dict with 'valid' bool and 'errors' list
+        """
+        errors = []
 
-    def init_drawer_document_config(self):
-        """"""
-        items = self.toolbox_config[100].get("items", {})
-        cnt = 0
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        options = ["Google Forms", "Nchantd Office"]
-        cfg = {
-            "label": "Form Compatibility: ",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": options},
-            "handler": self.cmd_select_form_compatibility,
-        }
-        self.form_compatibility_select = NchantdDropDown(self, cfg).initWidget()
-        items[cnt]["widget"] = self.form_compatibility_select
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        response_types = ["Text", "Number", "Date", "Multiple Choice", "Checkboxes", "Dropdown"]
-        cfg = {
-            "label": "Default Response Type:",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": response_types},
-        }
-        self.form_default_response_check = NchantdDropDown(self, cfg).initWidget()
-        items[cnt]["widget"] = self.form_default_response_check
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        triggers = ["On Submit", "On Change", "On Focus"]
-        cfg = {
-            "label": "Default Response Trigger:",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": triggers},
-        }
-        self.form_default_response_trigger_check = NchantdDropDown(self, cfg).initWidget()
-        items[cnt]["widget"] = self.form_default_response_trigger_check
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {
-            "text": "Set Default Answer Required",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-        }
-        self.form_default_answer_required_check = NchantdCheckbox(self, cfg).initWidget()
-        items[cnt]["widget"] = self.form_default_answer_required_check
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {
-            "text": "Set Default Always Asked",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-        }
-        self.form_default_always_asked_check = NchantdCheckbox(self, cfg).initWidget()
-        items[cnt]["widget"] = self.form_default_always_asked_check
-        cnt += 1
-        return items
+        if not self.selected_form:
+            return {"valid": False, "errors": ["No form selected"]}
 
-    def init_drawer_input_config(self):
-        """"""
-        items = self.toolbox_config[200].get("items", {})
-        cnt = 0
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        validation_options = ["None", "Email", "URL", "Number", "Phone", "Custom Regex"]
-        cfg = {
-            "label": "Validation Type:",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": validation_options},
-        }
-        self.validation_options_select = NchantdDropDown(self, cfg).initWidget()
-        items[cnt]["widget"] = self.validation_options_select
-        cnt += 1
-        return items
+        for item in self.selected_form.items:
+            if hasattr(item, "required") and item.required:
+                # Check if field has value
+                value = None
+                if hasattr(item, "get_text"):
+                    value = item.get_text()
+                elif hasattr(item, "value"):
+                    value = item.value()
+                elif hasattr(item, "isChecked"):
+                    value = item.isChecked()
 
-    def init_drawer_connections(self):
-        """"""
-        items = self.toolbox_config[300].get("items", {})
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        cnt = 0
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        options = ["Google Forms", "YouForm", "Notion Forms", "Nchantd Office"]
-        cfg = {
-            "label": "Form Service: ",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": options},
-        }
-        self.form_service_select = NchantdDropDown(self, cfg).initWidget()
-        items[cnt]["widget"] = self.form_service_select
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {
-            "label": "Account Name: ",
-            "layout": "horizontal",
-        }
-        self.form_account_name = NchantdLabeledEntry(self, cfg).initWidget()
-        items[cnt]["widget"] = self.form_account_name
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {
-            "text": "Connect to Service",
-            "layout": "horizontal",
-            "handler": self.cmd_connect_to_service,
-        }
-        self.service_connect_button = NchantdButton(self, cfg).initWidget()
-        items[cnt]["widget"] = self.service_connect_button
-        cnt += 1
-        return items
+                if not value:
+                    label = getattr(item, "label", "Unknown field")
+                    errors.append(f"Required field '{label}' is empty")
 
-    def init_drawer_quickstart(self):
-        """"""
-        items = {}
-        return items
+        valid = len(errors) == 0
+        logma.info(f"Form validation: {'passed' if valid else 'failed'}")
 
-    def init_toolbox(self):
-        """"""
-        super().init_toolbox()
-        self.toolbox_config[100]["items"] = self.init_drawer_document_config()
-        # self.toolbox_config[200]["items"] = self.init_drawer_input_config()
-        self.toolbox_config[300]["items"] = self.init_drawer_connections()
-        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
-
-    def select_form(self, form_name):
-        """"""
-        self.selected_form = self.forms[form_name]
+        return {"valid": valid, "errors": errors}
 
 
 class NchantdOfficeFeedback(NchantdWidget):

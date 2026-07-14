@@ -183,44 +183,55 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def cmd_add_chart(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_code(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_date(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_add_image(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_shape(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_table(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_textbox(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_time(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_on_compatability_changed(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_document_format(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_document_syntax(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_open_local_file(self, event=None, *args, **kwargs):
@@ -241,33 +252,40 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def cmd_set_margin_top(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_margin_bottom(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_margin_left(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_margin_right(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_toggle_selection_bold(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_toggle_selection_italic(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_toggle_selection_underline(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_toggle_page_view(self, event, *args, **kwargs):
         """"""
         # NOTE: Change between a full screen and a standard 8.5x11/whatever the current page size is set to
-        #view port change
+        # view port change
         return self
 
     def extract_images(self):
@@ -401,7 +419,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
             items[cnt] = default_action
-
         cfg = {
             "text": "Pretty Print",
             "layout": "vertical",
@@ -430,6 +447,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "layout": "horizontal",
             "options": self.get_margin_options(),
             "value": self.get_top_margin_selected(),
+            "handler": self.cmd_top_margin_change,
         }
         self.top_margin_select = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.top_margin_select
@@ -441,6 +459,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "layout": "horizontal",
             "options": self.get_margin_options(),
             "value": self.get_left_margin_selected(),
+            "handler": self.cmd_left_margin_change,
         }
         self.left_margin_select = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.left_margin_select
@@ -452,6 +471,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "layout": "horizontal",
             "options": self.get_margin_options(),
             "value": self.get_right_margin_selected(),
+            "handler": self.cmd_right_margin_change,
         }
         self.right_margin_select = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.right_margin_select
@@ -463,6 +483,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "layout": "horizontal",
             "options": self.get_margin_options(),
             "value": self.get_bottom_margin_selected(),
+            "handler": self.cmd_bottom_margin_change,
         }
         self.bottom_margin_select = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.bottom_margin_select
@@ -496,7 +517,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "label": "Insert Image:",
             "layout": "vertical",
             "handler": self.cmd_add_image,
-            "value": None,
         }
         self.insert_image = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.insert_image
@@ -507,7 +527,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "label": "Insert Table:",
             "layout": "vertical",
             "handler": self.cmd_add_table,
-            "value": None,
         }
         self.insert_table = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.insert_table
@@ -518,7 +537,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "label": "Insert Date:",
             "layout": "vertical",
             "handler": self.cmd_add_date,
-            "value": None,
         }
         self.insert_date = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.insert_date

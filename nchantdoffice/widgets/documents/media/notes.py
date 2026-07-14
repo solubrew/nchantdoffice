@@ -13,7 +13,7 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
-from os.path import abspath, dirname, join
+from os.path import dirname, join
 import datetime as dt
 from bs4 import BeautifulSoup
 
@@ -41,11 +41,7 @@ class NchantdOfficeNote(NchantdSigil):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__("NchantdNote", parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNote"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNote").override(cfg))
         self.editor = None
         self.is_dragging = False
         self.drag_start_position = pyqt.QPoint()
@@ -161,7 +157,6 @@ class NchantdOfficeNoteDocument(NchantdOfficeDocument):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNoteDocument").override(cfg))
 
     def initModel(self, cfg=None):
