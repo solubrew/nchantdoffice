@@ -34,12 +34,14 @@ from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.tables.lists import NchantdListWidget
+from nchantrs.widgets.browsers.profiles import NchantdWebProfile
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
-# logma.off()  # re-enabled for web-view render debugging
+if not log:
+    logma.off()  # re-enabled for web-view render debugging
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "browsers.yaml")
@@ -377,9 +379,13 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             home_page = self.config.dikt.get("default_home_page", "duckduckgo.com")
         return home_page
 
-    def get_current_profile(self):
+    def get_current_profile(self, cfg=None):
         """"""
-        # TODO implement method
+        cfg = cfg or {}
+        intercept = False
+        name = "DEFAULT_PROFILE"
+        self.current_profile = NchantdOfficeWebProfile(name, self.browser, intercept, self, cfg)
+        return self.current_profile
 
     def get_current_parameters(self):
         """"""
@@ -612,7 +618,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             options += ["Get Pro"]
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        self.current_profile = (self.get_current_profile(),)
+        self.current_profile = self.get_current_profile()
         cfg = {
             "label": "Select Profile",
             "layout": "horizontal",
@@ -669,7 +675,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "label": "Street",
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.current_profile.address.street_name,
+            "value": self.current_profile.contact.street_name,
         }
         self.address_street_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
         items[cnt]["widget"] = self.address_street_entry
@@ -680,7 +686,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "label": "City",
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.current_profile.address.city_name,
+            "value": self.current_profile.contact.city_name,
         }
         self.address_city_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
         items[cnt]["widget"] = self.address_city_entry
@@ -691,7 +697,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "label": "State",
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.current_profile.address.state_name,
+            "value": self.current_profile.contact.state_name,
         }
         self.address_state_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
         items[cnt]["widget"] = self.address_state_entry
@@ -702,7 +708,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "label": "Zip Code",
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.current_profile.address.zip_code,
+            "value": self.current_profile.contact.zip_code,
         }
         self.address_zip_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
         items[cnt]["widget"] = self.address_zip_entry
@@ -713,7 +719,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "label": "Primary Phone",
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.current_profile.primary_phone_number,
+            "value": self.current_profile.contact.phone,
         }
         self.phone_entry = NchantdLabeledEntry(self, cfg)  #
         items[cnt]["widget"] = self.phone_entry
@@ -724,7 +730,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "label": "Emergency Phone",
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.current_profile.emergency_phone_number,
+            "value": self.current_profile.contact.emergency_phone,
         }
         self.second_phone_entry = NchantdLabeledEntry(self, cfg)  #
         items[cnt]["widget"] = self.second_phone_entry
@@ -735,7 +741,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "label": "Company Name",
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.current_profile.secondary_phone_number,
+            "value": self.current_profile.contact.secondary_phone,
         }
         self.company_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.company_entry
@@ -746,7 +752,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "label": "Company Email",
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.current_profile.company_email,
+            "value": self.current_profile.contact.company_email,
         }
         self.company_email_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.company_email_entry
@@ -757,7 +763,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "label": "Company Phone",
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.current_profile.company_phone_number,
+            "value": self.current_profile.contact.company_phone,
         }
         self.company_phone_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.company_phone_entry
@@ -1021,12 +1027,8 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
         # orphan widget chain — parent() returns None, lifecycle/cleanup walking breaks).
         # ORIGINAL (commented for traceability):
         #     super().__init__(self)
-        super().__init__(parent) if parent is not None else super().__init__()
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSlimTabSearch"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSlimTabSearch").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -1054,7 +1056,6 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebViewer").override(cfg))
 
     def initModel(self, cfg=None):
@@ -1191,6 +1192,29 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self.document.save()
         return self
 
+
+class NchantdOfficeWebProfile(NchantdWebProfile):
+    """"""
+
+    def __init__(self, name, browser=None, intercept=False, parent=None, cfg=None):
+        """"""
+        super().__init__(name, browser, intercept, parent, cfg)
+        self.setup_address()
+
+    def setup_address(self):
+        """"""
+        document = {"document": self.config.get("document", {})}
+        self.contact = self.app.model.codex.init_contact(document)
+        self.contact.load_document()
+        cfg = {}
+        self.contact.add_address(cfg)
+        self.contact.street_name = self.contact.address.street_name
+        self.contact.city_name = self.contact.address.city_name
+        self.contact.state_name = self.contact.address.state_name
+        self.contact.zip_code = self.contact.address.zip_code
+
+        self.contact.secondary_phone = None #self.contact.phones[0:1]
+        self.contact.emergency_phone = None #self.contact.phones[0]#TODO implement data sourcing
 
 # ====================================================================================================================||
 

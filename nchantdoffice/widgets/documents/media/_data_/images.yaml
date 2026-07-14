@@ -18,11 +18,11 @@ NchantdOfficeImage:
               2: {"action": "", "type": ""}
               3: {"action": "", "type": ""}
               4: {"action": "", "type": ""}
-#      300:
-#          title: Palette
-#          items:
-#              0: {"action": "", "type": ""}
-#      400:
-#          title: Nchantd Image Quickstart
-#          items:
-#              0: {"action": "", "type": ""}
+      300:
+          title: Palette
+          items:
+              0: {"action": "", "type": ""}
+      400:
+          title: Nchantd Image Quickstart
+          items:
+              0: {"action": "", "type": ""}

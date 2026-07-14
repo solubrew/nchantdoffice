@@ -393,7 +393,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """"""
         # TODO implement method
 
-    def get_sample_data(self):
+    def get_sample_data(self, data_source):
         """"""
         # TODO implement method
 

@@ -611,6 +611,10 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """"""
         # TODO implement method
 
+    def get_image_width(self):
+        """"""
+        #TODO implement method
+
     def init_drawer_image_tools(self):
         """"""
         items = self.toolbox_config[200].get("items", {})

@@ -410,7 +410,7 @@ class NchantdEventRecursionEditPane(NchantdPane):
         cfg = {"handler": self.cmd_end_datetime_changed, "value": self.get_end_datetime()}
         self.end_date_select = NchantdDateTimeSelect(self, cfg).initWidget()
         layout.addWidget(self.end_date_select)
-        cfg = {"label": "End after:", "handler": self.cmd_end_after_changed, self.get_end_after()}
+        cfg = {"label": "End after:", "handler": self.cmd_end_after_changed, "value": self.get_end_after()}
         self.end_multiples_set = NchantdLabeledSpinBox(self, cfg).initWidget()
         layout.addWidget(self.end_multiples_set)
         cfg = {"handler": self.cmd_accept_buttons}
@@ -626,9 +626,13 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         cnt += 1
         return items
 
+    def cmd_create_new_event(self, event=None, *args, **kwargs):
+        """"""
+        #TODO: implement method
+
     def cmd_event_datetime_change(self):
         """"""
-        TODO: implement method
+        #TODO: implement method
 
     def init_drawer_event_config(self):
         """"""
@@ -646,7 +650,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         cfg = {
             "layout": "horizontal",
             "value": self.get_event_datetime_select_value(),
-            "handler": self.event_datettime_changed(),
+            "handler": self.cmd_event_datetime_change(),
         }
         self.date_select = NchantdDateTimeSelect(self, cfg)
         items[cnt]["widget"] = self.date_select
@@ -706,6 +710,10 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         self.event_tasks_pane = NchantdTasksListPane(self, cfg)
         items[cnt]["widget"] = self.event_tasks_pane
         return items
+
+    def cmd_event_datetime_change(self):
+        """"""
+        #TODO implement method
 
     def init_drawer_external_calendar_config(self):
         """"""

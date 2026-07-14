@@ -34,6 +34,7 @@ from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
+from nchantrs.widgets.controls.checkboxes import NchantdCheckboxWidget
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.libraries.pyqt import QTimer
 from nchantrs.libraries import pyqt
