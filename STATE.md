@@ -8,7 +8,7 @@
 - **Location**: `/home/solubrew/.orinbai/workspace/projects/nchantdoffice`
 - **Branch**: `gamma` (per CODING_STANDARDS Git workflow)
 - **Version**: 0.0.1.0.1.5 (working — pending release)
-- **HEAD**: `a01714c` — "fix: rename self.parent to self.parent_widget to avoid shadowing Qt.parent() method"
+- **HEAD**: `993372a` — "Merge remote-tracking branch 'origin/gamma' into gamma"
 
 ---
 

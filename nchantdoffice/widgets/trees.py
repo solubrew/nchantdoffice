@@ -117,7 +117,12 @@ class NchantdOfficeApplicationTree(NchantdWidget):
                 item = items[0]
                 # Get document from tree item
                 doc = item.data(0, pyqt.Qt.UserRole) if hasattr(item, "data") else None
-                if doc and isinstance(doc, NchantdOfficeDocument):
+                # [H32 2026-07-13] Safe None check: UserRole stores the node dict
+                # (or a pandas Series from df.iterrows()), NOT a NchantdOfficeDocument.
+                # The truthy `if doc` short-circuit raised ValueError on Series.
+                # Documents are looked up via the tree model elsewhere; this signal
+                # path won't emit from UserRole, but no longer crashes.
+                if doc is not None and isinstance(doc, NchantdOfficeDocument):
                     self.document_selected.emit(doc)
 
     def mousePressEvent(self, event):
