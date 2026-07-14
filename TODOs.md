@@ -1,12 +1,28 @@
 # NchantdOffice TODOs
 
-**Last Updated:** 2026-07-12
+**Last Updated:** 2026-07-13
 **Branch:** gamma
-**HEAD:** `c45cfc5` — "fix: H27/H29 - image save mode + drag-drop nid retrieval"
+**HEAD:** `a01714c` — "fix: rename self.parent to self.parent_widget to avoid shadowing Qt.parent() method"
 **Inline Markers:** 113 total — 63 NOTE, 50 TODO — across 27 files *(4 TODO in `widgets/items/items.py` resolved 2026-07-11)*
 **Priority: P0 = Critical/Blocking | P1 = High | P2 = Medium | P3 = Low**
 
 ---
+
+## Recent Activity (2026-07-13)
+
+| Commit | Description |
+|--------|-------------|
+| `a01714c` | fix: rename self.parent to self.parent_widget to avoid shadowing Qt.parent() method |
+| nchantrs `5afde9d` | fix H30: correct setData arg order (column, role, value) in initModel |
+| nchantrs `57839d2`+`be8a582` | fix H31: rename self.parent→self.parent_widget across all QTreeWidgetItem subclasses |
+
+## Recent Activity (2026-07-13)
+
+| Commit | Description |
+|--------|-------------|
+| `a01714c` | fix: rename self.parent to self.parent_widget to avoid shadowing Qt.parent() method |
+| nchantrs `5afde9d` | fix H30: correct setData arg order (column, role, value) in initModel |
+| nchantrs `57839d2`+`be8a582` | fix H31: rename self.parent→self.parent_widget across all QTreeWidgetItem subclasses |
 
 ## Recent Activity (2026-07-12)
 
@@ -32,11 +48,31 @@
 
 ---
 
-# Add TODOs:
-    - Journal entry needs to be made for each major activity this is a bigger development area defining "major" 
-        and integrating the writing entries in the journal 
+## New TODOs from Codebase Analysis (2026-07-13)
 
-    - 
+### F3 — Journal Entry Automation
+- **Severity:** P2
+- **Description:** Journal entry needs to be made for each major activity. This is a bigger development area defining "major" and integrating the writing entries in the journal.
+- **Related:** `nchantdoffice/wizards/wizards.py:62` — `add_journal_document()` intentionally NOT called
+- **Status:** TODO
+
+### M4 — `documents.py` Stub Methods (20+ `# TODO: implement method`)
+- **Severity:** P2
+- **Description:** 20+ methods in `nchantdoffice/widgets/documents/documents.py` are stubs with `# TODO: implement method`
+- **Count:** 20+ inline TODOs (lines 115, 120, 125, 130, 149, 154, 177, 182, 196, 201, 206, 216, 221, 311, 329, 338, 375, 415, 420, 425, 430, 530, 535, 540)
+- **Status:** TODO
+
+### M5 — `sketches.py` Stub Methods (28+ `# TODO: implement method`)
+- **Severity:** P2
+- **Description:** 28+ methods in `nchantdoffice/widgets/documents/media/sketches.py` are stubs with `# TODO: implement method`
+- **Count:** 28+ inline TODOs (lines 126–592)
+- **Status:** TODO
+
+### M6 — Filesystem Integrations (NOTE: needs implementation)
+- **Severity:** P3
+- **Description:** Multiple filesystem backends are stubbed: automation rules, Google Drive API, Dropbox API, storage config
+- **Related:** `nchantdoffice/widgets/documents/managers/filesystems.py` lines 106, 226, 703, 715, 788, 814
+- **Status:** TODO
 
 ---
 
@@ -76,6 +112,18 @@
 - **Symptom:** Dragging tree nodes no longer works; drop targets don't highlight; reordering fails silently
 - **Fix Applied:** Two-part fix — (1) `nchantrs/widgets/items/nodes.py` — `NchantdNode.initModel()` now stores the full node dict in `UserRole` for drag-drop, committed in nchantrs `fa05530`. (2) `nchantdoffice/widgets/trees.py` — `getNid()` now reads `nid_txt` from `UserRole` dict, committed in `c45cfc5`.
 - **Status:** ✅ **Completed** (2026-07-12) — root cause in nchantrs parent library
+
+### H30 — `setData()` Argument Order
+- **Severity:** P1
+- **Symptom:** `initModel()` stored role ID in column 0 instead of node dict in `UserRole`, silently breaking drag-drop data retrieval
+- **Fix Applied:** `nchantrs/widgets/items/nodes.py:380` — corrected `setData(0, Qt.UserRole, self.node)` arg order to `(column, role, value)`. Committed in nchantrs `5afde9d`.
+- **Status:** ✅ **Completed** (2026-07-13)
+
+### H31 — `self.parent` Shadowing `QTreeWidgetItem.parent()`
+- **Severity:** P1
+- **Symptom:** `TypeError: 'NchantdOfficeTreeNode' object is not callable` on drag-drop `_is_descendant()` checks
+- **Fix Applied:** Renamed `self.parent` → `self.parent_widget` across `NchantdOfficeDocumentCatalogItem`, `NchantdOfficeSourceCatalogItem`, `NchantdOfficeTreeNode` in `nchantdoffice/widgets/items/items.py`. Committed in `a01714c`.
+- **Status:** ✅ **Completed** (2026-07-13)
 
 ---
 
@@ -140,6 +188,10 @@
 | H27 | Nchantd Image Save Mode (external storage) | ✅ 2026-07-12 |
 | H28 | Browser Pin Tab persistence | ✅ 2026-07-11 |
 | H29 | Tree Node Drag-and-Drop Regression | ✅ 2026-07-12 |
+| H30 | `setData()` Argument Order | ✅ 2026-07-13 |
+| H31 | `self.parent` shadowing `Qt.parent()` | ✅ 2026-07-13 |
+| H30 | `setData()` Argument Order | ✅ 2026-07-13 |
+| H31 | `self.parent` shadowing `Qt.parent()` | ✅ 2026-07-13 |
 
 ---
 
@@ -159,4 +211,4 @@
 
 ---
 
-*This file is the live source of truth. Inline `# TODO` / `# NOTE` comments in source should be migrated here when addressed. Last auto-scan: 2026-07-12 — HEAD `c45cfc5`.*
+*This file is the live source of truth. Inline `# TODO` / `# NOTE` comments in source should be migrated here when addressed. Last auto-scan: 2026-07-13 — HEAD `a01714c`.*

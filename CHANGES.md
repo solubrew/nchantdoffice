@@ -18,7 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - `nchantdoffice/__init__.py` - Added version and config exports
-  to prevent shadowing `QTreeWidgetItem.parent()`
+- `nchantdoffice/widgets/items/items.py` - Renamed `self.parent` → `self.parent_widget`
+  across `NchantdOfficeDocumentCatalogItem`, `NchantdOfficeSourceCatalogItem`,
+  `NchantdOfficeTreeNode` to prevent shadowing `QTreeWidgetItem.parent()`
 
 ### Fixed
 - **H25 — Catalog Tab Wrong Child Count** (`nchantdoffice` consumer of `nchantrs fa05530`):
@@ -40,18 +42,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stores the full node dict in `UserRole` for drag-drop; (2) `nchantdoffice/widgets/trees.py`
   `getNid()` reads `nid_txt` from the `UserRole` dict. Drag-drop, drop targets,
   and reordering restored.
+- **H30 — `setData()` Argument Order** (`nchantrs commit 5afde9d`):
   `NchantdNode.initModel()` in `nchantrs/widgets/items/nodes.py:380` now calls
+  `self.setData(0, Qt.UserRole, self.node)` — the correct argument order is
   `(column, role, value)`. Previously the args were inverted, storing the role ID
   in column 0, which silently failed and produced empty `UserRole` data. This
   compounded with H29 to break drag-and-drop in nchantdoffice.
+- **H31 — `self.parent` Shadowing `QTreeWidgetItem.parent()`** (`commit a01714c`):
   `QTreeWidgetItem` subclasses in `nchantdoffice/widgets/items/items.py`
   (`NchantdOfficeDocumentCatalogItem`, `NchantdOfficeSourceCatalogItem`,
+  `NchantdOfficeTreeNode`) had `self.parent = parent` in their constructors, which
   shadowed Qt's built-in `parent()` method. This caused
   `TypeError: 'NchantdOfficeTreeNode' object is not callable` whenever Qt called
   `.parent()` on a tree item — most visibly in drag-and-drop `_is_descendant()`
+  checks. Renamed `self.parent` → `self.parent_widget` across all three classes.
+  nchantrs mirrored the rename across `NchantdItem`, `NchantdTreeItem`,
+  `NchantdTreeNode`, and `NchantdTree` (commits `57839d2` + `be8a582`).
 - Lambda antipattern in toolbar buttons (fixed variable capture)
 - Signal inheritance in NchantdNewDocumentToolBar
 - Incorrect super().__init__() calls in toolbar classes
+- 4 inline TODOs in `widgets/items/items.py` resolved (2026-07-11)
 
 ### Security
 - Added CI security scanning with bandit and safety
