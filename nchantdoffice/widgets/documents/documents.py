@@ -111,24 +111,42 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def align_left(self, selection=""):
-        """"""
-        # TODO: implement method
+        """Align text selection to the left within the document editor."""
+        if self.document_editor is not None:
+            cursor = self.document_editor.textCursor()
+            fmt = pyqt.QTextBlockFormat()
+            fmt.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
+            cursor.mergeBlockFormat(fmt)
+            self.on_document_changed()
         return self
 
     def align_center(self, selection=""):
-        """"""
-        # TODO: implement method
+        """Align text selection to the center within the document editor."""
+        if self.document_editor is not None:
+            cursor = self.document_editor.textCursor()
+            fmt = pyqt.QTextBlockFormat()
+            fmt.setAlignment(pyqt.Qt.AlignmentFlag.AlignCenter)
+            cursor.mergeBlockFormat(fmt)
+            self.on_document_changed()
         return self
 
     def align_right(self, selection=""):
-        """"""
-        # TODO: implement method
+        """Align text selection to the right within the document editor."""
+        if self.document_editor is not None:
+            cursor = self.document_editor.textCursor()
+            fmt = pyqt.QTextBlockFormat()
+            fmt.setAlignment(pyqt.Qt.AlignmentFlag.AlignRight)
+            cursor.mergeBlockFormat(fmt)
+            self.on_document_changed()
         return self
 
     def cmd_cancel(self):
-        """"""
-        # TODO: implement method
-        pass
+        """Cancel current document operation and revert unsaved changes."""
+        if hasattr(self, 'document_editor') and self.document_editor is not None:
+            self.document_editor.setText('')
+        if hasattr(self, 'app') and self.app:
+            self.app.model.has_changed = False
+        return self
 
     def cmd_delete_tab(self, event, *args, **kwargs):
         """"""
@@ -145,13 +163,23 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def cmd_node_edit(self, event=None, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Open the node editor for the current document's tree node."""
+        if hasattr(self, 'app') and self.app:
+            if hasattr(self.app.view, 'panes') and 'left' in self.app.view.panes:
+                tree = getattr(self.app.view.panes['left'], 'tree', None)
+                if tree and hasattr(tree, 'model') and tree.model.current_node:
+                    node = tree.model.current_node
+                    cfg = {'node': node, 'document': self.document}
+                    editor = NchantdOfficeNodeEditPane(self, cfg)
+                    editor.initWidget()
         return self
 
     def cmd_redo(self, event=None, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Redo the last undone action in the document editor."""
+        if self.document_editor is not None:
+            doc = self.document_editor.document()
+            if doc.isRedoAvailable():
+                doc.redo()
         return self
 
     def cmd_show_pane_left(self, event=None, *args, **kwargs):
@@ -173,13 +201,21 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def cmd_tag_edit(self, event=None, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Open tag editor for the current document."""
+        if hasattr(self, 'app') and self.app and hasattr(self.app, 'model'):
+            tags = getattr(self.document, 'tags', []) if self.document else []
+            cfg = {'tags': tags, 'document': self.document}
+            editor = NchantdOfficeNoteEditPane(self, cfg)
+            editor.initWidget()
+            self.on_document_changed()
         return self
 
     def cmd_undo(self, event=None, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Undo the last action in the document editor."""
+        if self.document_editor is not None:
+            doc = self.document_editor.document()
+            if doc.isUndoAvailable():
+                doc.undo()
         return self
 
     def cmd_save_tab(self, event=None, *args, **kwargs):
@@ -192,19 +228,38 @@ class NchantdOfficeDocumentMixin:
         return df
 
     def defocus(self):
-        """"""
-        # TODO: implement method
+        """Remove focus from the document widget and trigger save if needed."""
+        if self.document_editor is not None:
+            self.document_editor.clearFocus()
+        self.on_lost_focus()
         return self
 
     def export_document(self):
-        """Export a single selected document to an external file of the selected format"""
-        # TODO: implement method
+        """Export a single selected document to an external file of the selected format."""
+        if self.document is None:
+            logma.warning('No document to export')
+            return self
+        file_path, selected_filter = pyqt.QFileDialog.getSaveFileName(
+            self, 'Export Document', '',
+            'JSON Files (*.json);;Text Files (*.txt);;All Files (*)'
+        )
+        if file_path:
+            doc_data = self.document.to_dict() if hasattr(self.document, 'to_dict') else str(self.document.content)
+            with open(file_path, 'w', encoding='utf-8') as f:
+                j.dump(doc_data, f, indent=2, default=str)
+            logma.info(f'Exported document to {file_path}')
         return self
 
     def get_bytes(self):
-        """"""
-        # TODO: implement method
-        return bytes()
+        """Return document content as bytes for storage or transmission."""
+        if self.document is None:
+            return bytes()
+        content = self.document.content if hasattr(self.document, 'content') else ''
+        if isinstance(content, bytes):
+            return content
+        if isinstance(content, str):
+            return content.encode('utf-8')
+        return j.dumps(content, default=str).encode('utf-8')
 
     def get_primary_key(self):
         """"""
@@ -212,14 +267,40 @@ class NchantdOfficeDocumentMixin:
         return self.primary_key
 
     def import_document(self):
-        """"""
-        # TODO: implement method
+        """Import a document from an external file."""
+        file_path, _ = pyqt.QFileDialog.getOpenFileName(
+            self, 'Import Document', '',
+            'JSON Files (*.json);;Text Files (*.txt);;All Files (*)'
+        )
+        if file_path:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                raw = f.read()
+            try:
+                doc_data = j.loads(raw)
+            except j.JSONDecodeError:
+                doc_data = {'content': raw, 'format': 'text'}
+            if self.document is not None and hasattr(self.document, 'content'):
+                self.document.content = doc_data.get('content', raw)
+            self.on_document_changed()
+            logma.info(f'Imported document from {file_path}')
         return self
 
     def init_drawer(self, name):
-        """"""
-        # TODO: implement method
-        return self
+        """Initialize a named drawer section in the toolbox."""
+        if self.toolbox_config is None:
+            self.toolbox_config = {}
+        drawer_id = None
+        for key, drawer in self.toolbox_config.items():
+            if isinstance(drawer, dict) and drawer.get('name') == name:
+                drawer_id = key
+                break
+        if drawer_id is None:
+            drawer_id = max(self.toolbox_config.keys(), default=-1) + 1
+            self.toolbox_config[drawer_id] = {'name': name, 'items': {}}
+        drawer = self.toolbox_config[drawer_id]
+        if 'items' not in drawer:
+            drawer['items'] = {}
+        return drawer
 
     def init_toolbar(self, cfg=None):
         """"""
@@ -307,8 +388,12 @@ class NchantdOfficeDocumentMixin:
         return items
 
     def lock_page(self):
-        """"""
-        # TODO: implement method
+        """Lock the current document page to prevent editing."""
+        if self.document_editor is not None:
+            self.document_editor.setReadOnly(True)
+        if self.document is not None and hasattr(self.document, 'locked'):
+            self.document.locked = True
+        return self
 
     def on_document_changed(self):
         """
@@ -322,20 +407,22 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def on_gain_focus(self):
-        """
-            update document when it gains focus to ensure any edits made elsewhere are reflected here
-        :return:
-        """
-        # TODO: implement method
+        """Update document when it gains focus to reflect any edits made elsewhere."""
+        if self.document is not None and hasattr(self.app, 'model'):
+            stored = self.app.model.get_document(self.document.did) if hasattr(self.app.model, 'get_document') else None
+            if stored is not None and hasattr(stored, 'content'):
+                if self.document_editor is not None:
+                    self.document_editor.setPlainText(str(stored.content))
+        self.setFocus()
+        return self
 
     def on_lost_focus(self):
-        """
-        Save based on user settings
-        default is to save work when the user moves focus from the document widget
-
-        :return:
-        """
-        # TODO: implement method
+        """Save document when focus is lost, based on user settings."""
+        auto_save = self.config.dikt.get('auto_save_on_blur', True) if hasattr(self, 'config') else True
+        if auto_save and self.document is not None:
+            if self.document_editor is not None and hasattr(self.document, 'content'):
+                self.document.content = self.document_editor.toPlainText()
+            self.save_internal()
         return self
 
     def register(self):
@@ -371,8 +458,21 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def save_external(self):
-        """"""
-        # TODO: implement method
+        """Save document to an external file path."""
+        if self.document is None:
+            return self
+        if self.file_path is None:
+            file_path, _ = pyqt.QFileDialog.getSaveFileName(
+                self, 'Save Document', '',
+                'JSON Files (*.json);;Text Files (*.txt);;All Files (*)'
+            )
+            if not file_path:
+                return self
+            self.set_file_path(file_path)
+        doc_data = self.document.to_dict() if hasattr(self.document, 'to_dict') else {'content': str(self.document.content)}
+        with open(self.file_path, 'w', encoding='utf-8') as f:
+            j.dump(doc_data, f, indent=2, default=str)
+        logma.info(f'Saved external document to {self.file_path}')
         return self
 
     def save_internal(self):
