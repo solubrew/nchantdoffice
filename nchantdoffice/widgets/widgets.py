@@ -71,7 +71,9 @@ class NchantdOfficeTabSet(NchantdTabSet):
         """"""
         if cfg is None:
             cfg = {}
-        note = NchantdOfficeNote(self.app.main, cfg).initWidget()
+        #TODO BUG FIX: need to fix the Note object
+        #note = NchantdOfficeNote(self.app.main, cfg).initWidget()
+        note = NchantdOfficeNote(self, cfg).initWidget()
         self.app.view.panes["center"].model.current_tab.append_note(note)
         return self
 

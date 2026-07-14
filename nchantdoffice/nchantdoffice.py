@@ -120,10 +120,7 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeMainWindow"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeMainWindow").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -146,15 +143,6 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
         # self.parent.sigils.hide()
         super().hideEvent(event)
 
-
-# if __name__ == "__main__":
-#     start = dt.datetime.now()
-#     logma.info("Start")
-#     app = NchantdOfficeCloak
-#     wizard = NchantdOfficeApplicationStartupWizard
-#     nchantment("NchantdOffice", argv, app, None, wizard)
-#     end = dt.datetime.now()
-#     logma.info(f"End Duration {end - start}")
 
 # ====================================================================================================================||
 

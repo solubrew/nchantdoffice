@@ -241,7 +241,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
     def get_filter_option(self):
         """"""
         # TODO implement method
-        return self
+        return None
 
     def init_drawer_document_config(self):
         """"""
@@ -250,21 +250,35 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
 
-    def init_group_manager(self):
+    def init_drawer_contact_group_config(self):
         """"""
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
 
-    def init_contact_manager(self):
+    def init_drawer_contact_config(self):
         """"""
         items = self.toolbox_config[300].get("items", {})
         cnt = 0
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
 
-    # ========== CRUD Operations ==========
+    def init_drawer_quickstart(self):
+        """"""
+        items = self.toolbox_config[400].get("items", {})
+        cnt = 0
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+
+    def init_toolbox(self):
+        """"""
+        super().init_toolbox()
+        self.toolbox_config[100]["items"] = self.init_drawer_document_config()
+        self.toolbox_config[200]["items"] = self.init_drawer_contact_group_config()
+        self.toolbox_config[300]["items"] = self.init_drawer_contact_config()
+        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+        return self
 
     def load_contacts(self):
         """Load contacts from document/database"""

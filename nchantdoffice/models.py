@@ -38,7 +38,8 @@ from pyffice.pyffice import PyfficeCodex
 from subtrix.utilities import uuid
 from pycurity.pyhash import text_hashing_function, encode64
 from pycurity.pyhash import decode64
-from nchantdoffice.utilities.config import PyfficeApplicationConfig
+from nchantdoffice.utilities.config import PyfficeApplicationConfig, NchantdOfficeBrowserConfig
+from nchantrs.models.models import NchantdInstance
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -79,13 +80,20 @@ def web_url_label(url):
         return "New Tab"
 
 
-class NchantdOfficeInstance(object):
+class NchantdOfficeInstance(NchantdInstance):
     """"""
 
     def __init__(self, cfg=None):
         """"""
         super().__init__(cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeInstance").override(cfg))
+        self.browser = None
+        self.config_browser()
+
+    def config_browser(self, cfg=None):
+        """"""
+        cfg = cfg or {}
+        self.browser = NchantdOfficeBrowserConfig(self, cfg)
 
 
 class NchantdOfficeCloakModel(NchantdCloakModel):
@@ -101,7 +109,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.store = NchantdOfficeStore(name, self)
         self.codex = PyfficeCodex()
         cfg = {}
-        self.settings = PyfficeApplicationConfig(cfg)
+        self.settings = PyfficeApplicationConfig(cfg, self)
         cfg = {}
         self.mole = MicroMole(cfg)
         self.registered_documents = {}
@@ -1215,6 +1223,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # self.store.create_virtual_table() #TODO: relocat
         return self
 
+    def initialize_instance(self, instance_object=None):
+        """"""
+        if instance_object is None:
+            instance_object = NchantdOfficeInstance
+        super().initialize_instance(instance_object)
+
     def import_cherrytree(self, file_path):
         """Pyffice doesnt' have a native direct overlay document for cherrytree as it is distributed Scripts, etc within
         NchantdOffice"""
@@ -1480,6 +1494,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
     def store_instance(self, instance):
         """"""
         self.instance = instance
+        instance = instance.to_dict()
+
         self.store.store_app_instance(instance)
         return self
 

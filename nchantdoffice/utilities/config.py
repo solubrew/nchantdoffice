@@ -32,15 +32,30 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "config.yaml")
 
 
+class NchantdOfficeBrowserConfig(PyfficeConfig):
+    """"""
+
+    def __init__(self, cfg=None, parent=None):
+        """"""
+        super().__init__(cfg, parent)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeBrowserConfig").override(cfg))
+        self.home_page = self.config.get("home_page", "https://www.nchantdoffice.com")
+
+    def get_home_page(self):
+        """"""
+
+
 class PyfficeApplicationConfig(PyfficeConfig):
     """"""
 
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None, parent=None):
         """"""
-        super().__init__(cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("PyfficeApplicationConfig")).override(cfg)
+        super().__init__(cfg, parent)
+        self.app = self.parent.app
+        self.config.override(kahndor.Instruct(pxcfg).select("PyfficeApplicationConfig").override(cfg))
         self.interface_settings = None
         self.account_settings = None
+        self.browser_settings = None
         self.security_settings = None
         self.journal_settings = None
         self.storage_settings = None
@@ -55,6 +70,7 @@ class PyfficeApplicationConfig(PyfficeConfig):
         super().load_document(document)
         self.set_interface_settings(document.get("interface_settings", {}))
         self.set_account_settings(document.get("account_settings", {}))
+        self.set_account_settings(document.get("browser_settings", {}))
         self.set_security_settings(document.get("security_settings", {}))
         self.set_journal_settings(document.get("journal_settings", {}))
         self.set_storage_settings(document.get("storage_settings", {}))

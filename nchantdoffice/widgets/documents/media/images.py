@@ -481,7 +481,6 @@ class NchantdOfficeImage(NchantdOfficeDocument):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__("Nchantd Image", parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeImage").override(cfg))
 
     def initModel(self):
@@ -613,7 +612,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
     def get_image_width(self):
         """"""
-        #TODO implement method
+        # TODO implement method
 
     def init_drawer_image_tools(self):
         """"""
@@ -731,8 +730,8 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
         if self.document.location == "external":
             # Ensure file_path is set
-            if self.document.file_path is None:
-                raise Exception("External save mode requires file_path to be set")
+            # if self.document.file_path is None:
+            #    raise Exception("External save mode requires file_path to be set")
             # For round-trip consistency, store the current path in content metadata
             content = self.document.content if self.document.content else {}
             if isinstance(content, dict):

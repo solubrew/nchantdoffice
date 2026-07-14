@@ -36,6 +36,7 @@ from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.tables.lists import NchantdListWidget
 from nchantrs.widgets.browsers.profiles import NchantdWebProfile
 
+
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
@@ -94,6 +95,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
         self.library = self.document.library
         self.profiles = self.document.profile_manager
+        self.get_current_profile()
         return self
 
     def initView(self, cfg=None):
@@ -360,8 +362,8 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def get_current_default_browser(self):
         """"""
-        # TODO: implement method
-        return self
+        # TODO: get information from application config...is this configurable by instance?
+        return True
 
     def get_current_domain(self):
         """"""
@@ -374,9 +376,11 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def get_current_home_page(self, home_page=None):
         """"""
-        # home_page = self.document.home_url
         if home_page is None:
-            home_page = self.config.dikt.get("default_home_page", "duckduckgo.com")
+            logma.info(f"Instance {self.app.model.instance}")
+            home_page = self.app.model.instance.browser.home_page
+        if home_page is None:
+            home_page = self.config.dikt.get("default_home_page", "https://www.duckduckgo.com")
         return home_page
 
     def get_current_profile(self, cfg=None):
@@ -439,13 +443,26 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {
-            "text": "Set as Default Browser",
+            "text": "Is Default Browser",
             "handler": self.cmd_set_default_browser,
             "value": self.get_current_default_browser(),
-            "size": [300, "auto"],
+            "size": ["auto", "auto"],
         }
         self.default_browser_checkbox = NchantdCheckboxWidget(self, cfg)
         items[cnt]["widget"] = self.default_browser_checkbox
+        cnt += 1
+        # Home Page & Search Section
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
+        cfg = {
+            "label": "Home Page",
+            "layout": "horizontal",
+            "handler": self.cmd_set_home_page,
+            "value": self.get_current_home_page(),
+            "size": ["auto", "auto"],
+        }
+        self.default_home_page_entry = NchantdLabeledEntry(self, cfg)
+        items[cnt]["widget"] = self.default_home_page_entry
         cnt += 1
         # Privacy Controls Section
         if cnt not in items:
@@ -503,20 +520,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         }
         self.browsing_history_policy_spinbox = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.browsing_history_policy_spinbox
-        cnt += 1
-        # Home Page & Search Section
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "label": "Home Page",
-            "layout": "horizontal",
-            "handler": self.cmd_set_home_page,
-            "value": self.get_current_home_page(),
-            "options": self.get_search_engines(),
-            "size": None,
-        }
-        self.default_home_page_entry = NchantdDropDown(self, cfg)
-        items[cnt]["widget"] = self.default_home_page_entry
         cnt += 1
         return items
 
@@ -591,17 +594,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.whois = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.whois
         cnt += 1
-        # use this as a basis to build up a interface for 2FDNS
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {"text": "2FDNS"}
-        items[cnt]["widget"] = NchantdLabel(self, cfg)
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {"text": "Site Settings"}
-        items[cnt]["widget"] = NchantdLabel(self, cfg)
-        cnt += 1
         return items
 
     def init_drawer_form_control(self):
@@ -610,23 +602,25 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         cnt = 0
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        options = self.app.model.get_profiles()
-        if self.app.model.user and self.app.model.user.user_name not in options:
-            cfg = {}
-            self.add_profile(self.app.model.user.user_name, cfg)
-        if not getattr(self.app.model.user, "has_pro", False) if self.app.model.user else False:
-            options += ["Get Pro"]
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        self.current_profile = self.get_current_profile()
-        cfg = {
-            "label": "Select Profile",
-            "layout": "horizontal",
-            "options": options,
-            "handler": self.cmd_profile_change,
-            "value": self.current_profile.name,
-        }
-        self.profile_select = NchantdDropDown(self, cfg)
+        if not getattr(self.app.model.user, "has_pro", False) if self.app.model.user else False:
+            cfg = {"text": "Get Pro"}
+            self.profile_select = NchantdButtonWidget(self, cfg).initWidget()
+        else:
+            options = self.app.model.get_profiles()
+            if self.app.model.user and self.app.model.user.user_name not in options:
+                cfg = {}
+                self.add_profile(self.app.model.user.user_name, cfg)
+            self.current_profile = self.get_current_profile()
+            cfg = {
+                "label": "Select Profile",
+                "layout": "horizontal",
+                "options": options,
+                "handler": self.cmd_profile_change,
+                "value": self.current_profile.name,
+            }
+            self.profile_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.profile_select
         cnt += 1
         if cnt not in items:
@@ -816,6 +810,8 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {"text": "Bookmarks List"}
+        # TODO: build out using quick app links like a mini catalog
+        #
         self.quick_start_list = NchantdListWidget(self, cfg)
         items[cnt]["widget"] = self.quick_start_list
         cnt += 1
@@ -827,11 +823,13 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.toolbox_config[100]["items"] = self.init_drawer_url_inspection()
         self.toolbox_config[200]["items"] = self.init_drawer_browser_config()
         self.toolbox_config[300]["items"] = self.init_drawer_form_control()
-        self.toolbox_config[400]["items"] = self.init_drawer_source_inspection()
+        # PUSH until 0.0.3
+        # self.toolbox_config[400]["items"] = self.init_drawer_source_inspection()
         self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
     def open_new_tab(self):
         """"""
+        # TODO implement method
         return self
 
     def open_new_window(self, url):
@@ -890,16 +888,10 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     def save(self):
         """"""
         logma.info(f"Save Browser Profile")
-        # url = self.browser.url_select_entry.combobox.lineEdit().text().strip()
-        # if url == "about:blank":
-        #    url = None
-        # logma.info(f"URL: {url}")
-        # self.document.set_url_active(url)
         self.document.save()
         # H28 FIX: Check self.pinned instead of self.pin
         if self.pinned:
             return self
-        # self.document.set_url_active(self.active_url.url)
         content = self.document.active_page.to_dict()
         logma.info(f"Content: {content}")
         if content != self.document.content:
@@ -945,67 +937,110 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def set_profile_user_name_entry(self, name):
         """"""
+        # TODO implement method
         return self
 
     def set_profile_first_name_entry(self, name):
         """"""
+        # TODO implement method
         return self
 
     def set_profile_last_name_entry(self, name):
         """"""
+        # TODO implement method
         return self
 
     def set_profile_middle_name_entry(self, name):
         """"""
+        # TODO implement method
         return self
 
     def set_profile_postal_address_entry(self, address):
         """"""
+        # TODO implement method
         return self
 
     def set_profile_city_address_entry(self, address):
         """"""
+        # TODO implement method
         return self
 
     def set_profile_state_address_entry(self, address):
         """"""
+        # TODO implement method
         return self
 
     def set_profile_email_entry(self, email):
         """"""
+        # TODO implement method
+        return self
+
+    def set_profile_phone_entry(self, phone):
+        """"""
+        # TODO implement method
+        return self
+
+    def set_profile_second_phone_entry(self, phone):
+        """"""
+        # TODO implement method
+        return self
+
+    def set_profile_company_entry(self, entry):
+        """"""
+        # TODO implement method
+        return self
+
+    def set_profile_company_email_entry(self, email):
+        """"""
+        # TODO implement method
+        return self
+
+    def set_profile_company_phone_entry(self, phone):
+        """"""
+        # TODO implement method
+        phone = "1-800-check-it-out"
+        self.company_phone_entry.setText(phone)
+        return self
+
+    def set_profile_company_address_entry(self, address):
+        """"""
+        # TODO implement method
         return self
 
     def set_profile_zip_code_entry(self, zipcode):
         """"""
+        # TODO implement method
         return self
 
     def store_profile(self):
         """"""
+        # TODO implement method
         return self
 
     def update_profile(self, profile_name):
         """"""
+        # TODO implement method
         return self
 
     def update_toolbox_form_control(self):
         """"""
         profile = self.get_profile(self.profile_select.combobox.lineEdit().text().strip())
         self.set_profile(profile)
-        # self.set_profile_user_name_entry(self.profile.user_name)
-        # self.set_profile_first_name_entry(self.profile.first_name)
-        # self.set_profile_middle_name_entry(self.profile.middle_name)
-        # self.set_profile_last_name_entry(self.profile.last_name)
-        # self.set_profile_email_entry(self.profile.email)
-        # self.set_profile_postal_address_entry(self.profile.address)
-        # self.set_profile_city_address_entry(self.profile.city_address)
-        # self.set_profile_state_address_entry(self.profile.state_address)
-        # self.set_profile_zip_code_entry(self.profile.zip_code)
-        # self.set_profile_phone_entry(self.profile.phone)
-        # self.set_profile_second_phone_entry(self.profile.second_phone)
-        # self.set_profile_company_entry(self.profile.company_name)
-        # self.set_profile_company_email_entry(self.profile.company_email)
-        # self.set_profile_company_phone_entry(self.profile.company_phone)
-        # self.set_profile_company_address_entry(self.profile.company_address)
+        self.set_profile_user_name_entry(self.profile.user_name)
+        self.set_profile_first_name_entry(self.profile.first_name)
+        self.set_profile_middle_name_entry(self.profile.middle_name)
+        self.set_profile_last_name_entry(self.profile.last_name)
+        self.set_profile_email_entry(self.profile.email)
+        self.set_profile_postal_address_entry(self.profile.address)
+        self.set_profile_city_address_entry(self.profile.city_address)
+        self.set_profile_state_address_entry(self.profile.state_address)
+        self.set_profile_zip_code_entry(self.profile.zip_code)
+        self.set_profile_phone_entry(self.profile.phone)
+        self.set_profile_second_phone_entry(self.profile.second_phone)
+        self.set_profile_company_entry(self.profile.company_name)
+        self.set_profile_company_email_entry(self.profile.company_email)
+        self.set_profile_company_phone_entry(self.profile.company_phone)
+        self.set_profile_company_address_entry(self.profile.company_address)
         return self
 
     def update_toolbox_url_inspection(self):
@@ -1023,10 +1058,6 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        # FIX (critical): pass `parent` to Qt base, not `self` (self-as-parent produces an
-        # orphan widget chain — parent() returns None, lifecycle/cleanup walking breaks).
-        # ORIGINAL (commented for traceability):
-        #     super().__init__(self)
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSlimTabSearch").override(cfg))
 
@@ -1212,9 +1243,9 @@ class NchantdOfficeWebProfile(NchantdWebProfile):
         self.contact.city_name = self.contact.address.city_name
         self.contact.state_name = self.contact.address.state_name
         self.contact.zip_code = self.contact.address.zip_code
+        self.contact.secondary_phone = None  # self.contact.phones[0:1]
+        self.contact.emergency_phone = None  # self.contact.phones[0]#TODO implement data sourcing
 
-        self.contact.secondary_phone = None #self.contact.phones[0:1]
-        self.contact.emergency_phone = None #self.contact.phones[0]#TODO implement data sourcing
 
 # ====================================================================================================================||
 

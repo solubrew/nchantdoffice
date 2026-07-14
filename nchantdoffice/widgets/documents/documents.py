@@ -329,7 +329,7 @@ class NchantdOfficeDocumentMixin:
                 "layout": "horizontal",
                 "size": [10, 20],
                 "drop_down": {"size": [100, 20]},
-                "options": ["default"],
+                "options": ["default",],
             }
             self.profile_select_entry = NchantdDropDown(self, cfg).initWidget()
             buttons[1] = {"name": "get_pro", "widget": self.profile_select_entry}
