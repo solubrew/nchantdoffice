@@ -19,19 +19,25 @@ import subprocess
 import threading
 
 # ======================================3rd Party Library Modules=====================================================||
+from pygments import highlight
+from pygments.lexers import PythonLexer, JavaLexer, JavascriptLexer, CLexer
+from pygments.lexers import JsonLexer, YamlLexer, CssLexer, IniLexer
+from pygments.lexers.c_cpp import CppLexer
+from pygments.lexers.dotnet import CSharpLexer
+from pygments.lexers.ruby import RubyLexer
+from pygments.formatters import HtmlFormatter
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
 from kahndor.logma import Logma
-
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
-from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.libraries.pyqt import QTimer
 from nchantrs.libraries import pyqt
+from pycurity.pysan import Sanitized
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -547,6 +553,26 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"Error getting kernel info: {e}")
             return None
+
+    def get_kernel(self):
+        """"""
+        # TODO implement method
+
+    def get_server_port(self):
+        """"""
+        # TODO implement method
+
+    def get_config_autostart_server(self):
+        """"""
+        # TODO implement method
+
+    def cmd_cell_type_change(self):
+        """"""
+        # TODO implement method
+
+    def get_cell_type(self):
+        """"""
+        # TODO implement method
 
     def get_completions(self, code, cursor_pos):
         """Get code completions at cursor position

@@ -194,6 +194,81 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
         self.initView()
         return self
 
+    def get_border_color(self):
+        """"""
+        # TODO: implement method
+        return
+
+    def get_border_style(self):
+        """"""
+        # TODO: implement method
+        return
+
+    def get_border_thickness(self):
+        """"""
+        # TODO: implement method
+        return
+
+    def cmd_top_border_style_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_top_border_thickness_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_top_border_color_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_left_border_style_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_left_border_thickness_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_left_border_color_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_right_border_style_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_right_border_thickness_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_right_border_color_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_bottom_border_style_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_bottom_border_thickness_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_bottom_border_color_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return
+
     def get_border_styles(self):
         """"""
         options = ["Solid", "Dashed", "Dotted", "Double"]
@@ -334,6 +409,10 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                             item.setForeground(pyqt.QColor(color))
         return self
 
+    def get_dataview(self):
+        """"""
+        # TODO implement method
+
     def apply_default_background_color(self, color):
         """Apply background color to all cells"""
         if self.table and color:
@@ -440,6 +519,51 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             item = self.table.item(index.row(), index.column())
             if item:
                 item.setText("")
+
+    def cmd_formula_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return
+
+    def get_formula(self, event=None, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return
+
+    def get_dataset(self, event=None, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return
+
+    def get_dataveiw(self, event=None, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return
+
+    def get_border_color(self):
+        """"""
+        # TODO: implement method
+        return
+
+    def get_border_style(self):
+        """"""
+        # TODO: implement method
+        return
+
+    def get_border_thickness(self):
+        """"""
+        # TODO: implement method
+        return
+
+    def cmd_dataset_select_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return
+
+    def cmd_dataview_select_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO: implement method
+        return
 
     def cmd_auto_calculate(self, event, *args, **kwargs):
         """Enable or disable automatic formula calculation"""
@@ -1025,6 +1149,66 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         """"""
         return ["Blank", "Loan Calculator"]
 
+    def get_template(self):
+        """"""
+        # TODO implement method
+
+    def get_row_count(self):
+        """"""
+        # TODO implement method
+
+    def get_row_height(self):
+        """"""
+        # TODO implement method
+
+    def get_column_count(self):
+        """"""
+        # TODO implement method
+
+    def get_column_width(self):
+        """"""
+        # TODO implement method
+
+    def get_compatability(self):
+        """"""
+        # TODO implement method
+
+    def get_config_autocalculate(self):
+        """"""
+        # TODO implement method
+
+    def cmd_autocalculate_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO implement method
+
+    def cmd_formula_select_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO implement method
+
+    def cmd_active_cell_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO implement method
+
+    def cmd_document_compatability_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO implement method
+
+    def get_document_compatability(self, event=None, *args, **kwargs):
+        """"""
+        # TODO implement method
+
+    def get_active_cell(self, event=None, *args, **kwargs):
+        """"""
+        # TODO implement method
+
+    def get_selected_cell(self, event=None, *args, **kwargs):
+        """"""
+        # TODO implement method
+
+    def selected_cell_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO implement method
+
     def init_drawer_document_config(self):
         """"""
         items = self.toolbox_config[100].get("items", {})
@@ -1153,7 +1337,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cfg = {
             "text": "Set Formulas to Auto-Calculate",
             "size": ["auto", "auto"],
-            "value": self.get_config_autocalcualte(),
+            "value": self.get_config_autocalculate(),
             "handler": self.cmd_autocalculate_change,
         }
         self.autocalculate_checkbox = NchantdCheckboxGroup(self, cfg)
@@ -1166,12 +1350,15 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "layout": "horizontal",
             "options": self.get_formulas(),
             "handler": self.cmd_formula_select_change,
-            "value": self.get_formula()
+            "value": self.get_formula(),
         }
         self.formula_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.formula_select
         cnt += 1
         return items
+
+    def _setup_sheet_tabs(self):
+        """"""
 
     def init_drawer_cell_config(self):
         """"""
@@ -1183,7 +1370,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "label": "Active Cell: ",
             "layout": "horizontal",
             "handler": self.cmd_active_cell_change,
-            "value": self.get_active_cell()
+            "value": self.get_active_cell(),
         }  # NOTE readonly and fill in data
         self.selected_cell_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.selected_cell_entry
@@ -1204,7 +1391,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "label": "Selected Text: ",
             "layout": "horizontal",
             "handler": self.selected_cell_change,
-            "value": self.get_selected_cell()
+            "value": self.get_selected_cell(),
         }  # NOTE readonly and fill in data
         self.selected_cell_text_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.selected_cell_text_entry
@@ -1252,7 +1439,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                     "layout": "horizontal",
                     "size": ["auto", "auto"],
                 }
-            ]
+            ],
             "handler": self.cmd_document_compatability_change,
             "value": self.get_document_compatability(),
         }

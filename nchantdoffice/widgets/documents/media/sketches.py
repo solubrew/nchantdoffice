@@ -1174,6 +1174,19 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         items[cnt]["widget"] = self.layers_select
         return items
 
+    def cmd_canvas_size_change(self):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_layer_change(self):
+        """"""
+        # TODO implement method
+
+    def get_canvas_layer(self):
+        """"""
+        # TODO implement method
+
     def init_sketch_tools(self):
         """"""
         items = self.toolbox_config[200].get("items", {})

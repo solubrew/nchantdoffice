@@ -15,9 +15,7 @@
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, exists
 import json as j
-import html
 from bs4 import BeautifulSoup
-import re
 
 # ======================================3rd Party Library Modules=====================================================||
 from pygments import highlight
@@ -181,6 +179,26 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.initView()
         return self
 
+    def cmd_top_margin_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return self
+
+    def cmd_left_margin_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return self
+
+    def cmd_right_margin_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return self
+
+    def cmd_bottom_margin_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return self
+
     def cmd_add_chart(self, event, *args, **kwargs):
         """"""
         # TODO implement method
@@ -309,6 +327,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         else:
             logma.info(f"Total images extracted: {image_count}")
 
+    def get_text_background_color_options(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return self
+
     def get_compatability_selected(self):
         """"""
         compat = "Word"
@@ -366,11 +389,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         """
         styles = ["Arial", "San Serif"]
         return styles
-
-    def get_text_background_color_options(self):
-        """"""
-        colors = ["White", "Black"]
-        return colors
 
     def get_text_background_color_selected(self):
         """"""
@@ -634,39 +652,34 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.toolbox_config[300]["items"] = self.init_drawer_object_config()
         self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
-    def insert_image(self):
-        """
-        depnding on the document type this will be slightly different but should be allowed in most documents
-        :return:
-        """
-        return self
-
     def insert_chart(self):
         """"""
+        # TODO implement method
         return self
 
     def insert_shape(self):
         """"""
+        # TODO implement method
         return self
 
     def insert_symbol(self):
         """"""
+        # TODO implement method
         return self
 
     def insert_table(self):
         """"""
-        return self
-
-    def insert_chart(self):
-        """"""
+        # TODO implement method
         return self
 
     def insert_code(self):
         """"""
+        # TODO implement method
         return self
 
     def insert_document(self):
         """"""
+        # TODO implement method
         return self
 
     def insert_image(self):
@@ -683,18 +696,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             image_format.setName(path)
             image_format.setWidth(200)  # Set a default width for the image
             cursor.insertImage(image_format)
-        return self
-
-    def insert_shape(self):
-        """"""
-        return self
-
-    def insert_symbol(self):
-        """"""
-        return self
-
-    def insert_table(self):
-        """"""
         return self
 
     def onEnterEvent(self):

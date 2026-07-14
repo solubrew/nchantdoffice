@@ -204,13 +204,23 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
             items[cnt] = default_action
-        cfg = {"label": "Current Format: ", "layout": "horizontal"}
+        cfg = {
+            "label": "Current Format: ",
+            "layout": "horizontal",
+            "handler": self.cmd_image_format_change,
+            "value": self.get_image_format(),
+        }
         self.image_format_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.image_format_entry
         cnt += 1
         if cnt not in items:
             items[cnt] = default_action
-        cfg = {"label": "Convert Format", "layout": "horizontal"}
+        cfg = {
+            "label": "Convert Format",
+            "layout": "horizontal",
+            "handler": self.cmd_image_convert_change,
+            "value": self.get_image_convert(),
+        }
         self.image_conversion_select = NchantdDropDownActivator(self, cfg)
         items[cnt]["widget"] = self.image_conversion_select
         cnt += 1
@@ -243,7 +253,23 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
         self.toolbox_config[200]["items"] = self.init_drawer_document_tools()
-        # self.toolbox_config[300]["items"] = self.init_drawer_quickstart()
+        self.toolbox_config[300]["items"] = self.init_drawer_quickstart()
+
+    def cmd_image_format_change(self):
+        """"""
+        # TODO implement method
+
+    def cmd_image_convert_change(self):
+        """"""
+        # TODO implement method
+
+    def get_image_format(self):
+        """"""
+        # TODO implement method
+
+    def get_image_convert(self):
+        """"""
+        # TODO implement method
 
     def open_file(self, file=None):
         """"""
