@@ -482,22 +482,36 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def save_as(self, name, path=None):
-        """"""
-        if self.parent:
-            logma.warning(f"Save As method not usable if document has a parent")
-            raise NotImplementedError
+        """Create a copy of the document under a new name and optional path."""
+        if self.document is None:
+            logma.warning('save_as called with no document')
+            return self
         if path is None:
-            path = self.path
-        self.path = join(path, name)
-        self.save()
+            path = dirname(self.path) if self.path else getattr(self.app, 'base_path', '')
+        target_path = join(path, name)
+        doc_dict = self.document.to_dict() if hasattr(self.document, 'to_dict') else {'content': str(self.document)}
+        doc_dict['path'] = target_path
+        if hasattr(self.app, 'model') and hasattr(self.app.model, 'store_document'):
+            self.app.model.store_document(doc_dict)
+        logma.info(f'Document saved as {target_path}')
+        self.path = target_path
         return self
 
     def save_copy_as(self, name, path=None):
-        """"""
-        if self.parent:
-            logma.warning(f"Save Copy As method not usable if document has a parent")
-            raise NotImplementedError
-        self.save_as(name, path)
+        """Create a copy of the document without changing the current document state."""
+        if self.document is None:
+            logma.warning('save_copy_as called with no document')
+            return self
+        if path is None:
+            path = dirname(self.path) if self.path else getattr(self.app, 'base_path', '')
+        target_path = join(path, name)
+        doc_dict = self.document.to_dict() if hasattr(self.document, 'to_dict') else {'content': str(self.document)}
+        doc_dict['path'] = target_path
+        doc_dict['did'] = None
+        doc_dict.pop('uuid', None)
+        if hasattr(self.app, 'model') and hasattr(self.app.model, 'store_document'):
+            self.app.model.store_document(doc_dict)
+        logma.info(f'Document copy saved as {target_path}')
         return self
 
     def set_file_path(self, path):
@@ -511,23 +525,56 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def take_snapshot(self):
-        """"""
-        # TODO: implement method
+        """Capture a versioned snapshot of the current document state for undo/rollback."""
+        if self.document is None:
+            logma.warning('take_snapshot called with no document')
+            return self
+        snapshot = deepcopy(self.document)
+        # Prefer the store's snapshot API if available; fall back to a per-document list
+        store = getattr(getattr(self.app, 'model', None), 'store', None)
+        if store is not None and hasattr(store, 'snapshot_document'):
+            store.snapshot_document(self.document.did, snapshot)
+        else:
+            if not hasattr(self.document, 'snapshots'):
+                self.document.snapshots = []
+            self.document.snapshots.append(snapshot)
+        logma.info(f'Snapshot taken for document {getattr(self.document, "did", None)}')
         return self
 
     def unlock_page(self):
-        """"""
-        # TODO: implement method
+        """Unlock the current document page to allow editing."""
+        if self.document_editor is not None:
+            self.document_editor.setReadOnly(False)
+        if self.document is not None and hasattr(self.document, 'locked'):
+            self.document.locked = False
         return self
 
     def update_document(self):
-        """"""
-        # TODO: implement method
+        """Refresh the current document state from the underlying store."""
+        if self.document is None or not hasattr(self.document, 'did'):
+            return self
+        if not hasattr(self.app, 'model'):
+            return self
+        stored = self.app.model.get_document(self.document.did) if hasattr(self.app.model, 'get_document') else None
+        if stored is None:
+            return self
+        if self.document_editor is not None and hasattr(stored, 'content'):
+            self.document_editor.setPlainText(str(stored.content))
+        if hasattr(stored, 'to_dict'):
+            for key, value in stored.to_dict().items():
+                if hasattr(self.document, key) and key not in ('did', 'uuid'):
+                    setattr(self.document, key, value)
         return self
 
     def update_document_page(self, page_num):
-        """"""
-        # TODO: implement method
+        """Update display/state for a specific document page.
+        NOTE: this codebase currently uses a single-page editor; multi-page support
+        is a future feature. For page_num == 0 (current), we refresh from store; for
+        any other page_num we log a warning until multi-page support lands.
+        """
+        if page_num == 0:
+            return self.update_document()
+        logma.warning(f'update_document_page({page_num}) called but multi-page support is not implemented')
         return self
 
     def _store_document(self):
@@ -626,18 +673,35 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         return self
 
     def open(self):
-        """"""
-        # TODO: implement method
+        """Open the document for editing. If no document is set, attempt to load from the current node."""
+        if self.document is None and hasattr(self, 'app') and hasattr(self.app, 'view'):
+            tree = getattr(self.app.view.panes.get('left', {}), 'tree', None)
+            if tree and hasattr(tree, 'model') and tree.model.current_node:
+                node = tree.model.current_node
+                if hasattr(node, 'document') and node.document is not None:
+                    self.set_document(node.document)
+                    if self.document_editor is not None and hasattr(self.document, 'content'):
+                        self.document_editor.setPlainText(str(self.document.content))
         return self
 
     def open_local(self):
-        """"""
-        # TODO: implement method
-        return self
+        """Trigger the local file open dialog."""
+        return self.cmd_open_local_file()
 
     def open_remote(self):
-        """"""
-        # TODO: implement method
+        """Open a document from a remote source URL."""
+        if not hasattr(self.app, 'model') or not hasattr(self.app.model, 'open_remote'):
+            logma.warning('open_remote not available on this model')
+            return self
+        try:
+            doc = self.app.model.open_remote()
+            if doc is not None:
+                self.set_document(doc)
+                if self.document_editor is not None and hasattr(doc, 'content'):
+                    self.document_editor.setPlainText(str(doc.content))
+                logma.info(f'Remote document opened: {getattr(doc, "did", "unknown")}')
+        except Exception as e:
+            logma.error(f'Failed to open remote document: {e}')
         return self
 
     def save(self):
