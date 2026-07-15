@@ -44,12 +44,8 @@ class NchantdNewFormItemPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("Nchantd")
-        if self.parent:
-            self.config.override(parent.config)
-        super().__init__(self)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewFormItemPane").override(cfg))
         self.compatibility = None
 
     def initModel(self):
@@ -126,7 +122,6 @@ class NchantdNewFormItemPane(NchantdPane):
         cfg = {}
         self.accept_button_group = NchantdAcceptButtons(self, cfg).initWidget()
         self.right_side_layout.addWidget(self.accept_button_group)
-
         #        self.right_side_layout.addStretch(1)
         self.right_side_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignRight | pyqt.Qt.AlignmentFlag.AlignBottom)
         return self
@@ -139,55 +134,69 @@ class NchantdNewFormItemPane(NchantdPane):
 
     def cmd_on_change_form_description(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_on_change_query_text(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_on_click_text_response(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_click_date_response(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_click_time_response(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_click_dateteime_response(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_click_hidden_response(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_click_table_response(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_click_number_response(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_click_file_response(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_click_list_response(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_select_trigger_response(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_on_toggle_answer_required(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_toggle_always_asked(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
 

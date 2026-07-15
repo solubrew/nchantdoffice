@@ -51,11 +51,7 @@ class NchantdSourceEditPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourceEditPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourceEditPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -100,12 +96,8 @@ class NchantdSourcesListPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -137,12 +129,8 @@ class NchantdWhereUsedListPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -174,12 +162,8 @@ class NchantdOfficeEDA(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeEDA")
-        if self.parent:
-            self.config.override(parent.config)
-        super().__init__(self)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeEDA").override(cfg))
         self.slim_tab = True
 
     def initModel(self):
@@ -217,12 +201,8 @@ class NchantdSourcePane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourcePane"))
-        if self.parent:
-            self.config.override(parent.config)
-            self.catalog = self.parent.catalog
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourcePane").override(cfg))
+        self.catalog = self.parent.catalog
         self.accept_buttons_layout = None
         self.accept_buttons = None
         self.data_source_entry = None
@@ -315,13 +295,16 @@ class NchantdSourcePane(NchantdPane):
 
     def cmd_launch_data_source(self):
         """"""
+        # TODO implement method
 
     def cmd_on_change_data_source_availability(self, event=None, *args, **kwargs):
         """"""
         # update database to show that data source is available
+        # TODO implement method
 
     def cmd_show_api_key(self):
         """"""
+        # TODO implement method
 
     def get_data_source_availability(self):
         """"""
@@ -329,7 +312,6 @@ class NchantdSourcePane(NchantdPane):
 
     def store_active_source(self):
         """
-
         :return:
         """
         if self.active_item.requires_api_key is True:
@@ -348,7 +330,6 @@ class NchantdSourcePane(NchantdPane):
     def update_pane(self):
         """"""
         super().update_pane()
-
         return self
 
 
@@ -357,12 +338,8 @@ class NchantdDataSetPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("Nchantd"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSetPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -403,11 +380,7 @@ class NchantdViewPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdViewPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdViewPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -445,11 +418,7 @@ class NchantdViewEditPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdViewEditGroup"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdViewEditGroup").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -578,11 +547,7 @@ class NchantdDataSetConfigPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourceConfigPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourceConfigPane").override(cfg))
         self.name = None
         self.description = None
         self.type = None
@@ -677,244 +642,10 @@ class NchantdDataSetConfigPane(NchantdPane):
         self.initView()
         return self
 
-    def add_axis(self):
-        """"""
-        return self
-
-    def add_data_series(self):
-        """"""
-        return self
-
-    def add_legend(self, legend):
-        """"""
-        return self
-
-    def configure_background(self):
-        """"""
-        return self
-
-    def configure_legend(self):
-        """"""
-        return self
-
-    def configure_plotarea(self):
-        """"""
-        return self
-
-    def cmd_add_data_series(self, event=None, *args, **kwargs):
-        """"""
-        return self
-
-    def cmd_add_legend(self, event=None, *args, **kwargs):
-        """"""
-        return self
-
     def cmd_connect_source(self, event=None, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
 
-    def cmd_launch_color_sigil(self, event=None, *args, **kwargs):
-        """"""
-        cfg = {}
-        self.color_sigil = NchantdColorSelectSigil(self, cfg).initWidget()
-        return self
-
-    def cmd_set_border_color(self, event=None, *args, **kwargs):
-        """"""
-        return self
-
-    def cmd_set_border_style(self, event=None, *args, **kwargs):
-        """"""
-        return self
-
-    def cmd_set_border_thickness(self, event=None, *args, **kwargs):
-        """"""
-        return self
-
-    def cmd_set_name(self, event=None, *args, **kwargs):
-        """"""
-        return self
-
-    def cmd_set_description(self, event=None, *args, **kwargs):
-        """"""
-        return self
-
-    def cmd_set_color_area(self, event=None, *args, **kwargs):
-        """"""
-        return self
-
-    def cmd_set_color(self, event=None, *args, **kwargs):
-        """"""
-        return self
-
-    def cmd_on_change_type(self, event=None, *args, **kwargs):
-        """"""
-        logma.info(f"Event {event} value {args} params {kwargs}")
-        self.set_type(self.chart_type_select.get_value())
-        return self
-
-    def cmd_on_name_change(self, event=None, *args, **kwargs):
-        """"""
-
-    def cmd_on_description_change(self, event=None, *args, **kwargs):
-        """"""
-
-    def cmd_on_theme_change(self, event=None, *args, **kwargs):
-        """"""
-
-    def cmd_on_palette_change(self, event=None, *args, **kwargs):
-        """"""
-
-    def set_type(self, value):
-        """"""
-        self.parent.chart_type = value
-        self.update_chart()
-        return self
-
-    def cmd_set_data_series_color(self):
-        """"""
-        return self
-
-    def cmd_set_data_series_name(self):
-        """"""
-        return self
-
-    def cmd_set_data_series_shape(self):
-        """"""
-        return self
-
-    def cmd_set_data_series_style(self):
-        """"""
-        return self
-
-    def cmd_set_data_series_thickness(self):
-        """"""
-        return self
-
-    def get_border_color(self):
-        """"""
-        self.border_color = self.config.dikt.get("border_color", "")
-        return self.border_color
-
-    def get_border_colors(self):
-        """"""
-        self.border_colors = self.config.dikt.get("border_colors", [])
-        return self.border_colors
-
-    def get_border_style(self):
-        """"""
-        return self.border_style
-
-    def get_border_styles(self):
-        """"""
-        self.border_styles = self.config.dikt.get("border_styles", [])
-        return self.border_styles
-
-    def get_border_thickness(self):
-        """"""
-        if self.border_thickness is None:
-            self.border_thickness = self.config.dikt.get("border_thickness", 1)
-        return self.border_thickness
-
-    def get_background_color(self):
-        """"""
-        self.chart_color = self.config.dikt.get("chart_color", "")
-        return self.chart_color
-
-    def get_area_color(self):
-        """"""
-        self.chart_color = self.config.dikt.get("chart_color", "")
-        return self.chart_color
-
-    def get_border_color(self):
-        """"""
-        self.chart_color = self.config.dikt.get("chart_color", "")
-        return self.chart_color
-
-    def get_colors(self):
-        """"""
-        if self.colors_df is None:
-            self.load_colors()
-        self.chart_colors = self.colors_df["value_txt"].tolist()
-        return self.chart_colors
-
-    def get_area_color(self):
-        """"""
-        self.chart_color = self.config.dikt.get("chart_color", "")
-        return self.chart_color
-
-    def get_area_colors(self):
-        """"""
-        if self.colors_df is None:
-            self.load_colors()
-        self.chart_colors = self.colors_df["value_txt"].tolist()
-        return self.chart_colors
-
-    def get_palette(self):
-        """"""
-        if self.palette is None:
-            self.palette = self.config.dikt.get("chart_palette", "Dark")
-        return self.palette
-
-    def get_palettes(self):
-        """"""
-        if self.palettes is None:
-            self.palettes = self.config.dikt.get(
-                "chart_palettes", ["Dark", "DarkGrid", "Dark_background", "Dark2", "Dark2_5"]
-            )
-        return self.palettes
-
-    def get_theme(self):
-        """"""
-        if self.theme is None:
-            self.theme = self.config.dikt.get("chart_theme", "DarkGrid")
-        return self.theme
-
-    def get_themes(self):
-        """"""
-        if self.themes is None:
-            self.themes = self.config.dikt.get("themes", ["DarkGrid", "Dark", "White", "WhiteGrid"])
-        return self.themes
-
-    def get_type(self):
-        """"""
-        if self.parent.chart_type is None:
-            self.parent.chart_type = self.config.dikt.get("chart_type", "Line")
-        return self.parent.chart_type
-
-    def get_types(self):
-        """"""
-        if self.chart_types_df is None:
-            self.load_types()
-        self.chart_types = self.chart_types_df["value_txt"].tolist()
-        return self.chart_types
-
-    def get_legend(self):
-        """"""
-        return self
-
-    def get_legends(self):
-        """"""
-        return self
-
-    def load_types(self):
-        """"""
-        table = "vw_chart_types"
-        cfg = {}
-        self.chart_types_df = self.app.model.store.get_table(table, cfg)
-        return self
-
-    def load_colors(self):
-        """"""
-        table = "vw_colors"
-        cfg = {}
-        self.colors_df = self.app.model.store.get_table(table, cfg)
-        return self
-
-    def update_chart(self):
-        """"""
-        logma.info(f"Update Chart to {self.get_type()}")
-        self.parent.set_type(self.get_type())
         return self
 
 
@@ -924,11 +655,7 @@ class NchantdSourceDefaultPane(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourceDefaultPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourceDefaultPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -971,9 +698,11 @@ class NchantdSourceDefaultPane(NchantdWidget):
 
     def cmd_on_data_table_change(self, event):
         """"""
+        # TODO implement method
 
     def cmd_on_source_change(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def get_source(self, event=None, *args, **kwargs):
         """"""

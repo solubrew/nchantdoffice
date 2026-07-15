@@ -49,10 +49,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNewDocumentPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNewDocumentPane").override(cfg))
         self.connect_gfile = None
         self.open_file = None
         self.file_path = None
@@ -211,9 +208,11 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
 
     def add_bulk_node(self):
         """"""
+        # TODO implement method
 
     def add_bulk_tab(self):
         """"""
+        # TODO implement method
 
     def load_document(self):
         """"""
@@ -241,6 +240,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
 
     def show_checkboxes(self):
         """"""
+        # TODO implement method
         return self
 
     def show_file_path(self):
@@ -449,12 +449,8 @@ class NchantdOfficeNewSubtreePane(NchantdOfficeNewDocumentPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeNewSubtreePane")
-        if self.parent:
-            self.config.override(parent.config)
-        super().__init__(self)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNewSubtreePane").override(cfg))
 
     def initModel(self):
         """"""

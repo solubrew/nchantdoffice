@@ -54,9 +54,9 @@ class NchantdOfficeDiagramEdge(NchantdWidgetMixin, pyqt.QGraphicsLineItem):
     """
 
     def __init__(self, source_node, target_node, source_connection="bottom", target_connection="top", cfg=None):
-        self.config = kahndor.Instruct(pxcfg).select("Edge")
         super().__init__()
-        self.config.override(cfg)
+        self.init_variables()
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeDiagramEdge").override(cfg)
         self.source_node = source_node
         self.target_node = target_node
         self.source_connection = source_connection
@@ -86,9 +86,9 @@ class NchantdOfficeDiagramNode(NchantdWidgetMixin, pyqt.QGraphicsEllipseItem):
 
     def __init__(self, x, y, radius=20, label=None, color=QColor(100, 150, 255), cfg=None):
         """"""
-        self.config = kahndor.Instruct(pxcfg).select("NchantdNode")
         super().__init__(-radius, -radius, 2 * radius, 2 * radius)
-        self.config.override(cfg)
+        self.init_variables()
+        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeDiagramNode").override(cfg)
         self.document = PyfficeNode()
         self.radius = radius
         self.setBrush(pyqt.QBrush(color))
