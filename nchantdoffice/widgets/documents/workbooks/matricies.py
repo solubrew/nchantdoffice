@@ -194,80 +194,145 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
         self.initView()
         return self
 
-    def get_border_color(self):
-        """"""
-        # TODO: implement method
-        return
+    def get_border_color(self, side=None):
+        """Return the configured border color for a given side.
 
-    def get_border_style(self):
-        """"""
-        # TODO: implement method
-        return
+        Args:
+            side: 'top' | 'left' | 'right' | 'bottom' (or None for default)
 
-    def get_border_thickness(self):
-        """"""
-        # TODO: implement method
-        return
+        Returns:
+            Hex color string (e.g. '#000000'), or None if unconfigured.
+
+        NOTE: This widget has no direct cell reference. The returned value is
+        a UI-level preference; actual application to cells happens at the
+        NchantdOfficeMatrix level via apply_cell_border().
+        """
+        if not hasattr(self, "border_config"):
+            self.border_config = {}
+        return self.border_config.get(side, {}).get("color")
+
+    def get_border_style(self, side=None):
+        """Return the configured border style for a given side."""
+        if not hasattr(self, "border_config"):
+            self.border_config = {}
+        return self.border_config.get(side, {}).get("style")
+
+    def get_border_thickness(self, side=None):
+        """Return the configured border thickness for a given side."""
+        if not hasattr(self, "border_config"):
+            self.border_config = {}
+        return self.border_config.get(side, {}).get("thickness")
+
+    def _record_border(self, side, key, value):
+        """Internal: store border setting for a given side and log change."""
+        if not hasattr(self, "border_config"):
+            self.border_config = {}
+        self.border_config.setdefault(side, {})[key] = value
+        logma.info(f"Border[{side}].{key} = {value}")
 
     def cmd_top_border_style_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
-        return
+        """Handler: user changed the top-border style dropdown."""
+        new_style = getattr(event, "text", lambda: None)() if hasattr(event, "text") else None
+        if new_style is None and hasattr(self, "cell_border_style_top_select"):
+            new_style = self.cell_border_style_top_select.currentText()
+        self._record_border("top", "style", new_style)
+        return self
 
     def cmd_top_border_thickness_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
-        return
+        """Handler: user changed the top-border thickness spinbox."""
+        new_thickness = None
+        if hasattr(self, "cell_border_thickness_top_spin"):
+            try:
+                new_thickness = self.cell_border_thickness_top_spin.value()
+            except Exception:
+                new_thickness = None
+        self._record_border("top", "thickness", new_thickness)
+        return self
 
     def cmd_top_border_color_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
-        return
+        """Handler: user picked a top-border color (button opens color picker)."""
+        # Color picker event details vary by host widget; default to None
+        new_color = getattr(event, "color", None)
+        self._record_border("top", "color", new_color)
+        return self
 
     def cmd_left_border_style_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
-        return
+        """Handler: left-border style change."""
+        new_style = (
+            self.cell_border_style_left_select.currentText()
+            if hasattr(self, "cell_border_style_left_select")
+            else None
+        )
+        self._record_border("left", "style", new_style)
+        return self
 
     def cmd_left_border_thickness_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
-        return
+        """Handler: left-border thickness change."""
+        new_thickness = (
+            self.cell_border_thickness_left_spin.value()
+            if hasattr(self, "cell_border_thickness_left_spin")
+            else None
+        )
+        self._record_border("left", "thickness", new_thickness)
+        return self
 
     def cmd_left_border_color_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
-        return
+        """Handler: left-border color change."""
+        new_color = getattr(event, "color", None)
+        self._record_border("left", "color", new_color)
+        return self
 
     def cmd_right_border_style_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
-        return
+        """Handler: right-border style change."""
+        new_style = (
+            self.cell_border_style_right_select.currentText()
+            if hasattr(self, "cell_border_style_right_select")
+            else None
+        )
+        self._record_border("right", "style", new_style)
+        return self
 
     def cmd_right_border_thickness_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
-        return
+        """Handler: right-border thickness change."""
+        new_thickness = (
+            self.cell_border_thickness_right_spin.value()
+            if hasattr(self, "cell_border_thickness_right_spin")
+            else None
+        )
+        self._record_border("right", "thickness", new_thickness)
+        return self
 
     def cmd_right_border_color_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
-        return
+        """Handler: right-border color change."""
+        new_color = getattr(event, "color", None)
+        self._record_border("right", "color", new_color)
+        return self
 
     def cmd_bottom_border_style_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
-        return
+        """Handler: bottom-border style change."""
+        new_style = (
+            self.cell_border_style_bottom_select.currentText()
+            if hasattr(self, "cell_border_style_bottom_select")
+            else None
+        )
+        self._record_border("bottom", "style", new_style)
+        return self
 
     def cmd_bottom_border_thickness_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
-        return
+        """Handler: bottom-border thickness change."""
+        new_thickness = (
+            self.cell_border_thickness_bottom_spin.value()
+            if hasattr(self, "cell_border_thickness_bottom_spin")
+            else None
+        )
+        self._record_border("bottom", "thickness", new_thickness)
+        return self
 
     def cmd_bottom_border_color_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
-        return
+        """Handler: bottom-border color change."""
+        new_color = getattr(event, "color", None)
+        self._record_border("bottom", "color", new_color)
+        return self
 
     def get_border_styles(self):
         """"""
