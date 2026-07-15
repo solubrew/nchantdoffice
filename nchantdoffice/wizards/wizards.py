@@ -121,6 +121,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
 
     def on_download_progress(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def on_download_finished(self, event, *args, **kwargs):
         """"""

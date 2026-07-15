@@ -105,8 +105,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """ """
         super().__init__(parent, None)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCloakModel").override(cfg))
-        self.parent = parent
-        self.store = NchantdOfficeStore(name, self)
+        cfg = {}
+        self.store = NchantdOfficeStore(name, self, cfg=cfg)
         self.codex = PyfficeCodex()
         cfg = {}
         self.settings = PyfficeApplicationConfig(cfg, self)
