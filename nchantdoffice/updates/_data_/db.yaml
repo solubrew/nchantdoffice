@@ -96,9 +96,6 @@ NchantdOfficeDBUpdate:
           views:
             reload: True
             all: True
-    0.0.1.0.1.4:
-      active: True
-      versions:
         0.0.1.0.1.5:
           active: True
           description: "Fix document types"
@@ -125,7 +122,7 @@ NchantdOfficeDBUpdate:
                       "widget_txt": "widgets.config.accounts.NchantdOfficeAccountSettings"
                 -
                   data:
-                    widget_txt: "wnchantdoffice.idgets.config.settings.NchantdOfficeInterfaceSettings"
+                    widget_txt: "nchantdoffice.idgets.config.settings.NchantdOfficeInterfaceSettings"
                   WHERE:
                     "EQUAL":
                       "widget_txt": "widgets.config.settings.NchantdOfficeInterfaceSettings"
@@ -172,19 +169,113 @@ NchantdOfficeDBUpdate:
               update:
                 -
                   data:
-                    widget_txt: "widgets.documents.atnrg.pages.NchantdOfficeWebPage"
+                    widget_txt: "nchantdoffice.widgets.documents.atnrg.pages.NchantdOfficeWebPage"
                   WHERE:
                     "EQUAL":
                       "widget_txt": "widgets.documents.atnrg.browsers.browsers.pages.NchantdOfficeWebPage"
                 -
                   data:
-                    widget_txt: "widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
+                    widget_txt: "nchantdoffice.widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
                   WHERE:
                     "EQUAL":
                       "widget_txt": "widgets.documents.atnrg.browsers.browsers.NchantdOfficeWebBrowser"
                 -
                   data:
-                    widget_txt: "widgets.documents.media.images.NchantdOfficeImage"
+                    widget_txt: "nchantdoffice.widgets.documents.media.images.NchantdOfficeImage"
+                  WHERE:
+                    "EQUAL":
+                      "widget_txt": "widgets.documents.media.graphics.images.NchantdOfficeImage"
+          indexes:
+          views:
+    0.0.1.0.1.4:
+      active: True
+      versions:
+        0.0.1.0.1.5:
+          active: True
+          description: "Fix document types"
+          tables:
+            app_document_type:
+              reload: True
+              keep-records: False
+            app_tab:
+              reload: True
+              keep-records: True
+              add_columns: ["app_document_type_FK"]
+              update:
+                -
+                  data:
+                    widget_txt: "nchantdoffice.widgets.documents.atnrg.NchantdOfficeWebPage"
+                  WHERE:
+                    "EQUAL":
+                      "widget_txt": "widgets.documents.atnrg.browsers.pages.NchantdOfficeWebPage"
+                -
+                  data:
+                    widget_txt: "nchantdoffice.widgets.config.accounts.NchantdOfficeAccountSettings"
+                  WHERE:
+                    "EQUAL":
+                      "widget_txt": "widgets.config.accounts.NchantdOfficeAccountSettings"
+                -
+                  data:
+                    widget_txt: "nchantdoffice.idgets.config.settings.NchantdOfficeInterfaceSettings"
+                  WHERE:
+                    "EQUAL":
+                      "widget_txt": "widgets.config.settings.NchantdOfficeInterfaceSettings"
+                -
+                  data:
+                    widget_txt: "nchantdoffice.widgets.config.settings.NchantdOfficeThemeSettings"
+                  WHERE:
+                    "EQUAL":
+                      "widget_txt": "nchantdoffice.widgets.config.settings.NchantdOfficeThemeSettings"
+                -
+                  data:
+                    widget_txt: "nchantdoffice.widgets.config.security.NchantdOfficeSecuritySettings"
+                  WHERE:
+                    "EQUAL":
+                      "widget_txt": "widgets.config.security.NchantdOfficeSecuritySettings"
+                -
+                  data:
+                    widget_txt: "nchantdoffice.widgets.config.help.NchantdOfficeHelpChatDex"
+                  WHERE:
+                    "EQUAL":
+                      "widget_txt": "widgets.config.help.NchantdOfficeHelpChatDex"
+                -
+                  data:
+                    widget_txt: "nchantdoffice.widgets.config.help.NchantdOfficeFAQs"
+                  WHERE:
+                    "EQUAL":
+                      "widget_txt": "widgets.config.help.NchantdOfficeFAQs"
+                -
+                  data:
+                    widget_txt: "nchantdoffice.widgets.config.help.NchantdOfficeHelpDocs"
+                  WHERE:
+                    "EQUAL":
+                      "widget_txt": "widgets.config.help.NchantdOfficeHelpDocs"
+                -
+                  data:
+                    widget_txt: "nchantdoffice.widgets.controls.toolboxes.NchantdOfficeApplicationToolBox"
+                  WHERE:
+                    "EQUAL":
+                      "widget_txt": "widgets.controls.toolboxes.NchantdOfficeApplicationToolBox"
+            doc_tab:
+              reload: True
+              keep-records: True
+              add_columns: ["app_document_type_FK"]
+              update:
+                -
+                  data:
+                    widget_txt: "nchantdoffice.widgets.documents.atnrg.pages.NchantdOfficeWebPage"
+                  WHERE:
+                    "EQUAL":
+                      "widget_txt": "widgets.documents.atnrg.browsers.browsers.pages.NchantdOfficeWebPage"
+                -
+                  data:
+                    widget_txt: "nchantdoffice.widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
+                  WHERE:
+                    "EQUAL":
+                      "widget_txt": "widgets.documents.atnrg.browsers.browsers.NchantdOfficeWebBrowser"
+                -
+                  data:
+                    widget_txt: "nchantdoffice.widgets.documents.media.images.NchantdOfficeImage"
                   WHERE:
                     "EQUAL":
                       "widget_txt": "widgets.documents.media.graphics.images.NchantdOfficeImage"
