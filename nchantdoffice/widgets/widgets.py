@@ -144,6 +144,16 @@ class NchantdOfficeTabSet(NchantdTabSet):
                     logma.info("Wired toolbox to current_document_changed signal")
 
         # Ensure tabn is valid for super class to avoid IndexError in set_focus
+        # TODO BUG [off-by-one]: tabset tab selection is off by one in certain sequences.
+        # NOTE: keep this TODO OPEN for user to debug.
+        # Suspect area: the boundary check above uses `<= len(...)` here while the
+        # earlier `tabn < len(self.model.tabsdata)` uses strict `<`. The asymmetry
+        # can shift selection by one when tabs are added/removed or when the
+        # " + " dummy tab is at index len(tabsdata). Reproduce by:
+        #   1) open N tabs, 2) click the " + " tab to add a new doc, 3) close it,
+        #   4) observe selection lands on tabn-1 instead of the previously active tab.
+        # Do NOT change the comparison operator until the sequence is reproduced
+        # under logma debug capture from on_tab_focus and load_tab.
         if tabn >= 0 and tabn <= len(self.model.tabsdata):
             super().on_tab_focus(tabn)
         return self
