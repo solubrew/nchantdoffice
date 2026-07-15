@@ -38,12 +38,8 @@ class NchantdOfficeDocumentCape(NchantdCape):
 
     def __init__(self, name, instance=None, parent=None, cfg=None, args=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentCape")
-        if self.parent:
-            self.config.override(parent.config)
         super().__init__(name, instance, self.parent, self.config, args)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentCape").override(cfg))
         self.is_installable = True
 
     def initModel(self):
@@ -70,11 +66,7 @@ class NchantdNodeNameEditSigil(NchantdSigil):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("Nchantd"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNodeNameEditSigil").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -99,11 +91,7 @@ class NchantdTabNameEditSigil(NchantdSigil):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("Nchantd"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdTabNameEditSigil").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
