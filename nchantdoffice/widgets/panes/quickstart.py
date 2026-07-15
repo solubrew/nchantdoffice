@@ -42,11 +42,7 @@ class NchantdQuickStartPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdQuickStartPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdQuickStartPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""

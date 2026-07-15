@@ -49,12 +49,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
     def __init__(self, name, parent=None, cfg=None):
         """ """
         super().__init__(name, parent)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NewNchantdDocumentSigil"))
-        if self.parent:
-            self.config.override(parent.config)
-        logma.info(f"CFG {cfg}")
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NewNchantdDocumentSigil").override(cfg))
         self.catalog = None
         self.file_type = self.config.dikt.get("file_type", None)
         self.action = name  # self.config.dikt.get('action', None)
@@ -93,6 +88,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
 
     def import_file(self):
         """"""
+        # TODO implement method
 
     def initModel(self, cfg=None):
         """"""
@@ -143,6 +139,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
 
     def init_multi_page_import(self):
         """"""
+        # TODO implement method
 
     def init_google_drive_button(self):
         """"""

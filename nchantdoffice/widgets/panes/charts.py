@@ -50,11 +50,7 @@ class NchantdChartConfigPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartConfigPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartConfigPane").override(cfg))
         self.name = None
         self.description = None
         self.type = None
@@ -194,22 +190,6 @@ class NchantdChartConfigPane(NchantdPane):
         # TODO: BorderConfigBar was a copy of text config and needs to be updated to apply to border styles
         self.chart_border_bar = NchantdBorderConfigBar(self, cfg).initWidget()
         chart_details_layout.addWidget(self.chart_border_bar)
-        # cfg = {
-        #     "text": "Set Border Color: ",
-        #     "handler": self.cmd_launch_color_sigil,
-        #     "value": self.get_border_color(),
-        #     "layout": "horizontal",
-        #     "size": ["auto", "auto"],
-        # }
-        # self.chart_border_color = NchantdButton(self, cfg).initWidget()
-        # chart_details_layout.addWidget(self.chart_border_color)
-        # cfg = {
-        #     "label": "Select Border Thickness: ",
-        #     "layout": "horizontal",
-        #     "size": ["auto", "auto"],
-        # }
-        # self.chart_border_thickness = NchantdLabeledSpinBox(self, cfg).initWidget()
-        # chart_details_layout.addWidget(self.chart_border_thickness)
         self.left_group.addWidget(chart_details_group)
         self.left_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         self.layout.addLayout(self.left_group.layout)
@@ -269,34 +249,42 @@ class NchantdChartConfigPane(NchantdPane):
 
     def add_data_series(self):
         """"""
+        # TODO implement method
         return self
 
     def add_legend(self, legend):
         """"""
+        # TODO implement method
         return self
 
     def configure_background(self):
         """"""
+        # TODO implement method
         return self
 
     def configure_legend(self):
         """"""
+        # TODO implement method
         return self
 
     def configure_plotarea(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_data_series(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_legend(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_connect_data_source(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_launch_color_sigil(self, event=None, *args, **kwargs):
@@ -307,30 +295,37 @@ class NchantdChartConfigPane(NchantdPane):
 
     def cmd_set_border_color(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_border_style(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_border_thickness(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_name(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_description(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_color_area(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_color(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_type(self, event, *args, **kwargs):
@@ -341,15 +336,19 @@ class NchantdChartConfigPane(NchantdPane):
 
     def cmd_on_name_change(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_on_description_change(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_on_theme_change(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_on_palette_change(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def set_type(self, value):
         """"""
@@ -359,22 +358,27 @@ class NchantdChartConfigPane(NchantdPane):
 
     def cmd_set_data_series_color(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_data_series_name(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_data_series_shape(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_data_series_style(self):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_data_series_thickness(self):
         """"""
+        # TODO implement method
         return self
 
     def get_border_color(self):
@@ -412,22 +416,12 @@ class NchantdChartConfigPane(NchantdPane):
         self.chart_color = self.config.dikt.get("chart_color", "")
         return self.chart_color
 
-    def get_border_color(self):
-        """"""
-        self.chart_color = self.config.dikt.get("chart_color", "")
-        return self.chart_color
-
     def get_colors(self):
         """"""
         if self.colors_df is None:
             self.load_colors()
         self.chart_colors = self.colors_df["value_txt"].tolist()
         return self.chart_colors
-
-    def get_area_color(self):
-        """"""
-        self.chart_color = self.config.dikt.get("chart_color", "")
-        return self.chart_color
 
     def get_area_colors(self):
         """"""
@@ -477,10 +471,12 @@ class NchantdChartConfigPane(NchantdPane):
 
     def get_legend(self):
         """"""
+        # TODO implement method
         return self
 
     def get_legends(self):
         """"""
+        # TODO implement method
         return self
 
     def load_types(self):
@@ -510,11 +506,7 @@ class NchantdChartAxisPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartAxisPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartAxisPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -623,11 +615,7 @@ class NchantdChartDataSeriesPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartTrendlinePane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartTrendlinePane").override(cfg))
         self.color = None
         self.colors = None
         self.data_series_colors = None
@@ -711,96 +699,8 @@ class NchantdChartDataSeriesPane(NchantdPane):
         self.initView()
         return self
 
-    def get_color(self):
+    def cmd_connect_data_source(self):
         """"""
-        if self.color is None:
-            self.color = self.config.dikt.get("trendline_color", "red")
-        return self.color
-
-    def get_colors(self):
-        """"""
-        if self.colors is None:
-            self.colors = self.config.dikt.get("trendline_colors", ["red", "blue", "green", "orange", "purple"])
-        return self.colors
-
-    def get_line_marker(self):
-        """"""
-        return self
-
-    def get_line_markers(self):
-        """"""
-        markers = []
-        return markers
-
-    def get_color(self, series=None):
-        """"""
-        if len(self.data_series) == 0:
-            return None
-        if series is None:
-            series = 0
-        color = self.data_series[series].color
-        return color
-
-    def get_colors(self):
-        """"""
-        self.data_series_colors = self.config.dikt.get("data_series_colors", [])
-        return self.data_series_colors
-
-    def get_series_data(self):
-        """"""
-        self.data_series = {}
-        return self.data_series
-
-    def get_series(self):
-        """"""
-        data_series = []
-        return data_series
-
-    def get_shape(self, series=None):
-        """"""
-        if len(self.data_series) == 0:
-            return None
-        if series is None:
-            series = 0
-        shape = self.data_series[series].shape
-        return shape
-
-    def get_shapes(self):
-        """"""
-        self.shapes = self.config.dikt.get("data_series_shapes", [])
-        return self.shapes
-
-    def get_style(self, series=None):
-        """"""
-        if len(self.data_series) == 0:
-            return None
-        if series is None:
-            series = 0
-        style = self.data_series[series].style
-        return style
-
-    def get_styles(self):
-        """"""
-        self.styles = self.config.dikt.get("data_series_styles", [])
-        return self.styles
-
-    def get_thickness(self, series=None):
-        """"""
-        if series is None:
-            series = 0
-        if len(self.data_series) == 0:
-            return None
-        thickness = self.data_series[series].thickness
-        return thickness
-
-    def get_thickness_range(self, series=None):
-        """"""
-        if series is None:
-            series = 0
-        if len(self.data_series) == 0:
-            return None
-        thickness = self.data_series[series].thickness
-        return thickness
 
 
 class NchantdChartLegendPane(NchantdPane):
@@ -809,11 +709,8 @@ class NchantdChartLegendPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartTrendlinePane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartTrendlinePane").override(cfg))
+        self.right_group = None
         self.color = None
         self.colors = None
         self.trendline_formula = None
@@ -891,6 +788,10 @@ class NchantdChartLegendPane(NchantdPane):
         self.initView()
         return self
 
+    def cmd_connect_data_source(self):
+        """"""
+        # TODO implement method
+
     def get_color(self):
         """"""
         if self.color is None:
@@ -905,29 +806,35 @@ class NchantdChartLegendPane(NchantdPane):
 
     def get_line_marker(self):
         """"""
+        # TODO implement method
         return self
 
     def get_line_markers(self):
         """"""
         markers = []
+        # TODO implement method
         return markers
 
     def get_thickness(self):
         """"""
+        # TODO implement method
         return 2
 
     def get_thickness_range(self):
         """"""
+        # TODO implement method
         return 0, 10
 
     def get_data_series_all(self):
         """"""
         self.data_series = {}
+        # TODO implement method
         return self.data_series
 
     def get_data_series(self):
         """"""
         data_series = []
+        # TODO implement method
         return data_series
 
     def get_data_series_color(self, series=None):
@@ -1106,19 +1013,23 @@ class NchantdChartTrendlinePane(NchantdPane):
 
     def get_line_marker(self):
         """"""
+        # TODO implement method
         return self
 
     def get_line_markers(self):
         """"""
         markers = []
+        # TODO implement method
         return markers
 
     def get_thickness(self):
         """"""
+        # TODO implement method
         return 2
 
     def get_thickness_range(self):
         """"""
+        # TODO implement method
         return 0, 10
 
     def get_trendline_formulas(self):

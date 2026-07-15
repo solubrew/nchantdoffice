@@ -50,11 +50,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNodeEditPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNodeEditPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -93,7 +89,6 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         }
         self.node_buttonbar = NchantdButtonBar(self, cfg).initWidget()
         layout.addWidget(self.node_buttonbar)
-
         node = self.get_node()
         # logma.info(f"Node {dir(node)} {node.name}")
         logma.info(f"Node {node.item} {node.name}")
@@ -102,13 +97,11 @@ class NchantdOfficeNodeEditPane(NchantdPane):
             cfg["readonly"] = True
         self.name_entry = NchantdLabeledEntry(self, cfg).initWidget()
         layout.addWidget(self.name_entry)
-
         cfg = {"label": "Node Position: ", "value": node.position}
         if node.node_type in ("displaynode", "sysorgnode", "yearnode", "monthnode", "daynode"):
             cfg["readonly"] = True
         self.position_entry = NchantdLabeledSpinBox(self, cfg).initWidget()
         layout.addWidget(self.position_entry)
-
         cfg = {"show_label": False, "layout": "horizontal", "two_rows": True, "size": ["auto", "auto"]}
         self.font_bar = NchantdFontConfigBar(self, cfg).initWidget()
         layout.addWidget(self.font_bar)
@@ -184,30 +177,37 @@ class NchantdOfficeNodeEditPane(NchantdPane):
 
     def cmd_set_text_bold(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_italic(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_underline(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_underline_double(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_strike(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_subscript(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_superscript(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_sort_children(self, event=None, *args, **kwargs):
@@ -218,6 +218,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
 
     def cmd_take_snapshot(self):
         """"""
+        #TODO implement method
         return self
 
     def get_node(self):
@@ -240,11 +241,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTagEditPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTagEditPane").override(cfg))
         self.lock_page = False
 
     def initModel(self, cfg=None):
@@ -335,18 +332,22 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def cmd_set_text_bold(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_italic(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_underline(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_underline_double(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_strike(self):
@@ -355,10 +356,12 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def cmd_set_text_subscript(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_superscript(self):
         """"""
+        #TODO implement method
         return self
 
     def get_tab(self):
@@ -368,10 +371,12 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def cmd_take_snapshot(self, event=None, *args, **kwargs):
         """"""
+        #TODO implement method
         return self
 
     def cmd_toggle_page_lock(self, event=None, *args, **kwargs):
         """"""
+        #TODO implement method
         return self
 
     def decode64(self):
@@ -400,6 +405,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         need some way of scalling the hashses so that the image is recognized at all scales
         also use the color palette
         """
+        #TODO implement method
         return self
 
     def get_note(self, note_id):
@@ -409,6 +415,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def get_notes(self):
         """"""
+        #TODO implement method
         return self
 
     def get_tags(self):
@@ -485,11 +492,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTabEditPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTabEditPane").override(cfg))
         self.lock_page = False
 
     def initModel(self, cfg=None):
@@ -500,7 +503,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
     def initView(self, cfg=None):
         """"""
         super().initView(cfg)
-        cfg = {"text": " Tab: "}
+        cfg = {"text": "Tab:"}
         group = NchantdGroup(self, cfg)
         layout = pyqt.QVBoxLayout()
         group.setLayout(layout)
@@ -586,10 +589,12 @@ class NchantdOfficeTabEditPane(NchantdPane):
 
     def cmd_duplicate_document(self, event=None, *args, **kwargs):
         """"""
+        #TODO implement method
         return self
 
     def cmd_export_document(self, event=None, *args, **kwargs):
         """"""
+        #TODO implement method
         return self
 
     def cmd_import_file(self, event=None, *args, **kwargs):
@@ -621,34 +626,42 @@ class NchantdOfficeTabEditPane(NchantdPane):
 
     def cmd_set_text_bold(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_italic(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_underline(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_underline_double(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_strike(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_subscript(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_set_text_superscript(self):
         """"""
+        #TODO implement method
         return self
 
     def cmd_take_snapshot(self, event=None, *args, **kwargs):
         """"""
+        #TODO implement method
         return self
 
     def cmd_toggle_page_lock(self, event=None, *args, **kwargs):
@@ -663,7 +676,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
         need some way of scalling the hashses so that the image is recognized at all scales
         also use the color palette
         """
-
+        #TODO implement method
         return self
 
     def get_notes(self):

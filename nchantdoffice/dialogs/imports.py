@@ -40,12 +40,8 @@ class ImportDocumentNchantdSigil(NchantdSigil):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("ImportDocumentNchantdSigil")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-        super().__init__(self.parent, self.config)
+        super().__init__("ImportDocument", parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("ImportDocumentNchantdSigil").override(cfg))
         self.document_type = None
 
     def initModel(self):
@@ -74,12 +70,8 @@ class ImportExcelNchantdSigil(NchantdSigil):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("ImportExcelNchantdSigil")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-        super().__init__(self.parent, self.config)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("ImportExcelNchantdSigil").override(cfg))
 
     def initModel(self):
         """"""
@@ -103,12 +95,8 @@ class ImportPDFNchantdSigil(NchantdSigil):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("ImportPDFNchantdSigil")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-        super().__init__(self.parent, self.config)
+        super().__init__("", parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("ImportPDFNchantdSigil").override(cfg))
 
     def initModel(self):
         """"""
@@ -132,12 +120,8 @@ class NchantdGoogleDriveSigil(NchantdSigil):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdGoogleDriveSigil")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
         super().__init__("gdrive", self.parent, self.config)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdGoogleDriveSigil").override(cfg))
         self.viewer = None
         self.buttons = None
         self.file_selected = None

@@ -21,6 +21,7 @@ import datetime as dt
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
 from kahndor.logma import Logma
+from nchantrs.widgets.widgets import NchantdWidget
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -36,12 +37,8 @@ class NchantdNotificationSigil(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("Nchantd")
-        if self.parent:
-            self.config.override(parent.config)
-        super().__init__(self)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNotificationSigil").override(cfg))
 
     def initModel(self):
         """"""

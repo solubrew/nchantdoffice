@@ -46,11 +46,7 @@ class NchantdOfficeDocumentCatalogItem(NchantdCatalogItem):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent_widget = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentCatalogItem"))
-        if self.parent_widget:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentCatalogItem").override(cfg))
         self.action = None
         self.action_params = None
         self.document = None
@@ -184,7 +180,9 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         self.requires_api_key = required
         # Persist to data-source config
         if hasattr(self, "app") and self.app and hasattr(self.app, "model"):
-            self.app.model.update_data_source(self.nid, {"requires_api_key": required, "api_key_required": required_flag})
+            self.app.model.update_data_source(
+                self.nid, {"requires_api_key": required, "api_key_required": required_flag}
+            )
         return
 
     def cmd_update_api_key_entry(self, event, *args, **kwargs):
@@ -219,8 +217,7 @@ class NchantdOfficeTreeNode(NchantdTreeNode):
 
     def __init__(self, parent, name, nid, node, children=DataFrame(), cfg=None):
         """ """
-        super().__init__(parent, name, nid, node, children)
-        self.parent_widget = parent
+        super().__init__(parent, name, nid, node, children, cfg)
         self.config.override(
             kahndor.Instruct(pxcfg).select("NchantdOfficeTreeNode").override(parent.config).override(cfg)
         )

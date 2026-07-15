@@ -43,12 +43,8 @@ class NchantdNewObjectPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewObjectPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewObjectPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -103,12 +99,8 @@ class NchantdHeaderPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewObjectPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewObjectPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -151,12 +143,8 @@ class NchantdFooterPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewObjectPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewObjectPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""

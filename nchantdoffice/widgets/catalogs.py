@@ -51,10 +51,7 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentsCatalog"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentsCatalog").override(cfg))
         self.toolbox_config = None
         self.catalog = self
         self.name = "Document Catalog"
@@ -199,12 +196,8 @@ class NchantdOfficeExtensionsCatalog(NchantdCatalog):
 
     def __init__(self, parent, cfg=None):
         """"""
-        self.config = kahndor.instruct(pxcfg).select("NchantdDataSourcesSettingsTab")
-        self.parent = parent
-        if self.parent is not None:
-            self.config.override(self.parent.config)
-        self.config.override(cfg)
-        super().__init__(self)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.instruct(pxcfg).select("NchantdDataSourcesSettingsTab").override(cfg))
         self.data_sources = self.config.dikt["default_sources"]
 
     def initModel(self, cfg=None):
