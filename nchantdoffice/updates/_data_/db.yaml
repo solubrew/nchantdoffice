@@ -99,6 +99,7 @@ NchantdOfficeDBUpdate:
         0.0.1.0.1.5:
           active: True
           description: "Fix document types"
+          #TODO need to implement all document types across all tables
           tables:
             app_document_type:
               reload: True
