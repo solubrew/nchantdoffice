@@ -71,7 +71,7 @@ class NchantdOfficeNotificationButtonBar(NchantdButtonBar):
     def __init__(self, parent=None, cfg=None):
         """Initialize the notification bar."""
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationNotificationButtonBar").override(cfg)()
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationNotificationButtonBar").override(cfg))
 
     def initModel(self):
         """Initialize the model."""
