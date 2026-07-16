@@ -221,7 +221,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.formula_bar = None
         self.sheet_tabs = None
         self.setup_toolbar()
-        # self.connect_signals()
+        self.connect_signals()
 
     def initModel(self):
         """"""
@@ -503,10 +503,10 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "layout": "horizontal",
             "range": [1, 10000000],
             "default": self.config.dikt.get("num_rows", 20),
-            "handler": self.cmd_row_spinbox,
+            "handler": self.cmd_row_height_spinbox,
         }
-        self.rows_count_entry = NchantdLabeledSpinBox(self, cfg)
-        items[cnt]["widget"] = self.rows_count_entry
+        self.row_height_entry = NchantdLabeledSpinBox(self, cfg)
+        items[cnt]["widget"] = self.row_height_entry
         cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
@@ -1362,10 +1362,11 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # Chart insertion
         self.toolbar.addAction("Insert Chart", self.insert_chart)
 
-    # def connect_signals(self):
-    #     """Connect UI signals to handlers"""
-    #     self.table.itemChanged.connect(self.on_cell_changed)
-    #     self.table.itemSelectionChanged.connect(self.on_selection_changed)
+    def connect_signals(self):
+        """Connect UI signals to handlers"""
+        if self.table:
+            self.table.itemChanged.connect(self.on_cell_changed)
+            self.table.itemSelectionChanged.connect(self.on_selection_changed)
 
     # ================================ Data Loading ================================
 
