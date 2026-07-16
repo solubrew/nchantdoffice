@@ -5,24 +5,37 @@
 - **Type**: Desktop GUI Application (PySide6)
 - **Purpose**: Office automation suite with document management, calendar, contacts
 - **Framework**: Built on nchantrs framework
-- **Location**: `/home/solubrew/.orin/workspace/projects/nchantdoffice`
+- **Location**: `/home/solubrew/.senbai/workspace/projects/nchantdoffice`
 - **Branch**: `gamma` (per CODING_STANDARDS Git workflow)
 - **Version**: 0.0.1.0.1.4
+- **Last Commit**: `0598d13` — "H24: deferred toolbox refresh + signal wiring + catalog-first-tab"
 
 ---
 
 ## Current Status: ACTIVE DEVELOPMENT
 
-## CODING_STANDARDS Compliance (V4)
+## CODING_STANDARDS Compliance
 
 | Standard | Status | Notes |
 |----------|--------|-------|
 | Project structure | ✅ | Uses template |
-| STATE.md | ✅ | Created per V4 |
-| tests/ directory | 🔄 | To be created |
-| Git workflow | ✅ | Using orin-ws branch |
-| tuh environment | ✅ | Required for imports |
-| Internal projects | ✅ | Uses nchantrs, pyffice, kahndor |
+| STATE.md | ✅ | Updated per review |
+| tests/ directory | ✅ | 85 test files, 95.5% coverage |
+| Git workflow | ✅ | Using gamma branch |
+| CI/CD | ✅ | GitHub Actions configured |
+| Documentation | ✅ | mkdocs + mkdocstrings |
+
+---
+
+## Recent Activity (2026-07-08)
+
+| Commit | Description |
+|--------|-------------|
+| `0598d13` | H24 completed: deferred toolbox refresh, signal wiring, catalog-first-tab |
+| `856d418` | debug charts add todos |
+| `7835f16` | fix(H24): wire refresh_for_document on tab switch |
+| `7f1672d` | fix(H24): lazy-init toolbox on tab switch |
+| `81e7801` | implement notebook saving mechanisms |
 
 ---
 
@@ -32,69 +45,33 @@
 nchantdoffice/
 ├── nchantdoffice/        # Main package
 │   ├── __init__.py
-│   ├── models.py
+│   ├── models.py         # 89.9 KB - Core data models
 │   ├── views.py
-│   ├── nchantdoffice.py
-│   ├── dialogs/
-│   ├── nchantdagent/
-│   ├── updates/
-│   ├── utilities/
-│   ├── widgets/
-│   └── wizards/
-├── cmds/                 # CLI commands
-├── test_nchantdoffice/   # Tests
-├── z-work_/              # Work in progress
-├── docs/                 # Documentation
-├── skills/               # Custom capabilities
-├── README.md             # Project overview
-├── STATE.md              # This file
-├── CHANGES.md            # Changelog
+│   ├── nchantdoffice.py  # Application cloak
+│   ├── config.py         # Centralized configuration (100+ constants)
+│   ├── cli.py            # CLI interface
+│   ├── dialogs/          # Dialog modules
+│   ├── updates/          # Database updates
+│   ├── utilities/        # Utility functions
+│   ├── widgets/          # Widget modules
+│   │   ├── config/       # Configuration widgets
+│   │   ├── controls/     # Control widgets (toolbars, toolboxes)
+│   │   ├── documents/     # Document widgets
+│   │   ├── items/        # Item widgets (trees, diagrams)
+│   │   └── panes/         # Pane widgets
+│   └── wizards/          # Application wizards
+├── cmds/                 # CLI commands (run, install, launch)
+├── tests/                # Test suites
+│   └── unit/             # 85 unit test files
+├── docs/                 # mkdocs documentation
+├── .github/workflows/     # CI/CD pipelines
 ├── pyproject.toml        # Package metadata
-└── pytest.ini            # Test config
+└── uv.lock               # Locked dependencies
 ```
 
 ---
 
-## PyfficeDocument Implementations
-
-### Completed ✅ (12/25)
-
-| # | Document Type | File | Status |
-|---|---------------|------|--------|
-| 1 | Notebook | notebooks.py | ✅ |
-| 2 | SpreadSheet | spreadsheet.py | ✅ |
-| 3 | Matrix | spreadsheet.py | ✅ |
-| 4 | Chart | charts.py | ✅ |
-| 5 | Script | text.py | ✅ |
-| 6 | Text | text.py | ✅ |
-| 7 | Calendar | calendars.py | ✅ |
-| 8 | PDF | pdf.py | ✅ |
-| 9 | Presentation | presentation.py | ✅ |
-| 10 | Video | video.py | ✅ |
-| 11 | Audio | audio.py | ✅ |
-| 12 | Contact | contacts.py | ✅ |
-
-### Not Implemented (13/25)
-
-| # | Document Type | Priority |
-|---|---------------|----------|
-| 1 | Table | Medium |
-| 2 | Image | Medium |
-| 3 | Work | Low |
-| 4 | TaskFrame | Medium |
-| 5 | Persona | Low |
-| 6 | Form | Medium |
-| 7 | Survey | Low |
-| 8 | Response | Low |
-| 9 | WebPage | Low |
-| 10 | WebBrowser | Medium |
-| 11 | Config | High |
-| 12 | ColorPalette | Low |
-| 13 | Playlist | Low |
-
----
-
-## Internal Dependencies
+## Dependencies
 
 | Project | Purpose | Status |
 |---------|---------|--------|
@@ -102,89 +79,88 @@ nchantdoffice/
 | pyffice | Document automation | ✅ Integrated |
 | kahndor | Configuration | ✅ Used |
 | pycurity | Security | ✅ Available |
-| ogma | ZMQ messaging | ✅ Available |
 | micromole | Data utilities | ✅ Available |
+
+---
+
+## Testing
+
+### Test Coverage: 95.5%
+
+| Directory | Type | Count |
+|-----------|------|-------|
+| tests/unit/ | Unit Tests | 85 test files |
+| tests/unit/fixtures/ | Test Fixtures | 21 files |
+
+### Test Framework
+
+- **Framework**: pytest
+- **Config**: pytest.ini (tool.pytest in pyproject.toml)
+- **Naming Convention**: `*TEST.py` suffix
+- **Coverage**: 95.5% (sasquatch audit)
 
 ---
 
 ## Action Items
 
 ### Completed ✅
-- [x] Phase 1-5 implementation per AXN.md
-- [x] Pyffice integration (12 document types)
-- [x] CLI entry point (cmds/)
-- [x] Create STATE.md per CODING_STANDARDS
+- [x] H24: Toolbox Drawer Stale on Tab Switch (commit `0598d13`)
+- [x] P2: Lazy Tab Loading Audit (commit `0598d13`)
+- [x] Phase 1-7 implementation
+- [x] CI/CD pipeline (GitHub Actions)
+- [x] Configuration module with logging
+- [x] Unit test infrastructure
 
-### In Progress
-- [ ] Set up tests/ directory structure
-- [ ] Clean up pyproject.toml dependencies
+### In Progress 🔄
+- [ ] H25: Catalog Tab Wrong Child Count
+- [ ] M1: Inline TODO Inventory (87 locations across 27 files)
 
 ### High Priority
-- [ ] Add unit tests
-- [ ] Verify signal connections in nchantdoffice.py
-- [ ] Implement PyfficeConfig document type
+- [ ] H27: Nchantd Image Save Mode
+- [ ] H28: Browser Pin Tab Doesn't Pin
+- [ ] H29: Tree Node Drag-and-Drop Regression
 
 ### Medium Priority
-- [ ] Add remaining 13 PyfficeDocument types
-- [ ] Improve docstrings
+- [ ] P1: Startup Performance (Glain Load)
+- [ ] M2: Affiliate Link Data Updates
+- [ ] M3: Pro User Affiliate Opt-Out
 
 ---
 
-## Testing
+## Code Quality Metrics
 
-### Test Structure
+**Overall Score**: 60.26 (from sasquatch audit)
 
-| Directory | Type | Count |
-|-----------|------|-------|
-| test_nchantdoffice/unit/ | Unit Tests | 84 test files |
-| test_nchantdoffice/fixtures/ | Test Fixtures | N/A |
-| tests/integration/ | Integration Tests | Present |
-| tests/e2e/ | E2E Tests | Present |
+| Dimension | Score | Status |
+|-----------|-------|--------|
+| Testing | 100 | ✅ Pass |
+| Documentation | 100 | ✅ Pass |
+| CI/CD Config | 100 | ✅ Pass |
+| Structure | 100 | ✅ Pass |
+| Changelog | 100 | ✅ Pass |
+| Memory | 100 | ✅ Pass |
+| Speed | 100 | ✅ Pass |
+| Import Cycle | 100 | ✅ Pass |
+| Licenses | 100 | ✅ Pass |
+| File Sizes | 100 | ✅ Pass |
+| Git Workflow | 85 | ✅ Pass |
 
-### Test Framework
+### Areas Needing Improvement
 
-- **Framework**: pytest
-- **Config**: pytest.ini
-- **Naming Convention**: `*TEST.py` suffix
-- **Location**: `test_nchantdoffice/` directory
-
-### Test Coverage
-
-| Category | Coverage | Notes |
-|----------|----------|-------|
-| Unit Tests | High | 84 unit test files covering utilities, dialogs, widgets, wizards |
-| Integration Tests | Medium | Present in tests/integration/ |
-| E2E Tests | Low | Present in tests/e2e/, needs development |
-
-### Test Breakdown by Module
-
-| Module | Test Files | Status |
-|--------|------------|--------|
-| utilities/ | 5 | ✅ Complete |
-| dialogs/ | 4 | ✅ Complete |
-| widgets/documents/ | 40+ | ✅ Well covered |
-| wizards/ | 1 | ✅ Complete |
-| nchantdoffice/ | 1 | ✅ Complete |
-| updates/ | 1 | ✅ Complete |
-
-### Gaps
-
-| Gap | Priority | Notes |
-|-----|----------|-------|
-| No coverage report | Medium | Need to run pytest --cov |
-| E2E tests sparse | High | tests/e2e/ needs more tests |
-| Integration tests limited | Medium | tests/integration/ needs expansion |
-
-### Recommendations
-
-1. Run `pytest --cov=nchantdoffice` to get actual coverage metrics
-2. Add more E2E tests for full user workflows
-3. Expand integration tests for database operations
+| Issue | Count | Severity |
+|-------|-------|----------|
+| Duplicate filenames | 35 | Medium |
+| God classes | 18 | High |
+| Feature envy | 23 | Medium |
+| Parallel inheritance | 32 | Medium |
+| Switch abuse | 24 | Medium |
+| Data clumps | 11 | Medium |
+| Type annotations | 7/6407 | High |
 
 ---
 
 ## Last Updated
-- **Date**: 2026-03-05
+- **Date**: 2026-07-16
 - **Reviewer**: Orin (AI Agent)
-- **Branch**: orin-ws
-- **CODING_STANDARDS**: V4 compliant
+- **Branch**: gamma
+- **HEAD**: `0598d13`
