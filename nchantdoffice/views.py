@@ -53,10 +53,12 @@ class NchantdOfficeCloakView(NchantdCloakView):
 
     def switch_to_account_tab(self):
         """"""
+        # PUSH to 0.0.3
         return self
 
     def on_window_move(self, event):
         """"""
+        # PUSH to 0.0.3
         # need to move any visible notes at the same time as the main application
         # self.panes["center"].model.current_tab.on_window_move(event)
         return self

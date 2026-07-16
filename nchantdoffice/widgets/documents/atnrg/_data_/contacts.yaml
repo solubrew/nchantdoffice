@@ -1,5 +1,5 @@
 ---
-NchantdRolodex:
+NchantdOfficeRolodex:
     path:
     dstruct:
         database:
@@ -20,10 +20,6 @@ NchantdRolodex:
           items:
               0: {"action": "", "type": ""}
       400:
-          title: Configuration
-          items:
-              0: {"action": "", "type": ""}
-      500:
           title: Quick Start
           items:
               0: {"action": "", "type": ""}

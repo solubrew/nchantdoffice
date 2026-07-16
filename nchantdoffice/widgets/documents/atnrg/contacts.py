@@ -185,8 +185,6 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         self.context_menu_name = "context.document.files"
         if self.context_menu_name is not None:
             self.initialize_context_menu(self.context_menu_name)
-        # self.document = PyfficeRolodex()  # self.app.model.store)
-        # self.load_contacts()
         return self
 
     def initView(self, cfg=None):
@@ -194,7 +192,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         cfg = cfg or {}
         if "buttons" not in cfg:
             cfg["buttons"] = {}
-        search_cfg = {"label": "Search:", "layout": "horizontal", "text": ""}
+        search_cfg = {"label": "Search:", "layout": "horizontal", "text": "", "handler": self.cmd_search_contacts}
         self.search_entry = NchantdLabeledEntry(self, search_cfg)
         cfg["buttons"][10] = {"action": "search_contacts", "widget": self.search_entry}
         filter_cfg = {
@@ -202,6 +200,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
             "layout": "horizontal",
             "combobox": {"options": ["All", "Recent", "Favorites", "Company"]},
             "handler": self.cmd_filter_contacts,
+            "value": self.get_filter_option(),
         }
         self.filter_dropdown = NchantdDropDown(self, filter_cfg)
         cfg["buttons"][11] = {"action": "filter_contacts", "widget": self.filter_dropdown}
@@ -220,16 +219,14 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         super().initView(cfg)
         # Most likely contacts section
         self.contact_likely_group = NchantdHScrollGroupBox()
-        # TODO: create contact Card Widget
+        # NOTE: create contact Card Widget
         self.contact_likely_group.setTitle(f"Most Likely Contacts")
         self.layout.addLayout(self.contact_likely_group.layout)
-
         # All contacts section
         self.contacts_group = NchantdVScrollGroupBox(self)
-        # TODO: add a table
+        # NOTE: add a table
         self.contacts_group.setTitle(f"All Contacts ({len(self.contacts)})")
         self.layout.addLayout(self.contacts_group.layout)
-
         # Populate contacts
         self.display_contacts(self.contacts)
 
@@ -241,6 +238,11 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         self.initView()
         return self
 
+    def get_filter_option(self):
+        """"""
+        # TODO implement method
+        return None
+
     def init_drawer_document_config(self):
         """"""
         items = self.toolbox_config[100].get("items", {})
@@ -248,21 +250,35 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
 
-    def init_group_manager(self):
+    def init_drawer_contact_group_config(self):
         """"""
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
 
-    def init_contact_manager(self):
+    def init_drawer_contact_config(self):
         """"""
         items = self.toolbox_config[300].get("items", {})
         cnt = 0
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
 
-    # ========== CRUD Operations ==========
+    def init_drawer_quickstart(self):
+        """"""
+        items = self.toolbox_config[400].get("items", {})
+        cnt = 0
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+
+    def init_toolbox(self):
+        """"""
+        super().init_toolbox()
+        self.toolbox_config[100]["items"] = self.init_drawer_document_config()
+        self.toolbox_config[200]["items"] = self.init_drawer_contact_group_config()
+        self.toolbox_config[300]["items"] = self.init_drawer_contact_config()
+        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+        return self
 
     def load_contacts(self):
         """Load contacts from document/database"""

@@ -51,10 +51,7 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentsCatalog"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentsCatalog").override(cfg))
         self.toolbox_config = None
         self.catalog = self
         self.name = "Document Catalog"
@@ -68,9 +65,8 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
 
     def initModel(self, cfg=None):
         """"""
-        if cfg is None:
-            cfg = {}
-        cfg = {"size": None}
+        cfg = cfg or {}
+        cfg["size"] = None
         super().initModel(cfg)
         self.toolbox_config = self.config.dikt.get("toolbox", None)
         logma.info(f"Toolbox Config {self.toolbox_config}")
@@ -144,18 +140,22 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
 
     def cmd_node_edit(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_tab_edit(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_tag_edit(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def defocus(self):
         """"""
+        # TODO implement method
         return self
 
     def init_drawer_file_config(self):
@@ -196,19 +196,17 @@ class NchantdOfficeExtensionsCatalog(NchantdCatalog):
 
     def __init__(self, parent, cfg=None):
         """"""
-        self.config = kahndor.instruct(pxcfg).select("NchantdDataSourcesSettingsTab")
-        self.parent = parent
-        if self.parent is not None:
-            self.config.override(self.parent.config)
-        self.config.override(cfg)
-        super().__init__(self)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.instruct(pxcfg).select("NchantdDataSourcesSettingsTab").override(cfg))
         self.data_sources = self.config.dikt["default_sources"]
 
-    def initModel(self):
+    def initModel(self, cfg=None):
         """"""
+        super().initModel(cfg)
 
-    def initView(self):
+    def initView(self, cfg=None):
         """"""
+        super().initView(cfg)
         layout = pyqt.QVBoxLayout()
         if len(self.data_sources) != 0:
             for source in self.data_sources:
@@ -228,12 +226,9 @@ class NchantdOfficeServicesCatalog(NchantdCatalog):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        super().__init__(parent, cfg)
         self.parent = parent
-        self.config = kahndor.instruct(pxcfg).select("NchantdServiceCatalog")
-        if self.parent:
-            self.config.override(parent.config)
-        super().__init__(self)
-        self.config.override(cfg)
+        self.config.override(kahndor.instruct(pxcfg).select("NchantdServiceCatalog").override(cfg))
 
     def initModel(self):
         """"""
@@ -247,7 +242,7 @@ class NchantdOfficeServicesCatalog(NchantdCatalog):
         cfg = {"WHERE": {"EQUAL": {"tag_txt": "ai_service_site"}}}
         rdr = self.app.model.store.docs["db"].read(params, cfg)
         self.services_available = next(rdr).dikt[table]["df"]
-        # TODO: fix initial loading of data duplicates
+        # NOTE: fix initial loading of data duplicates
         self.services_available.drop_duplicates(subset=["name_txt", "service_nm_txt"], inplace=True)
         return self
 
@@ -270,10 +265,9 @@ class NchantdDataSourcesCatalog(NchantdCatalog):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSourceCatalog"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdDataSourceCatalog").override(parent.config).override(cfg)
+        )
         self.bridge = None
         self.search_bar = None
 
@@ -289,6 +283,7 @@ class NchantdDataSourcesCatalog(NchantdCatalog):
         """"""
         self.init_pre_view()
         self.search_bar = NchantdSearchBar()
+        # TODO add search bar to layout...with filter capabilities
         super().initView(NchantdOfficeSourceCatalogItem, NchantdSourcePane)
         return self
 

@@ -22,14 +22,12 @@ from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from kahndor.logma import Logma
-from pyffice.images.pdfs import PyfficePDF
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.controls.advanced_buttons import NchantdEnableSpinBox
 from nchantrs.widgets.media.editors.selectors import NchantdDropDownActivator, NchantdDropDown
 from nchantrs.widgets.panes.panes import NchantdPane
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
-from nchantrs.widgets.canvases.canvases import NchantdCanvas
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -44,20 +42,12 @@ class NchantdPageAddToolPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdPageAddToolPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdPageAddToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
         super().initModel(cfg)
-        # cfg = {}
-        # self.document = self.app.model.codex.init_pdf(cfg)
-        # self.document.load_document()
-        # self.context_menu.get_menu("context.document.pdf")
         return self
 
     def initView(self, cfg=None):
@@ -68,7 +58,12 @@ class NchantdPageAddToolPane(NchantdPane):
         group.setLayout(layout)
         pages = ["Page0", "Page1", "Page2", "Page3"]
         for page in pages:
-            cfg = {"label": page, "layout": "horizontal", "size": ["auto", "auto"]}
+            cfg = {
+                "label": page,
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "handler": self.cmd_page_number_change,
+            }
             pageW = NchantdEnableSpinBox(self, cfg).initWidget()
             layout.addWidget(pageW)
         cfg = {
@@ -76,11 +71,20 @@ class NchantdPageAddToolPane(NchantdPane):
             "layout": "horizontal",
             "label": "Open File: ",
             "tooltip": "Open File to Combine Pages",
+            "handler": self.cmd_open_file,
         }
         self.open_file_button = NchantdButton(self, cfg).initWidget()
         layout.addWidget(self.open_file_button)
         self.layout.addWidget(group)
         return self
+
+    def cmd_page_number_change(self):
+        """"""
+        # TODO implement method
+
+    def cmd_open_file(self):
+        """"""
+        # TODO implement method
 
     def initWidget(self):
         """"""
@@ -95,14 +99,8 @@ class NchantdOfficePDF(NchantdOfficeDocument):
     def __init__(self, parent=None, cfg=None):
         """"""
         super().__init__("Nchantd PDF", parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePDF"))
-        self.parent = parent
-        if self.parent is not None:
-            self.config.override(self.parent.config)
-        self.config.override(cfg)
-
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePDF").override(cfg))
         self.view = pyqt.QPdfView()
-
         self.annotations = None  # Store all drawing annotations as a list
         self.current_page = None  # Track the current PDF page
         self.document = None
@@ -110,16 +108,12 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         self.pdf_page_image = None  # Loaded PDF page as an image
         self.pen = None
         self.previous_point = None  # Store the previous drawing point
-
         self.current_page = 0
         self.scale = 1.0
         self.text_instances = []
         self.selected_text = ""
         self.selection_start = None
         self.selection_end = None
-
-        # self.init_ui()
-        # self.load_page()
 
     def initModel(self):
         """"""
@@ -187,10 +181,21 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         cnt += 1
         if cnt not in items:
             items[cnt] = default_action
-        cfg = {"label": "Page Count: ", "layout": "horizontal"}
+        cfg = {
+            "label": "Page Count: ",
+            "layout": "horizontal",
+            "handler": self.cmd_page_count_change,
+            "value": self.get_page_count(),
+        }
         self.label_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.label_entry
         return items
+
+    def cmd_page_count_change(self):
+        """"""
+
+    def get_page_count(self):
+        """"""
 
     def init_drawer_document_tools(self):
         """"""
@@ -199,13 +204,23 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
             items[cnt] = default_action
-        cfg = {"label": "Current Format: ", "layout": "horizontal"}
+        cfg = {
+            "label": "Current Format: ",
+            "layout": "horizontal",
+            "handler": self.cmd_image_format_change,
+            "value": self.get_image_format(),
+        }
         self.image_format_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.image_format_entry
         cnt += 1
         if cnt not in items:
             items[cnt] = default_action
-        cfg = {"label": "Convert Format", "layout": "horizontal"}
+        cfg = {
+            "label": "Convert Format",
+            "layout": "horizontal",
+            "handler": self.cmd_image_convert_change,
+            "value": self.get_image_convert(),
+        }
         self.image_conversion_select = NchantdDropDownActivator(self, cfg)
         items[cnt]["widget"] = self.image_conversion_select
         cnt += 1
@@ -238,7 +253,23 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
         self.toolbox_config[200]["items"] = self.init_drawer_document_tools()
-        # self.toolbox_config[300]["items"] = self.init_drawer_quickstart()
+        self.toolbox_config[300]["items"] = self.init_drawer_quickstart()
+
+    def cmd_image_format_change(self):
+        """"""
+        # TODO implement method
+
+    def cmd_image_convert_change(self):
+        """"""
+        # TODO implement method
+
+    def get_image_format(self):
+        """"""
+        # TODO implement method
+
+    def get_image_convert(self):
+        """"""
+        # TODO implement method
 
     def open_file(self, file=None):
         """"""

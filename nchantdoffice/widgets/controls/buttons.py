@@ -39,12 +39,8 @@ class NchantdOfficeNewDocumentAcceptButtons(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdOkButtons")
-        if parent:
-            self.config.override(self.parent.config)
-        self.config.override(cfg)
-        super().__init__(self.parent, self.config)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOkButtons").override(cfg))
         self.ok_button = None
         self.cancel_button = None
 

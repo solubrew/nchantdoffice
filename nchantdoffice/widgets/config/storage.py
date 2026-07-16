@@ -42,11 +42,7 @@ class NchantdOfficeStorageSettings(NchantdStorageSettings):
     def __init__(self, parent, cfg=None):
         """"""
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeStorageSettings"))
-        self.parent = parent
-        if self.parent is not None:
-            self.config.override(self.parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeStorageSettings").override(cfg))
         self.storage = self.config.dikt.get("default_storage", None)
         self.local_paths = []
         self.local_button_bar = None

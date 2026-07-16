@@ -26,18 +26,22 @@ from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.calendars.calendars import NchantdCalendar, NchantdDateTimeSelect
-from nchantrs.widgets.controls.buttons import NchantdButton
-from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
+from nchantdoffice.widgets.documents.atnrg.browsers import NchantdOfficeWebBrowser
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons
+from nchantrs.widgets.controls.checkboxes import NchantdCheckboxWidget
+from nchantrs.widgets.controls.buttons import NchantdButtonWidget
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
-from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.panes.panes import NchantdPane
-from nchantrs.widgets.widgets import NchantdWidget
-from nchantrs.widgets.tables.lists import NchantdList
-from nchantrs.widgets.groups import NchantdCollapsableGroup, NchantdGroup
+from nchantrs.widgets.tables.lists import NchantdList, NchantdListWidget
+from nchantrs.widgets.groups import NchantdGroup
+from nchantrs.widgets.calendars.timelines import NchantdTodayOverview
 from nchantrs.widgets.annotations import NchantdLabel
+from nchantrs.widgets.groups import NchantdHScrollGroupBox, NchantdVScrollGroupBox
+from nchantrs.widgets.media.editors.selectors import NchantdDropDown
+from nchantrs.widgets.widgets import NchantdWidget
+from nchantrs.widgets.calendars.days import NchantdDayDashboard
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -48,17 +52,31 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "calendars.yaml")
 
 
+def get_scope_options():
+    """"""
+    return [
+        "Minutely",
+        "Quarter-Hourly",
+        "Hourly",
+        "Daily",
+        "Weekly",
+        "Monthly",
+        "Quarter-Yearly",
+        "Yearly",
+    ]
+
+
 class NchantdEventPane(NchantdPane):
     """"""
 
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventPane").override(cfg))
+        self.event_start_label = None
+        self.event_end_label = None
+        self.event_alarm_label = None
+        self.event_task_label = None
 
     def initModel(self, cfg=None):
         """"""
@@ -67,8 +85,7 @@ class NchantdEventPane(NchantdPane):
 
     def initView(self, cfg=None):
         """"""
-        if cfg is None:
-            cfg = {}
+        cfg = cfg or {}
         cfg["layout"] = "grid"
         super().initView(cfg)
         cfg = {"label": f"Start: {dt.datetime.now()}"}
@@ -80,7 +97,7 @@ class NchantdEventPane(NchantdPane):
         cfg = {"label": f"Alarm: 10 minutes before"}
         self.event_alarm_label = NchantdLabel(self, cfg).initWidget()
         self.layout.addWidget(self.event_alarm_label, 2, 0)
-        cfg = {"label": "Task: "}
+        cfg = {"label": "Task:"}
         self.event_task_label = NchantdLabel(self, cfg).initWidget()
         self.layout.addWidget(self.event_task_label, 3, 0)
 
@@ -99,11 +116,7 @@ class NchantdAlarmsListPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -116,10 +129,10 @@ class NchantdAlarmsListPane(NchantdPane):
         group = pyqt.QGroupBox("Alarms: ")
         layout = pyqt.QVBoxLayout()
         group.setLayout(layout)
-        cfg = {"data": self.config.dikt.get("data", [])}
+        cfg = {"data": self.get_alarms_list()}
         cfg["data"].append("Add New Alarm")
-        self.layers_list = NchantdList(self, cfg).initWidget()
-        layout.addWidget(self.layers_list)
+        self.alarms_list = NchantdList(self, cfg).initWidget()
+        layout.addWidget(self.alarms_list)
         self.layout.addWidget(group)
         return self
 
@@ -129,6 +142,11 @@ class NchantdAlarmsListPane(NchantdPane):
         self.initView()
         return self
 
+    def get_alarms_list(self):
+        """"""
+        # TODO: implement method
+        return self
+
 
 class NchantdAlarmsEditPane(NchantdPane):
     """"""
@@ -136,11 +154,7 @@ class NchantdAlarmsEditPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventRecursionEditPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventRecursionEditPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -154,22 +168,15 @@ class NchantdAlarmsEditPane(NchantdPane):
         group = NchantdGroup(self, cfg)
         layout = pyqt.QVBoxLayout()
         group.setLayout(layout)
-        cfg = {"label": "Alarm Name: "}
+        cfg = {"label": "Alarm Name: ", "handler": self.cmd_name_changed, "value": self.get_name()}
         self.name_entry = NchantdLabeledEntry(self, cfg).initWidget()
         layout.addWidget(self.name_entry)
         cfg = {
             "layout": "horizontal",
             "label": "Alert ",
-            "options": [
-                "Minutely",
-                "Quarter-Hourly",
-                "Hourly",
-                "Daily",
-                "Weekly",
-                "Monthly",
-                "Quarter-Yearly",
-                "Yearly",
-            ],
+            "options": get_scope_options(),
+            "handler": self.cmd_scope_changed,
+            "value": self.get_current_scope(),
         }
         self.alarm_scope_select = NchantdDropDown(self, cfg).initWidget()
         layout.addWidget(self.alarm_scope_select)
@@ -191,6 +198,22 @@ class NchantdAlarmsEditPane(NchantdPane):
         self.initView()
         return self
 
+    def cmd_name_changed(self):
+        """"""
+        # TODO implement method
+
+    def cmd_scope_changed(self):
+        """"""
+        # TODO implement method
+
+    def get_name(self):
+        """"""
+        # TODO implement method
+
+    def get_current_scope(self):
+        """"""
+        # TODO implement method
+
 
 class NchantdEventGroup(NchantdWidget):
     """"""
@@ -198,20 +221,16 @@ class NchantdEventGroup(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventGroup"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventGroup").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
+        super().initModel(cfg)
         return self
 
     def initView(self, cfg=None):
         """"""
-        if cfg is None:
-            cfg = {}
+        cfg = cfg or {}
         cfg["layout"] = "grid"
         super().initView(cfg)
         cfg["text"] = "Event: "
@@ -246,11 +265,7 @@ class NchantdEventsListPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventsListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventsListPane").override(cfg))
         self.events = None
 
     def initModel(self, cfg=None):
@@ -271,15 +286,11 @@ class NchantdEventsListPane(NchantdPane):
                 "event_end_dttm": dt.datetime.now() + dt.timedelta(days=1),
             },
         }
-
-        # if self.events == {}:
-        #    self.events = self.app.model.store.get_events()
         return self
 
     def initView(self, cfg=None):
         """"""
-        if cfg is None:
-            cfg = {}
+        cfg = cfg or {}
         cfg["layout"] = "vertical"
         super().initView(cfg)
         for event in self.events:
@@ -301,11 +312,7 @@ class NchantdRecurrencesListPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdRecurrencesListPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -320,8 +327,8 @@ class NchantdRecurrencesListPane(NchantdPane):
         group.setLayout(layout)
         cfg = {"data": self.config.dikt.get("data", [])}
         cfg["data"].append("Add New Recurrence")
-        self.layers_list = NchantdList(self, cfg).initWidget()
-        layout.addWidget(self.layers_list)
+        self.recurrences_list = NchantdList(self, cfg).initWidget()
+        layout.addWidget(self.recurrences_list)
         self.layout.addWidget(group)
         return self
 
@@ -338,11 +345,8 @@ class NchantdTasksListPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdTasksListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdTasksListPane").override(cfg))
+        self.tasks_list = None
 
     def initModel(self, cfg=None):
         """"""
@@ -355,9 +359,9 @@ class NchantdTasksListPane(NchantdPane):
         group = pyqt.QGroupBox("Tasks: ")
         layout = pyqt.QVBoxLayout()
         group.setLayout(layout)
-        cfg = {"data": self.config.dikt.get("data", [])}
-        self.layers_list = NchantdList(self, cfg).initWidget()
-        layout.addWidget(self.layers_list)
+        cfg = {"data": self.get_tasks()}
+        self.tasks_list = NchantdList(self, cfg).initWidget()
+        layout.addWidget(self.tasks_list)
         self.layout.addWidget(group)
         return self
 
@@ -367,6 +371,9 @@ class NchantdTasksListPane(NchantdPane):
         self.initView()
         return self
 
+    def get_tasks(self):
+        """"""
+
 
 class NchantdEventRecursionEditPane(NchantdPane):
     """"""
@@ -374,11 +381,7 @@ class NchantdEventRecursionEditPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventRecursionEditPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventRecursionEditPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -392,32 +395,25 @@ class NchantdEventRecursionEditPane(NchantdPane):
         group = NchantdGroup(self, cfg)
         layout = pyqt.QVBoxLayout()
         group.setLayout(layout)
-        cfg = {"label": "Recurrence Name: "}
+        cfg = {"label": "Recurrence Name:", "handler": self.cmd_name_change, "value": self.get_name()}
         self.name_entry = NchantdLabeledEntry(self, cfg).initWidget()
         layout.addWidget(self.name_entry)
         cfg = {
             "layout": "horizontal",
-            "label": "Recur ",
-            "options": [
-                "Minutely",
-                "Quarter-Hourly",
-                "Hourly",
-                "Daily",
-                "Weekly",
-                "Monthly",
-                "Quarter-Yearly",
-                "Yearly",
-            ],
+            "label": "Recur",
+            "options": get_scope_options(),
+            "handler": self.cmd_recur_changed,
+            "value": self.get_recur(),
         }
         self.scope_select = NchantdDropDown(self, cfg).initWidget()
         layout.addWidget(self.scope_select)
-        cfg = {}
+        cfg = {"handler": self.cmd_end_datetime_changed, "value": self.get_end_datetime()}
         self.end_date_select = NchantdDateTimeSelect(self, cfg).initWidget()
         layout.addWidget(self.end_date_select)
-        cfg = {"label": "End after: "}
+        cfg = {"label": "End after:", "handler": self.cmd_end_after_changed, "value": self.get_end_after()}
         self.end_multiples_set = NchantdLabeledSpinBox(self, cfg).initWidget()
         layout.addWidget(self.end_multiples_set)
-        cfg = {}
+        cfg = {"handler": self.cmd_accept_buttons}
         self.accept_buttons = NchantdAcceptButtons(self, cfg).initWidget()
         layout.addWidget(self.accept_buttons)
         self.layout.addWidget(group)
@@ -428,6 +424,50 @@ class NchantdEventRecursionEditPane(NchantdPane):
         self.initModel()
         self.initView()
         return self
+
+    def cmd_accept_buttons(self):
+        """"""
+        # TODO: implement method
+
+    def cmd_name_change(self):
+        """"""
+        #TODO implement method
+
+    def cmd_end_datetime_changed(self):
+        """"""
+        # TODO: implement method
+
+    def cmd_end_after_changed(self):
+        """"""
+        # TODO: implement method
+
+    def cmd_recur(self):
+        """"""
+        # TODO: implement method
+
+    def cmd_recur_changed(self):
+        """"""
+        # TODO: implement method
+
+    def get_end_datetime(self):
+        """"""
+        # TODO: implement method
+
+    def get_end_after(self):
+        """"""
+        # TODO: implement method
+
+    def get_name(self):
+        """"""
+        #TODO implement method
+
+    def get_recur(self):
+        """"""
+        # TODO: implement method
+
+    def get_scope_options(self):
+        """"""
+        # TODO: implement method
 
 
 class NchantdOfficeCalendar(NchantdOfficeDocument):
@@ -469,7 +509,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             cfg = {}
         if cfg.get("buttons", None) is None:
             cfg["buttons"] = {}
-        options = ["Year", "Quarter Year", "Month", "Week", "Day", "Hour", "Quarter Hour"]
+        options = get_scope_options()
         css_cfg = {
             "label": "Scope:",
             "layout": "horizontal",
@@ -483,17 +523,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             "type": "dropdown",
             "widget": self.calendar_scope_select,
         }
-        options = [
-            "Year",
-            "Quarter Year",
-            "Month",
-            "Week",
-            "Day",
-            "Hour",
-            "Quarter Hour",
-            "Event",
-        ]  # Alter based on scope select ie. year scope can have qy and month
-
+        options = get_scope_options()  # Alter based on scope select ie. year scope can have qy and month
         cus_cfg = {
             "label": "Unit:",
             "layout": "horizontal",
@@ -527,8 +557,16 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         self.update_unit_options(scope)
         return self
 
+    def cmd_config_accept(self):
+        """"""
+        #TODO: implement method
+
+
+
+
     def cmd_select_calendar_unit(self, event, *args, **kwargs):
         """"""
+        # TODO: implement method
         return self
 
     def create_data_table(self):
@@ -562,15 +600,20 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         cnt = 0
         if cnt not in items:
             items[cnt] = deepcopy(default_action)
-        cfg = {"text": "", "layout": "horizontal", "justify": "center"}
+        cfg = {"text": "", "layout": "horizontal", "justify": "center", "handler": self.cmd_event_datetime_change}
         self.new_event_date_select = NchantdDateTimeSelect(self, cfg)
         items[cnt]["widget"] = self.new_event_date_select
         cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = deepcopy(default_action)
-        # cfg = {"text": "Create New Event", "layout": "horizontal", "justify": "center"}
-        # self.new_event_button = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.new_event_button
+        if cnt not in items:
+            items[cnt] = deepcopy(default_action)
+        cfg = {
+            "text": "Create New Event",
+            "layout": "horizontal",
+            "justify": "center",
+            "handler": self.cmd_create_new_event,
+        }
+        self.new_event_button = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.new_event_button
         cnt += 1
         if cnt not in items:
             items[cnt] = deepcopy(default_action)
@@ -583,6 +626,14 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         cnt += 1
         return items
 
+    def cmd_create_new_event(self, event=None, *args, **kwargs):
+        """"""
+        #TODO: implement method
+
+    def cmd_event_datetime_change(self):
+        """"""
+        #TODO: implement method
+
     def init_drawer_event_config(self):
         """"""
         items = self.toolbox_config[200].get("items", {})
@@ -590,9 +641,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         cnt = 0
         if cnt not in items:
             items[cnt] = deepcopy(default_action)
-        cfg = {
-            "layout": "horizontal",
-        }
+        cfg = {"layout": "horizontal", "handler": self.cmd_config_accept}
         self.event_config_accept_button = NchantdAcceptButtons(self, cfg)
         items[cnt]["widget"] = self.event_config_accept_button
         cnt += 1
@@ -601,19 +650,20 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         cfg = {
             "layout": "horizontal",
             "value": self.get_event_datetime_select_value(),
+            "handler": self.cmd_event_datetime_change(),
         }
         self.date_select = NchantdDateTimeSelect(self, cfg)
         items[cnt]["widget"] = self.date_select
         cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = deepcopy(default_action)
-        # cfg = {
-        #     "text": "Event is Required",
-        #     "layout": "horizontal",
-        #     "size": ["auto", "auto"],
-        # }
-        # self.event_required_checkbox = NchantdCheckbox(self, cfg)
-        # items[cnt]["widget"] = self.event_required_checkbox
+        if cnt not in items:
+            items[cnt] = deepcopy(default_action)
+        cfg = {
+            "text": "Event is Required",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+        }
+        self.event_required_checkbox = NchantdCheckboxWidget(self, cfg)
+        items[cnt]["widget"] = self.event_required_checkbox
         cnt += 1
         if cnt not in items:
             items[cnt] = deepcopy(default_action)
@@ -661,6 +711,10 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         items[cnt]["widget"] = self.event_tasks_pane
         return items
 
+    def cmd_event_datetime_change(self):
+        """"""
+        #TODO implement method
+
     def init_drawer_external_calendar_config(self):
         """"""
         items = self.toolbox_config[300].get("items", {})
@@ -685,15 +739,15 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         }
         self.calendar_account_name = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.calendar_account_name
-        # cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = default_action
-        # cfg = {
-        #     "text": "Connect to Service: ",
-        #     "layout": "horizontal",
-        # }
-        # self.service_connect_button = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.service_connect_button
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = default_action
+        cfg = {
+            "text": "Connect to Service: ",
+            "layout": "horizontal",
+        }
+        self.service_connect_button = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.service_connect_button
         return items
 
     def init_drawer_quickstart(self):
@@ -747,6 +801,72 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             "Minute": ["Second", "Quarter Minute", "Every 5 Seconds"],
         }
         self.calendar_unit_select.set_options(options[scope])
+
+
+class NchantdOfficeTodayOverview(NchantdTodayOverview):
+    """"""
+
+    def __init__(self, parent=None, cfg=None):
+        """ """
+        super().__init__(parent, cfg)
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdOfficeJournalSettings").override(cfg)
+        )
+
+    def initModel(self, cfg=None):
+        """"""
+        super().initModel(cfg)
+
+    def initView(self, cfg=None):
+        """"""
+        super().initView(cfg)
+        logma.info(f"initView")
+        cfg = {"height": 250}
+        scroll = NchantdHScrollGroupBox(self, cfg)
+        scroll.setTitle("Daily Weather")
+        today = dt.datetime.now()
+        days = [today + dt.timedelta(days=x) for x in range(-3, 4)]
+        logma.info(f"Days {days}")
+        for day in days:
+            cfg = {
+                "title": day.strftime("%A %Y-%m-%d"),
+                "humidity": {"high": "80", "low": "50"},
+                "temperature": {"high": "80", "low": "50"},
+                "rain_chance": {"high": "80", "low": "50"},
+            }
+            logma.info(f"Day {day}")
+            cfg = {"day": cfg}
+            if day.strftime("%Y-%m-%d") == today.strftime("%Y-%m-%d"):
+                cfg["font_zoom"] = 1.2  # [DONE]
+            scroll.addWidget(NchantdDayDashboard(self, cfg).initWidget())
+            # scrollbar = scroll.scroll.horizontalScrollBar()
+            # scrollbar = scroll.scroll.horizontalScrollBar()
+            # scrollbar.setSliderPosition(int((scrollbar.maximum() + scrollbar.minimum())/2))
+        scroll.set_scroll_bar_position("center")
+        self.layout.addLayout(scroll.layout)
+        if self.tasks is None:
+            self.tasks = []
+        # self.selected_day = NchantdDayCalendar(self, self.config).initWidget()
+        # if len(self.tasks) == 0:
+        #    self.selected_day.setFixedHeight(75)
+        # self.layout.addWidget(self.selected_day)
+        layout = pyqt.QHBoxLayout()
+        cfg = {"filters": {}}
+        # self.news = NchantdNEWSLSummary(self, cfg).initWidget()
+        # layout.addWidget(self.news)
+        cfg = {"size": ["auto", "auto"]}
+        self.viewer = NchantdVScrollGroupBox(self, cfg)
+        self.viewer.setTitle("Quick View")
+        cfg = {"url": "https://www.groundnews.com"}
+        browser = NchantdOfficeWebBrowser(self, cfg).initWidget()
+        self.viewer.addWidget(browser)
+        layout.addLayout(self.viewer.layout)
+        self.layout.addLayout(layout)
+
+    def initWidget(self):
+        """"""
+        self.initModel()
+        self.initView()
 
 
 # ====================================================================================================================||

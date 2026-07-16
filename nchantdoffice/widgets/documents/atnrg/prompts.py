@@ -56,11 +56,7 @@ class NchantdContextListPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdContextListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdContextListPane").override(cfg))
         self.contexts = None
 
     def initModel(self, cfg=None):
@@ -90,17 +86,14 @@ class NchantdContextListPane(NchantdPane):
         return self
 
 
+# TODO: unsure how to integrate this at the moment
 class NchantdOfficePromptManager(NchantdManager):
     """"""
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config = kahndor.instruct(pxcfg).select("NchantdOfficePromptManager")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePromptManager").override(cfg))
 
     def initModel(self):
         """"""
@@ -158,20 +151,12 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        # FIX: Pass parent properly to parent class instead of self
         super().__init__("NchantdOfficePrompt", parent=parent, cfg=cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePrompt"))
-        self.toolbox_config = self.config.dikt.get("toolbox", None)
-        logma.info(f"prompt config {self.toolbox_config}")
-        if self.parent:
-            self.config.override(parent.config)
-        if cfg is None:
-            cfg = {}
+        cfg = cfg or {}
         cfg["default_toolbar"] = False
         cfg["is_app"] = True
-        self.config.override(cfg)
-        logma.info(f"prompt config {self.config.dikt.keys()}")
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePrompt").override(cfg))
+        self.toolbox_config = self.config.dikt.get("toolbox", None)
         self.model_one = None
         self.model_two = None
         self.app_layout = None
@@ -189,8 +174,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
 
     def initModel(self, cfg=None):
         """"""
-        if cfg is None:
-            cfg = {}
+        cfg = cfg or {}
         super().initModel(cfg)
         # cfg = {"writer": self.app.model.store_document}
         document = {"document": self.config.dikt["document"]}
@@ -235,12 +219,18 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
 
     def cmd_select_model_new(self, event, *args, **kwargs):
         """"""
+        # TODO: implement method
+        return self
 
     def cmd_set_chat_history_expiry(self, event, *args, **kwargs):
         """"""
+        # TODO: implement method
+        return self
 
     def cmd_toggle_dual_models(self, event, *args, **kwargs):
         """"""
+        # TODO: implement method
+        return self
 
     def get_prompt_max_length(self):
         """"""
@@ -279,7 +269,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         self.chat_history_spin = NchantdEnableSpinBox(self, cfg)
         items[cnt]["widget"] = self.chat_history_spin
         cnt += 1
-        # need a pane to allow setting of days to keep chat history
+        # TODO need a pane to allow setting of days to keep chat history
         return items
 
     def init_drawer_models_config(self):
@@ -289,7 +279,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
             items[cnt] = default_action
-        options = ["Grok-3", "OpenAI", "Gemini", "Nchantd Office"]
+        options = self.get_available_models()
         cfg = {
             "label": "Available Models: ",
             "layout": "horizontal",
@@ -300,7 +290,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         self.models_select = NchantdNewModelPane(self, cfg)
         items[cnt]["widget"] = self.models_select
         cnt += 1
-        # show either a connection available or create connection to handle apis for the model
+        # TODO: show either a connection available or create connection to handle apis for the model
         return items
 
     def init_drawer_context_inputs(self):
@@ -308,31 +298,33 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         items = self.toolbox_config[300].get("items", {})
         cnt = 0
         default_action = {"action": "insert_generic_action", "type": "custom"}
-        if cnt not in items:
-            items[cnt] = default_action
-        options = ["Google Forms", "Nchantd Office"]
-        cfg = {
-            "label": "Select Form Compatibility: ",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": options},
-        }
-        self.context_input_list = NchantdContextListPane(self, cfg)
-        items[cnt]["widget"] = self.context_input_list
-        cnt += 1
+        # if cnt not in items:
+        #     items[cnt] = default_action
+        # options = ["Google Forms", "Nchantd Office"]
+        # cfg = {
+        #     "label": "Select Form Compatibility: ",
+        #     "layout": "horizontal",
+        #     "combobox": {"size": ["auto", "auto"], "options": options},
+        # }
+        # self.context_input_list = NchantdContextListPane(self, cfg)
+        # items[cnt]["widget"] = self.context_input_list
+        # cnt += 1
         return items
 
     def init_drawer_quickstart(self):
         """"""
-        items = {}
+        items = self.toolbox_config[400].get("items", {})
+        cnt = 0
+        default_action = {"action": "insert_generic_action", "type": "custom"}
         return items
 
     def init_toolbox(self):
         """"""
         super().init_toolbox()
-        # self.toolbox_config[100]["items"] = self.init_drawer_document_config()
-        # self.toolbox_config[200]["items"] = self.init_drawer_models_config()
+        self.toolbox_config[100]["items"] = self.init_drawer_document_config()
+        self.toolbox_config[200]["items"] = self.init_drawer_models_config()
         self.toolbox_config[300]["items"] = self.init_drawer_context_inputs()
-        # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
     def inject_context(self, context):
         """"""
@@ -420,7 +412,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
 
     def add_model(self, name, source):
         """"""
-        # TODO:  will need to get configurations from user or NchantdService
+        # NOTE:  will need to get configurations from user or NchantdService
         #  will need to get apikey if available
 
     def update_pane(self):

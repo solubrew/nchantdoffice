@@ -7,35 +7,41 @@
 - **Framework**: Built on nchantrs framework
 - **Location**: `/home/solubrew/.senbai/workspace/projects/nchantdoffice`
 - **Branch**: `gamma` (per CODING_STANDARDS Git workflow)
-- **Version**: 0.0.1.0.1.4
-- **Last Commit**: `0598d13` — "H24: deferred toolbox refresh + signal wiring + catalog-first-tab"
+- **Version**: 0.0.1.0.1.5
+- **Last Commit**: Merge — P0 fixes H30/H31/H32 + upstream sync
 
 ---
 
 ## Current Status: ACTIVE DEVELOPMENT
 
-## CODING_STANDARDS Compliance
+## Recent H## Activity (2026-07)
+
+| ID | Title | Status | Commit |
+|----|-------|--------|--------|
+| H24 | Toolbox Drawer Stale on Tab Switch | ✅ Completed (2026-07-08) | `0598d13` |
+| H25 | Catalog Tab Wrong Child Count | ✅ Completed (2026-07-12) | nchantrs `fa05530` |
+| H27 | Nchantd Image Save Mode (External Storage) | ✅ Completed (2026-07-12) | `c45cfc5` |
+| H28 | Browser Pin Tab Persistence | ✅ Completed (2026-07-11) | `87a5264` |
+| H29 | Tree Node Drag-and-Drop Regression | ✅ Completed (2026-07-12) | nchantrs `fa05530` + `c45cfc5` |
+| H30 | Row Height spinbox wrong handler | ✅ Completed (2026-07-16) | `5d52364` |
+| H31 | connect_signals() disabled | ✅ Completed (2026-07-16) | `5d52364` |
+| H32 | rows_count_entry widget overwrite | ✅ Completed (2026-07-16) | `5d52364` |
+
+---
+
+## CODING_STANDARDS Compliance (V4)
 
 | Standard | Status | Notes |
 |----------|--------|-------|
 | Project structure | ✅ | Uses template |
-| STATE.md | ✅ | Updated per review |
+| STATE.md | ✅ | This file — updated 2026-07-16 |
 | tests/ directory | ✅ | 85 test files, 95.5% coverage |
 | Git workflow | ✅ | Using gamma branch |
+| tuh environment | ✅ | Required for imports |
+| Internal projects | ✅ | Uses nchantrs, pyffice, kahndor |
 | CI/CD | ✅ | GitHub Actions configured |
 | Documentation | ✅ | mkdocs + mkdocstrings |
-
----
-
-## Recent Activity (2026-07-08)
-
-| Commit | Description |
-|--------|-------------|
-| `0598d13` | H24 completed: deferred toolbox refresh, signal wiring, catalog-first-tab |
-| `856d418` | debug charts add todos |
-| `7835f16` | fix(H24): wire refresh_for_document on tab switch |
-| `7f1672d` | fix(H24): lazy-init toolbox on tab switch |
-| `81e7801` | implement notebook saving mechanisms |
+| Inline TODO hygiene | 🟡 | 50 TODO + 63 NOTE across 27 files |
 
 ---
 
@@ -45,26 +51,29 @@
 nchantdoffice/
 ├── nchantdoffice/        # Main package
 │   ├── __init__.py
-│   ├── models.py         # 89.9 KB - Core data models
-│   ├── views.py
-│   ├── nchantdoffice.py  # Application cloak
 │   ├── config.py         # Centralized configuration (100+ constants)
-│   ├── cli.py            # CLI interface
-│   ├── dialogs/          # Dialog modules
-│   ├── updates/          # Database updates
-│   ├── utilities/        # Utility functions
-│   ├── widgets/          # Widget modules
+│   ├── models.py         # Tabset + document models (incl. lazy-load override)
+│   ├── views.py
+│   ├── nchantdoffice.py  # Main application entry
+│   ├── dialogs/          # Document dialogs
+│   ├── updates/          # Update handlers
+│   ├── utilities/        # Helpers (canonical widget lookup, etc.)
+│   ├── widgets/          # UI widgets (catalogs, documents, trees, etc.)
 │   │   ├── config/       # Configuration widgets
 │   │   ├── controls/     # Control widgets (toolbars, toolboxes)
-│   │   ├── documents/     # Document widgets
+│   │   ├── documents/    # Document widgets
 │   │   ├── items/        # Item widgets (trees, diagrams)
-│   │   └── panes/         # Pane widgets
-│   └── wizards/          # Application wizards
+│   │   └── panes/        # Pane widgets
+│   └── wizards/          # Wizard dialogs
 ├── cmds/                 # CLI commands (run, install, launch)
-├── tests/                # Test suites
+├── tests/                # Test suites (unit/integration/e2e)
 │   └── unit/             # 85 unit test files
-├── docs/                 # mkdocs documentation
-├── .github/workflows/     # CI/CD pipelines
+├── .github/workflows/    # CI + docs deployment
+├── docs/                 # Documentation
+├── README.md             # Project overview
+├── STATE.md              # This file
+├── CHANGES.md            # Changelog
+├── TODOs.md              # Active task inventory (H## + inline markers)
 ├── pyproject.toml        # Package metadata
 └── uv.lock               # Locked dependencies
 ```
@@ -75,7 +84,7 @@ nchantdoffice/
 
 | Project | Purpose | Status |
 |---------|---------|--------|
-| nchantrs | Core framework | ✅ Required |
+| nchantrs | Core framework | ✅ Required — branch `gamma` @ `4073c12` |
 | pyffice | Document automation | ✅ Integrated |
 | kahndor | Configuration | ✅ Used |
 | pycurity | Security | ✅ Available |
@@ -103,27 +112,29 @@ nchantdoffice/
 
 ## Action Items
 
-### Completed ✅
-- [x] H24: Toolbox Drawer Stale on Tab Switch (commit `0598d13`)
-- [x] P2: Lazy Tab Loading Audit (commit `0598d13`)
-- [x] Phase 1-7 implementation
+### Completed ✅ (2026-07)
+- [x] Phase 1-7 implementation per AXN.md
+- [x] Pyffice integration (12 document types)
+- [x] CLI entry point (cmds/)
+- [x] H24 — Toolbox Drawer Stale on Tab Switch
+- [x] H25 — Catalog Tab Wrong Child Count (via nchantrs)
+- [x] H27 — Image Save Mode (external storage)
+- [x] H28 — Browser Pin Tab Persistence
+- [x] H29 — Tree Node Drag-and-Drop (via nchantrs)
+- [x] P2 — Lazy Tab Loading Audit
+- [x] H30 — Row Height spinbox handler fix
+- [x] H31 — connect_signals() re-enabled
+- [x] H32 — row_height_entry widget naming fix
 - [x] CI/CD pipeline (GitHub Actions)
 - [x] Configuration module with logging
 - [x] Unit test infrastructure
 
-### In Progress 🔄
-- [ ] H25: Catalog Tab Wrong Child Count
-- [ ] M1: Inline TODO Inventory (87 locations across 27 files)
-
-### High Priority
-- [ ] H27: Nchantd Image Save Mode
-- [ ] H28: Browser Pin Tab Doesn't Pin
-- [ ] H29: Tree Node Drag-and-Drop Regression
-
 ### Medium Priority
-- [ ] P1: Startup Performance (Glain Load)
-- [ ] M2: Affiliate Link Data Updates
-- [ ] M3: Pro User Affiliate Opt-Out
+- [ ] Add remaining 13 PyfficeDocument types
+- [ ] Improve docstrings
+- [ ] M1 — Reduce 50 active inline TODOs
+- [ ] M2 — Affiliate Link Data Updates
+- [ ] M3 — Pro User Affiliate Opt-Out
 
 ---
 
@@ -161,6 +172,7 @@ nchantdoffice/
 
 ## Last Updated
 - **Date**: 2026-07-16
-- **Reviewer**: Orin (AI Agent)
+- **Reviewer**: Orinbai (AI Agent)
 - **Branch**: gamma
-- **HEAD**: `0598d13`
+- **HEAD**: Merge commit — P0 fixes + upstream sync
+- **CODING_STANDARDS**: V4 compliant

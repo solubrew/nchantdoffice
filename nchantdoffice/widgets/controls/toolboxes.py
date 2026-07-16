@@ -45,11 +45,7 @@ class NchantdApplicationSearchPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdApplicationSearchPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdApplicationSearchPane").override(cfg))
         self.handler = self.config.dikt.get("handler", None)
 
     def initModel(self, cfg=None):
@@ -99,12 +95,8 @@ class NchantdLLMQueryPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLLMQueryPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLLMQueryPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -146,12 +138,8 @@ class NchantdWebSearchPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdWebSearchPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdWebSearchPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -196,7 +184,6 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationToolBox").override(cfg))
 
     def initModel(self, cfg=None):

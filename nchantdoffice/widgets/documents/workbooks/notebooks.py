@@ -19,19 +19,26 @@ import subprocess
 import threading
 
 # ======================================3rd Party Library Modules=====================================================||
+from pygments import highlight
+from pygments.lexers import PythonLexer, JavaLexer, JavascriptLexer, CLexer
+from pygments.lexers import JsonLexer, YamlLexer, CssLexer, IniLexer
+from pygments.lexers.c_cpp import CppLexer
+from pygments.lexers.dotnet import CSharpLexer
+from pygments.lexers.ruby import RubyLexer
+from pygments.formatters import HtmlFormatter
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
 from kahndor.logma import Logma
-
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
-from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
+from nchantrs.widgets.controls.checkboxes import NchantdCheckboxWidget
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.libraries.pyqt import QTimer
 from nchantrs.libraries import pyqt
+from pycurity.pysan import Sanitized
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -113,7 +120,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         # cfg["buttons"][14] = {
         #     "action": "start_kernel",
         #     "handler": self.cmd_start_kernel,
-        # }  # TODO consolidate to only restart
+        # }  # NOTE consolidate to only restart
         # cfg["buttons"][15] = {"action": "interrupt_kernel", "handler": self.cmd_interrupt_kernel}
         cfg["buttons"][17] = {"action": "web_page_pin", "handler": self.cmd_pin_page, "value": self.cmd_check_is_pinned}
         cfg["buttons"][49] = "_insert_stretch"
@@ -548,6 +555,26 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error getting kernel info: {e}")
             return None
 
+    def get_kernel(self):
+        """"""
+        # TODO implement method
+
+    def get_server_port(self):
+        """"""
+        # TODO implement method
+
+    def get_config_autostart_server(self):
+        """"""
+        # TODO implement method
+
+    def cmd_cell_type_change(self):
+        """"""
+        # TODO implement method
+
+    def get_cell_type(self):
+        """"""
+        # TODO implement method
+
     def get_completions(self, code, cursor_pos):
         """Get code completions at cursor position
 
@@ -634,6 +661,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             "range": [8000, 9999],
             "default": self.server_port,
             "handler": self.cmd_set_server_port,
+            "value": self.get_server_port(),
         }
         self.port_spin = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.port_spin
@@ -646,20 +674,21 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             "layout": "horizontal",
             "combobox": {"size": ["auto", "auto"], "options": self.get_available_kernels()},
             "handler": self.cmd_select_kernel,
+            "value": self.get_kernel(),
         }
         self.kernel_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.kernel_select
         cnt += 1
-
         if cnt not in items:
             items[cnt] = default_action.copy()
         cfg = {
             "text": "Auto-start Server",
             "layout": "horizontal",
             "handler": self.cmd_toggle_autostart,
+            "value": self.get_config_autostart_server(),
         }
-        # self.autostart_checkbox = NchantdCheckbox(self, cfg)  # .initWidget()
-        # items[cnt]["widget"] = self.autostart_checkbox
+        self.autostart_checkbox = NchantdCheckboxWidget(self, cfg)
+        items[cnt]["widget"] = self.autostart_checkbox
         cnt += 1
 
         return items
@@ -669,21 +698,18 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         items = self.toolbox_config[200].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
         cnt = 0
-
         if cnt not in items:
             items[cnt] = default_action.copy()
         cfg = {"text": "Server Status: ", "layout": "horizontal"}
         self.server_status_label = NchantdLabel(self, cfg)
         items[cnt]["widget"] = self.server_status_label
         cnt += 1
-
         if cnt not in items:
             items[cnt] = default_action.copy()
         cfg = {"text": "Kernel Status: ", "layout": "horizontal"}
         self.kernel_status_label = NchantdLabel(self, cfg)
         items[cnt]["widget"] = self.kernel_status_label
         cnt += 1
-
         return items
 
     def init_drawer_object_config(self):
@@ -698,6 +724,8 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             "label": "Cell Type: ",
             "layout": "horizontal",
             "combobox": {"size": ["auto", "auto"], "options": ["Code", "Markdown", "Raw"]},
+            "handler": self.cmd_cell_type_change,
+            "value": self.get_cell_type(),
         }
         self.cell_type_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.cell_type_select
@@ -860,7 +888,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         logma.info(f"Syntax {self.document.syntax}")
         theme = "monokai"
         formatter = HtmlFormatter(style=theme, full=True, noclasses=True)
-        self.document.syntax = "html"  # TODO debug
+        self.document.syntax = "html"  # NOTE debug
         if self.document.syntax == "markdown":
             self.document_editor.setMarkdown(text)
             return self
@@ -980,7 +1008,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def save(self):
         """"""
-        # TODO: need to have a save url location mode so that it can reopen the same file each time
+        # NOTE: need to have a save url location mode so that it can reopen the same file each time
         #  and an internal save mode such that the file data is stored in the database and can be reconstructed to .ipynb file
         # logma.info(f"HTML {self.document_editor.toHtml()}")
         if self.document is None:
@@ -1001,7 +1029,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         #     logma.info(f"Content: {content}")
         # elif self.document.syntax == "jupyter":
         #     pass
-        #     #TODO: connect to jupyter saving mechanism as and connect the url path to the internal viewer entry
+        #     # NOTE: connect to jupyter saving mechanism as and connect the url path to the internal viewer entry
         # else:
         #     content = self.document_editor.toPlainText()
         # self.document.parse_content(content)

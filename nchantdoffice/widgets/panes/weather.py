@@ -37,12 +37,8 @@ class NchantdWeatherPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdWeatherPane")
-        if self.parent:
-            self.config.override(parent.config)
-        super().__init__(self)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdWeatherPane").override(cfg))
         self.html = self.config.dikt.get("html")
 
     def initModel(self):

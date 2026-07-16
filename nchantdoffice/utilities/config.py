@@ -32,19 +32,75 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "config.yaml")
 
 
-class PyfficeApplicationConfig(PyfficeConfig):
+# class NchantdOfficeConfigStoreDocument(NchantdConfigStoreDocument):
+#     """"""
+#
+#     def __init__(self, cfg=None):
+#         """"""
+#         super().__init__(cfg)
+#         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeConfigStoreDocument")).override(cfg)
+#
+#     def load_document(self, document=None):
+#         """"""
+#         super().load_document(document)
+#         return self
+#
+#     def set_settings_accounts(self, settings):
+#         """"""
+#         super().set_settings_accounts(settings)
+#         return self
+#
+#     def set_settings_journal(self, settings):
+#         """"""
+#         self.today_tabled_enable = True
+#         self.daily_headlines_enable = True
+#         self.weekly_weather_enable = True
+#         self.store_journal_entries_betweeen_sessions = True
+#         self.expire_history = True
+#         self.expire_history_days = 30
+#         self.journal_editor_enable = True
+#         self.insert_date_per_focus = True
+#         self.allow_edit_entry = True
+#         self.allow_reedit_entry = True
+#         return self
+#
+#     def to_dict(self):
+#         """"""
+#         doc = super().to_dict()
+#         doc["today_tabled_enable"] = self.today_tabled_enable
+#         doc["daily_headlines_enable"] = self.daily_headlines_enable
+#         doc["weekly_weather_enable"] = self.weekly_weather_enable
+#         doc["store_journal_entries_betweeen_sessions"] = self.store_journal_entries_betweeen_sessions
+#         doc["expire_history"] = self.expire_history
+#         doc["expire_history_days"] = self.expire_history_days
+#         doc["journal_editor_enable"] = self.journal_editor_enable
+#         doc["insert_date_per_focus"] = self.insert_date_per_focus
+#         doc["allow_edit_entry"] = self.allow_edit_entry
+#         doc["allow_reedit_entry"] = self.allow_reedit_entry
+#         return doc
+
+
+class NchantdOfficeBrowserConfig(PyfficeConfig):
     """"""
 
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None, parent=None):
         """"""
-        super().__init__(cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("PyfficeApplicationConfig")).override(cfg)
-        self.interface_settings = None
-        self.account_settings = None
-        self.security_settings = None
-        self.journal_settings = None
-        self.storage_settings = None
-        self.theme_settings = None
+        super().__init__(cfg, parent)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeBrowserConfig").override(cfg))
+        self.home_page = self.config.get("home_page", "https://www.nchantdoffice.com")
+
+    def get_home_page(self):
+        """"""
+
+
+class PyfficeApplicationConfig(PyfficeConfig):
+    """Define and control Pyffice Codex and ohter Pyffice Document Settings"""
+
+    def __init__(self, cfg=None, parent=None):
+        """"""
+        super().__init__(cfg, parent)
+        self.app = self.parent.app
+        self.config.override(kahndor.Instruct(pxcfg).select("PyfficeApplicationConfig").override(cfg))
 
     def load_document(self, document=None):
         """"""
@@ -53,54 +109,6 @@ class PyfficeApplicationConfig(PyfficeConfig):
             if document is None:
                 document = {}
         super().load_document(document)
-        self.set_interface_settings(document.get("interface_settings", {}))
-        self.set_account_settings(document.get("account_settings", {}))
-        self.set_security_settings(document.get("security_settings", {}))
-        self.set_journal_settings(document.get("journal_settings", {}))
-        self.set_storage_settings(document.get("storage_settings", {}))
-        self.set_theme_settings(document.get("theme_settings", {}))
-        return self
-
-    def set_interface_settings(self, settings):
-        """"""
-        if settings != self.interface_settings:
-            self.add_change("interface_settings", self.interface_settings, settings)
-            self.interface_settings = settings
-        return self
-
-    def set_account_settings(self, settings):
-        """"""
-        if settings != self.account_settings:
-            self.add_change("account_settings", self.account_settings, settings)
-            self.account_settings = settings
-        return self
-
-    def set_security_settings(self, settings):
-        """"""
-        if settings != self.security_settings:
-            self.add_change("security_settings", self.security_settings, settings)
-            self.security_settings = settings
-        return self
-
-    def set_journal_settings(self, settings):
-        """"""
-        if settings != self.interface_settings:
-            self.add_change("journal_settings", self.interface_settings, settings)
-            self.interface_settings = settings
-        return self
-
-    def set_storage_settings(self, settings):
-        """"""
-        if settings != self.storage_settings:
-            self.add_change("storage_settings", self.storage_settings, settings)
-            self.storage_settings = settings
-        return self
-
-    def set_theme_settings(self, settings):
-        """"""
-        if settings != self.theme_settings:
-            self.add_change("theme_settings", self.theme_settings, settings)
-            self.theme_settings = settings
         return self
 
     def to_dict(self):

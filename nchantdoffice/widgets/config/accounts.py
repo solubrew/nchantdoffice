@@ -45,11 +45,7 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAccountOverview"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAccountOverview").override(cfg))
         self.account_settings = None
         self.account_name_label = None
         self.account_type_label = None
@@ -66,34 +62,28 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
     def initView(self):
         """"""
         super().initView()
-
         # Account name
         cfg = {"text": f"Account: {self.app.model.user.name}", "size": ["auto", "auto"]}
         self.account_name_label = NchantdLabel(self, cfg).initWidget()
         self.layout.addWidget(self.account_name_label)
-
         # Account type
         account_type = "Pro" if self.app.model.user.has_pro else "Free"
         cfg = {"text": f"Type: {account_type}", "size": ["auto", "auto"]}
         self.account_type_label = NchantdLabel(self, cfg).initWidget()
         self.layout.addWidget(self.account_type_label)
-
         # Subscription status
         subscription_status = "Active" if self.app.model.user.is_paid else "Inactive"
         cfg = {"text": f"Subscription: {subscription_status}", "size": ["auto", "auto"]}
         self.subscription_label = NchantdLabel(self, cfg).initWidget()
         self.layout.addWidget(self.subscription_label)
-
         # Storage usage (placeholder)
         cfg = {"text": "Storage: 0 GB / 10 GB", "size": ["auto", "auto"]}
         self.storage_label = NchantdLabel(self, cfg).initWidget()
         self.layout.addWidget(self.storage_label)
-
         # Document count (placeholder)
         cfg = {"text": "Documents: 0", "size": ["auto", "auto"]}
         self.documents_label = NchantdLabel(self, cfg).initWidget()
         self.layout.addWidget(self.documents_label)
-
         return self
 
     def initWidget(self):
@@ -142,11 +132,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAccountSettings"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAccountSettings").override(cfg))
         self.user = pyqt.QApplication.instance().model.user
         self.user_name = None
         self.account_status = None
@@ -167,39 +153,39 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
     def initView(self):
         """"""
         super().initView()
-        top_layout = pyqt.QVBoxLayout()
-        cfg = {
-            "label": "Nchantd Account",
-            "size": ["auto", "auto"],
-            "layout": "horizontal",
-            "entrybox": {"size": [100, 25]},
-        }
-        self.user_name = NchantdEntryEditor(self, cfg).initWidget()
-        self.user_name.setPlaceholderText(f"{self.app.model.user.name}")
-        top_layout.addWidget(self.user_name)
-
-        status_layout = pyqt.QHBoxLayout()
-        cfg = {"label": "Status: ", "size": ["auto", "auto"], "layout": "horizontal", "entrybox": {"size": [50, 25]}}
-        self.account_status = NchantdEntryEditor(self, cfg).initWidget()
-        self.account_status.setPlaceholderText(f"{self.app.model.user.nchantrs_account_status}")
-        status_layout.addWidget(self.account_status)
-
-        # TODO: connect to service and get details
-        cfg = {"label": "Credits: ", "size": ["auto", "auto"], "layout": "horizontal", "entrybox": {"size": [50, 25]}}
-        self.credits_status = NchantdEntryEditor(self, cfg).initWidget()
-        self.credits_status.setPlaceholderText(f"{self.app.model.user.nchantrs_account_credits}")
-        status_layout.addWidget(self.credits_status)
-        status_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
-
-        top_layout.addLayout(status_layout)
-        top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
-
-        layout = pyqt.QHBoxLayout()
-        layout.addLayout(top_layout)
-        layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
-
-        self.config.dikt.pop("height", None)
-        self.config.dikt.pop("width", None)
+        # top_layout = pyqt.QHBoxLayout()
+        # cfg = {
+        #     "label": "Nchantd Account",
+        #     "size": ["auto", "auto"],
+        #     "layout": "horizontal",
+        #     "entrybox": {"size": [100, 25]},
+        # }
+        # self.user_name = NchantdEntryEditor(self, cfg).initWidget()
+        # # TODO: get user name from account api
+        # self.user_name.setPlaceholderText(f"{self.app.model.user.name}")
+        # top_layout.addWidget(self.user_name)
+        #
+        # # status_layout = pyqt.QHBoxLayout()
+        # cfg = {"label": "Status: ", "size": ["auto", "auto"], "layout": "horizontal", "entrybox": {"size": [50, 25]}}
+        # self.account_status = NchantdEntryEditor(self, cfg).initWidget()
+        # self.account_status.setPlaceholderText(f"{self.app.model.user.nchantrs_account_status}")
+        # top_layout.addWidget(self.account_status)
+        #
+        # # TODO: connect to service and get details
+        # cfg = {"label": "Credits: ", "size": ["auto", "auto"], "layout": "horizontal", "entrybox": {"size": [50, 25]}}
+        # self.credits_status = NchantdEntryEditor(self, cfg).initWidget()
+        # self.credits_status.setPlaceholderText(f"{self.app.model.user.nchantrs_account_credits}")
+        # top_layout.addWidget(self.credits_status)
+        # # top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
+        # # top_layout.addLayout(status_layout)
+        # top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
+        #
+        # layout = pyqt.QHBoxLayout()
+        # # layout.addLayout(top_layout)
+        # layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
+        #
+        # self.config.dikt.pop("height", None)
+        # self.config.dikt.pop("width", None)
         # logma.info(f"Set Scrolling Ad")
         # if self.user.no_ads:
         #     cfg = {"text": "Bob Board Ad Sapce", "size": [800, 75]}
@@ -211,34 +197,34 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         # logma.info(f"Scrolling Ad {self.scrolling_ad.size()}")
         # layout.addWidget(self.scrolling_ad)
 
-        if self.user.apikey is None:  # User has not registered with nchatrs.com
-            cfg = {"label": "Register", "size": [50, 75]}
-            self.register_button = NchantdButton(self, cfg).initWidget()
-        elif self.user.is_paid is False:  # User has been registered as a free user
-            cfg = {"label": "Start Subscription", "size": [50, 75]}
-            self.register_button = NchantdButton(self, cfg).initWidget()
-        else:
-            cfg = {"text": "Connect to Services", "size": [50, 75]}
-            self.register_button = NchantdButton(self, cfg).initWidget()
-        layout.addWidget(self.register_button)
-        layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft | pyqt.Qt.AlignmentFlag.AlignTop)
-        self.layout.addLayout(layout)
-        self.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft | pyqt.Qt.AlignmentFlag.AlignTop)
+        # if self.user.apikey is None:  # User has not registered with nchatrs.com
+        #     cfg = {"text": "Register", "size": [50, 75]}  # TODO: implement a larger button graphic
+        #     self.register_button = NchantdButton(self, cfg).initWidget()
+        # elif self.user.is_paid is False:  # User has been registered as a free user
+        #     cfg = {"text": "Start Subscription", "size": [50, 75]}
+        #     self.register_button = NchantdButton(self, cfg).initWidget()
+        # else:
+        #     cfg = {"text": "Connect to Services", "size": [50, 75]}
+        #     self.register_button = NchantdButton(self, cfg).initWidget()
+        # layout.addWidget(self.register_button)
+        # layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft | pyqt.Qt.AlignmentFlag.AlignTop)
+        # self.layout.addLayout(layout)
+        # self.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft | pyqt.Qt.AlignmentFlag.AlignTop)
 
         layout = pyqt.QHBoxLayout()
-        profile_layout = pyqt.QVBoxLayout()
-        cfg = {"size": [200, 200]}
-        self.profile_image = NchantdImage(self, cfg).initWidget()
-        profile_layout.addWidget(self.profile_image)
+        # profile_layout = pyqt.QVBoxLayout()
+        # cfg = {"size": [200, 200]}
+        # self.profile_image = NchantdImage(self, cfg).initWidget()
+        # profile_layout.addWidget(self.profile_image)
 
-        cfg = {"size": [200, 680], "label": "Profile Details"}
-        self.profile_label = NchantdLabel(self, cfg).initWidget()
-        profile_layout.addWidget(self.profile_label)
-        profile_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-        layout.addLayout(profile_layout)
+        # cfg = {"size": [100, "auto"], "label": "Profile Details"}
+        # self.profile_label = NchantdLabel(self, cfg).initWidget()
+        # profile_layout.addWidget(self.profile_label)
+        # profile_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+        # layout.addLayout(profile_layout)
         cfg = {
             "url": "https://www.nchantdoffice.com/registration",
-            "size": [1200, 750],
+            "size": [1600, 750],
             "is_simple": True,
         }
         if self.user.has_pro:

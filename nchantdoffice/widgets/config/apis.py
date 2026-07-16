@@ -42,11 +42,7 @@ class NchantdOfficeAPIFile(NchantdSettingsWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAPIFile"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAPIFile").override(cfg))
         self.document = None
         self.file_path = None
         self.primary_settings_group = None

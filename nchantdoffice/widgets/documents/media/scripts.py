@@ -15,9 +15,7 @@
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, exists
 import json as j
-import html
 from bs4 import BeautifulSoup
-import re
 
 # ======================================3rd Party Library Modules=====================================================||
 from pygments import highlight
@@ -129,7 +127,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "handler": self.cmd_on_change_document_syntax,
         }
         self.document_syntax_select = NchantdDropDown(self, dfs_cfg)
-        if self.format_type == "plaintext":  # TODO: change to richtext
+        if self.format_type == "plaintext":  # NOTE: change to richtext
             add_image = {"action": "insert_image", "handler": self.cmd_add_image}
             add_table = {"action": "insert_table", "handler": self.cmd_add_table}
             add_chart = {"action": "insert_chart", "handler": self.cmd_add_chart}
@@ -181,46 +179,77 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.initView()
         return self
 
+    def cmd_top_margin_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return self
+
+    def cmd_left_margin_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return self
+
+    def cmd_right_margin_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return self
+
+    def cmd_bottom_margin_change(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return self
+
     def cmd_add_chart(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_code(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_date(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_add_image(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_shape(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_table(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_textbox(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_add_time(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_on_compatability_changed(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_document_format(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_change_document_syntax(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_open_local_file(self, event=None, *args, **kwargs):
@@ -241,33 +270,40 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def cmd_set_margin_top(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_margin_bottom(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_margin_left(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_set_margin_right(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_toggle_selection_bold(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_toggle_selection_italic(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_toggle_selection_underline(self, event, *args, **kwargs):
         """"""
+        # TODO implement method
 
     def cmd_toggle_page_view(self, event, *args, **kwargs):
         """"""
-        #TODO: Change between a full screen and a standard 8.5x11/whatever the current page size is set to
-        #view port change
+        # NOTE: Change between a full screen and a standard 8.5x11/whatever the current page size is set to
+        # view port change
         return self
 
     def extract_images(self):
@@ -290,6 +326,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             logma.info("No images found in the document.")
         else:
             logma.info(f"Total images extracted: {image_count}")
+
+    def get_text_background_color_options(self, event, *args, **kwargs):
+        """"""
+        # TODO implement method
+        return self
 
     def get_compatability_selected(self):
         """"""
@@ -349,11 +390,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         styles = ["Arial", "San Serif"]
         return styles
 
-    def get_text_background_color_options(self):
-        """"""
-        colors = ["White", "Black"]
-        return colors
-
     def get_text_background_color_selected(self):
         """"""
         color = "White"
@@ -401,7 +437,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
             items[cnt] = default_action
-
         cfg = {
             "text": "Pretty Print",
             "layout": "vertical",
@@ -430,6 +465,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "layout": "horizontal",
             "options": self.get_margin_options(),
             "value": self.get_top_margin_selected(),
+            "handler": self.cmd_top_margin_change,
         }
         self.top_margin_select = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.top_margin_select
@@ -441,6 +477,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "layout": "horizontal",
             "options": self.get_margin_options(),
             "value": self.get_left_margin_selected(),
+            "handler": self.cmd_left_margin_change,
         }
         self.left_margin_select = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.left_margin_select
@@ -452,6 +489,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "layout": "horizontal",
             "options": self.get_margin_options(),
             "value": self.get_right_margin_selected(),
+            "handler": self.cmd_right_margin_change,
         }
         self.right_margin_select = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.right_margin_select
@@ -463,6 +501,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "layout": "horizontal",
             "options": self.get_margin_options(),
             "value": self.get_bottom_margin_selected(),
+            "handler": self.cmd_bottom_margin_change,
         }
         self.bottom_margin_select = NchantdLabeledSpinBox(self, cfg)
         items[cnt]["widget"] = self.bottom_margin_select
@@ -479,9 +518,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.page_layout_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.page_layout_select
         cnt += 1
-        # TODO: add text justification
-        # TODO: Add text bulleting
-        # TODO: add text spacing
+        # NOTE: add text justification
+        # NOTE: Add text bulleting
+        # NOTE: add text spacing
         #
         return items
 
@@ -496,7 +535,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "label": "Insert Image:",
             "layout": "vertical",
             "handler": self.cmd_add_image,
-            "value": None,
         }
         self.insert_image = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.insert_image
@@ -507,7 +545,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "label": "Insert Table:",
             "layout": "vertical",
             "handler": self.cmd_add_table,
-            "value": None,
         }
         self.insert_table = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.insert_table
@@ -518,7 +555,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "label": "Insert Date:",
             "layout": "vertical",
             "handler": self.cmd_add_date,
-            "value": None,
         }
         self.insert_date = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.insert_date
@@ -534,14 +570,14 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.insert_time = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.insert_time
         cnt += 1
-        # TODO move inserts to object config
-        # TODO add tools here like spell/grammar, etc
-        # TODO add analytics tools
+        # NOTE move inserts to object config
+        # NOTE add tools here like spell/grammar, etc
+        # NOTE add analytics tools
         return items
 
     def init_drawer_object_config(self):
         """"""
-        # TODO: each of these panes need to have their spacing tightened up
+        # NOTE: each of these panes need to have their spacing tightened up
         items = self.toolbox_config[300].get("items", {})
         cnt = 0
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -604,7 +640,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
     def init_drawer_quickstart(self):
         """"""
         items = {}
-        # TODO: add template selection/management
+        # NOTE: add template selection/management
         #
         return items
 
@@ -616,39 +652,34 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.toolbox_config[300]["items"] = self.init_drawer_object_config()
         self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
-    def insert_image(self):
-        """
-        depnding on the document type this will be slightly different but should be allowed in most documents
-        :return:
-        """
-        return self
-
     def insert_chart(self):
         """"""
+        # TODO implement method
         return self
 
     def insert_shape(self):
         """"""
+        # TODO implement method
         return self
 
     def insert_symbol(self):
         """"""
+        # TODO implement method
         return self
 
     def insert_table(self):
         """"""
-        return self
-
-    def insert_chart(self):
-        """"""
+        # TODO implement method
         return self
 
     def insert_code(self):
         """"""
+        # TODO implement method
         return self
 
     def insert_document(self):
         """"""
+        # TODO implement method
         return self
 
     def insert_image(self):
@@ -665,18 +696,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             image_format.setName(path)
             image_format.setWidth(200)  # Set a default width for the image
             cursor.insertImage(image_format)
-        return self
-
-    def insert_shape(self):
-        """"""
-        return self
-
-    def insert_symbol(self):
-        """"""
-        return self
-
-    def insert_table(self):
-        """"""
         return self
 
     def onEnterEvent(self):
@@ -721,7 +740,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         logma.info(f"Syntax {self.document.syntax}")
         theme = "monokai"
         formatter = HtmlFormatter(style=theme, full=True, noclasses=True)
-        self.document.syntax = "html"  # TODO debug
+        self.document.syntax = "html"  # NOTE debug
         if self.document.syntax == "markdown":
             self.document_editor.setMarkdown(text)
             return self

@@ -1,4 +1,3 @@
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
 """
 ---
 <(META)>:
@@ -47,11 +46,7 @@ class NchantdOfficeDocumentCatalogItem(NchantdCatalogItem):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentCatalogItem"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentCatalogItem").override(cfg))
         self.action = None
         self.action_params = None
         self.document = None
@@ -124,11 +119,7 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSourceCatalogItem"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSourceCatalogItem").override(cfg))
         self.requires_api_key = None
         self.is_data_source_available = None
 
@@ -138,6 +129,8 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         self.requires_api_key = self.config.dikt.get("requires_api_key", True)
         self.is_data_source_available = self.config.dikt.get("is_data_source_available", False)
         action = self.config.dikt.get("action", None)
+        # NOTE: instantiate a base NchantdAction from the config-supplied action string;
+        # mirrors the pattern used in NchantdOfficeDocumentCatalogItem.initModel above.
         self.action = NchantdAction(action, "base", self)
         return self
 
@@ -145,8 +138,15 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         """"""
         super().initView(cfg)
         # add a checkbox to make the datasource available
-        # show indicator of wethere an APIkey is required and if one available
-        # this should also integrate when the user is a pro user and the api is handled through NchantdOffice Servers
+        cfg = {"text": "Activate Data Source"}
+        self.activation_checkbox = NchantdCheckbox(self, cfg).initWidget()
+        cfg = {
+            "options": [{"text": "API Key Required"}, {"text": "API Key Optional"}, {"text": "No API Key"}],
+            "handler": self.cmd_update_api_key_requirements,
+        }
+        self.apikey_radio_buttons = NchantdRadioButtonGroup(self, cfg).initWidget()
+        cfg = {"text": "API Key:", "handler": self.cmd_update_api_key_entry, "value": self.get_api_key}
+        self.apikey = NchantdLabeledEntry(self, cfg).initWidget()
         return self
 
     def initWidget(self):
@@ -155,18 +155,69 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         self.initView()
         return self
 
+    def cmd_update_api_key_requirements(self, event, *args, **kwargs):
+        """Handle radio-button selection to update API key requirement mode.
+
+        Maps radio-button index to requires_api_key values:
+            0 = API Key Required  (True,  required=True)
+            1 = API Key Optional (True,  required=False)
+            2 = No API Key        (False, required=False)
+        Persists the new mode to the app model data-source config table.
+        """
+        selected_index = self.apikey_radio_buttons.get_selected_index()
+        if selected_index == 0:
+            required = True
+            required_flag = True
+        elif selected_index == 1:
+            required = True
+            required_flag = False
+        else:
+            required = False
+            required_flag = False
+        self.requires_api_key = required
+        # Persist to data-source config
+        if hasattr(self, "app") and self.app and hasattr(self.app, "model"):
+            self.app.model.update_data_source(
+                self.nid, {"requires_api_key": required, "api_key_required": required_flag}
+            )
+        return
+
+    def cmd_update_api_key_entry(self, event, *args, **kwargs):
+        """Handle API key entry widget edits.
+
+        Reads the current value from the NchantdLabeledEntry widget and
+        persists it to the app model data-source config table.
+        Called on every textChanged signal from the entry field.
+        """
+        raw = self.apikey.get_value()
+        api_key = raw if raw else ""
+        # Persist to data-source config
+        if hasattr(self, "app") and self.app and hasattr(self.app, "model"):
+            self.app.model.update_data_source(self.nid, {"api_key_txt": api_key})
+        return
+
+    def get_api_key(self):
+        """Return the stored API key for this data source.
+
+        Pulls the api_key_txt value from the app model data-source config
+        table for this node (self.nid).  Returns empty string if not set.
+        """
+        if hasattr(self, "app") and self.app and hasattr(self.app, "model"):
+            row = self.app.model.get_data_source(self.nid)
+            if row is not None:
+                return row.get("api_key_txt", "")
+        return ""
+
 
 class NchantdOfficeTreeNode(NchantdTreeNode):
     """"""
 
     def __init__(self, parent, name, nid, node, children=DataFrame(), cfg=None):
         """ """
-        super().__init__(parent, name, nid, node, children)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTreeNode"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, name, nid, node, children, cfg)
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdOfficeTreeNode").override(parent.config).override(cfg)
+        )
 
     def initModel(self, cfg=None):
         """"""
@@ -188,7 +239,7 @@ class NchantdOfficeTreeNode(NchantdTreeNode):
 
     def set_as_current(self):
         """Set this node as the current/focused node in the tree"""
-        if hasattr(self, "app") and hasattr(self.app.view.panes["left"], "tree"):
+        if hasattr(self, "app") and hasattr(self.app, "view") and hasattr(self.app.view.panes["left"], "tree"):
             tree = self.app.view.panes["left"].tree
             if tree is None:
                 return self

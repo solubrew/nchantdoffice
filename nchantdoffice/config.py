@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
 """
 ---
@@ -7,32 +8,33 @@
     description: >
         Centralized configuration management for NchantdOffice.
         Provides constants, defaults, and configuration utilities.
-    version: 0.0.1.0.0.0
+    version: 0.0.0.0.0.0
     authority: filesystem
     security: seclvl2
     <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
-from os.path import join, dirname
-from typing import Any, Dict, Optional
+from os.path import abspath, dirname, join
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Union
 
 # ======================================3rd Party Library Modules=====================================================||
-from kahndor import kahndor
 
 # ======================================Solutions Brewer Library Modules==============================================||
+from kahndor import kahndor
 from kahndor.logma import Logma
 
 # ====================================================================================================================||
-# Module-level logging setup
+HERE = join(dirname(__file__), "")  # ||
+log = True
+logma = Logma(__name__)
+if not log:
+    logma.off()
 # ====================================================================================================================||
-logger = Logma(__name__)
+PXCFG = join(HERE, "_data_", ".yaml")
 
-
-# ====================================================================================================================||
-# Application Constants
-# ====================================================================================================================||
 
 # Application Identity
 APP_NAME: str = "NchantdOffice"
@@ -361,12 +363,12 @@ def init_config(config_path: Optional[str] = None) -> None:
     """
     global _internal_config, _internal_initialized
 
-    logger.info("Initializing NchantdOffice configuration")
+    logma.info("Initializing NchantdOffice configuration")
     _internal_config = CONFIG_DEFAULTS.copy()
     _internal_initialized = True
 
     if config_path:
-        logger.debug(f"Loading config from: {config_path}")
+        logma.debug(f"Loading config from: {config_path}")
 
 
 def get_config_value(key: str, default: Any = None) -> Any:
@@ -413,7 +415,7 @@ def set_config_value(key: str, value: Any) -> None:
         config = config[k]
 
     config[keys[-1]] = value
-    logger.debug(f"Config set: {key} = {value}")
+    logma.debug(f"Config set: {key} = {value}")
 
 
 def get_window_geometry() -> Dict[str, int]:
@@ -434,7 +436,7 @@ def reset_config() -> None:
     """Reset configuration to defaults."""
     global _internal_config, _internal_initialized
     _internal_config = CONFIG_DEFAULTS.copy()
-    logger.info("Configuration reset to defaults")
+    logma.info("Configuration reset to defaults")
 
 
 # ====================================================================================================================||
@@ -652,6 +654,8 @@ __all__ = [
 # Initialize on import
 # ====================================================================================================================||
 init_config()
-logger.info(f"NchantdOffice configuration initialized - Version {APP_VERSION}")
+logma.info(f"NchantdOffice configuration initialized - Version {APP_VERSION}")
+
+# ====================================================================================================================||
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||

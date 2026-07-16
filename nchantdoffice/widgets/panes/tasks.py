@@ -45,12 +45,8 @@ class NchantdOfficeTaskEntryPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeTaskEntry")
-        if self.parent:
-            self.config.override(parent.config)
-        super().__init__(self)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTaskEntry").override(cfg))
         self.primary_settings_group = None
 
     def initModel(self):
@@ -124,9 +120,11 @@ class NchantdOfficeTaskEntryPane(NchantdPane):
 
     def accept(self):
         """"""
+        # TODO implement method
 
     def open_recurrence_config(self):
         """"""
+        # TODO implement method
 
 
 # ====================================================================================================================||
