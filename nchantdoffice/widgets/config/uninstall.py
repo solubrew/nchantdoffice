@@ -38,7 +38,6 @@ class NchantdOfficeUninstallSettings(NchantdUninstallSettings):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeUninstallSettings").override(cfg))
 
     def initModel(self, cfg=None):

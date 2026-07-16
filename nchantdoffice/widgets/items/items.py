@@ -119,10 +119,7 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent_widget = parent
-        self.config.override(
-            kahndor.Instruct(pxcfg).select("NchantdOfficeSourceCatalogItem").override(parent.config).override(cfg)
-        )
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSourceCatalogItem").override(cfg))
         self.requires_api_key = None
         self.is_data_source_available = None
 

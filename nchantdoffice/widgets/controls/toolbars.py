@@ -46,11 +46,7 @@ class NchantdOfficeApplicationToolBar(NchantdApplicationToolBar):
     def __init__(self, parent=None, cfg=None):
         """Initialize the toolbar."""
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationToolBar"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationToolBar").override(cfg))
 
     def initModel(self):
         """Initialize the model."""
@@ -74,12 +70,8 @@ class NchantdOfficeNotificationButtonBar(NchantdButtonBar):
 
     def __init__(self, parent=None, cfg=None):
         """Initialize the notification bar."""
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationNotificationButtonBar")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-        super().__init__(parent, self.config)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationNotificationButtonBar").override(cfg)()
 
     def initModel(self):
         """Initialize the model."""
@@ -113,7 +105,6 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
     def __init__(self, parent=None, cfg=None):
         """Initialize the toolbar."""
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewDocumentToolBar").override(cfg))
         self.actions = None
         self.document_types = None
@@ -252,6 +243,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
 
     def set_active_item(self):
         """Set the active item."""
+        #TODO implement method
         return self
 
     def set_actions(self, actions=None):
@@ -295,12 +287,8 @@ class NchantdCellFormattingToolBar(NchantdButtonBar):
 
     def __init__(self, parent=None, cfg=None):
         """Initialize the toolbar."""
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdCellFormattingToolBar")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-        super().__init__(self.parent, self.config)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdCellFormattingToolBar").override(cfg))
 
     def initModel(self):
         """Initialize the model."""
@@ -327,12 +315,8 @@ class NchantdDataFormattingToolBar(NchantdButtonBar):
 
     def __init__(self, parent=None, cfg=None):
         """Initialize the toolbar."""
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdTextFormattingToolBar")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-        super().__init__(self.parent, self.config)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdTextFormattingToolBar").override(cfg))
 
     def initModel(self):
         """Initialize the model."""
@@ -356,12 +340,8 @@ class NchantdTextFormattingToolBar(NchantdButtonBar):
 
     def __init__(self, parent=None, cfg=None):
         """Initialize the toolbar."""
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdTextFormattingToolBar")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-        super().__init__(self.parent, self.config)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdTextFormattingToolBar").override(cfg))
 
     def initModel(self):
         """Initialize the model."""

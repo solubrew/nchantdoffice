@@ -45,10 +45,7 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(
-            kahndor.Instruct(pxcfg).select("NchantdOfficeAccountOverview").override(parent.config).override(cfg)
-        )
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAccountOverview").override(cfg))
         self.account_settings = None
         self.account_name_label = None
         self.account_type_label = None
@@ -135,10 +132,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(
-            kahndor.Instruct(pxcfg).select("NchantdAccountSettings").override(parent.config).override(cfg)
-        )
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAccountSettings").override(cfg))
         self.user = pyqt.QApplication.instance().model.user
         self.user_name = None
         self.account_status = None

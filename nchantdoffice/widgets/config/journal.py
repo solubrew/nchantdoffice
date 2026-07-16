@@ -44,10 +44,7 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(
-            kahndor.Instruct(pxcfg).select("NchantdOfficeJournalSettings").override(parent.config).override(cfg)
-        )
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeJournalSettings").override(cfg))
 
     def initModel(self):
         """"""

@@ -40,7 +40,6 @@ class NchantdOfficeFAQs(NchantdFAQs):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeFAQs").override(parent.config).override(cfg))
 
     def initModel(self, cfg=None):
@@ -66,10 +65,7 @@ class NchantdOfficeHelpDocs(NchantdHelpDocs):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(
-            kahndor.Instruct(pxcfg).select("NchantdOfficeHelpDocs").override(parent.config).override(cfg)
-        )
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeHelpDocs").override(cfg))
         self.index_tree = None
         self.reader = None
 
@@ -107,8 +103,7 @@ class NchantdOfficeHelpChatDex(NchantdHelpChatDex):
     def __init__(self, parent=None, cfg=None):
         """"""
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdHelpChatDex").override(parent.config).override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdHelpChatDex").override(cfg))
 
     def initModel(self, cfg=None):
         """"""

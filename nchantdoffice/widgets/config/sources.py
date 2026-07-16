@@ -53,10 +53,7 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
     def __init__(self, parent, cfg=None):
         """"""
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(
-            kahndor.Instruct(pxcfg).select("NchantdDataSourcesSettingsTab").override(self.parent.config).override(cfg)
-        )
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSourcesSettingsTab").override(cfg))
         self.data_sources = self.config.get("default_sources", {}) or {}
         self.apikeys = {}
 
@@ -161,11 +158,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         """ """
         super().__init__(parent, cfg)
         self.name = "Nchantd Data Source"
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDataSourceManager"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDataSourceManager").override(cfg))
         self.canvas = None
         self.data_series = None
         self.source_select = None
@@ -250,10 +243,12 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
 
     def cmd_on_source_change(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_on_data_table_change(self, event=None, *args, **kwargs):
         """"""
+        # TODO implement method
         return self
 
     def cmd_toggle_config_pane(self, event=None, *args, **kwargs):
@@ -288,14 +283,17 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
     def get_source_table(self):
         """"""
         table = ""
+        # TODO implement method
         return table
 
     def get_source_tables(self, source):
         """"""
+        # TODO implement method
         return ["Supermarket", "CoinGecko"]
 
     def get_data_view(self):
         """"""
+        # TODO implement method
         self.data_view = ""
         return self.data_view
 
