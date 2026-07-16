@@ -83,9 +83,9 @@ def web_url_label(url):
 class NchantdOfficeInstance(NchantdInstance):
     """"""
 
-    def __init__(self, cfg=None):
+    def __init__(self, parent, cfg=None):
         """"""
-        super().__init__(cfg)
+        super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeInstance").override(cfg))
         self.browser = None
         self.config_browser()
@@ -103,7 +103,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def __init__(self, name, instance=None, parent=None, cfg=None):
         """ """
-        super().__init__(parent, None)
+        super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCloakModel").override(cfg))
         cfg = {}
         self.store = NchantdOfficeStore(name, self, cfg=cfg)
@@ -667,15 +667,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.store.backup_database()
         return self
 
-    # def auto_save(self):
-    #     """"""
-    #     # will need to access each changed document/tab and each new node and tab to ensure they are saved
-    #     # if I add a save on defocus then only the last accessed tab needs to be saved
-    #     # self.app.model.save()
-    #     # self.app.model.backup()
-    #     super().auto_save()
-    #     return self
-
     def change_node_parent(self, pid):
         """"""
         data = {"table": {"doc_tree_node": {"data": {"pid_txt": pid}}}}
@@ -786,7 +777,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             hash_,
             document.policy_fk,
         ]
-        self.store.store_doc_media()
+        self.store.store_doc_media(payload)
         self.create_doc_media_content()
         self.has_changed = True
         return self
@@ -935,9 +926,11 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def duplicate_node(self):
         """"""
+        # PUSH 0.0.3
 
     def duplicate_tab(self):
         """"""
+        # PUSH 0.0.3
 
     def get_available_services(self):
         """"""
@@ -1016,10 +1009,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def get_links(self):
         """"""
+        # PUSH 0.0.3
         return self
 
     def get_node_name(self):
         """"""
+        # PUSH 0.0.3
         return self
 
     def get_node(self, nid):
@@ -1059,6 +1054,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
         :return:
         """
+        # PUSH 0.0.3
 
     def get_rss_feeds(self):
         """"""
@@ -1119,6 +1115,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def get_urls(self, tag=None):
         """return a simple list of urls using the given criteria"""
+        # PUSH 0.0.3
         return []
 
     def get_tab_documents(self, node, tabset="center"):
@@ -1135,6 +1132,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def get_tab_name(self):
         """"""
+        # PUSH 0.0.3
         return self
 
     def get_tab_set(self, tag):
@@ -1196,23 +1194,28 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
     def init_mole(self, db="db"):
         """"""
         self.mole.set_storage_path(self.store_rss_entries)
-        # self.mole.load_feeds_list("rss")
+        return self
+
+    def init_worldbridge(self, db="db"):
+        """"""
+        # PUSH 0.0.3 - needs debug and refactor
+        self.mole.load_feeds_list("rss")
         # This is getting any new feeds from the perspective of the NchantdApplication those feeds would come from the
         # WorldBridgeService
-        # new_feeds = self.get_rss_feeds()
-        # logma.info(f"New RSS Feeds {new_feeds}")
-        # if new_feeds is None:
-        #     raise Exception("No new feeds")
-        # new_feeds = new_feeds["url_ltxt"].tolist()
-        # if isinstance(self.mole.feeds, DataFrame):
-        #     df = DataFrame([x for x in self.mole.feeds["url"].values.tolist() if x not in new_feeds], columns=["url"])
-        # elif isinstance(self.mole.feeds, list):
-        #     df = DataFrame([x for x in self.mole.feeds if x not in new_feeds], columns=["url"])
-        # elif isinstance(self.mole.feeds, dict):
-        #     raise Exception(f"Unknown feeds type {self.mole.feeds}")
-        # else:
-        #     raise Exception(f"Unknown feeds type {self.mole.feeds}")
-        # self.store_rss_feeds(df)
+        new_feeds = self.get_rss_feeds()
+        logma.info(f"New RSS Feeds {new_feeds}")
+        if new_feeds is None:
+            raise Exception("No new feeds")
+        new_feeds = new_feeds["url_ltxt"].tolist()
+        if isinstance(self.mole.feeds, DataFrame):
+            df = DataFrame([x for x in self.mole.feeds["url"].values.tolist() if x not in new_feeds], columns=["url"])
+        elif isinstance(self.mole.feeds, list):
+            df = DataFrame([x for x in self.mole.feeds if x not in new_feeds], columns=["url"])
+        elif isinstance(self.mole.feeds, dict):
+            raise Exception(f"Unknown feeds type {self.mole.feeds}")
+        else:
+            raise Exception(f"Unknown feeds type {self.mole.feeds}")
+        self.store_rss_feeds(df)
         return self
 
     def initialize_application(self):
@@ -1281,21 +1284,26 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def import_nchantdoffice(self, file_path):
         """"""
+        # PUSH 0.0.3
         # pid = self.get_current_node().nid
         # cloak = NchantdOfficeCloakModel()
         # db = connect(file_path)
 
-    def import_nchantdoffice_node(self, node, pid=None, pos=0):
+    def _import_nchantdoffice_node(self, node, pid=None, pos=0):
         """"""
+        # PUSH 0.0.3
 
-    def import_nchantdoffice_nodes(self, node, pid, pos):
+    def _import_nchantdoffice_nodes(self, node, pid, pos):
         """"""
+        # PUSH 0.0.3
 
-    def import_nchantdoffice_tabs(self, node, pid, pos=0):
+    def _import_nchantdoffice_tabs(self, node, pid, pos=0):
         """"""
+        # PUSH 0.0.3
 
     def import_filetree(self, file):
         """"""
+        # PUSH 0.0.3
         # each directory becomes a node
         # each file becomes a tab
         # limit depth
@@ -1343,6 +1351,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def import_sessions(self, file):
         """"""
+        # PUSH 0.0.3
         if file is not None:
             if exists(file):
                 pass
@@ -1350,6 +1359,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def import_web_sessions(self, file):
         """Import web browser sessions from a file."""
+        # PUSH 0.0.3
         if file is not None and exists(file):
             # TODO: Implement session parsing
             pass
@@ -1412,11 +1422,13 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def save_config_document(self):
         """"""
+        # TODO implment along with Instance/Config/Settings refactor
 
     def send_notification(self):
         """send notification of crash to service for trouble shooting and tracking
         TODO 20240804: check to see if sending external notifications is approved
         """
+        # PUSH 0.0.3
 
     def set_instance(self, instance):
         """"""
@@ -1527,10 +1539,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def store_settings(self):
         """"""
+        # TODO implment along with Instance/Config/Settings refactor
         return self
 
     def store_tab(self):
         """"""
+        # TODO implment method or remove unsure if it is needed
         return self
 
 
@@ -1550,7 +1564,7 @@ class NchantdOfficeStore(NchantdStore):
         if parent is not None:
             self.config.override(parent.config)
         self.config.override(cfg)
-
+        # TODO refactor app/agent_manager usage
         if self.app.agent_manager is None:
             return
         agent = self.app.agent_manager.assign_agent(self.mole)
@@ -1974,10 +1988,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTabSetModel"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTabSetModel").override(cfg))
         self.new_document = None
         self.show_add_tab = self.config.dikt.get("show_add_tab", False)
         self.tabsdata = None
@@ -2304,21 +2315,31 @@ class NchantdOfficeSettingsModel(NchantdModel):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSettingsModel"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSettingsModel").override(cfg))
         self.security = {}
         self.storage = {}
         self.packages = {}
         self.theme = {}
         self.interface = {}
         self.nchantd_account = {}
+        self.interface_settings = None
+        self.account_settings = None
+        self.browser_settings = None
+        self.security_settings = None
+        self.journal_settings = None
+        self.storage_settings = None
+        self.theme_settings = None
 
     def initModel(self, cfg=None):
         """"""
         super().initModel(cfg)
+        self.set_interface_settings(document.get("interface_settings", {}))
+        self.set_account_settings(document.get("account_settings", {}))
+        self.set_account_settings(document.get("browser_settings", {}))
+        self.set_security_settings(document.get("security_settings", {}))
+        self.set_journal_settings(document.get("journal_settings", {}))
+        self.set_storage_settings(document.get("storage_settings", {}))
+        self.set_theme_settings(document.get("theme_settings", {}))
         return self
 
     def change_user_password(self):
@@ -2501,6 +2522,48 @@ class NchantdOfficeSettingsModel(NchantdModel):
     def set_theme(self):
         """"""
 
+    def set_interface_settings(self, settings):
+        """"""
+        if settings != self.interface_settings:
+            self.add_change("interface_settings", self.interface_settings, settings)
+            self.interface_settings = settings
+        return self
+
+    def set_account_settings(self, settings):
+        """"""
+        if settings != self.account_settings:
+            self.add_change("account_settings", self.account_settings, settings)
+            self.account_settings = settings
+        return self
+
+    def set_security_settings(self, settings):
+        """"""
+        if settings != self.security_settings:
+            self.add_change("security_settings", self.security_settings, settings)
+            self.security_settings = settings
+        return self
+
+    def set_journal_settings(self, settings):
+        """"""
+        if settings != self.interface_settings:
+            self.add_change("journal_settings", self.interface_settings, settings)
+            self.interface_settings = settings
+        return self
+
+    def set_storage_settings(self, settings):
+        """"""
+        if settings != self.storage_settings:
+            self.add_change("storage_settings", self.storage_settings, settings)
+            self.storage_settings = settings
+        return self
+
+    def set_theme_settings(self, settings):
+        """"""
+        if settings != self.theme_settings:
+            self.add_change("theme_settings", self.theme_settings, settings)
+            self.theme_settings = settings
+        return self
+
     def to_dict(self):
         """"""
         doc = {}
@@ -2513,26 +2576,11 @@ class NchantdOfficeImportModel(NchantdModel):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeImportModel"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeImportModel").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
         super().initModel(cfg)
-        return self
-
-    def initView(self, cfg=None):
-        """"""
-        super().initView(cfg)
-        return self
-
-    def initWidget(self):
-        """"""
-        self.initModel()
-        self.initView()
         return self
 
 

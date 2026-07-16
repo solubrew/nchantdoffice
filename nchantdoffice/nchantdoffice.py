@@ -140,7 +140,6 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
 
     def hideEvent(self, event):
         """"""
-        # self.parent.sigils.hide()
         super().hideEvent(event)
 
 

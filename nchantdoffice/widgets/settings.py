@@ -41,12 +41,8 @@ class NchantdOfficeExtensionsSettings(NchantdWidget):
 
     def __init__(self, parent, cfg=None):
         """"""
-        self.config = kahndor.instruct(pxcfg).select("NchantdExtensionsSettingsTab")
-        self.parent = parent
-        if self.parent is not None:
-            self.config.override(self.parent.config)
-        self.config.override(cfg)
-        super().__init__(parent, self.config)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.instruct(pxcfg).select("NchantdExtensionsSettingsTab").override(cfg))
         self.extensions = []
 
     def initModel(self):
@@ -98,12 +94,8 @@ class NchantdIntegrationSettings(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.instruct(pxcfg).select("NchantdIntegrationSettings")
-        if self.parent:
-            self.config.override(parent.config)
-        super().__init__(self)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.instruct(pxcfg).select("NchantdIntegrationSettings").override(cfg))
 
     def initModel(self):
         """"""
