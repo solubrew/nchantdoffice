@@ -25,7 +25,8 @@ from nchantrs.widgets.tabsets import NchantdTabSet
 from nchantrs.libraries.pyqt import QTimer
 from nchantdoffice.models import NchantdOfficeTabSetModel
 from nchantdoffice.widgets.controls.toolboxes import NchantdOfficeApplicationToolBox
-from nchantdoffice.widgets.documents.media.notes import NchantdOfficeNote
+
+# from nchantdoffice.widgets.documents.media.notes import NchantdOfficeNote
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -71,8 +72,8 @@ class NchantdOfficeTabSet(NchantdTabSet):
         """"""
         if cfg is None:
             cfg = {}
-        #TODO BUG FIX: need to fix the Note object
-        #note = NchantdOfficeNote(self.app.main, cfg).initWidget()
+        # TODO BUG FIX: need to fix the Note object
+        # note = NchantdOfficeNote(self.app.main, cfg).initWidget()
         note = NchantdOfficeNote(self, cfg).initWidget()
         self.app.view.panes["center"].model.current_tab.append_note(note)
         return self
