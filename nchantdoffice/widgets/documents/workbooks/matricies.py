@@ -320,8 +320,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def cmd_row_height_spinbox(self, event, *args, **kwargs):
         """Handle row height change"""
-        if hasattr(self, "row_height_spin"):
-            new_height = self.row_height_spin.value()
+        if hasattr(self, "row_height_entry"):
+            new_height = self.row_height_entry.value()
             if self.table:
                 selected_rows = self.get_selected_rows()
                 if selected_rows:
@@ -501,8 +501,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cfg = {
             "label": "Row Height",
             "layout": "horizontal",
-            "range": [1, 10000000],
-            "default": self.config.dikt.get("num_rows", 20),
+            "range": [5, 200],
+            "default": self.config.dikt.get("row_height", 25),
             "handler": self.cmd_row_height_spinbox,
         }
         self.row_height_entry = NchantdLabeledSpinBox(self, cfg)
@@ -525,8 +525,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cfg = {
             "label": "Column Width",
             "layout": "horizontal",
-            "range": [10, 600],
-            "default": self.config.dikt.get("min_column_width", 30),
+            "range": [20, 600],
+            "default": self.config.dikt.get("column_width", 80),
             "handler": self.cmd_column_width_spinbox,
         }
         self.cell_width = NchantdLabeledSpinBox(self, cfg)
