@@ -1,0 +1,42 @@
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
+"""\
+---
+<(META)>:
+    docid:
+    name: NchantdOfficeTable
+    description: Table document widget for nchantdoffice
+    version: 0.0.0.0.0.0
+    authority: filesystem
+    security: seclvl2
+    <(WT)>: -32
+"""
+
+# Configuration template for NchantdOfficeTable
+NchantdOfficeTable:
+    template:
+        name: "Table"
+        document_type: "table"
+        supports_pyffice_versions: true
+        default_toolbar: true
+        buttons:
+            0: {action: show_pane_left, handler: cmd_show_pane_left}
+            100: {action: save, handler: cmd_save_tab}
+            150: {action: add_row, handler: cmd_add_row}
+            160: {action: add_column, handler: cmd_add_column}
+            200: {action: undo, handler: cmd_undo}
+            250: {action: redo, handler: cmd_redo}
+            400: {action: delete, handler: cmd_delete_table}
+            1000: {action: show_pane_right, handler: cmd_show_pane_right}
+    toolbox:
+        100:
+            name: "Table Settings"
+            icon: "table_settings"
+        200:
+            name: "Cell Operations"
+            icon: "cell_operations"
+        300:
+            name: "Data Import"
+            icon: "data_import"
+        400:
+            name: "Data Export"
+            icon: "data_export"

@@ -1,0 +1,101 @@
+NchantdOfficeFileSystem:
+  default_toolbar: True
+  dstruct:
+    database:
+      objects:
+        table:
+          app_action:
+            columns: ['code_group_txt', 'lookup_code_txt', 'title_txt', 'description_ltxt', 'UUID', 'icon_txt',
+                      'short_cut_txt', 'tip_txt', 'advanced_tip_txt', 'widget_txt', 'params_dict']
+            records:
+              - [ 'base', 'insert_bullet', '', '', '', '', '', '', '', '', "{}" ]
+              - [ 'base', 'insert_table', '', '', '', '', '', '', '', '', "{}" ]
+              - ['base', 'insert_node', 'Insert Node', '', '066e49bb-aa69-74d7-8000-58251d224e2c', 'arrow-in-circle', '', '', '', '', "{}"]
+              - ['base', 'insert_tab', 'Insert Tab', '', '066e49bb-aa69-7555-8000-d1bc8b7b352c', 'arrow-in-circle', '', '', '', '', "{}"]
+              - ['base', 'insert_chart', '', '', '', '', '', '', '', '', "{}"]
+              - ['base', 'insert_text_box', '', '', '', '', '', '', '', '', "{}"]
+              - ['base', 'insert_shape', '', '', '', '', '', '', '', '', "{}"]
+              - ['base', 'insert_column', 'Insert Column', '', '066ef9cf-2993-7ea6-8000-8ff7b0807551', '', '', '', '', '', "{}"]
+              - ['base', 'insert_row', 'Insert Row', '', '066ef9cf-2994-712b-8000-7b393f2ba693', '', '', '', '', '', "{}"]
+              - ['base', 'insert_cell', 'Insert Cell', '', '066ef9cf-2994-71e8-8000-2acff0ff003f', '', '', '', '', '', "{}"]
+              - ['base', 'insert_cells', 'Insert Cells', '', '066ef9cf-2994-7267-8000-2356e6c0eb93', '', '', '', '', '', "{}"]
+              - ['base', 'insert_rectangle', 'Insert Rectangle', '', '0671c25e-ad43-7abc-8000-561ca152a988', 'rectangle-svgrepo-com', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdRectangleNode', "{}"]
+              - ['base', 'insert_circle', 'Insert Circle', '', '0671c25e-ad43-7e13-8000-3f0db097ec94', 'circle-svgrepo-com', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdCircleNode', "{}"]
+              - ['base', 'insert_square', 'Insert Square', '', '0671c25e-ad43-7ed6-8000-16cf97d06c81', 'square-svgrepo-com', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdSquareNode', "{}"]
+              - ['base', 'insert_ellipse', 'Insert Ellipse', '', '0671c25e-ad43-7f5b-8000-db9d2ae4c839', 'ellipse-svgrepo-com', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdEllipseNode', "{}"]
+              - ['base', 'insert_image', 'Insert Image', '', '0671c25e-ad43-7fce-8000-dfa4b3bd3512', 'nchantd_image', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdImageNode', "{}"]
+              - ['base', 'insert_irregular_shape', 'Insert Irregular Shape', '', '0671c25e-ad44-7043-8000-8354cfcc87d2', '', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdIrregularShapeNode', "{}"]
+              - ['base', 'insert_polygon', 'Insert Polygon', '', '0671c25e-ad44-70bc-8000-27460a70a4d4', 'hexagon-svgrepo-com', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdPolygonNode', "{}"]
+              - ['base', 'insert_triangle', 'Insert Triangle', '', '0671c25e-ad44-712b-8000-f10101bcc4c4', 'triangle-svgrepo-com', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdTriangleNode', "{}"]
+              - ['base', 'insert_triangle_right', 'Insert Right Triangle', '', '', 'triangle-right-svgrepo-com', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdTriangleNode', "{}"]
+              - ['base', 'insert_canvas', 'Insert ', '', '0671c25e-ad44-719a-8000-fa2239542b1b', '', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdCanvasNode', "{}"]
+              - ['base', 'insert_table', 'Insert ', '', '0671c25e-ad44-7206-8000-3c6d289d45e7', 'table', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdTableNode', "{}"]
+              - ['base', 'insert_widget', 'Insert ', '', '0671c263-afce-711c-8000-b663c3c65ddf', '', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdWidgetNode', "{}"]
+              - ['base', 'insert_line', 'Insert ', '', '0671c263-afce-73fb-8000-a36065d725e6', '', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdLineNode', "{}"]
+              - ['base', 'insert_text', 'Insert ', '', '0671c263-afce-74e8-8000-54c698ae5480', 'text-svgrepo-com', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdTextNode', "{}"]
+              - ['base', 'insert_line_arrow', 'Insert ', '', '0671c263-afce-7598-8000-0f7a9521e919', '', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdLineArrowNode', "{}"]
+              - ['base', 'insert_line_double_arrow', 'Insert ', '', '0671c263-afce-7632-8000-2832cdad72a2', '', '', '', '', 'nchantrs.widgets.itesm.nodes.NchantdLineDoubleArrowNode', "{}"]
+              - ['base', 'paste_whole', 'Paste', '', '066aaebb-6de1-7f50-8000-595c3f591cf2', 'edit', '', '', '', '', "{}"]
+              - ['base', 'paste_formats', 'Paste Formats', '', '066d3ad2-2984-757d-8000-ddee80dd15f5', '', '', '', '', '', "{}"]
+              - ['base', 'paste_image', 'Paste Image', '', '066d3ad2-2984-77c2-8000-3480d092107c', '', '', '', '', '', "{}"]
+              - ['base', 'paste_numbers', 'Paste Numbers', '', '066d3ad2-2984-7881-8000-49d7c191c4fb', '', '', '', '', '', "{}"]
+              - ['base', 'paste_text', 'Paste Text', '', '066d3d49-9d61-73e9-8000-94fb2cc6d644', '', '', '', '', '', "{}"]
+              - ['base', 'preferences', 'Preferences', '', '24f877e0-193d-4276-8cfb-171f18ea1b36', '', '', '', '', '', "{}"]
+              - [ 'base', 'text_number', '', '', '066ef9d9-37d4-7059-8000-c7a8b39c7c92', '', '', '', '', '', "{}" ]
+              - [ 'base', 'text_currency', '', '', '066ef9d9-37d4-72d4-8000-86a26cd44e0f', '', '', '', '', '', "{}" ]
+              - [ 'base', 'text_decimal', '', '', '066ef9d9-37d4-7379-8000-0546f918189e', '', '', '', '', '', "{}" ]
+              - [ 'base', 'text_line_spacing_1', 'Line Spacing 1.0', '', '066d3add-ee73-7d34-8000-00a4019ed586', '', '', '', '', '', "{}" ]
+              - [ 'base', 'text_line_spacing_1.5', 'Line Spacing 1.5', '', '066d3add-ee73-7dad-8000-bf5f095cf9d7', '', '', '', '', '', "{}" ]
+              - [ 'base', 'text_line_spacing_2', '', 'Line Spacing 2.0', '066d3add-ee73-7e21-8000-16a012967e89', '', '', '', '', '', "{}" ]
+              - [ 'base', 'text_line_spacing_custom', 'Line Spacing...', '', '066d3add-ee73-7e92-8000-d3af6611ada2', '', '', '', '', '', "{}" ]
+              - ['base', 'text_color', '', '', '066ef9d4-9fae-7a78-8000-9f18414dbe17', '', '', '', '', '', "{}" ]
+              - ['base', 'text_justify_right', '', '', '066ef9d4-9fae-7ce9-8000-17d01cedd2cb', '', '', '', '', '', "{}" ]
+              - ['base', 'text_justify_left', '', '', '066ef9d4-9fae-7e0a-8000-4248b5aebfab', '', '', '', '', '', "{}" ]
+              - ['base', 'text_justify_top', '', '', '066ef9d4-9fae-7e7e-8000-b6c3691768e1', '', '', '', '', '', "{}" ]
+              - ['base', 'text_justify_bottom', '', '', '066ef9d4-9fae-7ef0-8000-806166e7366f', '', '', '', '', '', "{}" ]
+              - ['base', 'text_justify_left', 'Left Justify', '', '066d3d5d-0eb7-7000-8000-adbecb95b071', '', '', '', '', '', "{}"]
+              - ['base', 'text_justify_center', 'Center Justify', '', '066d3d5d-0eb7-7243-8000-046f60f1fa0b', '', '', '', '', '', "{}"]
+              - ['base', 'text_justify_right', 'Right Justify', '', '066d3d5d-0eb7-72e4-8000-1115eb2f9402', '', '', '', '', '', "{}"]
+              - ['base', 'text_date', '', '', '066ef9d9-37d4-74f6-8000-96ab199d628f', '', '', '', '', '', "{}"]
+              - ['base', 'text_date_short', '', '', '066ef9d9-37d4-7569-8000-a4cc11abbb71', '', '', '', '', '', "{}"]
+              - ['base', 'text_date_long', '', '', '066ef9d9-37d4-75d9-8000-00d5981b2748', '', '', '', '', '', "{}"]
+              - ['base', 'text_font_size', '', '', '066ef9d9-37d4-764b-8000-99d2d345fd78', '', '', '', '', '', "{}"]
+              - ['base', 'text_font_color', '', '', '066ef9d9-37d4-76bc-8000-63ce8082d10b', '', '', '', '', '', "{}"]
+              - ['base', 'text_highlight_color', '', '', '', '', '', '', '', '', "{}"]
+              - ['base', 'text_spell_check', '', '', '066ef9e2-559a-7501-8000-2e2a18e4029f', '', '', '', '', '', "{}"]
+              - [ 'base', 'text_font_style', '', '', '066ef9e2-559a-71ca-8000-5f2d81ff1aa1', '', '', '', '', '', "{}" ]
+              - ['base', 'text_bold', 'Bold', '', '066d3ad5-0524-7d22-8000-c146b56d2e33', '', '', '', '', '', "{}"]
+              - ['base', 'text_uppercase', 'Upper Case', '', '066d3ad5-0524-7d86-8000-1e7274884efe', '', '', '', '', '', "{}"]
+              - ['base', 'text_lowercase', 'Lower Case', '', '066d3ad5-0524-7de9-8000-5c04ced0ca46', '', '', '', '', '', "{}"]
+              - ['base', 'text_propercase', 'Proper Case', '', '066d3add-ee73-79f9-8000-d30443558583', '', '', '', '', '', "{}"]
+              - ['base', 'text_italic', 'Italic', '', '066d3add-ee73-7cb6-8000-a0d18c4d4524', '', '', '', '', '', "{}"]
+              - ['base', 'text_shadow', 'Shadow', '', '066d3add-ee73-7fe2-8000-7ba6c49cc019', '', '', '', '', '', "{}"]
+              - ['base', 'text_strike', 'Strike', '', '066d3ae9-32fc-7827-8000-6b21853d9972', '', '', '', '', '', "{}"]
+              - ['base', 'text_subscript', 'Subscript', '', '066d3ae9-32fc-7a66-8000-c5e7e1d79746', '', '', '', '', '', "{}"]
+              - ['base', 'text_superscript', 'Superscript', '', '066d3ae9-32fc-7b0f-8000-98a11a4166ad', '', '', '', '', '', "{}"]
+              - ['base', 'text_underline', 'Underline', '', '066d3ae9-32fc-7cbb-8000-113594ab930d', '', '', '', '', '', "{}"]
+              - ['base', 'text_double_underline', 'Double Underline', '', '066d3ae9-32fc-7d3e-8000-010fd3d260e4', '', '', '', '', '', "{}"]
+              - ['base', 'text_wrap', 'Wrap Text', '', '066d3ae9-32fc-7c2f-8000-2afee63c2263', '', '', '', '', '', "{}"]
+  toolbox:
+      100:
+          title:  File Details
+          items:
+              0: {"action": "", "type": ""}
+      200:
+          title: File Tools
+          items:
+              0: {"action": "", "type": ""}
+              1: {"action": "", "type": ""}
+              2: {"action": "", "type": ""}
+#      300:
+#          title: Storage Configuration
+#          items:
+#              0: {"action": "", "type": ""}
+#              1: {"action": "", "type": ""}
+#              2: {"action": "", "type": ""}
+      400:
+          title: Nchantd Files Quickstart
+          items:
+              0: {"action": "", "type": ""}
+              1: {"action": "", "type": ""}
+              2: {"action": "", "type": ""}

@@ -1,0 +1,48 @@
+NchantdNEWSLSummaryTab:
+  dstruct:
+    data:
+      appoptions:
+        - ['http://rss.cnn.com/rss/cnn_topstories.rss', 'ANY', 'rss_reader_link']
+        - ['http://rssfeeds.usatoday.com/UsatodaycomNation-TopStories', '', '']
+        - ['https://archive.nytimes.com/www.nytimes.com/services/xml/rss/index.html', 'ANY', 'rss_reader_link']
+        - ['http://www.nbcnews.com/id/6257883/t/press-release/', 'ANY', 'rss_reader_link']
+        - ['https://www.washingtontimes.com/feeds/', 'ANY', 'rss_reader_link']
+        - ['https://www.huffingtonpost.in/news/rss/', 'ANY', 'rss_reader_link']
+        - ['https://www.abc.net.au/news/rural/rss/', 'ANY', 'rss_reader_link']
+        - ['https://www.theage.com.au/rssheadlines', 'ANY', 'rss_reader_link']
+        - ['https://www.heraldsun.com.au/help-rss', 'ANY', 'rss_reader_link']
+        - ['https://www.yahoo.com/news/rss', 'ANY', 'rss_reader_link']
+        - ['https://www.yahoo.com/news/rss/us', 'ANY', 'rss_reader_link']
+        - ['https://finance.yahoo.com/news/rssindex', 'ANY', 'rss_reader_link']
+        - ['https://news.bitcoin.com/feed/', 'ANY', 'rss_reader_link']
+    path:
+    dstruct:
+        database:
+            objects:
+                table:
+                view:
+    toolbox:
+      100:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      200:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      300:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      400:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      500:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
+      600:
+          title: Configuration
+          items:
+              0: {"action": "", "type": ""}
