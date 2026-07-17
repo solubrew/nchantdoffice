@@ -473,7 +473,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "default": self.config.dikt.get("num_rows", 20),
             "handler": self.cmd_on_click_default_cell_background_color_button,
         }
-        self.cell_default_background_color_button = NchantdButtonWidget(self, cfg)
+        self.cell_default_background_color_button = NchantdButton(self, cfg)
         items[cnt]["widget"] = self.cell_default_background_color_button
         cnt += 1
         if cnt not in items:
@@ -580,7 +580,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "layout": "horizontal",
             "handler": self.cmd_merge_cells,
         }  #
-        self.selected_cell_merge_button = NchantdButtonWidget(self, cfg)
+        self.selected_cell_merge_button = NchantdButton(self, cfg)
         items[cnt]["widget"] = self.selected_cell_merge_button
         cnt += 1
         if cnt not in items:
@@ -610,7 +610,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "layout": "horizontal",
             "handler": self.cmd_font_color_select,
         }
-        self.cell_background_color_button = NchantdButtonWidget(self, cfg)
+        self.cell_background_color_button = NchantdButton(self, cfg)
         items[cnt]["widget"] = self.cell_background_color_button
         cnt += 1
         if cnt not in items:
