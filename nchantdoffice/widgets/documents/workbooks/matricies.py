@@ -52,11 +52,7 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCellBorderFormats"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCellBorderFormats").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -190,11 +186,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__("Nchantd Matrix", parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeMatrix"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeMatrix").override(cfg))
         self.document = None
         self.table = None
         self.toolbar = None
@@ -473,17 +465,17 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.font_config_bar = NchantdFontConfigBar(self, cfg)
         items[cnt]["widget"] = self.font_config_bar
         cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        # cfg = {
-        #     "text": "Set Cell Background Color",
-        #     "layout": "horizontal",
-        #     "default": self.config.dikt.get("num_rows", 20),
-        #     "handler": self.cmd_on_click_default_cell_background_color_button,
-        # }
-        # self.cell_default_background_color_button = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.cell_default_background_color_button
-        # cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        cfg = {
+            "text": "Set Cell Background Color",
+            "layout": "horizontal",
+            "default": self.config.dikt.get("num_rows", 20),
+            "handler": self.cmd_on_click_default_cell_background_color_button,
+        }
+        self.cell_default_background_color_button = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.cell_default_background_color_button
+        cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {
@@ -581,16 +573,16 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.selected_cell_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.selected_cell_entry
         cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        # cfg = {
-        #     "text": "Merge Cells: ",
-        #     "layout": "horizontal",
-        #     "handler": self.cmd_merge_cells,
-        # }  #
-        # self.selected_cell_merge_button = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.selected_cell_merge_button
-        # cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        cfg = {
+            "text": "Merge Cells: ",
+            "layout": "horizontal",
+            "handler": self.cmd_merge_cells,
+        }  #
+        self.selected_cell_merge_button = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.selected_cell_merge_button
+        cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {
@@ -611,16 +603,16 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.font_config_bar = NchantdFontConfigBar(self, cfg)
         items[cnt]["widget"] = self.font_config_bar
         cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        # cfg = {
-        #     "text": "Set Cell Background Color",
-        #     "layout": "horizontal",
-        #     "handler": self.cmd_font_color_select,
-        # }
-        # self.cell_background_color_button = NchantdButton(self, cfg)
-        # items[cnt]["widget"] = self.cell_background_color_button
-        # cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        cfg = {
+            "text": "Set Cell Background Color",
+            "layout": "horizontal",
+            "handler": self.cmd_font_color_select,
+        }
+        self.cell_background_color_button = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.cell_background_color_button
+        cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {"label": "Border Format"}
