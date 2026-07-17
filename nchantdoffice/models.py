@@ -44,7 +44,7 @@ from nchantrs.models.models import NchantdInstance
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
-log = True
+log = False
 if not log:
     logma.off()
 
@@ -1075,6 +1075,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.store_rss_entries(df)
         return df
 
+    def get_search_engines(self, db="db"):
+        """"""
+        cfg = {"WHERE": {"EQUAL": {"table_txt": "search", "key": "external", "label": "web"}}}
+        engines = self.store.get_table("vw_options", cfg, db)
+        return engines
+
     def get_settings(self, filter=None, db="db"):
         """"""
         table = "vw_settings"
@@ -1954,8 +1960,10 @@ class NchantdOfficeStore(NchantdStore):
                 content["context"],
             ]
         ]
-        # set delete for all but the largest 3 versions
+        logma.json(decode64(content["content"]))
         self._store(table, payload, db)
+        # PUSH 0.0.3 move this to a non blocking process
+        # set delete for all but the last 30 versions eventually base on variable policy of time/szie/counts
         # self._archive_versions(table, content["pUUID"], "pUUID", "UUID", 3)
         return content["uuid"]
 

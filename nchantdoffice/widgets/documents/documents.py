@@ -142,9 +142,9 @@ class NchantdOfficeDocumentMixin:
 
     def cmd_cancel(self):
         """Cancel current document operation and revert unsaved changes."""
-        if hasattr(self, 'document_editor') and self.document_editor is not None:
-            self.document_editor.setText('')
-        if hasattr(self, 'app') and self.app:
+        if hasattr(self, "document_editor") and self.document_editor is not None:
+            self.document_editor.setText("")
+        if hasattr(self, "app") and self.app:
             self.app.model.has_changed = False
         return self
 
@@ -164,12 +164,12 @@ class NchantdOfficeDocumentMixin:
 
     def cmd_node_edit(self, event=None, *args, **kwargs):
         """Open the node editor for the current document's tree node."""
-        if hasattr(self, 'app') and self.app:
-            if hasattr(self.app.view, 'panes') and 'left' in self.app.view.panes:
-                tree = getattr(self.app.view.panes['left'], 'tree', None)
-                if tree and hasattr(tree, 'model') and tree.model.current_node:
+        if hasattr(self, "app") and self.app:
+            if hasattr(self.app.view, "panes") and "left" in self.app.view.panes:
+                tree = getattr(self.app.view.panes["left"], "tree", None)
+                if tree and hasattr(tree, "model") and tree.model.current_node:
                     node = tree.model.current_node
-                    cfg = {'node': node, 'document': self.document}
+                    cfg = {"node": node, "document": self.document}
                     editor = NchantdOfficeNodeEditPane(self, cfg)
                     editor.initWidget()
         return self
@@ -202,9 +202,9 @@ class NchantdOfficeDocumentMixin:
 
     def cmd_tag_edit(self, event=None, *args, **kwargs):
         """Open tag editor for the current document."""
-        if hasattr(self, 'app') and self.app and hasattr(self.app, 'model'):
-            tags = getattr(self.document, 'tags', []) if self.document else []
-            cfg = {'tags': tags, 'document': self.document}
+        if hasattr(self, "app") and self.app and hasattr(self.app, "model"):
+            tags = getattr(self.document, "tags", []) if self.document else []
+            cfg = {"tags": tags, "document": self.document}
             editor = NchantdOfficeNoteEditPane(self, cfg)
             editor.initWidget()
             self.on_document_changed()
@@ -237,29 +237,28 @@ class NchantdOfficeDocumentMixin:
     def export_document(self):
         """Export a single selected document to an external file of the selected format."""
         if self.document is None:
-            logma.warning('No document to export')
+            logma.warning("No document to export")
             return self
         file_path, selected_filter = pyqt.QFileDialog.getSaveFileName(
-            self, 'Export Document', '',
-            'JSON Files (*.json);;Text Files (*.txt);;All Files (*)'
+            self, "Export Document", "", "JSON Files (*.json);;Text Files (*.txt);;All Files (*)"
         )
         if file_path:
-            doc_data = self.document.to_dict() if hasattr(self.document, 'to_dict') else str(self.document.content)
-            with open(file_path, 'w', encoding='utf-8') as f:
+            doc_data = self.document.to_dict() if hasattr(self.document, "to_dict") else str(self.document.content)
+            with open(file_path, "w", encoding="utf-8") as f:
                 j.dump(doc_data, f, indent=2, default=str)
-            logma.info(f'Exported document to {file_path}')
+            logma.info(f"Exported document to {file_path}")
         return self
 
     def get_bytes(self):
         """Return document content as bytes for storage or transmission."""
         if self.document is None:
             return bytes()
-        content = self.document.content if hasattr(self.document, 'content') else ''
+        content = self.document.content if hasattr(self.document, "content") else ""
         if isinstance(content, bytes):
             return content
         if isinstance(content, str):
-            return content.encode('utf-8')
-        return j.dumps(content, default=str).encode('utf-8')
+            return content.encode("utf-8")
+        return j.dumps(content, default=str).encode("utf-8")
 
     def get_primary_key(self):
         """"""
@@ -269,20 +268,19 @@ class NchantdOfficeDocumentMixin:
     def import_document(self):
         """Import a document from an external file."""
         file_path, _ = pyqt.QFileDialog.getOpenFileName(
-            self, 'Import Document', '',
-            'JSON Files (*.json);;Text Files (*.txt);;All Files (*)'
+            self, "Import Document", "", "JSON Files (*.json);;Text Files (*.txt);;All Files (*)"
         )
         if file_path:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 raw = f.read()
             try:
                 doc_data = j.loads(raw)
             except j.JSONDecodeError:
-                doc_data = {'content': raw, 'format': 'text'}
-            if self.document is not None and hasattr(self.document, 'content'):
-                self.document.content = doc_data.get('content', raw)
+                doc_data = {"content": raw, "format": "text"}
+            if self.document is not None and hasattr(self.document, "content"):
+                self.document.content = doc_data.get("content", raw)
             self.on_document_changed()
-            logma.info(f'Imported document from {file_path}')
+            logma.info(f"Imported document from {file_path}")
         return self
 
     def init_drawer(self, name):
@@ -291,15 +289,15 @@ class NchantdOfficeDocumentMixin:
             self.toolbox_config = {}
         drawer_id = None
         for key, drawer in self.toolbox_config.items():
-            if isinstance(drawer, dict) and drawer.get('name') == name:
+            if isinstance(drawer, dict) and drawer.get("name") == name:
                 drawer_id = key
                 break
         if drawer_id is None:
             drawer_id = max(self.toolbox_config.keys(), default=-1) + 1
-            self.toolbox_config[drawer_id] = {'name': name, 'items': {}}
+            self.toolbox_config[drawer_id] = {"name": name, "items": {}}
         drawer = self.toolbox_config[drawer_id]
-        if 'items' not in drawer:
-            drawer['items'] = {}
+        if "items" not in drawer:
+            drawer["items"] = {}
         return drawer
 
     def init_toolbar(self, cfg=None):
@@ -329,7 +327,9 @@ class NchantdOfficeDocumentMixin:
                 "layout": "horizontal",
                 "size": [10, 20],
                 "drop_down": {"size": [100, 20]},
-                "options": ["default",],
+                "options": [
+                    "default",
+                ],
             }
             self.profile_select_entry = NchantdDropDown(self, cfg).initWidget()
             buttons[1] = {"name": "get_pro", "widget": self.profile_select_entry}
@@ -344,7 +344,7 @@ class NchantdOfficeDocumentMixin:
             buttons[1] = {"name": "get_pro_features", "widget": self.profile_select_entry}
         cfg = {"layout": "horizontal", "justify": "right"}
         buttons = {k: buttons[k] for k in sorted(buttons)}
-        logma.warning(f"Buttons {buttons}")
+        logma.info(f"Buttons {buttons}")
         self.document_toolbar = NchantdButtonBar(self, cfg).initWidget(buttons)
         self.document_toolbar.setFixedHeight(30)
         self.layout.addWidget(self.document_toolbar)
@@ -379,6 +379,7 @@ class NchantdOfficeDocumentMixin:
         self.tab_edit_pane = NchantdOfficeTabEditPane(self, cfg)
         items[cnt]["widget"] = self.tab_edit_pane
         cnt += 1
+        # PUSH to 0.0.3
         # if cnt not in items:
         #     items[cnt] = default_action
         # cfg = {"layout": "horizontal", "handler": self.cmd_tag_edit}
@@ -391,7 +392,7 @@ class NchantdOfficeDocumentMixin:
         """Lock the current document page to prevent editing."""
         if self.document_editor is not None:
             self.document_editor.setReadOnly(True)
-        if self.document is not None and hasattr(self.document, 'locked'):
+        if self.document is not None and hasattr(self.document, "locked"):
             self.document.locked = True
         return self
 
@@ -408,9 +409,9 @@ class NchantdOfficeDocumentMixin:
 
     def on_gain_focus(self):
         """Update document when it gains focus to reflect any edits made elsewhere."""
-        if self.document is not None and hasattr(self.app, 'model'):
-            stored = self.app.model.get_document(self.document.did) if hasattr(self.app.model, 'get_document') else None
-            if stored is not None and hasattr(stored, 'content'):
+        if self.document is not None and hasattr(self.app, "model"):
+            stored = self.app.model.get_document(self.document.did) if hasattr(self.app.model, "get_document") else None
+            if stored is not None and hasattr(stored, "content"):
                 if self.document_editor is not None:
                     self.document_editor.setPlainText(str(stored.content))
         self.setFocus()
@@ -418,9 +419,9 @@ class NchantdOfficeDocumentMixin:
 
     def on_lost_focus(self):
         """Save document when focus is lost, based on user settings."""
-        auto_save = self.config.dikt.get('auto_save_on_blur', True) if hasattr(self, 'config') else True
+        auto_save = self.config.dikt.get("auto_save_on_blur", True) if hasattr(self, "config") else True
         if auto_save and self.document is not None:
-            if self.document_editor is not None and hasattr(self.document, 'content'):
+            if self.document_editor is not None and hasattr(self.document, "content"):
                 self.document.content = self.document_editor.toPlainText()
             self.save_internal()
         return self
@@ -437,11 +438,9 @@ class NchantdOfficeDocumentMixin:
 
         :return:
         """
-        # logma.warning("Saving Document")
         if self.document is None:
             return self
         logma.info(f"Save Content {self.document.content}")
-        # self.document.save()  # increments versions and (internal encryption..future)
         logma.info(f"Save Path {path}")
         self.set_file_path(path)
         if self.app.view.panes["left"].tree.model.current_node is None:
@@ -453,7 +452,7 @@ class NchantdOfficeDocumentMixin:
         pos = self.app.view.panes["center"].model.current_tab.position
         logma.info(f"Save Pos {pos}")
         logma.info(f"Save DID {self.document.did}")
-        # logma.json(self.document.to_dict())
+        self.document.save()  # increments versions and (internal encryption..future)
         self.app.model.store_document(self.document)
         return self
 
@@ -463,16 +462,17 @@ class NchantdOfficeDocumentMixin:
             return self
         if self.file_path is None:
             file_path, _ = pyqt.QFileDialog.getSaveFileName(
-                self, 'Save Document', '',
-                'JSON Files (*.json);;Text Files (*.txt);;All Files (*)'
+                self, "Save Document", "", "JSON Files (*.json);;Text Files (*.txt);;All Files (*)"
             )
             if not file_path:
                 return self
             self.set_file_path(file_path)
-        doc_data = self.document.to_dict() if hasattr(self.document, 'to_dict') else {'content': str(self.document.content)}
-        with open(self.file_path, 'w', encoding='utf-8') as f:
+        doc_data = (
+            self.document.to_dict() if hasattr(self.document, "to_dict") else {"content": str(self.document.content)}
+        )
+        with open(self.file_path, "w", encoding="utf-8") as f:
             j.dump(doc_data, f, indent=2, default=str)
-        logma.info(f'Saved external document to {self.file_path}')
+        logma.info(f"Saved external document to {self.file_path}")
         return self
 
     def save_internal(self):
@@ -484,34 +484,34 @@ class NchantdOfficeDocumentMixin:
     def save_as(self, name, path=None):
         """Create a copy of the document under a new name and optional path."""
         if self.document is None:
-            logma.warning('save_as called with no document')
+            logma.warning("save_as called with no document")
             return self
         if path is None:
-            path = dirname(self.path) if self.path else getattr(self.app, 'base_path', '')
+            path = dirname(self.path) if self.path else getattr(self.app, "base_path", "")
         target_path = join(path, name)
-        doc_dict = self.document.to_dict() if hasattr(self.document, 'to_dict') else {'content': str(self.document)}
-        doc_dict['path'] = target_path
-        if hasattr(self.app, 'model') and hasattr(self.app.model, 'store_document'):
+        doc_dict = self.document.to_dict() if hasattr(self.document, "to_dict") else {"content": str(self.document)}
+        doc_dict["path"] = target_path
+        if hasattr(self.app, "model") and hasattr(self.app.model, "store_document"):
             self.app.model.store_document(doc_dict)
-        logma.info(f'Document saved as {target_path}')
+        logma.info(f"Document saved as {target_path}")
         self.path = target_path
         return self
 
     def save_copy_as(self, name, path=None):
         """Create a copy of the document without changing the current document state."""
         if self.document is None:
-            logma.warning('save_copy_as called with no document')
+            logma.warning("save_copy_as called with no document")
             return self
         if path is None:
-            path = dirname(self.path) if self.path else getattr(self.app, 'base_path', '')
+            path = dirname(self.path) if self.path else getattr(self.app, "base_path", "")
         target_path = join(path, name)
-        doc_dict = self.document.to_dict() if hasattr(self.document, 'to_dict') else {'content': str(self.document)}
-        doc_dict['path'] = target_path
-        doc_dict['did'] = None
-        doc_dict.pop('uuid', None)
-        if hasattr(self.app, 'model') and hasattr(self.app.model, 'store_document'):
+        doc_dict = self.document.to_dict() if hasattr(self.document, "to_dict") else {"content": str(self.document)}
+        doc_dict["path"] = target_path
+        doc_dict["did"] = None
+        doc_dict.pop("uuid", None)
+        if hasattr(self.app, "model") and hasattr(self.app.model, "store_document"):
             self.app.model.store_document(doc_dict)
-        logma.info(f'Document copy saved as {target_path}')
+        logma.info(f"Document copy saved as {target_path}")
         return self
 
     def set_file_path(self, path):
@@ -527,15 +527,15 @@ class NchantdOfficeDocumentMixin:
     def take_snapshot(self):
         """Capture a versioned snapshot of the current document state for undo/rollback."""
         if self.document is None:
-            logma.warning('take_snapshot called with no document')
+            logma.warning("take_snapshot called with no document")
             return self
         snapshot = deepcopy(self.document)
         # Prefer the store's snapshot API if available; fall back to a per-document list
-        store = getattr(getattr(self.app, 'model', None), 'store', None)
-        if store is not None and hasattr(store, 'snapshot_document'):
+        store = getattr(getattr(self.app, "model", None), "store", None)
+        if store is not None and hasattr(store, "snapshot_document"):
             store.snapshot_document(self.document.did, snapshot)
         else:
-            if not hasattr(self.document, 'snapshots'):
+            if not hasattr(self.document, "snapshots"):
                 self.document.snapshots = []
             self.document.snapshots.append(snapshot)
         logma.info(f'Snapshot taken for document {getattr(self.document, "did", None)}')
@@ -545,24 +545,24 @@ class NchantdOfficeDocumentMixin:
         """Unlock the current document page to allow editing."""
         if self.document_editor is not None:
             self.document_editor.setReadOnly(False)
-        if self.document is not None and hasattr(self.document, 'locked'):
+        if self.document is not None and hasattr(self.document, "locked"):
             self.document.locked = False
         return self
 
     def update_document(self):
         """Refresh the current document state from the underlying store."""
-        if self.document is None or not hasattr(self.document, 'did'):
+        if self.document is None or not hasattr(self.document, "did"):
             return self
-        if not hasattr(self.app, 'model'):
+        if not hasattr(self.app, "model"):
             return self
-        stored = self.app.model.get_document(self.document.did) if hasattr(self.app.model, 'get_document') else None
+        stored = self.app.model.get_document(self.document.did) if hasattr(self.app.model, "get_document") else None
         if stored is None:
             return self
-        if self.document_editor is not None and hasattr(stored, 'content'):
+        if self.document_editor is not None and hasattr(stored, "content"):
             self.document_editor.setPlainText(str(stored.content))
-        if hasattr(stored, 'to_dict'):
+        if hasattr(stored, "to_dict"):
             for key, value in stored.to_dict().items():
-                if hasattr(self.document, key) and key not in ('did', 'uuid'):
+                if hasattr(self.document, key) and key not in ("did", "uuid"):
                     setattr(self.document, key, value)
         return self
 
@@ -574,7 +574,7 @@ class NchantdOfficeDocumentMixin:
         """
         if page_num == 0:
             return self.update_document()
-        logma.warning(f'update_document_page({page_num}) called but multi-page support is not implemented')
+        logma.warning(f"update_document_page({page_num}) called but multi-page support is not implemented")
         return self
 
     def _store_document(self):
@@ -674,13 +674,13 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
 
     def open(self):
         """Open the document for editing. If no document is set, attempt to load from the current node."""
-        if self.document is None and hasattr(self, 'app') and hasattr(self.app, 'view'):
-            tree = getattr(self.app.view.panes.get('left', {}), 'tree', None)
-            if tree and hasattr(tree, 'model') and tree.model.current_node:
+        if self.document is None and hasattr(self, "app") and hasattr(self.app, "view"):
+            tree = getattr(self.app.view.panes.get("left", {}), "tree", None)
+            if tree and hasattr(tree, "model") and tree.model.current_node:
                 node = tree.model.current_node
-                if hasattr(node, 'document') and node.document is not None:
+                if hasattr(node, "document") and node.document is not None:
                     self.set_document(node.document)
-                    if self.document_editor is not None and hasattr(self.document, 'content'):
+                    if self.document_editor is not None and hasattr(self.document, "content"):
                         self.document_editor.setPlainText(str(self.document.content))
         return self
 
@@ -690,18 +690,18 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
 
     def open_remote(self):
         """Open a document from a remote source URL."""
-        if not hasattr(self.app, 'model') or not hasattr(self.app.model, 'open_remote'):
-            logma.warning('open_remote not available on this model')
+        if not hasattr(self.app, "model") or not hasattr(self.app.model, "open_remote"):
+            logma.warning("open_remote not available on this model")
             return self
         try:
             doc = self.app.model.open_remote()
             if doc is not None:
                 self.set_document(doc)
-                if self.document_editor is not None and hasattr(doc, 'content'):
+                if self.document_editor is not None and hasattr(doc, "content"):
                     self.document_editor.setPlainText(str(doc.content))
                 logma.info(f'Remote document opened: {getattr(doc, "did", "unknown")}')
         except Exception as e:
-            logma.error(f'Failed to open remote document: {e}')
+            logma.error(f"Failed to open remote document: {e}")
         return self
 
     def save(self):

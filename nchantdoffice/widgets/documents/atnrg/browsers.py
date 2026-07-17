@@ -36,13 +36,12 @@ from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.tables.lists import NchantdListWidget
 from nchantrs.widgets.browsers.profiles import NchantdWebProfile
 
-
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
 if not log:
-    logma.off()  # re-enabled for web-view render debugging
+    logma.off()
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "browsers.yaml")
@@ -74,10 +73,10 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             cfg = {}
         if cfg.get("document", None) is None:
             cfg["document"] = {"data": {"unit": {}}}
-        cfg["url"] = self.config.dikt.get("url", self.config.dikt.get("default_url", "http://www.duckduckgo.com/"))
+        # TODO get home page from settings
+        cfg["url"] = self.config.dikt.get("url", self.get_current_page())
         self.config.override(cfg)
         super().initModel(self.config.dikt)
-
         # this translates url code from the web app tab catalog
         if self.config.dikt.get("url_code", None) is not None:
             cfg["document"]["data"]["unit"]["original_path"] = self.app.model.get_link(
@@ -88,9 +87,9 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         logma.json(document)
         self.document = self.app.model.codex.init_browser(document)
         self.document.load_document()
-        self.context_menu_name = "context.document.browser"
-        if self.context_menu_name is not None:
-            self.initialize_context_menu(self.context_menu_name)
+        # self.context_menu_name = "context.document.browser"
+        # if self.context_menu_name is not None:
+        self.initialize_context_menu("context.document.browser")
         cfg = {}
         self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
         self.library = self.document.library
@@ -105,9 +104,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.browser = NchantdOfficeWebViewer(self, {"url": self.active_url})
         self.browser.is_simple = False
         cfg["buttons"] = self.build_toolbar()
-        # Host of a single expanding web view: opt this container's layout out of
-        # the base AlignTop|AlignLeft so the viewer fills the pane instead of
-        # collapsing to its sizeHint (root-cause fix, see docs/nchantrs_webview_render_fixes.md).
         cfg["fill"] = True
         super().initView(cfg)
         self.init_toolbox()
@@ -124,22 +120,21 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.initView()
         return self
 
-    def add_profile(self, profile, cfg):
-        """"""
-        profile_limit = 1
-        if getattr(self.app.model.user, "has_pro", False) if self.app.model.user else False:
-            profile_limit = 10
-        if self.profiles.get_count() >= profile_limit:
-            return self
-        self.profiles.add_profile(profile, cfg)
-        return self
+    # def add_profile(self, profile, cfg):
+    #     """"""
+    #     # PUSH 0.0.3 - allow for switching between multiple profiles for pro users
+    #     profile_limit = 1
+    #     if getattr(self.app.model.user, "has_pro", False) if self.app.model.user else False:
+    #         profile_limit = 10
+    #     if self.profiles.get_count() >= profile_limit:
+    #         return self
+    #     self.profiles.add_profile(profile, cfg)
+    #     return self
 
     def build_toolbar(self):
         """"""
-        logma.info(f"Build toolbar")
         buttons = self.browser.build_toolbar()
         self.browser.url_select_entry.config.dikt["handler"] = self.cmd_goto_page
-
         buttons[17] = {"action": "web_page_pin", "handler": self.cmd_pin_page, "value": self.cmd_check_is_pinned}
         buttons[100] = "_skip"
         buttons[150] = "_skip"
@@ -212,18 +207,11 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     def cmd_goto_page(self, event=None, *args, **kwargs):
         """"""
         logma.info(f"Event {event}")
-        url = self.browser.url_select_entry.combobox.lineEdit().text().strip()
-        # page = self.add_page(url)
         page = None
         self.document.set_page_active(page)
         url = self.document.active_page.active_url.active_url
         logma.info(f"Goto {url}")
-        # self.browser.cmd_goto_page(url, args, kwargs)
         self.populate_document(url)
-        # # need to check if url inspection drawer has been initialized or not?
-        # self.update_toolbox_url_inspection(self.browser.active_url)
-        # self.document.set_refresh_time()
-        # self.populate_document(url)
         return self
 
     def cmd_launch_source_tab(self, event, *args, **kwargs):
@@ -248,7 +236,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     def cmd_next_page(self, url=None, *args, **kwargs):
         """"""
         self.browser.cmd_next_page(url, args, kwargs)
-        # self.update_toolbox_url_inspection(self.browser.active_url)
         self.document.set_refresh_time()
         return self
 
@@ -260,7 +247,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     def cmd_previous_page(self, url=None, *args, **kwargs):
         """"""
         self.browser.cmd_previous_page(url, args, kwargs)
-        # self.update_toolbox_url_inspection(self.browser.active_url)
         self.document.set_refresh_time()
         return self
 
@@ -271,16 +257,15 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def cmd_refresh_page(self, url=None, *args, **kwargs):
         """"""
-        # self.browser.cmd_refresh_page()
-        # self.update_toolbox_url_inspection(self.browser.active_url)
         self.populate_document()
         self.document.set_refresh_time()
         return self
 
-    def cmd_scan_source(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
-        return self
+    # PUSH to version 0.0.3
+    # def cmd_scan_source(self, event, *args, **kwargs):
+    #     """"""
+    #     # TODO: implement method
+    #     return self
 
     def cmd_set_default_browser(self, event, *args, **kwargs):
         """"""
@@ -374,14 +359,22 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         logma.info(f"Domain {domain}")
         return domain
 
-    def get_current_home_page(self, home_page=None):
+    def get_current_home_page(self, url=None):
         """"""
-        if home_page is None:
+        if url is None:
             logma.info(f"Instance {self.app.model.instance}")
-            home_page = self.app.model.instance.browser.home_page
-        if home_page is None:
-            home_page = self.config.dikt.get("default_home_page", "https://www.duckduckgo.com")
-        return home_page
+            url = self.app.model.instance.browser.home_page
+        if url is None:
+            url = self.config.dikt.get("default_home_page", "https://www.duckduckgo.com")
+        return url
+
+    def get_current_page(self, url=None):
+        """"""
+        if self.document:
+            url = self.document.get_active_url()
+        if url is None:
+            url = self.get_current_home_page()
+        return url
 
     def get_current_profile(self, cfg=None):
         """"""
@@ -425,15 +418,14 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # profile = self.profiles.profiles[profile]
         return profile
 
-    def get_profiles(self):
-        """"""
-        return self.profiles
+    # PUSH to version 0.0.3
+    # def get_profiles(self):
+    #     """"""
+    #     return self.profiles
 
     def get_search_engines(self):
         """"""
-        search_engines = [
-            "Google",
-        ]
+        search_engines = self.app.model.get_search_engines()
         return search_engines
 
     def init_drawer_browser_config(self):
@@ -442,15 +434,16 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         cnt = 0
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "text": "Is Default Browser",
-            "handler": self.cmd_set_default_browser,
-            "value": self.get_current_default_browser(),
-            "size": ["auto", "auto"],
-        }
-        self.default_browser_checkbox = NchantdCheckboxWidget(self, cfg)
-        items[cnt]["widget"] = self.default_browser_checkbox
-        cnt += 1
+        # PUSH to 0.0.3 requires logic to register application as default browser
+        # cfg = {
+        #     "text": "Is Default Browser",
+        #     "handler": self.cmd_set_default_browser,
+        #     "value": self.get_current_default_browser(),
+        #     "size": ["auto", "auto"],
+        # }
+        # self.default_browser_checkbox = NchantdCheckboxWidget(self, cfg)
+        # items[cnt]["widget"] = self.default_browser_checkbox
+        # cnt += 1
         # Home Page & Search Section
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
@@ -774,34 +767,35 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def init_drawer_source_inspection(self):
-        """"""
-        items = self.toolbox_config[400].get("items", {})
-        cnt = 0
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom", "handler": self.cmd_launch_source_tab}
-        cfg = {"text": "Launch Source Tab of Current Page"}
-        self.source_document_launch_button = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.source_document_launch_button
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom", "handler": self.cmd_scan_source}
-        cfg = {"text": "Scan Source for Resources"}
-        self.crawl_current_page_button = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.crawl_current_page_button
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        data = ["Images", "CSS", "JS", "HTML", "JSON", "XML", "Text", "All"]
-        cfg = {
-            "text": "Select Resource",
-            "data": data,
-            "handler": self.cmd_on_resource_select,
-        }
-        self.page_resource_list = NchantdListWidget(self, cfg)
-        items[cnt]["widget"] = self.page_resource_list
-        cnt += 1
-        return items
+    # PUSH to version 0.0.3
+    # def init_drawer_source_inspection(self):
+    #     """"""
+    #     items = self.toolbox_config[400].get("items", {})
+    #     cnt = 0
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom", "handler": self.cmd_launch_source_tab}
+    #     cfg = {"text": "Launch Source Tab of Current Page"}
+    #     self.source_document_launch_button = NchantdButtonWidget(self, cfg)
+    #     items[cnt]["widget"] = self.source_document_launch_button
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom", "handler": self.cmd_scan_source}
+    #     cfg = {"text": "Scan Source for Resources"}
+    #     self.crawl_current_page_button = NchantdButtonWidget(self, cfg)
+    #     items[cnt]["widget"] = self.crawl_current_page_button
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     data = ["Images", "CSS", "JS", "HTML", "JSON", "XML", "Text", "All"]
+    #     cfg = {
+    #         "text": "Select Resource",
+    #         "data": data,
+    #         "handler": self.cmd_on_resource_select,
+    #     }
+    #     self.page_resource_list = NchantdListWidget(self, cfg)
+    #     items[cnt]["widget"] = self.page_resource_list
+    #     cnt += 1
+    #     return items
 
     def init_drawer_quickstart(self):
         """"""
@@ -875,6 +869,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def populate_document(self, url=None):
         """"""
+        # self.update_toolbox_url_inspection(self.browser.active_url)
         if url is None:
             url = self.get_active_url()
         logma.info(f"Populate Document {url}")
@@ -887,9 +882,16 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def save(self):
         """"""
+        # TODO DEBUG document is not updating the active url in the content section
+        #  not sure if the page section is needed
+        #  remove the caller key/value
+        #  versioning of content not happening in all cases
+        #  probably a save that is not reloading the version after
         logma.info(f"Save Browser Profile")
+        # DEBUG this should be standard but it creates an issue here
+        # if self.document is None:
+        #     self.new_document()
         self.document.save()
-        # H28 FIX: Check self.pinned instead of self.pin
         if self.pinned:
             return self
         content = self.document.active_page.to_dict()
@@ -897,7 +899,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         if content != self.document.content:
             self.document.set_content(content)
         super().save()
-        self.document.save()
         return self
 
     def set_current_domain(self):

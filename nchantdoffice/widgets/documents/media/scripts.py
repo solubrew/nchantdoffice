@@ -879,7 +879,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             self.document.set_content(content)
         super().save()
         logma.json(self.document.to_dict())
-        # logma.info(self.document.to_dict())
         return self
 
     def set_page_view(self):

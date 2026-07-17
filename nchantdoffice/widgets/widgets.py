@@ -30,9 +30,10 @@ from nchantdoffice.widgets.controls.toolboxes import NchantdOfficeApplicationToo
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
-log = True
+log = False
 logma = Logma(__name__)
-
+if not log:
+    logma.off()
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "widgets.yaml")
 
@@ -43,11 +44,7 @@ class NchantdOfficeTabSet(NchantdTabSet):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeTabSet")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTabSet").override(cfg))
         self.model = NchantdOfficeTabSetModel(self, self.config)
 
     def initModel(self, create_objects=True):
@@ -68,21 +65,26 @@ class NchantdOfficeTabSet(NchantdTabSet):
         self.initView()
         return self
 
-    def launch_note(self, cfg=None):
-        """"""
-        if cfg is None:
-            cfg = {}
-        # TODO BUG FIX: need to fix the Note object
-        # note = NchantdOfficeNote(self.app.main, cfg).initWidget()
-        note = NchantdOfficeNote(self, cfg).initWidget()
-        self.app.view.panes["center"].model.current_tab.append_note(note)
-        return self
+    # PUSH to 0.0.3
+    # def launch_note(self, cfg=None):
+    #     """"""
+    #     if cfg is None:
+    #         cfg = {}
+    #     # TODO BUG FIX: need to fix the Note object
+    #     # note = NchantdOfficeNote(self.app.main, cfg).initWidget()
+    #     note = NchantdOfficeNote(self, cfg).initWidget()
+    #     self.app.view.panes["center"].model.current_tab.append_note(note)
+    #     return self
 
     def create_toolbox(self, parent=None, cfg=None):
         """"""
         toolbox = NchantdOfficeApplicationToolBox(parent, cfg)
         toolbox.initWidget()
         return toolbox
+
+    def go_to_previous_tab(self):
+        """"""
+        # TODO implement method
 
     def setTabText(self, position, text, store=True):
         """"""
@@ -155,7 +157,7 @@ class NchantdOfficeTabSet(NchantdTabSet):
         #   4) observe selection lands on tabn-1 instead of the previously active tab.
         # Do NOT change the comparison operator until the sequence is reproduced
         # under logma debug capture from on_tab_focus and load_tab.
-        if tabn >= 0 and tabn <= len(self.model.tabsdata):
+        if tabn >= 0 and tabn <= len(self.model.tabsdata) - 1:
             super().on_tab_focus(tabn)
         return self
 
