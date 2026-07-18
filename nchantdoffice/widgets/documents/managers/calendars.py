@@ -539,7 +539,8 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         }
         cfg["buttons"][49] = "_insert_stretch"
         super().initView(cfg)
-        self.calendar = NchantdCalendar(self).initWidget()
+        cfg = {}
+        self.calendar = NchantdCalendar(self, cfg).initWidget()
         self.layout.addWidget(self.calendar)
         self.layout.setSpacing(3)
         return self
@@ -560,9 +561,6 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
     def cmd_config_accept(self):
         """"""
         #TODO: implement method
-
-
-
 
     def cmd_select_calendar_unit(self, event, *args, **kwargs):
         """"""
@@ -800,7 +798,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             "Quarter Hour": ["Minute", "Every 5 Minutes"],
             "Minute": ["Second", "Quarter Minute", "Every 5 Seconds"],
         }
-        self.calendar_unit_select.set_options(options[scope])
+        self.calendar_unit_select.set_options(options.get(scope, ""))
 
 
 class NchantdOfficeTodayOverview(NchantdTodayOverview):

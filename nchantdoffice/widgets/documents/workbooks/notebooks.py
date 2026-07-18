@@ -74,7 +74,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         """ """
         icfg = {}
         super().__init__("Nchantd Notebook", parent, icfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNotebook").override(cfg))
         self.jupyter_process = None
         self.server_port = 8888
@@ -652,21 +651,19 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         items = self.toolbox_config[100].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
         cnt = 0
-
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {
-            "label": "Server Port: ",
-            "layout": "horizontal",
-            "range": [8000, 9999],
-            "default": self.server_port,
-            "handler": self.cmd_set_server_port,
-            "value": self.get_server_port(),
-        }
-        self.port_spin = NchantdLabeledSpinBox(self, cfg)
-        items[cnt]["widget"] = self.port_spin
-        cnt += 1
-
+        # if cnt not in items:
+        #     items[cnt] = default_action.copy()
+        # cfg = {
+        #     "label": "Server Port: ",
+        #     "layout": "horizontal",
+        #     "range": [8000, 9999],
+        #     "default": self.server_port,
+        #     "handler": self.cmd_set_server_port,
+        #     "value": self.get_server_port(),
+        # }
+        # self.port_spin = NchantdLabeledSpinBox(self, cfg)
+        # items[cnt]["widget"] = self.port_spin
+        # cnt += 1
         if cnt not in items:
             items[cnt] = default_action.copy()
         cfg = {
@@ -690,7 +687,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.autostart_checkbox = NchantdCheckboxWidget(self, cfg)
         items[cnt]["widget"] = self.autostart_checkbox
         cnt += 1
-
         return items
 
     def init_drawer_selection_config(self):

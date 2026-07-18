@@ -23,14 +23,15 @@ NchantdOfficeChart:
               0: {"action": "", "type": ""}
               1: {"action": "", "type": ""}
               2: {"action": "", "type": ""}
-      300:
-          title: Chart Connections
-          items:
-              0: {"action": "", "type": ""}
-      400:
-          title: Nchantd Chart Quickstart
-          items:
-              0: {"action": "", "type": ""}
+#PUSH to 0.0.3
+#      300:
+#          title: Chart Connections
+#          items:
+#              0: {"action": "", "type": ""}
+#      400:
+#          title: Nchantd Chart Quickstart
+#          items:
+#              0: {"action": "", "type": ""}
 plotfactorial:
   'Name': Factorial Plot
   'Description':

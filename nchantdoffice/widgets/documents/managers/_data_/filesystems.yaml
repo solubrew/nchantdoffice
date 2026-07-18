@@ -81,21 +81,22 @@ NchantdOfficeFileSystem:
           title:  File Details
           items:
               0: {"action": "", "type": ""}
-      200:
-          title: File Tools
-          items:
-              0: {"action": "", "type": ""}
-              1: {"action": "", "type": ""}
-              2: {"action": "", "type": ""}
+#PUSH to 0.0.3
+#      200:
+#          title: File Tools
+#          items:
+#              0: {"action": "", "type": ""}
+#              1: {"action": "", "type": ""}
+#              2: {"action": "", "type": ""}
 #      300:
 #          title: Storage Configuration
 #          items:
 #              0: {"action": "", "type": ""}
 #              1: {"action": "", "type": ""}
 #              2: {"action": "", "type": ""}
-      400:
-          title: Nchantd Files Quickstart
-          items:
-              0: {"action": "", "type": ""}
-              1: {"action": "", "type": ""}
-              2: {"action": "", "type": ""}
+#      400:
+#          title: Nchantd Files Quickstart
+#          items:
+#              0: {"action": "", "type": ""}
+#              1: {"action": "", "type": ""}
+#              2: {"action": "", "type": ""}

@@ -11,6 +11,9 @@ NchantdOfficeNotebook:
           title: Notebook Configuration
           items:
               0: {"action": "", "type": ""}
+              1: {"action": "", "type": ""}
+              2: {"action": "", "type": ""}
+              3: {"action": "", "type": ""}
       200:
           title: Notebook Tools
           items:

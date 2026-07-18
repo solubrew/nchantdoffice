@@ -113,6 +113,60 @@ class NchantdOfficeDocumentCatalogItem(NchantdCatalogItem):
         return self
 
 
+class NchantdOfficeLinkCatalogItem(NchantdCatalogItem):
+    """"""
+
+    def __init__(self, parent=None, cfg=None):
+        """ """
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeLinkCatalogItem").override(cfg))
+        self.action = None
+        self.action_params = None
+        self.document = None
+        self.did = None
+        self.document_nm = None
+        self.params = None
+        self.widget = None
+
+    def initModel(self, cfg=None):
+        """"""
+        super().initModel(cfg)
+        self.file_type = self.config.dikt.get("file_type", None)
+        action = self.config.dikt.get("action", None)
+        self.action = NchantdAction(action, "base", self)
+        action_slug = action[action.rfind("_") + 1 :]
+        self.catalog.all_items["slug"] = self.catalog.all_items["name_txt"].apply(lambda x: x.lower().replace(" ", ""))
+        self.document = self.catalog.all_items[self.catalog.all_items["slug"] == action_slug].to_dict("records")[0]
+        self.document_nm = self.document.get("name_txt", None)
+        self.document_txt = self.document.get("document_txt", None)
+        self.widget = self.document.get("widget_txt", None)
+        if self.document.get("parameters_dict", "") == "":
+            self.document["parameters_dict"] = "{}"
+        try:
+            self.params = j.loads(self.document.get("parameters_dict", "{}").replace("'", '"').strip())
+        except Exception as e:
+            logma.info(self.document.get("parameters_dict", "{}").replace("'", '"').strip())
+            logma.info(e)
+            if debug:
+                raise e
+        # logma.info(f"Parameters: {self.params}")
+
+        return self
+
+    def initView(self, cfg=None):
+        """"""
+        cfg = {"size": [128, 128]}
+        super().initView(cfg)
+        self.setStyleSheet("QWidget {background-color: #4F5665}")
+        return self
+
+    def initWidget(self):
+        """"""
+        self.initModel()
+        self.initView()
+        return self
+
+
 class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
     """"""
 
