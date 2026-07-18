@@ -180,23 +180,39 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         return self
 
     def cmd_top_margin_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Update top margin from spinbox and refresh page view."""
+        if hasattr(self, 'top_margin_select') and self.top_margin_select is not None:
+            value = self.top_margin_select.value() if hasattr(self.top_margin_select, 'value') else 72
+            self.margin_top = int(value) if value else 72
+            if self.view_type == "page_view":
+                self.set_page_view()
         return self
 
     def cmd_left_margin_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Update left margin from spinbox and refresh page view."""
+        if hasattr(self, 'left_margin_select') and self.left_margin_select is not None:
+            value = self.left_margin_select.value() if hasattr(self.left_margin_select, 'value') else 72
+            self.margin_left = int(value) if value else 72
+            if self.view_type == "page_view":
+                self.set_page_view()
         return self
 
     def cmd_right_margin_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Update right margin from spinbox and refresh page view."""
+        if hasattr(self, 'right_margin_select') and self.right_margin_select is not None:
+            value = self.right_margin_select.value() if hasattr(self.right_margin_select, 'value') else 72
+            self.margin_right = int(value) if value else 72
+            if self.view_type == "page_view":
+                self.set_page_view()
         return self
 
     def cmd_bottom_margin_change(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Update bottom margin from spinbox and refresh page view."""
+        if hasattr(self, 'bottom_margin_select') and self.bottom_margin_select is not None:
+            value = self.bottom_margin_select.value() if hasattr(self.bottom_margin_select, 'value') else 72
+            self.margin_bottom = int(value) if value else 72
+            if self.view_type == "page_view":
+                self.set_page_view()
         return self
 
     def cmd_add_chart(self, event, *args, **kwargs):
