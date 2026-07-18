@@ -462,10 +462,21 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
     def refresh_for_document(self, document):
         """Refresh toolbox drawer items for the active document/tab context.
 
-        Called by NchantdOfficeTabSet.on_tab_focus() when current_document_changed
-        signal is emitted. Clears existing items and rebuilds them via
+        Called by NchantdOfficeTabSet.on_tab_focus() when the focused center
+        document changes. Clears existing items and rebuilds them via
         init_drawer_application() without destroying the toolbox instance.
         """
+        # Tear down the current QToolBox before rebuilding. build_toolbox() always
+        # creates a brand-new QToolBox and adds it to this widget's layout; without
+        # removing the old one first, the previous drawers stay on screen and the
+        # toolbox appears to "hold" the prior document's drawers when the active
+        # document changes. clear() empties the old box and removes it from the
+        # layout; deleteLater() disposes of the orphaned box widget.
+        old_box = self.box
+        self.clear()
+        if old_box is not None:
+            old_box.deleteLater()
+
         # Clear existing toolbox drawer items in reverse order to avoid index shifts
         items = self.config.dikt["toolbox"][0].get("items", {})
         for idx in sorted(items.keys(), reverse=True):

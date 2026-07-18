@@ -82,6 +82,29 @@ class NchantdOfficeTabSet(NchantdTabSet):
         toolbox.initWidget()
         return toolbox
 
+    def _find_right_toolbox(self):
+        """Return the live (materialized) toolbox widget in the right pane, or None.
+
+        The visible toolbox is a right-pane tab whose widget is a
+        NchantdOfficeApplicationToolBox. Prefer the app-level reference
+        (``self.app.toolbox``, set by nchantrs.load_tab when a tab is named
+        "ToolBox"), but fall back to scanning the right pane's materialized tab
+        widgets by capability -- these office tabs are not necessarily named
+        "ToolBox", and non-active tabs are lazy ``dummy`` placeholders that cannot
+        be refreshed (they build correctly on their own first focus).
+        """
+        toolbox = getattr(self.app, "toolbox", None)
+        if toolbox is not None and hasattr(toolbox, "refresh_for_document"):
+            return toolbox
+        right_pane = self.app.view.panes.get("right")
+        model = getattr(right_pane, "model", None)
+        for candidate in getattr(model, "tab_widgets", []) or []:
+            if getattr(candidate, "dummy", False):
+                continue
+            if hasattr(candidate, "refresh_for_document") and hasattr(candidate, "build_toolbox"):
+                return candidate
+        return None
+
     def go_to_previous_tab(self):
         """"""
         # TODO implement method
@@ -143,30 +166,30 @@ class NchantdOfficeTabSet(NchantdTabSet):
             #     except Exception as e:
             #         logma.error(f"Failed to persist active tab position: {e}")
 
-            # H24 FIX: Lazy-init toolbox — create once, reuse on subsequent tab switches.
-            # Previously this block ran unconditionally, destroying toolbox state
-            # (search queries, filter results, selected items) on every tab switch.
-            right_pane = self.app.view.panes.get("right")
-            if not hasattr(right_pane, "toolbox") or right_pane.toolbox is None:
-                logma.info("Creating toolbox in right pane")
-                right_pane.toolbox = self.create_toolbox(right_pane)
-                logma.info("Building toolbox")
-                right_pane.toolbox.build_toolbox()
-            else:
-                logma.info("Reusing existing toolbox in right pane")
-                # H24 FIX: Deferred refresh using QTimer.singleShot to ensure widget is fully initialized
-                # before updating toolbox drawer items for the active document context
-                QTimer.singleShot(0, lambda: right_pane.toolbox.refresh_for_document(widget))
-
-            # H24 FIX: Wire toolbox to current_document_changed signal for automatic refresh
-            # when document changes via other mechanisms (drag-drop, API calls)
-            if not hasattr(right_pane, "toolbox_signal_connected") or not right_pane.toolbox_signal_connected:
-                if hasattr(self.parent, "current_document_changed"):
-                    self.parent.current_document_changed.connect(
-                        lambda doc: QTimer.singleShot(0, lambda: right_pane.toolbox.refresh_for_document(doc))
-                    )
-                    right_pane.toolbox_signal_connected = True
-                    logma.info("Wired toolbox to current_document_changed signal")
+            # Refresh the VISIBLE right-pane toolbox for the newly focused center
+            # document. The toolbox the user sees is the right-pane "ToolBox" tab,
+            # held on the app as `self.app.toolbox` (set when that tab is loaded in
+            # nchantrs tabsetmodels.load_tab). Its drawers are rebuilt from the
+            # active center document's `toolbox_config`, so switching center tabs
+            # must rebuild them.
+            #
+            # Only CENTER focus changes drive the toolbox: switching right-pane tabs
+            # does not change the center document, and the toolbox is itself a
+            # right-pane tab. The deferred QTimer.singleShot lets Qt settle the new
+            # currentWidget() (which build_toolbox reads) before we rebuild.
+            #
+            # NOTE: the previous implementation refreshed `right_pane.toolbox`, a
+            # separate toolbox built via create_toolbox() that is never added to any
+            # layout/tab (a phantom). Refreshing it had no visible effect, so
+            # switching center tabs left the visible toolbox showing the prior
+            # document's drawers -- it only appeared to refresh on node selection /
+            # new-tab because those rebuild the right pane (reloading the ToolBox tab
+            # from scratch).
+            if self.pane_position == "center":
+                toolbox = self._find_right_toolbox()
+                if toolbox is not None:
+                    logma.info("Refreshing right-pane toolbox for focused document")
+                    QTimer.singleShot(0, lambda tb=toolbox, doc=widget: tb.refresh_for_document(doc))
 
         # Ensure tabn is valid for super class to avoid IndexError in set_focus.
         # RESOLVED [off-by-one]: the first-click-off-by-one on center/right tabsets
