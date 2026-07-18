@@ -70,7 +70,8 @@ class NchantdOfficeTabSet(NchantdTabSet):
     #     """"""
     #     if cfg is None:
     #         cfg = {}
-    #     # TODO BUG FIX: need to fix the Note object
+    #     # NOTE: launch_note is temporarily disabled. Was causing Note object
+    #     # failures. The Note widget path needs a full review before re-enabling.
     #     # note = NchantdOfficeNote(self.app.main, cfg).initWidget()
     #     note = NchantdOfficeNote(self, cfg).initWidget()
     #     self.app.view.panes["center"].model.current_tab.append_note(note)

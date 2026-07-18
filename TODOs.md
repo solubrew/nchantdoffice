@@ -52,6 +52,21 @@ Total markers: ~280 (27 descriptive + ~248 stub methods)
 - Line 325: implement loading new nchantd office instance
 - Line 377: implement loading new nchantd office instance
 
+### H## Tracker (nchantdoffice — gamma HEAD `355fa85`)
+
+| ID | Title | Status | Resolved in | Notes |
+|----|-------|--------|-------------|-------|
+| H40 | Tab navigation off-by-one on first click (lazy tabs) | ✅ Completed (2026-07-18) | `355fa85` | `NchantdOfficeTabSet.on_tab_focus()` — lazy tab materialization via `removeTab`+`insertTab` shifts Qt's `currentIndex`; added `_materializing_tab` re-entrant guard + `blockSignals` restore |
+| H41 | Toolbox drawers not refreshed on center tab switch | ✅ Completed (2026-07-18) | `355fa85` | Two bugs: (1) `on_tab_focus` refreshed phantom `right_pane.toolbox` instead of the visible right-pane "ToolBox" tab; (2) `refresh_for_document` created a new `QToolBox` without clearing the old one. Fixed by redirecting refresh to `self.app.toolbox` (with capability-scan fallback) and calling `clear()`+`deleteLater()` before rebuilding. See inline NOTE in `widgets/widgets.py:181` |
+
+## Recent Activity (2026-07-18 — nchantdoffice gamma)
+
+| Commit | Description |
+|--------|-------------|
+| `355fa85` | fix(toolbox): H40 off-by-one tab fix + H41 toolbox refresh fix |
+| `e813db9` | stripping unused code |
+| `542bfba` | Merge remote `gamma` |
+
 ### analytics/analytics.py
 - Line 33: Integrate Orange3
 

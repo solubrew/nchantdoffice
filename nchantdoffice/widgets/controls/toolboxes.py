@@ -466,12 +466,13 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         document changes. Clears existing items and rebuilds them via
         init_drawer_application() without destroying the toolbox instance.
         """
-        # Tear down the current QToolBox before rebuilding. build_toolbox() always
-        # creates a brand-new QToolBox and adds it to this widget's layout; without
-        # removing the old one first, the previous drawers stay on screen and the
-        # toolbox appears to "hold" the prior document's drawers when the active
-        # document changes. clear() empties the old box and removes it from the
-        # layout; deleteLater() disposes of the orphaned box widget.
+        # RESOLVED [toolbox-stale-box]: build_toolbox() always creates a brand-new
+        # QToolBox and adds it to this widget's layout. Without removing the old
+        # one first, the previous drawers stay on screen and the toolbox appears to
+        # "hold" the prior document's drawers when the active document changes.
+        # clear() empties the old box and removes it from the layout; deleteLater()
+        # disposes of the orphaned box widget. Fixed in commit 355fa85 alongside the
+        # wrong-target fix in NchantdOfficeTabSet.on_tab_focus().
         old_box = self.box
         self.clear()
         if old_box is not None:
