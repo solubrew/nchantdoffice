@@ -23,7 +23,7 @@ from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.controls.advanced_buttons import NchantdNumberWheelButton, NchantdLabeledSpinBox, NchantdSpinBox
-from nchantrs.widgets.controls.buttons import NchantdButton
+from nchantrs.widgets.controls.buttons import NchantdButton, NchantdButtonWidget
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.tables.tables import NchantdDataFrameTable, NchantdTable
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry, NchantdEntryBox
@@ -31,7 +31,6 @@ from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.controls.checkboxes import NchantdCheckboxGroup
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown, NchantdComboBox
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
-from pyffice.matrix.spreadsheet import PyfficeMatrix
 from pyffice.workflows.formulas import PyfficeFormulasLibrary
 from kahndor.logma import Logma
 from nchantrs.widgets.controls.button_groups import NchantdFontConfigBar
@@ -473,7 +472,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "default": self.config.dikt.get("num_rows", 20),
             "handler": self.cmd_on_click_default_cell_background_color_button,
         }
-        self.cell_default_background_color_button = NchantdButton(self, cfg)
+        self.cell_default_background_color_button = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.cell_default_background_color_button
         cnt += 1
         if cnt not in items:
@@ -580,7 +579,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "layout": "horizontal",
             "handler": self.cmd_merge_cells,
         }  #
-        self.selected_cell_merge_button = NchantdButton(self, cfg)
+        self.selected_cell_merge_button = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.selected_cell_merge_button
         cnt += 1
         if cnt not in items:
@@ -610,7 +609,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "layout": "horizontal",
             "handler": self.cmd_font_color_select,
         }
-        self.cell_background_color_button = NchantdButton(self, cfg)
+        self.cell_background_color_button = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.cell_background_color_button
         cnt += 1
         if cnt not in items:
