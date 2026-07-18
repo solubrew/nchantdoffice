@@ -105,8 +105,30 @@ class NchantdOfficeTabSet(NchantdTabSet):
         if tabn >= 0 and tabn < len(self.model.tabsdata):
             widget = self.widget(tabn)
             if hasattr(widget, "dummy") and widget.dummy:
+                # [off-by-one FIX] Materializing a lazy tab replaces the dummy via
+                # removeTab(tabn)+insertTab(tabn, real_widget) (QTabWidget has no
+                # replace-in-place). Two Qt side effects broke first-click focus:
+                #   1) insertTab at an index <= the current index increments Qt's
+                #      currentIndex, shifting the visible page off the clicked tab.
+                #   2) base removeTab() unblocks signals at its end, so the shift in
+                #      (1) re-fires currentChanged -> re-enters on_tab_focus for the
+                #      wrong (shifted) index, lazily loading a tab nobody clicked.
+                # This is why the first click landed one tab away and only the second
+                # click (dummy already materialized) showed the right tab.
+                # The guard swallows the re-entrant signal; the outer call restores
+                # the current index (signals blocked) to the tab the user clicked.
+                if getattr(self, "_materializing_tab", False):
+                    return self
                 logma.info(f"Loading Lazy Tab {tabn}")
-                self.model.load_tab(self.model.tabsdata[tabn], tabn, self.pane_position)
+                self._materializing_tab = True
+                try:
+                    self.model.load_tab(self.model.tabsdata[tabn], tabn, self.pane_position)
+                    if self.currentIndex() != tabn:
+                        self.blockSignals(True)
+                        self.setCurrentIndex(tabn)
+                        self.blockSignals(False)
+                finally:
+                    self._materializing_tab = False
                 widget = self.widget(tabn)
 
             # Persist last selected tab
@@ -146,17 +168,12 @@ class NchantdOfficeTabSet(NchantdTabSet):
                     right_pane.toolbox_signal_connected = True
                     logma.info("Wired toolbox to current_document_changed signal")
 
-        # Ensure tabn is valid for super class to avoid IndexError in set_focus
-        # TODO BUG [off-by-one]: tabset tab selection is off by one in certain sequences.
-        # NOTE: keep this TODO OPEN for user to debug.
-        # Suspect area: the boundary check above uses `<= len(...)` here while the
-        # earlier `tabn < len(self.model.tabsdata)` uses strict `<`. The asymmetry
-        # can shift selection by one when tabs are added/removed or when the
-        # " + " dummy tab is at index len(tabsdata). Reproduce by:
-        #   1) open N tabs, 2) click the " + " tab to add a new doc, 3) close it,
-        #   4) observe selection lands on tabn-1 instead of the previously active tab.
-        # Do NOT change the comparison operator until the sequence is reproduced
-        # under logma debug capture from on_tab_focus and load_tab.
+        # Ensure tabn is valid for super class to avoid IndexError in set_focus.
+        # RESOLVED [off-by-one]: the first-click-off-by-one on center/right tabsets
+        # was caused by lazy-tab materialization shifting Qt's currentIndex (see the
+        # restore in the dummy-load branch above), NOT by this boundary check. The
+        # `<= len - 1` guard below is equivalent to the earlier strict `<` check and
+        # is intentionally kept.
         if tabn >= 0 and tabn <= len(self.model.tabsdata) - 1:
             super().on_tab_focus(tabn)
         return self
