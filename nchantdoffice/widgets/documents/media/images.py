@@ -559,6 +559,10 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """"""
         return self
 
+    def cmd_image_height_change(self):
+        """"""
+        # TODO implement method
+
     def cmd_open_local_file(self, event=None, *args, **kwargs):
         """"""
         super().cmd_open_local_file(event, *args, **kwargs)
@@ -566,6 +570,26 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             if exists(self.local_file):
                 self.open_file(self.local_file)
         return self
+
+    def cmd_run_palette_scan(self):
+        """"""
+        # TODO implement method
+
+    def cmd_image_width_change(self):
+        """"""
+        # TODO implement method
+
+    def get_binary(self):
+        """"""
+        # TODO implement method
+
+    def get_image_height(self):
+        """"""
+        # TODO implement method
+
+    def get_image_width(self):
+        """"""
+        # TODO implement method
 
     def init_drawer_document_config(self):
         """"""
@@ -584,7 +608,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             "label": "Image Width: ",
             "layout": "horizontal",
             "handler": self.cmd_image_width_change,
-            "value": self.get_image_width(),
+            "value": self.get_image_width() or "",
         }
         self.image_size_width_editor = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.image_size_width_editor
@@ -595,24 +619,12 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             "label": "Image Height: ",
             "layout": "horizontal",
             "handler": self.cmd_image_height_change,
-            "value": self.get_image_height(),
+            "value": self.get_image_height() or "",
         }
         self.image_size_height_editor = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.image_size_height_editor
         cnt += 1
         return items
-
-    def cmd_image_height_change(self):
-        """"""
-        # TODO implement method
-
-    def get_image_height(self):
-        """"""
-        # TODO implement method
-
-    def get_image_width(self):
-        """"""
-        # TODO implement method
 
     def init_drawer_image_tools(self):
         """"""
@@ -651,58 +663,48 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def init_drawer_palette(self):
-        """"""
-        items = self.toolbox_config[300].get("items", {})
-        cnt = 0
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        if cnt not in items:
-            items[cnt] = deepcopy(default_action)
-        cfg = {"text": "Scan to Extract Palette", "handler": self.cmd_run_palette_scan}
-        self.image_scan_palette_button = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.image_scan_palette_button
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = deepcopy(default_action)
-        cfg = {
-            "text": "Modify Palette: ",
-            "num_columns": 3,
-            "num_rows": 10,
-            "columns": ["Color", "Hex", "Usage %"],
-            "column_width": 10,
-        }
-        self.image_palette = NchantdPaletteTable(self, cfg)
-        items[cnt]["widget"] = self.image_palette
-        cnt += 1
-        return items
+    # PUSH to 0.0.3
+    # def init_drawer_palette(self):
+    #     """"""
+    #     items = self.toolbox_config[300].get("items", {})
+    #     cnt = 0
+    #     default_action = {"action": "insert_generic_action", "type": "custom"}
+    #     if cnt not in items:
+    #         items[cnt] = deepcopy(default_action)
+    #     cfg = {"text": "Scan to Extract Palette", "handler": self.cmd_run_palette_scan}
+    #     self.image_scan_palette_button = NchantdButtonWidget(self, cfg)
+    #     items[cnt]["widget"] = self.image_scan_palette_button
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = deepcopy(default_action)
+    #     cfg = {
+    #         "text": "Modify Palette: ",
+    #         "num_columns": 3,
+    #         "num_rows": 10,
+    #         "columns": ["Color", "Hex", "Usage %"],
+    #         "column_width": 10,
+    #     }
+    #     self.image_palette = NchantdPaletteTable(self, cfg)
+    #     items[cnt]["widget"] = self.image_palette
+    #     cnt += 1
+    #     return items
 
-    def cmd_run_palette_scan(self):
-        """"""
-        # TODO implement method
-
-    def cmd_image_width_change(self):
-        """"""
-        # TODO implement method
-
-    def get_binary(self):
-        """"""
-        # TODO implement method
-
-    def init_drawer_quickstart(self):
-        """"""
-        items = self.toolbox_config[400].get("items", {})
-        cnt = 0
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-
-        return items
+    # PUSH to 0.0.3
+    # def init_drawer_quickstart(self):
+    #     """"""
+    #     items = self.toolbox_config[400].get("items", {})
+    #     cnt = 0
+    #     default_action = {"action": "insert_generic_action", "type": "custom"}
+    #
+    #     return items
 
     def init_toolbox(self):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
         self.toolbox_config[200]["items"] = self.init_drawer_image_tools()
-        self.toolbox_config[300]["items"] = self.init_drawer_palette()
-        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+        # self.toolbox_config[300]["items"] = self.init_drawer_palette()
+        # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
         return self
 
     def open_file(self, file=None):

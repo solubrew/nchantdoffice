@@ -490,12 +490,12 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         self.default_type_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.default_type_select
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {"layout": "horizontal", "handler": self.cmd_insert_object, "value": self.get_new_object_types()}
-        self.chart_insert_object_pane = NchantdNewObjectPane(self, cfg)
-        items[cnt]["widget"] = self.chart_insert_object_pane
-        cnt += 1
+        # if cnt not in items:
+        #     items[cnt] = default_action.copy()
+        # cfg = {"layout": "horizontal", "handler": self.cmd_insert_object, "value": self.get_new_object_types()}
+        # self.chart_insert_object_pane = NchantdNewObjectPane(self, cfg)
+        # items[cnt]["widget"] = self.chart_insert_object_pane
+        # cnt += 1
         return items
 
     def init_drawer_data_sources(self):
@@ -564,8 +564,9 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_chart_config()
         self.toolbox_config[200]["items"] = self.init_drawer_data_sources()
-        self.toolbox_config[300]["items"] = self.init_drawer_connections()
-        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+        # PUSH to 0.0.3
+        # self.toolbox_config[300]["items"] = self.init_drawer_connections()
+        # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
     def load_chart_config(self, file_path):
         """Load chart configuration from file"""

@@ -36,7 +36,7 @@ from nchantrs.widgets.controls.advanced_buttons import NchantdEnableSpinBox
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.groups import NchantdGroup
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
-from nchantrs.widgets.media.editors.selectors import NchantdComboEditor
+from nchantrs.widgets.media.editors.selectors import NchantdComboEditor, NchantdDropDown
 from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
 
 # ====================================================================================================================||
@@ -86,7 +86,8 @@ class NchantdCompressPane(NchantdPane):
             "actions": {
                 0: {"action": "compress_files", "handler": self.cmd_compress_files},
                 1: {"action": "automate_action", "handler": self.cmd_automate_compress},
-            }
+            },
+            "layout": "horizontal",
         }
         self.tool_buttons = NchantdButtonBar(self, cfg).initWidget()
         self.group_layout.addWidget(self.tool_buttons)
@@ -99,17 +100,17 @@ class NchantdCompressPane(NchantdPane):
         self.initView()
         return self
 
-    def cmd_automate_compress(self, event=None):
+    def cmd_automate_compress(self, event=None, *args, **kwargs):
         """Set up automated compression rules"""
         logma.info("Setting up compression automation...")
         # NOTE: Implement automation rules
         return self
 
-    def cmd_delete_files_on_compress(self):
+    def cmd_delete_files_on_compress(self, event=None, *args, **kwargs):
         """"""
         # TODO implement method
 
-    def cmd_compress_files(self, event=None):
+    def cmd_compress_files(self, event=None, *args, **kwargs):
         """Compress selected files"""
         import zipfile
         from os.path import basename, exists
@@ -190,7 +191,6 @@ class NchantdImportPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdImportPane").override(cfg))
 
     def initModel(self, cfg=None):
@@ -201,13 +201,27 @@ class NchantdImportPane(NchantdPane):
     def initView(self, cfg=None):
         """"""
         super().initView(cfg)
-        cfg = {"text": "Import Tool:", "size": ["auto", "auto"]}
+        cfg = {"text": "Import Tool:"}
         group = NchantdGroup(self, cfg)
-        self.group_layout = pyqt.QVBoxLayout()
-        group.setLayout(self.group_layout)
-        cfg = {}
+        group_layout = pyqt.QVBoxLayout()
+        group.setLayout(group_layout)
+        cfg = {
+            "text": "Import File",
+            "options": self.get_file_options() or [],
+            "handler": self.cmd_file_change,
+            "value": self.get_file() or "",
+        }
+        self.rename_format_select = NchantdDropDown(self, cfg).initWidget()
+        group_layout.addWidget(self.rename_format_select)
+        cfg = {
+            "actions": {
+                0: {"action": "rename_files", "handler": self.cmd_import_file},
+                1: {"action": "automate_action", "handler": self.cmd_automate_import},
+            },
+            "layout": "horizontal",
+        }
         self.tool_buttons = NchantdButtonBar(self, cfg).initWidget()
-        self.group_layout.addWidget(self.tool_buttons)
+        group_layout.addWidget(self.tool_buttons)
         self.layout.addWidget(group)
         return self
 
@@ -216,6 +230,26 @@ class NchantdImportPane(NchantdPane):
         self.initModel()
         self.initView()
         return self
+
+    def cmd_automate_import(self, event=None, *args, **kwargs):
+        """"""
+        # TODO implement method
+
+    def cmd_file_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO implement method
+
+    def cmd_import_file(self, event=None, *args, **kwargs):
+        """"""
+        # TODO implement method
+
+    def get_file(self):
+        """"""
+        # TODO implement method
+
+    def get_file_options(self):
+        """"""
+        # TODO implement method
 
     def set_file(self, path):
         """"""
@@ -258,7 +292,8 @@ class NchantdMovePane(NchantdPane):
             "actions": {
                 0: {"action": "move_files", "handler": self.cmd_move_files},
                 1: {"action": "automate_action", "handler": self.cmd_automate_move},
-            }
+            },
+            "layout": "horizontal",
         }
         self.tool_buttons = NchantdButtonBar(self, cfg).initWidget()
         self.group_layout.addWidget(self.tool_buttons)
@@ -275,7 +310,7 @@ class NchantdMovePane(NchantdPane):
         """"""
         # TODO: implement method
 
-    def cmd_move_files(self):
+    def cmd_move_files(self, event=None, *args, **kwargs):
         """"""
         # TODO: implement method
 
@@ -314,13 +349,14 @@ class NchantdRenamePane(NchantdPane):
             "handler": self.cmd_format_change,
             "value": self.get_file_rename_format(),
         }
-        self.rename_format_select = NchantdComboEditor(self, cfg).initWidget()
+        self.rename_format_select = NchantdDropDown(self, cfg).initWidget()
         group_layout.addWidget(self.rename_format_select)
         cfg = {
             "actions": {
                 0: {"action": "rename_files", "handler": self.cmd_rename_files},
                 1: {"action": "automate_action", "handler": self.cmd_automate_rename},
-            }
+            },
+            "layout": "horizontal",
         }
         self.tool_buttons = NchantdButtonBar(self, cfg).initWidget()
         group_layout.addWidget(self.tool_buttons)
@@ -333,16 +369,16 @@ class NchantdRenamePane(NchantdPane):
         self.initView()
         return self
 
-    def cmd_format_change(self):
+    def cmd_format_change(self, event=None, *args, **kwargs):
         """"""
         # TODO implement method
 
-    def cmd_automate_rename(self, event=None):
+    def cmd_automate_rename(self, event=None, *args, **kwargs):
         """Set up automated file renaming rules"""
         logma.info("Setting up rename automation...")
         return self
 
-    def cmd_rename_files(self, event=None):
+    def cmd_rename_files(self, event=None, *args, **kwargs):
         """Rename files based on selected format"""
         from os import rename as os_rename
 
@@ -423,11 +459,7 @@ class NchantdStorageEditPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdStorageEditPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -857,7 +889,8 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
-        self.toolbox_config[200]["items"] = self.init_drawer_tools_config()
+        #PUSH to 0.0.3
+        # self.toolbox_config[200]["items"] = self.init_drawer_tools_config()
         # self.toolbox_config[300]["items"] = self.init_drawer_storage_config()
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 

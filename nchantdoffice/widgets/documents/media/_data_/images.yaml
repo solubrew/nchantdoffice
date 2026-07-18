@@ -10,6 +10,8 @@ NchantdOfficeImage:
           title: Image Details
           items:
               0: {"action": "", "type": ""}
+              1: {"action": "", "type": ""}
+              2: {"action": "", "type": ""}
       200:
           title: Image Tools
           items:
@@ -18,11 +20,12 @@ NchantdOfficeImage:
               2: {"action": "", "type": ""}
               3: {"action": "", "type": ""}
               4: {"action": "", "type": ""}
-      300:
-          title: Palette
-          items:
-              0: {"action": "", "type": ""}
-      400:
-          title: Nchantd Image Quickstart
-          items:
-              0: {"action": "", "type": ""}
+#PUSH to 0.0.3
+#      300:
+#          title: Palette
+#          items:
+#              0: {"action": "", "type": ""}
+#      400:
+#          title: Nchantd Image Quickstart
+#          items:
+#              0: {"action": "", "type": ""}

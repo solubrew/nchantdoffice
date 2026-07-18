@@ -123,9 +123,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         self.document = self.app.model.codex.init_pdf(document)
         self.document.load_document()
         logma.json(self.document.to_dict())
-        self.context_menu_name = "context.document.pdf"
-        if self.context_menu_name is not None:
-            self.initialize_context_menu(self.context_menu_name)
+        self.initialize_context_menu("context.document.pdf")
         return self
 
     def initView(self, cfg=None):
@@ -182,10 +180,10 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         if cnt not in items:
             items[cnt] = default_action
         cfg = {
-            "label": "Page Count: ",
+            "label": "Page Count:",
             "layout": "horizontal",
             "handler": self.cmd_page_count_change,
-            "value": self.get_page_count(),
+            "value": self.get_page_count() or "",
         }
         self.label_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.label_entry
@@ -193,9 +191,11 @@ class NchantdOfficePDF(NchantdOfficeDocument):
 
     def cmd_page_count_change(self):
         """"""
+        # TODO implement method
 
     def get_page_count(self):
         """"""
+        # TODO implement method
 
     def init_drawer_document_tools(self):
         """"""
@@ -253,7 +253,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
         self.toolbox_config[200]["items"] = self.init_drawer_document_tools()
-        self.toolbox_config[300]["items"] = self.init_drawer_quickstart()
+        # self.toolbox_config[300]["items"] = self.init_drawer_quickstart()
 
     def cmd_image_format_change(self):
         """"""
@@ -317,22 +317,16 @@ class NchantdOfficePDF(NchantdOfficeDocument):
 
     def load_page(self):
         """Load and display the current page with text extraction"""
-
-        page = self.document.extract_text(self.current_page)
-
+        # page = self.document.extract_text(self.current_page)
         page = self.pdf_document[self.current_page]
-
         # Get page as pixmap
         mat = fitz.Matrix(self.scale, self.scale)
         pix = page.get_pixmap(matrix=mat)
         img_data = pix.tobytes("ppm")
-
         pixmap = pyqt.QPixmap()
         pixmap.loadFromData(img_data)
-
         # Extract text with position information
         self.text_instances = page.get_text("dict")
-
         self.pdf_label.setPixmap(pixmap)
         self.pdf_label.resize(pixmap.size())
 

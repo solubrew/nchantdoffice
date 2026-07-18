@@ -50,10 +50,10 @@ NchantdOfficeSketch:
           title: Object Configuration
           items:
               0: {"action": "add_object", "type": ""}
-      400:
-          title: Nchantd Sketch Quickstart
-          items:
-              0: {"action": "", "type": ""}
+#      400:
+#          title: Nchantd Sketch Quickstart
+#          items:
+#              0: {"action": "", "type": ""}
 NchantdOfficePalette:
     toolbox:
       100:

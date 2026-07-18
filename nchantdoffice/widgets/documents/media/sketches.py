@@ -85,7 +85,6 @@ class NchantdEditLayerPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdEditorLayerPane").override(cfg))
 
     def initModel(self, cfg=None):
@@ -139,12 +138,8 @@ class NchantdObjectsPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(self)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdObjectsPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdObjectsPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -177,11 +172,11 @@ class NchantdLineToolPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
+        super().initModel(cfg)
         return self
 
     def initView(self, cfg=None):
@@ -268,11 +263,11 @@ class NchantdCurveToolPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
+        super().initModel(cfg)
         return self
 
     def initView(self, cfg=None):
@@ -344,11 +339,11 @@ class NchantdSplineToolPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
+        super().initModel(cfg)
         return self
 
     def initView(self, cfg=None):
@@ -415,11 +410,11 @@ class NchantdPolygonToolPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
+        super().initModel(cfg)
         return self
 
     def initView(self, cfg=None):
@@ -480,11 +475,11 @@ class NchantdCircleToolPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdCircleToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
+        super().initModel(cfg)
         return self
 
     def initView(self, cfg=None):
@@ -545,11 +540,11 @@ class NchantdObjectToolPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdObjectToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
+        super().initModel(cfg)
         return self
 
     def initView(self, cfg=None):
@@ -604,7 +599,6 @@ class NchantdFillToolPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdFillToolPane").override(cfg))
 
     def initModel(self, cfg=None):
@@ -665,7 +659,6 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
     def __init__(self, parent=None, cfg=None):
         """"""
         super().__init__("NchantdOfficeSketch", parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSketch").override(cfg))
         self.canvas = None
         self.layers = None
@@ -904,6 +897,15 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             self.render_on_canvas()
         return self
 
+    def cmd_canvas_size_change(self):
+        """"""
+        # TODO implement method
+        return
+
+    def cmd_layer_change(self):
+        """"""
+        # TODO implement method
+
     def delete_layer(self, layer_name):
         """Delete a layer by name."""
         if layer_name in self.layers and layer_name != "Layer 0 - Canvas Layer":
@@ -1069,6 +1071,10 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         """Get available canvas color options."""
         return ["Black", "Grey", "White", "Blue", "Red", "Green", "Yellow", "Magenta", "Cyan", "Orange", "Violet"]
 
+    def get_canvas_layer(self):
+        """"""
+        # TODO implement method
+
     def get_canvas_size(self):
         """Get the current canvas size."""
         if self.canvas:
@@ -1141,16 +1147,16 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.canvas_color_sigil_button = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.canvas_color_sigil_button
         cnt += 1
-        items[cnt] = {}
-        cfg = {
-            "label": "Canvas Size",
-            "layout": "horizontal",
-            "handler": self.cmd_canvas_size_change,
-            "value": self.get_canvas_size(),
-        }
-        self.canvas_size_set = NchantdLabeledDoubleSpinBox(self, cfg)
-        items[cnt]["widget"] = self.canvas_size_set
-        cnt += 1
+        # items[cnt] = {}
+        # cfg = {
+        #     "label": "Canvas Size",
+        #     "layout": "horizontal",
+        #     "handler": self.cmd_canvas_size_change,
+        #     "value": self.get_canvas_size(),
+        # }
+        # self.canvas_size_set = NchantdLabeledDoubleSpinBox(self, cfg)
+        # items[cnt]["widget"] = self.canvas_size_set
+        # cnt += 1
         items[cnt] = {}
         self.get_layers()
         cfg = {
@@ -1173,19 +1179,6 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.layers_select = NchantdEditLayerPane(self, cfg)
         items[cnt]["widget"] = self.layers_select
         return items
-
-    def cmd_canvas_size_change(self):
-        """"""
-        # TODO implement method
-        return
-
-    def cmd_layer_change(self):
-        """"""
-        # TODO implement method
-
-    def get_canvas_layer(self):
-        """"""
-        # TODO implement method
 
     def init_sketch_tools(self):
         """"""
@@ -1280,10 +1273,10 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
         return items
 
-    def init_drawer_quickstart(self):
-        """"""
-        items = self.toolbox_config[400].get("items", {})
-        return items
+    # def init_drawer_quickstart(self):
+    #     """"""
+    #     items = self.toolbox_config[400].get("items", {})
+    #     return items
 
     def init_toolbox(self):
         """"""
@@ -1293,7 +1286,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.toolbox_config[100]["items"] = self.init_canvas_config()
         self.toolbox_config[200]["items"] = self.init_sketch_tools()
         self.toolbox_config[300]["items"] = self.init_object_config()
-        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+        # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
     def merge_layers(self, layer1, layer2):
         """Merge two layers into one (placeholder for advanced functionality)."""

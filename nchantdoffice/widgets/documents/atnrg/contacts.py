@@ -47,14 +47,8 @@ class NchantdOfficeContact(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeContact")
-        if self.parent:
-            self.config.override(parent.config)
-        super().__init__(self.parent)
-        self.config.override(cfg)
-
-        # Contact data model
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeContact").override(cfg))
         self.document = PyfficeContact()
         self.contact_id = None
         self.first_name = ""
@@ -164,7 +158,6 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         """ """
         icfg = {}
         super().__init__("Nchantd Rolodex", parent, icfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeRolodex").override(cfg))
         self.contacts = []  # List of NchantdOfficeContact objects
         self.contact_panes = {}  # Dict of contact_id -> ContactPane widget

@@ -623,26 +623,25 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return items
 
     #
-    def init_drawer_quickstart(self):
-        """"""
-        items = self.toolbox_config[500].get("items", {})
-        cnt = 0
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "multi_options": [
-                {
-                    "label": "Quickstart List",
-                    "layout": "horizontal",
-                    "size": ["auto", "auto"],
-                }
-            ]
-        }
-        self.document_compatability = NchantdCheckboxGroup(self, cfg)
-        items[cnt]["widget"] = self.document_compatability
-        cnt += 1
-
-        return items
+    # def init_drawer_quickstart(self):
+    #     """"""
+    #     items = self.toolbox_config[500].get("items", {})
+    #     cnt = 0
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "multi_options": [
+    #             {
+    #                 "label": "Quickstart List",
+    #                 "layout": "horizontal",
+    #                 "size": ["auto", "auto"],
+    #             }
+    #         ]
+    #     }
+    #     self.document_compatability = NchantdCheckboxGroup(self, cfg)
+    #     items[cnt]["widget"] = self.document_compatability
+    #     cnt += 1
+    #     return items
 
     def init_toolbox(self):
         """"""
@@ -650,7 +649,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
         self.toolbox_config[200]["items"] = self.init_drawer_formula()
         self.toolbox_config[300]["items"] = self.init_drawer_cell_config()
-        self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
+        # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
     def move_cell(self, addrow, addcol):
         """Move the active cell within the worksheet"""

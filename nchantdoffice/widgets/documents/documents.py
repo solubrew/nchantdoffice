@@ -57,10 +57,11 @@ class NchantdOfficeDocumentMixin:
         self.button_bar = None
         self.context = None
         self.document = None
-        self.document_nm = name
+        self.document_name = name
         self.document_editor = None
         self.document_initialized = False
         self.document_toolbar = None
+        self.document_type = "base"
         self.data = None
         self.file_path = None
         self.file_type = None
@@ -310,6 +311,7 @@ class NchantdOfficeDocumentMixin:
         #         self.app = getattr(self.parent, "app", None)
         _buttons = {
             0: {"action": "show_pane_left", "handler": self.cmd_show_pane_left},
+            # DEBUG the open file dialog is not respecting close/cancel commands
             100: {"action": "open_local", "handler": self.cmd_open_local_file},
             101: {"action": "save", "handler": self.cmd_save_tab},
             150: {"action": "redo", "handler": self.cmd_redo},
@@ -525,20 +527,9 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def take_snapshot(self):
-        """Capture a versioned snapshot of the current document state for undo/rollback."""
-        if self.document is None:
-            logma.warning("take_snapshot called with no document")
-            return self
-        snapshot = deepcopy(self.document)
-        # Prefer the store's snapshot API if available; fall back to a per-document list
-        store = getattr(getattr(self.app, "model", None), "store", None)
-        if store is not None and hasattr(store, "snapshot_document"):
-            store.snapshot_document(self.document.did, snapshot)
-        else:
-            if not hasattr(self.document, "snapshots"):
-                self.document.snapshots = []
-            self.document.snapshots.append(snapshot)
-        logma.info(f'Snapshot taken for document {getattr(self.document, "did", None)}')
+        """Capture a image of the current document."""
+        # TODO this method is for taking visual snapshots of the document need to get the dimens of the
+        #  document widget and then grab and save an image
         return self
 
     def unlock_page(self):
@@ -606,8 +597,13 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
     def initModel(self, cfg=None):
         """"""
         self.init_variables(self.name)
+        self.config.override({"settings": self.app.model.settings.document.get(self.document_type, self.get_default_settings())})
         super().initModel(cfg)
         return self
+
+    def get_default_settings(self):
+        """"""
+        return {}
 
     def initView(self, cfg=None):
         """"""

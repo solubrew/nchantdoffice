@@ -110,8 +110,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.codex = PyfficeCodex()
         cfg = {}
         self.settings = PyfficeApplicationConfig(cfg, self)
-        cfg = {}
-        self.mole = MicroMole(cfg)
         self.registered_documents = {}
         self.enable_journal_focus = None
         self.enable_settings_focus = None
@@ -128,7 +126,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         docs = self.store.get_application_documents()
         self.codex.init_contacts(docs["contacts"])
         self.settings.load_document(docs["settings"])
-        self.init_mole()
+        # self.init_mole()
         return self
 
     def add_document(
@@ -1197,33 +1195,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # TODO: implement view then pull data from it
         return []
 
-    def init_mole(self, db="db"):
-        """"""
-        self.mole.set_storage_path(self.store_rss_entries)
-        return self
-
-    def init_worldbridge(self, db="db"):
-        """"""
-        # PUSH 0.0.3 - needs debug and refactor
-        self.mole.load_feeds_list("rss")
-        # This is getting any new feeds from the perspective of the NchantdApplication those feeds would come from the
-        # WorldBridgeService
-        new_feeds = self.get_rss_feeds()
-        logma.info(f"New RSS Feeds {new_feeds}")
-        if new_feeds is None:
-            raise Exception("No new feeds")
-        new_feeds = new_feeds["url_ltxt"].tolist()
-        if isinstance(self.mole.feeds, DataFrame):
-            df = DataFrame([x for x in self.mole.feeds["url"].values.tolist() if x not in new_feeds], columns=["url"])
-        elif isinstance(self.mole.feeds, list):
-            df = DataFrame([x for x in self.mole.feeds if x not in new_feeds], columns=["url"])
-        elif isinstance(self.mole.feeds, dict):
-            raise Exception(f"Unknown feeds type {self.mole.feeds}")
-        else:
-            raise Exception(f"Unknown feeds type {self.mole.feeds}")
-        self.store_rss_feeds(df)
-        return self
-
     def initialize_application(self):
         """"""
         last_affilate_update_dttm = self.get_link_last_affiliate_update()
@@ -1294,18 +1265,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # pid = self.get_current_node().nid
         # cloak = NchantdOfficeCloakModel()
         # db = connect(file_path)
-
-    def _import_nchantdoffice_node(self, node, pid=None, pos=0):
-        """"""
-        # PUSH 0.0.3
-
-    def _import_nchantdoffice_nodes(self, node, pid, pos):
-        """"""
-        # PUSH 0.0.3
-
-    def _import_nchantdoffice_tabs(self, node, pid, pos=0):
-        """"""
-        # PUSH 0.0.3
 
     def import_filetree(self, file):
         """"""
@@ -1552,6 +1511,18 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """"""
         # TODO implment method or remove unsure if it is needed
         return self
+
+    def _import_nchantdoffice_node(self, node, pid=None, pos=0):
+        """"""
+        # PUSH 0.0.3
+
+    def _import_nchantdoffice_nodes(self, node, pid, pos):
+        """"""
+        # PUSH 0.0.3
+
+    def _import_nchantdoffice_tabs(self, node, pid, pos=0):
+        """"""
+        # PUSH 0.0.3
 
 
 class NchantdOfficeStore(NchantdStore):

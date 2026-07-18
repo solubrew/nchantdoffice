@@ -35,6 +35,8 @@ from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.tables.lists import NchantdListWidget
 from nchantrs.widgets.browsers.profiles import NchantdWebProfile
+from nchantdoffice.widgets.panes.new import NchantdOfficeNewDocumentPane
+from nchantdoffice.widgets.panes.quickstart import NchantdOfficeBrowserQuickStartPane
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -53,9 +55,8 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__("Nchantd Browser", parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebBrowser").override(cfg))
-        logma.json(self.config.dikt.get("document", {}))
+        self.document_type = "browser"
         self.active_url = None
         self.library = None
         self.pinned = False
@@ -73,8 +74,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             cfg = {}
         if cfg.get("document", None) is None:
             cfg["document"] = {"data": {"unit": {}}}
-        # TODO get home page from settings
-        cfg["url"] = self.config.dikt.get("url", self.get_current_page())
+        # cfg["url"] = self.config.dikt.get("url", self.get_current_page())
         self.config.override(cfg)
         super().initModel(self.config.dikt)
         # this translates url code from the web app tab catalog
@@ -87,8 +87,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         logma.json(document)
         self.document = self.app.model.codex.init_browser(document)
         self.document.load_document()
-        # self.context_menu_name = "context.document.browser"
-        # if self.context_menu_name is not None:
         self.initialize_context_menu("context.document.browser")
         cfg = {}
         self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
@@ -120,9 +118,9 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.initView()
         return self
 
+    # PUSH 0.0.3 - allow for switching between multiple profiles for pro users
     # def add_profile(self, profile, cfg):
     #     """"""
-    #     # PUSH 0.0.3 - allow for switching between multiple profiles for pro users
     #     profile_limit = 1
     #     if getattr(self.app.model.user, "has_pro", False) if self.app.model.user else False:
     #         profile_limit = 10
@@ -148,22 +146,21 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def cmd_clear_cookies(self, event, *args, **kwargs):
         """"""
-        self.app.model.delete_cookies(self.document.profile_manager.get_current_profile())
+        self._delete_cookies()
         return self
 
     def cmd_clear_cache(self, event, *args, **kwargs):
         """"""
-        self.app.model.delete_cache(self.document.profile_manager.get_current_profile())
-        return self
+        self._delete_cache()
 
     def cmd_clear_metadata(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        self._delete_metadata()
         return self
 
     def cmd_clear_browsing_history(self, event, *args, **kwargs):
         """"""
-        self.app.model.clear_browsing_history(self.document.profile_manager.get_current_profile())
+        self._delete_browsing_history()
         return self
 
     def cmd_edit_profile(self, event, *args, **kwargs):
@@ -177,14 +174,15 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # Fall through to update_profile for any non-special-case selection.
         self.update_profile(self.profile_select.get_value())
 
-    def cmd_add_profile(self, event, *args, **kwargs):
-        """"""
-        # STUB: open dialog / create a new browser profile
-        return self
+    # PUSH to 0.0.3 decorate as paid feature
+    # @feature_restrict("min_user_level_2")
+    # def cmd_add_profile(self, event, *args, **kwargs):
+    #     """"""
+    #     # STUB: open dialog / create a new browser profile
+    #     return self
 
     def cmd_get_pro(self, event, *args, **kwargs):
         """"""
-        # STUB: redirect user to upgrade to Pro plan
         if hasattr(self, "app") and hasattr(self.app, "view"):
             self.app.view.switch_to_account_tab()
         return self
@@ -342,7 +340,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def get_browsing_history_expiry(self):
         """"""
-        expiry = self.config.dikt.get("browsing_history_expiry", 90)
+        expiry = self.config.get("browsing_history_expiry", 90)
         return expiry
 
     def get_current_default_browser(self):
@@ -411,6 +409,11 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         logma.info(f"WhoIs {whois}")
         return whois
 
+    def get_links_catalog(self):
+        """"""
+        links = []
+        return links
+
     def get_profile(self, profile):
         """"""
         if profile not in self.profiles.profiles:
@@ -456,6 +459,16 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         }
         self.default_home_page_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.default_home_page_entry
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
+        cfg = {
+            "label": "Actions taken here will affect all browser tabs related to the current active profile",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+        }
+        self.notification_label = NchantdLabel(self, cfg)
+        items[cnt]["widget"] = self.notification_label
         cnt += 1
         # Privacy Controls Section
         if cnt not in items:
@@ -520,22 +533,23 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """"""
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "layout": "horizontal",
-            "actions": {0: "show_badge_secure", 1: "show_badge_wot", 2: "show_badge_2fdns"},
-            "handler": self.cmd_show_badge,
-        }
-        items[cnt]["widget"] = NchantdBadgeBar(self, cfg)
-        cnt += 1
+        # PUSH to 0.0.3
+        # if cnt not in items:
+        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        # cfg = {
+        #     "layout": "horizontal",
+        #     "actions": {0: "show_badge_secure", 1: "show_badge_wot", 2: "show_badge_2fdns"},
+        #     "handler": self.cmd_show_badge,
+        # }
+        # items[cnt]["widget"] = NchantdBadgeBar(self, cfg)
+        # cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {
             "label": "Current URL",
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.get_active_url(),
+            "value": self.get_active_url() or "",
         }
         self.url_label = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.url_label
@@ -547,7 +561,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "readonly": True,
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.get_current_domain(),
+            "value": self.get_current_domain() or "",
         }
         self.domain = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.domain
@@ -559,7 +573,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "readonly": True,
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.get_current_sub_domain(),
+            "value": self.get_current_sub_domain() or "",
         }
         self.sub_domain = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.sub_domain
@@ -571,7 +585,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "readonly": True,
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.get_current_parameters(),
+            "value": self.get_current_parameters() or "",
         }
         self.parameters = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.parameters
@@ -582,190 +596,209 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             "label": "WhoIs",
             "layout": "horizontal",
             "size": ["auto", "auto"],
-            "value": self.get_current_whois(),
+            "value": self.get_current_whois() or "",
         }
         self.whois = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.whois
         cnt += 1
         return items
 
-    def init_drawer_form_control(self):
-        """"""
-        items = self.toolbox_config[300].get("items", {})
-        cnt = 0
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        if not getattr(self.app.model.user, "has_pro", False) if self.app.model.user else False:
-            cfg = {"text": "Get Pro"}
-            self.profile_select = NchantdButtonWidget(self, cfg).initWidget()
-        else:
-            options = self.app.model.get_profiles()
-            if self.app.model.user and self.app.model.user.user_name not in options:
-                cfg = {}
-                self.add_profile(self.app.model.user.user_name, cfg)
-            self.current_profile = self.get_current_profile()
-            cfg = {
-                "label": "Select Profile",
-                "layout": "horizontal",
-                "options": options,
-                "handler": self.cmd_profile_change,
-                "value": self.current_profile.name,
-            }
-            self.profile_select = NchantdDropDown(self, cfg)
-        items[cnt]["widget"] = self.profile_select
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {}
-        cfg = {
-            "text": "Fill-In Forms",
-            "type": "custom",
-            "handler": self.cmd_fill_in_forms,
-            "justify": "center",
-            "size": ["auto", "auto"],
-        }
-        self.fill_forms_button = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.fill_forms_button
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "User Name",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.current_profile.user_name,
-        }
-        self.name_entry = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.name_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {"label": "Name", "layout": "horizontal", "size": ["auto", "auto"], "value": self.current_profile.name}
-        self.name_entry = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.name_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Email",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.current_profile.user_email,
-        }
-        self.email_entry = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.email_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Street",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.current_profile.contact.street_name,
-        }
-        self.address_street_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
-        items[cnt]["widget"] = self.address_street_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "City",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.current_profile.contact.city_name,
-        }
-        self.address_city_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
-        items[cnt]["widget"] = self.address_city_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "State",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.current_profile.contact.state_name,
-        }
-        self.address_state_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
-        items[cnt]["widget"] = self.address_state_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Zip Code",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.current_profile.contact.zip_code,
-        }
-        self.address_zip_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
-        items[cnt]["widget"] = self.address_zip_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Primary Phone",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.current_profile.contact.phone,
-        }
-        self.phone_entry = NchantdLabeledEntry(self, cfg)  #
-        items[cnt]["widget"] = self.phone_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Emergency Phone",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.current_profile.contact.emergency_phone,
-        }
-        self.second_phone_entry = NchantdLabeledEntry(self, cfg)  #
-        items[cnt]["widget"] = self.second_phone_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Company Name",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.current_profile.contact.secondary_phone,
-        }
-        self.company_entry = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.company_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Company Email",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.current_profile.contact.company_email,
-        }
-        self.company_email_entry = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.company_email_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Company Phone",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.current_profile.contact.company_phone,
-        }
-        self.company_phone_entry = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.company_phone_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "handler": self.cmd_edit_profile,
-        }
-        self.update_buttons = NchantdAcceptButtons(self, cfg)
-        items[cnt]["widget"] = self.update_buttons
-        cnt += 1
-        return items
+    # Push to 0.0.3
+    # def init_drawer_form_control(self):
+    #     """"""
+    #     items = self.toolbox_config[300].get("items", {})
+    #     cnt = 0
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
+    #     if not getattr(self.app.model.user, "has_pro", False) if self.app.model.user else False:
+    #         cfg = {"text": "Get Pro"}
+    #         self.profile_select = NchantdButtonWidget(self, cfg).initWidget()
+    #     else:
+    #         options = self.app.model.get_profiles()
+    #         if self.app.model.user and self.app.model.user.user_name not in options:
+    #             cfg = {}
+    #             self.add_profile(self.app.model.user.user_name, cfg)
+    #         self.current_profile = self.get_current_profile()
+    #         cfg = {
+    #             "label": "Select Profile",
+    #             "layout": "horizontal",
+    #             "options": options,
+    #             "handler": self.cmd_profile_change,
+    #             "value": self.current_profile.name,
+    #         }
+    #         self.profile_select = NchantdDropDown(self, cfg)
+    #     items[cnt]["widget"] = self.profile_select
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {}
+    #     cfg = {
+    #         "text": "Send to Form",
+    #         "type": "custom",
+    #         "handler": self.cmd_fill_in_forms,
+    #         "justify": "center",
+    #         "size": ["auto", "auto"],
+    #     }
+    #     self.fill_forms_button = NchantdButtonWidget(self, cfg)
+    #     items[cnt]["widget"] = self.fill_forms_button
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {}
+    #     cfg = {
+    #         "text": "Clear Form",
+    #         "type": "custom",
+    #         "handler": self.cmd_fill_in_forms_clear,
+    #         "justify": "center",
+    #         "size": ["auto", "auto"],
+    #     }
+    #     self.fill_forms_clear_button = NchantdButtonWidget(self, cfg)
+    #     items[cnt]["widget"] = self.fill_forms_clear_button
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "label": "User Name",
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "value": self.current_profile.user_name or "",
+    #     }
+    #     self.name_entry = NchantdLabeledEntry(self, cfg)
+    #     items[cnt]["widget"] = self.name_entry
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "label": "Name",
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "value": self.current_profile.name or "",
+    #     }
+    #     self.name_entry = NchantdLabeledEntry(self, cfg)
+    #     items[cnt]["widget"] = self.name_entry
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "label": "Email",
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "value": self.current_profile.user_email or "",
+    #     }
+    #     self.email_entry = NchantdLabeledEntry(self, cfg)
+    #     items[cnt]["widget"] = self.email_entry
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "label": "Street",
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "value": self.current_profile.contact.street_name or "",
+    #     }
+    #     self.address_street_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
+    #     items[cnt]["widget"] = self.address_street_entry
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "label": "City",
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "value": self.current_profile.contact.city_name or "",
+    #     }
+    #     self.address_city_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
+    #     items[cnt]["widget"] = self.address_city_entry
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "label": "State",
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "value": self.current_profile.contact.state_name or "",
+    #     }
+    #     self.address_state_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
+    #     items[cnt]["widget"] = self.address_state_entry
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "label": "Zip Code",
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "value": self.current_profile.contact.zip_code or "",
+    #     }
+    #     self.address_zip_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
+    #     items[cnt]["widget"] = self.address_zip_entry
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "label": "Primary Phone",
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "value": self.current_profile.contact.phone or "",
+    #     }
+    #     self.phone_entry = NchantdLabeledEntry(self, cfg)  #
+    #     items[cnt]["widget"] = self.phone_entry
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "label": "Emergency Phone",
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "value": self.current_profile.contact.emergency_phone or "",
+    #     }
+    #     self.second_phone_entry = NchantdLabeledEntry(self, cfg)  #
+    #     items[cnt]["widget"] = self.second_phone_entry
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "label": "Company Name",
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "value": self.current_profile.contact.secondary_phone or "",
+    #     }
+    #     self.company_entry = NchantdLabeledEntry(self, cfg)
+    #     items[cnt]["widget"] = self.company_entry
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "label": "Company Email",
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "value": self.current_profile.contact.company_email or "",
+    #     }
+    #     self.company_email_entry = NchantdLabeledEntry(self, cfg)
+    #     items[cnt]["widget"] = self.company_email_entry
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "label": "Company Phone",
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "value": self.current_profile.contact.company_phone or "",
+    #     }
+    #     self.company_phone_entry = NchantdLabeledEntry(self, cfg)
+    #     items[cnt]["widget"] = self.company_phone_entry
+    #     cnt += 1
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {
+    #         "layout": "horizontal",
+    #         "size": ["auto", "auto"],
+    #         "handler": self.cmd_edit_profile,
+    #         "hint": {"accept": "Save Information for Later Use", "delete": "Clear Information"},
+    #     }
+    #     self.update_buttons = NchantdAcceptButtons(self, cfg)
+    #     items[cnt]["widget"] = self.update_buttons
+    #     cnt += 1
+    #     return items
 
     # PUSH to version 0.0.3
     # def init_drawer_source_inspection(self):
@@ -796,30 +829,30 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #     items[cnt]["widget"] = self.page_resource_list
     #     cnt += 1
     #     return items
-
-    def init_drawer_quickstart(self):
-        """"""
-        items = self.toolbox_config[500].get("items", {})
-        cnt = 0
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {"text": "Bookmarks List"}
-        # TODO: build out using quick app links like a mini catalog
-        #
-        self.quick_start_list = NchantdListWidget(self, cfg)
-        items[cnt]["widget"] = self.quick_start_list
-        cnt += 1
-        return items
+    # PUSH to version 0.0.3
+    # def init_drawer_quickstart(self):
+    #     """"""
+    #     items = self.toolbox_config[500].get("items", {})
+    #     cnt = 0
+    #     if cnt not in items:
+    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+    #     cfg = {"text": "Bookmarks List"}
+    #     # TODO: build out using quick app links like a mini catalog
+    #     #
+    #     self.quick_start_list = NchantdOfficeBrowserQuickStartPane(self, cfg).initWidget()
+    #     items[cnt]["widget"] = self.quick_start_list
+    #     cnt += 1
+    #     return items
 
     def init_toolbox(self):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_url_inspection()
         self.toolbox_config[200]["items"] = self.init_drawer_browser_config()
-        self.toolbox_config[300]["items"] = self.init_drawer_form_control()
         # PUSH until 0.0.3
+        # self.toolbox_config[300]["items"] = self.init_drawer_form_control()
         # self.toolbox_config[400]["items"] = self.init_drawer_source_inspection()
-        self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
+        # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
     def open_new_tab(self):
         """"""
@@ -1051,6 +1084,40 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.set_current_sub_domain()
         self.set_current_parameters()
         self.set_current_whois()
+        return self
+
+    def _delete_browsing_history(self):
+        """"""
+        profile = self.document.profile_manager.get_current_profile()
+        # TODO delete all browsing history for this profile on disk and in database non-history
+        logma.info(f"Non Functional")
+        return self
+
+    def _delete_all_browsing_tabs(self):
+        """"""
+        profile = self.document.profile_manager.get_current_profile()
+        # TODO delete all browsing history for this profile on disk and in database non-history
+        logma.info(f"Non Functional")
+        return self
+
+    def _delete_cache(self):
+        profile = self.document.profile_manager.get_current_profile()
+        # TODO delete all cache for this profile on disk and in database non-history
+        logma.info(f"Non Functional")
+        return self
+
+    def _delete_metadata(self):
+        """"""
+        profile = self.document.profile_manager.get_current_profile()
+        # TODO delete all metadata for this profile on disk and in database non-history
+        logma.info(f"Non Functional")
+        return self
+
+    def _delete_cookies(self):
+        """"""
+        profile = self.document.profile_manager.get_current_profile()
+        # TODO delete all cookies for this profile on disk and in database non-history
+        logma.info(f"Non Functional")
         return self
 
 
