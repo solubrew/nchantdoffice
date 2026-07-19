@@ -283,15 +283,77 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return self
 
     def cmd_compatibility_select(self, event, *args, **kwargs):
-        """"""
+        """Handle compatibility format selection from the document drawer dropdown.
+
+        Reads the selected format (xlsx, ods, csv, tsv) and updates the current
+        document's export format so subsequent saves write in that format.
+        """
+        if hasattr(self, "document_compatability") and self.document_compatability is not None:
+            selected = self.document_compatability.currentText()
+            if selected:
+                # Extract the file extension from the option text (e.g. ".xlsx - Excel" -> "xlsx")
+                ext = selected.strip().split(" - ")[0].lstrip(".").lower()
+                if hasattr(self, "document") and self.document is not None:
+                    self.document.compatibility_format = ext
+                self._pending_save_format = ext
+                logma.info(f"Compatibility format set to: {ext}")
         return self
 
     def cmd_font_style_select(self, event, *args, **kwargs):
-        """"""
+        """Apply font style selection from the font config bar to selected cells.
+
+        Reads the font family and size from the document-level font config bar
+        and applies it to the currently selected cells (or all cells if none
+        selected).
+        """
+        font_family = None
+        font_size = None
+        if hasattr(self, "font_config_bar") and self.font_config_bar is not None:
+            if hasattr(self.font_config_bar, "get_font_family"):
+                font_family = self.font_config_bar.get_font_family()
+            if hasattr(self.font_config_bar, "get_font_size"):
+                font_size = self.font_config_bar.get_font_size()
+        selected_rows = self.get_selected_rows()
+        selected_cols = self.get_selected_columns()
+        if self.table and not (selected_rows and selected_cols):
+            # No selection — apply to whole table
+            for row in range(self.table.rowCount()):
+                for col in range(self.table.columnCount()):
+                    item = self.table.item(row, col)
+                    if item is None:
+                        item = pyqt.QTableWidgetItem()
+                        self.table.setItem(row, col, item)
+                    font = item.font()
+                    if font_family:
+                        font.setFamily(font_family)
+                    if font_size:
+                        font.setPointSize(font_size)
+                    item.setFont(font)
+        elif self.table:
+            self.apply_font_style(font_family=font_family, font_size=font_size)
         return self
 
     def cmd_formula_entry(self, event, *args, **kwargs):
-        """"""
+        """Insert the currently selected formula from the formula dropdown into
+        the active cell's formula bar.
+
+        The formula is prefixed with '=' so the cell evaluator treats it as a
+        formula rather than literal text.
+        """
+        if not hasattr(self, "formula_select") or self.formula_select is None:
+            return self
+        selected_formula = self.formula_select.currentText()
+        if not selected_formula:
+            return self
+        # Normalise to '=' prefix
+        formula_text = selected_formula if selected_formula.startswith("=") else f"={selected_formula}"
+        if hasattr(self, "formula_bar") and self.formula_bar is not None:
+            if hasattr(self.formula_bar, "set_text"):
+                self.formula_bar.set_text(formula_text)
+            elif hasattr(self.formula_bar, "setText"):
+                self.formula_bar.setText(formula_text)
+        elif hasattr(self, "formula_input") and self.formula_input is not None:
+            self.formula_input.setText(formula_text)
         return self
 
     def cmd_font_color_select(self, event, *args, **kwargs):
@@ -384,7 +446,25 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return self
 
     def cmd_data_filters_select(self, event, *args, **kwargs):
-        """"""
+        """Apply a data filter to the table based on the selected filter option.
+
+        Hides rows whose value in the active column does not match the filter
+        text. An empty filter clears all hidden rows.
+        """
+        filter_text = ""
+        if hasattr(self, "data_filters_select") and self.data_filters_select is not None:
+            filter_text = self.data_filters_select.currentText().strip()
+        if not self.table:
+            return self
+        current_item = self.table.currentItem()
+        target_col = current_item.column() if current_item else 0
+        for row in range(self.table.rowCount()):
+            item = self.table.item(row, target_col)
+            cell_text = item.text() if item else ""
+            if not filter_text or filter_text.lower() in cell_text.lower():
+                self.table.showRow(row)
+            else:
+                self.table.hideRow(row)
         return self
 
     def cmd_on_click_default_cell_background_color_button(self, event, *args, **kwargs):
@@ -394,30 +474,122 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return self
 
     def cmd_open_local_file(self, event=None, *args, **kwargs):
-        """"""
+        """Open a local spreadsheet file and load it into the matrix table."""
         super().cmd_open_local_file(event, *args, **kwargs)
         if self.local_file is not None:
             if exists(self.local_file):
-                cfg = {"file_path": self.local_file}
-                self.document = PyfficeMatrix(cfg)
-                self.document.open_file()
-            self.populate_document()
+                self.load_from_file(self.local_file)
+                self.file_path = self.local_file
+            else:
+                logma.warning(f"File does not exist: {self.local_file}")
         else:
             if debug:
-                raise Exception(f"local_file is None: {self.local_file}")
+                logma.warning("cmd_open_local_file called with local_file=None")
         return self
 
     def cmd_run_eda(self):
-        """"""
+        """Run exploratory data analysis on the current table contents.
+
+        Computes per-column summary statistics (count, mean, min, max, std)
+        for numeric columns and surfaces them via a message box. Non-numeric
+        columns are reported with a unique-value count.
+        """
+        if not self.table:
+            return self
+        import math
+
+        n_rows = self.table.rowCount()
+        n_cols = self.table.columnCount()
+        report_lines = [f"EDA: {n_rows} rows × {n_cols} cols", ""]
+        for col in range(n_cols):
+            header_item = self.table.horizontalHeaderItem(col)
+            col_name = header_item.text() if header_item else self.column_index_to_letter(col)
+            values = []
+            numeric_values = []
+            for row in range(n_rows):
+                item = self.table.item(row, col)
+                if item is None:
+                    continue
+                text = item.text()
+                if text == "":
+                    continue
+                values.append(text)
+                try:
+                    numeric_values.append(float(text))
+                except ValueError:
+                    pass
+            if numeric_values and len(numeric_values) == len(values):
+                count = len(numeric_values)
+                mean = sum(numeric_values) / count
+                vmin = min(numeric_values)
+                vmax = max(numeric_values)
+                variance = sum((v - mean) ** 2 for v in numeric_values) / count
+                std = math.sqrt(variance)
+                report_lines.append(
+                    f"{col_name}: numeric — count={count}, mean={mean:.2f}, min={vmin:.2f}, max={vmax:.2f}, std={std:.2f}"
+                )
+            else:
+                unique = len(set(values))
+                report_lines.append(f"{col_name}: text — count={len(values)}, unique={unique}")
+        pyqt.QMessageBox.information(self, "Exploratory Data Analysis", "\n".join(report_lines))
         return self
 
     def cmd_template_select(self, event, *args, **kwargs):
-        """"""
+        """Apply the selected template to the spreadsheet.
+
+        Currently supports:
+          - 'Blank': clears the table
+          - 'Loan Calculator': populates a loan amortisation template
+        """
+        if not hasattr(self, "document_template") or self.document_template is None:
+            return self
+        selected = self.document_template.currentText()
+        if not self.table:
+            return self
+        if selected == "Blank":
+            self.table.clearContents()
+        elif selected == "Loan Calculator":
+            self._apply_loan_calculator_template()
         return self
 
+    def _apply_loan_calculator_template(self):
+        """Populate the table with a loan amortisation schedule template."""
+        if not self.table:
+            return
+        headers = ["Period", "Payment", "Principal", "Interest", "Balance"]
+        self.table.setColumnCount(len(headers))
+        self.table.setRowCount(2)
+        for idx, header in enumerate(headers):
+            self.table.setHorizontalHeaderItem(idx, pyqt.QTableWidgetItem(header))
+        # Placeholder inputs row
+        inputs = ["Inputs", "", "", "Rate: 0.05", "Principal: 100000"]
+        for idx, value in enumerate(inputs):
+            self.table.setItem(0, idx, pyqt.QTableWidgetItem(value))
+        # Formula header row
+        formulas = ["1", "=PMT", "=PPMT", "=IPMT", "=BAL"]
+        for idx, value in enumerate(formulas):
+            self.table.setItem(1, idx, pyqt.QTableWidgetItem(value))
+        self.table.resizeColumnsToContents()
+
     def get_datasets(self):
-        """"""
+        """Return the list of available datasets from the application codex.
+
+        Falls back to a single placeholder entry when no codex is available.
+        """
         datasets = ["No Data Set Selected"]
+        if self.app and hasattr(self.app, "model") and hasattr(self.app.model, "codex"):
+            try:
+                codex = self.app.model.codex
+                if hasattr(codex, "list_datasets"):
+                    available = codex.list_datasets()
+                    if available:
+                        datasets.extend(available)
+                elif hasattr(codex, "get_dataset_names"):
+                    available = codex.get_dataset_names()
+                    if available:
+                        datasets.extend(available)
+            except Exception as e:
+                logma.warning(f"Unable to enumerate datasets from codex: {e}")
         return datasets
 
     def get_formulas(self):
@@ -568,7 +740,9 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cfg = {
             "label": "Active Cell: ",
             "layout": "horizontal",
-        }  # TODO readonly and fill in data
+            "readonly": True,
+            "text": self.get_current_address() if self.table else "A1",
+        }
         self.selected_cell_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.selected_cell_entry
         cnt += 1
@@ -587,7 +761,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cfg = {
             "label": "Selected Text: ",
             "layout": "horizontal",
-        }  # TODO readonly and fill in data
+            "readonly": True,
+        }
         self.selected_cell_text_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.selected_cell_text_entry
         cnt += 1
@@ -618,7 +793,18 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.cell_format = NchantdOfficeCellBorderFormats(self, cfg)
         items[cnt]["widget"] = self.cell_format
         cnt += 1
-        # TODO show a thumbail of the object
+        # Thumbnail preview of selected cell content (image/object)
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        cfg = {
+            "label": "Preview: ",
+            "layout": "horizontal",
+            "size": ["auto", 80],
+        }
+        self.selected_cell_preview = NchantdLabel(self, cfg).initWidget()
+        self.selected_cell_preview.setText("")
+        self.selected_cell_preview.setAlignment(pyqt.Qt.AlignmentFlag.AlignCenter)
+        items[cnt]["widget"] = self.selected_cell_preview
         return items
 
     #
@@ -1470,9 +1656,44 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.set_cell_value(address, formula)
 
     def show_function_dialog(self):
-        """Show function selection dialog"""
-        # TODO: Implement function dialog
-        pyqt.QMessageBox.information(self, "Functions", "Function dialog not yet implemented")
+        """Show a function selection dialog and insert the chosen function into
+        the formula bar.
+        """
+        formulas = []
+        try:
+            formulas = self.get_formulas()
+        except Exception:
+            formulas = []
+        if not formulas:
+            formulas = ["SUM", "AVG", "MIN", "MAX", "COUNT", "ABS", "ROUND"]
+        dialog = pyqt.QDialog(self)
+        dialog.setWindowTitle("Insert Function")
+        dialog.setMinimumWidth(360)
+        layout = pyqt.QVBoxLayout(dialog)
+        layout.addWidget(pyqt.QLabel("Select a function:"))
+        combo = pyqt.QComboBox(dialog)
+        combo.addItems(formulas)
+        layout.addWidget(combo)
+        button_box = pyqt.QDialogButtonBox(
+            pyqt.QDialogButtonBox.StandardButton.Ok | pyqt.QDialogButtonBox.StandardButton.Cancel
+        )
+        layout.addWidget(button_box)
+        button_box.accepted.connect(dialog.accept)
+        button_box.rejected.connect(dialog.reject)
+        if dialog.exec() == pyqt.QDialog.DialogCode.Accepted:
+            chosen = combo.currentText()
+            if chosen:
+                snippet = f"={chosen}()"
+                if hasattr(self, "formula_input") and self.formula_input is not None:
+                    self.formula_input.setText(snippet)
+                    self.formula_input.setFocus()
+                    self.formula_input.cursorBackward(False)
+                elif hasattr(self, "formula_bar") and self.formula_bar is not None:
+                    if hasattr(self.formula_bar, "set_text"):
+                        self.formula_bar.set_text(snippet)
+                    elif hasattr(self.formula_bar, "setText"):
+                        self.formula_bar.setText(snippet)
+        return self
 
     # ================================ Toolbar Actions ================================
 
