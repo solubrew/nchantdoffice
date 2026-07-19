@@ -1,4 +1,3 @@
-content:
 ---
 NchantdOfficeLightTable:
     path: ""
@@ -41,3 +40,29 @@ NchantdOfficeImage:
     default_format: "PNG"
     compression_quality: 85
     preserve_metadata: true
+    dstruct:
+        database:
+            objects:
+                table:
+                view:
+    toolbox:
+        100:
+            title: Image Details
+            items:
+                0: { "action": "", "type": "" }
+        200:
+            title: Image Tools
+            items:
+                0: { "action": "", "type": "" }
+                1: { "action": "", "type": "" }
+                2: { "action": "", "type": "" }
+                3: { "action": "", "type": "" }
+                4: { "action": "", "type": "" }
+        300:
+            title: Palette
+            items:
+                0: { "action": "", "type": "" }
+        400:
+            title: Nchantd Image Quickstart
+            items:
+                0: { "action": "", "type": "" }
