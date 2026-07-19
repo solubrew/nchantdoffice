@@ -217,55 +217,55 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def cmd_add_chart(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_add_code(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_add_date(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
 
     def cmd_add_image(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_add_shape(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_add_table(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_add_textbox(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_add_time(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
 
     def cmd_on_compatability_changed(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_on_change_document_format(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_on_change_document_syntax(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_open_local_file(self, event=None, *args, **kwargs):
@@ -286,35 +286,35 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def cmd_set_margin_top(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_set_margin_bottom(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_set_margin_left(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_set_margin_right(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def cmd_toggle_selection_bold(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
 
     def cmd_toggle_selection_italic(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
 
     def cmd_toggle_selection_underline(self, event, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
 
     def cmd_toggle_page_view(self, event, *args, **kwargs):
         """"""
@@ -345,7 +345,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def get_text_background_color_options(self, event, *args, **kwargs):
         """"""
-        return ""
+        # TODO implement method
         return self
 
     def get_compatability_selected(self):
@@ -670,32 +670,32 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def insert_chart(self):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def insert_shape(self):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def insert_symbol(self):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def insert_table(self):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def insert_code(self):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def insert_document(self):
         """"""
-        return self
+        # TODO implement method
         return self
 
     def insert_image(self):
