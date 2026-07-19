@@ -1,31 +1,43 @@
+content:
 ---
+NchantdOfficeLightTable:
+    path: ""
+
+NchantdColorShiftPane:
+    default_shift: 0
+
+NchantdConvertFormatPane:
+    supported_formats:
+        - PNG
+        - JPEG
+        - WEBP
+        - BMP
+        - TIFF
+        - GIF
+
+NchantdConvertSizePane:
+    default_width: 100
+    default_height: 100
+    min_width: 10
+    max_width: 10000
+    min_height: 10
+    max_height: 10000
+
+NchantdImageCropPane:
+    default_aspect_ratio: "free"
+    preset_ratios:
+        - "free"
+        - "1:1"
+        - "4:3"
+        - "16:9"
+        - "3:2"
+
+NchantdImageGeneratorPane:
+    default_width: 800
+    default_height: 600
+    default_palette: "rgb"
+
 NchantdOfficeImage:
-    dstruct:
-        database:
-            objects:
-                table:
-                view:
-    toolbox:
-      100:
-          title: Image Details
-          items:
-              0: {"action": "", "type": ""}
-              1: {"action": "", "type": ""}
-              2: {"action": "", "type": ""}
-      200:
-          title: Image Tools
-          items:
-              0: {"action": "", "type": ""}
-              1: {"action": "", "type": ""}
-              2: {"action": "", "type": ""}
-              3: {"action": "", "type": ""}
-              4: {"action": "", "type": ""}
-#PUSH to 0.0.3
-#      300:
-#          title: Palette
-#          items:
-#              0: {"action": "", "type": ""}
-#      400:
-#          title: Nchantd Image Quickstart
-#          items:
-#              0: {"action": "", "type": ""}
+    default_format: "PNG"
+    compression_quality: 85
+    preserve_metadata: true
