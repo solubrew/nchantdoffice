@@ -148,19 +148,19 @@ class NchantdColorShiftPane(NchantdPane):
 
     def cmd_image_color_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_select_new_image_color(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_select_new_image_color_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_convert_color(self):
         """"""
-        # TODO implement method
+        return self
 
     def get_image_formats(self):
         """"""
@@ -216,27 +216,27 @@ class NchantdConvertFormatPane(NchantdPane):
 
     def cmd_current_format_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_convert_format(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_convert_to_format(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_convert_to_format_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def get_current_format(self):
         """"""
-        # TODO implement method
+        return ""
 
     def get_convert_to_format(self):
         """"""
-        # TODO implement method
+        return ""
 
     def initWidget(self):
         """"""
@@ -313,15 +313,15 @@ class NchantdConvertSizePane(NchantdPane):
 
     def cmd_select_new_image_color_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_image_maintain_ratio_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_image_height_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def get_image_height(self):
         """"""
@@ -376,7 +376,7 @@ class NchantdImageCropPane(NchantdPane):
 
     def cmd_activate_image_section_selection(self):
         """"""
-        # TODO implement method
+        return self
 
     def get_image_height(self):
         """"""
@@ -448,23 +448,23 @@ class NchantdImageGeneratorPane(NchantdPane):
 
     def cmd_image_width_select_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_image_height_select_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_generate_image(self):
         """"""
-        # TODO implement method
+        return self
 
     def get_palette(self):
         """"""
-        # TODO implement method
+        return None
 
     def cmd_palette_select_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def get_image_height(self):
         """"""
@@ -561,7 +561,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
     def cmd_image_height_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_open_local_file(self, event=None, *args, **kwargs):
         """"""
@@ -573,23 +573,23 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
     def cmd_run_palette_scan(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_image_width_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def get_binary(self):
         """"""
-        # TODO implement method
+        return None
 
     def get_image_height(self):
         """"""
-        # TODO implement method
+        return 0
 
     def get_image_width(self):
         """"""
-        # TODO implement method
+        return 0
 
     def init_drawer_document_config(self):
         """"""

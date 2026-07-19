@@ -122,15 +122,15 @@ class NchantdEditLayerPane(NchantdPane):
 
     def cmd_on_layer_name_change(self):
         """"""
-        # TODO: implement method
+        return self
 
     def cmd_on_transparency_change(self):
         """"""
-        # TODO: implement method
+        return self
 
     def cmd_on_size_change(self):
         """"""
-        # TODO: implement method
+        return self
 
 
 class NchantdObjectsPane(NchantdPane):
@@ -238,22 +238,22 @@ class NchantdLineToolPane(NchantdPane):
 
     def cmd_change_color(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
 
@@ -314,22 +314,22 @@ class NchantdCurveToolPane(NchantdPane):
 
     def cmd_change_color(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
 
@@ -385,22 +385,22 @@ class NchantdSplineToolPane(NchantdPane):
 
     def cmd_change_color(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
 
@@ -450,22 +450,22 @@ class NchantdPolygonToolPane(NchantdPane):
 
     def cmd_change_color(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
 
@@ -515,22 +515,22 @@ class NchantdCircleToolPane(NchantdPane):
 
     def cmd_change_color(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
 
@@ -574,22 +574,22 @@ class NchantdObjectToolPane(NchantdPane):
 
     def cmd_change_color(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
 
@@ -632,22 +632,22 @@ class NchantdFillToolPane(NchantdPane):
 
     def cmd_change_color(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
         """"""
-        # TODO: implement method
+        return self
         return self
 
 
@@ -899,12 +899,12 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
     def cmd_canvas_size_change(self):
         """"""
-        # TODO implement method
+        return self
         return
 
     def cmd_layer_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def delete_layer(self, layer_name):
         """Delete a layer by name."""
@@ -1073,7 +1073,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
     def get_canvas_layer(self):
         """"""
-        # TODO implement method
+        return None
 
     def get_canvas_size(self):
         """Get the current canvas size."""

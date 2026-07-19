@@ -80,11 +80,11 @@ class NchantdPageAddToolPane(NchantdPane):
 
     def cmd_page_number_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_open_file(self):
         """"""
-        # TODO implement method
+        return self
 
     def initWidget(self):
         """"""
@@ -191,11 +191,11 @@ class NchantdOfficePDF(NchantdOfficeDocument):
 
     def cmd_page_count_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def get_page_count(self):
         """"""
-        # TODO implement method
+        return 0
 
     def init_drawer_document_tools(self):
         """"""
@@ -257,19 +257,19 @@ class NchantdOfficePDF(NchantdOfficeDocument):
 
     def cmd_image_format_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def cmd_image_convert_change(self):
         """"""
-        # TODO implement method
+        return self
 
     def get_image_format(self):
         """"""
-        # TODO implement method
+        return ""
 
     def get_image_convert(self):
         """"""
-        # TODO implement method
+        return None
 
     def open_file(self, file=None):
         """"""
