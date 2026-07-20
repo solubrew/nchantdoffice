@@ -2,7 +2,7 @@
 
 __version__ = "0.0.1.0.1.4"
 
-from nchantdoffice.utilities.config import (
+from nchantdoffice.utilities.constants import (
     APP_NAME,
     APP_VERSION,
     APP_ID,
