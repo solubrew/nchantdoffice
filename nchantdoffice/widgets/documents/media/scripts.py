@@ -181,8 +181,8 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def cmd_top_margin_change(self, event, *args, **kwargs):
         """Update top margin from spinbox and refresh page view."""
-        if hasattr(self, 'top_margin_select') and self.top_margin_select is not None:
-            value = self.top_margin_select.value() if hasattr(self.top_margin_select, 'value') else 72
+        if hasattr(self, "top_margin_select") and self.top_margin_select is not None:
+            value = self.top_margin_select.value() if hasattr(self.top_margin_select, "value") else 72
             self.margin_top = int(value) if value else 72
             if self.view_type == "page_view":
                 self.set_page_view()
@@ -190,8 +190,8 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def cmd_left_margin_change(self, event, *args, **kwargs):
         """Update left margin from spinbox and refresh page view."""
-        if hasattr(self, 'left_margin_select') and self.left_margin_select is not None:
-            value = self.left_margin_select.value() if hasattr(self.left_margin_select, 'value') else 72
+        if hasattr(self, "left_margin_select") and self.left_margin_select is not None:
+            value = self.left_margin_select.value() if hasattr(self.left_margin_select, "value") else 72
             self.margin_left = int(value) if value else 72
             if self.view_type == "page_view":
                 self.set_page_view()
@@ -199,8 +199,8 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def cmd_right_margin_change(self, event, *args, **kwargs):
         """Update right margin from spinbox and refresh page view."""
-        if hasattr(self, 'right_margin_select') and self.right_margin_select is not None:
-            value = self.right_margin_select.value() if hasattr(self.right_margin_select, 'value') else 72
+        if hasattr(self, "right_margin_select") and self.right_margin_select is not None:
+            value = self.right_margin_select.value() if hasattr(self.right_margin_select, "value") else 72
             self.margin_right = int(value) if value else 72
             if self.view_type == "page_view":
                 self.set_page_view()
@@ -208,8 +208,8 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def cmd_bottom_margin_change(self, event, *args, **kwargs):
         """Update bottom margin from spinbox and refresh page view."""
-        if hasattr(self, 'bottom_margin_select') and self.bottom_margin_select is not None:
-            value = self.bottom_margin_select.value() if hasattr(self.bottom_margin_select, 'value') else 72
+        if hasattr(self, "bottom_margin_select") and self.bottom_margin_select is not None:
+            value = self.bottom_margin_select.value() if hasattr(self.bottom_margin_select, "value") else 72
             self.margin_bottom = int(value) if value else 72
             if self.view_type == "page_view":
                 self.set_page_view()
@@ -859,42 +859,23 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def save(self):
         """"""
-        logma.info(f"HTML {self.document_editor.toHtml()}")
         if self.document is None:
             self.new_document()
-        self.document.syntax = "html"
+        self.document.syntax = "html"  # TODO need to use the selector from toolbar
         if self.document.syntax == "html":
             html = """
             <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
             <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
             """
-            text = self.document_editor.toHtml()  # .replace("\n", "")
-            soup = BeautifulSoup(text, "html.parser")
-            contents = soup.body.decode_contents()
-            # spaces = [
-            #     '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"></br></p>',
-            #     '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"> </p>',
-            # ]
-            logma.info(f"Contents: {contents}")
-            # for space in spaces:
-            #     logma.info(f"Space: {space}")
-            #     logma.info(f"First Line {contents[0 : len(space)+1]}")
-            #     if space == contents[1 : len(space) + 1]:
-            #         contents = contents[len(space) :]
-            #         logma.info(f"Change Contents {contents}")
-            #     if space == contents[-len(space) :]:
-            #         contents = contents[: -len(space)]
-            html = html.replace("<[content]>", contents)
-            logma.info(f"Content: {contents}")
+            soup = BeautifulSoup(self.document_editor.toHtml(), "html.parser")
+            # html = html.replace("<[content]>", soup.body.decode_contents())
             content = html.replace("<[content]>", soup.body.decode_contents())
-            logma.info(f"Content: {content}")
         else:
             content = self.document_editor.toPlainText()
         self.document.parse_content(content)
         if content != self.document.content:
             self.document.set_content(content)
         super().save()
-        logma.json(self.document.to_dict())
         return self
 
     def set_page_view(self):

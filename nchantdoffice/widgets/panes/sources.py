@@ -281,7 +281,6 @@ class NchantdSourcePane(NchantdPane):
         cfg = {"action": None, "handler": self.accept}
         self.accept_buttons = NchantdAcceptButtons(self, cfg).initWidget()
         self.accept_buttons_layout.addWidget(self.accept_buttons)
-        self.accept_buttons_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignBottom | pyqt.Qt.AlignmentFlag.AlignRight)
         self.setSizePolicy(pyqt.QSizePolicy.Expanding, pyqt.QSizePolicy.Expanding)
         self.layout.addStretch()
         self.layout.addLayout(self.accept_buttons_layout)
@@ -555,25 +554,12 @@ class NchantdDataSetConfigPane(NchantdPane):
         self.origin = None
         self.data = []
         self.data_series = []
-        self.background = None
-        self.plotarea = self.configure_plotarea()
-        self.legend = None
-        self.chart_types_df = None
-        self.colors_df = None
-        self.themes = None
-        self.theme = None
-        self.palettes = None
-        self.palette = None
+
 
     def initModel(self):
         """"""
         super().initModel()
-        self.get_types()
-        self.get_colors()
         self.data_series = []
-        self.axes = self.config.dikt.get("axes", {})
-        self.axes["X"] = {}
-        self.axes["Y"] = {}
         self.legends = self.config.dikt.get("legends", {})
         self.trendlines = self.config.dikt.get("trendlines", {})
         self.data_series = self.config.dikt.get("data_series", {})
@@ -586,15 +572,12 @@ class NchantdDataSetConfigPane(NchantdPane):
         cfg = {"size": [self.source_width, "auto"]}
         self.left_group = NchantdVScrollGroupBox(self, cfg)
         self.left_group.layout.setSpacing(0)
-        self.left_group.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         self.left_group.setTitle("Data Source Configuration")
-        self.left_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         cfg = {"collapsable": False}
         chart_specifics_group = NchantdGroup(self, cfg)
         chart_specifics_group.setTitle("Data Source Specifics")
         chart_specifics_layout = pyqt.QGridLayout()
         chart_specifics_layout.setSpacing(3)
-        chart_specifics_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         chart_specifics_group.setLayout(chart_specifics_layout)
         cfg = {
             "label": "Enter Data Source Name",
@@ -614,7 +597,6 @@ class NchantdDataSetConfigPane(NchantdPane):
         chart_specifics_layout.addWidget(self.chart_description_entry)
         chart_specifics_group.set_height(chart_specifics_layout.sizeHint().height() * 1.2)
         self.left_group.addWidget(chart_specifics_group)
-        self.left_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         self.layout.addLayout(self.left_group.layout)
         logma.info(f"Port Size {self.size()} {self.parent.size()}")
         cfg = {"size": [self.parent.size().width() - self.source_width - 20, 350]}
@@ -624,14 +606,10 @@ class NchantdDataSetConfigPane(NchantdPane):
         self.new_view_config_pane = NchantdViewPane(self, cfg).initWidget()
         self.center_group.addWidget(self.new_view_config_pane)
         self.center_group.layout.setSpacing(3)
-        self.center_group.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         self.center_group.layout_box.setSpacing(3)
-        self.center_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
-        self.center_group.group.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
         self.center_group.layout.addStretch()
         self.center_group.layout_box.addStretch()
         self.layout.addLayout(self.center_group.layout)
-        self.center_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         self.set_size()
         self.setMinimumHeight(self.config.dikt.get("size", ["auto", 350])[1])
         return self
@@ -646,6 +624,14 @@ class NchantdDataSetConfigPane(NchantdPane):
         """"""
         # TODO implement method
 
+        return self
+
+    def cmd_on_description_change(self):
+        """"""
+        return self
+
+    def cmd_on_name_change(self):
+        """"""
         return self
 
 

@@ -157,7 +157,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.name = "Nchantd Data Source"
+        self.name = "Nchantd Data Source Manager"
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDataSourceManager").override(cfg))
         self.canvas = None
         self.data_series = None
@@ -276,8 +276,10 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         self.sources = self.app.model.get_sources()
         if full:
             return self.sources
-        ls = self.sources["name_txt"].tolist()
-        logma.info(f"List {ls}")
+        # ls = self.sources["name_txt"].tolist()
+        #TODO fix
+        # logma.info(f"List {ls}")
+        ls = []
         return ls
 
     def get_source_table(self):
@@ -432,58 +434,6 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         self.toolbox_config[300]["items"] = self.init_drawer_connections()
         self.toolbox_config[400]["items"] = self.init_drawer_exploratory_data_analysis()
         self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
-
-    def load_types(self):
-        """"""
-        table = "vw_chart_types"
-        cfg = {}
-        self.chart_types_df = self.app.model.store.get_table(table, cfg)
-        return self
-
-    def set_pane(self, pane=None):
-        """"""
-        if self.chart_config_pane is not None:
-            widget = self.chart_config_pane
-            self.layout.removeWidget(widget)
-            widget.deleteLater()
-            self.chart_config_pane = None
-        if pane is None:
-            pane = self.pane_type
-        logma.info(f"Set Pane: {pane}")
-        if pane == "config":
-            cfg = {}
-            self.chart_config_pane = NchantdChartConfigPane(self, cfg).initWidget()
-        elif pane == "data":
-            cfg = {}
-            self.chart_config_pane = NchantdTable(self, cfg).initWidget()
-        else:
-            logma.info(f"Set Full Screen Chart")
-        if self.chart_config_pane is not None:
-            self.layout.insertWidget(2, self.chart_config_pane)
-        self.update()
-
-    def set_type(self, chart_type=None):
-        """Switch between different chart types based on the selected option."""
-        # # Remove the current chart
-        # for i in reversed(range(self.chart_layout.count())):
-        #     widget = self.chart_layout.itemAt(i).widget()
-        #     self.chart_layout.removeWidget(widget)
-        #     widget.deleteLater()
-        # widget = self.layout.itemAt().widget()
-        if self.chart is not None:
-            widget = self.chart
-            self.layout.removeWidget(widget)
-            widget.deleteLater()
-            self.chart = None
-        # Add and display the selected chart
-        if chart_type is None:
-            chart_type = self.chart_type
-        cfg = {"width": 6, "height": 5, "dpi": 100, "chart_type": chart_type}
-        self.chart = NchantdChart(self, cfg).initWidget()
-        self.layout.insertWidget(1, self.chart)
-        self.update()
-
-    # ====================================================================================================================||
 
 
 # ====================================================================================================================||

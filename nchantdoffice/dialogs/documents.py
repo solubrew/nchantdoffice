@@ -48,8 +48,9 @@ class NchantdNewDocumentSigil(NchantdSigil):
 
     def __init__(self, name, parent=None, cfg=None):
         """ """
-        super().__init__(name, parent)
+        super().__init__(name, parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NewNchantdDocumentSigil").override(cfg))
+        
         self.catalog = None
         self.file_type = self.config.dikt.get("file_type", None)
         self.action = name  # self.config.dikt.get('action', None)

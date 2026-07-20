@@ -44,7 +44,7 @@ from nchantrs.models.models import NchantdInstance
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
-log = False
+log = True
 if not log:
     logma.off()
 
@@ -1457,6 +1457,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # TODO: increment version
         # pydoc.increment_version()
         # how to address content versioning
+        logma.json(pydoc.to_dict())
         self.add_document_content(pydoc.to_dict(), version=pydoc.version)
         return pydoc
 
