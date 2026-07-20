@@ -125,6 +125,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
         cfg = {"layout": "horizontal", "options": self.all_items["name_txt"].values.tolist()}
         self.pane = NchantdOfficeNewDocumentPane(self, cfg).initWidget()
         self.layout.addWidget(self.pane)
+        self.finalizeView()
         # if self.file_type is None:
         #     self.file_type = "all_file"
         # self.launch_button_layout = pyqt.QHBoxLayout()
