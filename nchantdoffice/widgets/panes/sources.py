@@ -546,7 +546,7 @@ class NchantdDataSetConfigPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourceConfigPane").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSetConfigPane").override(cfg))
         self.name = None
         self.description = None
         self.type = None
@@ -554,7 +554,13 @@ class NchantdDataSetConfigPane(NchantdPane):
         self.origin = None
         self.data = []
         self.data_series = []
-
+        self.legends = None
+        self.trendlines = None
+        self.source_width = None
+        self.left_group = None
+        self.chart_description_entry = None
+        self.center_group = None
+        self.new_view_config_pane = None
 
     def initModel(self):
         """"""
@@ -569,7 +575,7 @@ class NchantdDataSetConfigPane(NchantdPane):
         """"""
         super().initView()
         self.source_width = self.config.dikt.get("source_width", 350)
-        cfg = {"size": [self.source_width, "auto"]}
+        cfg = {}
         self.left_group = NchantdVScrollGroupBox(self, cfg)
         self.left_group.layout.setSpacing(0)
         self.left_group.setTitle("Data Source Configuration")
@@ -595,14 +601,12 @@ class NchantdDataSetConfigPane(NchantdPane):
         }
         self.chart_description_entry = NchantdLabeledEntry(self, cfg).initWidget()
         chart_specifics_layout.addWidget(self.chart_description_entry)
-        chart_specifics_group.set_height(chart_specifics_layout.sizeHint().height() * 1.2)
         self.left_group.addWidget(chart_specifics_group)
         self.layout.addLayout(self.left_group.layout)
-        logma.info(f"Port Size {self.size()} {self.parent.size()}")
-        cfg = {"size": [self.parent.size().width() - self.source_width - 20, 350]}
+        cfg = {}
         self.center_group = NchantdVScrollGroupBox(self, cfg)
         self.center_group.setTitle("Data Source Views")
-        # cfg = {"text": "Add New View"}
+        cfg = {}
         self.new_view_config_pane = NchantdViewPane(self, cfg).initWidget()
         self.center_group.addWidget(self.new_view_config_pane)
         self.center_group.layout.setSpacing(3)
@@ -610,8 +614,6 @@ class NchantdDataSetConfigPane(NchantdPane):
         self.center_group.layout.addStretch()
         self.center_group.layout_box.addStretch()
         self.layout.addLayout(self.center_group.layout)
-        self.set_size()
-        self.setMinimumHeight(self.config.dikt.get("size", ["auto", 350])[1])
         return self
 
     def initWidget(self):
@@ -628,10 +630,14 @@ class NchantdDataSetConfigPane(NchantdPane):
 
     def cmd_on_description_change(self):
         """"""
+        # TODO implement method
+
         return self
 
     def cmd_on_name_change(self):
         """"""
+        # TODO implement method
+
         return self
 
 
