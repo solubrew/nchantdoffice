@@ -63,7 +63,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.editor = None
         self.layout = None
         self.app = None
-        self.store_journal()
+        # self.store_journal()
         self.text = None
         self.data = None
         self.document = None
@@ -157,8 +157,9 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.app.model.add_document_content_app(self.document.to_dict(), version=self.document.version)
         return self
 
-    def store_journal(self):
-        """"""
+    # def store_journal(self):
+    #     """"""
+    #     #
 
 
 class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
