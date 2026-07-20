@@ -151,11 +151,6 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             logma.info(f"Save PID {pid}")
         except (AttributeError, KeyError) as e:
             logma.warning(f"Could not resolve PID: {e}")
-        try:
-            pos = self.app.view.panes["center"].model.current_tab.pos
-            logma.info(f"Save Pos {pos}")
-        except (AttributeError, KeyError) as e:
-            logma.warning(f"Could not resolve tab pos: {e}")
         logma.info(f"Save DID {self.document.did}")
         logma.info(f"Save Document {self.document.to_dict()}")
         logma.json(self.document.to_dict())
