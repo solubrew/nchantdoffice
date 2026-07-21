@@ -862,12 +862,12 @@ class NchantdFillToolPane(NchantdPane):
 
     def initModel(self, cfg=None):
         """"""
+        super().initModel(cfg)
         return self
 
     def initView(self, cfg=None):
         """"""
-        if cfg is None:
-            cfg = {}
+        cfg = cfg or {}
         cfg["text"] = "Fill Tool:"
         cfg["layout"] = "vertical"
         super().initView(cfg)
