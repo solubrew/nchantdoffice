@@ -1022,7 +1022,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def get_content(self):
         """"""
-        # TODO fix
+        # TODO implement getting the content for storage in the database
         # data = self.table.get_data()
         # return data
         return []
@@ -1762,12 +1762,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
     def save(self):
         """"""
         # TODO get current content from sheet...need parse and dense methods
-        content = self.get_content()
-        if content != self.document.content:
-            self.document.set_content(content)
-        # as matrix is a manager of objects spread sheet and chart tabs
-        # an NchantdMatrix-PyfficeMatrix is the Manager and a Sheet
-        # PyfficeSpreadSheet is the data object for the sheet itself
         super().save()
         return self
 

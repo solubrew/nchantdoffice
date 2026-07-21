@@ -597,6 +597,10 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         """"""
         return self.config.dikt.get("calendar_unit_select_value", "Day")
 
+    def get_content(self):
+        """"""
+        return {}
+
     def get_event_datetime_select_value(self):
         """"""
         datetime_ = dt.datetime.now()
@@ -647,7 +651,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
 
     def cmd_event_datetime_change(self):
         """"""
-        #TODO: implement method
+        # TODO: implement method
 
     def init_drawer_event_config(self):
         """"""
@@ -826,9 +830,7 @@ class NchantdOfficeTodayOverview(NchantdTodayOverview):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.config.override(
-            kahndor.Instruct(pxcfg).select("NchantdOfficeJournalSettings").override(cfg)
-        )
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeJournalSettings").override(cfg))
 
     def initModel(self, cfg=None):
         """"""

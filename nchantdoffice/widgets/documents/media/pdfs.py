@@ -253,6 +253,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
         self.toolbox_config[200]["items"] = self.init_drawer_document_tools()
+        # PUSH to 0.0.3
         # self.toolbox_config[300]["items"] = self.init_drawer_quickstart()
 
     def cmd_image_format_change(self):

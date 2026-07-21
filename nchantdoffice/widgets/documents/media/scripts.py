@@ -855,10 +855,8 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             raise Exception(f"unknown syntax {self.document.syntax}")
         return self
 
-    def save(self):
+    def get_content(self):
         """"""
-        if self.document is None:
-            self.new_document()
         self.document.syntax = "html"  # TODO need to use the selector from toolbar
         if self.document.syntax == "html":
             html = """
@@ -869,6 +867,13 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             content = html.replace("<[content]>", soup.body.decode_contents())
         else:
             content = self.document_editor.toPlainText()
+        return content
+
+    def save(self):
+        """"""
+        if self.document is None:
+            self.new_document()
+        content = self.get_content()
         self.document.parse_content(content)
         if content != self.document.content:
             self.document.set_content(content)

@@ -703,8 +703,26 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
             logma.error(f"Failed to open remote document: {e}")
         return self
 
+    def get_content(self):
+        """"""
+        return NotImplemented
+
     def save(self):
         """"""
+        if self.document.location is None:
+            self.document.set_location("external")
+        if self.document.location == "external":
+            content = self.document.content or {}
+            if isinstance(content, dict):
+                content["file_path"] = self.document.file_path
+            logma.info(f"File Path {self.document.file_path}")
+            logma.info(f"DID {self.document.did}")
+        elif self.document.location == "internal":
+            content = self.get_content()
+        else:
+            raise Exception(f"Unknown storage location {self.document.location}")
+        if content and content != self.document.content:
+            self.document.set_content(content)
         super().save()
         return self
 

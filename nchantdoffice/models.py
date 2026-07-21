@@ -21,7 +21,7 @@ from urllib.parse import urlsplit
 
 # ======================================3rd Party Library Modules=====================================================||
 from pandas import DataFrame, concat
-from numpy import isnan
+from numpy import isnan, nan
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
@@ -1991,8 +1991,9 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             self.tabsdata = []
             self.tab_widgets = []
 
-            tabsdata = self.get_documents(node, tabset)
+            tabsdata = self.get_documents(node, tabset).replace(nan, None)
             tabsdata.sort_values(by=["position_int"], ascending=True, inplace=True)
+
             logma.info(f"Tabsdata {tabsdata}")
             if not tabsdata.empty:
                 tabsdata = [self.convert_db_to_doc(tab) for tab in tabsdata.to_dict(orient="records")]
@@ -2074,7 +2075,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         document["version"] = document_.get("content_version_int", None)
         document["tab_type"] = document_.get("tab_type_txt", "custom_widget")
         document["document_type"] = document_.get("document_type_txt", None)
-        document["location"] = document_.get("store_location_txt", None)
+        document["location"] = document_.get("store_location_txt", None) if not nan else None
         document["encoding"] = document_.get("encoding_txt", None)
         document["tags"] = document_.get("tags_dict", None)
         document["hash"] = document_.get("hash_txt", None)

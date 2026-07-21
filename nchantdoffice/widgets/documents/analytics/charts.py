@@ -251,6 +251,10 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """"""
         # TODO implement method
 
+    def get_content(self):
+        """"""
+        return {}
+
     def cmd_insert_object(self, event, *args, **kwargs):
         """"""
         # TODO implement method

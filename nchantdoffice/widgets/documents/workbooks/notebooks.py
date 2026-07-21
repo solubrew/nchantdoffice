@@ -26,6 +26,7 @@ from pygments.lexers.c_cpp import CppLexer
 from pygments.lexers.dotnet import CSharpLexer
 from pygments.lexers.ruby import RubyLexer
 from pygments.formatters import HtmlFormatter
+from numpy import isnan, nan
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
@@ -1005,27 +1006,15 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
     def get_binary(self):
         """"""
 
+    def get_content(self):
+        """"""
+        return {}
+
     def save(self):
         """"""
         # NOTE: need to have a save url location mode so that it can reopen the same file each time
         #  and an internal save mode such that the file data is stored in the database and can be reconstructed to .ipynb file
         # logma.info(f"HTML {self.document_editor.toHtml()}")
-        if self.document.location is None:
-            self.document.set_location("external")
-        if self.document.location == "external":
-            content = self.document.content or {}
-            if isinstance(content, dict):
-                content["file_path"] = self.document.file_path
-            logma.info(f"File Path {self.document.file_path}")
-            logma.info(f"DID {self.document.did}")
-        elif self.document.location == "internal":
-            # Migrate to external: get binary, write to file, switch mode
-            logma.info("Migrating internal image to external storage")
-            content = self.get_binary()  # Assume parent provides this method
-        else:
-            raise Exception(f"Unknown storage location {self.document.location}")
-        if content and content != self.document.content:
-            self.document.set_content(content)
         super().save()
         # TODO: loading the notebook back internally without an external file needs to be developed
         return self

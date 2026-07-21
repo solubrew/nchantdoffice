@@ -913,6 +913,11 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.document.save()
         return self
 
+    def get_content(self):
+        """"""
+        content = self.document.active_page.to_dict()
+        return content
+
     def save(self):
         """"""
         # TODO DEBUG document is not updating the active url in the content section
@@ -924,13 +929,9 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # DEBUG this should be standard but it creates an issue here
         # if self.document is None:
         #     self.new_document()
-        self.document.save()
         if self.pinned:
             return self
-        content = self.document.active_page.to_dict()
-        logma.info(f"Content: {content}")
-        if content != self.document.content:
-            self.document.set_content(content)
+        self.document.save()
         super().save()
         return self
 
