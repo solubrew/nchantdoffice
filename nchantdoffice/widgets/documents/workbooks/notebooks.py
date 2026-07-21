@@ -27,6 +27,9 @@ from pygments.lexers.dotnet import CSharpLexer
 from pygments.lexers.ruby import RubyLexer
 from pygments.formatters import HtmlFormatter
 from numpy import isnan, nan
+import nbformat
+from nbclient import NotebookClient
+from jupyter_client import KernelManager
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
@@ -40,6 +43,7 @@ from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.libraries.pyqt import QTimer
 from nchantrs.libraries import pyqt
 from pycurity.pysan import Sanitized
+from nchantdoffice.widgets.panes.sources import NchantdSourceEditPane, NchantdSourcesListPane
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -429,6 +433,12 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error executing cell: {e}")
             return {"output": "", "error": str(e), "status": "error"}
 
+    # nb = nbformat.read("notebook.ipynb", as_version=4)
+    # client = NotebookClient(nb, timeout=600, kernel_name="python3")
+    #
+    # client.execute()  # Runs all cells
+    # nbformat.write(nb, "executed.ipynb")  # Save with outputs
+
     def execute_code_interactive(self, code):
         """Execute code and return output for interactive use
 
@@ -770,9 +780,10 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
-        self.toolbox_config[200]["items"] = self.init_drawer_selection_config()
-        self.toolbox_config[300]["items"] = self.init_drawer_object_config()
-        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+        # PUSH to 0.0.3
+        # self.toolbox_config[200]["items"] = self.init_drawer_selection_config()
+        # self.toolbox_config[300]["items"] = self.init_drawer_object_config()
+        # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
     def interrupt_kernel(self):
         """Interrupt the running kernel (like Ctrl+C)"""
@@ -1246,7 +1257,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             kernel_name: Name of kernel to start (e.g., 'python3', 'ir', 'julia')
         """
         try:
-            from jupyter_client import KernelManager
 
             if kernel_name is None:
                 kernel_name = self.kernel_name

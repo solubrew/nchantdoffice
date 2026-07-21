@@ -33,7 +33,7 @@ from nchantrs.widgets.panes.panes import NchantdPane
 from nchantrs.widgets.tables.lists import NchantdList
 from nchantdoffice.widgets.panes.objects import NchantdNewObjectPane
 from nchantrs.widgets.tables.tables import NchantdTableWidget, NchantdTable
-from nchantdoffice.widgets.panes.sources import NchantdSourceEditPane
+from nchantdoffice.widgets.panes.sources import NchantdSourceEditPane, NchantdSourcesListPane
 from nchantrs.widgets.groups import NchantdGroup
 
 # ====================================================================================================================||
@@ -44,40 +44,6 @@ logma.off()
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "charts.yaml")
-
-
-class NchantdSourcesListPane(NchantdPane):
-    """"""
-
-    def __init__(self, parent=None, cfg=None):
-        """ """
-        super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourcesListPane").override(cfg))
-
-    def initModel(self, cfg=None):
-        """"""
-        super().initModel(cfg)
-        # TODO: need to get list of sources
-        return self
-
-    def initView(self, cfg=None):
-        """"""
-        super().initView(cfg)
-        cfg = {"text": "Sources List:"}
-        group = NchantdGroup(self, cfg)
-        layout = pyqt.QVBoxLayout()
-        group.setLayout(layout)
-        cfg = {"data": self.config.dikt.get("data", [])}
-        self.sources_list = NchantdList(self, cfg).initWidget()
-        layout.addWidget(self.sources_list)
-        self.layout.addWidget(group)
-        return self
-
-    def initWidget(self):
-        """"""
-        self.initModel()
-        self.initView()
-        return self
 
 
 class NchantdWhereUsedListPane(NchantdPane):

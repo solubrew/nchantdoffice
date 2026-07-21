@@ -97,11 +97,12 @@ class NchantdSourcesListPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourcesListPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
         super().initModel(cfg)
+        # TODO: need to get list of sources
         return self
 
     def initView(self, cfg=None):
@@ -112,8 +113,8 @@ class NchantdSourcesListPane(NchantdPane):
         layout = pyqt.QVBoxLayout()
         group.setLayout(layout)
         cfg = {"data": self.config.dikt.get("data", [])}
-        self.layers_list = NchantdList(self, cfg).initWidget()
-        layout.addWidget(self.layers_list)
+        self.sources_list = NchantdList(self, cfg).initWidget()
+        layout.addWidget(self.sources_list)
         self.layout.addWidget(group)
         return self
 

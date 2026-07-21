@@ -34,6 +34,7 @@ from nchantrs.dialogs.colors import NchantdColorSelectSigil
 from pyffice.workflows.formulas import PyfficeFormulasLibrary
 from kahndor.logma import Logma
 from nchantrs.widgets.controls.button_groups import NchantdFontConfigBar
+from nchantdoffice.widgets.panes.sources import NchantdSourceEditPane, NchantdSourcesListPane
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
