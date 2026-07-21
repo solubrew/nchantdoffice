@@ -102,7 +102,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
     def initModel(self):
         """"""
         super().initModel()
-        self.document = self.app.model.codex.init_notebook()
+        self.document = self.app.model.codex.init_notebook({"document": self.config.dikt.get("document", {})})
         self.document.load_document()
         self.context_menu.get_menu("context.document.notebook")
         return self
@@ -1009,31 +1009,13 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         # logma.info(f"HTML {self.document_editor.toHtml()}")
         if self.document is None:
             self.new_document()
-        self.document.syntax = "html"
-        if self.document.syntax == "html":
-            html = """
-            <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
-            <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
-            """
-        #     text = self.document_editor.toHtml()  # .replace("\n", "")
-        #     soup = BeautifulSoup(text, "html.parser")
-        #     contents = soup.body.decode_contents()
-        #     logma.info(f"Contents: {contents}")
-        #     html = html.replace("<[content]>", contents)
-        #     logma.info(f"Content: {contents}")
-        #     content = html.replace("<[content]>", soup.body.decode_contents())
-        #     logma.info(f"Content: {content}")
-        # elif self.document.syntax == "jupyter":
-        #     pass
-        #     # NOTE: connect to jupyter saving mechanism as and connect the url path to the internal viewer entry
-        # else:
-        #     content = self.document_editor.toPlainText()
-        # self.document.parse_content(content)
-        # if content != self.document.content:
-        #     self.document.set_content(content)
-        # super().save()
-        # logma.json(self.document.to_dict())
-        # logma.info(self.document.to_dict())
+        # self.document.syntax = "jupyter"
+        content = {}
+        self.document.parse_content(content)
+        if content != self.document.content:
+            self.document.set_content(content)
+        super().save()
+        # TODO: loading the notebook back internally without an external file needs to be developed
         return self
 
     def save_notebook(self, file_path=None):
@@ -1438,6 +1420,36 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             if view is None:
                 logma.error("[notebook] cannot wire load logging: no underlying web view")
                 return self
+            # Log the page's profile/storage configuration once. JupyterLab keeps
+            # its settings state in localStorage and its shared document (ydoc)
+            # state in IndexedDB; if the profile is off-the-record or has no
+            # persistent storage path / disabled web storage, the settings
+            # registry fails ("reading 'schema'") and the ydoc layer breaks
+            # ("Not same Y.Doc"). This pins down whether storage is the cause.
+            try:
+                page = view.page()
+                prof = page.profile() if page is not None else None
+                if prof is not None:
+                    settings = page.settings()
+                    WA = pyqt.QWebEngineSettings.WebAttribute
+                    logma.info(
+                        "[notebook] page profile | "
+                        f"offTheRecord={prof.isOffTheRecord()} | "
+                        f"persistentStoragePath={prof.persistentStoragePath()!r} | "
+                        f"cachePath={prof.cachePath()!r} | "
+                        f"httpCacheType={prof.httpCacheType()} | "
+                        f"cookiesPolicy={prof.persistentCookiesPolicy()}"
+                    )
+                    logma.info(
+                        "[notebook] page web-attrs | "
+                        f"LocalStorageEnabled={settings.testAttribute(WA.LocalStorageEnabled)} | "
+                        f"JavascriptEnabled={settings.testAttribute(WA.JavascriptEnabled)} | "
+                        f"LocalContentCanAccessRemoteUrls={settings.testAttribute(WA.LocalContentCanAccessRemoteUrls)}"
+                    )
+                else:
+                    logma.error("[notebook] page profile | no page/profile available to inspect")
+            except Exception as e:
+                logma.error(f"[notebook] could not log page profile/storage config: {e}", exc_info=True)
             view.loadStarted.connect(lambda: logma.info("[notebook] webview loadStarted"))
             view.loadProgress.connect(lambda p: logma.info(f"[notebook] webview loadProgress={p}%"))
 
@@ -1611,6 +1623,18 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             });
             console.log('[jserr] error instrumentation installed (DocumentCreation)');
           } catch (e) { console.log('[jserr] instrumentation failed: '+e); }
+          // Probe the storage JupyterLab depends on (localStorage for the
+          // settings registry, IndexedDB for the ydoc shared model). A failure
+          // here directly explains "reading 'schema'" and "Not same Y.Doc".
+          try {
+            var ls = 'unknown';
+            try { window.localStorage.setItem('__nchantd_probe','1'); window.localStorage.removeItem('__nchantd_probe'); ls='ok'; }
+            catch (e) { ls='FAIL: '+e; }
+            var idb = (typeof window.indexedDB !== 'undefined' && window.indexedDB) ? 'present' : 'MISSING';
+            console.log('[storage] localStorage='+ls+' indexedDB='+idb
+              +' secureContext='+window.isSecureContext
+              +' cookieEnabled='+navigator.cookieEnabled);
+          } catch (e) { console.log('[storage] probe failed: '+e); }
         })();
         """
         try:

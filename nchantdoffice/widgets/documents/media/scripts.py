@@ -99,9 +99,8 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         logma.json({"document": self.config.dikt.get("document", {})})
         self.document = self.app.model.codex.init_script({"document": self.config.dikt.get("document", {})})
         self.document.load_document()
-        self.context_menu_name = "context.document.script"
         if self.context_menu_name is not None:
-            self.initialize_context_menu(self.context_menu_name)
+            self.initialize_context_menu("context.document.script")
         self.view_type = self.config.dikt.get("view_type", "note_view")
         return self
 
@@ -867,7 +866,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
             """
             soup = BeautifulSoup(self.document_editor.toHtml(), "html.parser")
-            # html = html.replace("<[content]>", soup.body.decode_contents())
             content = html.replace("<[content]>", soup.body.decode_contents())
         else:
             content = self.document_editor.toPlainText()
