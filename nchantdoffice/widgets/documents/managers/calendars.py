@@ -145,9 +145,22 @@ class NchantdAlarmsListPane(NchantdPane):
         return self
 
     def get_alarms_list(self):
-        """"""
-        # TODO: implement method
-        return []
+        """Retrieve the list of alarms from config or model.
+
+        Returns a list of alarm dicts/strings. Pulls from config.dikt["alarms"]
+        when present; otherwise falls back to an empty list. Each entry is
+        normalized to a string so the NchantdList widget can render it.
+        """
+        alarms = []
+        try:
+            if self.config and isinstance(getattr(self.config, "dikt", None), dict):
+                alarms = self.config.dikt.get("alarms", [])
+            elif hasattr(self, "model") and self.model is not None:
+                if hasattr(self.model, "get_alarms"):
+                    alarms = self.model.get_alarms() or []
+        except Exception as exc:
+            logma.error(f"get_alarms_list failed: {exc}")
+        return [str(a) for a in alarms]
 
 
 class NchantdAlarmsEditPane(NchantdPane):
