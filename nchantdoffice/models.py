@@ -2053,6 +2053,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         """"""
         document = {}
         document["data"] = decode64(document_["content_enc64_txt"])
+        logma.json(document)
         try:
             document["data"] = j.loads(document["data"])
         except Exception:
