@@ -28,7 +28,14 @@ from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.groups import NchantdGridScrollGroupBox
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocumentManager
-
+from nchantrs.widgets.canvases.canvases import NchantdCanvas
+from nchantdoffice.widgets.panes.sources import NchantdDataSetPane, NchantdSourceDefaultPane, NchantdDataSetConfigPane
+from nchantdoffice.widgets.panes.sources import NchantdWhereUsedListPane, NchantdViewPane, NchantdViewEditPane
+from nchantdoffice.widgets.panes.sources import NchantdOfficeEDA, NchantdSourcesListPane
+from nchantrs.widgets.widgets import NchantdWidget
+from nchantrs.widgets.groups import NchantdVScrollGroupBox, NchantdHGroupBox
+from nchantrs.widgets.annotations import NchantdLabel
+from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
@@ -449,8 +456,9 @@ class NchantdOfficeAffiliateManager(NchantdOfficeDocumentManager):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.name = "Nchantd Data Source Manager"
+        self.name = "NchantdOffice Affiliate Manager"
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDataSourceManager").override(cfg))
+        self.user = pyqt.QApplication.instance().model.user
         self.canvas = None
         self.data_series = None
         self.source_select = None
@@ -498,15 +506,19 @@ class NchantdOfficeAffiliateManager(NchantdOfficeDocumentManager):
         cfg["buttons"][3] = {"action": "add_source", "handler": self.cmd_add_dataset}
         cfg["buttons"][49] = "_insert_stretch"
         super().initView(cfg)
-        cfg = {"size": ["auto", self.size().height() * (2 / 3) - 18]}
-        self.canvas = NchantdCanvas(self, cfg).initWidget()
-        self.layout.addWidget(self.canvas)
-        self.add_dataset()
-        cfg = {"size": ["auto", self.size().height() / 3 - 18]}
-        self.source_config_pane = NchantdDataSetConfigPane(self, cfg).initWidget()
-        self.layout.addWidget(self.source_config_pane)
-        self.layout.setSpacing(3)
-        self.layout.setContentsMargins(0, 0, 0, 0)
+        layout = pyqt.QHBoxLayout()
+        cfg = {
+            "url": "https://www.nchantdoffice.com/affiliate_marketing",
+            "size": [1600, 750],
+            "is_simple": True,
+        }
+        if self.user.has_pro:
+            cfg["url"] = "https://www.nchantdoffice.com/affiliate_account"
+        elif self.user.has_account:
+            cfg["url"] = "https://www.nchantdoffice.com/affiliate_account"
+        self.browser = NchantdWebViewer(self, cfg).initWidget()
+        layout.addWidget(self.browser)
+        self.layout.addLayout(layout)
         return self
 
     def initWidget(self):
