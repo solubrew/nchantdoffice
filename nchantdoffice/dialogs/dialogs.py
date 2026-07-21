@@ -38,14 +38,14 @@ class NchantdOfficeDocumentCape(NchantdCape):
 
     def __init__(self, name, instance=None, parent=None, cfg=None, args=None):
         """ """
-        super().__init__(name, instance, self.parent, self.config, args)
+        super().__init__(name, instance, parent, cfg, args)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentCape").override(cfg))
         self.is_installable = True
 
     def initModel(self):
         """"""
         super().initModel()
-        self.model.pybook = PyfficeBook()
+        self.model.codex = PyfficeCodex()
         return self
 
     def initView(self, cfg=None):

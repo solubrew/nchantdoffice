@@ -39,8 +39,7 @@ class NchantdImport(object):
     def __init__(self, path, cfg=None):
         """"""
         self.path = path
-        self.config = kahndor.Instruct(pxcfg).select("NchantdImport")
-        self.config.override(cfg)
+        self.config = kahndor.Instruct(pxcfg).select("NchantdImport").override(cfg)
 
     def run(self):
         """"""
@@ -52,9 +51,8 @@ class NchantdCherrytreeImport(NchantdImport):
 
     def __init__(self, path, cfg=None):
         """"""
-        self.config = kahndor.Instruct(pxcfg).select("NchantdCherrytreeImport")
-        super().__init__(path, self.config)
-        self.config.override(cfg)
+        super().__init__(path, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdCherrytreeImport").override(cfg))
         self.cherrytree = PyfficeCherryTree(path, self.config)
 
     def run(self):

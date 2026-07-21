@@ -41,9 +41,9 @@ class NchantdOfficeDataPolicy(NchantdDataPolicy):
 
     def __init__(self, parent=None, cfg=None):
         """"""
+        super().__init__(parent, cfg)
         self.parent = parent
-        self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeDataPolicy").override(cfg)
-        super().__init__(parent, self.config)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDataPolicy").override(cfg))
 
 
 # ====================================================================================================================||

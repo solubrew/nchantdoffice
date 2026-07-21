@@ -20,7 +20,6 @@ import datetime as dt
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
-from nchantdoffice.services.services import Bridge
 from nchantrs.utilities.utils import User
 from kahndor.logma import Logma
 
@@ -37,14 +36,15 @@ class NchantdOfficeUser(User):
     """"""
 
     def __init__(self, parent=None, cfg=None):
-        super().__init__(parent)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeUser").override(cfg))
         self.available_services = None
         self.services = None
         self.bridges = {}
 
     def create_bridge(self, profile="default"):
         """"""
-        self.bridges[profile.lower()] = Bridge(profile.lower())
+        # self.bridges[profile.lower()] = Bridge(profile.lower())
 
     def add_api_service(self, service):
         """
