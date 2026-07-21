@@ -2057,8 +2057,6 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             document["data"] = j.loads(document["data"])
         except Exception:
             pass
-        # logma.info(f"Document_ {document_}")
-        # logma.info(f"Document {document}")
         document["did"] = document_["did_txt"]
         document["syntax"] = document_["syntax_txt"]
         document["name"] = document_["name_txt"]
@@ -2110,6 +2108,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         from nchantrs.libraries import pyqt
 
         for tabn, tab in enumerate(self.tabsdata):
+
             if tabn == active_tab_position:
                 self.load_tab(tab, tabn, tabset, active_tab_position)
             else:

@@ -38,7 +38,7 @@ from nchantrs.widgets.controls.buttons import NchantdButton
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
 debug = True
-log = False
+log = True
 if not log:
     logma.off()
 
@@ -597,8 +597,11 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
     def initModel(self, cfg=None):
         """"""
         self.init_variables(self.name)
-        self.config.override({"settings": self.app.model.settings.document.get(self.document_type, self.get_default_settings())})
+        self.config.override(
+            {"settings": self.app.model.settings.document.get(self.document_type, self.get_default_settings())}
+        )
         super().initModel(cfg)
+        logma.json({"document": self.config.dikt.get("document", {})})
         return self
 
     def get_default_settings(self):

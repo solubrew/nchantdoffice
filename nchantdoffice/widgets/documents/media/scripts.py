@@ -96,10 +96,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
     def initModel(self):
         """ """
         super().initModel()
-        document = {"document": self.config.dikt.get("document", {})}
-        self.document = self.app.model.codex.init_script(document)
+        logma.json({"document": self.config.dikt.get("document", {})})
+        self.document = self.app.model.codex.init_script({"document": self.config.dikt.get("document", {})})
         self.document.load_document()
-        logma.json(self.document.to_dict())
         self.context_menu_name = "context.document.script"
         if self.context_menu_name is not None:
             self.initialize_context_menu(self.context_menu_name)
