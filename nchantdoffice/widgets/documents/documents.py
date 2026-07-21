@@ -709,6 +709,9 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
 
     def save(self):
         """"""
+        if self.document is None:
+            cfg = {}
+            self.document = PyfficeDocument(cfg)
         if self.document.location is None:
             self.document.set_location("external")
         if self.document.location == "external":

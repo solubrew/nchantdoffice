@@ -1149,6 +1149,11 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
         self.initView()
         return self
 
+    def get_content(self):
+        """"""
+        content = self.document.active_page.to_dict()
+        return content
+
 
 class NchantdOfficeWebViewer(NchantdWebViewer):
     """"""
@@ -1173,6 +1178,11 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
         self.initModel()
         self.initView()
         return self
+
+    def get_content(self):
+        """"""
+        content = self.document.active_page.to_dict()
+        return content
 
     def populate_document(self, url):
         """"""
@@ -1280,6 +1290,11 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         url = self.document.active_page.active_url.active_url
         logma.info(f"URL {url}")
         return url
+
+    def get_content(self):
+        """"""
+        content = self.document.active_page.to_dict()
+        return content
 
     def populate_document(self, url=None):
         """"""
