@@ -124,13 +124,32 @@ class NchantdEditLayerPane(NchantdPane):
         """"""
         # TODO: implement method
 
-    def cmd_on_transparency_change(self):
-        """"""
-        # TODO: implement method
+    def cmd_on_transparency_change(self, *args, **kwargs):
+        """Handle transparency change from the transparency entry field."""
+        try:
+            if hasattr(self, 'transparency_entry') and self.transparency_entry:
+                val = self.transparency_entry.text() if hasattr(self.transparency_entry, 'text') else None
+                if val:
+                    try:
+                        transparency = float(val)
+                    except ValueError:
+                        transparency = None
+                    if transparency is not None and hasattr(self.parent(), 'cmd_set_layer_transparency'):
+                        self.parent().cmd_set_layer_transparency(transparency)
+        except Exception:
+            pass
+        return self
 
-    def cmd_on_size_change(self):
-        """"""
-        # TODO: implement method
+    def cmd_on_size_change(self, *args, **kwargs):
+        """Handle size change from the size spin box."""
+        try:
+            if hasattr(self, 'size_set') and self.size_set:
+                size = self.size_set.value() if hasattr(self.size_set, 'value') else None
+                if size is not None and hasattr(self.parent(), 'cmd_set_layer_size'):
+                    self.parent().cmd_set_layer_size(size)
+        except Exception:
+            pass
+        return self
 
 
 class NchantdObjectsPane(NchantdPane):
@@ -237,23 +256,53 @@ class NchantdLineToolPane(NchantdPane):
         return self
 
     def cmd_change_color(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle color change from the color dropdown."""
+        try:
+            if hasattr(self, 'line_color_select'):
+                color_name = self.line_color_select.currentText() if hasattr(self.line_color_select, 'currentText') else None
+                if color_name and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['color'] = self.parent()._get_qcolor_from_name(color_name)
+        except Exception:
+            pass
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle thickness change from the thickness spin box."""
+        try:
+            if hasattr(self, 'line_thickness_spin'):
+                thickness = self.line_thickness_spin.value() if hasattr(self.line_thickness_spin, 'value') else None
+                if thickness is not None and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['thickness'] = thickness
+        except Exception:
+            pass
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle style change from the style dropdown."""
+        try:
+            if hasattr(self, 'line_style_select'):
+                style = self.line_style_select.currentText() if hasattr(self.line_style_select, 'currentText') else None
+                if style and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['style'] = style
+        except Exception:
+            pass
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle end style change from the end style dropdowns."""
+        try:
+            if not hasattr(self.parent(), 'current_tool_config'):
+                return self
+            if hasattr(self, 'line_end_one_type_select'):
+                end_type = self.line_end_one_type_select.currentText() if hasattr(self.line_end_one_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_1'] = end_type
+            if hasattr(self, 'line_end_two_type_select'):
+                end_type = self.line_end_two_type_select.currentText() if hasattr(self.line_end_two_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_2'] = end_type
+        except Exception:
+            pass
         return self
 
 
@@ -313,23 +362,53 @@ class NchantdCurveToolPane(NchantdPane):
         return self
 
     def cmd_change_color(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle color change from the color dropdown."""
+        try:
+            if hasattr(self, 'line_color_select'):
+                color_name = self.line_color_select.currentText() if hasattr(self.line_color_select, 'currentText') else None
+                if color_name and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['color'] = self.parent()._get_qcolor_from_name(color_name)
+        except Exception:
+            pass
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle thickness change from the thickness spin box."""
+        try:
+            if hasattr(self, 'line_thickness_spin'):
+                thickness = self.line_thickness_spin.value() if hasattr(self.line_thickness_spin, 'value') else None
+                if thickness is not None and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['thickness'] = thickness
+        except Exception:
+            pass
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle style change from the style dropdown."""
+        try:
+            if hasattr(self, 'line_style_select'):
+                style = self.line_style_select.currentText() if hasattr(self.line_style_select, 'currentText') else None
+                if style and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['style'] = style
+        except Exception:
+            pass
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle end style change from the end style dropdowns."""
+        try:
+            if not hasattr(self.parent(), 'current_tool_config'):
+                return self
+            if hasattr(self, 'line_end_one_type_select'):
+                end_type = self.line_end_one_type_select.currentText() if hasattr(self.line_end_one_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_1'] = end_type
+            if hasattr(self, 'line_end_two_type_select'):
+                end_type = self.line_end_two_type_select.currentText() if hasattr(self.line_end_two_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_2'] = end_type
+        except Exception:
+            pass
         return self
 
 
@@ -384,23 +463,53 @@ class NchantdSplineToolPane(NchantdPane):
         return self
 
     def cmd_change_color(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle color change from the color dropdown."""
+        try:
+            if hasattr(self, 'line_color_select'):
+                color_name = self.line_color_select.currentText() if hasattr(self.line_color_select, 'currentText') else None
+                if color_name and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['color'] = self.parent()._get_qcolor_from_name(color_name)
+        except Exception:
+            pass
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle thickness change from the thickness spin box."""
+        try:
+            if hasattr(self, 'line_thickness_spin'):
+                thickness = self.line_thickness_spin.value() if hasattr(self.line_thickness_spin, 'value') else None
+                if thickness is not None and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['thickness'] = thickness
+        except Exception:
+            pass
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle style change from the style dropdown."""
+        try:
+            if hasattr(self, 'line_style_select'):
+                style = self.line_style_select.currentText() if hasattr(self.line_style_select, 'currentText') else None
+                if style and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['style'] = style
+        except Exception:
+            pass
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle end style change from the end style dropdowns."""
+        try:
+            if not hasattr(self.parent(), 'current_tool_config'):
+                return self
+            if hasattr(self, 'line_end_one_type_select'):
+                end_type = self.line_end_one_type_select.currentText() if hasattr(self.line_end_one_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_1'] = end_type
+            if hasattr(self, 'line_end_two_type_select'):
+                end_type = self.line_end_two_type_select.currentText() if hasattr(self.line_end_two_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_2'] = end_type
+        except Exception:
+            pass
         return self
 
 
@@ -449,23 +558,53 @@ class NchantdPolygonToolPane(NchantdPane):
         return self
 
     def cmd_change_color(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle color change from the color dropdown."""
+        try:
+            if hasattr(self, 'line_color_select'):
+                color_name = self.line_color_select.currentText() if hasattr(self.line_color_select, 'currentText') else None
+                if color_name and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['color'] = self.parent()._get_qcolor_from_name(color_name)
+        except Exception:
+            pass
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle thickness change from the thickness spin box."""
+        try:
+            if hasattr(self, 'line_thickness_spin'):
+                thickness = self.line_thickness_spin.value() if hasattr(self.line_thickness_spin, 'value') else None
+                if thickness is not None and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['thickness'] = thickness
+        except Exception:
+            pass
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle style change from the style dropdown."""
+        try:
+            if hasattr(self, 'line_style_select'):
+                style = self.line_style_select.currentText() if hasattr(self.line_style_select, 'currentText') else None
+                if style and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['style'] = style
+        except Exception:
+            pass
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle end style change from the end style dropdowns."""
+        try:
+            if not hasattr(self.parent(), 'current_tool_config'):
+                return self
+            if hasattr(self, 'line_end_one_type_select'):
+                end_type = self.line_end_one_type_select.currentText() if hasattr(self.line_end_one_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_1'] = end_type
+            if hasattr(self, 'line_end_two_type_select'):
+                end_type = self.line_end_two_type_select.currentText() if hasattr(self.line_end_two_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_2'] = end_type
+        except Exception:
+            pass
         return self
 
 
@@ -514,23 +653,53 @@ class NchantdCircleToolPane(NchantdPane):
         return self
 
     def cmd_change_color(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle color change from the color dropdown."""
+        try:
+            if hasattr(self, 'line_color_select'):
+                color_name = self.line_color_select.currentText() if hasattr(self.line_color_select, 'currentText') else None
+                if color_name and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['color'] = self.parent()._get_qcolor_from_name(color_name)
+        except Exception:
+            pass
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle thickness change from the thickness spin box."""
+        try:
+            if hasattr(self, 'line_thickness_spin'):
+                thickness = self.line_thickness_spin.value() if hasattr(self.line_thickness_spin, 'value') else None
+                if thickness is not None and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['thickness'] = thickness
+        except Exception:
+            pass
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle style change from the style dropdown."""
+        try:
+            if hasattr(self, 'line_style_select'):
+                style = self.line_style_select.currentText() if hasattr(self.line_style_select, 'currentText') else None
+                if style and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['style'] = style
+        except Exception:
+            pass
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle end style change from the end style dropdowns."""
+        try:
+            if not hasattr(self.parent(), 'current_tool_config'):
+                return self
+            if hasattr(self, 'line_end_one_type_select'):
+                end_type = self.line_end_one_type_select.currentText() if hasattr(self.line_end_one_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_1'] = end_type
+            if hasattr(self, 'line_end_two_type_select'):
+                end_type = self.line_end_two_type_select.currentText() if hasattr(self.line_end_two_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_2'] = end_type
+        except Exception:
+            pass
         return self
 
 
@@ -573,23 +742,53 @@ class NchantdObjectToolPane(NchantdPane):
         return self
 
     def cmd_change_color(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle color change from the color dropdown."""
+        try:
+            if hasattr(self, 'line_color_select'):
+                color_name = self.line_color_select.currentText() if hasattr(self.line_color_select, 'currentText') else None
+                if color_name and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['color'] = self.parent()._get_qcolor_from_name(color_name)
+        except Exception:
+            pass
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle thickness change from the thickness spin box."""
+        try:
+            if hasattr(self, 'line_thickness_spin'):
+                thickness = self.line_thickness_spin.value() if hasattr(self.line_thickness_spin, 'value') else None
+                if thickness is not None and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['thickness'] = thickness
+        except Exception:
+            pass
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle style change from the style dropdown."""
+        try:
+            if hasattr(self, 'line_style_select'):
+                style = self.line_style_select.currentText() if hasattr(self.line_style_select, 'currentText') else None
+                if style and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['style'] = style
+        except Exception:
+            pass
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle end style change from the end style dropdowns."""
+        try:
+            if not hasattr(self.parent(), 'current_tool_config'):
+                return self
+            if hasattr(self, 'line_end_one_type_select'):
+                end_type = self.line_end_one_type_select.currentText() if hasattr(self.line_end_one_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_1'] = end_type
+            if hasattr(self, 'line_end_two_type_select'):
+                end_type = self.line_end_two_type_select.currentText() if hasattr(self.line_end_two_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_2'] = end_type
+        except Exception:
+            pass
         return self
 
 
@@ -631,23 +830,53 @@ class NchantdFillToolPane(NchantdPane):
         return self
 
     def cmd_change_color(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle color change from the color dropdown."""
+        try:
+            if hasattr(self, 'line_color_select'):
+                color_name = self.line_color_select.currentText() if hasattr(self.line_color_select, 'currentText') else None
+                if color_name and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['color'] = self.parent()._get_qcolor_from_name(color_name)
+        except Exception:
+            pass
         return self
 
     def cmd_change_thickness(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle thickness change from the thickness spin box."""
+        try:
+            if hasattr(self, 'line_thickness_spin'):
+                thickness = self.line_thickness_spin.value() if hasattr(self.line_thickness_spin, 'value') else None
+                if thickness is not None and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['thickness'] = thickness
+        except Exception:
+            pass
         return self
 
     def cmd_change_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle style change from the style dropdown."""
+        try:
+            if hasattr(self, 'line_style_select'):
+                style = self.line_style_select.currentText() if hasattr(self.line_style_select, 'currentText') else None
+                if style and hasattr(self.parent(), 'current_tool_config'):
+                    self.parent().current_tool_config['style'] = style
+        except Exception:
+            pass
         return self
 
     def cmd_change_end_style(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle end style change from the end style dropdowns."""
+        try:
+            if not hasattr(self.parent(), 'current_tool_config'):
+                return self
+            if hasattr(self, 'line_end_one_type_select'):
+                end_type = self.line_end_one_type_select.currentText() if hasattr(self.line_end_one_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_1'] = end_type
+            if hasattr(self, 'line_end_two_type_select'):
+                end_type = self.line_end_two_type_select.currentText() if hasattr(self.line_end_two_type_select, 'currentText') else None
+                if end_type and end_type != 'None':
+                    self.parent().current_tool_config['end_type_2'] = end_type
+        except Exception:
+            pass
         return self
 
 
@@ -897,14 +1126,27 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             self.render_on_canvas()
         return self
 
-    def cmd_canvas_size_change(self):
-        """"""
-        # TODO implement method
-        return
+    def cmd_canvas_size_change(self, *args, **kwargs):
+        """Handle canvas size change from the canvas size spin boxes."""
+        try:
+            if hasattr(self, 'canvas_size_set'):
+                size = self.canvas_size_set.value() if hasattr(self.canvas_size_set, 'value') else None
+                if size:
+                    self.set_canvas_size(int(size), int(size))
+        except Exception:
+            pass
+        return self
 
-    def cmd_layer_change(self):
-        """"""
-        # TODO implement method
+    def cmd_layer_change(self, *args, **kwargs):
+        """Handle layer selection change from the layer dropdown."""
+        try:
+            if hasattr(self, 'canvas_layer_select'):
+                layer_name = self.canvas_layer_select.currentText() if hasattr(self.canvas_layer_select, 'currentText') else None
+                if layer_name:
+                    self.set_active_layer(layer_name)
+        except Exception:
+            pass
+        return self
 
     def delete_layer(self, layer_name):
         """Delete a layer by name."""
@@ -1072,8 +1314,10 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         return ["Black", "Grey", "White", "Blue", "Red", "Green", "Yellow", "Magenta", "Cyan", "Orange", "Violet"]
 
     def get_canvas_layer(self):
-        """"""
-        # TODO implement method
+        """Get the currently selected canvas layer name."""
+        if self.layers and 0 <= self.active_layer_index < len(self.layers):
+            return self.layers[self.active_layer_index]
+        return None
 
     def get_canvas_size(self):
         """Get the current canvas size."""
