@@ -1491,6 +1491,12 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             # Install fetch/WebSocket instrumentation ONCE, at document creation,
             # so it wraps window.fetch/WebSocket before JupyterLab captures them.
             self._install_net_instrumentation(view)
+            # Capture uncaught errors + unhandled promise rejections with full
+            # stack traces. QtWebEngine reports these as bare "Uncaught (in
+            # promise) TypeError: ..." lines with no source/stack; this surfaces
+            # the exact module + line so the JupyterLab open regression (e.g.
+            # "reading 'insertWidget'"/"reading 'schema'") can be pinpointed.
+            self._install_error_instrumentation(view)
             logma.info("[notebook] browser load logging wired")
         except Exception as e:
             logma.error(f"[notebook] failed to wire browser load logging: {e}", exc_info=True)
@@ -1559,6 +1565,68 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 logma.info("[notebook] net instrumentation installed at DocumentCreation")
         except Exception as e:
             logma.error(f"[notebook] could not install net instrumentation: {e}", exc_info=True)
+        return self
+
+    def _install_error_instrumentation(self, view):
+        """Capture uncaught JS errors and unhandled promise rejections.
+
+        Installed as a persistent QWebEngineScript at DocumentCreation (before
+        JupyterLab bootstraps) so the global handlers are registered first.
+
+        QtWebEngine's default console output collapses these to opaque lines
+        like ``Uncaught (in promise) TypeError: Cannot read properties of null
+        (reading 'insertWidget')`` with no source file, line, or stack. These
+        handlers re-emit each failure via console.error with the message, the
+        originating ``source:line:col``, and the full ``.stack`` so the exact
+        JupyterLab module/function can be identified from the logs.
+
+        Surfaces (via the JS console -> logged with [JS/Error] provenance):
+          [jserr] <message> @ <source>:<line>:<col>
+              <stack>
+          [jsrejection] <reason>
+              <stack>
+        """
+        if getattr(self, "_error_instrumented", False):
+            return self
+        js = r"""
+        (function(){
+          if (window.__nchantd_err_wrap) return;
+          window.__nchantd_err_wrap = true;
+          try {
+            window.addEventListener('error', function(ev){
+              try {
+                var e = ev.error;
+                var where = (ev.filename||'?')+':'+(ev.lineno||0)+':'+(ev.colno||0);
+                var stack = (e && e.stack) ? ('\n'+e.stack) : '';
+                console.error('[jserr] '+(ev.message||(e&&e.message)||e||'unknown')+' @ '+where+stack);
+              } catch (x) { console.error('[jserr] (handler failed) '+x); }
+            }, true);
+            window.addEventListener('unhandledrejection', function(ev){
+              try {
+                var r = ev.reason;
+                var msg = (r && (r.message!==undefined)) ? r.message : String(r);
+                var stack = (r && r.stack) ? ('\n'+r.stack) : '';
+                console.error('[jsrejection] '+msg+stack);
+              } catch (x) { console.error('[jsrejection] (handler failed) '+x); }
+            });
+            console.log('[jserr] error instrumentation installed (DocumentCreation)');
+          } catch (e) { console.log('[jserr] instrumentation failed: '+e); }
+        })();
+        """
+        try:
+            script = pyqt.QWebEngineScript()
+            script.setName("nchantd_error_instrumentation")
+            script.setSourceCode(js)
+            script.setInjectionPoint(pyqt.QWebEngineScript.DocumentCreation)
+            script.setWorldId(pyqt.QWebEngineScript.MainWorld)
+            script.setRunsOnSubFrames(True)
+            page = view.page()
+            if page is not None:
+                page.scripts().insert(script)
+                self._error_instrumented = True
+                logma.info("[notebook] error instrumentation installed at DocumentCreation")
+        except Exception as e:
+            logma.error(f"[notebook] could not install error instrumentation: {e}", exc_info=True)
         return self
 
     def _navigate_browser(self, url):

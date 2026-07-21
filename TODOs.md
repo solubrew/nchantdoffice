@@ -149,3 +149,4 @@ Total markers: ~280 (27 descriptive + ~248 stub methods)
 
 ---
 Total: 27 descriptive TODOs + ~248 stub methods = ~280 total markers
+- [ ] **H42 — OS-agnostic default browser registration**: Implement process to register `nchantdoffice` as the default browser/app on Windows (registry), macOS (` defaults write`), and Linux (`.desktop` file via `xdg-mime`). Ensure update/removal cleanup. Priority: high. Owner: orinbai. Tags: P0, cross-platform, config.
