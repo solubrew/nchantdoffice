@@ -37,12 +37,8 @@ class NchantdQuickTagsWidget(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.instruct(pxcfg).select("NchantdQuickTagsWidget")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-        super(NchantdQuickTagsWidget, self).__init__(self.parent, self.config)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.instruct(pxcfg).select("NchantdQuickTagsWidget").override(cfg))
 
     def initModel(self):
         """"""
@@ -64,17 +60,12 @@ class NchantdTagsSideBar(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        self.parent = parent
-        self.config = kahndor.instruct(pxcfg).select("NchantdTagsSideBar")
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-        super(NchantdTagsSideBar, self).__init__(self.parent, self.config)
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.instruct(pxcfg).select("NchantdTagsSideBar").override(cfg))
 
     def initModel(self):
         """"""
         super().initModel()
-
         return self
 
     def initView(self):

@@ -50,7 +50,6 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentsCatalog").override(cfg))
         self.toolbox_config = None
         self.catalog = self
@@ -227,7 +226,6 @@ class NchantdOfficeServicesCatalog(NchantdCatalog):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.instruct(pxcfg).select("NchantdServiceCatalog").override(cfg))
 
     def initModel(self):
@@ -264,10 +262,7 @@ class NchantdDataSourcesCatalog(NchantdCatalog):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(
-            kahndor.Instruct(pxcfg).select("NchantdDataSourceCatalog").override(parent.config).override(cfg)
-        )
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSourceCatalog").override(cfg))
         self.bridge = None
         self.search_bar = None
 

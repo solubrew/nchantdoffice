@@ -20,7 +20,7 @@ import datetime as dt
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
-from nchantrs.utilities.utils import User
+from nchantrs.utilities.users import NchantdUser
 from kahndor.logma import Logma
 
 # ====================================================================================================================||
@@ -32,7 +32,7 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "users.yaml")
 
 
-class NchantdOfficeUser(User):
+class NchantdOfficeUser(NchantdUser):
     """"""
 
     def __init__(self, parent=None, cfg=None):

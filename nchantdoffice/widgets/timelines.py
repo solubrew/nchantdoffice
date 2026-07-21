@@ -21,6 +21,7 @@ import datetime as dt
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
 from kahndor.logma import Logma
+from nchantrs.widgets.calendars.timelines import NchantdTodayOverview
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
