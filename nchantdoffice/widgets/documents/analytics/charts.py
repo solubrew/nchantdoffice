@@ -227,37 +227,98 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         return self
 
     def cmd_add_data_view(self):
-        """"""
-        # TODO: implement method
+        """Add a new data view to the chart.
+
+        Creates a new data view entry in the data_views list and triggers
+        a refresh of the chart's view selector. Default view type is 'Table'.
+        """
+        try:
+            current_views = self.config.dikt.get("data_views", [])
+            new_view = {"name": f"View {len(current_views) + 1}", "type": "Table"}
+            current_views.append(new_view)
+            self.config.dikt["data_views"] = current_views
+            if hasattr(self, "chart_data_view_select"):
+                options = self.get_data_views()
+                self.chart_data_view_select.set_options(options)
+            logma.info(f"Added data view: {new_view['name']}")
+        except Exception as exc:
+            logma.error(f"cmd_add_data_view failed: {exc}")
         return self
 
     def cmd_change_data_set(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Handle data set selection change from the data set dropdown.
+
+        Updates the chart's data source selection and reloads the chart
+        data from the new source.
+        """
+        try:
+            if hasattr(self, "chart_data_set_select"):
+                data_set = self.chart_data_set_select.currentText()
+                self.config.dikt["selected_data_set"] = data_set
+                self.load_data_from_source(data_set)
+                logma.info(f"Changed data set to: {data_set}")
+        except Exception as exc:
+            logma.error(f"cmd_change_data_set failed: {exc}")
+        return self
 
     def cmd_change_data_view(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Handle data view selection change from the data view dropdown.
+
+        Updates the chart's data view selection and triggers chart refresh.
+        """
+        try:
+            if hasattr(self, "chart_data_view_select"):
+                data_view = self.chart_data_view_select.currentText()
+                self.config.dikt["selected_data_view"] = data_view
+                self.refresh_chart()
+                logma.info(f"Changed data view to: {data_view}")
+        except Exception as exc:
+            logma.error(f"cmd_change_data_view failed: {exc}")
+        return self
 
     def get_configuration_show_config_pane(self):
-        """"""
-        # TODO implement method
+        """Get the current visibility state of the config pane.
+
+        Returns:
+            bool: True if config pane is shown, False otherwise.
+        """
+        return self.config.dikt.get("show_config_pane", True)
 
     def get_configuration_show_data_pane(self):
-        """"""
-        # TODO implement method
+        """Get the current visibility state of the data pane.
+
+        Returns:
+            bool: True if data pane is shown, False otherwise.
+        """
+        return self.config.dikt.get("show_data_pane", True)
 
     def get_configuration_show_full_chart_pane(self):
-        """"""
-        # TODO implement method
+        """Get the current visibility state of the full chart pane.
+
+        Returns:
+            bool: True if full chart pane is shown, False otherwise.
+        """
+        return self.config.dikt.get("show_full_chart_pane", False)
 
     def get_content(self):
         """"""
-        return {}
+        return self.config.dikt.get("content", {}) or self.config.dikt.get("data", {})
 
     def cmd_insert_object(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Insert a new object into the chart.
+
+        Opens the new object pane to allow the user to select an object type
+        and configure its properties before insertion.
+        """
+        try:
+            object_types = self.get_new_object_types()
+            logma.info(f"Available object types: {object_types}")
+            if hasattr(self, "new_object_pane"):
+                self.new_object_pane.show()
+            self.config.dikt["pending_object_insert"] = True
+        except Exception as exc:
+            logma.error(f"cmd_insert_object failed: {exc}")
+        return self
 
     def cmd_search_data_sources(self):
         """"""
