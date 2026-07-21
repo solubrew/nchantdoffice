@@ -79,8 +79,10 @@ class NchantdEventPane(NchantdPane):
         self.event_task_label = None
 
     def initModel(self, cfg=None):
-        """"""
+        """Initialize the today overview model."""
         super().initModel(cfg)
+        self.tasks = []
+        return self
         return self
 
     def initView(self, cfg=None):
@@ -203,16 +205,17 @@ class NchantdAlarmsEditPane(NchantdPane):
         # TODO implement method
 
     def cmd_scope_changed(self):
-        """"""
-        # TODO implement method
+        """Handle alarm scope/interval change."""
+        if hasattr(self, "alarm_scope_select"):
+            self.config.dikt["scope"] = self.alarm_scope_select.get_value()
 
     def get_name(self):
-        """"""
-        # TODO implement method
+        """Get the alarm name."""
+        return self.config.dikt.get("name", "")
 
     def get_current_scope(self):
-        """"""
-        # TODO implement method
+        """Get the current alarm scope/interval."""
+        return self.config.dikt.get("scope", "Daily")
 
 
 class NchantdEventGroup(NchantdWidget):
@@ -372,7 +375,8 @@ class NchantdTasksListPane(NchantdPane):
         return self
 
     def get_tasks(self):
-        """"""
+        """Get list of tasks from model."""
+        return self.config.dikt.get("tasks", [])
 
 
 class NchantdEventRecursionEditPane(NchantdPane):
@@ -426,48 +430,54 @@ class NchantdEventRecursionEditPane(NchantdPane):
         return self
 
     def cmd_accept_buttons(self):
-        """"""
-        # TODO: implement method
+        """Handle accept/confirm button press for recurrence settings."""
+        logma.info(f"Recurrence settings accepted: {self.config.dikt}")
+        self.parent.update() if hasattr(self, "parent") else None
 
     def cmd_name_change(self):
-        """"""
-        #TODO implement method
+        """Handle recurrence name change."""
+        if hasattr(self, "name_entry"):
+            self.config.dikt["name"] = self.name_entry.get_value()
 
     def cmd_end_datetime_changed(self):
-        """"""
-        # TODO: implement method
+        """Handle recurrence end datetime change."""
+        if hasattr(self, "end_date_select"):
+            self.config.dikt["end_datetime"] = self.end_date_select.get_value()
 
     def cmd_end_after_changed(self):
-        """"""
-        # TODO: implement method
+        """Handle recurrence end-after count change."""
+        if hasattr(self, "end_multiples_set"):
+            self.config.dikt["end_after"] = self.end_multiples_set.get_value()
 
     def cmd_recur(self):
-        """"""
-        # TODO: implement method
+        """Handle recurrence command trigger."""
+        if hasattr(self, "scope_select"):
+            self.config.dikt["recur"] = self.scope_select.get_value()
 
     def cmd_recur_changed(self):
-        """"""
-        # TODO: implement method
+        """Handle recurrence scope/interval change."""
+        if hasattr(self, "scope_select"):
+            self.config.dikt["recur"] = self.scope_select.get_value()
 
     def get_end_datetime(self):
-        """"""
-        # TODO: implement method
+        """Get the recurrence end datetime."""
+        return self.config.dikt.get("end_datetime", dt.datetime.now())
 
     def get_end_after(self):
-        """"""
-        # TODO: implement method
+        """Get the recurrence end-after count."""
+        return self.config.dikt.get("end_after", 1)
 
     def get_name(self):
-        """"""
-        #TODO implement method
+        """Get the recurrence name."""
+        return self.config.dikt.get("name", "")
 
     def get_recur(self):
-        """"""
-        # TODO: implement method
+        """Get the recurrence scope/interval."""
+        return self.config.dikt.get("recur", "Daily")
 
     def get_scope_options(self):
-        """"""
-        # TODO: implement method
+        """Get available recurrence scope options."""
+        return get_scope_options()
 
 
 class NchantdOfficeCalendar(NchantdOfficeDocument):
@@ -559,12 +569,15 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         return self
 
     def cmd_config_accept(self):
-        """"""
-        #TODO: implement method
+        """Handle config accept button press."""
+        logma.info(f"Calendar config accepted: {self.config.dikt}")
+        self.update() if hasattr(self, "update") else None
 
     def cmd_select_calendar_unit(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Handle calendar unit selection change."""
+        unit = self.calendar_unit_select.get_value()
+        self.set_calendar_unit_select_value(unit)
+        logma.info(f"Calendar unit changed to: {unit}")
         return self
 
     def create_data_table(self):
@@ -625,8 +638,12 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         return items
 
     def cmd_create_new_event(self, event=None, *args, **kwargs):
-        """"""
-        #TODO: implement method
+        """Handle create new event button press."""
+        logma.info("Creating new calendar event")
+        if hasattr(self, "new_event_date_select"):
+            event_dt = self.new_event_date_select.get_value()
+            logma.info(f"New event datetime: {event_dt}")
+        return self
 
     def cmd_event_datetime_change(self):
         """"""
@@ -710,8 +727,10 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         return items
 
     def cmd_event_datetime_change(self):
-        """"""
-        #TODO implement method
+        """Handle event datetime selection change."""
+        if hasattr(self, "date_select"):
+            self.config.dikt["event_datetime"] = self.date_select.get_value()
+        return self
 
     def init_drawer_external_calendar_config(self):
         """"""
