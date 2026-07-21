@@ -19,12 +19,13 @@ NchantdOfficeCalendar:
               1: {"action": "select_date_time", "type": ""}
               2: {"action": "set_event_required", "type": ""}
               3: {"action": "edit_event_recurrence", "type": ""}
-        300:
-            title: External Calendar Configuration
-            items:
-              0: {"action": "connect_google_calendar", "type": ""}
-              1: {"action": "connect_notion_calendar", "type": ""}
-              2: {"action": "connect_outlook_calendar", "type": ""}
-        400:
-            title: Nchantd Calendar Quickstart
-            items:
+# PUSH to 0.0.3
+#        300:
+#            title: External Calendar Configuration
+#            items:
+#              0: {"action": "connect_google_calendar", "type": ""}
+#              1: {"action": "connect_notion_calendar", "type": ""}
+#              2: {"action": "connect_outlook_calendar", "type": ""}
+#        400:
+#            title: Nchantd Calendar Quickstart
+#            items:

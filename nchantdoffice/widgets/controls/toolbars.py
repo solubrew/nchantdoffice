@@ -111,6 +111,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
 
     def initModel(self):
         """Initialize the model."""
+        self.init_variables()#TODO this is redundant but for now we need the app attribute to be set before the super call
         self.document_types = self.app.model.get_document_types()
         logma.info(f"Document Types {self.document_types}")
         # self.document_types.drop_duplicates(subset=["name_txt", "widget_txt", "parameters_dict"], inplace=True)

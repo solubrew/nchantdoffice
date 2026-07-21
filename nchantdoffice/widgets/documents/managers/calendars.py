@@ -147,7 +147,7 @@ class NchantdAlarmsListPane(NchantdPane):
     def get_alarms_list(self):
         """"""
         # TODO: implement method
-        return self
+        return []
 
 
 class NchantdAlarmsEditPane(NchantdPane):
@@ -781,8 +781,9 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_events()
         self.toolbox_config[200]["items"] = self.init_drawer_event_config()
-        self.toolbox_config[300]["items"] = self.init_drawer_external_calendar_config()
-        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+        # PUSH to 0.0.3
+        # self.toolbox_config[300]["items"] = self.init_drawer_external_calendar_config()
+        # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
     def set_calendar_scope_select_value(self, value):
         """"""
