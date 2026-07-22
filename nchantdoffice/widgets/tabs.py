@@ -77,7 +77,6 @@ class NchantdOfficeTabs(NchantdTabSet):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTabs").override(cfg))
         # Enable drag-drop
         self._setup_drag_drop()

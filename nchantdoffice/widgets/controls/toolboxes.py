@@ -422,6 +422,9 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 1: {"action": "open_instance", "type": "", "handler": self.cmd_open_local_file},
                 2: {"action": "import_instance", "type": "", "handler": self.cmd_import_local_file},
                 3: {"action": "duplicate_instance", "type": "", "handler": self.cmd_duplicate_instance},
+                # PUSH to 0.0.3
+                # implement a mirror instance so user can work on two different nodes in two differenct screens from the
+                # same document
                 # 3: {"action": "save_instance", "type": "", "handler": self.cmd_save_instance},
                 # 5: {"action": "export_instance", "type": "", "handler": self.cmd_export_instance},
             },
