@@ -730,8 +730,6 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
     def populate_document(self):
         """"""
-        # if self.document.file_path is None:
-        #     return
         self.image.load_image(self.file_path)
         return self
 

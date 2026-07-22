@@ -621,6 +621,13 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error getting completions: {e}")
             return []
 
+    def get_binary(self):
+        """"""
+
+    def get_content(self):
+        """"""
+        return {}
+
     def inspect_object(self, code, cursor_pos, detail_level=0):
         """Get object inspection/documentation
 
@@ -872,129 +879,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def populate_document(self):
         """"""
-        logma.info(f"Populating Document")
-        style = f"background-color: #FFFFFF;"
-        self.document_editor.setStyleSheet(style)
-        if self.document is None:
-            text = self.document_editor.get_text()
-        else:
-            text = self.document.text.to_dict()["unit"].get("value", "")
-        if isinstance(text, bytes):
-            text = decode64(text)
-        if isinstance(text, dict):
-            text = text.get("value", "")
-        text = text.lstrip()
-        logma.info(f"Text: {text}")
-        logma.info(f"Type: {type(text)}")
-        self.document_editor.convert_urls_to_links(text)
-        if self.document is None:
-            return self
-        self.document.file_format = self.config.dikt.get("document", {}).get("syntax", "plain-text")
-        if self.document.file_format is None:
-            self.document.file_format = "plain-text"
-        logma.info(f"Document Format: {self.document.file_format}")
-        logma.info(f"Syntax {self.document.syntax}")
-        theme = "monokai"
-        formatter = HtmlFormatter(style=theme, full=True, noclasses=True)
-        self.document.syntax = "html"  # NOTE debug
-        if self.document.syntax == "markdown":
-            self.document_editor.setMarkdown(text)
-            return self
-        elif self.document.syntax in ("plain-text", "plaintext"):
-            self.document_editor.setPlainText(text)
-            return self
-        elif self.document.syntax == "xml":
-            self.document_editor.setXml(text)
-            return self
-        elif self.document.syntax == "latex":
-            self.document_editor.setLatex(text)
-            return self
-        elif self.document.syntax == "html":
-            logma.info(f"HTML {text}")
-            self.document_editor.setHtml(text)
-            return self
-        elif self.document.syntax == "python":
-            text = highlight(text, PythonLexer(), formatter)
-            # text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "javascript":
-            text = highlight(text, JavascriptLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "ruby":
-            text = highlight(text, RubyLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "c":
-            text = highlight(text, CLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "cpp":
-            text = highlight(text, CppLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "cs":
-            text = highlight(text, CSharpLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax in ("css", "qss"):
-            text = highlight(text, CssLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "java":
-            text = highlight(text, JavaLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "json":
-            text = highlight(text, JsonLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "yaml":
-            text = highlight(text, YamlLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "toml":
-            text = highlight(text, IniLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "r":
-            text = highlight(text, RLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "rmd":
-            pass
-        elif self.document.syntax == "rst":
-            pass
-        elif self.document.syntax == "tex":
-            pass
-        elif self.document.syntax == "texinfo":
-            pass
-        else:
-            raise Exception(f"unknown syntax {self.document.syntax}")
+        self.browser.load_page(self.file_path)
         return self
 
     def restart_kernel(self):
@@ -1013,13 +898,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"Error restarting kernel: {e}")
         return self
-
-    def get_binary(self):
-        """"""
-
-    def get_content(self):
-        """"""
-        return {}
 
     def save(self):
         """"""
