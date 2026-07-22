@@ -2,6 +2,15 @@
 NchantdOfficeMatrix:
   num_columns: 20
   num_rows: 20
+  compatability_options:
+    - ".xlsx - Excel"
+    - ".ods - OpenOffice"
+    - ".csv - Comma-Separated Values"
+    - ".tsv - Tab-Separated Values"
+    - ".pyof - NchantdOffice"
+  template_options:
+    - "Blank"
+    - "Loan Calculator"
   button_bar:
     fill_selection_color:
     launch_cell_border_sigil:

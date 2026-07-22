@@ -259,6 +259,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.layout.addWidget(self.table, stretch=1)
         self.layout.setSpacing(3)
         self.layout.setContentsMargins(0, 0, 0, 0)
+        self.populate_document()
         return self
 
     def initWidget(self, pos=0):
@@ -1037,6 +1038,72 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             return f"{chr(65 + col)}{row + 1}"
         return "A1"
 
+    def get_datasets(self):
+        """Return the list of available datasets from the application codex.
+
+        Falls back to a single placeholder entry when no codex is available.
+        """
+        datasets = ["No Data Set Selected"]
+        if self.app and hasattr(self.app, "model") and hasattr(self.app.model, "codex"):
+            try:
+                codex = self.app.model.codex
+                if hasattr(codex, "list_datasets"):
+                    available = codex.list_datasets()
+                    if available:
+                        datasets.extend(available)
+                elif hasattr(codex, "get_dataset_names"):
+                    available = codex.get_dataset_names()
+                    if available:
+                        datasets.extend(available)
+            except Exception as e:
+                logma.warning(f"Unable to enumerate datasets from codex: {e}")
+        return datasets
+
+    def get_formula_description(self, formula=None):
+        """"""
+        if formula is None:
+            formula = self.formula_select.get_value()
+        if formula is None:
+            formula = self.formulas[0]
+        return self.document.formulas_library.get_formula(formula).description or f"{formula} Description not Found"
+
+    def get_formulas(self):
+        """"""
+        self.formulas = self.document.formulas_library.get_formulas_list()
+        return self.formulas
+
+    def get_range_values(self, range_str):
+        """Get values from a cell range like 'A1:A10'"""
+        parts = range_str.split(":")
+        if len(parts) != 2:
+            return []
+
+        # Parse start and end cells
+        import re
+
+        start_match = re.match(r"([A-Z]+)(\d+)", parts[0].strip())
+        end_match = re.match(r"([A-Z]+)(\d+)", parts[1].strip())
+
+        if not start_match or not end_match:
+            return []
+
+        start_col = self.column_letter_to_index(start_match.group(1))
+        start_row = int(start_match.group(2)) - 1
+        end_col = self.column_letter_to_index(end_match.group(1))
+        end_row = int(end_match.group(2)) - 1
+
+        values = []
+        for row in range(start_row, end_row + 1):
+            for col in range(start_col, end_col + 1):
+                if self.table and 0 <= row < self.table.rowCount() and 0 <= col < self.table.columnCount():
+                    item = self.table.item(row, col)
+                    if item:
+                        try:
+                            values.append(float(item.text()))
+                        except ValueError:
+                            pass  # Skip non-numeric values
+        return values
+
     def get_selection_range(self):
         """Get the selected cell range"""
         selected = self.table.selectedIndexes()
@@ -1076,63 +1143,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             return sorted(list(cols))
         return []
 
-    def get_datasets(self):
-        """Return the list of available datasets from the application codex.
-
-        Falls back to a single placeholder entry when no codex is available.
-        """
-        datasets = ["No Data Set Selected"]
-        if self.app and hasattr(self.app, "model") and hasattr(self.app.model, "codex"):
-            try:
-                codex = self.app.model.codex
-                if hasattr(codex, "list_datasets"):
-                    available = codex.list_datasets()
-                    if available:
-                        datasets.extend(available)
-                elif hasattr(codex, "get_dataset_names"):
-                    available = codex.get_dataset_names()
-                    if available:
-                        datasets.extend(available)
-            except Exception as e:
-                logma.warning(f"Unable to enumerate datasets from codex: {e}")
-        return datasets
-
-    def get_formulas(self):
+    def get_document_compatability_options(self):
         """"""
-        formulas = PyfficeFormulasLibrary().get_formulas_list()
-        return formulas
+        return self.config.get("compatability_options", [])
 
-    def get_range_values(self, range_str):
-        """Get values from a cell range like 'A1:A10'"""
-        parts = range_str.split(":")
-        if len(parts) != 2:
-            return []
-
-        # Parse start and end cells
-        import re
-
-        start_match = re.match(r"([A-Z]+)(\d+)", parts[0].strip())
-        end_match = re.match(r"([A-Z]+)(\d+)", parts[1].strip())
-
-        if not start_match or not end_match:
-            return []
-
-        start_col = self.column_letter_to_index(start_match.group(1))
-        start_row = int(start_match.group(2)) - 1
-        end_col = self.column_letter_to_index(end_match.group(1))
-        end_row = int(end_match.group(2)) - 1
-
-        values = []
-        for row in range(start_row, end_row + 1):
-            for col in range(start_col, end_col + 1):
-                if self.table and 0 <= row < self.table.rowCount() and 0 <= col < self.table.columnCount():
-                    item = self.table.item(row, col)
-                    if item:
-                        try:
-                            values.append(float(item.text()))
-                        except ValueError:
-                            pass  # Skip non-numeric values
-        return values
+    def get_template_options(self):
+        """"""
+        return self.config.get("template_options", [])
 
     def init_drawer_document_config(self):
         """"""
@@ -1140,10 +1157,10 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cnt = 0
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        options = [".xlsx - Excel", ".ods - OpenOffice", ".csv - Comma-Separated Values", ".tsv - Tab-Separated Values"]
+        options = self.get_document_compatability_options()
         cfg = {
             "label": "Compatability",
-            "layout": "horizontal",
+            "layout": "Vertical",
             "options": options,
             "handler": self.cmd_compatibility_select,
         }
@@ -1152,7 +1169,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        options = ["Blank", "Loan Calculator"]
+        options = self.get_template_options()
         cfg = {
             "label": "Template",
             "layout": "horizontal",
@@ -1238,34 +1255,59 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         """"""
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
+        # if cnt not in items:
+        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        # cfg = {"text": "Set Formulas to Auto-Calculate", "size": ["auto", "auto"]}
+        # self.autocalculate_checkbox = NchantdCheckboxGroup(self, cfg)
+        # items[cnt]["widget"] = self.autocalculate_checkbox
+        # cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        cfg = {
+            "label": "Select Formula:",
+            "layout": "vertical",
+            "options": self.get_formulas(),
+            "handler": self.cmd_formula_select_change,
+        }
+        self.formula_select = NchantdDropDown(self, cfg)
+        items[cnt]["widget"] = self.formula_select
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        cfg = {
+            "text": self.get_formula_description(),
+            "layout": "horizontal",
+            "size": ["auto", 350],
+            "justify": "top",
+        }
+        self.formula_description = NchantdLabel(self, cfg)
+        items[cnt]["widget"] = self.formula_description
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        # TODO expand in the Y direction and wrap text
         cfg = {
             "label": "Fx",
             "layout": "horizontal",
             "size": ["auto", 350],
             "justify": "top",
+            "handler": self.cmd_formula_entry_change,
         }
         self.formula = NchantdEntryBox(self, cfg)
         items[cnt]["widget"] = self.formula
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {"text": "Set Formulas to Auto-Calculate", "size": ["auto", "auto"]}
-        self.autocalculate_checkbox = NchantdCheckboxGroup(self, cfg)
-        items[cnt]["widget"] = self.autocalculate_checkbox
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Select Formula: ",
-            "layout": "horizontal",
-            "options": self.get_formulas(),
-        }
-        self.formula_select = NchantdDropDown(self, cfg)
-        items[cnt]["widget"] = self.formula_select
-        cnt += 1
         return items
+
+    def cmd_formula_entry_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO
+        # run validation on formula
+        # if autocalculate then try to calculate new value on change
+
+    def cmd_formula_select_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO
+        # update the description
 
     def init_drawer_cell_config(self):
         """"""
@@ -1274,7 +1316,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {
-            "label": "Active Cell: ",
+            "label": "Active Cells:",
             "layout": "horizontal",
             "readonly": True,
             "text": self.get_current_address() if self.table else "A1",
@@ -1285,7 +1327,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {
-            "text": "Merge Cells: ",
+            "text": "Merge Selection",
             "layout": "horizontal",
             "handler": self.cmd_merge_cells,
         }  #
@@ -1295,7 +1337,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         cfg = {
-            "label": "Selected Text: ",
+            "label": "Selected Text:",
             "layout": "horizontal",
             "readonly": True,
         }
@@ -1310,6 +1352,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "range": [1, 100],
             "default": 12,
         }
+        # TODO: add Bold, Italic and Underline buttons
         self.font_config_bar = NchantdFontConfigBar(self, cfg)
         items[cnt]["widget"] = self.font_config_bar
         cnt += 1
@@ -1329,18 +1372,19 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.cell_format = NchantdOfficeCellBorderFormats(self, cfg)
         items[cnt]["widget"] = self.cell_format
         cnt += 1
+        # PUSH 0.0.3
         # Thumbnail preview of selected cell content (image/object)
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Preview: ",
-            "layout": "horizontal",
-            "size": ["auto", 80],
-        }
-        self.selected_cell_preview = NchantdLabel(self, cfg).initWidget()
-        self.selected_cell_preview.setText("")
-        self.selected_cell_preview.setAlignment(pyqt.Qt.AlignmentFlag.AlignCenter)
-        items[cnt]["widget"] = self.selected_cell_preview
+        # if cnt not in items:
+        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        # cfg = {
+        #     "label": "Preview: ",
+        #     "layout": "horizontal",
+        #     "size": ["auto", 80],
+        # }
+        # self.selected_cell_preview = NchantdLabel(self, cfg).initWidget()
+        # self.selected_cell_preview.setText("")
+        # self.selected_cell_preview.setAlignment(pyqt.Qt.AlignmentFlag.AlignCenter)
+        # items[cnt]["widget"] = self.selected_cell_preview
         return items
 
     # PUSH to 0.0.3
@@ -1370,6 +1414,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
         self.toolbox_config[200]["items"] = self.init_drawer_formula()
         self.toolbox_config[300]["items"] = self.init_drawer_cell_config()
+        # PUSH to 0.0.3
         # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
     def insert_chart(self):
@@ -1440,7 +1485,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 logma.error(f"Error loading dataset {dataset_name}: {e}")
         return self
 
-    # ================================ Data Loading ================================
     def load_from_file(self, file_path):
         """Load spreadsheet from file"""
         try:
@@ -1630,12 +1674,9 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def open_file(self, file=None):
         """Open a spreadsheet file"""
-        # file_path, _ = pyqt.QFileDialog.getOpenFileName(
-        #     self, "Open Spreadsheet", "", "Spreadsheet Files (*.csv *.xlsx *.xls);;All Files (*)"
-        # )
-
-        # if file_path:
-        #    self.load_from_file(file_path)
+        # TODO implement message to let user know that some features of excel files are not implmented
+        #  if file_path:
+        #     self.load_from_file(file_path)
         self.file_path = file
         if file is None:
             file = self.file_path
@@ -1760,8 +1801,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
     def populate_document(self):
         """"""
         logma.info(f"Populate worksheet {self.document.data}")
-        logma.info(f"Populate worksheet {type(self.document.data)}")
         self.table.update_data(self.document.data)
+        # TODO implement row and cell size formatting on document population
 
     def save(self):
         """"""
