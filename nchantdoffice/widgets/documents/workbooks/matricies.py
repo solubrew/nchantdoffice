@@ -1026,7 +1026,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # TODO implement getting the content for storage in the database
         # data = self.table.get_data()
         # return data
-        return []
+        return {"content": {"file_path": self.file_path}, "data": self.document.data}
 
     def get_current_address(self):
         """Get the currently selected cell address"""
@@ -1457,6 +1457,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         """Load CSV file into spreadsheet"""
         import csv
 
+        logma.info(f"Load CSV {file_path}")
         self.table.clearContents()
         with open(file_path, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
@@ -1467,7 +1468,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                         self.table.setHorizontalHeaderItem(col_idx, pyqt.QTableWidgetItem(chr(65 + col_idx)))
                     item = pyqt.QTableWidgetItem(value)
                     self.table.setItem(row_idx, col_idx, item)
-
                 if row_idx >= self.table.rowCount() - 1:
                     self.table.insertRow(row_idx + 1)
 
@@ -1628,18 +1628,21 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
         self.set_cell_value(address, formula)
 
-    def open_file(self):
+    def open_file(self, file=None):
         """Open a spreadsheet file"""
-        file_path, _ = pyqt.QFileDialog.getOpenFileName(
-            self, "Open Spreadsheet", "", "Spreadsheet Files (*.csv *.xlsx *.xls);;All Files (*)"
-        )
+        # file_path, _ = pyqt.QFileDialog.getOpenFileName(
+        #     self, "Open Spreadsheet", "", "Spreadsheet Files (*.csv *.xlsx *.xls);;All Files (*)"
+        # )
 
-        if file_path:
-            self.load_from_file(file_path)
-
-    # ================================ Event Handlers ================================
-
-    # ================================ Toolbar Actions ================================
+        # if file_path:
+        #    self.load_from_file(file_path)
+        self.file_path = file
+        if file is None:
+            file = self.file_path
+        if file is not None:
+            self.document.open_file(file)
+        self.document.set_location("external")
+        self.populate_document()
 
     def recalculate_all_formulas(self):
         """Recalculate all formulas in the spreadsheet"""

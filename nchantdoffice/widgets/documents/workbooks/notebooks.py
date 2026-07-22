@@ -128,9 +128,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         # cfg["buttons"][15] = {"action": "interrupt_kernel", "handler": self.cmd_interrupt_kernel}
         cfg["buttons"][17] = {"action": "web_page_pin", "handler": self.cmd_pin_page, "value": self.cmd_check_is_pinned}
         cfg["buttons"][49] = "_insert_stretch"
-        # This document hosts a single expanding web view, so opt this container's
-        # layout out of the base AlignTop|AlignLeft (which would otherwise pin the
-        # viewer to its sizeHint and collapse it to a blank strip).
         cfg["fill"] = True
         super().initView(cfg)
         # Start the embedded viewer on a blank page. Loading the Jupyter URL
@@ -147,7 +144,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.browser = NchantdWebViewer(self, cfg).initWidget()
         self._wire_browser_load_logging()
         self.layout.addWidget(self.browser)
-
         # Auto-start Jupyter server when tab opens (defaults True).
         # QTimer.singleShot defers the start until the event loop is idle so
         # the UI renders first; start_jupyter_server() spawns the subprocess
@@ -162,7 +158,8 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         if autostart and not self.server_running:
             logma.info("[notebook] initView: scheduling start_jupyter_server in 500ms (QTimer.singleShot)")
             QTimer.singleShot(500, self.start_jupyter_server)
-
+        # TODO: load previously open .ipynb file
+        #  need a way to safely allow the user to select the place to start the server
         return self
 
     def initWidget(self):
@@ -432,12 +429,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"Error executing cell: {e}")
             return {"output": "", "error": str(e), "status": "error"}
-
-    # nb = nbformat.read("notebook.ipynb", as_version=4)
-    # client = NotebookClient(nb, timeout=600, kernel_name="python3")
-    #
-    # client.execute()  # Runs all cells
-    # nbformat.write(nb, "executed.ipynb")  # Save with outputs
 
     def execute_code_interactive(self, code):
         """Execute code and return output for interactive use
@@ -860,11 +851,9 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         """"""
         if file is None:
             file = self.file_path
-        cfg = {"file_path": file}
-        document = self.app.model.codex.init_script(cfg)
-        document.load_document()
-        self.set_document(document)
-        self.document.open_file()
+        if file is not None:
+            self.document.open_file(file)
+        self.document.set_location("external")
         self.populate_document()
         return self
 
@@ -1594,5 +1583,11 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
 
 # ====================================================================================================================||
-
+"""
+    # nb = nbformat.read("notebook.ipynb", as_version=4)
+    # client = NotebookClient(nb, timeout=600, kernel_name="python3")
+    #
+    # client.execute()  # Runs all cells
+    # nbformat.write(nb, "executed.ipynb")  # Save with outputs
+"""
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
