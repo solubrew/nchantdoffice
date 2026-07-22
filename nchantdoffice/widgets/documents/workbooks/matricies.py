@@ -636,7 +636,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 logma.warning("cmd_open_local_file called with local_file=None")
         return self
 
-    def cmd_run_eda(self):
+    def cmd_run_eda(self, event=None, *args, **kwargs):
         """Run exploratory data analysis on the current table contents.
 
         Computes per-column summary statistics (count, mean, min, max, std)

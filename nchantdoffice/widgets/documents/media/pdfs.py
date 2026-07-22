@@ -78,11 +78,11 @@ class NchantdPageAddToolPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def cmd_page_number_change(self):
+    def cmd_page_number_change(self, event=None, *args, **kwargs):
         """"""
         # TODO implement method
 
-    def cmd_open_file(self):
+    def cmd_open_file(self, event=None, *args, **kwargs):
         """"""
         # TODO implement method
 
@@ -189,7 +189,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         items[cnt]["widget"] = self.label_entry
         return items
 
-    def cmd_page_count_change(self):
+    def cmd_page_count_change(self, event=None, *args, **kwargs):
         """"""
         # TODO implement method
 
@@ -256,11 +256,11 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         # PUSH to 0.0.3
         # self.toolbox_config[300]["items"] = self.init_drawer_quickstart()
 
-    def cmd_image_format_change(self):
+    def cmd_image_format_change(self, event=None, *args, **kwargs):
         """"""
         # TODO implement method
 
-    def cmd_image_convert_change(self):
+    def cmd_image_convert_change(self, event=None, *args, **kwargs):
         """"""
         # TODO implement method
 

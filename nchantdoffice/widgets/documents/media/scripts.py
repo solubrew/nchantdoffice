@@ -138,9 +138,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             add_textbox = "_skip"
             add_shape = "_skip"
 
-        self.file_path = self.document.content.get("file_path")
-        if self.file_path is None:
-            self.file_path = self.document.content.get("content", {}).get("file_path")
+        #self.file_path = self.document.content.get("file_path")
+        #if self.file_path is None:
+        #    self.file_path = self.document.content.get("content", {}).get("file_path")
         if self.file_path is None or not exists(self.file_path):
             cfg = {
                 "buttons": {
@@ -373,7 +373,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def get_bottom_margin_selected(self):
         """"""
-        bottom_margin = "1 inch"
+        bottom_margin = 1
         return bottom_margin
 
     def get_document_syntax(self):
@@ -416,22 +416,22 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def get_left_margin_selected(self):
         """"""
-        left_margin = "1 inch"
+        left_margin = 1
         return left_margin
 
     def get_right_margin_selected(self):
         """"""
-        right_margin = "1 inch"
+        right_margin = 1
         return right_margin
 
     def get_top_margin_selected(self):
         """"""
-        top_margin = "1 inch"
+        top_margin = 1
         return top_margin
 
     def get_margin_options(self):
         """"""
-        margins = ["1 inch", "2 inches", "3 inches", "4 inches"]
+        margins = [1, "2 inches", "3 inches", "4 inches"]
         return margins
 
     def get_page_view_selected(self):

@@ -538,31 +538,31 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         self.initView()
         return self
 
-    def cmd_add_palette_document_nchantdpalette(self):
+    def cmd_add_palette_document_nchantdpalette(self, event=None, *args, **kwargs):
         """"""
         return self
 
-    def cmd_convert_color(self):
+    def cmd_convert_color(self, event=None, *args, **kwargs):
         """"""
         return self
 
-    def cmd_convert_format(self):
+    def cmd_convert_format(self, event=None, *args, **kwargs):
         """"""
         return self
 
-    def cmd_convert_size(self):
+    def cmd_convert_size(self, event=None, *args, **kwargs):
         """"""
         return self
 
-    def cmd_crop_image(self):
+    def cmd_crop_image(self, event=None, *args, **kwargs):
         """"""
         return self
 
-    def cmd_generate_image(self):
+    def cmd_generate_image(self, event=None, *args, **kwargs):
         """"""
         return self
 
-    def cmd_image_height_change(self):
+    def cmd_image_height_change(self, event=None, *args, **kwargs):
         """"""
         # TODO implement method
 
@@ -574,11 +574,11 @@ class NchantdOfficeImage(NchantdOfficeDocument):
                 self.open_file(self.local_file)
         return self
 
-    def cmd_run_palette_scan(self):
+    def cmd_run_palette_scan(self, event=None, *args, **kwargs):
         """"""
         # TODO implement method
 
-    def cmd_image_width_change(self):
+    def cmd_image_width_change(self, event=None, *args, **kwargs):
         """"""
         # TODO implement method
 
@@ -718,7 +718,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
     def open_file(self, file=None):
         """"""
         logma.info(file)
-        #if self.file_path is None:
+        # if self.file_path is None:
         self.file_path = file
         if file is None:
             file = self.file_path
