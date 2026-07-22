@@ -97,7 +97,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         """ """
         super().initModel()
         logma.json({"document": self.config.dikt.get("document", {})})
-        self.document = self.app.model.codex.init_script({"document": self.config.dikt.get("document", {})})
+        self.document = self.app.model.codex.init_script({"document": self.config.get("document", {})})
         self.document.load_document()
         if self.context_menu_name is not None:
             self.initialize_context_menu("context.document.script")
@@ -106,8 +106,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def initView(self, cfg=None):
         """"""
-        if cfg is None:
-            cfg = {}
+        cfg = cfg or {}
         fcbcfg = {
             "layout": "horizontal",
             "extend": True,
@@ -137,34 +136,32 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             add_chart = "_skip"
             add_textbox = "_skip"
             add_shape = "_skip"
-
-        #self.file_path = self.document.content.get("file_path")
-        #if self.file_path is None:
-        #    self.file_path = self.document.content.get("content", {}).get("file_path")
-        if self.file_path is None or not exists(self.file_path):
-            cfg = {
-                "buttons": {
-                    10: {"action": "set_page_view", "handler": self.cmd_toggle_page_view},
-                    11: {
-                        "action": "select_document_format",
-                        "handler": self.cmd_on_change_document_syntax,
-                        "widget": self.document_syntax_select,
-                    },
-                    12: {
-                        "action": "set_text_font_config",
-                        "widget": self.font_config_header,
-                    },
-                    13: {"action": "set_background_color"},
-                    14: add_image,
-                    15: add_table,
-                    16: add_chart,
-                    17: add_shape,
-                    18: add_textbox,
-                    49: "_insert_stretch",
-                }
+        logma.info(f"Content {self.document.content}")
+        # self.file_path = self.document.content.get("file_path")
+        if self.file_path is None:
+            self.file_path = self.document.content.get("content", {}).get("file_path")
+        cfg = {
+            "buttons": {
+                10: {"action": "set_page_view", "handler": self.cmd_toggle_page_view},
+                11: {
+                    "action": "select_document_format",
+                    "handler": self.cmd_on_change_document_syntax,
+                    "widget": self.document_syntax_select,
+                },
+                12: {
+                    "action": "set_text_font_config",
+                    "widget": self.font_config_header,
+                },
+                13: {"action": "set_background_color"},
+                14: add_image,
+                15: add_table,
+                16: add_chart,
+                17: add_shape,
+                18: add_textbox,
+                49: "_insert_stretch",
             }
+        }
         logma.info(f"Initialize View")
-
         super().initView(cfg)
         logma.info(f"View Initialized")
         if self.view_type == "page_view":
@@ -370,6 +367,23 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             ".json - JSON",
         ]
         return options
+
+    def get_content(self):
+        """"""
+        self.document.syntax = "html"  # TODO need to use the selector from toolbar
+        if self.document.syntax == "html":
+            html = """
+            <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
+            <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
+            """
+            soup = BeautifulSoup(self.document_editor.toHtml(), "html.parser")
+            text = html.replace("<[content]>", soup.body.decode_contents())
+        else:
+            text = self.document_editor.toPlainText()
+        logma.info(f"File Path {self.file_path}")
+        content = {"content": {"file_path": self.file_path}, "text": text}
+        logma.info(f"CONTENT {content}")
+        return content
 
     def get_bottom_margin_selected(self):
         """"""
@@ -725,11 +739,12 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         """"""
         if file is None:
             file = self.file_path
-        cfg = {"file_path": file}
-        document = self.app.model.codex.init_script(cfg)
-        document.load_document()
-        self.set_document(document)
-        self.document.open_file()
+        # cfg = {"file_path": file}
+        # document = self.app.model.codex.init_script(cfg)
+        # document.load_document()
+        # self.set_document(document)
+        self.document.open_file(file)
+        self.document.set_location("external")
         self.populate_document()
         return self
 
@@ -745,9 +760,14 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         style = f"background-color: #FFFFFF;"
         self.document_editor.setStyleSheet(style)
         if self.document is None:
+            logma.info(f"Document is None")
             text = self.document_editor.get_text()
         else:
-            text = self.document.text.to_dict()["unit"].get("value", "")
+            text = self.document.text.to_dict()["unit"].get("value", None)
+            if text is None:
+                text = self.document.content.get("content", {}).get("text", {})
+                if text is None:
+                    raise Exception(f"Document Not Formated Properly {self.document.content}")
         if isinstance(text, bytes):
             text = decode64(text)
         if isinstance(text, dict):
@@ -770,6 +790,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             self.document_editor.setMarkdown(text)
             return self
         elif self.document.syntax in ("plain-text", "plaintext"):
+            logma.info(f"PlainText")
             self.document_editor.setPlainText(text)
             return self
         elif self.document.syntax == "xml":
@@ -779,7 +800,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             self.document_editor.setLatex(text)
             return self
         elif self.document.syntax == "html":
-            logma.info(f"HTML {text}")
+            logma.info(f"HTML")
             self.document_editor.setHtml(text)
             return self
         elif self.document.syntax == "python":
@@ -866,28 +887,14 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             raise Exception(f"unknown syntax {self.document.syntax}")
         return self
 
-    def get_content(self):
-        """"""
-        self.document.syntax = "html"  # TODO need to use the selector from toolbar
-        if self.document.syntax == "html":
-            html = """
-            <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
-            <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
-            """
-            soup = BeautifulSoup(self.document_editor.toHtml(), "html.parser")
-            content = html.replace("<[content]>", soup.body.decode_contents())
-        else:
-            content = self.document_editor.toPlainText()
-        return content
-
     def save(self):
         """"""
-        if self.document is None:
-            self.new_document()
-        content = self.get_content()
-        self.document.parse_content(content)
-        if content != self.document.content:
-            self.document.set_content(content)
+        # if self.document is None:
+        #     self.new_document()
+        # content = self.get_content()
+        # self.document.parse_content(content)
+        # if content != self.document.content:
+        #     self.document.set_content(content)
         super().save()
         return self
 

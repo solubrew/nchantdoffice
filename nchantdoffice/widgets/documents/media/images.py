@@ -486,7 +486,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
     def initModel(self):
         """"""
         super().initModel()
-        document = {"document": self.config.dikt.get("document", {})}
+        document = {"document": self.config.get("document", {})}
         logma.info(f"Document {document}")
         self.document = self.app.model.codex.init_image(document)
         self.document.load_document()
@@ -540,27 +540,27 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
     def cmd_add_palette_document_nchantdpalette(self, event=None, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
 
     def cmd_convert_color(self, event=None, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
 
     def cmd_convert_format(self, event=None, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
 
     def cmd_convert_size(self, event=None, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
 
     def cmd_crop_image(self, event=None, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
 
     def cmd_generate_image(self, event=None, *args, **kwargs):
         """"""
-        return self
+        # TODO implement method
 
     def cmd_image_height_change(self, event=None, *args, **kwargs):
         """"""

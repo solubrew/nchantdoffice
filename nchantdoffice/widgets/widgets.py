@@ -119,7 +119,7 @@ class NchantdOfficeTabSet(NchantdTabSet):
 
     def on_tab_focus(self, tabn=None):
         """"""
-        logma.inspect_caller()
+        # logma.inspect_caller()
         if tabn is None:
             tabn = self.currentIndex()
 

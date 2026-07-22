@@ -35,7 +35,7 @@ from nchantrs.widgets.browsers.codecs.h264 import OpenH264Downloader
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
-log = True
+log = False
 logma = Logma(__name__)
 debug = True
 if not log:
