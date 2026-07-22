@@ -137,6 +137,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             add_chart = "_skip"
             add_textbox = "_skip"
             add_shape = "_skip"
+
+        self.file_path = self.document.content.get("file_path")
+        if self.file_path is None:
+            self.file_path = self.document.content.get("content", {}).get("file_path")
         if self.file_path is None or not exists(self.file_path):
             cfg = {
                 "buttons": {
@@ -160,6 +164,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
                 }
             }
         logma.info(f"Initialize View")
+
         super().initView(cfg)
         logma.info(f"View Initialized")
         if self.view_type == "page_view":
@@ -731,6 +736,12 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
     def populate_document(self):
         """"""
         logma.info(f"Populating Document")
+
+        # TODO implement external loading of script file
+        #  standardize along with images and pdfs
+
+        # self.document_editor.load_file(self.file_path)
+
         style = f"background-color: #FFFFFF;"
         self.document_editor.setStyleSheet(style)
         if self.document is None:

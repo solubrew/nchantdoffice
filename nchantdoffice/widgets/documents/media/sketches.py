@@ -549,7 +549,7 @@ class NchantdPolygonToolPane(NchantdPane):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdPolygonToolPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -1765,6 +1765,16 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             logma.info(f"Selected shape: {shape.get('tool')}")
             return shape
         return None
+
+    def save(self):
+        """"""
+        if self.document is None:
+            self.new_document()
+        content = self.get_content()
+        if content != self.document.content:
+            self.document.set_content(content)
+        super().save()
+        return self
 
     def save_shape(self):
         """Save the current shape to the shapes list and clear redo stack."""

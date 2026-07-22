@@ -118,7 +118,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
     def initModel(self):
         """"""
         super().initModel()
-        document = {"document": self.config.dikt["document"]}
+        document = {"document": self.config.dikt.get("document", {})}
         logma.json(self.config.dikt["document"])
         self.document = self.app.model.codex.init_pdf(document)
         self.document.load_document()
@@ -208,7 +208,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
             "label": "Current Format: ",
             "layout": "horizontal",
             "handler": self.cmd_image_format_change,
-            "value": self.get_image_format(),
+            "value": self.get_file_format(),
         }
         self.image_format_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.image_format_entry
@@ -219,7 +219,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
             "label": "Convert Format",
             "layout": "horizontal",
             "handler": self.cmd_image_convert_change,
-            "value": self.get_image_convert(),
+            "value": self.get_file_convert(),
         }
         self.image_conversion_select = NchantdDropDownActivator(self, cfg)
         items[cnt]["widget"] = self.image_conversion_select
@@ -264,13 +264,17 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         """"""
         # TODO implement method
 
-    def get_image_format(self):
+    def get_file_format(self):
         """"""
         # TODO implement method
 
-    def get_image_convert(self):
+    def get_file_convert(self):
         """"""
         # TODO implement method
+
+    def get_content(self):
+        """"""
+        return super().get_content()
 
     def open_file(self, file=None):
         """"""
@@ -291,28 +295,6 @@ class NchantdOfficePDF(NchantdOfficeDocument):
 
     def save(self):
         """"""
-        logma.inspect_caller()
-        logma.info(f"Saving document")
-        if self.document.location is None:
-            self.document.set_location("external")
-        if self.document.location == "external":
-            content = self.document.content
-            if content is None:
-                content = {}
-            if isinstance(content, dict):
-                content["file_path"] = self.document.file_path
-            logma.info(f"File Path {self.document.file_path}")
-            logma.info(f"DID {self.document.did}")
-        elif self.document.location == "internal":
-            content = self.get_bytes()
-        else:
-            raise Exception(f"Unknown storage location {self.document.location}")
-        logma.info(f"Content {content}")
-        logma.info(f"Content {self.document.content}")
-        if content != self.document.content:
-            self.document.set_content(content)
-            logma.info(f"Content {self.document.content}")
-        logma.json(self.document.to_dict())
         super().save()
         return self
 

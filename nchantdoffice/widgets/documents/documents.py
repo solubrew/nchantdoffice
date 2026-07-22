@@ -320,10 +320,9 @@ class NchantdOfficeDocumentMixin:
             400: {"action": "cancel", "handler": self.cmd_delete_tab},
             1000: {"action": "show_pane_right", "handler": self.cmd_show_pane_right},
         }
-        logma.info(f"CFG {cfg}")
         buttons = kahndor.Instruct(self.config.dikt.get("buttons", {})).override(cfg.get("buttons", {})).dikt
         buttons.update(_buttons)
-        if self.has_pro:
+        if self.has_pro:  # TODO replace with profile switcher/other pro features based on document type
             cfg = {
                 "label": "Profile",
                 "layout": "horizontal",
@@ -346,7 +345,6 @@ class NchantdOfficeDocumentMixin:
             buttons[1] = {"name": "get_pro_features", "widget": self.profile_select_entry}
         cfg = {"layout": "horizontal", "justify": "right"}
         buttons = {k: buttons[k] for k in sorted(buttons)}
-        logma.info(f"Buttons {buttons}")
         self.document_toolbar = NchantdButtonBar(self, cfg).initWidget(buttons)
         self.document_toolbar.setFixedHeight(30)
         self.layout.addWidget(self.document_toolbar)
@@ -683,6 +681,14 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
                         self.document_editor.setPlainText(str(self.document.content))
         return self
 
+    def open_file(self, file):
+        """"""
+        if file is None:
+            file = self.file_path
+        self.document.open_file(file)  # The Pyffice document is not connected directly with the viewable pdf render
+        self.document.set_location("external")
+        self.populate_document()
+
     def open_local(self):
         """Trigger the local file open dialog."""
         return self.cmd_open_local_file()
@@ -703,27 +709,25 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
             logma.error(f"Failed to open remote document: {e}")
         return self
 
-    def get_content(self):
+    def get_content_internal(self):
         """"""
-        return NotImplemented
+        return {}
+
+    def get_content(self, content=None, location="external"):
+        """"""
+        content = content or {}
+        content["file_path"] = self.document.file_path
+        content["location"] = self.document.location
+        if self.document.location == "internal":
+            content["internal"] = self.get_content_internal()
+        return content
 
     def save(self):
         """"""
-        if self.document is None:
-            cfg = {}
-            self.document = PyfficeDocument(cfg)
+        self.document = self.document or PyfficeDocument({})
         if self.document.location is None:
             self.document.set_location("external")
-        if self.document.location == "external":
-            content = self.document.content or {}
-            if isinstance(content, dict):
-                content["file_path"] = self.document.file_path
-            logma.info(f"File Path {self.document.file_path}")
-            logma.info(f"DID {self.document.did}")
-        elif self.document.location == "internal":
-            content = self.get_content()
-        else:
-            raise Exception(f"Unknown storage location {self.document.location}")
+        content = self.get_content()
         if content and content != self.document.content:
             self.document.set_content(content)
         super().save()

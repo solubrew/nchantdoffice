@@ -512,19 +512,22 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             }
         }
         super().initView(cfg)
-        logma.info(f"File Path: {self.document.file_path}")
+        # self.document.file_path = self.document.content.get("file_path")
+        # logma.info(f"File Path: {self.document.file_path}")
         cfg = {
             "size": ["auto", "auto"],
             "document": self.document,
             "path": self.document.file_path,
         }
         logma.info(f"Content {self.document.content}")
+        self.file_path = self.document.content.get("file_path")
+        if self.file_path is None:
+            self.file_path = self.document.content.get("content", {}).get("file_path")
         if self.document.content is not None:
             cfg["image_data"] = self.document.content.get("L0", {}).get("bytes", None)
             logma.info(f"Image Data: {cfg['image_data']}")
         self.image = NchantdImage(self, cfg).initWidget()
-        if self.document.file_path is None:
-            self.open_file(self.document.file_path)
+        self.populate_document()
         self.layout.addWidget(self.image)
         self.layout.setSpacing(3)
         return self
@@ -582,6 +585,11 @@ class NchantdOfficeImage(NchantdOfficeDocument):
     def get_binary(self):
         """"""
         # TODO implement method
+
+    def get_content(self):
+        """"""
+        logma.info(f"File Path {self.file_path}")
+        return {"content": {"file_path": self.file_path}}
 
     def get_image_height(self):
         """"""
@@ -709,15 +717,22 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
     def open_file(self, file=None):
         """"""
+        logma.info(file)
+        #if self.file_path is None:
+        self.file_path = file
         if file is None:
             file = self.file_path
-        self.document.open_file(file)
+        if file is not None:
+            self.document.open_file(file)
+        self.document.set_location("external")
         self.populate_document()
         return self
 
     def populate_document(self):
         """"""
-        self.image.load_image(self.document.file_path)
+        # if self.document.file_path is None:
+        #     return
+        self.image.load_image(self.file_path)
         return self
 
     def save(self):

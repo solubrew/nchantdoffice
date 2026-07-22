@@ -44,7 +44,7 @@ from nchantrs.models.models import NchantdInstance
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
-log = True
+log = False
 if not log:
     logma.off()
 
