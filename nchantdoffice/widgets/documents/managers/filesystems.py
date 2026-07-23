@@ -107,8 +107,10 @@ class NchantdCompressPane(NchantdPane):
         return self
 
     def cmd_delete_files_on_compress(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Toggle whether files are deleted after compression"""
+        self.delete_on_compress_enabled = self.delete_on_compress.isChecked() if hasattr(self, 'delete_on_compress') else True
+        logma.info(f"Delete on compress: {self.delete_on_compress_enabled}")
+        return self
 
     def cmd_compress_files(self, event=None, *args, **kwargs):
         """Compress selected files"""
@@ -159,12 +161,42 @@ class NchantdCompressPane(NchantdPane):
         # TODO: implement method
 
     def cmd_rename_on_compress(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Toggle whether files are renamed after compression"""
+        self.rename_on_compress_enabled = self.rename_on_compress.isChecked() if hasattr(self, 'rename_on_compress') else True
+        logma.info(f"Rename on compress: {self.rename_on_compress_enabled}")
+        return self
 
     def cmd_delete_files_on_selection(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Delete files that are currently selected in the file table"""
+        from os import remove
+        from os.path import exists, join
+
+        try:
+            if not hasattr(self.parent, "file_table_one") or self.parent.file_table_one is None:
+                logma.warning("No file table available")
+                return self
+
+            selected_files = []
+            try:
+                selected_items = self.parent.file_table_one.selectedItems()
+                for item in selected_items:
+                    selected_files.append(item.text())
+            except Exception:
+                logma.warning("Unable to retrieve selected items")
+                return self
+
+            source_path = self.parent.fs_tree.current_level_path
+            for file_name in selected_files:
+                file_path = join(source_path, file_name)
+                if exists(file_path):
+                    remove(file_path)
+                    logma.info(f"Deleted file: {file_name}")
+
+            if hasattr(self.parent, "populate_table_one"):
+                self.parent.populate_table_one()
+        except Exception as e:
+            logma.error(f"Error deleting files on selection: {e}")
+        return self
 
     def set_from_folder(self):
         """"""

@@ -121,8 +121,15 @@ class NchantdEditLayerPane(NchantdPane):
         return self
 
     def cmd_on_layer_name_change(self):
-        """"""
-        # TODO: implement method
+        """Handle layer name change from the name entry field."""
+        try:
+            if hasattr(self, "name_entry") and self.name_entry:
+                name = self.name_entry.text() if hasattr(self.name_entry, "text") else None
+                if name and hasattr(self.parent(), "cmd_set_layer_name"):
+                    self.parent().cmd_set_layer_name(name)
+        except Exception:
+            pass
+        return self
 
     def cmd_on_transparency_change(self, *args, **kwargs):
         """Handle transparency change from the transparency entry field."""
@@ -1398,8 +1405,34 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         return self.size()
 
     def get_content(self):
-        """"""
-        return {}
+        """Return sketch content for serialization - layers, shapes, and canvas config."""
+        content = {}
+        content["layers"] = self.layers if self.layers else []
+        content["active_layer_index"] = self.active_layer_index
+        content["layer_properties"] = self.layer_properties
+        content["shapes"] = []
+        for shape in self.shapes:
+            shape_dict = {
+                "tool": shape.get("tool"),
+                "layer": shape.get("layer"),
+                "start": {"x": shape["start"].x(), "y": shape["start"].y()},
+                "end": {"x": shape["end"].x(), "y": shape["end"].y()},
+            }
+            config = shape.get("config", {})
+            shape_dict["config"] = {
+                "style": config.get("style", "Solid"),
+                "thickness": config.get("thickness", 3),
+                "color": config["color"].name() if config.get("color") else "#000000",
+                "end_type_1": config.get("end_type_1"),
+                "end_type_2": config.get("end_type_2"),
+            }
+            content["shapes"].append(shape_dict)
+        if self.canvas:
+            content["canvas_size"] = {
+                "width": self.canvas.width(),
+                "height": self.canvas.height()
+            }
+        return content
 
     def get_active_layer(self):
         """Get the currently active layer."""
@@ -1681,8 +1714,9 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         return self
 
     def paintEvent(self, event):
-        """Paint event handler - just update canvas, don't paint here."""
+        """Paint event handler - delegate rendering to render_on_canvas."""
         super().paintEvent(event)
+        self.render_on_canvas()
 
     def render_on_canvas(self):
         """Render all shapes on the canvas using a pixmap for double buffering."""
@@ -2179,7 +2213,7 @@ class NchantdOfficePalette(NchantdOfficeDocument):
             items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
         options = ["Black", "Grey", "White", "Blue", "Red", "Green", "Yellow", "Magenta", "Cyan", "Orange", "Violet"]
         cfg = {"label": "Select Canvas Color", "layout": "horizontal", "options": options}
-        self.canvas_color_select = NchantdDropDown
+        self.canvas_color_select = NchantdDropDown(self, cfg).initWidget()
         items[cnt]["widget"] = self.canvas_color_select
         return items
 
