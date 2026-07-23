@@ -45,6 +45,7 @@ from nchantrs.models.models import NchantdInstance
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
 log = False
+debug = True
 if not log:
     logma.off()
 
@@ -372,19 +373,38 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         context = ""
         logma.info(f"document {document}")
         logma.info(f"document type {type(document)}")
-        content = document.get("content", {})
+        content = document.get("content", {}) or {}
         if content == {}:
-            content = document.get("data", {})
-        if content is None:
-            content = {}
+            content = document.get("data", {}) or {}
         if isinstance(content, dict):
             logma.info(f"Content {content}")
-            enc_content = encode64(j.dumps(content))
+            try:
+                enc_content = encode64(j.dumps(content))
+            except Exception as e:
+                logma.warning(f"Dictionary Encoding Failed")
+                logma.warning(e)
+                if debug:
+                    logma.warning(content)
+                    raise e
         elif isinstance(content, str):
-            logma.info(f"Content {content[:500]}")
-            enc_content = encode64(content)
+            try:
+                logma.info(f"Content {content[:500]}")
+                enc_content = encode64(content)
+            except Exception as e:
+                logma.warning(f"String Encoding Failed")
+                logma.warning(e)
+                if debug:
+                    logma.warning(content)
+                    raise e
         elif isinstance(content, bytes):
-            enc_content = encode64(content)
+            try:
+                enc_content = encode64(content)
+            except Exception as e:
+                logma.warning(f"Bytes Encoding Failed")
+                logma.warning(e)
+                if debug:
+                    logma.warning(content)
+                    raise e
         else:
             raise Exception(f"content is not a dict or a str or a bytes but is {type(content)}")
         payload = {

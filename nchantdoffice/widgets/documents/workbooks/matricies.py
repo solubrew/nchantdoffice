@@ -25,7 +25,6 @@ from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.controls.advanced_buttons import NchantdNumberWheelButton, NchantdLabeledSpinBox, NchantdSpinBox
 from nchantrs.widgets.controls.buttons import NchantdButton, NchantdButtonWidget
 from nchantrs.widgets.annotations import NchantdLabel
-from nchantrs.widgets.tables.tables import NchantdDataFrameTable, NchantdTable
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry, NchantdEntryBox
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.controls.checkboxes import NchantdCheckboxGroup
@@ -35,6 +34,7 @@ from pyffice.workflows.formulas import PyfficeFormulasLibrary
 from kahndor.logma import Logma
 from nchantrs.widgets.controls.button_groups import NchantdFontConfigBar
 from nchantdoffice.widgets.panes.sources import NchantdSourceEditPane, NchantdSourcesListPane
+from nchantdoffice.widgets.tables import NchantdOfficeTable
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -232,7 +232,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "entrybox": {"text": "=", "size": [600, 30]},
             "justify": "left",
             "layout": "horizontal",
-            "handler": self.formula_bar_change,
+            "handler": self.cmd_formula_bar_change,
         }
         self.formula_bar = NchantdLabeledEntry(self, cfg)
         if self.file_path is None or not exists(self.file_path):
@@ -256,7 +256,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         #     cfg["buttons"][200] = {"action": "show_data_set"}
         super().initView(cfg)
         cfg = {"num_rows": 100, "num_columns": 40, "min_column_width": 30, "handler": self.cmd_cell_change}
-        self.table = NchantdTable(self.parent, self.config.override(cfg)).initWidget()
+        self.table = NchantdOfficeTable(self.parent, self.config.override(cfg)).initWidget()
         self.layout.addWidget(self.table, stretch=1)
         self.layout.setSpacing(3)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -484,6 +484,9 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.apply_font_style(font_family=font_family, font_size=font_size)
         return self
 
+    def cmd_formula_bar_change(self, event=None, *args, **kwargs):
+        """"""
+
     def cmd_formula_entry(self, event, *args, **kwargs):
         """Insert the currently selected formula from the formula dropdown into
         the active cell's formula bar.
@@ -629,8 +632,9 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         super().cmd_open_local_file(event, *args, **kwargs)
         if self.local_file is not None:
             if exists(self.local_file):
-                self.load_from_file(self.local_file)
-                self.file_path = self.local_file
+                # self.load_from_file(self.local_file)
+                # self.file_path = self.local_file
+                self.open_file(self.local_file)
             else:
                 logma.warning(f"File does not exist: {self.local_file}")
         else:
@@ -1187,7 +1191,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "layout": "horizontal",
             "range": [1, 100],
             "default": 12,
-            "handler": self.document_font_config_change,
+            "handler": self.cmd_document_font_config_change,
         }
         self.font_config_bar = NchantdFontConfigBar(self, cfg)
         items[cnt]["widget"] = self.font_config_bar
@@ -1252,6 +1256,9 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         items[cnt]["widget"] = self.cell_width
         cnt += 1
         return items
+
+    def cmd_document_font_config_change(self, event=None, *args, **kwargs):
+        """"""
 
     def init_drawer_formula(self):
         """"""
@@ -1413,6 +1420,21 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
     #     cnt += 1
     #     return items
 
+    def cmd_selected_cell_change(self, event=None, *args, **kwargs):
+        """"""
+
+    def cmd_selected_cell_text_change(self, event=None, *args, **kwargs):
+        """"""
+
+    def cmd_cell_font_change(self, event=None, *args, **kwargs):
+        """"""
+
+    def cmd_cell_border_change(self, event=None, *args, **kwargs):
+        """"""
+
+    def cmd_cell_change(self, event=None, *args, **kwargs):
+        """"""
+
     def init_toolbox(self):
         """"""
         super().init_toolbox()
@@ -1525,6 +1547,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         if file is None:
             file = self.file_path
         if file is not None:
+            #TODO: need to determine correct file type to open
             self.document.open_file(file)
         self.document.set_location("external")
         self.populate_document()
@@ -1704,7 +1727,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # File operations
         self.toolbar.addAction("New", self.new_sheet)
         self.toolbar.addAction("Open", self.open_file)
-        self.toolbar.addAction("Save", self.save_file)
+        self.toolbar.addAction("Save", self.save)
         self.toolbar.addSeparator()
 
         # Edit operations

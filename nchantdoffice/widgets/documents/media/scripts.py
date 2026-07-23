@@ -43,9 +43,11 @@ from pycurity.pysan import Sanitized
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
-debug = False
+debug = True
+log = True
 logma = Logma(__name__)
-# logma.off()
+if not log:
+    logma.off()
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "scripts.yaml")
@@ -743,7 +745,12 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         # document = self.app.model.codex.init_script(cfg)
         # document.load_document()
         # self.set_document(document)
-        self.document.open_file(file)
+        try:
+            self.document.open_file(file)
+        except Exception as e:
+            logma.warning(e)
+            if debug:
+                raise e
         self.document.set_location("external")
         self.populate_document()
         return self
