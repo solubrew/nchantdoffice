@@ -310,6 +310,8 @@ class NchantdEventsListPane(NchantdPane):
         cfg["layout"] = "vertical"
         super().initView(cfg)
         for event in self.events:
+            cfg = {}
+            # TODO build with event
             self.events[event] = NchantdEventGroup(self, self.events[event]).initWidget()
             self.layout.addWidget(self.events[event])
         self.layout.addStretch()
@@ -574,6 +576,27 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         self.initView()
         return self
 
+    def cmd_calendar_service_select_change(self):
+        """"""
+
+    def cmd_calendar_account_name_change(self):
+        """"""
+
+    def cmd_service_connect_button_activate(self):
+        """"""
+
+    def cmd_create_new_event(self, event=None, *args, **kwargs):
+        """Handle create new event button press."""
+        logma.info("Creating new calendar event")
+        if hasattr(self, "new_event_date_select"):
+            event_dt = self.new_event_date_select.get_value()
+            logma.info(f"New event datetime: {event_dt}")
+        return self
+
+    def cmd_event_datetime_change(self):
+        """"""
+        # TODO: implement method
+
     def cmd_on_change_scope(self, event, *args, **kwargs):
         """"""
         scope = self.calendar_scope_select.get_value()
@@ -654,18 +677,6 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def cmd_create_new_event(self, event=None, *args, **kwargs):
-        """Handle create new event button press."""
-        logma.info("Creating new calendar event")
-        if hasattr(self, "new_event_date_select"):
-            event_dt = self.new_event_date_select.get_value()
-            logma.info(f"New event datetime: {event_dt}")
-        return self
-
-    def cmd_event_datetime_change(self):
-        """"""
-        # TODO: implement method
-
     def init_drawer_event_config(self):
         """"""
         items = self.toolbox_config[200].get("items", {})
@@ -693,6 +704,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             "text": "Event is Required",
             "layout": "horizontal",
             "size": ["auto", "auto"],
+            "handler": self.cmd_event_required_change,
         }
         self.event_required_checkbox = NchantdCheckboxWidget(self, cfg)
         items[cnt]["widget"] = self.event_required_checkbox
@@ -743,7 +755,10 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         items[cnt]["widget"] = self.event_tasks_pane
         return items
 
-    def cmd_event_datetime_change(self):
+    def cmd_event_required_change(self, event=None, *args, **kwargs):
+        """"""
+
+    def cmd_event_datetime_change(self, event=None, *args, **kwargs):
         """Handle event datetime selection change."""
         if hasattr(self, "date_select"):
             self.config.dikt["event_datetime"] = self.date_select.get_value()
@@ -761,16 +776,14 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             "label": "Calendar Service: ",
             "layout": "horizontal",
             "options": options,
+            "handler": self.cmd_calendar_service_select_change,
         }
         self.calendar_service_select = NchantdDropDown(self, cfg)
         items[cnt]["widget"] = self.calendar_service_select
         cnt += 1
         if cnt not in items:
             items[cnt] = default_action
-        cfg = {
-            "label": "Name: ",
-            "layout": "horizontal",
-        }
+        cfg = {"label": "Name: ", "layout": "horizontal", "handler": self.cmd_calendar_account_name_change}
         self.calendar_account_name = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.calendar_account_name
         cnt += 1
@@ -779,6 +792,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         cfg = {
             "text": "Connect to Service: ",
             "layout": "horizontal",
+            "handler": self.cmd_service_connect_button_activate,
         }
         self.service_connect_button = NchantdButtonWidget(self, cfg)
         items[cnt]["widget"] = self.service_connect_button
