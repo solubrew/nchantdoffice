@@ -44,7 +44,7 @@ from nchantrs.models.models import NchantdInstance
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
-log = False
+log = True
 debug = True
 if not log:
     logma.off()
@@ -304,7 +304,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         document["policy"] = policy
         logma.info(f"Document {document}")
         logma.info(f"Widget {widget}")
-        match document["type"]:
+        match document["type"]:# need to refactor to remove the limitations of manually registering each
             case "add_browser_document_nchantdbrowser":
                 document["document_type"] = "browser"
                 syntax = "html"
@@ -352,9 +352,17 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 document["document_type"] = "image"
                 syntax = "bytes"
                 document["location"] = "internal"
+            case "add_sheet_document_nchantdmatrix":
+                document["document_type"] = "matrix"
+                syntax = "plain-text"
+                document["location"] = "external"
+            case "matrix":
+                document["document_type"] = "matrix"
+                syntax = "plain-text"
+                document["location"] = "internal"
             case _:
                 syntax = "plain-text"
-                document["document_type"] = "note"
+                document["document_type"] = "doc" #PUSH to 0.0.3 should be note but need to adjust all other document types
         document["syntax"] = syntax
         self.store.store_app_media(document)
         page_n = 0
@@ -378,8 +386,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             content = document.get("data", {}) or {}
         if isinstance(content, dict):
             logma.info(f"Content {content}")
+            logma.info(f"Dumped Content {j.dumps(content)}")
             try:
                 enc_content = encode64(j.dumps(content))
+                logma.info(f"Encoded Dictionary {enc_content}")
             except Exception as e:
                 logma.warning(f"Dictionary Encoding Failed")
                 logma.warning(e)
@@ -1953,6 +1963,7 @@ class NchantdOfficeStore(NchantdStore):
             ]
         ]
         logma.json(decode64(content["content"]))
+        logma.warning(decode64(content["content"]))
         self._store(table, payload, db)
         # PUSH 0.0.3 move this to a non blocking process
         # set delete for all but the last 30 versions eventually base on variable policy of time/szie/counts
@@ -2013,17 +2024,14 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
             tabsdata = self.get_documents(node, tabset).replace(nan, None)
             tabsdata.sort_values(by=["position_int"], ascending=True, inplace=True)
-
-            logma.info(f"Tabsdata {tabsdata}")
             if not tabsdata.empty:
-                tabsdata = [self.convert_db_to_doc(tab) for tab in tabsdata.to_dict(orient="records")]
+                logma.info(f"[ BUILD TAB ]")
+                tabsdata = [self.convert_db_to_doc(tab) for tab in tabsdata.to_dict(orient="records") if tab is not None]
             else:
                 tabsdata = []
-
             self.tabset = tabset
             self.current_node = node
             self.tabsdata = tabsdata
-
             # Lazy loading logic
             active_tab_position = node.parameters.get("active_tab_position", 0)
             # Ensure it's an integer and within bounds
@@ -2072,13 +2080,17 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
     def convert_db_to_doc(self, document_):
         """"""
+        logma.info(f"\n\n{document_}\n\n")
         document = {}
+        logma.info(f"ENCODED {document_["content_enc64_txt"]}")
         document["data"] = decode64(document_["content_enc64_txt"])
-        logma.json(document)
+        logma.info(f"DECODED {document["data"]}")
         try:
             document["data"] = j.loads(document["data"])
-        except Exception:
-            pass
+        except Exception as e:
+            logma.warning(f"Data Cannot be Converted to JSON")
+            logma.warning(e)
+            document["data_str"] = document["data"]
         document["did"] = document_["did_txt"]
         document["syntax"] = document_["syntax_txt"]
         document["name"] = document_["name_txt"]
@@ -2130,7 +2142,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         from nchantrs.libraries import pyqt
 
         for tabn, tab in enumerate(self.tabsdata):
-
+            logma.info(f"Tab {tab}")
             if tabn == active_tab_position:
                 self.load_tab(tab, tabn, tabset, active_tab_position)
             else:
@@ -2147,25 +2159,6 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
         self.parent.setCurrentIndex(active_tab_position)
         return self
-
-    def _widget_current_url(self, widget):
-        """Best-effort current URL for a browser tab widget (live view first,
-        then the persisted document URL)."""
-        try:
-            viewer = getattr(widget, "browser", None)
-            view = getattr(viewer, "browser", None) if viewer is not None else None
-            if view is not None:
-                url = view.url()
-                if url is not None:
-                    text = url.toString()
-                    if text:
-                        return text
-        except Exception:
-            pass
-        try:
-            return widget.get_active_url()
-        except Exception:
-            return None
 
     def open_web_tab(self, url, name=None):
         """Open ``url`` as a browser tab in this (center) tabset — or focus the
@@ -2308,7 +2301,24 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         """"""
         super().set_focus()
         return self
-
+    def _widget_current_url(self, widget):
+        """Best-effort current URL for a browser tab widget (live view first,
+        then the persisted document URL)."""
+        try:
+            viewer = getattr(widget, "browser", None)
+            view = getattr(viewer, "browser", None) if viewer is not None else None
+            if view is not None:
+                url = view.url()
+                if url is not None:
+                    text = url.toString()
+                    if text:
+                        return text
+        except Exception:
+            pass
+        try:
+            return widget.get_active_url()
+        except Exception:
+            return None
 
 class NchantdOfficeSettingsModel(NchantdModel):
     """"""

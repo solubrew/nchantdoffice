@@ -452,7 +452,7 @@ class NchantdOfficeDocumentMixin:
         pos = self.app.view.panes["center"].model.current_tab.position
         logma.info(f"Save Pos {pos}")
         logma.info(f"Save DID {self.document.did}")
-        self.document.save()  # increments versions and (internal encryption..future)
+        self.document.save(self.file_path)  # increments versions and (internal encryption..future)
         self.app.model.store_document(self.document)
         return self
 
@@ -519,10 +519,10 @@ class NchantdOfficeDocumentMixin:
         self.file_path = path
         return self
 
-    def store_document(self):
-        """"""
-        self.app.model.store.store_document(self.document)
-        return self
+    # def store_document(self):
+    #     """"""
+    #     self.app.model.store.store_document(self.document)
+    #     return self
 
     def take_snapshot(self):
         """Capture a image of the current document."""

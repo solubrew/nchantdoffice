@@ -218,8 +218,9 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
     def initModel(self):
         """"""
         super().initModel()
-        cfg = {"file_path": self.file_path}
-        self.document = self.app.model.codex.init_matrix(cfg)
+        document = {"document": self.config.get("document", {})}
+        logma.info(f"Document {document}")
+        self.document = self.app.model.codex.init_matrix(document)
         self.document.load_document()
         self.context_menu.get_menu("context.document.matrix")
         return self
@@ -259,7 +260,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.table = NchantdOfficeTable(self.parent, self.config.override(cfg)).initWidget()
         self.layout.addWidget(self.table, stretch=1)
         self.layout.setSpacing(3)
-        self.layout.setContentsMargins(0, 0, 0, 0)
+        # self.layout.setContentsMargins(0, 0, 0, 0)
+        logma.info(f"[ INITIALIZE NCHANTD OFFICE MATRIX VIEW ] - populate document")
         self.populate_document()
         return self
 
@@ -707,6 +709,35 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self._apply_loan_calculator_template()
         return self
 
+    def cmd_document_font_config_change(self, event=None, *args, **kwargs):
+        """"""
+
+    def cmd_formula_entry_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO
+        # run validation on formula
+        # if autocalculate then try to calculate new value on change
+
+    def cmd_formula_select_change(self, event=None, *args, **kwargs):
+        """"""
+        # TODO
+        # update the description
+
+    def cmd_selected_cell_change(self, event=None, *args, **kwargs):
+        """"""
+
+    def cmd_selected_cell_text_change(self, event=None, *args, **kwargs):
+        """"""
+
+    def cmd_cell_font_change(self, event=None, *args, **kwargs):
+        """"""
+
+    def cmd_cell_border_change(self, event=None, *args, **kwargs):
+        """"""
+
+    def cmd_cell_change(self, event=None, *args, **kwargs):
+        """"""
+
     def copy_cells(self):
         """Copy selected cells to clipboard"""
         if self.table:
@@ -1029,9 +1060,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def get_content(self):
         """"""
-        # TODO implement getting the content for storage in the database
-        # data = self.table.get_data()
-        # return data
         return {"content": {"file_path": self.file_path}, "data": self.document.data}
 
     def get_current_address(self):
@@ -1257,9 +1285,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def cmd_document_font_config_change(self, event=None, *args, **kwargs):
-        """"""
-
     def init_drawer_formula(self):
         """"""
         items = self.toolbox_config[200].get("items", {})
@@ -1306,17 +1331,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         items[cnt]["widget"] = self.formula
         cnt += 1
         return items
-
-    def cmd_formula_entry_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO
-        # run validation on formula
-        # if autocalculate then try to calculate new value on change
-
-    def cmd_formula_select_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO
-        # update the description
 
     def init_drawer_cell_config(self):
         """"""
@@ -1419,21 +1433,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
     #     items[cnt]["widget"] = self.document_compatability
     #     cnt += 1
     #     return items
-
-    def cmd_selected_cell_change(self, event=None, *args, **kwargs):
-        """"""
-
-    def cmd_selected_cell_text_change(self, event=None, *args, **kwargs):
-        """"""
-
-    def cmd_cell_font_change(self, event=None, *args, **kwargs):
-        """"""
-
-    def cmd_cell_border_change(self, event=None, *args, **kwargs):
-        """"""
-
-    def cmd_cell_change(self, event=None, *args, **kwargs):
-        """"""
 
     def init_toolbox(self):
         """"""
@@ -1547,7 +1546,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         if file is None:
             file = self.file_path
         if file is not None:
-            #TODO: need to determine correct file type to open
+            # TODO: need to determine correct file type to open
             self.document.open_file(file)
         self.document.set_location("external")
         self.populate_document()
@@ -1667,9 +1666,14 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def populate_document(self):
         """"""
-        logma.info(f"Populate worksheet {self.document.data}")
+        logma.info(f"Populate worksheet {self.file_path}")
+        # the NchantdOfficeTable has no file open capability which is where we diverge from other Documents
+        # self.(self.file_path)
         self.table.update_data(self.document.data)
         # TODO implement row and cell size formatting on document population
+
+    def _open_file(self, path):
+        """"""
 
     def save(self):
         """"""

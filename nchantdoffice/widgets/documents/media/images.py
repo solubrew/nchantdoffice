@@ -487,7 +487,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """"""
         super().initModel()
         document = {"document": self.config.get("document", {})}
-        logma.info(f"Document {document}")
+
         self.document = self.app.model.codex.init_image(document)
         self.document.load_document()
         self.context_menu_name = "context.document.image"
@@ -730,6 +730,8 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
     def populate_document(self):
         """"""
+        # TODO we really should open from binary data that is already opened in the PyfficeDocument
+        logma.info(f"Populate worksheet {self.file_path}")
         self.image.load_image(self.file_path)
         return self
 
