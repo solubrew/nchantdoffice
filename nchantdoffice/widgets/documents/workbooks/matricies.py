@@ -232,6 +232,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "entrybox": {"text": "=", "size": [600, 30]},
             "justify": "left",
             "layout": "horizontal",
+            "handler": self.formula_bar_change,
         }
         self.formula_bar = NchantdLabeledEntry(self, cfg)
         if self.file_path is None or not exists(self.file_path):
@@ -254,7 +255,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # if self.document.is_saved:  # is_data_set
         #     cfg["buttons"][200] = {"action": "show_data_set"}
         super().initView(cfg)
-        cfg = {"num_rows": 100, "num_columns": 40, "min_column_width": 30}
+        cfg = {"num_rows": 100, "num_columns": 40, "min_column_width": 30, "handler": self.cmd_cell_change}
         self.table = NchantdTable(self.parent, self.config.override(cfg)).initWidget()
         self.layout.addWidget(self.table, stretch=1)
         self.layout.setSpacing(3)
@@ -262,7 +263,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.populate_document()
         return self
 
-    def initWidget(self, pos=0):
+    def initWidget(self):
         """"""
         self.initModel()
         self.initView()
@@ -1186,6 +1187,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "layout": "horizontal",
             "range": [1, 100],
             "default": 12,
+            "handler": self.document_font_config_change,
         }
         self.font_config_bar = NchantdFontConfigBar(self, cfg)
         items[cnt]["widget"] = self.font_config_bar
@@ -1319,7 +1321,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "label": "Active Cells:",
             "layout": "horizontal",
             "readonly": True,
-            "text": self.get_current_address() if self.table else "A1",
+            "text": self.get_current_address() if self.table else "I1",
+            "handler": self.cmd_selected_cell_change,
         }
         self.selected_cell_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.selected_cell_entry
@@ -1340,6 +1343,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "label": "Selected Text:",
             "layout": "horizontal",
             "readonly": True,
+            "handler": self.cmd_selected_cell_text_change,
         }
         self.selected_cell_text_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.selected_cell_text_entry
@@ -1351,6 +1355,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "layout": "horizontal",
             "range": [1, 100],
             "default": 12,
+            "handler": self.cmd_cell_font_change,
         }
         # TODO: add Bold, Italic and Underline buttons
         self.font_config_bar = NchantdFontConfigBar(self, cfg)
@@ -1368,7 +1373,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {"label": "Border Format"}
+        cfg = {"label": "Border Format", "handler": self.cmd_cell_border_change}
         self.cell_format = NchantdOfficeCellBorderFormats(self, cfg)
         items[cnt]["widget"] = self.cell_format
         cnt += 1
@@ -1458,167 +1463,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         for i in range(count):
             self.insert_row(position)
         return self
-
-    def load_dataset(self, dataset_name):
-        """Load data from a named dataset into the table"""
-        if self.app and hasattr(self.app, "model"):
-            try:
-                dataset = self.app.model.codex.get_dataset(dataset_name)
-                if dataset and self.table:
-                    # Clear existing data
-                    self.table.clearContents()
-                    # Load new data
-                    if hasattr(dataset, "values"):
-                        data = dataset.values
-                    else:
-                        data = dataset
-
-                    for row_idx, row_data in enumerate(data):
-                        if row_idx >= self.table.rowCount():
-                            self.table.setRowCount(row_idx + 1)
-                        for col_idx, cell_value in enumerate(row_data):
-                            if col_idx >= self.table.columnCount():
-                                self.table.setColumnCount(col_idx + 1)
-                            item = pyqt.QTableWidgetItem(str(cell_value))
-                            self.table.setItem(row_idx, col_idx, item)
-            except Exception as e:
-                logma.error(f"Error loading dataset {dataset_name}: {e}")
-        return self
-
-    def load_from_file(self, file_path):
-        """Load spreadsheet from file"""
-        try:
-            if file_path.endswith(".csv"):
-                self.load_csv(file_path)
-            elif file_path.endswith(".xlsx") or file_path.endswith(".xls"):
-                self.load_excel(file_path)
-            else:
-                pyqt.QMessageBox.warning(self, "Error", "Unsupported file format")
-        except Exception as e:
-            pyqt.QMessageBox.warning(self, "Error", f"Failed to load file: {e}")
-
-    def load_csv(self, file_path):
-        """Load CSV file into spreadsheet"""
-        import csv
-
-        logma.info(f"Load CSV {file_path}")
-        self.table.clearContents()
-        with open(file_path, "r", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            for row_idx, row in enumerate(reader):
-                for col_idx, value in enumerate(row):
-                    if col_idx >= self.table.columnCount():
-                        self.table.insertColumn(col_idx)
-                        self.table.setHorizontalHeaderItem(col_idx, pyqt.QTableWidgetItem(chr(65 + col_idx)))
-                    item = pyqt.QTableWidgetItem(value)
-                    self.table.setItem(row_idx, col_idx, item)
-                if row_idx >= self.table.rowCount() - 1:
-                    self.table.insertRow(row_idx + 1)
-
-    def load_excel(self, file_path, sheet_name=None):
-        """Load Excel file into spreadsheet with formula preservation
-
-        Args:
-            file_path: Path to the Excel file
-            sheet_name: Optional specific sheet to load. If None, loads active sheet.
-        """
-        try:
-            import openpyxl
-            from openpyxl.utils import get_column_letter
-
-            # Load workbook WITHOUT data_only to preserve formulas
-            wb = openpyxl.load_workbook(file_path, data_only=False)
-
-            # Select sheet
-            if sheet_name and sheet_name in wb.sheetnames:
-                ws = wb[sheet_name]
-            else:
-                ws = wb.active
-
-            self.table.clearContents()
-
-            # Track workbook data for multi-sheet support
-            self._excel_workbook = wb
-            self._excel_sheets = list(wb.sheetnames)
-
-            # Get dimensions
-            max_row = ws.max_row or 100
-            max_col = ws.max_column or 26
-
-            # Ensure we have enough rows/columns
-            self.table.setRowCount(max(max_row, 100))
-            self.table.setColumnCount(max(max_col, 26))
-
-            # Update column headers for columns beyond Z (AA, AB, etc.)
-            for col_idx in range(26, max_col):
-                self.table.setHorizontalHeaderItem(col_idx, pyqt.QTableWidgetItem(get_column_letter(col_idx + 1)))
-
-            # Load cells with formulas preserved
-            for row_idx, row in enumerate(ws.iter_rows()):
-                for col_idx, cell in enumerate(row):
-                    value = None
-
-                    # Get formula or value - key for H1: preserve formulas!
-                    if cell.data_type == "f":  # Formula cell
-                        value = cell.value  # Returns the formula string
-                    elif cell.value is not None:
-                        value = cell.value
-
-                    # Set cell value (formula or plain value)
-                    if value is not None:
-                        item = pyqt.QTableWidgetItem(str(value))
-
-                        # Preserve number format
-                        if cell.number_format and cell.number_format != "General":
-                            item.setData(
-                                pyqt.Qt.ItemDataRole.UserRole,
-                                {
-                                    "number_format": cell.number_format,
-                                    "font_bold": cell.font.bold if cell.font else False,
-                                    "font_italic": cell.font.italic if cell.font else False,
-                                    "fill_color": cell.fill.fgColor.rgb if cell.fill and cell.fill.fgColor else None,
-                                },
-                            )
-
-                        self.table.setItem(row_idx, col_idx, item)
-
-                    # Preserve column widths
-                    if col_idx < max_col:
-                        col_dim = ws.column_dimensions.get(get_column_letter(col_idx + 1))
-                        if col_dim and col_dim.width:
-                            self.table.setColumnWidth(col_idx, int(col_dim.width * 7))
-
-            # Update sheet tabs if in workbook mode
-            if self.is_workbook and self.sheet_tabs:
-                self._setup_sheet_tabs()
-
-            self.current_sheet = ws.title
-
-        except ImportError:
-            pyqt.QMessageBox.warning(self, "Error", "openpyxl not installed. Please install: pip install openpyxl")
-        except Exception as e:
-            pyqt.QMessageBox.warning(self, "Error", f"Failed to load Excel: {e}")
-
-    def load_from_config(self, cfg):
-        """Load spreadsheet data from configuration"""
-        if "data" in cfg:
-            self.load_data(cfg["data"])
-        if "sheets" in cfg:
-            for sheet_name, sheet_data in cfg["sheets"].items():
-                self.add_sheet(sheet_name, sheet_data)
-
-    def load_data(self, data):
-        """Load data into the spreadsheet"""
-        if isinstance(data, dict):
-            # Load from cell dictionary
-            for address, value in data.items():
-                self.set_cell_value(address, value)
-        elif isinstance(data, list):
-            # Load from list (rows)
-            for row_idx, row in enumerate(data):
-                for col_idx, value in enumerate(row):
-                    address = f"{chr(65 + col_idx)}{row_idx + 1}"
-                    self.set_cell_value(address, value)
 
     def move_cell(self, addrow, addcol):
         """Move the active cell within the worksheet"""
@@ -1815,98 +1659,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         if self.file_path and exists(dirname(self.file_path)):
             self.save_document()
         return self
-
-    def save_document(self, file_path=None):
-        """Save the current spreadsheet to a file"""
-        if file_path is None:
-            file_path = self.file_path
-
-        if file_path is None:
-            logma.warning("No file path specified for saving")
-            return self
-
-        # Determine file format from extension
-        file_ext = file_path.split(".")[-1].lower()
-
-        if file_ext in ["xlsx", "xls"]:
-            self.save_as_excel(file_path)
-        elif file_ext == "ods":
-            self.save_as_ods(file_path)
-        elif file_ext == "csv":
-            self.save_as_csv(file_path)
-        elif file_ext == "tsv":
-            self.save_as_tsv(file_path)
-        else:
-            logma.warning(f"Unsupported file format: {file_ext}")
-
-        return self
-
-    def save_as_excel(self, file_path):
-        """Save as Excel file (.xlsx)"""
-        try:
-            if self.document:
-                # Update document data from table
-                self.document.data = self.extract_table_data()
-                # Save using PyfficeMatrix
-                self.document.file_path = file_path
-                self.document.save_file()
-            else:
-                # Fallback: save using basic method
-                import openpyxl
-
-                wb = openpyxl.Workbook()
-                ws = wb.active
-                data = self.extract_table_data()
-                for row_idx, row_data in enumerate(data, start=1):
-                    for col_idx, cell_value in enumerate(row_data, start=1):
-                        ws.cell(row=row_idx, column=col_idx, value=cell_value)
-                wb.save(file_path)
-            logma.info(f"Saved Excel file: {file_path}")
-        except Exception as e:
-            logma.error(f"Error saving Excel file: {e}")
-        return self
-
-    def save_as_ods(self, file_path):
-        """Save as OpenDocument Spreadsheet (.ods)"""
-        try:
-            if self.document:
-                # Update document data from table
-                self.document.data = self.extract_table_data()
-                # Save using PyfficeMatrix
-                self.document.file_path = file_path
-                self.document.save_as_ods()
-            else:
-                logma.warning("ODS export requires PyfficeMatrix document")
-        except Exception as e:
-            logma.error(f"Error saving ODS file: {e}")
-        return self
-
-    def save_as_csv(self, file_path, delimiter=","):
-        """Save as CSV file"""
-        try:
-            import csv
-
-            data = self.extract_table_data()
-            with open(file_path, "w", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f, delimiter=delimiter)
-                writer.writerows(data)
-            logma.info(f"Saved CSV file: {file_path}")
-        except Exception as e:
-            logma.error(f"Error saving CSV file: {e}")
-        return self
-
-    def save_as_tsv(self, file_path):
-        """Save as TSV (Tab-Separated Values) file"""
-        return self.save_as_csv(file_path, delimiter="\t")
-
-    def save_file(self):
-        """Save spreadsheet to file"""
-        file_path, _ = pyqt.QFileDialog.getSaveFileName(
-            self, "Save Spreadsheet", "", "CSV Files (*.csv);;Excel Files (*.xlsx);;All Files (*)"
-        )
-
-        if file_path:
-            self.save_to_file(file_path)
 
     def save_to_file(self, file_path):
         """Save spreadsheet to file"""
