@@ -739,14 +739,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def open_file(self, file=None):
         """"""
-        if file is None:
-            file = self.file_path
-        # cfg = {"file_path": file}
-        # document = self.app.model.codex.init_script(cfg)
-        # document.load_document()
-        # self.set_document(document)
         try:
-            self.document.open_file(file)
+            self.set_file_path(file)
+            if file is not None:
+                self.document.open_file(file)
         except Exception as e:
             logma.warning(e)
             if debug:

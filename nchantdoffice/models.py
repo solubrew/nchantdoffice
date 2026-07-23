@@ -304,7 +304,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         document["policy"] = policy
         logma.info(f"Document {document}")
         logma.info(f"Widget {widget}")
-        match document["type"]:# need to refactor to remove the limitations of manually registering each
+        match document["type"]:  # need to refactor to remove the limitations of manually registering each
             case "add_browser_document_nchantdbrowser":
                 document["document_type"] = "browser"
                 syntax = "html"
@@ -362,7 +362,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 document["location"] = "internal"
             case _:
                 syntax = "plain-text"
-                document["document_type"] = "doc" #PUSH to 0.0.3 should be note but need to adjust all other document types
+                document["document_type"] = (
+                    "doc"  # PUSH to 0.0.3 should be note but need to adjust all other document types
+                )
         document["syntax"] = syntax
         self.store.store_app_media(document)
         page_n = 0
@@ -1916,7 +1918,7 @@ class NchantdOfficeStore(NchantdStore):
             [
                 document["did"],
                 document.get("compatibility", "pyffice"),
-                document["document_type"],
+                document["document_type"] if document["document_type"] != "note" else "doc",  # PUSH to 0.0.3
                 document["syntax"],
                 document["name"],
                 document.get("file_name", ""),
@@ -2026,7 +2028,9 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             tabsdata.sort_values(by=["position_int"], ascending=True, inplace=True)
             if not tabsdata.empty:
                 logma.info(f"[ BUILD TAB ]")
-                tabsdata = [self.convert_db_to_doc(tab) for tab in tabsdata.to_dict(orient="records") if tab is not None]
+                tabsdata = [
+                    self.convert_db_to_doc(tab) for tab in tabsdata.to_dict(orient="records") if tab is not None
+                ]
             else:
                 tabsdata = []
             self.tabset = tabset
@@ -2301,6 +2305,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         """"""
         super().set_focus()
         return self
+
     def _widget_current_url(self, widget):
         """Best-effort current URL for a browser tab widget (live view first,
         then the persisted document URL)."""
@@ -2319,6 +2324,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             return widget.get_active_url()
         except Exception:
             return None
+
 
 class NchantdOfficeSettingsModel(NchantdModel):
     """"""

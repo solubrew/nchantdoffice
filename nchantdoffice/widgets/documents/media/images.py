@@ -41,8 +41,10 @@ from nchantrs.widgets.annotations import NchantdLabel
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
+debug = True
 logma = Logma(__name__)
-
+if not log:
+    logma.off()
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "images.yaml")
 
@@ -718,12 +720,14 @@ class NchantdOfficeImage(NchantdOfficeDocument):
     def open_file(self, file=None):
         """"""
         logma.info(file)
-        # if self.file_path is None:
-        self.file_path = file
-        if file is None:
-            file = self.file_path
-        if file is not None:
-            self.document.open_file(file)
+        try:
+            self.set_file_path(file)
+            if file is not None:
+                self.document.open_file(file)
+        except Exception as e:
+            logma.warning(e)
+            if debug:
+                raise e
         self.document.set_location("external")
         self.populate_document()
         return self
