@@ -326,10 +326,7 @@ class NchantdRenamePane(NchantdPane):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
@@ -778,6 +775,10 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
         return self
 
+    def get_content(self):
+        """"""
+        return {"content": {"file_path": self.file_path}}
+
     def get_current_path(self):
         """"""
         return self.fs_tree.current_level_path
@@ -889,10 +890,25 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
-        #PUSH to 0.0.3
+        # PUSH to 0.0.3
         # self.toolbox_config[200]["items"] = self.init_drawer_tools_config()
         # self.toolbox_config[300]["items"] = self.init_drawer_storage_config()
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+
+    def open_file(self, file=None):
+        """"""
+        # TODO not sure this fits as the whole document is basically a file nav window
+        #  there is no real open of the file but we need to align the populate and config
+        logma.info(file)
+        # if self.file_path is None:
+        self.file_path = file
+        if file is None:
+            file = self.file_path
+        if file is not None:
+            self.document.open_file(file)
+        self.document.set_location("external")
+        self.populate_document()
+        return self
 
     def populate_document(self):
         """"""
@@ -931,27 +947,28 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
     def save(self):
         """"""
         logma.info(f"Saving document")
-        if self.document.location is None:
-            self.document.set_location("external")
-        if self.document.location == "external":
-            content = self.document.content
-            if content is None:
-                content = {}
-            if isinstance(content, dict):
-                content["file_path"] = self.document.file_path
-            logma.info(f"File Path {self.document.file_path}")
-            logma.info(f"DID {self.document.did}")
-        elif self.document.location == "internal":
-            content = self.get_binary()
-        else:
-            raise Exception(f"Unknown storage location {self.document.location}")
-        logma.info(f"Location {self.document.location}")
-        logma.info(f"Content {content}")
-        logma.info(f"Content {self.document.content}")
-        if content != self.document.content:
-            self.document.set_content(content)
-            logma.info(f"Content {self.document.content}")
-        logma.info(f"Document {self.document.to_dict()}")
+        # TODO test and refactor
+        # if self.document.location is None:
+        #     self.document.set_location("external")
+        # if self.document.location == "external":
+        #     content = self.document.content
+        #     if content is None:
+        #         content = {}
+        #     if isinstance(content, dict):
+        #         content["file_path"] = self.document.file_path
+        #     logma.info(f"File Path {self.document.file_path}")
+        #     logma.info(f"DID {self.document.did}")
+        # elif self.document.location == "internal":
+        #     content = self.get_binary()
+        # else:
+        #     raise Exception(f"Unknown storage location {self.document.location}")
+        # logma.info(f"Location {self.document.location}")
+        # logma.info(f"Content {content}")
+        # logma.info(f"Content {self.document.content}")
+        # if content != self.document.content:
+        #     self.document.set_content(content)
+        #     logma.info(f"Content {self.document.content}")
+        # logma.info(f"Document {self.document.to_dict()}")
         super().save()
         return self
 

@@ -612,7 +612,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
 
     def get_content(self):
         """"""
-        return {}
+        return {"content": {"file_path": self.file_path}}
 
     def get_event_datetime_select_value(self):
         """"""
