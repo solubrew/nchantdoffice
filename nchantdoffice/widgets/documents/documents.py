@@ -320,8 +320,9 @@ class NchantdOfficeDocumentMixin:
             400: {"action": "cancel", "handler": self.cmd_delete_tab},
             1000: {"action": "show_pane_right", "handler": self.cmd_show_pane_right},
         }
-        buttons = kahndor.Instruct(self.config.dikt.get("buttons", {})).override(cfg.get("buttons", {})).dikt
-        buttons.update(_buttons)
+        buttons = (
+            kahndor.Instruct(self.config.get("buttons", {})).override(_buttons).override(cfg.get("buttons", {})).dikt
+        )
         if self.has_pro:  # TODO replace with profile switcher/other pro features based on document type
             cfg = {
                 "label": "Profile",
@@ -756,10 +757,9 @@ class NchantdOfficeDocumentManager(NchantdOfficeDocumentMixin, NchantdManager):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentManager"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config = (
+            kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentManager").override(parent.config).override(cfg)
+        )
         self.name = "NchantdOfficeDocumentManager"
 
     def initModel(self, cfg=None):

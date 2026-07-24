@@ -133,6 +133,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """"""
         buttons = self.browser.build_toolbar()
         self.browser.url_select_entry.config.dikt["handler"] = self.cmd_goto_page
+
         buttons[17] = {"action": "web_page_pin", "handler": self.cmd_pin_page, "value": self.cmd_check_is_pinned}
         buttons[100] = "_skip"
         buttons[150] = "_skip"
@@ -1258,8 +1259,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
 
     def initView(self, cfg=None):
         """"""
-        if cfg is None:
-            cfg = {}
+        cfg = cfg or {}
         self.browser = NchantdOfficeWebViewer(self, {"url": self.active_url})
         self.browser.is_simple = False
         # cfg["buttons"] = self.build_toolbar()

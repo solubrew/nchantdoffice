@@ -126,6 +126,18 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         #     "handler": self.cmd_start_kernel,
         # }  # NOTE consolidate to only restart
         # cfg["buttons"][15] = {"action": "interrupt_kernel", "handler": self.cmd_interrupt_kernel}
+        cfg["buttons"][14] = {
+            "name": "select_url",
+            "label": "URL",
+            "layout": "horizontal",
+            "size": [30, 30],
+            "combobox": {"size": [500, 30], "options": self.get_url_history()},
+            "type": "dropdown",
+            "handler": self.cmd_goto_page,
+            "value": self.get_current_url(),
+        }
+        self.url_select_entry = NchantdDropDown(self, cfg["buttons"][14])
+        cfg["buttons"][14]["widget"] = self.url_select_entry
         cfg["buttons"][17] = {"action": "web_page_pin", "handler": self.cmd_pin_page, "value": self.cmd_check_is_pinned}
         cfg["buttons"][49] = "_insert_stretch"
         cfg["fill"] = True
@@ -167,6 +179,15 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.initModel()
         self.initView()
         return self
+
+    def get_url_history(self):
+        """"""
+
+    def get_current_url(self):
+        """"""
+
+    def cmd_goto_page(self):
+        """"""
 
     def add_cell(self, cell):
         """Append a cell to the notebook.
@@ -617,7 +638,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def get_content(self):
         """"""
-        return {}
+        return {"content": {"file_path": self.file_path}}
 
     def inspect_object(self, code, cursor_pos, detail_level=0):
         """Get object inspection/documentation
@@ -849,10 +870,15 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def open_file(self, file=None):
         """"""
-        if file is None:
-            file = self.file_path
-        if file is not None:
-            self.document.open_file(file)
+        logma.info(file)
+        try:
+            self.set_file_path(file)
+            if file is not None:
+                self.document.open_file(file)
+        except Exception as e:
+            logma.warning(e)
+            if debug:
+                raise e
         self.document.set_location("external")
         self.populate_document()
         return self

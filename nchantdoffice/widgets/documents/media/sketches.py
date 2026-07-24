@@ -1013,6 +1013,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
                 15: {"action": "insert_object", "handler": self.cmd_insert_object},
                 16: {"action": "fill_color", "handler": self.cmd_fill_color},
                 49: "_insert_stretch",
+                100: "_skip",  # PUSH to 0.0.3 FileSystem not compatible to any outside protocol
             }
         }
         super().initView(cfg)
@@ -1428,10 +1429,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             }
             content["shapes"].append(shape_dict)
         if self.canvas:
-            content["canvas_size"] = {
-                "width": self.canvas.width(),
-                "height": self.canvas.height()
-            }
+            content["canvas_size"] = {"width": self.canvas.width(), "height": self.canvas.height()}
         return content
 
     def get_active_layer(self):

@@ -572,6 +572,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             12: {"action": "set_root", "handler": self.cmd_set_root},
             # add flatten option with a depth control to show all files flattened to a specific depth
             49: "_insert_stretch",
+            100: "_skip",  # PUSH to 0.0.3 Sketch not compatible to any outside protocol
         }
         ffes_cfg = {"handler": self.cmd_on_file_search_method_change, "action": "select_file_method"}
         self.flatten_files_enable_spin = NchantdEnableSpinBox(self, ffes_cfg)
