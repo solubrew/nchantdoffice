@@ -85,7 +85,6 @@ class NchantdOfficeNodeEditPane(NchantdPane):
                 },
                 5: {"action": "delete_node", "type": "", "handler": self.cmd_delete_node},
             },
-            "size": ["auto", 30],
         }
         self.node_buttonbar = NchantdButtonBar(self, cfg).initWidget()
         layout.addWidget(self.node_buttonbar)
@@ -115,7 +114,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         # cfg = {"data": self.tags}
         # self.tags_list = NchantdList(self, cfg).initWidget()
         # layout.addWidget(self.tags_list)
-        group.set_height(layout.sizeHint().height() * 1.2)
+        # group.set_height(layout.sizeHint().height() * 1.2)
         self.layout.addWidget(group)
 
     def initWidget(self):
@@ -177,37 +176,37 @@ class NchantdOfficeNodeEditPane(NchantdPane):
 
     def cmd_set_text_bold(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_italic(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_underline(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_underline_double(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_strike(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_subscript(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_superscript(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_sort_children(self, event=None, *args, **kwargs):
@@ -218,7 +217,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
 
     def cmd_take_snapshot(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def get_node(self):
@@ -332,22 +331,22 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def cmd_set_text_bold(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_italic(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_underline(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_underline_double(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_strike(self):
@@ -356,12 +355,12 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def cmd_set_text_subscript(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_superscript(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def get_tab(self):
@@ -371,12 +370,12 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def cmd_take_snapshot(self, event=None, *args, **kwargs):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_toggle_page_lock(self, event=None, *args, **kwargs):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def decode64(self):
@@ -405,7 +404,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         need some way of scalling the hashses so that the image is recognized at all scales
         also use the color palette
         """
-        #TODO implement method
+        # TODO implement method
         return self
 
     def get_note(self, note_id):
@@ -415,7 +414,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def get_notes(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def get_tags(self):
@@ -515,11 +514,11 @@ class NchantdOfficeTabEditPane(NchantdPane):
                 2: {"action": "export_document", "type": "", "handler": self.cmd_export_document},
                 # 3: {"action": "create_dataset", "type": "", "handler": self.cmd_create_dataset},
                 4: {"action": "take_snapshot", "handler": self.cmd_take_snapshot},
-                5: {
-                    "action": "unlock_view",
-                    "handler": self.lock_page,
-                    "checked": {"action": "lock_view", "handler": self.cmd_toggle_page_lock},
-                },
+                # 5: {
+                #     "action": "unlock_view",
+                #     "handler": self.lock_page,
+                #     "checked": {"action": "lock_view", "handler": self.cmd_toggle_page_lock},
+                # },
                 6: {"action": "delete_tab", "type": "", "handler": self.cmd_delete_tab},
             },
         }
@@ -536,7 +535,10 @@ class NchantdOfficeTabEditPane(NchantdPane):
         cfg = {"label": "Tab Position: ", "value": tab.position}
         self.position_entry = NchantdLabeledSpinBox(self, cfg).initWidget()
         layout.addWidget(self.position_entry)
-
+        location = "external"  # tab.location TODO define location
+        cfg = {"text": f"Document Location: {location}"}
+        self.location_label = NchantdLabel(self, cfg).initWidget()
+        layout.addWidget(self.location_label)
         cfg = {"text": f"Tab Type: {tab.type}"}
         self.type_label = NchantdLabel(self, cfg).initWidget()
         layout.addWidget(self.type_label)
@@ -561,7 +563,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
         # cfg = {"data": self.tags, "columns": ["Tags"]}
         # self.tags_list = NchantdList(self, cfg).initWidget()
         # layout.addWidget(self.tags_list)
-        group.set_height(layout.sizeHint().height() * 1.2)
+        # group.set_height(layout.sizeHint().height() * 1.2)
         self.layout.addWidget(group)
 
     def initWidget(self):
@@ -589,12 +591,12 @@ class NchantdOfficeTabEditPane(NchantdPane):
 
     def cmd_duplicate_document(self, event=None, *args, **kwargs):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_export_document(self, event=None, *args, **kwargs):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_import_file(self, event=None, *args, **kwargs):
@@ -626,42 +628,42 @@ class NchantdOfficeTabEditPane(NchantdPane):
 
     def cmd_set_text_bold(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_italic(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_underline(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_underline_double(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_strike(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_subscript(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_set_text_superscript(self):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_take_snapshot(self, event=None, *args, **kwargs):
         """"""
-        #TODO implement method
+        # TODO implement method
         return self
 
     def cmd_toggle_page_lock(self, event=None, *args, **kwargs):
@@ -676,7 +678,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
         need some way of scalling the hashses so that the image is recognized at all scales
         also use the color palette
         """
-        #TODO implement method
+        # TODO implement method
         return self
 
     def get_notes(self):
