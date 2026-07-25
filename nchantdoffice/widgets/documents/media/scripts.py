@@ -24,6 +24,8 @@ from pygments.lexers import JsonLexer, YamlLexer, CssLexer, IniLexer
 from pygments.lexers.c_cpp import CppLexer
 from pygments.lexers.dotnet import CSharpLexer
 from pygments.lexers.ruby import RubyLexer
+from pygments.lexers.r import SLexer as RLexer
+from pygments.lexers.shell import BashLexer
 from pygments.formatters import HtmlFormatter
 
 # ======================================Solutions Brewer Library Modules==============================================||
@@ -372,7 +374,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
     def get_content(self):
         """"""
-        self.document.syntax = "html"  # TODO need to use the selector from toolbar
+        # self.document.syntax = "html"  # TODO need to use the selector from toolbar
         if self.document.syntax == "html":
             html = """
             <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
@@ -788,7 +790,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         logma.info(f"Syntax {self.document.syntax}")
         theme = "monokai"
         formatter = HtmlFormatter(style=theme, full=True, noclasses=True)
-        self.document.syntax = "html"  # NOTE debug
         if self.document.syntax == "markdown":
             self.document_editor.setMarkdown(text)
             return self
@@ -874,6 +875,12 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             return self
         elif self.document.syntax == "r":
             text = highlight(text, RLexer(), formatter)
+            text = Sanitized(text).sanitize_html()
+            self.document_editor.setHtml(text)
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
+            return self
+        elif self.document.syntax == "bash":
+            text = highlight(text, BashLexer(), formatter)
             text = Sanitized(text).sanitize_html()
             self.document_editor.setHtml(text)
             self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
