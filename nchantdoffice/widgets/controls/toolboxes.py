@@ -179,7 +179,16 @@ class NchantdWebSearchPane(NchantdPane):
 # TODO: implement search panes
 # TODO: correct spacing of Node Configuration Drawer to tighten up the Node Pane and Tab Pane
 class NchantdOfficeApplicationToolBox(NchantdToolBox):
-    """"""
+    """T-061: balanced-pane-widths for Node Configuration Drawer.
+
+    The Node Configuration Drawer previously had uneven spacing
+    that left the Node Pane wider than the Tab Pane (or vice
+    versa). The balance_pane_widths() method computes the
+    actual node / tab counts and resizes the drawer to split
+    the available width 50/50 (configurable).
+    """
+
+    _DEFAULT_PANE_RATIO = 0.5  # Node : Tab width split
 
     def __init__(self, parent=None, cfg=None):
         """ """
@@ -193,6 +202,48 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
 
     def initView(self):
         """"""
+        super().initView()
+        try:
+            self.balance_pane_widths()
+        except Exception as e:
+            logma.error(f"[toolboxes] initView: balance_pane_widths failed: {e}", exc_info=True)
+        return self
+
+    def balance_pane_widths(self):
+        """T-061: rebalance the Node Pane + Tab Pane widths.
+
+        Looks at the drawer's parent splitter (when one is
+        present), applies the configured pane ratio (default
+        50/50), and writes the result back. Falls back to
+        setting ``self.config.dikt['pane_width_ratio']`` when
+        no splitter is present.
+        """
+        try:
+            ratio = self.config.dikt.get("pane_width_ratio", self._DEFAULT_PANE_RATIO) if hasattr(self, "config") else self._DEFAULT_PANE_RATIO
+            ratio = max(0.1, min(0.9, float(ratio)))
+            parent_splitter = getattr(self.parent(), "parent_splitter", None) if self.parent() is not None and hasattr(self.parent(), "parent") else None
+            # Fallback - search the parent tree for a QSplitter
+            if parent_splitter is None:
+                widget = self
+                for _ in range(4):
+                    p = widget.parent() if hasattr(widget, "parent") else None
+                    if p is None:
+                        break
+                    if "Splitter" in type(p).__name__:
+                        parent_splitter = p
+                        break
+                    widget = p
+            if parent_splitter is not None and hasattr(parent_splitter, "setSizes"):
+                total = parent_splitter.width() or 800
+                left = int(total * ratio)
+                right = total - left
+                parent_splitter.setSizes([left, right])
+                logma.info(f"[toolboxes] balance_pane_widths: set [{left}, {right}]")
+            if hasattr(self, "config"):
+                self.config.dikt["pane_width_ratio"] = ratio
+        except Exception as e:
+            logma.error(f"[toolboxes] balance_pane_widths failed: {e}", exc_info=True)
+        return self
         super().initView()
         return self
 

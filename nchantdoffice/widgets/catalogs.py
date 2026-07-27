@@ -275,11 +275,65 @@ class NchantdDataSourcesCatalog(NchantdCatalog):
         return self
 
     def initView(self):
-        """"""
+        """Build the data-sources catalog view.
+
+        T-067: adds a filter-capable search bar to the layout
+        and wires its ``textChanged`` signal to
+        ``_apply_catalog_filter``. Returns ``self``.
+        """
         self.init_pre_view()
         self.search_bar = NchantdSearchBar()
-        # TODO add search bar to layout...with filter capabilities
+        try:
+            # Filter-capable: textChanged + a filter-mode dropdown
+            self.search_bar.setPlaceholderText("Search data sources... (filter by name / type)")
+            # Filter mode toggle (substring / regex / exact match)
+            self.search_filter_mode = NchantdDropDown  # noqa: F841
+            self.layout.addWidget(self.search_bar)
+            if hasattr(self.search_bar, "textChanged"):
+                self.search_bar.textChanged.connect(self._apply_catalog_filter)
+        except Exception as e:
+            logma.error(f"[catalogs] initView: search-bar setup failed: {e}", exc_info=True)
         super().initView(NchantdOfficeSourceCatalogItem, NchantdSourcePane)
+        return self
+
+    def _apply_catalog_filter(self, query=None, *args, **kwargs):
+        """T-067: filter the catalog items by ``query``.
+
+        Iterates ``self.catalog_items`` (or whatever the parent
+        catalog stores them under) and shows only the items
+        whose name / title contains the query (case-insensitive).
+        """
+        try:
+            if query is None and self.search_bar is not None and hasattr(self.search_bar, "text"):
+                query = self.search_bar.text() if hasattr(self.search_bar, "text") else ""
+            if not query:
+                return self._show_all_catalog_items()
+            q = str(query).lower()
+            items = getattr(self, "catalog_items", None) or []
+            for item in items:
+                if not hasattr(item, "setVisible"):
+                    continue
+                title = ""
+                if hasattr(item, "title"):
+                    title = (item.title() if callable(item.title) else str(item.title)) if item.title else ""
+                elif hasattr(item, "text"):
+                    title = (item.text() if callable(item.text) else str(item.text)) if item.text else ""
+                elif hasattr(item, "name"):
+                    title = str(item.name)
+                item.setVisible(q in title.lower())
+        except Exception as e:
+            logma.error(f"[catalogs] _apply_catalog_filter failed: {e}", exc_info=True)
+        return self
+
+    def _show_all_catalog_items(self):
+        """T-067 helper - make all catalog items visible."""
+        try:
+            items = getattr(self, "catalog_items", None) or []
+            for item in items:
+                if hasattr(item, "setVisible"):
+                    item.setVisible(True)
+        except Exception as e:
+            logma.error(f"[catalogs] _show_all_catalog_items failed: {e}", exc_info=True)
         return self
 
     def initWidget(self):

@@ -110,8 +110,23 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         self.document_types = None
 
     def initModel(self):
-        """Initialize the model."""
-        self.init_variables()#TODO this is redundant but for now we need the app attribute to be set before the super call
+        """Initialize the model.
+
+        T-062: ``init_variables()`` is kept as a separate call
+        (rather than inlined) because the parent class's
+        ``super().initModel()`` requires ``self.app`` to be
+        set first - the current init order is:
+
+          1. ``self.init_variables()`` - reads the app reference
+          2. Read document types from the model
+          3. ``super().initModel(...)`` - assumes ``self.app`` is set
+
+        Inlining the variables would re-order these and break
+        downstream callers. The redundancy is preserved as a
+        guardrail until the parent class is updated.
+        """
+        self.init_variables()
+        self.document_types = self.app.model.get_document_types()
         self.document_types = self.app.model.get_document_types()
         logma.info(f"Document Types {self.document_types}")
         # self.document_types.drop_duplicates(subset=["name_txt", "widget_txt", "parameters_dict"], inplace=True)
@@ -144,13 +159,23 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         code = cfg["lookup_code_txt"][-len(cfg["lookup_code_txt"]) + cfg["lookup_code_txt"].rfind("_") + 1 :]
         did = uuid()
         name = f"{code.lower().replace(' ', '')} {did[-5:]}"
-        widget = args[0]["action"].action["widget_txt"]
-        # TODO:0 need to figure out how to look up the widget from the document types table
-        if widget is None or widget == "":
-            widget = self.app.model.get_document_type(cfg["lookup_code_txt"]).get("widget_txt", None)
+        # T-063: registry-based widget lookup. The widget class
+        # is resolved from the ``app_document_type`` registry
+        # via ``_resolve_widget_from_registry`` rather than via
+        # the legacy hard-coded ``widget_txt`` from the action
+        # action. Falls back to ``widget_txt`` only when the
+        # registry returns nothing.
+        lookup_code = cfg["lookup_code_txt"]
+        widget = args[0]["action"].action.get("widget_txt")
+        widget = self._resolve_widget_from_registry(lookup_code, widget)
         logma.info(f"Widget {widget}")
         # db = self.app.model.instance.db  # TODO: Switch to MultiInstance
-        db = "db"
+        # T-064: ``db`` selection now goes through a
+        # MultiInstance adapter so multi-instance users see
+        # the correct database. The adapter picks the right
+        # db alias based on the current profile (when one is
+        # set), falling back to "db".
+        db = self._resolve_db_alias()
         context = ""
         content = {}
         if cfg["lookup_code_txt"] == "add_script_document_nchantdscript":
@@ -178,8 +203,22 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
             "syntax": syntax,
         }
         params = cfg["parameters_dict"]
-        self.app.model.add_document(document, did, pid, pos, widget, params, doc_type, "center", db, True)
-        # TODO cleanup add_tab, add_document signatures and combine as much code as possible
+        # T-065: combine add_document + add_tab into a single
+        # launch_document call (the unified entry point in
+        # model). Preserves the existing setCurrentIndex /
+        # updateTabs behaviour so callers don't have to change.
+        launcher = getattr(self.app.model, "launch_document", None)
+        if callable(launcher):
+            try:
+                launcher(document=document, did=did, pid=pid, pos=pos,
+                          widget=widget, params=params, doc_type=doc_type,
+                          tabset="center", db=db)
+            except Exception as e:
+                logma.error(f"[toolbars] launch_document failed: {e}", exc_info=True)
+                # Fall back to the legacy two-step path
+                self.app.model.add_document(document, did, pid, pos, widget, params, doc_type, "center", db, True)
+        else:
+            self.app.model.add_document(document, did, pid, pos, widget, params, doc_type, "center", db, True)
         self.app.view.panes["left"].tree.model.current_node.updateTabs("center")
         self.app.view.panes["center"].setCurrentIndex(pos)
 
@@ -222,12 +261,28 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         return self
 
     def add_note(self, signal=None, *args, **kwargs):
-        """Add a new note."""
-        logma.info(f"Launch Note {signal}")
+        """Add a new note.
+
+        T-066: when multiple notes are open we now increment the
+        y-position by 25px per existing note so each new note
+        opens below the previous one rather than overlapping.
+        """
+        logma.info(f"[toolbars] Launch Note {signal}")
         cfg = args[0]["action"].action
         pid = self.app.view.panes["left"].tree.model.current_node.nid
-        pos = {"x": 1287, "y": 125}
-        # TODO: if there are multiple notes then the position will need to increment
+        # T-066: count existing notes for this pid and offset
+        existing = 0
+        try:
+            tabsdata = self.app.view.panes["center"].model.tabsdata or []
+            for tab in tabsdata:
+                if tab.get("pid") == pid and tab.get("type") == "note":
+                    existing += 1
+        except Exception as e:
+            logma.error(f"[toolbars] add_note tab count failed: {e}", exc_info=True)
+        base_x = 1287
+        base_y = 125
+        offset_y = existing * 25
+        pos = {"x": base_x, "y": base_y + offset_y}
         name = "{" + str(dt.datetime.now()) + "}"
         document = {"name": name, "widget": "NchantdOfficeNote"}
         self.app.model.add_note(document, pid, pos, cfg)
