@@ -739,47 +739,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """"""
 
     def convert_db_to_journal(self, document_):
-        """"""
-        document = {}
-        document["data"] = decode64(document_["content_enc64_txt"])
-        logma.info(f"Content {document}")
-        try:
-            document["data"] = j.loads(document["data"])
-        except Exception:
-            pass
-        logma.info(f"Document_ {document_}")
-        logma.info(f"Document {document}")
-        document["did"] = document_["did"]
-        document["name"] = document_["name_txt"]
-        document["path"] = document_["path_txt"]
-        document["filename"] = document_["filename_txt"]
-        document["syntax"] = document_["syntax_txt"]
-        # document["position"] = document_["position_int"]
-        # document["document_type"] = document_["document_type_txt"]
-        # document["readonly"] = document_["readonly_bit"]
-        # document["editable"] = document_["editable_bit"]
-        # document["visible"] = document_["visible_bit"]
-        # document["moveable"] = document_["moveable_bit"]
-        # document["tid"] = document_["tid_txt"]
-        # document["pid"] = document_["pid_txt"]
-        # document["widget"] = document_["widget_txt"]
-        # document["widgdata"] = document_["widgdata_dict"]
-        document["compatibility"] = document_.get("compatibility_txt", "pyffice")
-        document["version"] = document_.get("content_version_int", 0)
-        # document["tab_type"] = document_.get("tab_type_txt", "custom_widget")
-        document["document_type"] = document_.get("document_type_txt", None)
-        document["location"] = document_.get("store_location_txt", None)
-        document["encoding"] = document_.get("encoding_txt", None)
-        document["tags"] = document_.get("tags_dict", None)
-        document["hash"] = document_.get("hash_txt", None)
-        document["meta_data"] = self.convert_encoding(document_.get("meta_data_enc64_dict", None))
-        document["policy_FK"] = document_.get("policy_FK", None)
-        document["page"] = document_["page_int"]
-        document["entry"] = document_["entry_int"]
-        document["content_version"] = document_["content_version_int"]
-        document["content_hash"] = document_["content_hash_txt"]
-        document["content"] = self.convert_encoding(document_["content_enc64_txt"])
-        return document
+        """Convert a DB row to a journal document. Delegates to the free function."""
+        return _convert_db_to_journal(document_, convert_encoding=self.convert_encoding)
 
     def convert_encoding(self, entry):
         """"""
@@ -790,24 +751,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return entry
 
     def create_doc_media(self, document):
-        """"""
-        tags = ",".join(document.tags)
-        hash_ = text_hashing_function(j.dumps(document.content))
-        payload = [
-            document.id,
-            document.type,
-            document.file_name,
-            document.description,
-            document.path,
-            document.location,
-            document.encoding,
-            tags,
-            document.context,
-            document.version,
-            hash_,
-            document.policy_fk,
-        ]
-        self.store.store_doc_media(payload)
+        """Build payload from document and dispatch to store. Delegates to the free function."""
+        _build_doc_media_payload(document)
+        self.store.store_doc_media(_build_doc_media_payload(document))
         self.create_doc_media_content()
         self.has_changed = True
         return self
@@ -1849,22 +1795,8 @@ class NchantdOfficeStore(NchantdStore):
         return self.get_table(table, cfg, db)
 
     def store_app_instance(self, instance, db="db"):
-        """"""
-
-        payload = [
-            [
-                instance.get("instance_id_txt"),
-                instance.get("name_txt", "db"),
-                instance.get("description_ltxt", ""),
-                instance.get("is_primary_bit", 1),
-                instance.get("application_NCD_txt", ""),
-                instance.get("application_path_txt", ""),
-                instance.get("instance_path_txt", ""),
-                instance.get("version_txt", ""),
-                instance.get("meta_data_dict", "{}"),
-            ]
-        ]
-        self._store("app_instance", payload, db)
+        """Build payload from instance dict and dispatch. Delegates to the free function."""
+        self._store("app_instance", [_build_app_instance_payload(instance)], db)
 
     def store_doc_media(self, document, db="db", how="INSERT"):
         """
@@ -1937,21 +1869,24 @@ class NchantdOfficeStore(NchantdStore):
         self._store(table, payload, db)
         return document["did"]
 
+    # Payload strategy: INSERT/UPDATE/DEACTIVATE/DELETE/ARCHIVE produce
+    # different payload initial states. Dispatch via dict so adding a new
+    # operation means registering an entry rather than editing the chain.
+    _DOC_MEDIA_PAYLOAD_INIT = {
+        "INSERT": list,
+        "UPDATE": lambda: [{}],
+        "DEACTIVATE": list,
+        "DELETE": list,
+        "ARCHIVE": list,
+    }
+
     def store_doc_media_content(self, content, db="db", how="INSERT"):
         """"""
         table = "doc_media_content"
-        if how == "INSERT":
-            payload = []
-        elif how == "UPDATE":
-            payload = [{}]
-        elif how == "DEACTIVATE":
-            payload = []
-        elif how == "DELETE":
-            payload = []
-        elif how == "ARCHIVE":
-            payload = []
-        else:
+        payload_factory = self._DOC_MEDIA_PAYLOAD_INIT.get(how)
+        if payload_factory is None:
             raise Exception(f"{how} is not supported.")
+        payload = payload_factory()
         payload = [
             [
                 content["uuid"],
