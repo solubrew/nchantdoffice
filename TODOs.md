@@ -1,5 +1,13 @@
 # TODOs
 
+## NEW TODOs 
+  ### need integration into plan
+- replace tab creation name with tab icon used for that document type and the generated 5 digit or user entered name
+- 
+
+
+
+
 > Reconsolidated against `68365d2` (HEAD of `nchantdoffice/gamma`, 2026-07-27).
 > Last full audit: **81.42%** (was 73.93% at sprint start, +7.49 points).
 > Regenerate with: `grep -rn 'TODO:' nchantdoffice/ --include='*.py' | grep -v 'implement method' | grep -v 'invoked (stub)'`
