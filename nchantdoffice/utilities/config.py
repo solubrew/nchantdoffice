@@ -90,9 +90,12 @@ class NchantdOfficeBrowserConfig(PyfficeConfig):
         super().__init__(cfg, parent)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeBrowserConfig").override(cfg))
         self.home_page = self.config.get("home_page", "https://www.nchantdoffice.com")
+        logma.info(f"[config] NchantdOfficeBrowserConfig.__init__: home_page={self.home_page!r}")
 
     def get_home_page(self):
         """"""
+        logma.info(f"[config] NchantdOfficeBrowserConfig.get_home_page: returning {getattr(self, 'home_page', None)!r}")
+        return getattr(self, "home_page", None)
 
 
 class PyfficeApplicationConfig(PyfficeConfig):
@@ -101,7 +104,11 @@ class PyfficeApplicationConfig(PyfficeConfig):
     def __init__(self, cfg=None, parent=None):
         """"""
         super().__init__(cfg, parent)
-        self.app = self.parent.app
+        try:
+            self.app = self.parent.app
+        except Exception as e:
+            logma.warning(f"[config] PyfficeApplicationConfig.__init__: parent has no app ({e}) - app=None")
+            self.app = None
         self.config.override(kahndor.Instruct(pxcfg).select("PyfficeApplicationConfig").override(cfg))
         self.account_settings = {}
         self.interface_settings = {}
@@ -109,18 +116,27 @@ class PyfficeApplicationConfig(PyfficeConfig):
         self.security_settings = {}
         self.storage_settings = {}
         self.theme_settings = {}
+        logma.info("[config] PyfficeApplicationConfig.__init__: section dicts initialised")
 
     def load_document(self, document=None):
         """"""
-        if document is None:
-            document = self.config.dikt.get("document", {})
+        logma.info(f"[config] PyfficeApplicationConfig.load_document: document_provided={document is not None}")
+        try:
             if document is None:
-                document = {}
-        super().load_document(document)
+                document = self.config.dikt.get("document", {})
+                if document is None:
+                    logma.warning("[config] PyfficeApplicationConfig.load_document: config.dikt['document'] is None - using empty dict")
+                    document = {}
+            super().load_document(document)
+            logma.info("[config] PyfficeApplicationConfig.load_document: super().load_document complete")
+        except Exception as e:
+            logma.error(f"[config] PyfficeApplicationConfig.load_document failed: {e}", exc_info=True)
+            raise
         return self
 
     def set_settings_journal(self, settings):
         """"""
+        logma.info("[config] PyfficeApplicationConfig.set_settings_journal: enabling all journal flags")
         self.today_tabled_enable = True
         self.daily_headlines_enable = True
         self.weekly_weather_enable = True
@@ -131,10 +147,12 @@ class PyfficeApplicationConfig(PyfficeConfig):
         self.insert_date_per_focus = True
         self.allow_edit_entry = True
         self.allow_reedit_entry = True
+        logma.debug(f"[config] set_settings_journal: applied settings={settings!r}")
         return self
 
     def to_dict(self):
         """"""
+        logma.debug("[config] PyfficeApplicationConfig.to_dict: serialising all settings sections")
         doc = super().to_dict()
         doc["data"] = {
             "content": {

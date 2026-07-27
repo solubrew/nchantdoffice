@@ -55,80 +55,103 @@ class NchantdOfficeApplicationTree(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationTree").override(cfg))
-        self.tree = None
-        self.image = None
-        # Setup drag-drop
-        self._setup_drag_drop()
+        logma.info(f"[trees] NchantdOfficeApplicationTree.__init__ parent={type(parent).__name__ if parent else None}")
+        try:
+            super().__init__(parent, cfg)
+            self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationTree").override(cfg))
+            self.tree = None
+            self.image = None
+            # Setup drag-drop
+            self._setup_drag_drop()
+        except Exception as e:
+            logma.error(f"[trees] NchantdOfficeApplicationTree.__init__ failed: {e}", exc_info=True)
+            raise
 
     def _setup_drag_drop(self):
         """Setup tree drag and drop"""
+        logma.debug("[trees] _setup_drag_drop: delegated to underlying NchantdApplicationTree")
         pass  # Handled by underlying NchantdApplicationTree
 
     def initModel(self):
         """"""
-        super().initModel()
+        logma.info("[trees] initModel")
+        try:
+            super().initModel()
+        except Exception as e:
+            logma.error(f"[trees] initModel failed: {e}", exc_info=True)
+            raise
         return self
 
     def initView(self):
         """"""
-        super().initView()
-        cfg = {"node_widget": NchantdOfficeTreeNode}
-        self.tree = NchantdApplicationTree(self.parent, cfg).initWidget()
+        logma.info("[trees] initView")
+        try:
+            super().initView()
+            cfg = {"node_widget": NchantdOfficeTreeNode}
+            self.tree = NchantdApplicationTree(self.parent, cfg).initWidget()
+            logma.debug("[trees] initView: NchantdApplicationTree built")
 
-        # Ensure the tree maintains selection highlight when not focused
-        if hasattr(self.tree, "setSelectionMode"):
-            self.tree.setSelectionMode(pyqt.QAbstractItemView.SingleSelection)
-        if hasattr(self.tree, "setSelectionBehavior"):
-            self.tree.setSelectionBehavior(pyqt.QAbstractItemView.SelectRows)
+            # Ensure the tree maintains selection highlight when not focused
+            if hasattr(self.tree, "setSelectionMode"):
+                self.tree.setSelectionMode(pyqt.QAbstractItemView.SingleSelection)
+            if hasattr(self.tree, "setSelectionBehavior"):
+                self.tree.setSelectionBehavior(pyqt.QAbstractItemView.SelectRows)
 
-        # Connect tree selection to emit document_selected signal
-        if hasattr(self.tree, 'selectionModel'):
-            self.tree.selectionModel().selectionChanged.connect(self._on_tree_selection_changed)
+            # Connect tree selection to emit document_selected signal
+            if hasattr(self.tree, 'selectionModel'):
+                self.tree.selectionModel().selectionChanged.connect(self._on_tree_selection_changed)
 
-        # Setup drag on tree
-        if hasattr(self.tree, "setDragEnabled"):
-            self.tree.setDragEnabled(True)
-        if hasattr(self.tree, "setAcceptDrops"):
-            self.tree.setAcceptDrops(True)
-        if hasattr(self.tree, "setDragDropMode"):
-            self.tree.setDragDropMode(pyqt.QAbstractItemView.DragDrop)
-        if hasattr(self.tree, "setDefaultDropAction"):
-            self.tree.setDefaultDropAction(pyqt.Qt.MoveAction)
+            # Setup drag on tree
+            if hasattr(self.tree, "setDragEnabled"):
+                self.tree.setDragEnabled(True)
+            if hasattr(self.tree, "setAcceptDrops"):
+                self.tree.setAcceptDrops(True)
+            if hasattr(self.tree, "setDragDropMode"):
+                self.tree.setDragDropMode(pyqt.QAbstractItemView.DragDrop)
+            if hasattr(self.tree, "setDefaultDropAction"):
+                self.tree.setDefaultDropAction(pyqt.Qt.MoveAction)
 
-        self.layout.addWidget(self.tree)
-        cfg = {
-            "size": [250, 200],
-            "path": join(self.app.view.themes_path, "_data_", "icons", "midnight_icons", "midnight-mist-headshot.svg"),
-        }
-        self.image = NchantdImage(self, cfg).initWidget()
-        self.image.label.setFrameStyle(0)
-        self.image.label.setStyleSheet("border: 0px;")
-        self.layout.addWidget(self.image)
-        self.layout.setAlignment(pyqt.Qt.AlignTop)
+            self.layout.addWidget(self.tree)
+            cfg = {
+                "size": [250, 200],
+                "path": join(self.app.view.themes_path, "_data_", "icons", "midnight_icons", "midnight-mist-headshot.svg"),
+            }
+            self.image = NchantdImage(self, cfg).initWidget()
+            self.image.label.setFrameStyle(0)
+            self.image.label.setStyleSheet("border: 0px;")
+            self.layout.addWidget(self.image)
+            self.layout.setAlignment(pyqt.Qt.AlignTop)
+            logma.info("[trees] initView: complete (tree + headshot image added)")
+        except Exception as e:
+            logma.error(f"[trees] initView failed: {e}", exc_info=True)
+            raise
         return self
 
     def _on_tree_selection_changed(self, selected, deselected):
         """Handle tree selection change - emit document_selected signal"""
-        if hasattr(self.tree, "selectedItems"):
-            items = self.tree.selectedItems()
-            if items:
-                item = items[0]
-                # Get document from tree item
-                doc = item.data(0, pyqt.Qt.UserRole) if hasattr(item, "data") else None
-                # [H32 2026-07-13] Safe None check: UserRole stores the node dict
-                # (or a pandas Series from df.iterrows()), NOT a NchantdOfficeDocument.
-                # The truthy `if doc` short-circuit raised ValueError on Series.
-                # Documents are looked up via the tree model elsewhere; this signal
-                # path won't emit from UserRole, but no longer crashes.
-                if doc is not None and isinstance(doc, NchantdOfficeDocument):
-                    self.document_selected.emit(doc)
+        if not hasattr(self.tree, "selectedItems"):
+            return
+        items = self.tree.selectedItems()
+        if not items:
+            return
+        item = items[0]
+        # Get document from tree item
+        doc = item.data(0, pyqt.Qt.UserRole) if hasattr(item, "data") else None
+        # [H32 2026-07-13] Safe None check: UserRole stores the node dict
+        # (or a pandas Series from df.iterrows()), NOT a NchantdOfficeDocument.
+        # The truthy `if doc` short-circuit raised ValueError on Series.
+        # Documents are looked up via the tree model elsewhere; this signal
+        # path won't emit from UserRole, but no longer crashes.
+        logma.debug(f"[trees] _on_tree_selection_changed: doc_type={type(doc).__name__}")
+        if doc is not None and isinstance(doc, NchantdOfficeDocument):
+            logma.info(f"[trees] _on_tree_selection_changed: emitting document_selected for {doc}")
+            self.document_selected.emit(doc)
 
     def mousePressEvent(self, event):
         """Start drag tracking"""
         if event.button() == pyqt.Qt.LeftButton:
             self._drag_start_pos = event.pos()
+            logma.debug(f"[trees] mousePressEvent: drag_start pos={event.pos().x()},{event.pos().y()}")
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -137,6 +160,7 @@ class NchantdOfficeApplicationTree(NchantdWidget):
             if hasattr(self, "_drag_start_pos"):
                 diff = event.pos() - self._drag_start_pos
                 if diff.manhattanLength() > pyqt.QApplication.startDragDistance():
+                    logma.debug("[trees] mouseMoveEvent: drag distance exceeded")
                     self._initiate_item_drag()
         super().mouseMoveEvent(event)
 
@@ -144,7 +168,10 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         """Start tree item drag"""
         selected_items = self.tree.selectedItems() if hasattr(self.tree, "selectedItems") else []
         if not selected_items:
+            logma.debug("[trees] _initiate_item_drag: no selected items - skipping")
             return
+
+        logma.info(f"[trees] _initiate_item_drag: {len(selected_items)} item(s)")
 
         # Emit drag started signal
         self.item_drag_started.emit(selected_items[0])
@@ -165,11 +192,15 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         if nids:
             mime_data.setData("application/x-nchantd-tree-item", ",".join(nids).encode())
             drag.setMimeData(mime_data)
+            logma.debug(f"[trees] drag started with nids={nids}")
             drag.exec_(pyqt.Qt.MoveAction)
+        else:
+            logma.warning("[trees] _initiate_item_drag: no nid_txt in selected items - drag aborted")
 
     def dragEnterEvent(self, event):
         """Accept drag enter"""
         mime_data = event.mimeData()
+        logma.debug(f"[trees] dragEnterEvent: has_tab={mime_data.hasFormat('application/x-nchantd-tab')} has_tree_item={mime_data.hasFormat('application/x-nchantd-tree-item')}")
         if mime_data.hasFormat("application/x-nchantd-tree-item"):
             event.acceptProposedAction()
         elif mime_data.hasFormat("application/x-nchantd-tab"):
@@ -183,10 +214,12 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         if mime_data.hasFormat("application/x-nchantd-tab"):
             # Tab dropped on tree - create reference or open
             tab_data = mime_data.data("application/x-nchantd-tab")
+            logma.info(f"[trees] dropEvent (tab): emitting item_dropped_on_tabs")
             self.item_dropped_on_tabs.emit(tab_data)
             event.acceptProposedAction()
 
         elif mime_data.hasFormat("application/x-nchantd-tree-item"):
+            logma.info("[trees] dropEvent (tree-item): reorder accepted")
             # Tree item reordered
             event.acceptProposedAction()
 
@@ -194,8 +227,13 @@ class NchantdOfficeApplicationTree(NchantdWidget):
 
     def initWidget(self, cfg=None):
         """"""
-        self.initModel()
-        self.initView()
+        logma.info("[trees] initWidget")
+        try:
+            self.initModel()
+            self.initView()
+        except Exception as e:
+            logma.error(f"[trees] initWidget failed: {e}", exc_info=True)
+            raise
         return self
 
 

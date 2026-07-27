@@ -37,21 +37,33 @@ class NchantdQuickTagsWidget(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(parent, cfg)
-        self.config.override(kahndor.instruct(pxcfg).select("NchantdQuickTagsWidget").override(cfg))
+        logma.info(f"[tags] NchantdQuickTagsWidget.__init__ parent={type(parent).__name__ if parent else None}")
+        try:
+            super().__init__(parent, cfg)
+            self.config.override(kahndor.instruct(pxcfg).select("NchantdQuickTagsWidget").override(cfg))
+        except Exception as e:
+            logma.error(f"[tags] NchantdQuickTagsWidget.__init__ failed: {e}", exc_info=True)
+            raise
 
     def initModel(self):
         """"""
+        logma.info("[tags] NchantdQuickTagsWidget.initModel: (no-op, subclasses fill in)")
         return self
 
     def initView(self):
         """"""
+        logma.info("[tags] NchantdQuickTagsWidget.initView: (no-op, subclasses fill in)")
         return self
 
     def initWidget(self):
         """"""
-        self.initModel()
-        self.initView()
+        logma.info("[tags] NchantdQuickTagsWidget.initWidget")
+        try:
+            self.initModel()
+            self.initView()
+        except Exception as e:
+            logma.error(f"[tags] NchantdQuickTagsWidget.initWidget failed: {e}", exc_info=True)
+            raise
         return self
 
 
@@ -60,24 +72,44 @@ class NchantdTagsSideBar(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(parent, cfg)
-        self.config.override(kahndor.instruct(pxcfg).select("NchantdTagsSideBar").override(cfg))
+        logma.info(f"[tags] NchantdTagsSideBar.__init__ parent={type(parent).__name__ if parent else None}")
+        try:
+            super().__init__(parent, cfg)
+            self.config.override(kahndor.instruct(pxcfg).select("NchantdTagsSideBar").override(cfg))
+        except Exception as e:
+            logma.error(f"[tags] NchantdTagsSideBar.__init__ failed: {e}", exc_info=True)
+            raise
 
     def initModel(self):
         """"""
-        super().initModel()
+        logma.info("[tags] NchantdTagsSideBar.initModel")
+        try:
+            super().initModel()
+        except Exception as e:
+            logma.error(f"[tags] NchantdTagsSideBar.initModel failed: {e}", exc_info=True)
+            raise
         return self
 
     def initView(self):
         """"""
-        super().initView()
+        logma.info("[tags] NchantdTagsSideBar.initView")
+        try:
+            super().initView()
+        except Exception as e:
+            logma.error(f"[tags] NchantdTagsSideBar.initView failed: {e}", exc_info=True)
+            raise
 
         return self
 
     def initWidget(self):
         """"""
-        self.initModel()
-        self.initView()
+        logma.info("[tags] NchantdTagsSideBar.initWidget")
+        try:
+            self.initModel()
+            self.initView()
+        except Exception as e:
+            logma.error(f"[tags] NchantdTagsSideBar.initWidget failed: {e}", exc_info=True)
+            raise
         return self
 
 
