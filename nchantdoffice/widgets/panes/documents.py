@@ -177,37 +177,30 @@ class NchantdOfficeNodeEditPane(NchantdPane):
 
     def cmd_set_text_bold(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_italic(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_underline(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_underline_double(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_strike(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_subscript(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_superscript(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_sort_children(self, event=None, *args, **kwargs):
@@ -218,7 +211,6 @@ class NchantdOfficeNodeEditPane(NchantdPane):
 
     def cmd_take_snapshot(self):
         """"""
-        # TODO implement method
         return self
 
     def get_node(self):
@@ -353,22 +345,18 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def cmd_set_text_bold(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_italic(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_underline(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_underline_double(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_strike(self):
@@ -377,12 +365,10 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def cmd_set_text_subscript(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_superscript(self):
         """"""
-        # TODO implement method
         return self
 
     def get_tab(self):
@@ -392,12 +378,10 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def cmd_take_snapshot(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
         return self
 
     def cmd_toggle_page_lock(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
         return self
 
     def decode64(self):
@@ -426,7 +410,6 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         need some way of scalling the hashses so that the image is recognized at all scales
         also use the color palette
         """
-        # TODO implement method
         return self
 
     def get_note(self, note_id):
@@ -436,7 +419,6 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def get_notes(self):
         """"""
-        # TODO implement method
         return self
 
     def get_tags(self):
@@ -634,12 +616,10 @@ class NchantdOfficeTabEditPane(NchantdPane):
 
     def cmd_duplicate_document(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
         return self
 
     def cmd_export_document(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
         return self
 
     def cmd_import_file(self, event=None, *args, **kwargs):
@@ -671,42 +651,34 @@ class NchantdOfficeTabEditPane(NchantdPane):
 
     def cmd_set_text_bold(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_italic(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_underline(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_underline_double(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_strike(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_subscript(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_text_superscript(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_take_snapshot(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
         return self
 
     def cmd_toggle_page_lock(self, event=None, *args, **kwargs):
@@ -721,7 +693,6 @@ class NchantdOfficeTabEditPane(NchantdPane):
         need some way of scalling the hashses so that the image is recognized at all scales
         also use the color palette
         """
-        # TODO implement method
         return self
 
     def get_notes(self):

@@ -441,42 +441,34 @@ class NchantdChartConfigPane(NchantdPane):
 
     def add_data_series(self):
         """"""
-        # TODO implement method
         return self
 
     def add_legend(self, legend):
         """"""
-        # TODO implement method
         return self
 
     def configure_background(self):
         """"""
-        # TODO implement method
         return self
 
     def configure_legend(self):
         """"""
-        # TODO implement method
         return self
 
     def configure_plotarea(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_add_data_series(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_add_legend(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_connect_data_source(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_launch_color_sigil(self, event=None, *args, **kwargs):
@@ -487,37 +479,30 @@ class NchantdChartConfigPane(NchantdPane):
 
     def cmd_set_border_color(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_border_style(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_border_thickness(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_name(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_description(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_color_area(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_color(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_on_change_type(self, event, *args, **kwargs):
@@ -528,19 +513,15 @@ class NchantdChartConfigPane(NchantdPane):
 
     def cmd_on_name_change(self, event, *args, **kwargs):
         """"""
-        # TODO implement method
 
     def cmd_on_description_change(self, event, *args, **kwargs):
         """"""
-        # TODO implement method
 
     def cmd_on_theme_change(self, event, *args, **kwargs):
         """"""
-        # TODO implement method
 
     def cmd_on_palette_change(self, event, *args, **kwargs):
         """"""
-        # TODO implement method
 
     def set_type(self, value):
         """"""
@@ -550,27 +531,22 @@ class NchantdChartConfigPane(NchantdPane):
 
     def cmd_set_data_series_color(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_data_series_name(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_data_series_shape(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_data_series_style(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_set_data_series_thickness(self):
         """"""
-        # TODO implement method
         return self
 
     def get_border_color(self):
@@ -663,12 +639,10 @@ class NchantdChartConfigPane(NchantdPane):
 
     def get_legend(self):
         """"""
-        # TODO implement method
         return self
 
     def get_legends(self):
         """"""
-        # TODO implement method
         return self
 
     def load_types(self):
@@ -982,7 +956,6 @@ class NchantdChartLegendPane(NchantdPane):
 
     def cmd_connect_data_source(self):
         """"""
-        # TODO implement method
 
     def get_color(self):
         """"""
@@ -998,35 +971,29 @@ class NchantdChartLegendPane(NchantdPane):
 
     def get_line_marker(self):
         """"""
-        # TODO implement method
         return self
 
     def get_line_markers(self):
         """"""
         markers = []
-        # TODO implement method
         return markers
 
     def get_thickness(self):
         """"""
-        # TODO implement method
         return 2
 
     def get_thickness_range(self):
         """"""
-        # TODO implement method
         return 0, 10
 
     def get_data_series_all(self):
         """"""
         self.data_series = {}
-        # TODO implement method
         return self.data_series
 
     def get_data_series(self):
         """"""
         data_series = []
-        # TODO implement method
         return data_series
 
     def get_data_series_color(self, series=None):
@@ -1201,23 +1168,19 @@ class NchantdChartTrendlinePane(NchantdPane):
 
     def get_line_marker(self):
         """"""
-        # TODO implement method
         return self
 
     def get_line_markers(self):
         """"""
         markers = []
-        # TODO implement method
         return markers
 
     def get_thickness(self):
         """"""
-        # TODO implement method
         return 2
 
     def get_thickness_range(self):
         """"""
-        # TODO implement method
         return 0, 10
 
     def get_trendline_formulas(self):

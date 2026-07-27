@@ -108,7 +108,6 @@ class NchantdOfficeTabSet(NchantdTabSet):
 
     def go_to_previous_tab(self):
         """"""
-        # TODO implement method
 
     def setTabText(self, position, text, store=True):
         """"""

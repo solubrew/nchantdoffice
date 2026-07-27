@@ -218,11 +218,9 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
 
     def add_bulk_node(self):
         """"""
-        # TODO implement method
 
     def add_bulk_tab(self):
         """"""
-        # TODO implement method
 
     def load_document(self):
         """"""
@@ -250,7 +248,6 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
 
     def show_checkboxes(self):
         """"""
-        # TODO implement method
         return self
 
     def show_file_path(self):

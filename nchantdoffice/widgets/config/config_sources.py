@@ -323,12 +323,10 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
 
     def cmd_on_source_change(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
         return self
 
     def cmd_on_data_table_change(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
         return self
 
     def cmd_toggle_config_pane(self, event=None, *args, **kwargs):
@@ -409,7 +407,6 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
 
     def get_data_view(self):
         """"""
-        # TODO implement method
         self.data_view = ""
         return self.data_view
 

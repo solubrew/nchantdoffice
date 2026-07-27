@@ -391,37 +391,30 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
 
     def cmd_on_change_journal_focus(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_on_change_settings_focus(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_on_change_automation(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_on_change_data_source(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_on_change_show_left_side_pane(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_on_change_show_right_side_pane(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_on_change_quicklaunch(self):
         """"""
-        # TODO implement method
         return self
 
     def cmd_on_change_document_catalog(self, event=None, *args, **kwargs):
@@ -729,12 +722,10 @@ class NchantdOfficeAffiliateManager(NchantdOfficeDocumentManager):
 
     def cmd_on_source_change(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
         return self
 
     def cmd_on_data_table_change(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
         return self
 
     def cmd_toggle_config_pane(self, event=None, *args, **kwargs):
@@ -802,12 +793,10 @@ class NchantdOfficeAffiliateManager(NchantdOfficeDocumentManager):
 
     def get_source_tables(self, source):
         """"""
-        # TODO implement method
         return ["Supermarket", "CoinGecko"]
 
     def get_data_view(self):
         """"""
-        # TODO implement method
         self.data_view = ""
         return self.data_view
 

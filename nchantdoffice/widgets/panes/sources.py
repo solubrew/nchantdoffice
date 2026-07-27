@@ -320,16 +320,13 @@ class NchantdSourcePane(NchantdPane):
 
     def cmd_launch_data_source(self):
         """"""
-        # TODO implement method
 
     def cmd_on_change_data_source_availability(self, event=None, *args, **kwargs):
         """"""
         # update database to show that data source is available
-        # TODO implement method
 
     def cmd_show_api_key(self):
         """"""
-        # TODO implement method
 
     def get_data_source_availability(self):
         """"""
@@ -650,19 +647,16 @@ class NchantdDataSetConfigPane(NchantdPane):
 
     def cmd_connect_source(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
 
         return self
 
     def cmd_on_description_change(self):
         """"""
-        # TODO implement method
 
         return self
 
     def cmd_on_name_change(self):
         """"""
-        # TODO implement method
 
         return self
 
@@ -716,11 +710,9 @@ class NchantdSourceDefaultPane(NchantdWidget):
 
     def cmd_on_data_table_change(self, event):
         """"""
-        # TODO implement method
 
     def cmd_on_source_change(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
 
     def get_source(self, event=None, *args, **kwargs):
         """"""

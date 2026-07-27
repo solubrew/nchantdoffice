@@ -89,7 +89,6 @@ class NchantdNewDocumentSigil(NchantdSigil):
 
     def import_file(self):
         """"""
-        # TODO implement method
 
     def initModel(self, cfg=None):
         """"""
@@ -141,7 +140,6 @@ class NchantdNewDocumentSigil(NchantdSigil):
 
     def init_multi_page_import(self):
         """"""
-        # TODO implement method
 
     def init_google_drive_button(self):
         """"""

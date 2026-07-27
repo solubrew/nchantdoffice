@@ -324,7 +324,6 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
 
     def set_active_item(self):
         """Set the active item."""
-        #TODO implement method
         return self
 
     def set_actions(self, actions=None):

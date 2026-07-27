@@ -139,22 +139,18 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
 
     def cmd_node_edit(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
         return self
 
     def cmd_tab_edit(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
         return self
 
     def cmd_tag_edit(self, event=None, *args, **kwargs):
         """"""
-        # TODO implement method
         return self
 
     def defocus(self):
         """"""
-        # TODO implement method
         return self
 
     def init_drawer_file_config(self):
