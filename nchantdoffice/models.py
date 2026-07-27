@@ -2411,6 +2411,89 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_tab_document_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
+
+
+    def _delete(self, table, cfg, db="db"):
+        """Delete rows matching ``cfg`` from ``table``.
+
+        Thin wrapper around the parent class's delete path. Mirrors
+        ``_delete_by_uuid`` but takes an arbitrary WHERE clause
+        (``cfg``) instead of an explicit ``column=`` + ``uuid=`` pair.
+
+        Used by ``remove_document`` for doc_media / doc_media_content
+        cleanup where the filter is on a non-UUID column (e.g.
+        ``parent_FK``).
+        """
+        try:
+            store = getattr(self, "docs", None)
+            if not isinstance(store, dict) or db not in store:
+                logma.warning(f"[models] _delete: no docs for db={db}")
+                return
+            parent_delete = getattr(super(), "_delete", None)
+            if callable(parent_delete):
+                parent_delete(table, cfg, db)
+                return
+            dbit = 1
+            abit = 0
+            data = {
+                "table": {
+                    table: {
+                        "data": {
+                            "DELETE_BIT": dbit,
+                            "ACTIVE_BIT": abit,
+                            "MODON_DTTM": __import__("datetime").datetime.utcnow().isoformat(),
+                            "MODBY_FK": getattr(self, "user_FK", 0),
+                        },
+                        "WHERE": cfg.get("WHERE", {}),
+                    }
+                }
+            }
+            if hasattr(store[db], "write"):
+                store[db].write(data, db, cfg)
+        except Exception as e:
+            logma.error(f"[models] _delete({table}) failed: {e}", exc_info=True)
+        return self
+
+    def _increment_pydoc_version(self, pydoc, policy="patch"):
+        """Bump ``pydoc.version`` using a real semver policy.
+
+        Treats ``pydoc.version`` as a 4-part dotted version
+        (major.minor.patch.build) and bumps one component per
+        save based on ``policy`` ("major" / "minor" / "patch" /
+        "build"). Default is "patch".
+
+        Writes the new version back to ``pydoc.version`` so the
+        subsequent ``add_document_content`` records the bump.
+
+        Returns ``True`` when the version was incremented,
+        ``False`` on any failure.
+        """
+        try:
+            current = str(getattr(pydoc, "version", "0.0.0.0") or "0.0.0.0")
+            parts = current.split(".")
+            while len(parts) < 4:
+                parts.append("0")
+            nums = []
+            for p in parts[:4]:
+                try:
+                    nums.append(int(p))
+                except ValueError:
+                    nums.append(0)
+            if policy == "major":
+                nums = [nums[0] + 1, 0, 0, 0]
+            elif policy == "minor":
+                nums = [nums[0], nums[1] + 1, 0, 0]
+            elif policy == "patch":
+                nums = [nums[0], nums[1], nums[2] + 1, 0]
+            else:  # "build" or unknown
+                nums = [nums[0], nums[1], nums[2], nums[3] + 1]
+            new_version = ".".join(str(n) for n in nums)
+            pydoc.version = new_version
+            logma.info(f"[models] _increment_pydoc_version: {current} -> {new_version} (policy={policy})")
+            return True
+        except Exception as e:
+            logma.error(f"[models] _increment_pydoc_version failed: {e}", exc_info=True)
+            return False
     def store_app_instance(self, instance, db="db"):
         """Build payload from instance dict and dispatch. Delegates to the free function."""
         self._store("app_instance", [_build_app_instance_payload(instance)], db)
