@@ -485,9 +485,23 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         return options
 
     def get_content(self):
-        """"""
-        # self.document.syntax = "html"  # TODO need to use the selector from toolbar
-        if self.document.syntax == "html":
+        """Return the document content, normalizing the source syntax.
+
+        T-034: the document syntax now comes from the toolbar
+        selector (``self.compatibility`` or
+        ``self.config.dikt['compatibility']``) instead of being
+        hard-coded to ``"html"``. The fallback chain is:
+          1. ``self.compatibility`` attribute
+          2. ``self.config.dikt['compatibility']``
+          3. ``self.document.syntax``
+        """
+        syntax = (
+            getattr(self, "compatibility", None)
+            or (self.config.dikt.get("compatibility") if hasattr(self, "config") else None)
+            or getattr(self.document, "syntax", None)
+            or "html"
+        )
+        if syntax == "html":
             html = """
             <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
             <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>

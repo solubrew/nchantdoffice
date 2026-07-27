@@ -994,10 +994,31 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         return self
 
     def populate_document(self):
-        """"""
-        # TODO we really should open from binary data that is already opened in the PyfficeDocument
-        logma.info(f"Populate worksheet {self.file_path}")
-        self.image.load_image(self.file_path)
+        """Populate the image widget from the document's binary data.
+
+        T-036: prefers the in-memory ``PyfficeDocument.binary`` /
+        ``PyfficeDocument.bytes`` when set (avoids re-reading the
+        file from disk and works for documents that originated
+        from a database blob). Falls back to ``load_image(file_path)``
+        when no binary is available.
+        """
+        logma.info(f"[images] Populate image {self.file_path}")
+        doc = getattr(self, "document", None)
+        binary = None
+        if doc is not None:
+            binary = (
+                getattr(doc, "binary", None)
+                or getattr(doc, "bytes", None)
+                or getattr(doc, "data", None)
+            )
+        if binary and hasattr(self.image, "load_image_bytes"):
+            try:
+                self.image.load_image_bytes(binary)
+                return self
+            except Exception as e:
+                logma.error(f"[images] populate_document: load_image_bytes failed: {e}", exc_info=True)
+        if self.file_path and hasattr(self.image, "load_image"):
+            self.image.load_image(self.file_path)
         return self
 
     def save(self):

@@ -323,15 +323,18 @@ class NchantdOfficeDocumentMixin:
         buttons = (
             kahndor.Instruct(self.config.get("buttons", {})).override(_buttons).override(cfg.get("buttons", {})).dikt
         )
-        if self.has_pro:  # TODO replace with profile switcher/other pro features based on document type
+        # T-037: per-document-type pro-feature routing. The
+        # ``profile`` dropdown is populated dynamically from the
+        # document type's registered pro-feature set rather than
+        # being a hard-coded single "default" option.
+        if self.has_pro:
+            profile_options = self._get_pro_profile_options()
             cfg = {
                 "label": "Profile",
                 "layout": "horizontal",
                 "size": [10, 20],
                 "drop_down": {"size": [100, 20]},
-                "options": [
-                    "default",
-                ],
+                "options": self._get_pro_profile_options(),
             }
             self.profile_select_entry = NchantdDropDown(self, cfg).initWidget()
             buttons[1] = {"name": "get_pro", "widget": self.profile_select_entry}
@@ -526,10 +529,41 @@ class NchantdOfficeDocumentMixin:
     #     return self
 
     def take_snapshot(self):
-        """Capture a image of the current document."""
-        # TODO this method is for taking visual snapshots of the document need to get the dimens of the
-        #  document widget and then grab and save an image
-        return self
+        """Capture a PNG snapshot of the current document widget.
+
+        T-038: grabs the document_editor's pixmap via QWidget.grab()
+        and saves it to ``self.snapshot_path`` (or a temp file when
+        no path is set). Returns ``self.snapshot_path`` on success,
+        ``None`` on failure.
+        """
+        try:
+            target = (
+                getattr(self, "document_editor", None)
+                or getattr(self, "browser", None)
+                or getattr(self, "image", None)
+            )
+            if target is None or not hasattr(target, "grab"):
+                logma.warning("[documents] take_snapshot: no grabbable widget")
+                return None
+            pixmap = target.grab()
+            if pixmap is None or pixmap.isNull():
+                logma.warning("[documents] take_snapshot: pixmap is null")
+                return None
+            path = getattr(self, "snapshot_path", None) or (
+                self.config.dikt.get("snapshot_path") if hasattr(self, "config") else None
+            )
+            if not path:
+                import os, tempfile
+                path = os.path.join(tempfile.gettempdir(), "nchantdoffice_snapshot.png")
+            if pixmap.save(path, "PNG"):
+                self.snapshot_path = path
+                logma.info(f"[documents] take_snapshot: saved {path}")
+                return path
+            logma.warning(f"[documents] take_snapshot: failed to save pixmap to {path}")
+            return None
+        except Exception as e:
+            logma.error(f"[documents] take_snapshot failed: {e}", exc_info=True)
+            return None
 
     def unlock_page(self):
         """Unlock the current document page to allow editing."""

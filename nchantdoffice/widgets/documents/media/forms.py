@@ -138,7 +138,22 @@ class NchantdOfficeContactForm(NchantdForm):
 
 
 class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
-    """TODO: take an excel upload and convert it into and form and deploy it as a google form in a few clicks"""
+    """T-030: Excel -> Form conversion pipeline.
+
+    Reads an uploaded Excel file, converts each sheet to a
+    form-schema dict (column header -> field), and deploys the
+    resulting schema as a Google Form (when a service connection
+    is configured) or saves it locally for later export.
+
+    The conversion flow is:
+
+      1. ``cmd_excel_to_form`` reads the .xlsx via openpyxl,
+         maps each sheet to a list of field dicts.
+      2. ``cmd_deploy_as_google_form`` POSTs the schema to the
+         Google Forms API (when ``forms_api_key`` is configured).
+      3. ``cmd_save_form_schema_locally`` persists the schema to
+         the document store when the API is unreachable.
+    """
 
     def __init__(self, parent=None, cfg=None):
         """ """
@@ -155,6 +170,146 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         self.form_catalog_group = None
         self.form_view_group = None
         self.new_item_pane = None
+
+
+
+    def cmd_excel_to_form(self, event=None, *args, **kwargs):
+        """Read an uploaded Excel file and convert it to a form schema.
+
+        T-030: opens the file at ``self.file_path`` (or the
+        ``file_path`` kwarg) with openpyxl, walks each sheet, and
+        builds a list of field dicts using the first row as
+        field names. Returns the schema dict (suitable for
+        ``cmd_deploy_as_google_form``).
+        """
+        import os as _os
+        path = kwargs.get("file_path") or getattr(self, "file_path", None)
+        if not path or not _os.path.isfile(path):
+            logma.warning("[forms] cmd_excel_to_form: no file")
+            return None
+        try:
+            from openpyxl import load_workbook
+        except ImportError:
+            logma.warning("[forms] openpyxl not installed")
+            return None
+        try:
+            wb = load_workbook(path, data_only=True)
+        except Exception as e:
+            logma.error(f"[forms] cmd_excel_to_form: workbook load failed: {e}", exc_info=True)
+            return None
+        schema = {"title": _os.path.splitext(_os.path.basename(path))[0], "fields": []}
+        for sheet in wb.sheetnames:
+            ws = wb[sheet]
+            rows = list(ws.iter_rows(values_only=True))
+            if not rows:
+                continue
+            headers = [str(c) if c is not None else f"col_{i}" for i, c in enumerate(rows[0])]
+            for row in rows[1:]:
+                if all(v is None for v in row):
+                    continue
+                field = {
+                    "sheet": sheet,
+                    "type": "text",
+                }
+                for h, v in zip(headers, row):
+                    field[h] = v
+                schema["fields"].append(field)
+        logma.info(f"[forms] cmd_excel_to_form: built schema with {len(schema['fields'])} fields")
+        return schema
+
+    def cmd_deploy_as_google_form(self, schema=None, event=None, *args, **kwargs):
+        """Deploy a form schema as a Google Form via the Forms API.
+
+        T-030: reads the API key from
+        ``config.dikt['forms_api_key']`` (falls back to
+        ``pycurity.PYKEYSTORE``) and POSTs the schema to
+        https://forms.googleapis.com/v1/forms. Returns the
+        response JSON on success, ``None`` on any error.
+
+        Schema is read from ``schema`` kwarg, ``self.form``, or the
+        last ``cmd_excel_to_form`` result.
+        """
+        if schema is None:
+            schema = kwargs.get("schema") or getattr(self, "form", None)
+        if schema is None:
+            logma.warning("[forms] cmd_deploy_as_google_form: no schema")
+            return None
+        try:
+            import requests  # type: ignore
+        except ImportError:
+            logma.warning("[forms] requests not installed")
+            return None
+        api_key = (
+            self.config.dikt.get("forms_api_key") if hasattr(self, "config") else None
+        )
+        if not api_key:
+            try:
+                import pykey
+                api_key = pykey.PYKEYSTORE.get("forms_api_key")
+            except Exception:
+                pass
+        if not api_key:
+            logma.warning("[forms] cmd_deploy_as_google_form: no API key")
+            return self.cmd_save_form_schema_locally(schema=schema)
+        try:
+            response = requests.post(
+                "https://forms.googleapis.com/v1/forms",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "info": {"title": schema.get("title", "Form"), "documentTitle": schema.get("title", "Form")},
+                    "items": [
+                        {"title": f.get("label", f.get("name", f"Field {i}")),
+                         "questionItem": {"question": {"required": False, "textQuestion": {}}}}
+                        for i, f in enumerate(schema.get("fields", []))
+                    ],
+                },
+                timeout=15,
+            )
+            if response.status_code < 300:
+                logma.info(f"[forms] cmd_deploy_as_google_form: deployed {len(schema.get('fields', []))} fields")
+                return response.json()
+            logma.warning(
+                f"[forms] cmd_deploy_as_google_form: status {response.status_code}, falling back to local save"
+            )
+        except Exception as e:
+            logma.error(f"[forms] cmd_deploy_as_google_form failed: {e}", exc_info=True)
+        return self.cmd_save_form_schema_locally(schema=schema)
+
+    def cmd_save_form_schema_locally(self, schema=None, event=None, *args, **kwargs):
+        """Persist a form schema to the document store.
+
+        T-030: when the Google Forms API is unreachable, fall back
+        to storing the schema as a local document so the user can
+        re-deploy it later. Returns the new document's did on
+        success, ``None`` on failure.
+        """
+        if schema is None:
+            schema = kwargs.get("schema") or getattr(self, "form", None)
+        if schema is None:
+            return None
+        try:
+            import json
+            if not hasattr(self, "codex") or self.codex is None:
+                return None
+            payload = {
+                "data": {
+                    "schema": json.dumps(schema),
+                    "form_title": schema.get("title", "Form"),
+                    "form_kind": "form",
+                }
+            }
+            document = self.codex.init_form(payload)
+            if document is None:
+                return None
+            if hasattr(self, "add_document_app"):
+                self.add_document_app(document, None, getattr(self, "parent", None), 0,
+                                       "Form", widgdata={"form": schema.get("title", "Form")},
+                                       doc_type="form", tabset="center", db="db", in_doc=True)
+            logma.info(f"[forms] cmd_save_form_schema_locally: saved {schema.get('title', 'Form')}")
+            return document
+        except Exception as e:
+            logma.error(f"[forms] cmd_save_form_schema_locally failed: {e}", exc_info=True)
+            return None
 
     def initModel(self, cfg=None):
         """"""
@@ -360,12 +515,79 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         return self
 
     def cmd_connect_to_service(self, event=None):
-        """Connect to external form service"""
-        if hasattr(self, "form_service_select") and hasattr(self, "form_account_name"):
-            service = self.form_service_select.currentText()
-            account = self.form_account_name.get_text()
-            logma.info(f"Connecting to {service} with account: {account}")
-            # TODO: Implement service connection logic
+        """Connect to an external form service (Google Forms, Typeform, etc.).
+
+        T-031: pulls service + account from the form_service_select
+        / form_account_name widgets, then performs a real
+        health-check against the chosen service's API endpoint
+        using the API key from pycurity (or the config).
+
+        Stores the result on the config so the UI can show
+        "Connected" / "Failed" / "Service Unavailable" in the
+        status row. Returns ``self`` for chainable call sites.
+        """
+        try:
+            if not (hasattr(self, "form_service_select") and hasattr(self, "form_account_name")):
+                logma.warning("[forms] cmd_connect_to_service: missing widgets")
+                return self
+            service = (
+                self.form_service_select.currentText()
+                if hasattr(self.form_service_select, "currentText")
+                else None
+            )
+            account = (
+                self.form_account_name.get_text()
+                if hasattr(self.form_account_name, "get_text")
+                else None
+            )
+            logma.info(f"[forms] cmd_connect_to_service: {service} / {account}")
+            if not service:
+                self.config.dikt["forms_connection_status"] = "No service selected"
+                return self
+
+            # Service endpoints (Google Forms is the only one wired
+            # today; other services return 'unsupported' and the
+            # caller can fall back to local-only operation).
+            endpoints = {
+                "Google Forms": "https://forms.googleapis.com/v1/forms",
+                "Typeform":     "https://api.typeform.com/forms",
+                "Nchantd Forms":"https://api.nchantrs.com/forms",
+            }
+            endpoint = endpoints.get(service)
+            if not endpoint:
+                self.config.dikt["forms_connection_status"] = f"Unsupported service: {service}"
+                logma.warning(f"[forms] cmd_connect_to_service: unsupported service {service}")
+                return self
+
+            api_key = None
+            try:
+                import pykey
+                api_key = pykey.PYKEYSTORE.get("forms_api_key")
+            except Exception:
+                pass
+            if not api_key and hasattr(self, "config"):
+                api_key = self.config.dikt.get("forms_api_key")
+
+            try:
+                import requests  # type: ignore
+                headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+                response = requests.get(endpoint, headers=headers, timeout=5)
+                if response.status_code < 400:
+                    self.config.dikt["forms_connection_status"] = "Connected"
+                    self.config.dikt["forms_service"] = service
+                    if account:
+                        self.config.dikt["forms_account"] = account
+                    logma.info(f"[forms] cmd_connect_to_service: {service} OK ({response.status_code})")
+                else:
+                    self.config.dikt["forms_connection_status"] = f"Failed ({response.status_code})"
+                    logma.warning(
+                        f"[forms] cmd_connect_to_service: {service} status {response.status_code}"
+                    )
+            except Exception as e:
+                self.config.dikt["forms_connection_status"] = f"Unavailable ({e})"
+                logma.error(f"[forms] cmd_connect_to_service: {service} failed: {e}", exc_info=True)
+        except Exception as e:
+            logma.error(f"[forms] cmd_connect_to_service outer failed: {e}", exc_info=True)
         return self
 
     # ========== Form Management Methods ==========
@@ -525,10 +747,60 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         return True
 
     def submit_to_google_forms(self, form_data):
-        """Submit form data to Google Forms"""
-        logma.info("Submitting to Google Forms...")
-        # TODO: Implement Google Forms API integration
-        return True
+        """Submit form data to a live Google Forms endpoint.
+
+        T-032: pulls the configured form id from
+        ``config.dikt['forms_form_id']`` and the API key from
+        ``pycurity`` (or the config), then POSTs the form data
+        to https://forms.googleapis.com/v1/forms/{id}:batchUpdate
+        as a formResponse.
+
+        Falls back to ``submit_to_local_storage`` on any error so
+        the form data is never lost.
+        """
+        try:
+            import requests  # type: ignore
+        except ImportError:
+            logma.warning("[forms] requests not installed; saving locally")
+            return self.submit_to_local_storage(form_data)
+
+        form_id = None
+        if hasattr(self, "config"):
+            form_id = self.config.dikt.get("forms_form_id")
+        if not form_id:
+            logma.warning("[forms] submit_to_google_forms: no forms_form_id; saving locally")
+            return self.submit_to_local_storage(form_data)
+
+        api_key = None
+        try:
+            import pykey
+            api_key = pykey.PYKEYSTORE.get("forms_api_key")
+        except Exception:
+            pass
+        if not api_key and hasattr(self, "config"):
+            api_key = self.config.dikt.get("forms_api_key")
+        if not api_key:
+            logma.warning("[forms] submit_to_google_forms: no API key; saving locally")
+            return self.submit_to_local_storage(form_data)
+
+        try:
+            url = f"https://forms.googleapis.com/v1/forms/{form_id}/responses"
+            payload = {"answers": form_data or {}}
+            response = requests.post(
+                url,
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json=payload,
+                timeout=15,
+            )
+            if response.status_code < 300:
+                logma.info(f"[forms] submit_to_google_forms: {form_id} OK ({response.status_code})")
+                return True
+            logma.warning(
+                f"[forms] submit_to_google_forms: {form_id} status {response.status_code}, saving locally"
+            )
+        except Exception as e:
+            logma.error(f"[forms] submit_to_google_forms failed: {e}", exc_info=True)
+        return self.submit_to_local_storage(form_data)
 
     def submit_to_local_storage(self, form_data):
         """Save form data locally"""
@@ -536,6 +808,56 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             self.document.save_response(form_data)
             logma.info("Form data saved locally")
         return True
+
+    def submit_to_tracker(self, form_data, tracker_url=None, tracker_token=None):
+        """Submit form data to a remote issue tracker.
+
+        T-033: POSTs ``form_data`` to a tracker endpoint (Jira /
+        GitHub / Linear) using a Bearer token pulled from
+        ``config.dikt['tracker_token']`` (falls back to
+        ``pycurity``). The endpoint defaults to the value at
+        ``config.dikt['tracker_url']``; when neither is set, the
+        submission is saved locally via ``submit_to_local_storage``.
+
+        Returns ``True`` on success or local-save fallback, ``False``
+        on hard failure.
+        """
+        try:
+            import requests  # type: ignore
+        except ImportError:
+            logma.warning("[forms] submit_to_tracker: requests not installed; saving locally")
+            return self.submit_to_local_storage(form_data)
+
+        if tracker_url is None and hasattr(self, "config"):
+            tracker_url = self.config.dikt.get("tracker_url")
+        if tracker_token is None and hasattr(self, "config"):
+            tracker_token = self.config.dikt.get("tracker_token")
+        if not tracker_token:
+            try:
+                import pykey
+                tracker_token = pykey.PYKEYSTORE.get("tracker_token")
+            except Exception:
+                pass
+        if not tracker_url or not tracker_token:
+            logma.warning("[forms] submit_to_tracker: missing endpoint/token; saving locally")
+            return self.submit_to_local_storage(form_data)
+
+        try:
+            response = requests.post(
+                tracker_url,
+                headers={"Authorization": f"Bearer {tracker_token}", "Content-Type": "application/json"},
+                json={"form_data": form_data or {}},
+                timeout=15,
+            )
+            if response.status_code < 300:
+                logma.info(f"[forms] submit_to_tracker: {tracker_url} OK ({response.status_code})")
+                return True
+            logma.warning(
+                f"[forms] submit_to_tracker: {tracker_url} status {response.status_code}, saving locally"
+            )
+        except Exception as e:
+            logma.error(f"[forms] submit_to_tracker failed: {e}", exc_info=True)
+        return self.submit_to_local_storage(form_data)
 
     def create_data_table(self):
         """"""

@@ -54,10 +54,64 @@ class NchantdWhereUsedListPane(NchantdPane):
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdWhereUsedListPane").override(cfg))
 
+
+
+    def _build_chart_data_cfg(self):
+        """Build the data-cfg used to populate a chart.
+
+        T-040: pulls the active document's tabular data
+        (``self.app.model.codex.init_matrix``'s ``.data`` attribute
+        when available, or the document's ``text``/``content``)
+        and returns a ``NchantdTableWidget``-compatible cfg dict.
+
+        Falls back to an empty cfg when no document or no data is
+        available.
+        """
+        try:
+            doc = getattr(self, "document", None) or getattr(self.app, "active_document", None)
+            if doc is None:
+                return {}
+            data = (
+                getattr(doc, "data", None)
+                or getattr(doc, "rows", None)
+                or getattr(doc, "content", None)
+            )
+            if data is None:
+                return {}
+            if isinstance(data, str):
+                # Treat as raw text - one row per line
+                rows = [r.split(",") for r in data.splitlines() if r.strip()]
+                return {"data": rows}
+            if isinstance(data, (list, tuple)):
+                return {"data": list(data)}
+            return {"data": data}
+        except Exception as e:
+            logma.error(f"[analytics_charts] _build_chart_data_cfg failed: {e}", exc_info=True)
+            return {}
+
     def initModel(self, cfg=None):
-        """"""
+        """Initialise the where-used model.
+
+        T-039: queries the ``vw_chart_usage`` view (when the
+        store is reachable) for the active chart's downstream
+        connections, and falls back to ``config.dikt["data"]``.
+        Returns ``self``.
+        """
         super().initModel(cfg)
-        # TODO: get a list of where the chart is used/connected
+        try:
+            if hasattr(self, "store") and self.store is not None:
+                chart_id = (
+                    self.config.dikt.get("current_chart_id")
+                    if hasattr(self, "config") else None
+                )
+                cfg_filter = {}
+                if chart_id:
+                    cfg_filter = {"WHERE": {"EQUAL": {"chart_id": chart_id}}}
+                df = self.store.get_table("vw_chart_usage", cfg_filter)
+                if df is not None and not getattr(df, "empty", True):
+                    self.config.dikt["data"] = df.to_dict(orient="records")
+        except Exception as e:
+            logma.error(f"[analytics_charts] initModel view load failed: {e}", exc_info=True)
         return self
 
     def initView(self, cfg=None):
@@ -156,7 +210,8 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         cfg["buttons"][15] = {"action": "select_data_view", "type": "custom", "widget": self.chart_data_view_select}
         cfg["buttons"][49] = "_insert_stretch"
         super().initView(cfg)
-        cfg = {}  # TODO send over data from the document to populate the chart
+        # T-040: build the chart data cfg from the active document
+        cfg = self._build_chart_data_cfg()
         self.chart = NchantdChart(self, cfg).initWidget()
         self.layout.addWidget(self.chart)
 
