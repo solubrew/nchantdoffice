@@ -209,3 +209,104 @@ NchantdOfficeTabSetModel:
   dstruct:
     database:
       objects:
+        table:
+          #TODO: details commented out as they are currently defined in package nchantrs and need to be moved here but there is a configuration refactor in creating db objects on initialization
+          'app_tab':
+            'columns': [{"name": 'name_txt', "type": "text"}, {"name": 'widget_txt', "type": "text"},
+                        {"name": 'widgdata_dict', "type": "text"}, {"name": 'pid_txt', "type": "text"},
+                        {"name": 'did_txt', "type": "text"}, {"name": 'position_int', "type": "integer"},
+                        {"name": 'tab_type_txt', "type": "text"}, {"name": 'tabset_type_txt', "type": "text"},
+                        {"name": 'readonly_bit', "type": "integer"}, {"name": 'editable_bit', "type": "integer"},
+                        {"name": 'visible_bit', "type": "integer"}, {"name": 'moveable_bit', "type": "integer"},
+                        {"name": 'tid_txt', "type": "text", "constraint": "unique"}]
+            'records': []
+            system_records:
+#              #Action:
+#              - ['Todos', 'nchantdoffice.widgets.documents.engrg.tasks.NchantdOfficeTODOs', "{}", '066a7cf6-5aca-7912-8000-4e27f26fd8c2', "37af16cc-50e7-4004-bde2-7d7838ea4954", 1, 'custom_widget', 'center']
+#              - ['MailBox', 'nchantdoffice.widgets.documents.atnrg.email.NchantdOfficeMailBox', "{}", '066a7cf6-5aca-7912-8000-4e27f26fd8c2', "ae7760dd-2d66-4080-8a83-7f5283c04d80", 2, 'custom_widget', 'center']
+#              - ['Rolodex', 'nchantdoffice.widgets.documents.atnrg.contacts.NchantdOfficeRolodex', "{}", '066a7cf6-5aca-7912-8000-4e27f26fd8c2', "43a9b202-46e2-4edf-b589-55817d873132", 3, 'custom_widget', 'center']
+#              - ['Surveys', 'nchantdoffice.widgets.documents.atnrg.surveys.NchantdOfficeSurveyResponder', "{}", '066a7cf6-5aca-7912-8000-4e27f26fd8c2', "4b11853a-be5a-42be-8c49-4b1eab4521c1", 4, 'custom_widget', 'center']
+#              - ['Recent', 'widgets.calendars.timelines.NchantdRecentChanges', "{}", '066a7cf6-5aca-7912-8000-4e27f26fd8c2', "e5268c39-bbab-435b-a6ba-b57168d02b27", 5, 'custom_widget', 'center']
+#              - ['Configurations', 'widgets.calendars.timelines.NchantdRecentChanges', "{}", "066a7cf6-5aca-7912-8000-4e27f26fd8c2", '53e4acc9-11ff-4693-94e7-dddf0efd87ea', 6, 'custom_widget', 'center']
+#              #Tasks
+#              - ['Tasks', 'nchantdoffice.widgets.documents.engrg.tasks.NchantdOfficeTasksManager', "{}", '067cbcf0-8244-7f75-8000-bc46aca2db8f', "ca124b24-b42b-4c3a-8009-6b1a77addcb8", 0, 'custom_widget', 'center']
+#              #Projects
+#              - ['Projects', 'nchantdoffice.widgets.documents.engrg.tasks.NchantdOfficeProjectsManager', "{}", '067cbcf0-8245-74d2-8000-bd7b33800c59', "894210d6-3270-4555-bf42-ae6b73cbc571", 0, 'custom_widget', 'center']
+#              #Communications
+#              - ['MailBox', 'nchantdoffice.widgets.documents.atnrg.email.NchantdOfficeMailBox', "{}", '067cbcf0-8245-73a2-8000-46a5409373f7', "b394bec4-5fc8-4b40-8b6b-765eca3b1dd9", 0, 'custom_widget', 'center']
+#              - ['Accounts', 'widgets.calendars.timelines.NchantdRecentChanges', "{}", '1d049fa4-464a-4930-9987-36026d9249ff', "86d58a53-580c-4615-b737-6495df0d035c", 1, 'custom_widget', 'center']
+              #Journal
+              #- ['Today', 'nchantdoffice.widgets.documents.managers.calendars.NchantdOfficeTodayOverview', "{}", '067ce332-8864-7d0b-8000-bfd314a580cc', "ac3d3fa2-c0ca-4963-8fae-d90cd722aa5d", 0, 'custom_widget', 'center']
+              #- ['Overview', 'nchantdoffice.widgets.documents.journal.NchantdOfficeJournalOverview', "{}", '067ce332-8864-7d0b-8000-bfd314a580cc', "ecd86055-c7b2-4911-895d-f99f14e50cea", 1, 'custom_widget', 'center']
+              #- ['Settings', 'nchantdoffice.widgets.config.journal.NchantdOfficeJournalSettings', "{}", '067ce332-8864-7d0b-8000-bfd314a580cc', "e5e1dbe7-5b48-4edc-a18b-4b1340ec799d", 2, 'custom_widget', 'center']
+              #App Settings
+              #- ['Nchantd Account', 'nchantdoffice.widgets.config.accounts.NchantdOfficeAccountSettings', "{}", '066a7cf6-5aca-79a2-8000-f4b5405a0427', "c919cbf9-2c85-4256-b645-2287346749c2", 0, 'custom_widget', 'center']
+              #- ['Interface', 'nchantdoffice.widgets.config.settings.NchantdOfficeInterfaceSettings', "{}", '066a7cf6-5aca-79a2-8000-f4b5405a0427', "999d42e6-c678-4f6b-81e2-ff7ca6451564", 1, 'custom_widget', 'center']
+              #- ['Affiliate Manager', 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager', "{}", '066a7cf6-5aca-79a2-8000-f4b5405a0427', "024694d6-f14b-435b-a130-f86a7e4e447f", 2, 'custom_widget', 'center']
+              #- ['Theme', 'nchantdoffice.widgets.config.settings.NchantdOfficeThemeSettings', "{}", '066a7cf6-5aca-79a2-8000-f4b5405a0427', "b8f6d482-d62a-4ad1-96ed-6ebe1b652141", 2, 'custom_widget', 'center']
+              #- ['Packages', 'nchantdoffice.widgets.config.packages.NchantdPackageSettings', "{}", '066a7cf6-5aca-79a2-8000-f4b5405a0427', "03762344-3d2e-45f6-a642-f9a489af1b43", 3, 'custom_widget', 'center']
+              #- ['Storage', 'nchantdoffice.widgets.config.storage.NchantdOfficeStorageSettings', "{}", '066a7cf6-5aca-79a2-8000-f4b5405a0427', "629cadba-bb23-47c2-8c32-a7f050b6680b", 4, 'custom_widget', 'center']
+              #- ['Security', 'nchantdoffice.widgets.config.security.NchantdOfficeSecuritySettings', "{}", '066a7cf6-5aca-79a2-8000-f4b5405a0427', "f39d9f66-9b99-445f-83a4-767bc63a9de3", 5, 'custom_widget', 'center']
+              # Automation
+              #- ['Active', 'nchantdoffice.widgets.config.automations.NchantdAutomationsManager', "{}", '067d5e25-a405-7122-8000-1574a03c4522', "4db5365e-d5fb-483c-bc08-d5d7253ff2c9", 0, 'custom_widget', 'center']
+              #- ['Settings', 'nchantdoffice.widgets.config.automations.NchantdAutomationSettings', "{}", '067d5e25-a405-7122-8000-1574a03c4522', "e8fe276c-b994-4cb6-b3c6-2487ca018daf", 1, 'custom_widget', 'center']
+              # Sources
+              #- ['Data Sources', 'nchantdoffice.widgets.config.sources.NchantdOfficeDataSourcesSettings', "{}", '066c9768-8efd-7816-8000-3bd305f0de84', "c7669186-76bc-4043-b024-c9b53ba0fd84", 0, 'custom_widget', 'center']
+              #- ['DataSource Manager', 'nchantdoffice.widgets.config.sources.NchantdOfficeSourceManager', "{}", '066c9768-8efd-7816-8000-3bd305f0de84', "c7669186-76bc-4043-b024-c9b53ba0fd84", 0, 'custom_widget', 'center']
+              #- ['Available Sources', 'nchantdoffice.widgets.catalogs.NchantdDataSourcesCatalog', "{}", '066c9768-8efd-7816-8000-3bd305f0de84', "11daaa75-c1e3-4824-811f-3b2bf81cbb82", 1, 'custom_widget', 'center']
+              #- ['APIs', 'nchantdoffice.widgets.config.apis.NchantdOfficeAPIFile', "{}", '066c9768-8efd-7816-8000-3bd305f0de84', "b5ac46bc-230a-4380-bb60-e6dca155cb27", 2, 'custom_widget', 'center']
+              #Help Documents
+              #- ['FAQs', 'nchantdoffice.widgets.config.help.NchantdOfficeFAQs', "{}", '066abcfb-5af0-7027-8000-980e6c9d841b', "4862cdca-9bee-4daf-9f7f-ec10bf90ce48", 0, 'custom_widget', 'center']
+              #- ['Documentation', 'nchantdoffice.widgets.config.help.NchantdOfficeHelpDocs', "{}", '066abcfb-5af0-7027-8000-980e6c9d841b', "f44b83ea-8932-486d-a9ea-26bf7b56ff2f", 1, 'custom_widget', 'center']
+              #- ['Help', 'nchantdoffice.widgets.config.help.NchantdOfficeHelpChatDex', "{}", '066abcfb-5af0-7027-8000-980e6c9d841b', "755ca550-fbf5-4bf4-b990-311043053577", 2, 'custom_widget', 'center']
+              #Right Side TabSet
+              #- ['Journal', 'nchantdoffice.widgets.documents.journal.NchantdOfficeJournalEditor', "{}", '0', "06875532-6b6d-787b-8000-41ace4c1038a", 0, 'custom_widget', 'right']
+              #- ['Scratch', 'nchantdoffice.widgets.documents.media.notes.NchantdOfficeScratchEditor', "{}", '0', "", 1, 'custom_widget', 'right']
+              #- ['ToolBox', 'nchantdoffice.widgets.controls.toolboxes.NchantdOfficeApplicationToolBox', "{}", '0', "06875532-6b6d-7c8f-8000-a4ea03a7ece3", 2, 'custom_widget', 'right']
+              #- ['Search', 'widgets.documents.atnrg.browsers.NchantdOfficeSlimTabSearch', "{}", '0', "7e7a40ce-4455-4561-ae40-12852d810b81", 2, 'custom_widget', 'right']
+              #- ['Calculator', 'nchantrs.widgets.calculators.calculators.NchantdCalculator', "{}", '0', "06875532-6b6d-7d9b-8000-c7073dc89ef6", 3, 'custom_widget', 'right']
+              #- ['Feedback', 'widgets.documents.media.forms.NchantdOfficeFeedback', "{}", '0', "37f8112e-c361-4a06-b5ae-6541b3a77d8a", 3, 'custom_widget', 'right']
+              #- ['Ad', 'nchantdoffice.widgets.documents.atnrg.browsers.NchantdOfficeAdTab', "{}", '0', "936073aa-37e1-4c38-8296-94dcd1ba9e0d", 4, 'custom_widget', 'right']
+            'params':
+              'filters':
+          'doc_tab':
+            'columns': [{"name": 'name_txt', "type": "text"}, {"name": 'widget_txt', "type": "text"},
+                        {"name": 'widgdata_dict', "type": "text"}, {"name": 'pid_txt', "type": "text"},
+                        {"name": 'did_txt', "type": "text"}, {"name": 'position_int', "type": "integer"},
+                        {"name": 'tab_type_txt', "type": "text"}, {"name": 'tabset_type_txt', "type": "text"},
+                        {"name": 'readonly_bit', "type": "integer"}, {"name": 'editable_bit', "type": "integer"},
+                        {"name": 'visible_bit', "type": "integer"}, {"name": 'moveable_bit', "type": "integer"},
+                        {"name": 'tid_txt', "type": "text", "constraint": "unique"}]
+            'records': []
+            system_records: []
+              #Home
+              #- [ 'Browser', 'widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center' ]
+              #- [ 'Script', 'widgets.documents.media.scripts.NchantdOfficeScript', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center' ]
+              #              - ['Matrix', 'widgets.documents.workbooks.matricies.NchantdOfficeMatrix', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center']
+              #- [ 'Image', 'widgets.documents.media.images.NchantdOfficeImage', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center' ]
+              #              - ['Sketch', 'widgets.documents.media.graphics.NchantdOfficeSketch', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center']
+              #              - ['Prompt', 'widgets.documents.atnrg.prompts.NchantdOfficePrompt', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center']
+              #              - ['Palette', 'widgets.documents.graphics.NchantdOfficePalette', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center']
+              #              - ['Data', 'widgets.documents.analytics.sources.NchantdOfficeSourceManager', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center']
+              #              - ['Form', 'widgets.documents.media.forms.NchantdOfficeFormManager', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center']
+              #              - ['Chart', 'widgets.documents.analytics.charts.NchantdOfficeChart', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center']
+              #- [ 'Files', 'widgets.documents.filesystems.NchantdOfficeFileSystem', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center' ]
+              #- [ 'PDF', 'widgets.documents.media.pdfs.NchantdOfficePDF', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center' ]
+              #              - ['Calendar', 'widgets.documents.calendars.NchantdOfficeCalendar', "{}", '067ca837-17f6-74e7-8000-f7de9b7927f1', "", 0, 'custom_widget', 'center']
+        'view':
+          'vw_tab':
+            'description':
+            'cmd': >
+#               CREATE VIEW vw_tab AS
+#                SELECT
+#                  name_txt, widget_txt, widgdata_dict, pid_txt, did_txt, position_int, tab_type_txt,
+#                  tabset_type_txt, readonly_bit, editable_bit, visible_bit, moveable_bit, tid_txt, 'app' as "app_data_type"
+#                FROM app_tab
+#                WHERE ACTIVE_BIT = 1
+#                UNION
+#                SELECT
+#                  name_txt, widget_txt, widgdata_dict, pid_txt, did_txt, position_int, tab_type_txt,
+#                  tabset_type_txt, readonly_bit, editable_bit, visible_bit, moveable_bit, tid_txt, 'doc' as "app_data_type"
+#                FROM doc_tab
+#                WHERE ACTIVE_BIT = 1
+#                GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
