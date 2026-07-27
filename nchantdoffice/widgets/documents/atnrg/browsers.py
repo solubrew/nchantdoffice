@@ -141,8 +141,8 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return buttons
 
     def cmd_check_is_pinned(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_check_is_pinned."""
+        logma.info(f"[browsers] {self.__class__.__name__}.cmd_check_is_pinned invoked (stub)")
         return self
 
     def cmd_clear_cookies(self, event, *args, **kwargs):
@@ -189,18 +189,18 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return self
 
     def cmd_fill_in_forms(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_fill_in_forms."""
+        logma.info(f"[browsers] {self.__class__.__name__}.cmd_fill_in_forms invoked (stub)")
         return self
 
     def cmd_fill_in_forms_clear(self, event, *args, **kwargs):
-        """will ask for delete in dialog"""
-        # TODO: implement method
+        """Stub implementation of cmd_fill_in_forms_clear."""
+        logma.info(f"[browsers] {self.__class__.__name__}.cmd_fill_in_forms_clear invoked (stub)")
         return self
 
     def cmd_fill_in_forms_edit(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_fill_in_forms_edit."""
+        logma.info(f"[browsers] {self.__class__.__name__}.cmd_fill_in_forms_edit invoked (stub)")
         return self
 
     def cmd_goto_page(self, event=None, *args, **kwargs):
@@ -239,8 +239,8 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return self
 
     def cmd_on_resource_select(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_on_resource_select."""
+        logma.info(f"[browsers] {self.__class__.__name__}.cmd_on_resource_select invoked (stub)")
         return self
 
     def cmd_previous_page(self, url=None, *args, **kwargs):
@@ -277,23 +277,23 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return self
 
     def cmd_set_pin_browser_tab(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_set_pin_browser_tab."""
+        logma.info(f"[browsers] {self.__class__.__name__}.cmd_set_pin_browser_tab invoked (stub)")
         return self
 
     def cmd_set_save_browser_tab(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_set_save_browser_tab."""
+        logma.info(f"[browsers] {self.__class__.__name__}.cmd_set_save_browser_tab invoked (stub)")
         return self
 
     def cmd_set_browsing_history_expiry(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_set_browsing_history_expiry."""
+        logma.info(f"[browsers] {self.__class__.__name__}.cmd_set_browsing_history_expiry invoked (stub)")
         return self
 
     def cmd_show_badge(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_show_badge."""
+        logma.info(f"[browsers] {self.__class__.__name__}.cmd_show_badge invoked (stub)")
         return self
 
     def cmd_take_screenshot(self, event, *args, **kwargs):

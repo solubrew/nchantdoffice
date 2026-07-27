@@ -157,8 +157,9 @@ class NchantdCompressPane(NchantdPane):
         return self
 
     def cmd_move_files_on_compress(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_move_files_on_compress."""
+        logma.info(f"[stub] {self.__class__.__name__}.cmd_move_files_on_compress invoked")
+        return self
 
     def cmd_rename_on_compress(self, event, *args, **kwargs):
         """Toggle whether files are renamed after compression"""
@@ -358,16 +359,19 @@ class NchantdMovePane(NchantdPane):
         return self
 
     def cmd_automate_move(self, event=None, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_automate_move."""
+        logma.info(f"[stub] {self.__class__.__name__}.cmd_automate_move invoked")
+        return self
 
     def cmd_move_files(self, event=None, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_move_files."""
+        logma.info(f"[stub] {self.__class__.__name__}.cmd_move_files invoked")
+        return self
 
     def set_from_folder(self):
-        """"""
-        # TODO: implement method
+        """Stub implementation of set_from_folder."""
+        logma.info(f"[stub] {self.__class__.__name__}.set_from_folder invoked")
+        return self
 
 
 class NchantdRenamePane(NchantdPane):

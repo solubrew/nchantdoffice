@@ -1462,9 +1462,22 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def store_node(self):
-        """"""
-        # TODO: implement method
-        return self
+        """Persist the current node tree to the database.
+
+        Iterates ``self.nodes`` (the in-memory DataFrame) and writes each row
+        via ``store.store_app_tree_node``. Skip the implementation for now —
+        logging the count so callers can see this stub was hit.
+        """
+        if not hasattr(self, "nodes") or self.nodes is None:
+            logma.info("[models] store_node: no in-memory nodes to persist")
+            return self
+        try:
+            count = len(self.nodes)
+            logma.info(f"[models] store_node: would persist {count} nodes (stub)")
+            return self
+        except Exception as e:
+            logma.error(f"[models] store_node failed: {e}", exc_info=True)
+            return self
 
     def store_rss_feeds(self, df, how=None):
         """"""

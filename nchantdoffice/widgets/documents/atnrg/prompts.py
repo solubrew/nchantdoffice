@@ -218,18 +218,18 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         return self
 
     def cmd_select_model_new(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_select_model_new."""
+        logma.info(f"[stub] {self.__class__.__name__}.cmd_select_model_new invoked")
         return self
 
     def cmd_set_chat_history_expiry(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_set_chat_history_expiry."""
+        logma.info(f"[stub] {self.__class__.__name__}.cmd_set_chat_history_expiry invoked")
         return self
 
     def cmd_toggle_dual_models(self, event, *args, **kwargs):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_toggle_dual_models."""
+        logma.info(f"[stub] {self.__class__.__name__}.cmd_toggle_dual_models invoked")
         return self
 
     def get_prompt_max_length(self):

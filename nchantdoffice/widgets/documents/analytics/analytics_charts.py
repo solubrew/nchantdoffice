@@ -287,8 +287,8 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         return self
 
     def cmd_search_data_sources(self):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_search_data_sources."""
+        logma.info(f"[stub] {self.__class__.__name__}.cmd_search_data_sources invoked")
         return self
 
     def cmd_toggle_config_pane(self, event, *args, **kwargs):

@@ -597,8 +597,9 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         return self
 
     def cmd_event_datetime_change(self):
-        """"""
-        # TODO: implement method
+        """Stub implementation of cmd_event_datetime_change."""
+        logma.info(f"[stub] {self.__class__.__name__}.cmd_event_datetime_change invoked")
+        return self
 
     def cmd_on_change_scope(self, event, *args, **kwargs):
         """"""
