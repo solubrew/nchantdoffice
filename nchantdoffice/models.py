@@ -1046,11 +1046,37 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         if df.empty:
             return None
         # df["published_dttm"] = df["published_dttm"].apply(lambda x: parser.parse(x).isoformat())
-        # df = df[df["published_dttm"] == dt.datetime.now().date() - 3]#TODO convert to correct formats
+        df = self._filter_recent_rss_entries(df)
         df.sort_values(by=["published_dttm"])
         logma.info(f"Store RSS Feeds {df.head()}")
         self.store_rss_entries(df)
         return df
+
+    def _filter_recent_rss_entries(self, df, days_back=None):
+        """Filter an RSS-entries DataFrame to recent published dates.
+
+        Uses ``days_back`` (defaults to 3) to compute the cutoff. The
+        cutoff is ``dt.datetime.now() - dt.timedelta(days=days_back)``.
+        Any entry with ``published_dttm`` after the cutoff is kept.
+
+        Falls back to returning the unfiltered DataFrame if the
+        ``published_dttm`` column is missing or non-parsable.
+        """
+        try:
+            import datetime as _dt
+            import pandas as _pd
+            if "published_dttm" not in df.columns:
+                return df
+            cutoff = _dt.datetime.now() - _dt.timedelta(
+                days=days_back if days_back is not None else 3
+            )
+            # Parse to datetime; coerce errors to NaT
+            parsed = _pd.to_datetime(df["published_dttm"], errors="coerce")
+            mask = parsed.notna() & (parsed >= cutoff)
+            return df.loc[mask]
+        except Exception as e:
+            logma.error(f"[models] _filter_recent_rss_entries failed: {e}", exc_info=True)
+            return df
 
     def get_search_engines(self, db="db"):
         """"""

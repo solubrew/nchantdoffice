@@ -382,14 +382,57 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # TODO implement method
         return self
 
-    def cmd_on_change_right_side_focus(self):
-        """"""
-        # TODO implement method
+    def cmd_on_change_right_side_focus(self, event=None, *args, **kwargs):
+        """Toggle the refocus-right-side-tabs-on-document-change flag.
+
+        Reads the current checkbox state (or falls back to the
+        stored ``refocus_right_side_tab`` attribute) and writes the
+        updated value to the config so downstream behaviour follows
+        the user's preference.
+        """
+        try:
+            value = None
+            checkbox = getattr(self, "refocus_setting", None)
+            if checkbox is not None and hasattr(checkbox, "isChecked"):
+                value = bool(checkbox.isChecked())
+            if value is None:
+                value = getattr(self, "refocus_right_side_tab", False)
+            self.refocus_right_side_tab = bool(value)
+            self.config.dikt["refocus_right_side_tab"] = bool(value)
+        except Exception as e:
+            logma.error(f"[settings] cmd_on_change_right_side_focus failed: {e}", exc_info=True)
         return self
 
-    def cmd_on_change_right_side_tab_select(self):
-        """"""
-        # TODO implement method
+    def cmd_on_change_right_side_tab_select(self, event=None, *args, **kwargs):
+        """Record the user's chosen right-side default tab.
+
+        Reads the current value from ``self.default_tab_switch``
+        (or ``self.default_right_side_tab_select`` as a fallback)
+        and persists it on the config so the next session opens the
+        selected right-pane tab.
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            value = None
+            widget = (
+                getattr(self, "default_tab_switch", None)
+                or getattr(self, "default_right_side_tab_select", None)
+            )
+            if widget is not None:
+                getter = (
+                    getattr(widget, "currentText", None)
+                    or getattr(widget, "get_value", None)
+                )
+                if callable(getter):
+                    value = getter()
+            if value is None:
+                value = getattr(self, "default_right_side_tab", None)
+            if value is not None:
+                self.default_right_side_tab = value
+                self.config.dikt["default_right_side_tab"] = value
+        except Exception as e:
+            logma.error(f"[settings] cmd_on_change_right_side_tab_select failed: {e}", exc_info=True)
         return self
 
     def get_settings(self):

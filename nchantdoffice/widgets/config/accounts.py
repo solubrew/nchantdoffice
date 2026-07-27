@@ -353,38 +353,60 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         }
 
     def sync_with_server(self):
-        """Synchronize account data with nchantrs.com server"""
-        try:
-            # TODO: Implement actual server sync
-            # This would involve:
-            # 1. Check for API key
-            # 2. Make API request to server
-            # 3. Update local user data
-            # 4. Refresh UI
+        """Synchronize account data with nchantrs.com server.
 
-            if not self.app.model.user.apikey:
-                logma.warning("No API key configured - cannot sync with server")
+        Validates the API key, makes a GET request to the nchantrs
+        account endpoint, parses the JSON response and writes the
+        returned ``status`` and ``credits`` onto the local user
+        object via ``update_account_status`` / ``update_credits``.
+
+        Returns ``True`` on a successful sync, ``False`` on any
+        validation, network, or parse failure.
+        """
+        try:
+            user = getattr(self.app.model, "user", None)
+            if not user or not getattr(user, "apikey", None):
+                logma.warning("[accounts] sync_with_server: no API key configured")
                 return False
 
             logma.info("Syncing account data with server...")
-            # Example API call placeholder:
-            # response = requests.get(
-            #     "https://api.nchantrs.com/account",
-            #     headers={"Authorization": f"Bearer {self.app.model.user.apikey}"}
-            # )
-            # if response.status_code == 200:
-            #     data = response.json()
-            #     self.update_account_status(data.get('status'))
-            #     self.update_credits(data.get('credits'))
-            #     return True
+            try:
+                import requests  # type: ignore
+            except ImportError:
+                logma.warning("[accounts] sync_with_server: requests module not installed")
+                return False
 
-            logma.info("Server sync requires API implementation")
-            return False
+            try:
+                response = requests.get(
+                    "https://api.nchantrs.com/account",
+                    headers={"Authorization": f"Bearer {user.apikey}"},
+                    timeout=10,
+                )
+            except Exception as e:
+                logma.error(f"[accounts] sync_with_server request failed: {e}", exc_info=True)
+                return False
+
+            if response.status_code != 200:
+                logma.warning(
+                    f"[accounts] sync_with_server got status {response.status_code}"
+                )
+                return False
+
+            try:
+                data = response.json()
+            except ValueError as e:
+                logma.error(f"[accounts] sync_with_server parse failed: {e}", exc_info=True)
+                return False
+
+            if hasattr(self, "update_account_status") and "status" in data:
+                self.update_account_status(data["status"])
+            if hasattr(self, "update_credits") and "credits" in data:
+                self.update_credits(data["credits"])
+            return True
 
         except Exception as e:
-            logma.error(f"Error syncing with server: {e}")
+            logma.error(f"[accounts] sync_with_server failed: {e}", exc_info=True)
             return False
-
 
 # ====================================================================================================================||
 
