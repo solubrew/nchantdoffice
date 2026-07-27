@@ -170,6 +170,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         try:
             node.setText(0, self.name_entry.textbox.entry_data)
         except Exception as e:
+            logma.warning(f"[panes/documents] set_node_name: first setText failed ({e}) - re-fetching node")
             node = self.app.model.get_current_node()
             node.setText(0, self.name_entry.textbox.entry_data)
         return self
