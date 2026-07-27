@@ -27,7 +27,7 @@ from pygments.lexers.ruby import RubyLexer
 from pygments.lexers.r import SLexer as RLexer
 from pygments.lexers.shell import BashLexer
 from pygments.formatters import HtmlFormatter
-
+from numpy import isnan, nan
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
 from nchantrs.libraries import pyqt
@@ -155,10 +155,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             ranges = md.get("formatting") or []
             if not ranges:
                 return self
-            editor = (
-                getattr(self, "document_editor", None)
-                or getattr(self, "editor", None)
-            )
+            editor = getattr(self, "document_editor", None) or getattr(self, "editor", None)
             if editor is None:
                 return self
             cursor = None
@@ -184,6 +181,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
                         cursor.setUnderline(bool(entry["underline"]))
                     if entry.get("color") and hasattr(cursor, "setForeground"):
                         from PySide6 import QtGui
+
                         cursor.setForeground(QtGui.QColor(str(entry["color"])))
                 except Exception:
                     pass
@@ -314,13 +312,13 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         back to setting plain text.
         """
         if hasattr(self, "document_editor") and self.document_editor is not None:
-            self.document_editor.insert("[chart]")
+            self.document_editor.insert("[chart]")  # TODO this needs to be real logic
         return self
 
     def cmd_add_code(self, event=None, *args, **kwargs):
         """Insert a code-block placeholder at the current cursor position."""
         if hasattr(self, "document_editor") and self.document_editor is not None:
-            self.document_editor.insert("[code]")
+            self.document_editor.insert("[code]")  # TODO this needs to be real logic
         return self
 
     def cmd_add_date(self, event=None, *args, **kwargs):
@@ -334,25 +332,25 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
     def cmd_add_image(self, event=None, *args, **kwargs):
         """Insert an image placeholder at the current cursor position."""
         if hasattr(self, "document_editor") and self.document_editor is not None:
-            self.document_editor.insert("[image]")
+            self.document_editor.insert("[image]")  # TODO this needs to be real logic
         return self
 
     def cmd_add_shape(self, event=None, *args, **kwargs):
         """Insert a shape placeholder at the current cursor position."""
         if hasattr(self, "document_editor") and self.document_editor is not None:
-            self.document_editor.insert("[shape]")
+            self.document_editor.insert("[shape]")  # TODO this needs to be real logic
         return self
 
     def cmd_add_table(self, event=None, *args, **kwargs):
         """Insert a table placeholder at the current cursor position."""
         if hasattr(self, "document_editor") and self.document_editor is not None:
-            self.document_editor.insert("[table]")
+            self.document_editor.insert("[table]")  # TODO this needs to be real logic
         return self
 
     def cmd_add_textbox(self, event=None, *args, **kwargs):
         """Insert a text-box placeholder at the current cursor position."""
         if hasattr(self, "document_editor") and self.document_editor is not None:
-            self.document_editor.insert("[textbox]")
+            self.document_editor.insert("[textbox]")  # TODO this needs to be real logic
         return self
 
     def cmd_add_time(self, event=None, *args, **kwargs):
@@ -824,9 +822,15 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             chart_type = "bar"
             try:
                 from PySide6 import QtWidgets
+
                 items = ["Line", "Bar", "Pie", "Scatter"]
                 chart_type, ok = QtWidgets.QInputDialog.getItem(
-                    self, "Insert Chart", "Chart type:", items, 0, False,
+                    self,
+                    "Insert Chart",
+                    "Chart type:",
+                    items,
+                    0,
+                    False,
                 )
                 if not ok:
                     return self
@@ -857,9 +861,15 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             shape = "rectangle"
             try:
                 from PySide6 import QtWidgets
+
                 items = ["Rectangle", "Circle", "Line", "Triangle"]
                 shape, ok = QtWidgets.QInputDialog.getItem(
-                    self, "Insert Shape", "Shape:", items, 0, False,
+                    self,
+                    "Insert Shape",
+                    "Shape:",
+                    items,
+                    0,
+                    False,
                 )
                 if not ok:
                     return self
@@ -892,9 +902,15 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             symbol = "α"
             try:
                 from PySide6 import QtWidgets
+
                 items = ["α (alpha)", "β (beta)", "γ (gamma)", "δ (delta)", "π (pi)", "Σ (Sigma)", "§ (section)"]
                 symbol, ok = QtWidgets.QInputDialog.getItem(
-                    self, "Insert Symbol", "Symbol:", items, 0, False,
+                    self,
+                    "Insert Symbol",
+                    "Symbol:",
+                    items,
+                    0,
+                    False,
                 )
                 if not ok:
                     return self
@@ -922,6 +938,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             rows, cols = 3, 3
             try:
                 from PySide6 import QtWidgets
+
                 rows, ok_r = QtWidgets.QInputDialog.getInt(self, "Insert Table", "Rows:", 3, 1, 50)
                 if not ok_r:
                     return self
@@ -968,9 +985,15 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             language = "python"
             try:
                 from PySide6 import QtWidgets
+
                 items = ["python", "javascript", "html", "css", "json", "yaml", "bash"]
                 language, ok = QtWidgets.QInputDialog.getItem(
-                    self, "Insert Code", "Language:", items, 0, False,
+                    self,
+                    "Insert Code",
+                    "Language:",
+                    items,
+                    0,
+                    False,
                 )
                 if not ok:
                     return self
@@ -981,13 +1004,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
                 return self
             _style = "background:#f5f5f5;padding:8px;border:1px solid #ccc;"
             _code_open = '<code class="language-' + str(language) + '">'
-            _code_body = '\n# ' + str(language) + ' code here\n'
-            _code_close = '</code>'
-            html = (
-                '<pre style="' + _style + '">'
-                + _code_open + _code_body + _code_close
-                + '</pre>'
-            )
+            _code_body = "\n# " + str(language) + " code here\n"
+            _code_close = "</code>"
+            html = '<pre style="' + _style + '">' + _code_open + _code_body + _code_close + "</pre>"
             cursor.insertHtml(html)
             logma.info(f"[scripts] insert_code: {language}")
         except Exception as e:
@@ -1005,9 +1024,15 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             doc_type = "note"
             try:
                 from PySide6 import QtWidgets
+
                 items = ["note", "image", "pdf", "spreadsheet", "script", "form"]
                 doc_type, ok = QtWidgets.QInputDialog.getItem(
-                    self, "Insert Document", "Document type:", items, 0, False,
+                    self,
+                    "Insert Document",
+                    "Document type:",
+                    items,
+                    0,
+                    False,
                 )
                 if not ok:
                     return self
@@ -1021,7 +1046,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             char_format.setAnchor(True)
             char_format.setAnchorNames([anchor])
             char_format.setFontUnderline(True)
-            char_format.setForeground(pyqt.QColor(0x1f, 0x4e, 0x79))
+            char_format.setForeground(pyqt.QColor(0x1F, 0x4E, 0x79))
             cursor.insertText(f"[Inserted {doc_type} document]", char_format)
             logma.info(f"[scripts] insert_document: {doc_type}")
         except Exception as e:
@@ -1062,8 +1087,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.populate_document()
         return self
 
-
-
     def _load_external_file(self):
         """Load an external script file into the document editor.
 
@@ -1083,6 +1106,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         """
         try:
             import os
+
             path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path", None)
             if not path:
                 return False
@@ -1091,17 +1115,26 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
                 return False
             ext = os.path.splitext(path)[1].lower()
             supported = {
-                ".py", ".js", ".md", ".txt", ".json", ".yaml", ".yml",
-                ".html", ".css", ".xml", ".csv", ".ini", ".toml", ".sh",
+                ".py",
+                ".js",
+                ".md",
+                ".txt",
+                ".json",
+                ".yaml",
+                ".yml",
+                ".html",
+                ".css",
+                ".xml",
+                ".csv",
+                ".ini",
+                ".toml",
+                ".sh",
             }
             if ext not in supported:
                 return False
             with open(path, "r", encoding="utf-8", errors="replace") as f:
                 text = f.read()
-            editor = (
-                getattr(self, "document_editor", None)
-                or getattr(self, "editor", None)
-            )
+            editor = getattr(self, "document_editor", None) or getattr(self, "editor", None)
             if editor is None:
                 return False
             if hasattr(editor, "setPlainText"):
@@ -1164,6 +1197,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.document.file_format = self.config.dikt.get("document", {}).get("syntax", "plain-text")
         if self.document.file_format is None:
             self.document.file_format = "plain-text"
+        logma.info(f"Syntax {self.document.syntax}")
+        logma.info(f"Type {type(self.document.syntax)}")
+        if self.document.syntax is None or isinstance(self.document.syntax, float):#This is to catch nan probably a better way
+            self.document.syntax = "plain-text"
         logma.info(f"Document Format: {self.document.file_format}")
         logma.info(f"Syntax {self.document.syntax}")
         theme = "monokai"
