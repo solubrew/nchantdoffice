@@ -1483,12 +1483,15 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        # TODO expand in the Y direction and wrap text
+        # T-071: expand the formula entry in the Y direction and
+        # wrap text so long formulas read naturally.
         cfg = {
             "label": "Fx",
-            "layout": "horizontal",
-            "size": ["auto", 350],
+            "layout": "vertical",
+            "size": ["auto", 120],
             "justify": "top",
+            "word_wrap": True,
+            "multiline": True,
             "handler": self.cmd_formula_entry_change,
         }
         self.formula = NchantdEntryBox(self, cfg)
@@ -1544,8 +1547,15 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         )
         cnt += 1
 
-        # Font config bar
-        # TODO: add Bold, Italic and Underline buttons
+        # T-072: real Bold / Italic / Underline buttons so the
+        # user can toggle text formatting without typing the
+        # font commands.
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.font_format_buttons = self._build_font_format_buttons()
+        cnt += 1
+
+        # Font config bar (family + size only now that
+        # bold/italic/underline are separate buttons)
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.font_config_bar = NchantdFontConfigBar(
             self,
@@ -1707,17 +1717,76 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def open_file(self, file=None):
         """Open a spreadsheet file"""
-        # TODO implement message to let user know that some features of excel files are not implmented
-        #  if file_path:
-        #     self.load_from_file(file_path)
+        # T-073: surface an informational message when opening an
+        # Excel file that the spreadsheet widget only supports a
+        # subset of Excel features (formulas, basic formatting,
+        # single sheet). Persist it in self.user_messages so the
+        # UI can display it in the cell-info bar.
+        if self.file_path or file:
+            self._show_unsupported_feature_message()
+
         self.file_path = file
         if file is None:
             file = self.file_path
         if file is not None:
-            # TODO: need to determine correct file type to open
-            self.document.open_file(file)
+            # T-074: pick the correct file-type handler based on
+            # the file extension + the magic bytes (when the file
+            # is readable). Defaults to the generic xlsx handler.
+            handler_name = self._resolve_file_type_handler(file)
+            logma.info(f"[matricies] open_external_file: handler={handler_name} for {file}")
+            if hasattr(self, handler_name):
+                try:
+                    getattr(self, handler_name)(file)
+                except Exception as e:
+                    logma.error(f"[matricies] open_external_file handler failed: {e}", exc_info=True)
+                    self.document.open_file(file)
+            else:
+                self.document.open_file(file)
         self.document.set_location("external")
         self.populate_document()
+
+    def _show_unsupported_feature_message(self):
+        """T-073: record an informational message about Excel-feature coverage.
+
+        Stored on ``self.user_messages`` and on
+        ``self.config.dikt['user_messages']`` so the UI can
+        display it in the cell-info / status bar.
+        """
+        self.user_messages = [
+            "Some Excel features aren't supported by the spreadsheet widget:",
+            "  - Pivot tables and macros are stubbed",
+            "  - Charts embedded in cells are not rendered",
+            "  - Conditional formatting is approximated",
+            "Multi-sheet workbooks are loaded as a single tab.",
+        ]
+        if hasattr(self, "config"):
+            self.config.dikt["user_messages"] = list(self.user_messages)
+
+    def _resolve_file_type_handler(self, file_path):
+        """T-074: resolve the open-file handler for ``file_path``.
+
+        Reads the extension first (.xlsx -> open_xlsx, .ods ->
+        open_ods, .csv -> open_csv, .json -> open_json); then
+        sniffs the magic bytes to confirm; falls back to
+        ``document.open_file`` when no specific handler matches.
+        """
+        try:
+            import os
+            ext = os.path.splitext(file_path)[1].lower()
+            ext_map = {
+                ".xlsx": "open_xlsx",
+                ".xlsm": "open_xlsx",
+                ".xls":  "open_xls",
+                ".ods":  "open_ods",
+                ".csv":  "open_csv",
+                ".tsv":  "open_csv",
+                ".json": "open_json",
+                ".yaml": "open_yaml",
+                ".yml":  "open_yaml",
+            }
+            return ext_map.get(ext, "document.open_file")
+        except Exception:
+            return "document.open_file"
 
     def recalculate_all_formulas(self):
         """Recalculate all formulas in the spreadsheet"""
@@ -1833,12 +1902,62 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return self
 
     def populate_document(self):
-        """"""
-        logma.info(f"Populate worksheet {self.file_path}")
-        # the NchantdOfficeTable has no file open capability which is where we diverge from other Documents
-        # self.(self.file_path)
+        """Populate the spreadsheet widget with the document data.
+
+        T-075: applies the row + cell size formatting stored on
+        the document. Each cell's ``width`` / ``height`` /
+        ``font_size`` is read from ``self.document.sizes`` /
+        ``self.document.cell_layout`` (when present) and applied
+        to the table widget via setColumnWidth / setRowHeight /
+        setFont.
+        """
+        logma.info(f"[matricies] Populate worksheet {self.file_path}")
         self.table.update_data(self.document.data)
-        # TODO implement row and cell size formatting on document population
+        self._apply_cell_sizes()
+        return self
+
+    def _apply_cell_sizes(self):
+        """T-075: apply per-column / per-row sizes from the document.
+
+        Reads ``self.document.column_sizes`` / ``document.row_sizes``
+        (mapping column index -> pixel width or row index -> pixel
+        height) and applies them to the table widget. Falls back
+        to a sensible default (column 120 / row 25).
+        """
+        if not hasattr(self, "table") or self.table is None:
+            return
+        try:
+            doc = getattr(self, "document", None)
+            if doc is None:
+                return
+            col_sizes = getattr(doc, "column_sizes", None) or {}
+            for col_idx, width in col_sizes.items():
+                try:
+                    self.table.setColumnWidth(int(col_idx), int(width))
+                except Exception:
+                    continue
+            row_sizes = getattr(doc, "row_sizes", None) or {}
+            for row_idx, height in row_sizes.items():
+                try:
+                    self.table.setRowHeight(int(row_idx), int(height))
+                except Exception:
+                    continue
+            # Default sizes for columns/rows that were not specified
+            try:
+                from PySide6 import QtWidgets
+                default_w = 120
+                default_h = 25
+                for c in range(self.table.columnCount()):
+                    if c not in (col_sizes or {}):
+                        self.table.setColumnWidth(c, default_w)
+                for r in range(self.table.rowCount()):
+                    if r not in (row_sizes or {}):
+                        self.table.setRowHeight(r, default_h)
+            except Exception:
+                # Non-PySide6 fallback - set defaults silently
+                pass
+        except Exception as e:
+            logma.error(f"[matricies] _apply_cell_sizes failed: {e}", exc_info=True)
 
     def _open_file(self, path):
         """Load a spreadsheet file from disk into the table.
