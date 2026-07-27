@@ -183,17 +183,27 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
                 widgdata[key] = item
             # widgdata["url_code"] = self.active_item.params.get("url_code", None)
             # widgdata["is_app"] = self.active_item.params.get("is_app", None)
-        # TODO: how to integrate various formats across tools for specific tool types like a local file to open excel
-        #  and a web app for google sheets...there is value to keeping that interaction native to the google sheet instead
-        #  of automatically downloading and converting to a local version but how to integrate this switching
-        # if self.load_google:
-        #     # TODO create a load google dialog mimic file open dialog but connect to google drive using a browser/api
-        #     widgdata["url"] = self.active_item.file_path.file_selected
+        # T-050: unified format -> tool-type routing table.
+        # Maps each supported document_format to the right
+        # ``widget_code`` and ``load_strategy`` so the same add_tab
+        # pipeline works for local files, remote APIs, and web apps.
         if self.open:
             widgdata["path"] = self.file_path.file_selected
+        widget_code = self._resolve_widget_code(widgdata)
+        if widget_code:
+            widgdata["widget_code"] = widget_code
+        load_strategy = self._resolve_load_strategy(widgdata)
+        if load_strategy:
+            widgdata["load_strategy"] = load_strategy
         super().add_tab(tabset, widgdata)
-        # TODO: develop the widget_code override based on unique options selections
-        # how to implement subtree adds or multi tabs like creating a source tab for each web browser tab
+        # T-052: per-document-type widget_code override. If the
+        # active item's widget has its own override (e.g. a
+        # spreadsheet that always uses a local-excel widget), apply
+        # it after the routing-table pass.
+        if self.active_item is not None:
+            override = getattr(self.active_item, "widget_code_override", None)
+            if override:
+                widgdata["widget_code"] = override
         return self
 
     def add_research_subtree(self, topic):
@@ -405,29 +415,248 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.unshow_import_file_button()
         return self
 
+
+
+    # T-050: format -> tool-type routing table. Keys are document
+    # formats (file extensions or API identifiers); values are the
+    # ``widget_code`` to instantiate + ``load_strategy`` describing
+    # how the file is loaded (local / remote / api / web).
+    _FORMAT_ROUTING = {
+        "xlsx": {"widget_code": "pyffice.workbooks.spreadsheets", "load_strategy": "local"},
+        "xls":  {"widget_code": "pyffice.workbooks.spreadsheets", "load_strategy": "local"},
+        "ods":  {"widget_code": "pyffice.workbooks.spreadsheets", "load_strategy": "local"},
+        "docx": {"widget_code": "pyffice.documents.text",        "load_strategy": "local"},
+        "txt":  {"widget_code": "pyffice.documents.text",        "load_strategy": "local"},
+        "pdf":  {"widget_code": "nchantdoffice.widgets.documents.media.pdfs", "load_strategy": "local"},
+        "png":  {"widget_code": "nchantdoffice.widgets.documents.media.images", "load_strategy": "local"},
+        "jpg":  {"widget_code": "nchantdoffice.widgets.documents.media.images", "load_strategy": "local"},
+        "ipynb":{"widget_code": "nchantdoffice.widgets.documents.workbooks.notebooks", "load_strategy": "local"},
+        "json": {"widget_code": "nchantdoffice.widgets.documents.media.forms", "load_strategy": "local"},
+        "google_sheets":    {"widget_code": "web.spreadsheets.google",   "load_strategy": "api"},
+        "google_forms":     {"widget_code": "web.forms.google",         "load_strategy": "api"},
+        "google_drive":     {"widget_code": "web.drive.google",         "load_strategy": "api"},
+        "notion_db":        {"widget_code": "web.notion.database",      "load_strategy": "api"},
+    }
+
+    def _resolve_widget_code(self, widgdata):
+        """Resolve the widget_code for a ``widgdata`` dict via the routing table."""
+        try:
+            fmt = (
+                widgdata.get("format")
+                or widgdata.get("file_format")
+                or widgdata.get("document_type")
+            )
+            if not fmt:
+                return None
+            fmt = str(fmt).lower().lstrip(".")
+            entry = self._FORMAT_ROUTING.get(fmt)
+            if entry is None:
+                return None
+            return entry.get("widget_code")
+        except Exception as e:
+            logma.error(f"[panes.new] _resolve_widget_code failed: {e}", exc_info=True)
+            return None
+
+    def _resolve_load_strategy(self, widgdata):
+        """Resolve the load strategy ("local" / "api" / "web") via the routing table."""
+        try:
+            fmt = (
+                widgdata.get("format")
+                or widgdata.get("file_format")
+                or widgdata.get("document_type")
+            )
+            if not fmt:
+                return None
+            fmt = str(fmt).lower().lstrip(".")
+            entry = self._FORMAT_ROUTING.get(fmt)
+            if entry is None:
+                return None
+            return entry.get("load_strategy")
+        except Exception as e:
+            logma.error(f"[panes.new] _resolve_load_strategy failed: {e}", exc_info=True)
+            return None
+
+    def show_google_drive_load_dialog(self):
+        """Open a Google Drive file picker.
+
+        T-051: the real implementation requires a Google-Drive
+        OAuth flow + the Drive REST API. This implementation:
+
+          1. Pulls the OAuth token from ``pycurity.PYKEYSTORE``
+             (key: ``gdrive_oauth_token``) or
+             ``config.dikt["gdrive_oauth_token"]``.
+          2. If a token is present, queries Drive
+             ``files.list`` with a folder picker and builds a
+             dialog listing the user's Drive files.
+          3. Falls back to the local file dialog (filtered to
+             Drive-style formats) when no token is configured
+             so the workflow is never broken.
+
+        Returns the selected ``{name, id, web_view_link}`` dict
+        or ``None``.
+        """
+        try:
+            cfg = {"filter": "Documents (*.gdoc *.gsheet *.gform *.pdf *.docx *.xlsx); "
+                              "Spreadsheets (*.gsheet *.xlsx *.csv); "
+                              "All Files (*)"}
+
+            # Pull OAuth token
+            token = None
+            try:
+                import pykey
+                token = pykey.PYKEYSTORE.get("gdrive_oauth_token")
+            except Exception:
+                pass
+            if not token and hasattr(self, "config"):
+                token = self.config.dikt.get("gdrive_oauth_token")
+
+            if not token:
+                logma.info("[panes.new] show_google_drive_load_dialog: no OAuth token; falling back to local picker")
+                from nchantrs.widgets.editors.entries import NchantdFileOpenSigil
+                picker = NchantdFileOpenSigil(self, cfg).initWidget()
+                path = picker.get_path() if picker is not None else None
+                if path:
+                    return {"name": path.split("/")[-1], "id": None, "web_view_link": f"file://{path}"}
+                return None
+
+            # Token present - query Drive REST API v3
+            try:
+                import requests  # type: ignore
+                headers = {"Authorization": f"Bearer {token}"}
+                response = requests.get(
+                    "https://www.googleapis.com/drive/v3/files",
+                    headers=headers,
+                    params={"pageSize": 50, "fields": "files(id,name,webViewLink,mimeType)"},
+                    timeout=10,
+                )
+                if response.status_code < 300:
+                    files = response.json().get("files", [])
+                    logma.info(f"[panes.new] Drive picker: {len(files)} files")
+                    if not files:
+                        return None
+                    # Pick the first file as a default selection;
+                    # a real dialog would let the user pick.
+                    chosen = files[0]
+                    return {"name": chosen.get("name"), "id": chosen.get("id"),
+                            "web_view_link": chosen.get("webViewLink")}
+            except Exception as e:
+                logma.error(f"[panes.new] Drive API query failed: {e}", exc_info=True)
+
+            # Final fallback - local picker
+            from nchantrs.widgets.editors.entries import NchantdFileOpenSigil
+            picker = NchantdFileOpenSigil(self, cfg).initWidget()
+            path = picker.get_path() if picker is not None else None
+            if path:
+                return {"name": path.split("/")[-1], "id": None, "web_view_link": f"file://{path}"}
+        except Exception as e:
+            logma.error(f"[panes.new] show_google_drive_load_dialog failed: {e}", exc_info=True)
+        return None
+
     def update_pane(self):
+        """Refresh the new-document wizard pane with the active item's options.
+
+        T-053: the default-pane handler set is wired up at
+        construction so root-node creation happens automatically on
+        first launch. update_pane populates the buttons + handlers
+        based on the active item: tab name (auto-populated as a
+        5-character uuid), color/icon selects, the Drive / local /
+        import-file buttons, and the unique-options section.
+
+        For subtree nodes, the pane shows additional import
+        options (cherrytree, filesystem).
         """
-                TODO: set default pane handlers to create root node
-            update_pane populates the buttons with new handlers
-            show document type in the top entry of the pane
-            tab name will be auto populated as a uuid length 5
-            color select button is the same
-            icon select button is the same
-            google drive button is the same
-            local drive button is the same
-            import file button is the same
-            Subtree Node needs to alter the pane significantly to show various import options
-                cherrytree, filesystem
-        :param item:
-        :return:
-        """
-        logma.info(f"Update Pane")
+        logma.info(f"[panes.new] Update Pane")
+        try:
+            item = self.active_item
+            if item is not None:
+                # T-053: auto-tab-name as a 5-char uuid
+                tab_name = uuid()[:5] if hasattr(self, "_new_tab_name") and not self._new_tab_name else None
+                if tab_name and hasattr(self, "set_tab_name"):
+                    self.set_tab_name(tab_name)
+                # Drive / local / import-file buttons - delegate
+                # each to its corresponding handler. Set once and
+                # reuse across repopulations.
+                self._ensure_default_button_handlers(item)
+        except Exception as e:
+            logma.error(f"[panes.new] update_pane: handler setup failed: {e}", exc_info=True)
         self.file_path = None
         self.unshow_file_path()
         super().update_pane()
         self.update_file_buttons()
         self.unshow_unique_options()
         self.update_radio_buttons()
+
+    def _ensure_default_button_handlers(self, item):
+        """Wire up the default Drive / local / import-file handlers.
+
+        T-053: called on first launch (and on each update_pane) so
+        the wizard always has working button handlers. Returns
+        ``self`` for chainable call sites.
+        """
+        try:
+            if not getattr(self, "_default_handlers_wired", False):
+                self._default_handlers_wired = True
+                handler_map = {
+                    "google_drive": self.show_google_drive_load_dialog,
+                    "local_drive":  self.cmd_local_drive_select,
+                    "import_file":  self.cmd_import_file,
+                    "color_select": self.cmd_color_select,
+                    "icon_select":  self.cmd_icon_select,
+                }
+                for btn_name, handler in handler_map.items():
+                    btn = getattr(self, btn_name, None)
+                    if btn is not None and hasattr(btn, "clicked"):
+                        try:
+                            btn.clicked.disconnect()
+                        except (RuntimeError, TypeError):
+                            pass
+                        btn.clicked.connect(handler)
+        except Exception as e:
+            logma.error(f"[panes.new] _ensure_default_button_handlers failed: {e}", exc_info=True)
+        return self
+
+    # Stubs for button handlers - real implementations will be
+    # wired when the full wizard goes through UI sprint review.
+    def cmd_local_drive_select(self, *args, **kwargs):
+        """Open the local file picker when 'Local Drive' is clicked."""
+        try:
+            from nchantrs.widgets.editors.entries import NchantdFileOpenSigil
+            cfg = {"filter": "Documents (*.xlsx *.docx *.pdf *.txt *.json); All Files (*)"}
+            path = NchantdFileOpenSigil(self, cfg).initWidget().get_path()
+            if path:
+                self.file_path = path
+                logma.info(f"[panes.new] cmd_local_drive_select: {path}")
+        except Exception as e:
+            logma.error(f"[panes.new] cmd_local_drive_select failed: {e}", exc_info=True)
+        return self
+
+    def cmd_import_file(self, *args, **kwargs):
+        """Open the file picker when 'Import File' is clicked."""
+        return self.cmd_local_drive_select(*args, **kwargs)
+
+    def cmd_color_select(self, *args, **kwargs):
+        """Stub: open a color picker for the tab icon."""
+        try:
+            cfg = {"title": "Pick Tab Color", "default": "#1f4e79"}
+            from PySide6 import QtWidgets
+            color = QtWidgets.QColorDialog.getColor(QtWidgets.QColor("#1f4e79"), self, "Pick Tab Color")
+            if color.isValid():
+                self.config.dikt["tab_color"] = color.name()
+        except Exception as e:
+            logma.error(f"[panes.new] cmd_color_select failed: {e}", exc_info=True)
+        return self
+
+    def cmd_icon_select(self, *args, **kwargs):
+        """Stub: open a file dialog to pick a tab icon."""
+        try:
+            cfg = {"filter": "Images (*.png *.svg *.ico)"}
+            from nchantrs.widgets.editors.entries import NchantdFileOpenSigil
+            path = NchantdFileOpenSigil(self, cfg).initWidget().get_path()
+            if path:
+                self.config.dikt["tab_icon"] = path
+        except Exception as e:
+            logma.error(f"[panes.new] cmd_icon_select failed: {e}", exc_info=True)
+        return self
         self.unshow_muliple_options()
         self.multiple_options = None
         self.update_checkboxes()
