@@ -551,64 +551,87 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         return options
 
     def init_drawer_document_config(self):
-        """"""
+        """Build the document-config drawer (compatibility / response defaults)."""
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        options = ["Google Forms", "Nchantd Office"]
-        cfg = {
-            "label": "Form Compatibility: ",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": options},
-            "handler": self.cmd_select_form_compatibility,
-        }
-        self.form_compatibility_select = NchantdDropDown(self, cfg).initWidget()
-        items[cnt]["widget"] = self.form_compatibility_select
+
+        # Compatibility dropdown
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.form_compatibility_select = NchantdDropDown(
+            self,
+            {
+                "label": "Form Compatibility: ",
+                "layout": "horizontal",
+                "combobox": {"size": ["auto", "auto"], "options": ["Google Forms", "Nchantd Office"]},
+                "handler": self.cmd_select_form_compatibility,
+            },
+        ).initWidget()
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        response_types = ["Text", "Number", "Date", "Multiple Choice", "Checkboxes", "Dropdown"]
-        cfg = {
-            "label": "Default Response Type:",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": response_types},
-        }
-        self.form_default_response_check = NchantdDropDown(self, cfg).initWidget()
-        items[cnt]["widget"] = self.form_default_response_check
+
+        # Default response type
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.form_default_response_check = NchantdDropDown(
+            self,
+            {
+                "label": "Default Response Type:",
+                "layout": "horizontal",
+                "combobox": {
+                    "size": ["auto", "auto"],
+                    "options": ["Text", "Number", "Date", "Multiple Choice", "Checkboxes", "Dropdown"],
+                },
+            },
+        ).initWidget()
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        triggers = ["On Submit", "On Change", "On Focus"]
-        cfg = {
-            "label": "Default Response Trigger:",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": triggers},
-        }
-        self.form_default_response_trigger_check = NchantdDropDown(self, cfg).initWidget()
-        items[cnt]["widget"] = self.form_default_response_trigger_check
+
+        # Default response trigger
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.form_default_response_trigger_check = NchantdDropDown(
+            self,
+            {
+                "label": "Default Response Trigger:",
+                "layout": "horizontal",
+                "combobox": {
+                    "size": ["auto", "auto"],
+                    "options": ["On Submit", "On Change", "On Focus"],
+                },
+            },
+        ).initWidget()
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {
-            "text": "Set Default Answer Required",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-        }
-        self.form_default_answer_required_check = NchantdCheckbox(self, cfg).initWidget()
-        items[cnt]["widget"] = self.form_default_answer_required_check
+
+        # Default answer required
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.form_default_answer_required_check = NchantdCheckbox(
+            self,
+            {
+                "text": "Set Default Answer Required",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+            },
+        ).initWidget()
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action.copy()
-        cfg = {
-            "text": "Set Default Always Asked",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-        }
-        self.form_default_always_asked_check = NchantdCheckbox(self, cfg).initWidget()
-        items[cnt]["widget"] = self.form_default_always_asked_check
+
+        # Default always-asked
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.form_default_always_asked_check = NchantdCheckbox(
+            self,
+            {
+                "text": "Set Default Always Asked",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+            },
+        ).initWidget()
         cnt += 1
+        return items
+
+    def _ensure_drawer_item(self, items, cnt):
+        """Lazily create a default drawer-item slot.
+
+        Centralises the ``if cnt not in items: items[cnt] = {...}`` pattern
+        used by ``init_drawer_document_config``, removing the repeated
+        branch flagged by the maintainability auditor as switch abuse.
+        """
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}.copy()
         return items
 
     def init_drawer_input_config(self):
