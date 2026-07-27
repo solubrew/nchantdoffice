@@ -446,9 +446,27 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return expiry
 
     def get_current_default_browser(self):
-        """"""
-        # TODO: get information from application config...is this configurable by instance?
-        return True
+        """Return whether the current browser is the OS default.
+
+        Looks up the per-instance configuration via
+        ``self.app.model.instance.browser.is_default`` first; falls
+        back to ``self.config.dikt["is_default_browser"]``; defaults
+        to ``True`` when neither is set.
+
+        Returns ``True`` if this instance is configured as the
+        system default, ``False`` otherwise.
+        """
+        try:
+            instance = getattr(self.app.model, "instance", None)
+            browser_cfg = getattr(instance, "browser", None) if instance else None
+            if browser_cfg is not None and hasattr(browser_cfg, "is_default"):
+                return bool(browser_cfg.is_default)
+        except Exception as e:
+            logma.error(f"[browsers] get_current_default_browser instance lookup failed: {e}", exc_info=True)
+        try:
+            return bool(self.config.dikt.get("is_default_browser", True))
+        except Exception:
+            return True
 
     def get_current_domain(self):
         """"""
@@ -939,20 +957,77 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #     items[cnt]["widget"] = self.page_resource_list
     #     cnt += 1
     #     return items
-    # PUSH to version 0.0.3
-    # def init_drawer_quickstart(self):
-    #     """"""
-    #     items = self.toolbox_config[500].get("items", {})
-    #     cnt = 0
-    #     if cnt not in items:
-    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-    #     cfg = {"text": "Bookmarks List"}
-    #     # TODO: build out using quick app links like a mini catalog
-    #     #
-    #     self.quick_start_list = NchantdOfficeBrowserQuickStartPane(self, cfg).initWidget()
-    #     items[cnt]["widget"] = self.quick_start_list
-    #     cnt += 1
-    #     return items
+    def init_drawer_quickstart(self):
+        """Build the quickstart drawer with bookmarks + quick-app links.
+
+        Populates ``toolbox_config[500]["items"]`` with two panes:
+          1. Bookmarks list (loaded from config.dikt)
+          2. Quick-app-link mini-catalog (loaded from the model's
+             quick-apps registry when available)
+
+        Each pane is its own slot; the helper centralises the slot
+        creation so future drawers can follow the same shape.
+        """
+        items = self.toolbox_config[500].get("items", {})
+        cnt = 0
+
+        # Bookmarks list
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.quick_start_list = self._build_bookmarks_pane()
+        cnt += 1
+
+        # Quick-app-link mini-catalog
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.quick_start_links = self._build_quick_app_links_pane()
+        cnt += 1
+
+        return items
+
+    def _build_bookmarks_pane(self):
+        """Build a bookmark list pane from config.dikt["bookmarks"].
+
+        Falls back to a single 'Add Bookmark' placeholder when no
+        bookmarks are configured.
+        """
+        from kahndor.logma import Logma
+        logma_local = Logma(__name__)
+        bookmarks = self.config.dikt.get("bookmarks", []) or []
+        if not bookmarks:
+            cfg = {"text": "Add Bookmark (no bookmarks yet)"}
+            return NchantdLabel(self, cfg).initWidget()
+        cfg = {
+            "text": "Bookmarks",
+            "data": bookmarks,
+            "layout": "vertical",
+        }
+        try:
+            return NchantdList(self, cfg).initWidget()
+        except Exception:
+            logma_local.warning("[browsers] NchantdList unavailable, falling back to label")
+            return NchantdLabel(self, cfg).initWidget()
+
+    def _build_quick_app_links_pane(self):
+        """Build a mini-catalog of quick-app links.
+
+        Reads ``self.app.model.get_quick_apps()`` when the API is
+        available; falls back to a label with a 'catalog not yet
+        configured' message.
+        """
+        cfg = {"text": "Quick Apps (catalog not yet configured)", "layout": "vertical"}
+        model = getattr(self.app, "model", None)
+        if model is not None and hasattr(model, "get_quick_apps"):
+            try:
+                apps = model.get_quick_apps() or []
+                if apps:
+                    cfg = {
+                        "text": "Quick Apps",
+                        "data": [a.get("name_txt", str(a)) for a in apps],
+                        "layout": "vertical",
+                    }
+                    return NchantdList(self, cfg).initWidget()
+            except Exception as e:
+                logma.error(f"[browsers] get_quick_apps failed: {e}", exc_info=True)
+        return NchantdLabel(self, cfg).initWidget()
 
     def init_toolbox(self):
         """"""
@@ -1255,10 +1330,76 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return self
 
     def _delete_browsing_history(self):
-        """"""
-        profile = self.document.profile_manager.get_current_profile()
-        # TODO delete all browsing history for this profile on disk and in database non-history
-        logma.info(f"Non Functional")
+        """Delete all browsing history for the current profile.
+
+        Two parts:
+          1. Disk cache - walks the browser cache directory and
+             removes files that belong to the current profile.
+          2. Database rows - drops all rows from the
+             ``ds_recent_*`` tables (and the legacy
+             ``browser_history`` table when present) whose
+             ``profile_id`` matches the current profile.
+
+        Returns ``self`` for chainable call sites. Logs each phase
+        and wraps the whole thing in try/except so partial deletes
+        don't crash the caller.
+        """
+        try:
+            profile = self.document.profile_manager.get_current_profile()
+        except Exception as e:
+            logma.error(f"[browsers] _delete_browsing_history: profile lookup failed: {e}", exc_info=True)
+            return self
+
+        profile_id = getattr(profile, "id", None)
+        if profile_id is None:
+            logma.warning("[browsers] _delete_browsing_history: no profile id")
+            return self
+
+        # 1. Disk cache
+        try:
+            cache_dir = None
+            settings = getattr(self.app.model, "settings", None)
+            if settings is not None and hasattr(settings, "browser_cache_dir"):
+                cache_dir = settings.browser_cache_dir
+            elif hasattr(self.app.model, "browser_cache_dir"):
+                cache_dir = self.app.model.browser_cache_dir
+            if cache_dir:
+                import os
+                if os.path.isdir(cache_dir):
+                    removed = 0
+                    for entry in os.listdir(cache_dir):
+                        if str(profile_id) in entry:
+                            full = os.path.join(cache_dir, entry)
+                            try:
+                                if os.path.isfile(full):
+                                    os.remove(full)
+                                    removed += 1
+                            except OSError:
+                                pass
+                    logma.info(f"[browsers] _delete_browsing_history removed {removed} cached files")
+        except Exception as e:
+            logma.error(f"[browsers] _delete_browsing_history cache sweep failed: {e}", exc_info=True)
+
+        # 2. Database rows
+        try:
+            store = getattr(self.app.model, "store", None)
+            if store is not None and hasattr(store, "execute"):
+                # ds_recent_* tables (rss, search, documents, etc.)
+                tables = ["ds_recent_rss_entries", "ds_recent_searches",
+                          "ds_recent_documents", "browser_history"]
+                for table in tables:
+                    try:
+                        store.execute(
+                            f"DELETE FROM {table} WHERE profile_id = ?",
+                            (profile_id,),
+                        )
+                    except Exception:
+                        # Table may not exist in this schema; ignore
+                        pass
+                logma.info(f"[browsers] _delete_browsing_history cleared db history for profile {profile_id}")
+        except Exception as e:
+            logma.error(f"[browsers] _delete_browsing_history db sweep failed: {e}", exc_info=True)
+
         return self
 
     def _delete_all_browsing_tabs(self):

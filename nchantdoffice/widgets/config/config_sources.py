@@ -67,16 +67,39 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         """"""
         super().initView()
         # need to a scroll
+        # Size-control selector ("Full", "50%", "10%") so the user
+        # can collapse the data-source list when not in use.
+        size_cfg = {
+            "label": "Pane Size:",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "combobox": {
+                "size": [120, 30],
+                "options": ["Full", "50%", "10%"],
+            },
+            "value": self.config.dikt.get("data_source_pane_size", "Full"),
+            "handler": self.cmd_change_data_source_pane_size,
+        }
+        size_row = pyqt.QHBoxLayout()
+        size_label = NchantdLabel(self, size_cfg).initWidget()
+        size_row.addWidget(size_label)
+        self.data_source_size_combo = NchantdDropDown(self, size_cfg).initWidget()
+        size_row.addWidget(self.data_source_size_combo)
+        size_row.addStretch()
+        self.layout.addLayout(size_row)
+
+        # Standout title with bold accent so the pane draws the eye
         cfg = {
             "text": "Available Data Sources",
             "size": ["auto", "auto"],
-        }  # TODO: build in additional controls for size ["full", "%10"]}
+            "stylesheet": "font-weight: bold; font-size: 14pt; color: #1f4e79; padding: 6px;",
+        }
         title = NchantdLabel(self, cfg).initWidget()
+        title.setStyleSheet(cfg["stylesheet"])
         self.layout.addWidget(title)
         logma.info(f"Data Sources {self.data_sources}")
         sources = [dict(zip(list(self.data_sources.columns), x)) for x in self.data_sources.values.tolist()]
         nchantdsource = [x for x in sources if x["value_txt"] == "NchantdOffice"]
-        # TODO: implement config changes to make the pane standout
         self.build_data_source_pane(nchantdsource[0])
         sources = [x for x in sources if x["value_txt"] != "NchantdOffice"]
         for source in sources:
