@@ -758,21 +758,47 @@ class NchantdOfficeAffiliateManager(NchantdOfficeDocumentManager):
         return self.source
 
     def get_sources(self, full=False):
-        """"""
-        self.sources = self.app.model.get_sources()
+        """Return the available data sources (T-090).
+
+        Reads ``self.app.model.get_sources()`` and returns
+        either the full DataFrame (``full=True``) or the
+        ``name_txt`` column as a list. Falls back to an empty
+        list when the model is unreachable or returns
+        nothing.
+        """
+        try:
+            self.sources = self.app.model.get_sources()
+        except Exception as e:
+            logma.error(f"[settings] get_sources: model.get_sources failed: {e}", exc_info=True)
+            self.sources = None
+        if self.sources is None:
+            return [] if not full else self.sources
         if full:
             return self.sources
-        # ls = self.sources["name_txt"].tolist()
-        # TODO fix
-        # logma.info(f"List {ls}")
-        ls = []
-        return ls
+        try:
+            if hasattr(self.sources, "name_txt"):
+                return list(self.sources["name_txt"].tolist())
+            if isinstance(self.sources, (list, tuple)):
+                return list(self.sources)
+            if isinstance(self.sources, dict):
+                return list(self.sources.values())
+        except Exception as e:
+            logma.error(f"[settings] get_sources: coercion failed: {e}", exc_info=True)
+        return []
 
     def get_source_table(self):
-        """"""
-        table = ""
-        # TODO implement method
-        return table
+        """Return the source-table widget (T-090).
+
+        T-090: returns ``self.source_table`` when the
+        attribute exists (set up by initView). Falls back to
+        an empty string when not available, so callers can
+        use the return value as truthy/falsy.
+        """
+        try:
+            return getattr(self, "source_table", "") or ""
+        except Exception as e:
+            logma.error(f"[settings] get_source_table failed: {e}", exc_info=True)
+            return ""
 
     def get_source_tables(self, source):
         """"""

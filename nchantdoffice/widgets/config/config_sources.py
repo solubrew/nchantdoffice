@@ -353,24 +353,58 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
 
     def get_sources(self, full=False):
         """"""
-        self.sources = self.app.model.get_sources()
+        try:
+            self.sources = self.app.model.get_sources()
+        except Exception as e:
+            logma.error(f"[config_sources] get_sources: model.get_sources failed: {e}", exc_info=True)
+            self.sources = None
+        if self.sources is None:
+            return self.sources if full else []
         if full:
             return self.sources
-        # ls = self.sources["name_txt"].tolist()
-        #TODO fix
-        # logma.info(f"List {ls}")
-        ls = []
-        return ls
+        try:
+            if hasattr(self.sources, "name_txt"):
+                return list(self.sources["name_txt"].tolist())
+        except Exception as e:
+            logma.error(f"[config_sources] get_sources coercion failed: {e}", exc_info=True)
+        return []
 
     def get_source_table(self):
-        """"""
-        table = ""
-        # TODO implement method
-        return table
+        """Return the source-table widget (T-092).
+
+        Returns ``self.source_table`` (set up by initView
+        when the data-sources layout was built). Falls back
+        to the empty string when not available.
+        """
+        try:
+            return getattr(self, "source_table", "") or ""
+        except Exception as e:
+            logma.error(f"[config_sources] get_source_table failed: {e}", exc_info=True)
+            return ""
 
     def get_source_tables(self, source):
-        """"""
-        # TODO implement method
+        """Return the source-tables list for ``source`` (T-092).
+
+        T-092: previous version returned a hard-coded stub
+        (``["Supermarket", "CoinGecko"]``). Now queries the
+        model's ``get_source_tables(source)`` when available,
+        falls back to ``config.dikt["source_tables"][source]``
+        when one is configured, and finally to the
+        canonical Supermarket / CoinGecko default list so
+        the method is never empty.
+        """
+        try:
+            model = getattr(self.app, "model", None) if hasattr(self, "app") else None
+            if model is not None and hasattr(model, "get_source_tables"):
+                tables = model.get_source_tables(source)
+                if tables:
+                    return list(tables)
+            if hasattr(self, "config"):
+                stored = (self.config.dikt.get("source_tables") or {}).get(source)
+                if stored:
+                    return list(stored)
+        except Exception as e:
+            logma.error(f"[config_sources] get_source_tables failed: {e}", exc_info=True)
         return ["Supermarket", "CoinGecko"]
 
     def get_data_view(self):

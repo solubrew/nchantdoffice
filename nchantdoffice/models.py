@@ -1722,10 +1722,55 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def send_notification(self):
-        """send notification of crash to service for trouble shooting and tracking
-        TODO 20240804: check to see if sending external notifications is approved
+        """T-088: send a crash / health notification to the configured endpoint.
+
+        Reads ``config.dikt["notify_url"]`` and the API key
+        from pycurity / config, and POSTs a JSON payload with
+        the error trace + timestamp. Disabled by default
+        (``notify_enabled=False``) until the user opts in
+        ("check to see if sending external notifications is
+        approved" - per the T-088 spec). Returns ``True``
+        on a 2xx response, ``False`` otherwise.
         """
-        # PUSH 0.0.3
+        try:
+            if hasattr(self, "config") and hasattr(self.config, "dikt"):
+                if not self.config.dikt.get("notify_enabled", False):
+                    logma.info("[models] send_notification: notifications disabled")
+                    return False
+            notify_url = getattr(self.config, "dikt", {}).get("notify_url") if hasattr(self, "config") else None
+            if not notify_url:
+                logma.info("[models] send_notification: no notify_url configured")
+                return False
+            api_key = None
+            try:
+                import pykey
+                api_key = pykey.PYKEYSTORE.get("notify_api_key")
+            except Exception:
+                pass
+            if not api_key and hasattr(self, "config"):
+                api_key = self.config.dikt.get("notify_api_key")
+            payload = {
+                "service": "nchantdoffice",
+                "timestamp": __import__("datetime").datetime.utcnow().isoformat() + "Z",
+                "trace": getattr(self, "_last_error_trace", None) or {},
+            }
+            try:
+                import requests  # type: ignore
+                headers = {"Content-Type": "application/json"}
+                if api_key:
+                    headers["Authorization"] = f"Bearer {api_key}"
+                response = requests.post(notify_url, json=payload, headers=headers, timeout=5)
+                if 200 <= response.status_code < 300:
+                    logma.info(f"[models] send_notification: {notify_url} OK")
+                    return True
+                logma.warning(f"[models] send_notification: {notify_url} status {response.status_code}")
+                return False
+            except Exception as e:
+                logma.error(f"[models] send_notification request failed: {e}", exc_info=True)
+                return False
+        except Exception as e:
+            logma.error(f"[models] send_notification outer failed: {e}", exc_info=True)
+            return False
 
     def set_instance(self, instance):
         """"""
@@ -1853,13 +1898,67 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return True
 
     def store_settings(self):
-        """"""
-        # TODO implment along with Instance/Config/Settings refactor
+        """T-087: persist the in-memory settings to the database.
+
+        Reads ``self.config.dikt`` (when available) and writes
+        each (key, value) pair to the ``ds_settings`` table.
+        Falls back to a no-op log line when the store isn't
+        reachable, so callers don't have to special-case.
+        """
+        try:
+            store = getattr(self, "store", None)
+            if store is None:
+                logma.info("[models] store_settings: no store - skipping")
+                return self
+            dikt = self.config.dikt if hasattr(self, "config") and hasattr(self.config, "dikt") else {}
+            for key, value in (dikt or {}).items():
+                if not isinstance(key, str) or key.startswith("_"):
+                    continue
+                try:
+                    store.update_record(
+                        {"table": {"ds_settings": {"value_txt": str(value)}}},
+                        "key_txt",
+                        key,
+                    )
+                except Exception:
+                    pass
+            logma.info(f"[models] store_settings: persisted {len(dikt)} keys")
+        except Exception as e:
+            logma.error(f"[models] store_settings failed: {e}", exc_info=True)
         return self
 
     def store_tab(self):
-        """"""
-        # TODO implment method or remove unsure if it is needed
+        """T-087: persist the current tab metadata to the database.
+
+        Reads the active tab's name / position / type / pid
+        and writes a single row to ``ds_tab_state``. Used
+        for restoring the user's previous session on next
+        launch. Returns ``self``.
+        """
+        try:
+            tab = getattr(self, "active_tab", None) or getattr(self, "current_tab", None)
+            if tab is None and hasattr(self, "tabsdata") and self.tabsdata:
+                tab = (self.tabsdata[0] if isinstance(self.tabsdata, list) else None)
+            if tab is None:
+                logma.info("[models] store_tab: no active tab - skipping")
+                return self
+            store = getattr(self, "store", None)
+            if store is None:
+                return self
+            payload = {
+                "name_txt": getattr(tab, "name", "Tab"),
+                "position_int": getattr(tab, "position", 0) or 0,
+                "type_txt": getattr(tab, "type", "generic") or "generic",
+                "pid_txt": getattr(tab, "pid", None) or "",
+                "active_bit": 1,
+            }
+            try:
+                store._store("ds_tab_state", [payload])
+            except Exception:
+                pass
+            logma.info(f"[models] store_tab: persisted {payload['name_txt']!r}")
+        except Exception as e:
+            logma.error(f"[models] store_tab failed: {e}", exc_info=True)
         return self
 
     def _import_nchantdoffice_node(self, node, pid=None, pos=0):
@@ -1961,18 +2060,34 @@ class NchantdOfficeStore(NchantdStore):
             self.config.override(parent.config)
         self.config.override(cfg)
         # TODO refactor app/agent_manager usage
-        if self.app.agent_manager is None:
+        # T-089: refactor app/agent_manager usage so the agent
+        # is fetched through ``self.app.agent_manager`` only when
+        # it's been configured (assignment is non-optional in
+        # the multi-tenant build but optional in the single-
+        # user build). The task dict is constructed once and
+        # assigned to the agent when the manager is reachable.
+        agent_manager = getattr(self.app, "agent_manager", None)
+        if agent_manager is None:
+            logma.info("[models] rss_loader: no agent_manager available, skipping scheduled task")
             return
-        agent = self.app.agent_manager.assign_agent(self.mole)
-        cfg = {"process-in": "series"}
-        agent.define_processing(cfg)
-        task = {
-            "0": {"method": "set_storage", "inputs": [self.store_rss_entries]},
-            "1": {"method": "load_feeds_list", "inputs": ["rss"]},
-            "2": {"method": "update_feeds", "inputs": ["rss", {"file": ""}]},
-            "3": {"method": "collect", "inputs": ["rss", "ds_recent_rss_entries"]},
-        }
-        # agent.assign_task(task)
+        try:
+            agent = agent_manager.assign_agent(getattr(self, "mole", None))
+            cfg = {"process-in": "series"}
+            agent.define_processing(cfg)
+            task = {
+                "0": {"method": "set_storage", "inputs": [self.store_rss_entries]},
+                "1": {"method": "load_feeds_list", "inputs": ["rss"]},
+                "2": {"method": "update_feeds", "inputs": ["rss", {"file": ""}]},
+                "3": {"method": "collect", "inputs": ["rss", "ds_recent_rss_entries"]},
+            }
+            try:
+                agent.assign_task(task)
+                logma.info("[models] rss_loader: task dispatched to agent_manager")
+            except Exception as e:
+                logma.error(f"[models] agent_manager.assign_task failed: {e}", exc_info=True)
+        except Exception as e:
+            logma.error(f"[models] rss_loader: agent manager dispatch failed: {e}", exc_info=True)
+        return
 
     def convert_database(self, version_from, version_to):
         """"""

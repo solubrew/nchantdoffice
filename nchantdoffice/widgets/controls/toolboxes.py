@@ -176,8 +176,10 @@ class NchantdWebSearchPane(NchantdPane):
         return self
 
 
-# TODO: implement search panes
-# TODO: correct spacing of Node Configuration Drawer to tighten up the Node Pane and Tab Pane
+# T-091: search panes are now built by NchantdApplicationSearchPane /
+# NchantdLLMQueryPane / NchantdWebSearchPane (above).
+# T-091: Node Configuration Drawer pane spacing is now balanced via
+# NchantdOfficeApplicationToolBox.balance_pane_widths() (T-061).
 class NchantdOfficeApplicationToolBox(NchantdToolBox):
     """T-061: balanced-pane-widths for Node Configuration Drawer.
 
