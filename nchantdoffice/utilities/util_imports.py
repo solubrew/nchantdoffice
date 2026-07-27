@@ -76,7 +76,26 @@ class NchantdCherrytreeImport(NchantdImport):
             super().run()
             cherrytree = self.cherrytree.convert_to_yaml()
             logma.debug(f"[util_imports] cherrytree converted (yaml length={len(cherrytree) if hasattr(cherrytree, '__len__') else 'n/a'})")
-            # TODO: resolve parent_node + app reference cleanly
+            # Resolve parent_node: prefer the model-owned current node,
+            # fall back to a freshly-created root node when the model
+            # is unreachable. convert_yaml_to_nchantdoffice writes
+            # the imported subtree under this parent.
+            parent_node = None
+            app_model = getattr(getattr(self, "app", None), "model", None)
+            if app_model is not None and hasattr(app_model, "get_current_node"):
+                try:
+                    parent_node = app_model.get_current_node()
+                except Exception as e:
+                    logma.warning(f"[util_imports] get_current_node failed: {e}")
+            if parent_node is None and app_model is not None and hasattr(app_model, "add_root_node"):
+                try:
+                    parent_node = app_model.add_root_node(name="Imported Root")
+                    logma.info(f"[util_imports] created new root node for import: {parent_node}")
+                except Exception as e:
+                    logma.error(f"[util_imports] add_root_node failed: {e}", exc_info=True)
+            if parent_node is None:
+                logma.error("[util_imports] cannot resolve parent_node for cherrytree import - skipping")
+                return self
             convert_yaml_to_nchantdoffice(cherrytree, self.app, parent_node)
             logma.info(f"[util_imports] NchantdCherrytreeImport.run: completed for path={getattr(self, 'path', None)!r}")
         except Exception as e:

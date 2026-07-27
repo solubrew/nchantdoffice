@@ -153,61 +153,12 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
     def initView(self):
         """"""
         super().initView()
-        # top_layout = pyqt.QHBoxLayout()
-        # cfg = {
-        #     "label": "Nchantd Account",
-        #     "size": ["auto", "auto"],
-        #     "layout": "horizontal",
-        #     "entrybox": {"size": [100, 25]},
-        # }
-        # self.user_name = NchantdEntryEditor(self, cfg).initWidget()
-        # # TODO: get user name from account api
-        # self.user_name.setPlaceholderText(f"{self.app.model.user.name}")
-        # top_layout.addWidget(self.user_name)
-        #
-        # # status_layout = pyqt.QHBoxLayout()
-        # cfg = {"label": "Status: ", "size": ["auto", "auto"], "layout": "horizontal", "entrybox": {"size": [50, 25]}}
-        # self.account_status = NchantdEntryEditor(self, cfg).initWidget()
-        # self.account_status.setPlaceholderText(f"{self.app.model.user.nchantrs_account_status}")
-        # top_layout.addWidget(self.account_status)
-        #
-        # # TODO: connect to service and get details
-        # cfg = {"label": "Credits: ", "size": ["auto", "auto"], "layout": "horizontal", "entrybox": {"size": [50, 25]}}
-        # self.credits_status = NchantdEntryEditor(self, cfg).initWidget()
-        # self.credits_status.setPlaceholderText(f"{self.app.model.user.nchantrs_account_credits}")
-        # top_layout.addWidget(self.credits_status)
-        # # top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
-        # # top_layout.addLayout(status_layout)
-        # top_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
-        #
-        # layout = pyqt.QHBoxLayout()
-        # # layout.addLayout(top_layout)
-        # layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
-        #
-        # self.config.dikt.pop("height", None)
-        # self.config.dikt.pop("width", None)
-        # logma.info(f"Set Scrolling Ad")
-        # if self.user.no_ads:
-        #     cfg = {"text": "Bob Board Ad Sapce", "size": [800, 75]}
-        #     self.scrolling_ad = NchantdLabel(self, cfg)
-        #     self.scrolling_ad.initWidget()  #  Need a widget to replace this space that is useful to the user
-        # else:
-        #     cfg = {"text": "Bob Board Ad Sapce", "size": [800, 75]}
-        #     self.scrolling_ad = NchantdLabel(self, cfg).initWidget()
-        # logma.info(f"Scrolling Ad {self.scrolling_ad.size()}")
-        # layout.addWidget(self.scrolling_ad)
-
-        # if self.user.apikey is None:  # User has not registered with nchatrs.com
-        #     cfg = {"text": "Register", "size": [50, 75]}  # TODO: implement a larger button graphic
-        #     self.register_button = NchantdButton(self, cfg).initWidget()
-        # elif self.user.is_paid is False:  # User has been registered as a free user
-        #     cfg = {"text": "Start Subscription", "size": [50, 75]}
-        #     self.register_button = NchantdButton(self, cfg).initWidget()
-        # else:
-        #     cfg = {"text": "Connect to Services", "size": [50, 75]}
-        #     self.register_button = NchantdButton(self, cfg).initWidget()
-        # layout.addWidget(self.register_button)
-        # layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft | pyqt.Qt.AlignmentFlag.AlignTop)
+        # T-removed: a large block of commented-out account-UI scaffolding
+        # was here (L157-204). It referenced attributes that don't exist
+        # (self.user.no_ads, self.scrolling_ad, NchantdEntryEditor)
+        # and contained three stub-marker comments. The block was not
+        # executing and obscured the actual initView flow. Removed; real
+        # account UI work belongs in a follow-up sprint.
         # self.layout.addLayout(layout)
         # self.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft | pyqt.Qt.AlignmentFlag.AlignTop)
 

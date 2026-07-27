@@ -330,7 +330,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     # PUSH to version 0.0.3
     # def cmd_scan_source(self, event, *args, **kwargs):
     #     """"""
-    #     # TODO: implement method
     #     return self
 
     def cmd_set_default_browser(self, event, *args, **kwargs):

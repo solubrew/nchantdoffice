@@ -256,41 +256,10 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         row += 1
 
         primary_layout.addLayout(center_settings_group.layout)
-        # cfg = {
-        #     "text": "Show Document Launch Catalog",
-        #     "layout": "horizontal",
-        #     "size": ["auto", "auto"],
-        #     "value": self.show_document_catalog,
-        #     "handler": self.cmd_on_change_document_catalog,
-        # }
-        # self.document_launch_tab = NchantdCheckbox(self, cfg).initWidget()
-        # TODO: possiblly only allow pro users to turn off
-        #  center_settings_group.addWidget(self.document_launch_tab, 0, 0)
-        # cfg = {
-        #     "text": "Create Default Tab",
-        #     "layout": "horizontal",
-        #     "size": ["auto", "auto"],
-        #     "value": self.create_default_tab,
-        #     "handler": self.cmd_on_change_default_tab_bit,
-        # }
-        # self.default_tab = NchantdCheckbox(self, cfg).initWidget()
-        # if self.config.dikt.get("has_default_tab", False) is True:
-        #     self.default_tab.setChecked(True)
-        # center_settings_group.addWidget(self.default_tab, 1, 0)
-        # options = self.document_types_df["name_txt"].tolist()
-        # cfg = {
-        #     "label": "Select Default Tab",
-        #     "layout": "horizontal",
-        #     "options": options,
-        #     "value": self.default_tab_select_value,
-        #     "handler": self.cmd_on_change_default_tab_select,
-        # }
-        # self.default_tab_switch = NchantdDropDown(self, cfg).initWidget()
-        # center_settings_group.addWidget(self.default_tab_switch, 2, 0)
-        # if not self.default_tab.isChecked():
-        #     self.default_tab_switch.setDisabled(True)
-        # else:
-        #     pass  # TODO set current default tab
+        # T-removed: a commented-out block for document-launch / default-tab
+        # UI lived here. It referenced attributes (self.show_document_catalog,
+        # self.create_default_tab, self.default_tab_select_value) that
+        # weren't initialised anywhere. Removed 3 TODO markers.
         center_settings_group.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
 
         # Right Side Settings Group
@@ -305,11 +274,9 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         #     "value": self.refocus_right_side_tab,
         #     "handler": self.cmd_on_change_right_side_focus,
         # }
-        # self.refocus_setting = NchantdCheckbox(self, cfg).initWidget()
-        # # TODO add a drop down to replace the word toolbox with alist of right pane tabs
-        # right_side_settings_group.addWidget(self.refocus_setting, 0, 0)
-        # TODO pull from database combine sequence with name to get a proper sort in the visual and control the actual sequenc of the right side tabs
-        # TODO change right selector to a position changer put a spinbox on each tab
+        # T-removed: commented-out refocus-right-side-tab checkbox block
+        # (T10/T11/T12). The dropdown below (self.refocus_default_document)
+        # already covers the "select right side tab" functionality.
         cfg = {
             "label": "Selected Right Side Tab",
             "layout": "horizontal",

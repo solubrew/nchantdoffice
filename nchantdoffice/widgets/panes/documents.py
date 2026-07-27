@@ -107,14 +107,8 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         cfg = {"buttons": {"ok": {"handler": self.cmd_set_node_name}}}
         self.accept_button = NchantdOkButtons(self, cfg).initWidget()
         layout.addWidget(self.accept_button)
-        # self.tags = self.get_tags()
-        # tags_label = NchantdLabel(self, {"text": "Tags: "}).initWidget()
-        # layout.addWidget(tags_label)
-        # TODO: add tag tracking
-        # cfg = {"data": self.tags}
-        # self.tags_list = NchantdList(self, cfg).initWidget()
-        # layout.addWidget(self.tags_list)
-        # group.set_height(layout.sizeHint().height() * 1.2)
+        # T-removed: commented-out tag-tracking block (referenced
+        # get_tags() / NchantdList that aren't wired in). Removed.
         self.layout.addWidget(group)
 
     def initWidget(self):

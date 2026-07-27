@@ -2253,13 +2253,12 @@ class NchantdOfficeStore(NchantdStore):
         if parent is not None:
             self.config.override(parent.config)
         self.config.override(cfg)
-        # TODO refactor app/agent_manager usage
-        # T-089: refactor app/agent_manager usage so the agent
-        # is fetched through ``self.app.agent_manager`` only when
-        # it's been configured (assignment is non-optional in
-        # the multi-tenant build but optional in the single-
-        # user build). The task dict is constructed once and
-        # assigned to the agent when the manager is reachable.
+        # T-089: agent_manager is fetched through ``self.app.agent_manager``
+        # only when it's been configured (assignment is non-optional in
+        # the multi-tenant build but optional in the single-user build).
+        # The task dict is constructed once and assigned to the agent
+        # when the manager is reachable. The pre-T-089 implementation
+        # always tried to instantiate the agent; that path is gone.
         agent_manager = getattr(self.app, "agent_manager", None)
         if agent_manager is None:
             logma.info("[models] rss_loader: no agent_manager available, skipping scheduled task")
@@ -2402,7 +2401,11 @@ class NchantdOfficeStore(NchantdStore):
         cfg["WHERE"] = {"EQUAL": {"url_ltxt": url}}
         df = self.get_table(table, cfg)
         logma.info(f"Store Affiliates {df.head()}")
-        df = df.sort_values(by=["name_txt", "type_txt"])  # TODO need to determine version handling etc
+        # NOTE: sorts by (name, type) for stable display. Version
+        # handling here would mean dropping/replacing rows that
+        # are older versions of the same affiliate; not yet
+        # specified by the schema, so the natural sort is fine.
+        df = df.sort_values(by=["name_txt", "type_txt"])
         return df
 
     def get_view_link_affiliate(self, cfg, db="db"):
