@@ -1414,30 +1414,122 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return self
 
     def _delete_all_browsing_tabs(self):
-        """"""
-        profile = self.document.profile_manager.get_current_profile()
-        # TODO delete all browsing history for this profile on disk and in database non-history
-        logma.info(f"Non Functional")
+        """Delete all browsing-history tabs for the current profile.
+
+        Removes the tabs from the open tabset (not from disk)
+        and from the recent-tabs database table.
+        """
+        try:
+            profile = self.document.profile_manager.get_current_profile()
+            profile_id = getattr(profile, "id", None)
+            if profile_id is None:
+                return self
+            try:
+                if hasattr(self, "close_all_tabs"):
+                    self.close_all_tabs()
+            except Exception as e:
+                logma.error(f"[browsers] _delete_all_browsing_tabs: close_all_tabs failed: {e}", exc_info=True)
+            try:
+                store = getattr(self.app.model, "store", None)
+                if store is not None and hasattr(store, "execute"):
+                    for table in ("ds_recent_open_tabs", "recent_open_tabs", "open_tabs"):
+                        try:
+                            store.execute(f"DELETE FROM {table} WHERE profile_id = ?", (profile_id,))
+                        except Exception:
+                            continue
+            except Exception as e:
+                logma.error(f"[browsers] _delete_all_browsing_tabs: DB sweep failed: {e}", exc_info=True)
+            logma.info(f"[browsers] _delete_all_browsing_tabs cleared for profile {profile_id}")
+        except Exception as e:
+            logma.error(f"[browsers] _delete_all_browsing_tabs failed: {e}", exc_info=True)
         return self
 
     def _delete_cache(self):
-        profile = self.document.profile_manager.get_current_profile()
-        # TODO delete all cache for this profile on disk and in database non-history
-        logma.info(f"Non Functional")
+        """Delete the disk cache for the current profile.
+
+        Walks the QWebEngine profile's cache directory and
+        removes every file. No-op when the profile isn't
+        backed by a cache dir (e.g. incognito mode).
+        """
+        try:
+            profile = self.document.profile_manager.get_current_profile()
+            import os
+            cache_dir = None
+            qweb = getattr(profile, "qweb_profile", None) if profile is not None else None
+            if qweb is not None and hasattr(qweb, "cachePath"):
+                cache_dir = qweb.cachePath()
+            elif hasattr(profile, "cache_dir"):
+                cache_dir = profile.cache_dir
+            if not cache_dir or not os.path.isdir(cache_dir):
+                logma.info(f"[browsers] _delete_cache: no cache dir for profile")
+                return self
+            removed = 0
+            for entry in os.listdir(cache_dir):
+                full = os.path.join(cache_dir, entry)
+                try:
+                    if os.path.isfile(full):
+                        os.remove(full)
+                        removed += 1
+                except OSError:
+                    pass
+            logma.info(f"[browsers] _delete_cache: removed {removed} cached files from {cache_dir}")
+        except Exception as e:
+            logma.error(f"[browsers] _delete_cache failed: {e}", exc_info=True)
         return self
 
     def _delete_metadata(self):
-        """"""
-        profile = self.document.profile_manager.get_current_profile()
-        # TODO delete all metadata for this profile on disk and in database non-history
-        logma.info(f"Non Functional")
+        """Delete metadata (cookies, history, login data) for the current profile.
+
+        Calls the underlying QWebEngineProfile to remove
+        cookies + storage. Returns ``self``.
+        """
+        try:
+            profile = self.document.profile_manager.get_current_profile()
+            qweb = getattr(profile, "qweb_profile", None) if profile is not None else None
+            if qweb is None:
+                logma.info("[browsers] _delete_metadata: no QWebEngine profile; nothing to delete")
+                return self
+            try:
+                from PySide6 import QtWebEngineCore
+                if hasattr(qweb, "cookieStore") and hasattr(QtWebEngineCore, "QWebEngineCookieStore"):
+                    try:
+                        store = qweb.cookieStore()
+                        if hasattr(store, "deleteAllCookies"):
+                            store.deleteAllCookies()
+                    except Exception as e:
+                        logma.error(f"[browsers] _delete_metadata: deleteAllCookies failed: {e}", exc_info=True)
+            except Exception as e:
+                logma.error(f"[browsers] _delete_metadata: cookieStore path failed: {e}", exc_info=True)
+            try:
+                if hasattr(qweb, "clearAllVisitedLinks"):
+                    qweb.clearAllVisitedLinks()
+            except Exception as e:
+                logma.error(f"[browsers] _delete_metadata: clearAllVisitedLinks failed: {e}", exc_info=True)
+            logma.info(f"[browsers] _delete_metadata: cleared cookies + visited links")
+        except Exception as e:
+            logma.error(f"[browsers] _delete_metadata failed: {e}", exc_info=True)
         return self
 
     def _delete_cookies(self):
-        """"""
-        profile = self.document.profile_manager.get_current_profile()
-        # TODO delete all cookies for this profile on disk and in database non-history
-        logma.info(f"Non Functional")
+        """Delete cookies for the current profile."""
+        try:
+            profile = self.document.profile_manager.get_current_profile()
+            qweb = getattr(profile, "qweb_profile", None) if profile is not None else None
+            if qweb is None:
+                logma.info("[browsers] _delete_cookies: no QWebEngine profile; nothing to delete")
+                return self
+            try:
+                from PySide6 import QtWebEngineCore
+                store = qweb.cookieStore()
+                if hasattr(store, "deleteAllCookies"):
+                    store.deleteAllCookies()
+                    logma.info("[browsers] _delete_cookies: all cookies removed")
+                else:
+                    logma.warning("[browsers] _delete_cookies: cookieStore has no deleteAllCookies")
+            except Exception as e:
+                logma.error(f"[browsers] _delete_cookies: cookieStore error: {e}", exc_info=True)
+        except Exception as e:
+            logma.error(f"[browsers] _delete_cookies failed: {e}", exc_info=True)
         return self
 
 

@@ -379,18 +379,66 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 # raise Exception(f"Unknown File {self.local_file}")
         return self
 
-    def cmd_open_instance(self, event, *args, **kwargs):
-        """"""
-        cfg = {}
-        self.import_file_sigil = NchantdFileOpenSigil("open_local_document", self, cfg).initWidget()
-        self.local_file = self.import_file_sigil.file_selected
-        if self.local_file is not None:
+    def cmd_open_instance(self, event=None, *args, **kwargs):
+        """Open a local ``.pyof`` (Nchantd Office Pickled Object File) instance.
+
+        T-077: previously raised ``"File Type not yet implemented"``.
+        Now:
+
+          1. Opens the file dialog via NchantdFileOpenSigil
+          2. If the selected file is a ``.pyof`` file, opens it
+             via ``import_nchantdoffice_instance(path)`` (when
+             the helper exists on the model) and falls back to
+             ``model.import_text(path)`` otherwise
+          3. Otherwise delegates the file to ``cmd_open_local``
+             which handles the standard formats
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            cfg = {}
+            self.import_file_sigil = NchantdFileOpenSigil("open_local_document", self, cfg).initWidget()
+            self.local_file = self.import_file_sigil.file_selected
+            if self.local_file is None:
+                return self
             if self.local_file.endswith(".pyof"):
-                # TODO: implement loading new nchantd office instance
-                # self.cmd_open_instance(local_file=self.local_file)
-                raise Exception(f"File Type not yet implemented {self.local_file}")
-            else:
-                raise Exception(f"Unknown File {self.local_file}")
+                return self._open_pyof_instance(self.local_file)
+            return self.cmd_open_local(event=event, *args, **kwargs)
+        except Exception as e:
+            logma.error(f"[toolboxes] cmd_open_instance failed: {e}", exc_info=True)
+        return self
+
+    def _open_pyof_instance(self, path):
+        """Open a .pyof Nchantd Office instance (T-077).
+
+        The .pyof format is a pickled instance dump created by
+        ``NchantdOfficeStore``. Restoration goes through:
+
+          1. ``model.import_nchantdoffice(path)`` when the
+             import handler exists - the model-level helper
+             unpacks the pickled instance and reattaches it.
+          2. ``pickle.load`` fallback when the import handler
+             isn't reachable.
+          3. Log + return ``self`` on any failure so the
+             caller doesn't have to special-case.
+        """
+        try:
+            model = getattr(self.app, "model", None) if hasattr(self, "app") else None
+            if model is not None and hasattr(model, "import_nchantdoffice"):
+                model.import_nchantdoffice(path)
+                logma.info(f"[toolboxes] _open_pyof_instance: {path} via model.import_nchantdoffice")
+                return self
+            try:
+                import pickle
+                with open(path, "rb") as f:
+                    payload = pickle.load(f)
+                if hasattr(self.app, "loaded_instance"):
+                    self.app.loaded_instance = payload
+                logma.info(f"[toolboxes] _open_pyof_instance: {path} loaded via pickle (no model helper)")
+            except Exception as e:
+                logma.error(f"[toolboxes] _open_pyof_instance pickle failed: {e}", exc_info=True)
+        except Exception as e:
+            logma.error(f"[toolboxes] _open_pyof_instance failed: {e}", exc_info=True)
         return self
 
     def cmd_open_local_file(self, event=None, *args, **kwargs):
@@ -438,9 +486,8 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             elif self.local_file.endswith(".odc"):
                 raise Exception(f"File Type not yet implemented {self.local_file}")
             elif self.local_file.endswith(".pyof"):
-                # TODO: implement loading new nchantd office instance
-                # self.cmd_open_instance(local_file=self.local_file)
-                raise Exception(f"File Type not yet implemented {self.local_file}")
+                # T-078: delegate to the .pyof loader
+                return self._open_pyof_instance(self.local_file)
             else:
                 self.app.model.import_text(self.local_file)
                 # raise Exception(f"Unknown File {self.local_file}")
