@@ -3,7 +3,24 @@
 ## NEW TODOs 
   ### need integration into plan
 - replace tab creation name with tab icon used for that document type and the generated 5 digit or user entered name
+
+- 35c050e4 solubrew <solubrew@solutionsbrewer.com> on 7/23/26 at 6:42 PM - this hash had functional opening of all
+  document types with the ability to save and restore to some degree.  While implementing fixes there have been 
+  regressions in both the open_file and save of some of the documents specifically NchantdMatrix is no longer 
+  functional for .csv files.  need to fix these issues.
+
+- Default behaviour is for NchantdDocument tabs to open external files and save the file_path to 
+  doc_media and doc_media_content tables with the option to switch to saving in pyffice.to_dict() format saving the
+  full content in the doc_media and doc_media_content tables.  We need to be careful to not break as we align all the\
+  document types to be as consistent as possible and fully functional.
+
+- Implement Locks on App Nodes like Home, Journal, Settings to not allow new sibiling nodes we will need to detail each 
+  child node and tab as to where the user has the ability to add new tabs or not like the Journal can have no new nodes 
+  but can have new tabs at each level. Settings can have no user nodes or tabs at any level. Home has full 
+  children Nodes and Tabs but no sibling Nodes. Can create nodes in the root Home Node
+
 - 
+   
 
 
 

@@ -2831,8 +2831,9 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             self.tab_widgets = []
 
             tabsdata = self.get_documents(node, tabset).replace(nan, None)
-            tabsdata.sort_values(by=["position_int"], ascending=True, inplace=True)
+            logma.info(f"TabsData {tabsdata}")
             if not tabsdata.empty:
+                tabsdata.sort_values(by=["position_int"], ascending=True, inplace=True)
                 logma.info(f"[ BUILD TAB ]")
                 tabsdata = [
                     self.convert_db_to_doc(tab) for tab in tabsdata.to_dict(orient="records") if tab is not None
