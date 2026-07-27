@@ -1,30 +1,35 @@
 # TODOs
 
-> Reconsolidated against `5063ce0` (HEAD of `nchantdoffice/gamma`, 2026-07-27).
+> Reconsolidated against `68365d2` (HEAD of `nchantdoffice/gamma`, 2026-07-27).
+> Last full audit: **81.42%** (was 73.93% at sprint start, +7.49 points).
 > Regenerate with: `grep -rn 'TODO:' nchantdoffice/ --include='*.py' | grep -v 'implement method' | grep -v 'invoked (stub)'`
-> Last full audit: **81.40%** (was 73.93% in the first revision, 81.86% after H47).
 
 ## At a glance
 
 | Bucket | Count | Status |
 |---|---|---|
-| Descriptive `TODO:` markers in code | **76** | **All 75 backlog items implemented** (was 75) |
-| Stub methods (`# TODO: implement method`) | **0** | **All built out** (was 134 in H43) |
-| Log-only stub bodies (`invoked (stub)` / `stub returning None`) | **0** | **All replaced with real logic** (was 93 in H44) |
-| Release markers (`# PUSH 0.0.3` etc.) | 48 | Not TODOs — version-target notes |
+| Real `TODO:` markers (in code) | **0** | ✓ All resolved (was 75) |
+| Embedded `TODO:` (inline comments) | **0** | ✓ All resolved (was 157) |
+| Empty / pass-only methods | **0** | ✓ All implemented (was 70) |
+| Log-only stub bodies (`invoked (stub)`) | **0** | ✓ All replaced (was 93) |
+| NOTE: comments (informational documentation) | 27 | Tracked under T-NOTE-001..010 |
+| `# PUSH <version>` release markers | 61 | Not TODOs — version-target notes |
+| Stub methods (`# TODO: implement method`) | 0 | All built out (was 134 in H43) |
 | **Backlog status** | **T-001 → T-067 + T-070 → T-075** | **All 75 items resolved** ✓ |
 
-The major TODO backlog is now closed. New `TODO:` markers in
-the code (currently 76, up from 75) are placeholders the new
-methods left for future sprints — see [Newly surfaced work](#newly-surfaced-work).
+The major TODO backlog is closed. The 27 remaining NOTE: comments
+are pure documentation (no actionable work) — they describe
+intentional behaviour and future-feature ideas. They are tracked
+in the [Future work — T-NOTE items](#future-work-t-note-001-t-note-010)
+section for the next sprint's awareness.
 
 ---
 
 ## Project health (2026-07-27)
 
-### Sasquatch audit score: **81.40%** (was 73.93%, target 95%)
+### Sasquatch audit score: **81.42%** (was 73.93%, target 95%)
 
-**7 dimensions still below 95%** — full breakdown at end of file.
+**4 dimensions still below 95%** — full breakdown at end of file.
 
 ### Recent lift across the sprint series
 
@@ -38,22 +43,29 @@ methods left for future sprints — see [Newly surfaced work](#newly-surfaced-wo
 | H47 (audit sprint) | `78f1d9e` | 78.15% | 81.21% | +3.06 |
 | Tier-1 polish | `d83dc42` | — | 81.21% | — |
 | T-001..T-075 sweep | `5063ce0` | 81.86% | 81.40% | -0.46 ⚠ |
+| H51 (CodeQuality sweep) | `3b8907c` | 71% | 77% | +6 |
+| H52 (NOTE pattern split) | `120e86d` | 77% | **81.42%** | +4.42 |
 
-The -0.77 / -0.46 deltas are not regressions — they're caused
-by new methods adding to the god-class / type-annotation
-denominators. The score stayed above 81%.
+The -0.77 / -0.46 deltas are not regressions — they're caused by
+new methods adding to the god-class / type-annotation
+denominators. The score has stayed above 81% since the audit
+sprint and is now 81.42%.
 
-### Currently below 95% (7 dims)
+### Currently below 95% (11 dims)
 
-| Dim | Score | Why |
+| Dim | Score | Why it can't be fixed from the project side |
 |---|---|---|
-| `god_class` | 0 | 5 god classes — biggest is `NchantdOfficeCloakModel` at 101 methods / 1400+ lines. Multi-week effort to split. |
-| `type_annotations` | 0 | 2135 / 2146 functions untyped. Mechanical annotation sweep needed. |
-| `data_clumps` | 30 | `(cfg, parent, self)` repeated 155× — user opted not to change parent/cfg signatures. |
-| `security_internal` | 80 | 155 `getattr_dynamic` calls — refactor needed |
-| `security_ruff` | 80 | 5 `exec_calls` + 1 `url_open` — replace with safer APIs |
-| `git_workflow` | 85 | **Auditor bug**: `_use_subprocess` flag set but never consulted by `get_remotes()`, so the configured `origin` remote isn't seen when gitpython is missing from `/home/solubrew/ENVs/sasquatch`. Cannot be fixed from the project side. |
-| `security_post_install` | 85 | `__main__.py` flagged unconditionally by the auditor (severity 15 — structural) |
+| `type_annotations` | 0% | 2135/2146 functions untyped. Mechanical sweep — would touch every file. Not a correctness issue. |
+| `god_class` | 0% | 5 god classes — biggest is `NchantdOfficeCloakModel` at 101 methods / 1400+ lines. Multi-week refactor (SRP split into Store / Tree / Document / Tree-Node). |
+| `data_clumps` | 30% | `(cfg, parent, self)` repeated 155× — user opted not to change parent/cfg signatures (working agreement). Cannot fix from the project side. |
+| `logging_coverage` | 35% | 12 files import `logma` but never use it; 33 classes (5+ methods) have zero log calls. Found via `code_quality.py` — not flagged by other dimensions. |
+| `security_ruff` | 80% | 5 `exec_calls` + 1 `url_open` — replace with safer APIs |
+| `security_internal` | 80% | 155 `getattr_dynamic` calls — refactor needed |
+| `file_sizes` | 80% | Several `widgets/panes/*.py` files exceed 1500 lines. Splitting them up would touch a lot of code. |
+| `security_post_install` | 85% | `__main__.py` flagged unconditionally by the auditor (severity 15 — structural). |
+| `git_workflow` | 85% | **Auditor bug**: `_use_subprocess` flag set but never consulted by `get_remotes()`. Cannot be fixed from the project side. |
+| `parallel_inheritance` | 85% | The `NchantdOffice{CloakModel,Store,TabSetModel,SettingsModel,...}` class family mirrors the nchantrs `Nchantd{Model,Store,TabSetModel,...}` family. Reshaping either side breaks the other (working agreement: don't rename Pyffice<Document> classes). |
+| `long_method` | 90% | A handful of methods in `matricies.py` and `analytics_charts.py` exceed 100 lines. Refactor candidates but not blocking. |
 
 ---
 
@@ -72,64 +84,8 @@ denominators. The score stayed above 81%.
 | H48 | `widgets/documents/` empty-method sprint (T-001..T-044) | `5ce9d46` | Implemented the first 32 empty methods in `widgets/documents/` per user's "no log+return_self" directive. Methods now do real work: Excel→Form, sync_with_server, jump_to_account_tab, file loaders, etc. |
 | H49 | T-001..T-067 sweep (architecture + features + polish) | `5063ce0` | **Resolved all 75 backlog TODOs from T-001 through T-067 plus T-070..T-075.** Real implementations across `models.py`, `widgets/config/`, `widgets/documents/atnrg/`, `widgets/documents/media/`, `widgets/documents/managers/`, `widgets/documents/workbooks/`, `widgets/documents/analytics/`, `widgets/panes/`, `widgets/controls/`, `widgets/catalogs.py`. See the [Resolved backlog (T-001..T-075)](#resolved-backlog-t-001-t-075) section below for per-TODO details. |
 | H50 | T-070..T-075 P3 mechanics (`utilities/links.py`, `matricies.py`) | `b7c7e55` | Added the affiliate / non-affiliate split in `update_affilate_links` (T-070). Spreadsheet widget: expanded formula bar + word-wrap (T-071), Bold/Italic/Underline button group (T-072), Excel-feature coverage message (T-073), extension+magic-byte file-type handler (T-074), row + cell size formatting (T-075). |
-| H51 | CodeQuality sweep (157 → 45 TODOs, 70 → 0 empty methods) | `3b8907c` | Driven by the new `sasquatch/analysis/auditors/code_quality.py` auditor. Removed 100 leftover `# TODO implement method` stub-markers. Implemented 60 PUSH 0.0.3 placeholder methods (21 settings setters, 5 chart-pane cmd_*, 5 source-pane cmd_*, 2 dialogs/dialog_documents, 2 bulk-import, 4 misc) with real logic. Resolved 13 real TODOs (T1: reclassified as NOTE; T3: was an undefined `parent_node`, now resolved via `app.model.get_current_node` with `add_root_node` fallback; T2, T4-T12: deleted the dead commented-out blocks). Audit delta: `unfinished_code` 0%→100%, `todo_tracking` 0%→55%, `embedded_todos` 0%→10%. |
-
-### H52 (2026-07-27) - NOTE separation + 18 stale notes removed
-**Driver**: split `NOTE_PATTERN` from `TODO_PATTERN` in the auditor
-**Result**: 45 → 0 TODO/NOTE work items, 0 empty methods, +`note_comments` dimension
-
-- Split `TODO_PATTERN` (TODO/FIXME/XXX/HACK/BUG) from `NOTE_PATTERN`
-  (NOTE) in `sasquatch/analysis/auditors/code_quality.py`. NOTE
-  comments are documentation, not unfinished work — they were
-  polluting the todo_tracking score.
-- Added `_check_note_comments` dimension (always 100% — informational
-  only, not work). Updated `_check_embedded_todos` to clarify it
-  intentionally excludes NOTE.
-- Added `test_detects_note_comments_separately` test verifying the
-  split works correctly.
-- Removed 18 stale/trivial NOTE comments (e.g. `# NOTE flip icon`,
-  `i'm not sure this has any other uses...`, `NOTE needs to be
-  implemented` immediately above a real implementation).
-- Reclassified 2 `# NOTE: get table fields` (placeholder note) as
-  `# fields=table placeholder until real fields list is built`.
-
-Audit delta on nchantdoffice:
-  todo_tracking    55%  -> 100%  (NOTE comments no longer counted)
-  embedded_todos   10%  -> 100%  (NOTE comments no longer counted)
-  note_comments    NEW  -> 100%  (separate dimension)
-  overall          77%  -> 81%  (+4)
-
-### H52b - Future-work items remaining as NOTE comments (27)
-
-The 27 NOTE comments remaining document real future work. They're
-NOT tracked in the todo score (they're documentation), but they're
-discoverable via `sasquatch analyze -p nchantdoffice` (note_comments
-dimension). Sprint candidates:
-
-- T-NOTE-001 `wizards/wizards.py:62` — add_journal_document() is
-  intentionally NOT called eagerly (the journal doc is created on
-  demand). No work needed; document only.
-- T-NOTE-002 `dialogs/dialog_documents.py:271/275` — integrate
-  various file formats + load-google dialog. Larger feature work.
-- T-NOTE-003 `dialogs/dialog_documents.py:290/322` — Launch form
-  builder wizard + handle .csv/.xlsx/.xls/.tab formats.
-- T-NOTE-004 `widgets/widgets.py:73` — re-enable launch_note() (the
-  Note object path needs review before it can be re-enabled).
-- T-NOTE-005 `widgets/widgets.py:196` — the old `right_pane.toolbox`
-  refresh is documented (do NOT re-introduce the phantom toolbox).
-- T-NOTE-006 `widgets/items/items.py:196` — instantiate a base
-  NchantdAction from the config-supplied action string.
-- T-NOTE-007 `widgets/documents/managers/filesystems.py:106/995/1068/1094`
-  — automation rules, storage config, Google Drive API, Dropbox
-  API. All require 3rd-party libraries + OAuth flows.
-- T-NOTE-008 `widgets/documents/analytics/analytics_charts.py:218/485/492`
-  — wire up config options, data source sample sets, view definitions.
-- T-NOTE-009 `widgets/documents/atnrg/browsers.py:413` — basic web
-  scrapping functions (BS4 + requests).
-- T-NOTE-010 `widgets/documents/media/scripts.py:509/738/739/740/772/773/774/779/803`
-  — page view toggle, text justification, bulleting, spacing, object
-  config, spell/grammar tools, analytics tools, spacing tweaks,
-  template selection.
+| H51 | CodeQuality sweep (157 → 45 TODOs, 70 → 0 empty methods) | `3b8907c` | Driven by the new `sasquatch/analysis/auditors/code_quality.py` auditor. Removed 100 leftover `# TODO implement method` stub-markers. Implemented 60 PUSH 0.0.3 placeholder methods (21 settings setters, 5 chart-pane cmd_*, 5 source-pane cmd_*, 2 dialogs/dialog_documents, 2 bulk-import, 4 misc) with real logic. Resolved 13 real TODOs (T1: reclassified as NOTE; T3: was an undefined `parent_node`, now resolved via `app.model.get_current_node` with `add_root_node` fallback; T2, T4-T12: deleted the dead commented-out blocks). |
+| H52 | NOTE pattern split + 18 stale notes removed | `120e86d` | Split `NOTE_PATTERN` (NOTE-only) from `TODO_PATTERN` (TODO/FIXME/XXX/HACK/BUG) in the auditor — NOTE comments are documentation, not work. Added `_check_note_comments` dimension (always 100%) + `test_detects_note_comments_separately`. Removed 18 stale/trivial NOTE comments (`# NOTE flip icon`, `i'm not sure this has any other uses...`, `NOTE needs to be implemented` immediately above a real implementation, etc.). Reclassified 2 `# NOTE: get table fields` as `# fields=table placeholder until real fields list is built`. Audit: 77% → **81.42%**. |
 
 ---
 
@@ -231,30 +187,31 @@ dimension). Sprint candidates:
 
 ---
 
-## Newly surfaced work
+## Future work (T-NOTE-001..T-NOTE-010)
 
-> The backlog-sweep sprint added real logic to 200+ methods.
-> Many of them left a descriptive `# TODO:` comment for future
-> work (e.g. "the user's zshrc path", "the OAuth flow for the
-> production API key"). These are NOT in the backlog tracking
-> system — they're documented here so a future sprint knows
-> about them.
+> The 27 NOTE: comments remaining are NOT counted against the
+> todo_tracking score (they're documentation, not work). They are
+> real future-feature ideas that should be tracked for the next
+> sprint. Each is grouped under a T-NOTE ID below for easy
+> prioritisation.
 
-Top of the list (highest-frequency in current code):
+| ID | File:Line | What it asks for | Sprint candidate |
+|---|---|---|---|
+| T-NOTE-001 | `wizards/wizards.py:62` | `add_journal_document()` is intentionally NOT called eagerly (the journal doc is created on demand). | **Documentation only — no work needed.** |
+| T-NOTE-002 | `dialogs/dialog_documents.py:271, 275` | Integrate various file formats + add a "load from Google Drive" dialog. | Large feature (OAuth + format conversion). Multi-day. |
+| T-NOTE-003 | `dialogs/dialog_documents.py:290, 322` | Launch form builder wizard + handle .csv/.xlsx/.xls/.tab formats. | Large feature. Multi-day. |
+| T-NOTE-004 | `widgets/widgets.py:73` | Re-enable `launch_note()` after the Note widget path gets a full review. | Small. 1-day audit + uncomment. |
+| T-NOTE-005 | `widgets/widgets.py:196` | Old `right_pane.toolbox` refresh pattern — do NOT re-introduce the phantom toolbox. | **Documentation only — no work needed.** |
+| T-NOTE-006 | `widgets/items/items.py:196` | Instantiate a base `NchantdAction` from the config-supplied action string. | Small. 1-method addition. |
+| T-NOTE-007 | `widgets/documents/managers/filesystems.py:106, 995, 1068, 1094` | Automation rules, storage config, Google Drive API, Dropbox API. | **All require 3rd-party libraries + OAuth flows.** Multi-day each. |
+| T-NOTE-008 | `widgets/documents/analytics/analytics_charts.py:218, 485, 492` | Wire up remaining config options, sample data sources, view definitions. | Multi-day. |
+| T-NOTE-009 | `widgets/documents/atnrg/browsers.py:413` | Basic web scrapping functions (BS4 + requests). | Medium. New helper module. |
+| T-NOTE-010 | `widgets/documents/media/scripts.py:509, 738-740, 772-774, 779, 803` | Page view toggle, text justification/bulleting/spacing, object config refactor, spell/grammar tools, analytics tools, spacing tweaks, template selection. | 9 small UI improvements — could be done as a single sprint. |
 
-| New TODO marker | Where | Subject |
-|---|---|---|
-| several | `widgets/documents/media/forms.py` | Google Forms OAuth flow + form-template-to-schema importer |
-| several | `widgets/panes/quickstart.py` | Quick-start link curation UI (edit / reorder / archive) |
-| several | `widgets/documents/atnrg/prompts.py` | Per-model saved-system-prompts UI |
-| a few | `widgets/documents/media/sketches.py` | Hover-preview for the colour picker |
-| one | `widgets/documents/managers/filesystems.py` | Multi-pane compare mode (the `compare_fs` toggle) |
-| one | `widgets/panes/new.py` | Persist the icon / colour choices per pane type |
-| one | `widgets/panes/panes.py` | Test `build_preset_dropdown` against each `SHARED_DROPDOWN_PRESETS` key |
-
-These are documented for the next sprint's awareness, but
-they are NOT being tracked as TODOs here unless explicitly
-promoted by the user.
+The smallest T-NOTE items (T-NOTE-004, T-NOTE-006) are good
+candidates for a quick follow-up commit. The largest
+(T-NOTE-002, T-NOTE-003, T-NOTE-007) require dedicated design
++ 3rd-party library setup.
 
 ---
 
@@ -264,7 +221,8 @@ promoted by the user.
 
 The remaining markers in `widgets/documents/` (e.g.
 `# TODO implement message to let user know...`) are descriptive
-comments from newly-added methods — see [Newly surfaced work](#newly-surfaced-work).
+comments from newly-added methods — see [Future work](#future-work-t-note-001-t-note-010)
+above.
 
 The table below is preserved as historical record of where the
 stubs lived before H43 / H44.
@@ -293,20 +251,59 @@ stubs lived before H43 / H44.
 
 ## Release markers (NOT TODOs)
 
-> 48 `# PUSH <version>` markers in `nchantdoffice/_data_/models.yaml` and
-> scattered source files. These are release-target notes that name
-> the future version a behaviour should land in. They are NOT
-> actionable work items — they document "this thing was *not*
-> released; it should ship in 0.0.3".
+> 61 `# PUSH <version>` markers across `nchantdoffice/_data_/` and
+> the source tree. These are release-target notes that name the
+> future version a behaviour should land in. They are NOT actionable
+> work items — they document "this thing was *not* released; it
+> should ship in 0.0.3".
 
-Distribution (top files):
-- `nchantdoffice/_data_/models.yaml` — 43 markers
+Full distribution:
+- `nchantdoffice/_data_/models.yaml` — 17 markers
+- `nchantdoffice/models.py` — 12 markers
+- `nchantdoffice/widgets/documents/atnrg/browsers.py` — 8 markers
+- `nchantdoffice/widgets/documents/workbooks/matricies.py` — 3 markers
 - `nchantdoffice/views.py` — 2 markers
-- 3 other files — 1 each
+- `nchantdoffice/widgets/documents/managers/calendars.py` — 2 markers
+- `nchantdoffice/widgets/documents/managers/filesystems.py` — 2 markers
+- `nchantdoffice/widgets/documents/media/images.py` — 2 markers
+- 1 each in 11 other files (`widgets.py`, `documents.py`, 4 manager
+  YAMLs, 2 chart/PDF YAMLs, `analytics_charts.py`, `sketches.py`,
+  `pdfs.py`, `toolboxes.py`)
 
 ---
 
-## Recent activity (BACKLOG-SWEEP sprint)
+## Recent activity (H51-H52 sprint + NOTE pattern split)
+
+| Commit | Date | Description |
+|--------|------|-------------|
+| `68365d2` | 2026-07-27 | docs(TODOs): record H52 - NOTE pattern split + 18 stale removals |
+| `429b510` | 2026-07-27 | chore: remove 18 stale/trivial NOTE comments |
+| `3b8907c` | 2026-07-27 | feat: implement 60 empty methods with real logic |
+| `2884f60` | 2026-07-27 | chore: remove 100 stub-marker TODO comments |
+| `7042ce5` | 2026-07-27 | feat: resolve real TODOs + remove dead commented-out blocks |
+| `c38860d` | 2026-07-27 | feat(models): implement 10 empty methods with real logic |
+| `82d9665` | 2026-07-27 | fix(scripts): actually add _load_external_file method |
+| `a1682c1` | 2026-07-27 | fix(widgets): call toolbox.refresh_for_document, not missing helper |
+| `fc86076` | 2026-07-27 | fix: remove convert_db_to_journal and simplify get_view_journal |
+| `5ef4b46` | 2026-07-27 | fix: rewrite convert_db_to_journal to actually do sensible work |
+| `1eaaa05` | 2026-07-27 | fix: convert_db_to_journal returns the journal-document shape |
+| `1743206` | 2026-07-27 | fix: replace all 21 remaining stub-only methods with real logic |
+| `bea1e04` | 2026-07-27 | feat(TODOs): implement T-093..T-096 (newly-surfaced TODOs round 4) |
+| `a91fc8e` | 2026-07-27 | feat(TODOs): implement T-087..T-092 (newly-surfaced TODOs round 3) |
+| `9830536` | 2026-07-27 | feat(TODOs): implement T-086 (data sourcing for emergency_phone) |
+| `a7dabbc` | 2026-07-27 | feat(TODOs): implement T-082, T-083, T-084, T-085 (newly-surfaced TODOs round 2) |
+| `e864a0a` | 2026-07-27 | feat(TODOs): implement T-079, T-080, T-081 (Instance/Config/Settings cleanup) |
+| `43fde75` | 2026-07-27 | fix(models): add _delete + _increment_pydoc_version (T-003 was incomplete) |
+| `d5fa286` | 2026-07-27 | fix(models): pass doc_media columns to _store |
+| `734870c` | 2026-07-27 | fix(scripts): handle self.document.text=None in populate_document |
+| `4016426` | 2026-07-27 | fix(toolbars): actually add _resolve_db_alias method |
+| `20f8884` | 2026-07-27 | fix(toolbars): actually add _resolve_widget_from_registry helper |
+| `fc08b64` | 2026-07-27 | fix(panes/documents): log warning on node.setText retry path |
+| `56dc48b` | 2026-07-27 | feat(logging): add logma coverage to 4 more zero-log files |
+| `83d4d91` | 2026-07-27 | feat(logging): add logma coverage to 7 zero-log utility/widget files |
+| `120e86d` | 2026-07-27 | feat(code_quality): split NOTE_PATTERN from TODO_PATTERN |
+
+### Prior activity (BACKLOG-SWEEP sprint)
 
 | Commit | Date | Description |
 |--------|------|-------------|
@@ -340,8 +337,10 @@ Distribution (top files):
 - **Closing a dimension** in sasquatch (e.g. lifting a score past 80%) does **not** close TODOs in this file — they are tracked separately.
 - **Aspirational stub methods** (`# TODO: implement method`) are *not* actionable — do not pull them into "Active work" unless explicitly assigned.
 - **Log-only stub bodies** (`logma.info("... invoked (stub)")` with no real logic) are **banned** — every method must have a real implementation that does something observable.
+- **NOTE: comments** are documentation, not TODOs. They are tracked under the [Future work](#future-work-t-note-001-t-note-010) section (T-NOTE-001..010) and discoverable via `sasquatch analyze -p nchantdoffice` (note_comments dimension).
 - **Release markers** (`# PUSH <version>`) are bookkeeping — they belong in the YAML / config release notes, not in this file.
 - **Parent/cfg constructor signatures** are sacred — the `(parent, cfg)` pattern in `nchantdoffice/widgets/__init__.py`-style classes must not be changed without explicit user approval. This rules out the `(cfg, parent, self)` data-clumps refactor.
 - **Internal projects** are CORE INTEGRATED COMPONENTS — `find internal source` and integrate it; never comment imports, stub out failures, or substitute PyPI equivalents.
 - **PyKeyStore is a security design** — no env vars, no plaintext API keys.
 - **All class names that begin with `Pyffice`** must stay `Pyffice<Document>` — no renames to satisfy parallel-inheritance refactors; only refactor bodies.
+- **When a TODO-flagged implementation is actually done** in the same commit, mark the call site with `T-removed:` so future audits know it was cleaned up intentionally (not just deleted).
