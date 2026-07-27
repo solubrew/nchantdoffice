@@ -484,6 +484,40 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             logma.error(f"[settings] cmd_on_change_default_tab_select failed: {e}", exc_info=True)
         return self
 
+
+    def cmd_set_pro_edition(self, event=None, *args, **kwargs):
+        """Toggle the pro-edition flag, gated by the actual user capability.
+
+        Reads the checkbox state (or kwargs value) and stores the
+        requested setting on the config. Refuses to enable pro
+        features when the current user does not have the underlying
+        ``has_pro`` capability (i.e. the user is on the free tier).
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            requested = None
+            if event is not None and hasattr(event, "isChecked"):
+                requested = bool(event.isChecked())
+            if requested is None and "value" in (kwargs or {}):
+                requested = bool(kwargs["value"])
+            if requested is None:
+                requested = False
+
+            user = getattr(self, "user", None) or getattr(self.app.model, "user", None)
+            has_pro_capability = bool(getattr(user, "has_pro", False)) if user else False
+
+            if requested and not has_pro_capability:
+                logma.warning(
+                    "[settings] cmd_set_pro_edition: user lacks has_pro capability - ignoring"
+                )
+                requested = False
+            self.pro_edition = bool(requested)
+            self.config.dikt["pro_edition"] = bool(requested)
+        except Exception as e:
+            logma.error(f"[settings] cmd_set_pro_edition failed: {e}", exc_info=True)
+        return self
+
     def cmd_on_change_right_side_focus(self, event=None, *args, **kwargs):
         """Toggle the refocus-right-side-tabs-on-document-change flag.
 

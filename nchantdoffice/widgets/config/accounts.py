@@ -264,25 +264,46 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             return False
 
     def load_account_settings(self):
-        """Load account settings from user model"""
+        """Load account settings from the local user model + live API.
+
+        Two-phase load:
+          1. Populate the local cached values (name, status, credits)
+             from ``self.app.model.user`` so the UI is never blank.
+          2. Make a live API call to nchantrs.com (via
+             ``sync_with_server``) to refresh the cached values
+             when an API key is configured.
+
+        Returns ``True`` if either phase succeeded.
+        """
         try:
-            # Populate user name
+            user = self.app.model.user
+            # Phase 1 - populate from local cache
             if self.user_name:
-                self.user_name.setPlaceholderText(f"{self.app.model.user.name}")
-
-            # Populate account status
+                self.user_name.setPlaceholderText(f"{user.name}")
             if self.account_status:
-                self.account_status.setPlaceholderText(f"{self.app.model.user.nchantrs_account_status}")
-
-            # Populate credits
+                self.account_status.setPlaceholderText(f"{user.nchantrs_account_status}")
             if self.credits_status:
-                self.credits_status.setPlaceholderText(f"{self.app.model.user.nchantrs_account_credits}")
+                self.credits_status.setPlaceholderText(f"{user.nchantrs_account_credits}")
+
+            # Phase 2 - live API refresh (only if we have a key)
+            if getattr(user, "apikey", None):
+                try:
+                    self.sync_with_server()
+                except Exception as e:
+                    logma.error(f"[accounts] load_account_settings: live refresh failed: {e}", exc_info=True)
+                # Re-populate with whatever the sync updated
+                if self.user_name:
+                    self.user_name.setPlaceholderText(f"{user.name}")
+                if self.account_status:
+                    self.account_status.setPlaceholderText(f"{user.nchantrs_account_status}")
+                if self.credits_status:
+                    self.credits_status.setPlaceholderText(f"{user.nchantrs_account_credits}")
 
             logma.info("Account settings loaded")
             return True
 
         except Exception as e:
-            logma.error(f"Error loading account settings: {e}")
+            logma.error(f"Error loading account settings: {e}", exc_info=True)
             return False
 
     def validate_account_settings(self):

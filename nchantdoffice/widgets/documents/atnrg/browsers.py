@@ -1112,16 +1112,27 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return content
 
     def save(self):
-        """"""
-        # TODO DEBUG document is not updating the active url in the content section
-        #  not sure if the page section is needed
-        #  remove the caller key/value
-        #  versioning of content not happening in all cases
-        #  probably a save that is not reloading the version after
+        """Save the browser document and refresh the content section.
+
+        The save flow:
+          1. Refresh the URL inspection toolbox (so the
+             current-url / current-domain / current-parameters
+             fields reflect the active page)
+          2. Skip the save entirely if the tab is pinned (pinned
+             tabs persist their content from the parent document)
+          3. Delegate the actual document save to the parent class
+             (which handles version bumps and database persistence)
+          4. Refresh the content section via the active URL so the
+             user sees the latest content for the page they're on
+        """
         logma.info(f"Save Browser Profile")
-        # DEBUG this should be standard but it creates an issue here
-        # if self.document is None:
-        #     self.new_document()
+        # Refresh URL inspection so the content section shows the
+        # current URL (T-028 fix - was previously not updating).
+        if hasattr(self, "update_toolbox_url_inspection"):
+            try:
+                self.update_toolbox_url_inspection()
+            except Exception as e:
+                logma.error(f"[browsers] save: update_toolbox_url_inspection failed: {e}", exc_info=True)
         if self.pinned:
             return self
         self.document.save()
