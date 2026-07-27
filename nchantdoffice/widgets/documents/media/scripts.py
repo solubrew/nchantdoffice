@@ -1062,6 +1062,60 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.populate_document()
         return self
 
+
+
+    def _load_external_file(self):
+        """Load an external script file into the document editor.
+
+        Reads ``self.file_path`` (or ``self.current_notebook_path``
+        as a fallback) and, when the path points at an existing
+        readable text file, copies its contents into the editor
+        via ``setPlainText`` / ``set_text``. Returns ``True`` when
+        a file was loaded, ``False`` when there was no file to
+        load (no path, missing file, or unsupported extension).
+
+        Whitelisted text formats: ``.py``, ``.js``, ``.md``,
+        ``.txt``, ``.json``, ``.yaml``, ``.yml``, ``.html``,
+        ``.css``, ``.xml``, ``.csv``, ``.ini``, ``.toml``,
+        ``.sh``. The editor is left untouched when the
+        extension isn't on the whitelist (the in-memory
+        document text takes over).
+        """
+        try:
+            import os
+            path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path", None)
+            if not path:
+                return False
+            path = os.path.abspath(path)
+            if not os.path.isfile(path):
+                return False
+            ext = os.path.splitext(path)[1].lower()
+            supported = {
+                ".py", ".js", ".md", ".txt", ".json", ".yaml", ".yml",
+                ".html", ".css", ".xml", ".csv", ".ini", ".toml", ".sh",
+            }
+            if ext not in supported:
+                return False
+            with open(path, "r", encoding="utf-8", errors="replace") as f:
+                text = f.read()
+            editor = (
+                getattr(self, "document_editor", None)
+                or getattr(self, "editor", None)
+            )
+            if editor is None:
+                return False
+            if hasattr(editor, "setPlainText"):
+                editor.setPlainText(text)
+            elif hasattr(editor, "set_text"):
+                editor.set_text(text)
+            else:
+                return False
+            logma.info(f"[scripts] _load_external_file loaded {len(text)} chars from {path}")
+            return True
+        except Exception as e:
+            logma.error(f"[scripts] _load_external_file failed: {e}", exc_info=True)
+            return False
+
     def populate_document(self):
         """"""
         logma.info(f"Populating Document")
