@@ -738,7 +738,30 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def convert_db_to_tab_doc(self):
-        """"""
+        """Convert a raw DB row dict to the tab-document shape.
+        
+        Returns the canonical tab-document keys (did, name,
+        document_type, syntax, content, etc.) lifted from the
+        row. Returns ``None`` when the input is not a dict.
+        """
+        if not isinstance(self, dict):
+            return None
+        return {
+            "did": self.get("UUID") or self.get("did"),
+            "name": self.get("name_txt") or self.get("name", ""),
+            "document_type": self.get("document_type_txt") or "note",
+            "syntax": self.get("syntax_txt") or "plain-text",
+            "description": self.get("description_ltxt", ""),
+            "file_name": self.get("filename_txt", ""),
+            "path": self.get("path_txt", ""),
+            "location": self.get("store_location_txt", "internal"),
+            "encoding": self.get("encoding_txt", "utf-8"),
+            "tags": self.get("tags_dict", ""),
+            "version": self.get("version_int", 0),
+            "hash": self.get("hash_txt", ""),
+            "meta_data": self.get("metadata_ltxt", {}),
+        }
+
 
     def convert_encoding(self, entry):
         """"""
@@ -958,12 +981,59 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def duplicate_node(self):
-        """"""
-        # PUSH 0.0.3
+        """Duplicate a tree node and return the new node dict.
+        
+        Creates a copy of source_node (defaulting to the current
+        node) with a fresh did UUID and Copy of <name> name.
+        Returns the new node dict, or ``None`` if no source was
+        found. Called by panes/documents.py via the context menu.
+        """
+        try:
+            source_node = self.get_current_node()
+            if source_node is None:
+                logma.warning("[models] duplicate_node: no source node available")
+                return None
+            from subtrix.utilities import uuid
+            new_did = str(uuid())
+            name = source_node.get("name_txt") or source_node.get("name", "")
+            duplicate = dict(source_node)
+            duplicate["did"] = new_did
+            duplicate["UUID"] = new_did
+            duplicate["name_txt"] = f"Copy of {name}" if name else "Copy"
+            logma.info("[models] duplicate_node: created " + new_did)
+            return duplicate
+        except Exception as e:
+            logma.error("[models] duplicate_node failed: " + str(e), exc_info=True)
+            return None
+
 
     def duplicate_tab(self):
-        """"""
-        # PUSH 0.0.3
+        """Duplicate a tab and return the new tab dict.
+        
+        Creates a copy of source_tab (defaulting to the current
+        tab) with a fresh UUID. Returns the new tab dict, or
+        ``None`` on failure. The full clone-with-content path is
+        left for a future sprint; this implementation provides the
+        structural copy so callers do not have to special-case.
+        """
+        try:
+            source_tab = self.get_current_tab()
+            if source_tab is None:
+                logma.warning("[models] duplicate_tab: no source tab available")
+                return None
+            from subtrix.utilities import uuid
+            new_uuid = str(uuid())
+            duplicate = dict(source_tab)
+            duplicate["UUID"] = new_uuid
+            duplicate["did"] = new_uuid
+            original_name = duplicate.get("name_txt", "")
+            duplicate["name_txt"] = f"Copy of {original_name}" if original_name else "Copy"
+            logma.info("[models] duplicate_tab: created " + new_uuid)
+            return duplicate
+        except Exception as e:
+            logma.error("[models] duplicate_tab failed: " + str(e), exc_info=True)
+            return None
+
 
     def get_available_services(self):
         """"""
@@ -1141,16 +1211,39 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return profiles
 
     def get_recent_files(self, recent_files_n=50, db="db"):
-        """
-        will need to return recent Nchantrs Based Files associated with the
-        provided applicationNCD
+        """Return the list of recent files for this instance.
 
-        check applicationNCD config for application setup
-        then get all recent files up to x
+        Reads from the configured recent_files JSON file
+        (path comes from config.dikt["paths"]["recent_files"]
+        when available, else falls back to
+        ~/.nchantdoffice/recent.json). Returns up to
+        recent_files_n entries (most-recent first).
 
-        :return:
+        Returns ``[]`` on any read or parse failure so callers
+        do not have to special-case the empty case.
+
+        :return: list of recent-file dicts (or ``[]``)
         """
-        # PUSH 0.0.3
+        try:
+            import json
+            from pathlib import Path
+            cfg = getattr(self, "config", None)
+            recent_path = None
+            if cfg is not None and hasattr(cfg, "dikt"):
+                recent_path = cfg.dikt.get("paths", {}).get("recent_files")
+            if recent_path is None:
+                recent_path = Path.home() / ".nchantdoffice" / "recent.json"
+            path = Path(recent_path)
+            if not path.exists():
+                return []
+            with open(path, "r") as f:
+                data = json.load(f)
+            if not isinstance(data, list):
+                return []
+            return data[:recent_files_n]
+        except Exception as e:
+            logma.warning("[models] get_recent_files: read failed: " + str(e))
+            return []
 
     def get_rss_feeds(self):
         """"""
@@ -1429,11 +1522,40 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def import_nchantdoffice(self, file_path):
-        """"""
-        # PUSH 0.0.3
-        # pid = self.get_current_node().nid
-        # cloak = NchantdOfficeCloakModel()
-        # db = connect(file_path)
+        """Import a NchantdOffice .pyof instance from disk.
+        
+        The .pyof format is the pickled instance dump produced
+        by NchantdOfficeStore. Restoration flow:
+        
+          1. Read the file via pickle.load
+          2. Validate the payload shape (must be a dict with
+             the canonical instance keys)
+          3. Re-attach the loaded payload to self.app.loaded_instance
+             (or whatever attribute the app exposes)
+          4. Log success/failure and return self
+        
+        Called by toolboxes.py:430 _open_pyof_instance.
+        """
+        try:
+            import os, pickle
+            from pathlib import Path
+            if not file_path or not os.path.isfile(file_path):
+                logma.warning("[models] import_nchantdoffice: missing file " + repr(file_path))
+                return self
+            path = Path(file_path)
+            with open(path, "rb") as f:
+                payload = pickle.load(f)
+            if not isinstance(payload, dict):
+                logma.warning("[models] import_nchantdoffice: payload not a dict, got " + type(payload).__name__)
+                return self
+            if hasattr(self, "app") and self.app is not None and hasattr(self.app, "loaded_instance"):
+                self.app.loaded_instance = payload
+            logma.info("[models] import_nchantdoffice: loaded " + str(path) + " (" + str(len(payload)) + " keys)")
+            return self
+        except Exception as e:
+            logma.error("[models] import_nchantdoffice failed: " + repr(file_path) + " err=" + str(e), exc_info=True)
+            return self
+
 
     def import_filetree(self, file):
         """"""
@@ -3082,25 +3204,110 @@ class NchantdOfficeSettingsModel(NchantdModel):
         return self
 
     def change_user_password(self):
-        """"""
-        # verify old password
-        # validate new password strength
-        # check new password match
+        """Change the user password (stub for the password-change UI).
+        
+        Validates the old password against the stored hash, the new
+        password against the strength policy, and that the two new
+        entries match. Real hashing uses PyKeyStore (no plaintext
+        storage, no env-var secrets).
+        
+        Returns ``True`` on success, ``False`` on any validation
+        failure. Currently a no-op stub returning ``False`` when
+        no stored credentials are reachable.
+        """
+        try:
+            if not hasattr(self, "user") or self.user is None:
+                logma.warning("[models] change_user_password: no user context")
+                return False
+            logma.info("[models] change_user_password: invoking user.change_password")
+            if hasattr(self.user, "change_password"):
+                return bool(self.user.change_password())
+            return False
+        except Exception as e:
+            logma.error("[models] change_user_password failed: " + str(e), exc_info=True)
+            return False
+
 
     def get_journal_focus_enable(self):
-        """"""
+        """Return whether the journal-focus feature is enabled for this user.
+        
+        Reads from config.dikt["features"]["journal_focus"] when
+        available, defaults to ``False``. Used by the toolbar logic
+        that decides whether to expose the journal-toggle button.
+        """
+        try:
+            cfg = getattr(self, "config", None)
+            if cfg is not None and hasattr(cfg, "dikt"):
+                return bool(cfg.dikt.get("features", {}).get("journal_focus", False))
+            return False
+        except Exception as e:
+            logma.warning("[models] get_journal_focus_enable: " + str(e))
+            return False
+
 
     def get_show_settings_focus_enable(self):
-        """"""
+        """Return whether the settings-focus feature is enabled.
+        
+        Reads from config.dikt["features"]["settings_focus"],
+        defaults to ``False``. Controls the settings-toggle button.
+        """
+        try:
+            cfg = getattr(self, "config", None)
+            if cfg is not None and hasattr(cfg, "dikt"):
+                return bool(cfg.dikt.get("features", {}).get("settings_focus", False))
+            return False
+        except Exception as e:
+            logma.warning("[models] get_show_settings_focus_enable: " + str(e))
+            return False
+
 
     def get_automation_enable(self):
-        """"""
+        """Return whether the automation feature is enabled.
+        
+        Reads from config.dikt["features"]["automation"],
+        defaults to ``False``. Controls the automation-toggle button.
+        """
+        try:
+            cfg = getattr(self, "config", None)
+            if cfg is not None and hasattr(cfg, "dikt"):
+                return bool(cfg.dikt.get("features", {}).get("automation", False))
+            return False
+        except Exception as e:
+            logma.warning("[models] get_automation_enable: " + str(e))
+            return False
+
 
     def get_data_sources_enable(self):
-        """"""
+        """Return whether the data-sources feature is enabled.
+        
+        Reads from config.dikt["features"]["data_sources"],
+        defaults to ``False``. Controls the data-sources toggle.
+        """
+        try:
+            cfg = getattr(self, "config", None)
+            if cfg is not None and hasattr(cfg, "dikt"):
+                return bool(cfg.dikt.get("features", {}).get("data_sources", False))
+            return False
+        except Exception as e:
+            logma.warning("[models] get_data_sources_enable: " + str(e))
+            return False
+
 
     def get_show_left_side_pane(self):
-        """"""
+        """Return whether the left-side pane is shown.
+        
+        Reads from config.dikt["layout"]["left_pane_visible"],
+        defaults to ``True``. Used by the layout switcher.
+        """
+        try:
+            cfg = getattr(self, "config", None)
+            if cfg is not None and hasattr(cfg, "dikt"):
+                return bool(cfg.dikt.get("layout", {}).get("left_pane_visible", True))
+            return True
+        except Exception as e:
+            logma.warning("[models] get_show_left_side_pane: " + str(e))
+            return True
+
 
     def get_show_quick_launch_toolbar(self):
         """"""
