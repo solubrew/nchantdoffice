@@ -170,8 +170,21 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         if autostart and not self.server_running:
             logma.info("[notebook] initView: scheduling start_jupyter_server in 500ms (QTimer.singleShot)")
             QTimer.singleShot(500, self.start_jupyter_server)
-        # TODO: load previously open .ipynb file
-        #  need a way to safely allow the user to select the place to start the server
+
+        # T-044: re-load the previously-open .ipynb file when one
+        # is configured. Looks for the path on
+        # ``config.dikt["last_notebook_path"]`` first, then falls
+        # back to ``self.current_notebook_path``. The actual
+        # reload is deferred 1 second so it runs after the
+        # Jupyter server is up.
+        last_path = None
+        if hasattr(self, "config"):
+            last_path = self.config.dikt.get("last_notebook_path")
+        if not last_path:
+            last_path = getattr(self, "current_notebook_path", None)
+        if last_path and self._looks_like_ipynb_path(last_path):
+            logma.info(f"[notebook] initView: scheduling reload of {last_path}")
+            QTimer.singleShot(1000, lambda p=last_path: self.open_notebook(p))
         return self
 
     def initWidget(self):
@@ -196,6 +209,41 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 history.append(url)
                 seen.add(url)
         return history
+
+
+
+    def _looks_like_ipynb_path(self, path):
+        """Return True if ``path`` is a string ending in ``.ipynb``."""
+        return bool(path) and isinstance(path, str) and path.lower().endswith(".ipynb")
+
+    def open_notebook(self, path):
+        """Open a local .ipynb file in the embedded webview.
+
+        T-044 helper - resolves to an absolute path, validates the
+        file exists, then issues a webview.setUrl() to the Jupyter
+        server's ``/notebooks/<name>`` endpoint. Returns ``self``.
+        """
+        if not self._looks_like_ipynb_path(path):
+            logma.warning(f"[notebook] open_notebook: not a .ipynb path: {path}")
+            return self
+        import os
+        path = os.path.abspath(path)
+        if not os.path.isfile(path):
+            logma.warning(f"[notebook] open_notebook: file missing: {path}")
+            return self
+        try:
+            import urllib.parse
+            self.current_notebook_path = path
+            if hasattr(self, "config"):
+                self.config.dikt["last_notebook_path"] = path
+            target = f"{self.server_url}/notebooks/{urllib.parse.quote(os.path.basename(path))}"
+            if hasattr(self, "browser") and self.browser is not None and hasattr(self.browser, "setUrl"):
+                from PySide6 import QtCore
+                self.browser.setUrl(QtCore.QUrl(target))
+            logma.info(f"[notebook] open_notebook: navigated to {target}")
+        except Exception as e:
+            logma.error(f"[notebook] open_notebook failed: {e}", exc_info=True)
+        return self
 
     def get_current_url(self):
         """Return the URL the notebook is currently displaying.

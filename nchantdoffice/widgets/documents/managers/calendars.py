@@ -339,11 +339,16 @@ class NchantdEventsListPane(NchantdPane):
         cfg = cfg or {}
         cfg["layout"] = "vertical"
         super().initView(cfg)
-        for event in self.events:
-            cfg = {}
-            # TODO build with event
-            self.events[event] = NchantdEventGroup(self, self.events[event]).initWidget()
-            self.layout.addWidget(self.events[event])
+        # T-043: build each event pane from the events dict
+        # (alarm / task / event_start / event_end fields). Each
+        # entry is a NchantdEventGroup wrapping the event dict.
+        for event_name, event_cfg in list(self.events.items()):
+            try:
+                widget = NchantdEventGroup(self, event_cfg).initWidget()
+                self.events[event_name] = widget
+                self.layout.addWidget(widget)
+            except Exception as e:
+                logma.error(f"[calendars] build event {event_name} failed: {e}", exc_info=True)
         self.layout.addStretch()
         return self
 

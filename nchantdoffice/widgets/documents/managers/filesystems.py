@@ -1093,17 +1093,27 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
     def open_file(self, file=None):
-        """"""
-        # TODO not sure this fits as the whole document is basically a file nav window
-        #  there is no real open of the file but we need to align the populate and config
-        logma.info(file)
-        # if self.file_path is None:
+        """Open a file-system path inside the file-nav document.
+
+        T-041: this is intentionally a navigation-only operation
+        (the document IS the file nav window, not a file editor).
+        We align the populate + config state and reset the
+        file-table contents so the user sees the new directory
+        rather than stale data.
+        """
+        logma.info(f"[filesystems] open_file {file}")
         self.file_path = file
         if file is None:
-            file = self.file_path
+            file = getattr(self, "current_path", None)
         if file is not None:
-            self.document.open_file(file)
-        self.document.set_location("external")
+            self.config.dikt["current_path"] = file
+            if hasattr(self, "document") and self.document is not None:
+                if hasattr(self.document, "set_location"):
+                    self.document.set_location("external")
+                if hasattr(self.document, "set_file_path"):
+                    self.document.set_file_path(file)
+        if hasattr(self, "clear_table_views"):
+            self.clear_table_views()
         self.populate_document()
         return self
 
@@ -1142,22 +1152,57 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.file_table_two.update_data(data)
 
     def save(self):
-        """"""
-        logma.info(f"Saving document")
-        # TODO test and refactor
-        # if self.document.location is None:
-        #     self.document.set_location("external")
-        # if self.document.location == "external":
-        #     content = self.document.content
-        #     if content is None:
-        #         content = {}
-        #     if isinstance(content, dict):
-        #         content["file_path"] = self.document.file_path
-        #     logma.info(f"File Path {self.document.file_path}")
-        #     logma.info(f"DID {self.document.did}")
-        # elif self.document.location == "internal":
-        #     content = self.get_binary()
-        # else:
+        """Persist the file-nav document's current state.
+
+        T-042: branches on the document's location:
+          - "external" -> store the file_path on the content dict
+            and delegate to the parent save
+          - "internal" -> store the binary representation
+          - anything else -> delegate to the parent save (best
+            effort)
+        Returns ``self`` for chainable call sites.
+        """
+        logma.info("[filesystems] save")
+        if not hasattr(self, "document") or self.document is None:
+            return self
+        try:
+            if getattr(self.document, "location", None) is None:
+                if hasattr(self.document, "set_location"):
+                    self.document.set_location("external")
+            location = getattr(self.document, "location", "external")
+            if location == "external":
+                content = getattr(self.document, "content", None) or {}
+                if isinstance(content, dict):
+                    content["file_path"] = getattr(self.document, "file_path", None)
+                if hasattr(self.document, "set_content"):
+                    self.document.set_content(content)
+            elif location == "internal":
+                binary = self.get_binary() if hasattr(self, "get_binary") else None
+                if binary and hasattr(self.document, "set_binary"):
+                    self.document.set_binary(binary)
+        except Exception as e:
+            logma.error(f"[filesystems] save: doc-state persist failed: {e}", exc_info=True)
+        try:
+            super().save()
+        except Exception as e:
+            logma.error(f"[filesystems] save: super().save() failed: {e}", exc_info=True)
+        return self
+
+    def clear_table_views(self):
+        """Clear both file-table widgets (used when navigating to a new path).
+
+        T-041 helper - resets the table contents without rebuilding
+        the widget tree so the next populate fills them with the
+        correct data.
+        """
+        try:
+            for attr in ("file_table_one", "file_table_two"):
+                table = getattr(self, attr, None)
+                if table is not None and hasattr(table, "update_data"):
+                    table.update_data([])
+        except Exception as e:
+            logma.error(f"[filesystems] clear_table_views failed: {e}", exc_info=True)
+        return self
         #     raise Exception(f"Unknown storage location {self.document.location}")
         # logma.info(f"Location {self.document.location}")
         # logma.info(f"Content {content}")
