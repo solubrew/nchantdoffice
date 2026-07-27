@@ -77,16 +77,16 @@ class APIClient:
             return response.json()
 
         except requests.exceptions.Timeout:
-            print("Request timed out")
+            logma.warning("[links] request timed out")
             return None
         except requests.exceptions.HTTPError as e:
-            print(f"HTTP error: {e}")
+            logma.error(f"[links] HTTP error: {e}", exc_info=True)
             return None
         except requests.exceptions.RequestException as e:
-            print(f"Request error: {e}")
+            logma.error(f"[links] request error: {e}", exc_info=True)
             return None
         except json.JSONDecodeError:
-            print("Invalid JSON response")
+            logma.error("[links] invalid JSON response")
             return None
 
     def post(self, endpoint: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -99,7 +99,7 @@ class APIClient:
             return response.json()
 
         except requests.exceptions.RequestException as e:
-            print(f"Request error: {e}")
+            logma.error(f"[links] request error: {e}", exc_info=True)
             return None
 
 
@@ -113,19 +113,19 @@ def example_with_client():
     # Get a specific post
     post = client.get("posts/1")
     if post:
-        print(f"Post title: {post['title']}")
+        logma.info(f"[links] post title: {post['title']}")
 
     # Get posts with parameters
     posts = client.get("posts", params={"userId": 1, "_limit": 3})
     if posts:
-        print(f"Found {len(posts)} posts")
+        logma.info(f"[links] found {len(posts)} posts")
 
     # Create a new post
     new_post_data = {"title": "My API Test", "body": "Testing the API client", "userId": 1}
 
     created_post = client.post("posts", new_post_data)
     if created_post:
-        print(f"Created post with ID: {created_post.get('id')}")
+        logma.info(f"[links] created post with id: {created_post.get('id')}")
 
 
 # ====================================================================================================================||
