@@ -19,7 +19,18 @@
   but can have new tabs at each level. Settings can have no user nodes or tabs at any level. Home has full 
   children Nodes and Tabs but no sibling Nodes. Can create nodes in the root Home Node
 
-- 
+- Versioning system is getting blurred as there are actually 3 separate version control objects
+   1.doc_media & doc_media_content have a integer based version control for each save iteration of a NchantdDocument
+   2.nchantd_instance handles versioning between multi instance hanlding where the initial launch is a primary instance and then furhter file level instance can be created that are there own .pyof based db file
+   3.pyffice_documents have a version inside the pyffice code that will be used for controlling upgrade of data storage in the content field dictionary schema
+
+-  NchantdDocument types that have been broken by the   File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 1065, in lookupWidget
+    return kahndor.Instruct(pxcfg).select("RegisteredWidgets").dikt[key] error
+   1. NchantdSketch
+   2. NchantdMatrix
+   3. NchantdNotebook
+   4. NchantdCalendar
+   5. NchantdChart
    
 
 

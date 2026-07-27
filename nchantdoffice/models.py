@@ -2764,7 +2764,7 @@ class NchantdOfficeStore(NchantdStore):
                 content["pUUID"],
                 content["page"],
                 content["entry"],
-                int(content["version"]) + 1,
+                int(content["version"]) + 1, #TODO need to move back to an integer based version
                 content["hash"],
                 content["content"],
                 content["context"],
