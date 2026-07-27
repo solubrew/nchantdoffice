@@ -1738,7 +1738,26 @@ class NchantdOfficeWebProfile(NchantdWebProfile):
         self.contact.state_name = self.contact.address.state_name
         self.contact.zip_code = self.contact.address.zip_code
         self.contact.secondary_phone = None  # self.contact.phones[0:1]
-        self.contact.emergency_phone = None  # self.contact.phones[0]#TODO implement data sourcing
+        # T-086: pull the emergency phone from the contact's
+        # ``phones`` list (when populated). Falls back to the
+        # first entry by ordinal when no ``emergency_phone``
+        # attribute is set, then to ``None`` when there's no
+        # data at all.
+        emergency = None
+        try:
+            phones = getattr(self.contact, "phones", None)
+            if isinstance(phones, (list, tuple)) and phones:
+                emergency = phones[0]
+            elif isinstance(phones, dict):
+                for key in ("emergency", "primary", "default"):
+                    if phones.get(key):
+                        emergency = phones.get(key)
+                        break
+            elif hasattr(self.contact, "emergency_phone_raw"):
+                emergency = self.contact.emergency_phone_raw
+        except Exception as e:
+            logma.error(f"[browsers] emergency_phone data sourcing failed: {e}", exc_info=True)
+        self.contact.emergency_phone = emergency
 
 
 # ====================================================================================================================||
