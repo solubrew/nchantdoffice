@@ -809,8 +809,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         """"""
         logma.info(f"Populating Document")
 
-        # TODO implement external loading of script file
-        #  standardize along with images and pdfs
+        # External file loading: if the document has a file_path set
+        # (e.g. the user opened an external .py / .js / .md / .txt
+        # file via cmd_open_local_file), load its contents into the
+        # editor before falling back to the in-memory document text.
+        self._load_external_file()
 
         # self.document_editor.load_file(self.file_path)
 
