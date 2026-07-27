@@ -190,7 +190,14 @@ class NchantdOfficeTabSet(NchantdTabSet):
                 toolbox = self._find_right_toolbox()
                 if toolbox is not None:
                     logma.info("Refreshing right-pane toolbox for focused document")
-                    QTimer.singleShot(0, self._refresh_toolbox_for_doc(toolbox, widget))
+                    # The toolbox widget itself owns the refresh logic;
+                    # it exposes refresh_for_document(doc_widget). We pass
+                    # the just-focused center widget so the toolbox can
+                    # rebuild drawers from its toolbox_config.
+                    QTimer.singleShot(
+                        0,
+                        lambda tb=toolbox, w=widget: tb.refresh_for_document(w),
+                    )
 
         # Ensure tabn is valid for super class to avoid IndexError in set_focus.
         # RESOLVED [off-by-one]: the first-click-off-by-one on center/right tabsets
