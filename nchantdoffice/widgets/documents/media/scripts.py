@@ -1132,13 +1132,25 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.document_editor.setStyleSheet(style)
         if self.document is None:
             logma.info(f"Document is None")
-            text = self.document_editor.get_text()
+            text = self.document_editor.get_text() if hasattr(self, "document_editor") else ""
         else:
-            text = self.document.text.to_dict()["unit"].get("value", None)
+            # The script document may exist without its text payload
+            # loaded yet (PyfficeScript.__init__ sets self.text = None).
+            # Handle each shape defensively before dereferencing.
+            doc_text = getattr(self.document, "text", None)
+            if doc_text is not None and hasattr(doc_text, "to_dict"):
+                unit = doc_text.to_dict().get("unit", {})
+                text = unit.get("value", None) if isinstance(unit, dict) else None
+            else:
+                text = None
             if text is None:
-                text = self.document.content.get("content", {}).get("text", {})
-                if text is None:
-                    raise Exception(f"Document Not Formated Properly {self.document.content}")
+                content_obj = getattr(self.document, "content", None) or {}
+                content_inner = content_obj.get("content", {}) if isinstance(content_obj, dict) else {}
+                text_obj = content_inner.get("text", {}) if isinstance(content_inner, dict) else {}
+                text = text_obj.get("value", "") if isinstance(text_obj, dict) else (text_obj or "")
+            if text is None:
+                logma.warning(f"[scripts] populate_document: doc has no text content yet - starting with empty editor")
+                text = ""
         if isinstance(text, bytes):
             text = decode64(text)
         if isinstance(text, dict):
