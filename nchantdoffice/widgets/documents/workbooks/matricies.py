@@ -500,7 +500,30 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return self
 
     def cmd_formula_bar_change(self, event=None, *args, **kwargs):
-        """"""
+        """Apply the text from the formula bar to the active cell.
+
+        Reads the formula bar text and writes it into the currently
+        selected cell. If the formula bar does not exist or no cell is
+        selected, the method is a no-op.
+        """
+        if not getattr(self, "table", None):
+            return self
+        formula_text = ""
+        if hasattr(self, "formula_bar") and self.formula_bar is not None:
+            get = getattr(self.formula_bar, "get_text", None) or getattr(self.formula_bar, "text", None)
+            if get is not None:
+                formula_text = get()
+        selected = self.table.currentItem()
+        if selected is not None and formula_text:
+            if not formula_text.startswith("=") and formula_text and formula_text[0].isalpha():
+                formula_text = "=" + formula_text
+            selected.setText(formula_text)
+            if (hasattr(self, "autocalculate_checkbox")
+                    and self.autocalculate_checkbox is not None
+                    and self.autocalculate_checkbox.isChecked()):
+                if hasattr(self, "evaluate_cell_formula"):
+                    self.evaluate_cell_formula(selected)
+        return self
 
     def cmd_formula_entry(self, event, *args, **kwargs):
         """Insert the currently selected formula from the formula dropdown into
@@ -723,33 +746,170 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return self
 
     def cmd_document_font_config_change(self, event=None, *args, **kwargs):
-        """"""
+        """Apply the document-level font selection to the entire table.
+
+        Reads the font family and size from ``self.font_config_bar`` and
+        delegates to ``apply_font_style``.
+        """
+        if not getattr(self, "table", None):
+            return self
+        font_family = None
+        font_size = None
+        if hasattr(self, "font_config_bar") and self.font_config_bar is not None:
+            getter = getattr(self.font_config_bar, "get_value", None)
+            if callable(getter):
+                value = getter()
+                if isinstance(value, dict):
+                    font_family = value.get("family")
+                    font_size = value.get("size")
+        if hasattr(self, "apply_font_style"):
+            self.apply_font_style(font_family=font_family, font_size=font_size)
+        return self
 
     def cmd_formula_entry_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO
-        # run validation on formula
-        # if autocalculate then try to calculate new value on change
+        """Validate a formula entry and auto-calculate if enabled.
+
+        Reads the formula bar text and runs it through the formula
+        validator. If autocalculate is enabled, evaluates the formula
+        on the active cell.
+        """
+        if not getattr(self, "table", None):
+            return self
+        text = ""
+        if hasattr(self, "formula_bar") and self.formula_bar is not None:
+            get = getattr(self.formula_bar, "get_text", None) or getattr(self.formula_bar, "text", None)
+            if get is not None:
+                text = get()
+        if not text:
+            return self
+        if hasattr(self, "validate_formula"):
+            try:
+                self.validate_formula(text)
+            except Exception as e:
+                logma.error(f"[matricies] cmd_formula_entry_change validation failed: {e}", exc_info=True)
+        if (hasattr(self, "autocalculate_checkbox")
+                and self.autocalculate_checkbox is not None
+                and self.autocalculate_checkbox.isChecked()):
+            current = self.table.currentItem()
+            if current is not None and hasattr(self, "evaluate_cell_formula"):
+                self.evaluate_cell_formula(current)
+        return self
 
     def cmd_formula_select_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO
-        # update the description
+        """Show the description of the currently selected formula.
+
+        Reads the formula dropdown's current text and writes its
+        description (looked up via ``get_formula_description``) to the
+        config so the UI can display it.
+        """
+        if not hasattr(self, "formula_select") or self.formula_select is None:
+            return self
+        selected = self.formula_select.currentText()
+        if not selected:
+            return self
+        description = ""
+        if hasattr(self, "get_formula_description"):
+            try:
+                description = self.get_formula_description(selected)
+            except Exception as e:
+                logma.error(f"[matricies] cmd_formula_select_change failed: {e}", exc_info=True)
+        self.config.dikt["formula_select_description"] = description
+        return self
 
     def cmd_selected_cell_change(self, event=None, *args, **kwargs):
-        """"""
+        """Update the active-cells display when the user clicks a new cell.
+
+        Reads the current cell address from the table and writes it
+        into the ``selected_cell_address`` config field.
+        """
+        if not getattr(self, "table", None):
+            return self
+        current = self.table.currentItem()
+        if current is None:
+            return self
+        row = current.row()
+        col = current.column()
+        address = self.column_index_to_letter(col) + str(row + 1)
+        self.config.dikt["selected_cell_address"] = address
+        return self
 
     def cmd_selected_cell_text_change(self, event=None, *args, **kwargs):
-        """"""
+        """Update the active-cell text display when cell content changes.
+
+        Reads the currently selected cell's text and stores it on
+        the config so the UI can show it.
+        """
+        if not getattr(self, "table", None):
+            return self
+        current = self.table.currentItem()
+        if current is None:
+            return self
+        self.config.dikt["selected_cell_text"] = current.text() or ""
+        return self
 
     def cmd_cell_font_change(self, event=None, *args, **kwargs):
-        """"""
+        """Apply the font picker selection to the selected cells.
+
+        Reads font family and size from the cell-level font config bar
+        and delegates to ``apply_font_style``.
+        """
+        if not getattr(self, "table", None):
+            return self
+        font_family = None
+        font_size = None
+        if hasattr(self, "font_config_bar") and self.font_config_bar is not None:
+            getter = getattr(self.font_config_bar, "get_value", None)
+            if callable(getter):
+                value = getter()
+                if isinstance(value, dict):
+                    font_family = value.get("family")
+                    font_size = value.get("size")
+        if hasattr(self, "apply_font_style"):
+            self.apply_font_style(font_family=font_family, font_size=font_size)
+        return self
 
     def cmd_cell_border_change(self, event=None, *args, **kwargs):
-        """"""
+        """Apply the selected border format to the selected cells.
+
+        Reads the current border selection from the border-format
+        widget and applies it to the currently selected cells.
+        """
+        if not getattr(self, "table", None):
+            return self
+        if not hasattr(self, "cell_format") or self.cell_format is None:
+            return self
+        border_format = None
+        getter = getattr(self.cell_format, "currentText", None) or getattr(self.cell_format, "get_value", None)
+        if callable(getter):
+            border_format = getter()
+        if hasattr(self, "apply_cell_border"):
+            self.apply_cell_border(border_format)
+        return self
 
     def cmd_cell_change(self, event=None, *args, **kwargs):
-        """"""
+        """React to a cell value change.
+
+        Reads the current cell's text and stores it on the model.
+        If autocalculate is on, re-evaluates the formula.
+        """
+        if not getattr(self, "table", None):
+            return self
+        current = self.table.currentItem()
+        if current is None:
+            return self
+        text = current.text() or ""
+        row, col = current.row(), current.column()
+        if hasattr(self, "document") and self.document is not None and hasattr(self.document, "data"):
+            try:
+                self.document.data[row][col] = text
+            except (IndexError, TypeError, KeyError):
+                pass
+        if (hasattr(self, "autocalculate_checkbox")
+                and self.autocalculate_checkbox is not None
+                and self.autocalculate_checkbox.isChecked()):
+            if hasattr(self, "evaluate_cell_formula"):
+                self.evaluate_cell_formula(current)
+        return self
 
     def copy_cells(self):
         """Copy selected cells to clipboard"""
@@ -1681,7 +1841,38 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # TODO implement row and cell size formatting on document population
 
     def _open_file(self, path):
-        """"""
+        """Load a spreadsheet file from disk into the table.
+
+        Uses ``pyffice`` (the Excel-equivalent backing library) when
+        available to parse ``path``. Updates ``self.file_path`` and
+        triggers a UI refresh. Returns ``self`` for chainable callers.
+        """
+        if not path:
+            return self
+        try:
+            from pyffice.workbooks.spreadsheets import load_workbook
+        except ImportError:
+            logma.warning("[matricies] pyffice not available; cannot open file")
+            return self
+        try:
+            workbook = load_workbook(path, data_only=True)
+            sheet = workbook.active if hasattr(workbook, "active") else None
+            if sheet is None:
+                return self
+            rows = list(sheet.iter_rows(values_only=True))
+            if not rows:
+                return self
+            self.table.setRowCount(len(rows))
+            self.table.setColumnCount(max(len(r) for r in rows))
+            for r_idx, row in enumerate(rows):
+                for c_idx, value in enumerate(row):
+                    self.table.setItem(r_idx, c_idx, pyqt.QTableWidgetItem(str(value) if value is not None else ""))
+            self.file_path = path
+            self.num_rows = len(rows)
+            self.num_cols = max(len(r) for r in rows) if rows else 0
+        except Exception as e:
+            logma.error(f"[matricies] _open_file failed: {e}", exc_info=True)
+        return self
 
     def save(self):
         """"""
@@ -1960,8 +2151,26 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return self
 
     def _apply_template(self):
-        """"""
-        # TODO build generic feature to apply template
+        """Apply the template selected via ``document_template`` to the table.
+
+        Reads the current selection from the document-template dropdown
+        and dispatches to the corresponding ``_apply_*_template`` method.
+        Falls back to clearing the table for the ``Blank`` template.
+        """
+        if not getattr(self, "table", None):
+            return self
+        if not hasattr(self, "document_template") or self.document_template is None:
+            return self
+        template_name = self.document_template.currentText()
+        if not template_name or template_name == "Blank":
+            self.table.clearContents()
+            return self
+        # Dispatch to per-template implementation.
+        method_name = f"_apply_{template_name.lower().replace(' ', '_')}_template"
+        method = getattr(self, method_name, None)
+        if callable(method):
+            method()
+        return self
 
     def _apply_loan_calculator_template(self):
         """Populate the table with a loan amortisation schedule template."""

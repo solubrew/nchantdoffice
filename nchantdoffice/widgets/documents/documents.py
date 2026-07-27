@@ -663,7 +663,18 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         return self
 
     def jump_to_account_tab(self):
-        """"""
+        """Switch the central tab area to the Account/Settings tab.
+
+        Delegates to ``self.app.view.switch_to_account_tab`` which holds
+        the actual tab-routing logic. Returns ``self`` for chainable
+        call sites.
+        """
+        view = getattr(self, "app", None)
+        if view is not None and hasattr(view, "view"):
+            account_switch = getattr(view.view, "switch_to_account_tab", None)
+            if account_switch is not None:
+                return account_switch()
+        return self
 
     def lock_view(self):
         """"""

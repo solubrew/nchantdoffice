@@ -181,13 +181,55 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         return self
 
     def get_url_history(self):
-        """"""
+        """Return the list of URLs the notebook has visited.
+
+        Combines the static default URL (the local Jupyter server) with
+        any URLs the user has navigated to since the notebook was
+        opened. Returns a list of URL strings, most recent first.
+        """
+        history = []
+        if getattr(self, "server_url", None):
+            history.append(self.server_url)
+        seen = set(history)
+        for url in getattr(self, "_url_history", []) or []:
+            if url and url not in seen:
+                history.append(url)
+                seen.add(url)
+        return history
 
     def get_current_url(self):
-        """"""
+        """Return the URL the notebook is currently displaying.
 
-    def cmd_goto_page(self):
-        """"""
+        Falls back to the local Jupyter server URL when no explicit
+        navigation has happened yet.
+        """
+        current = getattr(self, "_target_url", None)
+        if current:
+            return current
+        return getattr(self, "server_url", None) or ""
+
+    def cmd_goto_page(self, url=None, *args, **kwargs):
+        """Navigate the embedded browser to the given URL.
+
+        Validates that the URL is non-empty and remembers it for the
+        next ``get_current_url`` call. Returns ``self`` for chainable
+        call sites.
+        """
+        if not url:
+            return self
+        self._target_url = url
+        history = list(getattr(self, "_url_history", []) or [])
+        if url in history:
+            history.remove(url)
+        history.insert(0, url)
+        # Cap history at 50 entries to keep the dropdown manageable
+        self._url_history = history[:50]
+        if hasattr(self, "web_view") and self.web_view is not None:
+            try:
+                self.web_view.setUrl(pyqt.QUrl(url))
+            except Exception as e:
+                logma.error(f"[notebooks] cmd_goto_page failed: {e}", exc_info=True)
+        return self
 
     def add_cell(self, cell):
         """Append a cell to the notebook.
@@ -649,7 +691,27 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             return []
 
     def get_binary(self):
-        """"""
+        """Serialize the notebook to the standard .ipynb JSON format.
+
+        Builds the notebook dict from the in-memory cells and returns
+        the UTF-8 encoded JSON bytes. Returns empty bytes if the
+        notebook has no cells yet.
+        """
+        try:
+            import json
+            nb = {
+                "cells": self.cells or [],
+                "metadata": {
+                    "kernelspec": {"name": getattr(self, "kernel_name", "python3"),
+                                   "display_name": "Python 3"},
+                },
+                "nbformat": 4,
+                "nbformat_minor": 5,
+            }
+            return json.dumps(nb, indent=1, default=str).encode("utf-8")
+        except Exception as e:
+            logma.error(f"[notebooks] get_binary failed: {e}", exc_info=True)
+            return b""
 
     def get_content(self):
         """"""

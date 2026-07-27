@@ -152,7 +152,15 @@ class NchantdOfficeNote(NchantdSigil):
         return self
 
     def store_note(self):
-        """"""
+        """Persist the current note to the underlying storage.
+
+        Writes the current note content via ``self.save`` which pushes
+        the editor's text into the document and calls ``self.editor.save``
+        to store it. Returns ``self`` for chainable call sites.
+        """
+        return self.save()
+        logma.info(f"[notes] {self.__class__.__name__}.store_note invoked (stub)")
+        return self
 
 
 class NchantdOfficeNoteDocument(NchantdOfficeDocument):

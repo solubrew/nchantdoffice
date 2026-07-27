@@ -472,21 +472,25 @@ class NchantdOfficePDFMarkup(pyqt.QGraphicsView):
         self.setDragMode(pyqt.QGraphicsView.ScrollHandDrag)
 
     def initView(self):
-        """"""
-        # self.canvas = NchantdCanvas(self, cfg).initWidget()
-        # self.canvas.setSizePolicy(pyqt.QSizePolicy.Expanding, pyqt.QSizePolicy.MinimumExpanding)
-        # self.layout.addWidget(self.canvas)
-        #
-        # self.current_page = 0  # Track the current PDF page
-        # self.pdf_page_image = None  # Loaded PDF page as an image
-        # self.annotations = []  # Store all drawing annotations as a list
-        # self.drawing = False  # Track whether the user is currently drawing
-        # self.previous_point = pyqt.QPointF()  # Store the previous drawing point
-        #
-        # # Enable scrollable and zoomable behavior
-        # self.setRenderHint(pyqt.QPainter.Antialiasing)
-        # self.setTransformationAnchor(pyqt.QGraphicsView.AnchorUnderMouse)
-        # self.setDragMode(pyqt.QGraphicsView.ScrollHandDrag)
+        """(Re-)initialize the PDF viewer widget to a clean state.
+
+        Resets the drawing state, scene, and rendering hints used by
+        the PDF markup view. Idempotent — safe to call multiple times
+        (e.g. when re-opening a PDF document).
+        """
+        self.current_page = 0
+        self.pdf_page_image = None
+        self.annotations = []
+        self.drawing = False
+        self.previous_point = pyqt.QPointF()
+
+        self.pen = pyqt.QPen(pyqt.Qt.red)
+        self.pen.setWidth(3)
+
+        self.setRenderHint(pyqt.QPainter.Antialiasing)
+        self.setTransformationAnchor(pyqt.QGraphicsView.AnchorUnderMouse)
+        self.setDragMode(pyqt.QGraphicsView.ScrollHandDrag)
+        return self
 
     def load_page(self):
         """Render the current PDF page onto the QGraphicsScene."""

@@ -72,7 +72,17 @@ class NchantdNEWSDashboard:
     algorythm"""
 
     def __init__(self):
-        """ """
+        """Initialize the dashboard's empty state.
+
+        Sets the default NEWS-source registry, sections list, and
+        refresh interval so subclasses / decorators can populate the
+        dashboard without re-initialising the container.
+        """
+        self.sources = []        # NEWS sources registered with this dashboard
+        self.sections = []       # Ordered list of section names to display
+        self.refresh_seconds = 0  # 0 = no auto-refresh; >0 = periodic refresh interval
+        self.last_refresh = None  # Timestamp of the last refresh (datetime)
+        self.active = False      # True when the dashboard is visible to the user
 
 
 class NchantdNEWSTab(tabs.NchantdTab):

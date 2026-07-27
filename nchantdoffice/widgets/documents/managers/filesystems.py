@@ -461,24 +461,49 @@ class NchantdRenamePane(NchantdPane):
 
         return self
 
+    def _rename_add_prefix(name, ext, filename, index):
+        """Add a literal ``prefix_`` to the start of the filename."""
+        return f"prefix_{filename}"
+
+    def _rename_add_suffix(name, ext, filename, index):
+        """Add a literal ``_suffix`` between the basename and extension."""
+        return f"{name}_suffix{ext}"
+
+    def _rename_sequential(name, ext, filename, index):
+        """Rename the file to its 1-based index, padded to 3 digits."""
+        return f"{index + 1:03d}{ext}"
+
+    def _rename_date_prefix(name, ext, filename, index):
+        """Add ``YYYYMMDD_`` to the start of the filename."""
+        return f"{datetime.datetime.now().strftime('%Y%m%d')}_{filename}"
+
+    def _rename_lowercase(name, ext, filename, index):
+        """Lowercase the entire filename."""
+        return filename.lower()
+
+    def _rename_uppercase(name, ext, filename, index):
+        """Uppercase the entire filename."""
+        return filename.upper()
+
+    def _rename_remove_spaces(name, ext, filename, index):
+        """Replace spaces with underscores."""
+        return filename.replace(" ", "_")
+
     # Rename-format dispatch — adding a new format means adding one entry here.
-    # Each lambda receives ``(name, ext, filename, index)``.
+    # Each method receives ``(name, ext, filename, index)``.
     _RENAME_FORMATS = {
-        "Add Prefix":         lambda name, ext, filename, index: f"prefix_{filename}",
-        "Add Suffix":         lambda name, ext, filename, index: f"{name}_suffix{ext}",
-        "Sequential Numbers": lambda name, ext, filename, index: f"{index + 1:03d}{ext}",
-        "Date Prefix":        lambda name, ext, filename, index: (
-            f"{datetime.datetime.now().strftime('%Y%m%d')}_{filename}"
-        ),
-        "Lowercase":          lambda name, ext, filename, index: filename.lower(),
-        "Uppercase":          lambda name, ext, filename, index: filename.upper(),
-        "Remove Spaces":      lambda name, ext, filename, index: filename.replace(" ", "_"),
+        "Add Prefix":         _rename_add_prefix,
+        "Add Suffix":         _rename_add_suffix,
+        "Sequential Numbers": _rename_sequential,
+        "Date Prefix":        _rename_date_prefix,
+        "Lowercase":          _rename_lowercase,
+        "Uppercase":          _rename_uppercase,
+        "Remove Spaces":      _rename_remove_spaces,
     }
 
     def apply_rename_format(self, filename, index, format_pattern):
         """Apply rename format pattern to filename."""
         from os.path import splitext
-        import datetime as dt  # noqa: F401  — captured by _RENAME_FORMATS closure
 
         name, ext = splitext(filename)
         formatter = self._RENAME_FORMATS.get(format_pattern)

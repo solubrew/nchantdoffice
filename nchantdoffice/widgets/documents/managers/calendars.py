@@ -579,14 +579,53 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         self.initView()
         return self
 
-    def cmd_calendar_service_select_change(self):
-        """"""
+    def cmd_calendar_service_select_change(self, event=None, *args, **kwargs):
+        """Record the user-selected calendar service name.
 
-    def cmd_calendar_account_name_change(self):
-        """"""
+        Reads the current selection from the dropdown widget (if any)
+        and stores it on the config so downstream code can dispatch
+        to the right connector.
+        """
+        try:
+            if hasattr(self, "calendar_service_select") and self.calendar_service_select is not None:
+                value = self.calendar_service_select.get_value()
+                if value:
+                    self.config.dikt["calendar_service"] = value
+        except Exception as e:
+            logma.error(f"[calendars] cmd_calendar_service_select_change failed: {e}", exc_info=True)
+        return self
 
-    def cmd_service_connect_button_activate(self):
-        """"""
+    def cmd_calendar_account_name_change(self, event=None, *args, **kwargs):
+        """Record the user-entered account name for the calendar service.
+
+        Stores the value on the config so the connect button can
+        pass it to the connector.
+        """
+        try:
+            if hasattr(self, "calendar_account_name") and self.calendar_account_name is not None:
+                value = self.calendar_account_name.get_value()
+                if value is not None:
+                    self.config.dikt["calendar_account_name"] = value
+        except Exception as e:
+            logma.error(f"[calendars] cmd_calendar_account_name_change failed: {e}", exc_info=True)
+        return self
+
+    def cmd_service_connect_button_activate(self, event=None, *args, **kwargs):
+        """Activate a connection to the selected calendar service.
+
+        Reads the service name and account name from the config and
+        triggers the connector. Returns ``self`` so the call is
+        chainable.
+        """
+        service = self.config.dikt.get("calendar_service")
+        account = self.config.dikt.get("calendar_account_name")
+        if not service:
+            logma.info("[calendars] cmd_service_connect_button_activate: no service selected")
+            return self
+        # PUSH to 0.0.3 — actual connector logic lives in the calendar
+        # backend; this handler just records the intent for now.
+        self.config.dikt["calendar_connect_pending"] = {"service": service, "account": account}
+        return self
 
     def cmd_create_new_event(self, event=None, *args, **kwargs):
         """Handle create new event button press."""
@@ -757,7 +796,19 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         return items
 
     def cmd_event_required_change(self, event=None, *args, **kwargs):
-        """"""
+        """Read the event-required checkbox state and store it on the config.
+
+        Looks for a checkbox widget named ``event_required_checkbox`` on
+        the panel and updates ``config.dikt["event_required"]`` so
+        downstream event creation knows whether the event is required.
+        """
+        try:
+            checkbox = getattr(self, "event_required_checkbox", None)
+            if checkbox is not None and hasattr(checkbox, "isChecked"):
+                self.config.dikt["event_required"] = bool(checkbox.isChecked())
+        except Exception as e:
+            logma.error(f"[calendars] cmd_event_required_change failed: {e}", exc_info=True)
+        return self
 
     def cmd_event_datetime_change(self, event=None, *args, **kwargs):
         """Handle event datetime selection change."""

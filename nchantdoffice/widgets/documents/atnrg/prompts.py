@@ -411,9 +411,20 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
         return self
 
     def add_model(self, name, source):
-        """"""
-        # NOTE:  will need to get configurations from user or NchantdService
-        #  will need to get apikey if available
+        """Register a model in the available_models list.
+
+        Avoids duplicates and stores the model as a ``(name, source)``
+        tuple. ``source`` is the implementation class or module that
+        can produce the model.
+        """
+        if not name:
+            return self
+        if not hasattr(self, "available_models") or self.available_models is None:
+            self.available_models = []
+        existing_names = {m[0] if isinstance(m, (list, tuple)) else m for m in self.available_models}
+        if name not in existing_names:
+            self.available_models.append((name, source))
+        return self
 
     def update_pane(self):
         """"""
@@ -478,23 +489,80 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
         self.show_radio_buttons()
         return self
 
-    def cmd_insert_image(self, event, *args, **kwargs):
-        """"""
+    def cmd_insert_image(self, event=None, *args, **kwargs):
+        """Insert an image reference into the prompt input.
 
-    def cmd_insert_context(self, event, *args, **kwargs):
-        """"""
+        Appends the token ``[image]`` at the current cursor position
+        of the prompt input editor. Returns ``self`` for chainable
+        call sites.
+        """
+        try:
+            if hasattr(self, "prompt_input") and self.prompt_input is not None:
+                self.prompt_input.insert_text("[image]")
+        except Exception as e:
+            logma.error(f"[prompts] cmd_insert_image failed: {e}", exc_info=True)
+        return self
 
-    def cmd_insert_document(self, event, *args, **kwargs):
-        """"""
+    def cmd_insert_context(self, event=None, *args, **kwargs):
+        """Insert a context reference into the prompt input.
 
-    def cmd_model_one_selected(self, event, *args, **kwargs):
-        """"""
+        Appends the token ``[context]`` at the current cursor position.
+        """
+        try:
+            if hasattr(self, "prompt_input") and self.prompt_input is not None:
+                self.prompt_input.insert_text("[context]")
+        except Exception as e:
+            logma.error(f"[prompts] cmd_insert_context failed: {e}", exc_info=True)
+        return self
 
-    def cmd_model_two_selected(self, event, *args, **kwargs):
-        """"""
+    def cmd_insert_document(self, event=None, *args, **kwargs):
+        """Insert a document reference into the prompt input.
 
-    def cmd_set_track_conversation(self, event, *args, **kwargs):
-        """"""
+        Appends the token ``[document]`` at the current cursor position.
+        """
+        try:
+            if hasattr(self, "prompt_input") and self.prompt_input is not None:
+                self.prompt_input.insert_text("[document]")
+        except Exception as e:
+            logma.error(f"[prompts] cmd_insert_document failed: {e}", exc_info=True)
+        return self
+
+    def cmd_model_one_selected(self, event=None, *args, **kwargs):
+        """Record the model the user picked for comparison slot one.
+
+        Reads the dropdown value and stores it on the config so
+        downstream handlers know which model is active.
+        """
+        try:
+            if hasattr(self, "comparison_one") and self.comparison_one is not None:
+                value = self.comparison_one.get_value()
+                if value:
+                    self.config.dikt["model_one_name"] = value
+        except Exception as e:
+            logma.error(f"[prompts] cmd_model_one_selected failed: {e}", exc_info=True)
+        return self
+
+    def cmd_model_two_selected(self, event=None, *args, **kwargs):
+        """Record the model the user picked for comparison slot two."""
+        try:
+            if hasattr(self, "comparison_two") and self.comparison_two is not None:
+                value = self.comparison_two.get_value()
+                if value:
+                    self.config.dikt["model_two_name"] = value
+        except Exception as e:
+            logma.error(f"[prompts] cmd_model_two_selected failed: {e}", exc_info=True)
+        return self
+
+    def cmd_set_track_conversation(self, event=None, *args, **kwargs):
+        """Toggle the conversation-tracking flag on the config.
+
+        Flips ``config.dikt["track_conversation"]`` between True and
+        False so the next ``submit`` call can decide whether to record
+        the conversation.
+        """
+        current = bool(self.config.dikt.get("track_conversation", False))
+        self.config.dikt["track_conversation"] = not current
+        return self
 
     def cmd_submit(self, event, *args, **kwargs):
         """"""
@@ -504,10 +572,33 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
         return self
 
     def get_model_one_name(self):
-        """"""
+        """Return the currently selected model name for comparison slot one.
+
+        Reads the stored value from the config or falls back to the
+        first available model.
+        """
+        stored = self.config.dikt.get("model_one_name")
+        if stored:
+            return stored
+        models = getattr(self, "available_models", []) or []
+        if models:
+            first = models[0]
+            return first[0] if isinstance(first, (list, tuple)) else first
+        return ""
 
     def get_model_two_name(self):
-        """"""
+        """Return the currently selected model name for comparison slot two."""
+        stored = self.config.dikt.get("model_two_name")
+        if stored:
+            return stored
+        models = getattr(self, "available_models", []) or []
+        if len(models) > 1:
+            second = models[1]
+            return second[0] if isinstance(second, (list, tuple)) else second
+        if models:
+            first = models[0]
+            return first[0] if isinstance(first, (list, tuple)) else first
+        return ""
 
     def show_radio_buttons(self):
         """"""
