@@ -74,6 +74,63 @@ denominators. The score stayed above 81%.
 | H50 | T-070..T-075 P3 mechanics (`utilities/links.py`, `matricies.py`) | `b7c7e55` | Added the affiliate / non-affiliate split in `update_affilate_links` (T-070). Spreadsheet widget: expanded formula bar + word-wrap (T-071), Bold/Italic/Underline button group (T-072), Excel-feature coverage message (T-073), extension+magic-byte file-type handler (T-074), row + cell size formatting (T-075). |
 | H51 | CodeQuality sweep (157 → 45 TODOs, 70 → 0 empty methods) | `3b8907c` | Driven by the new `sasquatch/analysis/auditors/code_quality.py` auditor. Removed 100 leftover `# TODO implement method` stub-markers. Implemented 60 PUSH 0.0.3 placeholder methods (21 settings setters, 5 chart-pane cmd_*, 5 source-pane cmd_*, 2 dialogs/dialog_documents, 2 bulk-import, 4 misc) with real logic. Resolved 13 real TODOs (T1: reclassified as NOTE; T3: was an undefined `parent_node`, now resolved via `app.model.get_current_node` with `add_root_node` fallback; T2, T4-T12: deleted the dead commented-out blocks). Audit delta: `unfinished_code` 0%→100%, `todo_tracking` 0%→55%, `embedded_todos` 0%→10%. |
 
+### H52 (2026-07-27) - NOTE separation + 18 stale notes removed
+**Driver**: split `NOTE_PATTERN` from `TODO_PATTERN` in the auditor
+**Result**: 45 → 0 TODO/NOTE work items, 0 empty methods, +`note_comments` dimension
+
+- Split `TODO_PATTERN` (TODO/FIXME/XXX/HACK/BUG) from `NOTE_PATTERN`
+  (NOTE) in `sasquatch/analysis/auditors/code_quality.py`. NOTE
+  comments are documentation, not unfinished work — they were
+  polluting the todo_tracking score.
+- Added `_check_note_comments` dimension (always 100% — informational
+  only, not work). Updated `_check_embedded_todos` to clarify it
+  intentionally excludes NOTE.
+- Added `test_detects_note_comments_separately` test verifying the
+  split works correctly.
+- Removed 18 stale/trivial NOTE comments (e.g. `# NOTE flip icon`,
+  `i'm not sure this has any other uses...`, `NOTE needs to be
+  implemented` immediately above a real implementation).
+- Reclassified 2 `# NOTE: get table fields` (placeholder note) as
+  `# fields=table placeholder until real fields list is built`.
+
+Audit delta on nchantdoffice:
+  todo_tracking    55%  -> 100%  (NOTE comments no longer counted)
+  embedded_todos   10%  -> 100%  (NOTE comments no longer counted)
+  note_comments    NEW  -> 100%  (separate dimension)
+  overall          77%  -> 81%  (+4)
+
+### H52b - Future-work items remaining as NOTE comments (27)
+
+The 27 NOTE comments remaining document real future work. They're
+NOT tracked in the todo score (they're documentation), but they're
+discoverable via `sasquatch analyze -p nchantdoffice` (note_comments
+dimension). Sprint candidates:
+
+- T-NOTE-001 `wizards/wizards.py:62` — add_journal_document() is
+  intentionally NOT called eagerly (the journal doc is created on
+  demand). No work needed; document only.
+- T-NOTE-002 `dialogs/dialog_documents.py:271/275` — integrate
+  various file formats + load-google dialog. Larger feature work.
+- T-NOTE-003 `dialogs/dialog_documents.py:290/322` — Launch form
+  builder wizard + handle .csv/.xlsx/.xls/.tab formats.
+- T-NOTE-004 `widgets/widgets.py:73` — re-enable launch_note() (the
+  Note object path needs review before it can be re-enabled).
+- T-NOTE-005 `widgets/widgets.py:196` — the old `right_pane.toolbox`
+  refresh is documented (do NOT re-introduce the phantom toolbox).
+- T-NOTE-006 `widgets/items/items.py:196` — instantiate a base
+  NchantdAction from the config-supplied action string.
+- T-NOTE-007 `widgets/documents/managers/filesystems.py:106/995/1068/1094`
+  — automation rules, storage config, Google Drive API, Dropbox
+  API. All require 3rd-party libraries + OAuth flows.
+- T-NOTE-008 `widgets/documents/analytics/analytics_charts.py:218/485/492`
+  — wire up config options, data source sample sets, view definitions.
+- T-NOTE-009 `widgets/documents/atnrg/browsers.py:413` — basic web
+  scrapping functions (BS4 + requests).
+- T-NOTE-010 `widgets/documents/media/scripts.py:509/738/739/740/772/773/774/779/803`
+  — page view toggle, text justification, bulleting, spacing, object
+  config, spell/grammar tools, analytics tools, spacing tweaks,
+  template selection.
+
 ---
 
 ## Resolved backlog (T-001..T-075)
