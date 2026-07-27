@@ -609,7 +609,8 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                     msg = self.kernel_client.get_shell_msg(timeout=1)
                     if msg["parent_header"].get("msg_id") == msg_id:
                         return msg["content"]
-                except:
+                except (KeyError, TypeError) as e:
+                    logma.debug(f"[notebooks] kernel-info header lookup: {e}")
                     continue
 
             logma.warning("Timeout waiting for kernel info")
@@ -708,7 +709,8 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                     if msg["parent_header"].get("msg_id") == msg_id:
                         content = msg["content"]
                         return content.get("matches", [])
-                except:
+                except (KeyError, TypeError) as e:
+                    logma.debug(f"[notebooks] completion-match lookup: {e}")
                     continue
 
             return []
@@ -771,7 +773,8 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                     msg = self.kernel_client.get_shell_msg(timeout=1)
                     if msg["parent_header"].get("msg_id") == msg_id:
                         return msg["content"]
-                except:
+                except (KeyError, TypeError) as e:
+                    logma.debug(f"[notebooks] message-header lookup: {e}")
                     continue
 
             return None

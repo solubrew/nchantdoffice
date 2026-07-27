@@ -143,7 +143,8 @@ class NchantdNEWSTab(tabs.NchantdTab):
                         continue
                         if log:
                             logma.info(f"Feed Keys: {list(feeddata['feed'].keys())}")
-                except:
+                except Exception as e:
+                    logma.error(f"[attentioneering] feed-label creation failed: {e}", exc_info=True)
                     cfg = {"text": "Unknown"}
                     title = annotations.NchantdLabel(self).initWidget(cfg)
                 feedlo = pyqt.QVBoxLayout()

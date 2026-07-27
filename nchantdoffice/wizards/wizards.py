@@ -329,7 +329,8 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
             role_nid = item.data(0, pyqt.Qt.UserRole)
             if role_nid == target_nid:
                 return item
-        except:
+        except (KeyError, TypeError, AttributeError) as e:
+            logma.error(f"[wizards] _find_node_in_tree lookup failed: {e}", exc_info=True)
             pass
 
         for i in range(item.childCount()):

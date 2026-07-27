@@ -934,7 +934,8 @@ class NchantdOfficeFeedback(NchantdWidget):
             try:
                 with open(feedback_file, "r") as f:
                     all_feedback = json.load(f)
-            except:
+            except (OSError, ValueError) as e:
+                logma.error(f"[forms] feedback-file load failed: {e}", exc_info=True)
                 pass
 
         # Append new feedback
