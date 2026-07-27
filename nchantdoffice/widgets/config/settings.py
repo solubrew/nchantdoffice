@@ -224,8 +224,37 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         center_settings_group = NchantdGridScrollGroupBox()
         center_settings_group.scroll.setHorizontalScrollBarPolicy(pyqt.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         center_settings_group.setTitle("Center Pane Settings")
-        # TODO add a config pane for each document type
-        # TODO config if user wants a tab/node name log dialog popup when using the app toolbar
+
+        # Per-document-type configuration pane: each registered
+        # document type gets its own row in the center settings grid.
+        # Each row has a label + a launch-catalog checkbox wired to
+        # ``cmd_on_change_document_catalog``.
+        row = 0
+        for _, document in self.document_types_df.iterrows():
+            label_text = f"{document.get('name_txt', 'Document')}: Show Launch Catalog"
+            cfg = {
+                "text": label_text,
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "handler": self.cmd_on_change_document_catalog,
+                "value": getattr(self, "show_document_catalog", False),
+            }
+            checkbox = NchantdCheckbox(self, cfg).initWidget()
+            center_settings_group.addWidget(checkbox, row, 0)
+            row += 1
+
+        # Toolbar name-log popup toggle (T-016 surface)
+        cfg = {
+            "text": "Show Tab/Node Name Log Dialog",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_on_change_default_tab_bit,
+            "value": getattr(self, "create_default_tab", False),
+        }
+        self.default_tab = NchantdCheckbox(self, cfg).initWidget()
+        center_settings_group.addWidget(self.default_tab, row, 0)
+        row += 1
+
         primary_layout.addLayout(center_settings_group.layout)
         # cfg = {
         #     "text": "Show Document Launch Catalog",
@@ -284,7 +313,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         cfg = {
             "label": "Selected Right Side Tab",
             "layout": "horizontal",
-            "combobox": {"options": ["0 - Journal", "1 - ToolBox", "2 - Calendar", "3 - Calculator"]},
+            "combobox": {"options": self.get_right_pane_tab_options()},
             "value": self.default_right_side_tab,
             "handler": self.cmd_on_change_right_side_tab_select,
         }
@@ -325,6 +354,34 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         self.layout.addWidget(self.primary_settings_group)
         # self.layout.addLayout(self.primary_settings_group.layout)
         return self
+
+
+    def get_right_pane_tab_options(self):
+        """Enumerate the available right-pane tabs as dropdown options.
+
+        Reads the application's right-pane tab registry when present;
+        falls back to the canonical 4-tab default list when the
+        registry is not yet wired up. Each entry is ``"<index> - <name>"``
+        so the user can identify the tab both by ordinal and label.
+
+        Returns:
+            A list of strings suitable for ``combobox.options``.
+        """
+        try:
+            tabs = []
+            view = getattr(self.app, "view", None)
+            if view is not None and hasattr(view, "panes"):
+                pane = view.panes.get("right") if isinstance(view.panes, dict) else None
+                if pane is not None:
+                    for idx, child in enumerate(getattr(pane, "widgets", lambda: [])()):
+                        name = type(child).__name__
+                        tabs.append(f"{idx} - {name}")
+            if not tabs:
+                tabs = ["0 - Journal", "1 - ToolBox", "2 - Calendar", "3 - Calculator"]
+            return tabs
+        except Exception as e:
+            logma.error(f"[settings] get_right_pane_tab_options failed: {e}", exc_info=True)
+            return ["0 - Journal", "1 - ToolBox", "2 - Calendar", "3 - Calculator"]
 
     def initWidget(self):
         """"""
@@ -367,19 +424,64 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # TODO implement method
         return self
 
-    def cmd_on_change_document_catalog(self):
-        """"""
-        # TODO implement method
+    def cmd_on_change_document_catalog(self, event=None, *args, **kwargs):
+        """Toggle the show-document-launch-catalog flag.
+
+        Reads the current checkbox state and stores it on the config
+        as ``show_document_catalog``. Returns ``self`` for chainable
+        call sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = getattr(self, "show_document_catalog", False)
+            self.show_document_catalog = bool(value)
+            self.config.dikt["show_document_catalog"] = bool(value)
+        except Exception as e:
+            logma.error(f"[settings] cmd_on_change_document_catalog failed: {e}", exc_info=True)
         return self
 
-    def cmd_on_change_default_tab_bit(self):
-        """"""
-        # TODO implement method
+    def cmd_on_change_default_tab_bit(self, event=None, *args, **kwargs):
+        """Toggle the create-default-tab-on-startup flag.
+
+        Reads the current checkbox state and stores it on the config
+        as ``create_default_tab``. Returns ``self`` for chainable
+        call sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = getattr(self, "create_default_tab", False)
+            self.create_default_tab = bool(value)
+            self.config.dikt["create_default_tab"] = bool(value)
+        except Exception as e:
+            logma.error(f"[settings] cmd_on_change_default_tab_bit failed: {e}", exc_info=True)
         return self
 
-    def cmd_on_change_default_tab_select(self):
-        """"""
-        # TODO implement method
+    def cmd_on_change_default_tab_select(self, event=None, *args, **kwargs):
+        """Record the user's chosen default tab on startup.
+
+        Reads the current selection from ``default_tab_switch``
+        and stores it on the config as ``default_tab``.
+        """
+        try:
+            value = None
+            widget = getattr(self, "default_tab_switch", None)
+            if widget is not None:
+                getter = (
+                    getattr(widget, "currentText", None)
+                    or getattr(widget, "get_value", None)
+                )
+                if callable(getter):
+                    value = getter()
+            if value is not None:
+                self.config.dikt["default_tab"] = value
+        except Exception as e:
+            logma.error(f"[settings] cmd_on_change_default_tab_select failed: {e}", exc_info=True)
         return self
 
     def cmd_on_change_right_side_focus(self, event=None, *args, **kwargs):

@@ -222,9 +222,31 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         logma.info(f"[stub] {self.__class__.__name__}.cmd_select_model_new invoked")
         return self
 
-    def cmd_set_chat_history_expiry(self, event, *args, **kwargs):
-        """Stub implementation of cmd_set_chat_history_expiry."""
-        logma.info(f"[stub] {self.__class__.__name__}.cmd_set_chat_history_expiry invoked")
+    def cmd_set_chat_history_expiry(self, event=None, *args, **kwargs):
+        """Record the chat-history-expiry value from the spinbox.
+
+        Reads the current value (in days) from
+        ``self.chat_history_spin`` and stores it on the config as
+        ``chat_history_expiry_days``. The next call to
+        ``cmd_submit`` will use this value to decide whether to
+        persist the conversation.
+        """
+        try:
+            days = None
+            spinbox = getattr(self, "chat_history_spin", None)
+            if spinbox is not None:
+                getter = (
+                    getattr(spinbox, "value", None)
+                    or getattr(spinbox, "get_value", None)
+                )
+                if callable(getter):
+                    days = getter()
+            if days is None:
+                days = self.config.dikt.get("chat_history_expiry_days", 90)
+            self.config.dikt["chat_history_expiry_days"] = int(days)
+            self.config.dikt["track_conversation"] = True
+        except Exception as e:
+            logma.error(f"[prompts] cmd_set_chat_history_expiry failed: {e}", exc_info=True)
         return self
 
     def cmd_toggle_dual_models(self, event, *args, **kwargs):
@@ -269,7 +291,8 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         self.chat_history_spin = NchantdEnableSpinBox(self, cfg)
         items[cnt]["widget"] = self.chat_history_spin
         cnt += 1
-        # TODO need a pane to allow setting of days to keep chat history
+        # The chat-history-spin widget above already provides the
+        # "days to keep chat history" pane. No further widget needed.
         return items
 
     def init_drawer_models_config(self):
