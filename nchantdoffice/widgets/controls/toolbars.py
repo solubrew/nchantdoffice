@@ -169,12 +169,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         widget = args[0]["action"].action.get("widget_txt")
         widget = self._resolve_widget_from_registry(lookup_code, widget)
         logma.info(f"Widget {widget}")
-        # db = self.app.model.instance.db  # TODO: Switch to MultiInstance
-        # T-064: ``db`` selection now goes through a
-        # MultiInstance adapter so multi-instance users see
-        # the correct database. The adapter picks the right
-        # db alias based on the current profile (when one is
-        # set), falling back to "db".
+        # T-064: db goes through MultiInstance adapter
         db = self._resolve_db_alias()
         context = ""
         content = {}

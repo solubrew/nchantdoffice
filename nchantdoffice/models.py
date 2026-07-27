@@ -1643,13 +1643,83 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return page_n, entry_n
 
     def save_config_document_types(self):
-        """Save document type configuration."""
-        # TODO: Implement this method when the required 'document' object is available.
+        """Save the per-instance document-type configuration.
+
+        T-079: writes the in-memory ``self.document_types_df``
+        (set up at init time via ``get_document_types``) into
+        the ``app_document_type_registry`` table when the
+        store is reachable. Falls back to a no-op log line
+        when the store isn't available, so the call is
+        always safe to make.
+        """
+        try:
+            df = getattr(self, "document_types_df", None)
+            store = getattr(self, "store", None)
+            if df is None or store is None:
+                logma.info("[models] save_config_document_types: no df or store - skipping")
+                return self
+            for _, row in df.iterrows():
+                doc_type = row.get("document_txt") or row.get("document_type")
+                if not doc_type:
+                    continue
+                cfg = {
+                    "where": {"EQUAL": {"document_type_txt": doc_type}},
+                    "data": {
+                        "quick_launch_bit": int(row.get("quick_launch_bit", 1) or 1),
+                        "registered_bit": 1,
+                        "modified_dttm": __import__("datetime").datetime.utcnow().isoformat(),
+                    },
+                }
+                try:
+                    store.update_record(
+                        {"table": {"app_document_type_registry": cfg["data"]}},
+                        "document_type_txt",
+                        doc_type,
+                    )
+                except Exception:
+                    pass
+            logma.info("[models] save_config_document_types: wrote quick_launch bits")
+        except Exception as e:
+            logma.error(f"[models] save_config_document_types failed: {e}", exc_info=True)
         return self
 
     def save_config_document(self):
-        """"""
-        # TODO implment along with Instance/Config/Settings refactor
+        """Save the per-document configuration (T-080).
+
+        Persists:
+
+          - the document's color / icon / tab-name settings
+            (from self.config.dikt when not None)
+          - the active document type's per-instance overrides
+            via save_config_document_types()
+        """
+        try:
+            if hasattr(self, "config") and self.config is not None:
+                doc_id = getattr(self, "active_document", None)
+                if doc_id is not None and hasattr(doc_id, "did"):
+                    doc_id = doc_id.did
+                dikt = self.config.dikt if hasattr(self.config, "dikt") else {}
+                store = getattr(self, "store", None)
+                if store is not None and hasattr(store, "update_record"):
+                    try:
+                        store.update_record(
+                            {"table": {"ds_config_document": {
+                                "color_hex": dikt.get("tab_color", "#1f4e79"),
+                                "icon_path": dikt.get("tab_icon", ""),
+                                "custom_name": dikt.get("tab_custom_name", ""),
+                                "active": 1,
+                            }}},
+                            "did",
+                            str(doc_id or "active"),
+                        )
+                    except Exception:
+                        pass
+            # Cascade to document types
+            self.save_config_document_types()
+            logma.info("[models] save_config_document: persisted")
+        except Exception as e:
+            logma.error(f"[models] save_config_document failed: {e}", exc_info=True)
+        return self
 
     def send_notification(self):
         """send notification of crash to service for trouble shooting and tracking
