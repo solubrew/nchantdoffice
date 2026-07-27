@@ -20,7 +20,7 @@ import tempfile  # 2025-11-06 09:46:02
 import os  # 2025-11-06 09:46:02
 
 # ======================================3rd Party Library Modules=====================================================||
-from nchantdoffice.widgets.config.journal import NchantdJournalSettings  # 2025-11-06 09:46:02
+from nchantdoffice.widgets.config.config_journal import NchantdJournalSettings  # 2025-11-06 09:46:02
 
 # =========================================Local Library Modules======================================================||
 # 2025-11-06 09:46:02

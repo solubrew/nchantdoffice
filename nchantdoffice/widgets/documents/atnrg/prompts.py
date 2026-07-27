@@ -33,7 +33,7 @@ from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox, Nc
 from nchantrs.widgets.media.editors.editors import NchantdDocEditor
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.panes.panes import NchantdPane
-from nchantdoffice.widgets.panes.models import NchantdNewModelPane
+from nchantdoffice.widgets.panes.pane_models import NchantdNewModelPane
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.tables.lists import NchantdCollapsableList
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox

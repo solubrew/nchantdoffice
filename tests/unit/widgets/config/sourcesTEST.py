@@ -20,7 +20,7 @@ import tempfile  # 2025-11-06 09:46:08
 import os  # 2025-11-06 09:46:08
 
 # ======================================3rd Party Library Modules=====================================================||
-from nchantdoffice.widgets.config.sources import NchantdDataSourcesSettings  # 2025-11-06 09:46:08
+from nchantdoffice.widgets.config.config_sources import NchantdDataSourcesSettings  # 2025-11-06 09:46:08
 
 # =========================================Local Library Modules======================================================||
 # 2025-11-06 09:46:08

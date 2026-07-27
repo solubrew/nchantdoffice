@@ -25,7 +25,7 @@ from subtrix.utilities import uuid
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.controls.toolbars import NchantdApplicationToolBar
 from kahndor.logma import Logma
-from nchantdoffice.dialogs.documents import NchantdNewDocumentSigil
+from nchantdoffice.dialogs.dialog_documents import NchantdNewDocumentSigil
 from nchantrs.libraries import pyqt
 
 # ====================================================================================================================||

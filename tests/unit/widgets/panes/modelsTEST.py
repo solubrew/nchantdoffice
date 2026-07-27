@@ -20,7 +20,7 @@ import tempfile  # 2025-11-06 09:47:42
 import os  # 2025-11-06 09:47:42
 
 # ======================================3rd Party Library Modules=====================================================||
-from nchantdoffice.widgets.panes.models import NchantdNewModelPane  # 2025-11-06 09:47:42
+from nchantdoffice.widgets.panes.pane_models import NchantdNewModelPane  # 2025-11-06 09:47:42
 
 # =========================================Local Library Modules======================================================||
 # 2025-11-06 09:47:42

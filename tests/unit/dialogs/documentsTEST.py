@@ -20,7 +20,7 @@ import tempfile  # 2025-11-06 09:45:25
 import os  # 2025-11-06 09:45:25
 
 # ======================================3rd Party Library Modules=====================================================||
-from nchantdoffice.dialogs.documents import NchantdNewDocumentSigil  # 2025-11-06 09:44:04
+from nchantdoffice.dialogs.dialog_documents import NchantdNewDocumentSigil  # 2025-11-06 09:44:04
 
 # 2025-11-06 09:44:04
 

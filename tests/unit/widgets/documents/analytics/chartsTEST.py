@@ -20,9 +20,9 @@ import tempfile  # 2025-11-06 09:46:34
 import os  # 2025-11-06 09:46:34
 
 # ======================================3rd Party Library Modules=====================================================||
-from nchantdoffice.widgets.documents.analytics.charts import NchantdSourcesListPane  # 2025-11-06 09:46:34
-from nchantdoffice.widgets.documents.analytics.charts import NchantdWhereUsedListPane  # 2025-11-06 09:46:34
-from nchantdoffice.widgets.documents.analytics.charts import NchantdOfficeChart  # 2025-11-06 09:46:34
+from nchantdoffice.widgets.documents.analytics.analytics_charts import NchantdSourcesListPane  # 2025-11-06 09:46:34
+from nchantdoffice.widgets.documents.analytics.analytics_charts import NchantdWhereUsedListPane  # 2025-11-06 09:46:34
+from nchantdoffice.widgets.documents.analytics.analytics_charts import NchantdOfficeChart  # 2025-11-06 09:46:34
 
 # =========================================Local Library Modules======================================================||
 # 2025-11-06 09:46:34

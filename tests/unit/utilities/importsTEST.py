@@ -20,9 +20,9 @@ import tempfile  # 2025-11-06 09:45:42
 import os  # 2025-11-06 09:45:42
 
 # ======================================3rd Party Library Modules=====================================================||
-from nchantdoffice.utilities.imports import NchantdImport  # 2025-11-06 09:45:42
-from nchantdoffice.utilities.imports import NchantdCherrytreeImport  # 2025-11-06 09:45:42
-from nchantdoffice.utilities.imports import convert_yaml_to_nchantdoffice  # 2025-11-06 09:45:42
+from nchantdoffice.utilities.util_imports import NchantdImport  # 2025-11-06 09:45:42
+from nchantdoffice.utilities.util_imports import NchantdCherrytreeImport  # 2025-11-06 09:45:42
+from nchantdoffice.utilities.util_imports import convert_yaml_to_nchantdoffice  # 2025-11-06 09:45:42
 
 # =========================================Local Library Modules======================================================||
 # 2025-11-06 09:45:42

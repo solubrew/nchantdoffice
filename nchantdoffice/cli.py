@@ -443,3 +443,76 @@ def list(limit):
         click.echo(f"    Size: {size_str} | Accessed: {date_str}")
         click.echo("")
 
+
+
+
+@cli.command()
+@click.option("--quiet", "-q", is_flag=True, help="Suppress output")
+def models(quiet):
+    """Inspect the data models (NchantdOfficeCloakModel, NchantdOfficeSettingsModel, etc.)."""
+    if not quiet:
+        click.echo("Loading NchantdOffice data models...")
+    try:
+        from nchantdoffice.models import (
+            NchantdOfficeCloakModel,
+            NchantdOfficeSettingsModel,
+            NchantdOfficeStore,
+        )
+        click.echo("Models:")
+        click.echo("  - NchantdOfficeCloakModel")
+        click.echo("  - NchantdOfficeSettingsModel")
+        click.echo("  - NchantdOfficeStore")
+        return 0
+    except ImportError as e:
+        click.echo(f"Failed to import models: {e}", err=True)
+        return 1
+
+
+@cli.command()
+@click.option("--quiet", "-q", is_flag=True, help="Suppress output")
+def views(quiet):
+    """Inspect the view layer (Qt windows, panes, dialogs)."""
+    if not quiet:
+        click.echo("Loading NchantdOffice views...")
+    try:
+        from nchantdoffice import views
+        click.echo("Views module loaded successfully")
+        click.echo("Provides: document, spreadsheet, presentation, drawing panes")
+        return 0
+    except ImportError as e:
+        click.echo(f"Failed to import views: {e}", err=True)
+        return 1
+
+
+@cli.command(name="nchantdoffice")
+@click.option("--quiet", "-q", is_flag=True, help="Suppress output")
+def nchantdoffice_cmd(quiet):
+    """Inspect the main NchantdOffice application module."""
+    if not quiet:
+        click.echo("Loading NchantdOffice application module...")
+    try:
+        from nchantdoffice import nchantdoffice as ncd
+        click.echo("NchantdOffice application module loaded")
+        click.echo(f"  version: {getattr(ncd, '__version__', 'unknown')}")
+        return 0
+    except ImportError as e:
+        click.echo(f"Failed to import nchantdoffice module: {e}", err=True)
+        return 1
+
+
+@cli.command(name="__main__")
+@click.option("--quiet", "-q", is_flag=True, help="Suppress output")
+def main_module_cmd(quiet):
+    """Inspect the __main__ entry point (python -m nchantdoffice)."""
+    if not quiet:
+        click.echo("__main__ entry point information")
+    try:
+        import runpy
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        # Don't actually run the module, just verify it's importable
+        import nchantdoffice.__main__
+        click.echo("__main__ module loaded successfully")
+        return 0
+    except Exception as e:
+        click.echo(f"Failed to inspect __main__: {e}", err=True)
+        return 1

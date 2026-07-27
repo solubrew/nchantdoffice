@@ -20,8 +20,8 @@ import tempfile  # 2025-11-06 09:45:41
 import os  # 2025-11-06 09:45:41
 
 # ======================================3rd Party Library Modules=====================================================||
-from nchantdoffice.utilities.utilities import lookup_widget  # 2025-11-06 09:44:14
-from nchantdoffice.utilities.utilities import document_lookup  # 2025-11-06 09:44:14
+from nchantdoffice.utilities.util_helpers import lookup_widget  # 2025-11-06 09:44:14
+from nchantdoffice.utilities.util_helpers import document_lookup  # 2025-11-06 09:44:14
 
 # 2025-11-06 09:44:14
 

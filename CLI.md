@@ -1,5 +1,17 @@
 # CLI Reference
 
+## Purpose
+
+NchantdOffice is a GUI-based office suite application providing document,
+spreadsheet, presentation, and drawing tools — built on the Qt
+framework and integrated with the broader nChantrs / shieldface ecosystem.
+The CLI exists primarily to launch the GUI in development or test mode,
+and to provide a programmatic entry point via `python -m nchantdoffice`.
+
+For everyday interaction, prefer launching the GUI. The CLI is suitable
+for headless CI runs (smoke tests), debugging, and embedding the
+application in scripts.
+
 NchantdOffice provides a GUI-based office suite application. CLI usage is primarily for development and testing.
 
 ## Usage
