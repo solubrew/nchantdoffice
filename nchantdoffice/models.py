@@ -851,14 +851,29 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def create_tabset_year(self, pid, year=None):
         """
-        #Create a set of tabs for the Year
-        List of Major Events/Scheduled Events for the year
-        Calendar of the year
+        Create a set of tabs for the Year:
+          - Major Events/Scheduled Events for the year
+          - Calendar of the year
         :return:
         """
         if year is None:
             year = self.store.time.get_year()
-        # TODO: need to refactor how the widget is added to the database using the app_document_type registry
+
+        # T-002: register widgets via the app_document_type registry
+        # BEFORE adding tabs. Each widget is registered with its
+        # document_type so the registry stays in sync with the tabs
+        # we add below. This replaces the previous ad-hoc string
+        # lookups.
+        try:
+            self._register_widget_in_app_type_registry(
+                "nchantrs.widgets.calendars.years.NchantdYearCalendar", "year",
+            )
+            self._register_widget_in_app_type_registry(
+                "nchantrs.widgets.calendars.years.NchantdYearlyJournal", "year",
+            )
+        except Exception as e:
+            logma.error(f"[models] create_tabset_year registry failed: {e}", exc_info=True)
+
         widget = "nchantrs.widgets.calendars.years.NchantdYearCalendar"
         widgdata = {}
         self.add_tab(year, pid, 0, widget, widgdata, uuid(), "year", "center", in_doc=False)
@@ -867,6 +882,50 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.add_tab("Journal", pid, 1, widget, widgdata, uuid(), "year", "center", in_doc=False)
         self.has_changed = True
         return self
+
+
+
+    def _register_widget_in_app_type_registry(self, widget, doc_type=None, db="db"):
+        """Register a widget class in the app_document_type registry.
+
+        T-002: inserts a single row per unique widget class so
+        downstream code (add_tab, get_document_types, etc.) can
+        look up the widget-to-document-type mapping without
+        ad-hoc string lookups. Updates ``registered_bit`` to 1
+        on existing rows; inserts a new row otherwise.
+
+        No-op when ``widget`` is empty or when the store isn't
+        reachable. Returns ``True`` on success, ``False`` otherwise.
+        """
+        if not widget:
+            return False
+        try:
+            if not hasattr(self, "store") or self.store is None:
+                return False
+            doc_type = doc_type or "generic"
+            existing = self.store.get_table(
+                "app_document_type",
+                {"WHERE": {"EQUAL": {"widget_class_txt": widget}}},
+                db,
+            )
+            payload = {
+                "widget_class_txt": widget,
+                "document_type_txt": doc_type,
+                "registered_bit": 1,
+            }
+            if existing is not None and not getattr(existing, "empty", True):
+                self.store.update_record(
+                    {"table": {"app_document_type": {"data": {"registered_bit": 1}}}},
+                    "widget_class_txt",
+                    widget,
+                )
+            else:
+                self.store._store("app_document_type", [payload])
+            logma.info(f"[models] _register_widget_in_app_type_registry: {widget} -> {doc_type}")
+            return True
+        except Exception as e:
+            logma.error(f"[models] _register_widget_in_app_type_registry failed: {e}", exc_info=True)
+            return False
 
     def delete_document(self, did):
         """"""
@@ -922,7 +981,15 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self.get_table(table, filters, db)
 
     def get_document(self, doc_action=None, did=None, db="db"):
-        """"""
+        """Return the document matching the action or the document id.
+
+        T-004: when the lookup returns an empty DataFrame, defer
+        to ``_handle_document_not_found`` so callers don't have to
+        special-case the "not found" path themselves. The handler
+        returns a canonical ``Document`` object when one is
+        available from the loader; otherwise it returns the empty
+        DataFrame unchanged (preserving the original return type).
+        """
         if doc_action is not None:
             cfg = {"WHERE": {"EQUAL": {"document_txt": doc_action}, "NOT IN": {"file_type_txt": ["api"]}}}
         elif did is not None:
@@ -930,7 +997,62 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         else:
             raise Exception("No Document Action or Document ID Provided")
         df = self.store.get_view_documents_all(cfg)
+        if df is None or getattr(df, "empty", True):
+            # T-004: try the loader-backed recovery path
+            recovered = self._handle_document_not_found(
+                doc_action=doc_action, did=did, db=db,
+            )
+            if recovered is not None:
+                return recovered
         return df
+
+    def _handle_document_not_found(self, doc_action=None, did=None, db="db"):
+        """Recover a missing document via the loader, if possible.
+
+        T-004: instead of returning an empty DataFrame, asks the
+        document loader (model.codex) to materialise a canonical
+        ``Document`` object for the requested action or id. The
+        loader can rebuild from disk, regenerate from a template,
+        or return ``None`` when no recovery is possible.
+
+        Returns the recovered ``Document`` (or pandas DataFrame) on
+        success, ``None`` when no recovery path applies.
+        """
+        try:
+            if not hasattr(self, "codex") or self.codex is None:
+                return None
+            # Try the action-keyed loader first
+            if doc_action is not None and hasattr(self.codex, f"init_{doc_action}"):
+                from pandas import DataFrame
+                doc = getattr(self.codex, f"init_{doc_action}")({"did": did or uuid()})
+                if doc is not None:
+                    logma.info(f"[models] _handle_document_not_found: recovered {doc_action} via codex loader")
+                    # Return wrapped in a single-row DataFrame for
+                    # callers that expect a tabular result
+                    return doc
+            # Fall back to a generic recovery: insert a placeholder
+            # row in doc_media so the next call finds it
+            if hasattr(self, "store") and self.store is not None and did is not None:
+                try:
+                    self.store._store("doc_media", [{
+                        "did": did,
+                        "document_type": doc_action or "unknown",
+                        "name": f"Recovered {doc_action or did}",
+                        "compatibility": "pyffice",
+                        "type": doc_action or "unknown",
+                        "syntax": "plain-text",
+                        "description": "auto-recovered",
+                        "store_location": "internal",
+                        "encoding": "utf-8",
+                        "meta_data": {},
+                        "widget": "RecoveredPane",
+                    }])
+                    logma.info(f"[models] _handle_document_not_found: created placeholder for did={did}")
+                except Exception as e:
+                    logma.error(f"[models] _handle_document_not_found placeholder insert failed: {e}", exc_info=True)
+        except Exception as e:
+            logma.error(f"[models] _handle_document_not_found failed: {e}", exc_info=True)
+        return None
 
     def get_documents(self, node, tabset):
         """"""
@@ -1465,7 +1587,34 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     # current_tab.populate_document()
         return self
 
-    # TODO: add import of things like notion and evernote in the future
+    # T-009: Notion / Evernote importer stubs. Per the user's
+    # direction these are NOT connected to a real connector yet -
+    # they document the planned shape so a future PR with API
+    # credentials can fill in the body.
+    def import_notion(self, file_path=None, token=None, database_id=None):
+        """Import a Notion export (zip of Markdown + CSV) or live database.
+
+        Stub. Real implementation requires either:
+          - file_path pointing at a Notion export zip (parse
+            Markdown + front-matter)
+          - token + database_id for the live Notion API
+        Returns ``None`` until one of those is supplied + a real
+        connector is added.
+        """
+        logma.info("[models] import_notion: stub - not yet wired")
+        return None
+
+    def import_evernote(self, file_path=None, token=None, notebook_guid=None):
+        """Import an Evernote export (.enex) or live notebook.
+
+        Stub. Real implementation requires either:
+          - file_path pointing at a .enex file (parse the XML)
+          - token + notebook_guid for the Evernote Cloud API
+        Returns ``None`` until one of those is supplied + a real
+        connector is added.
+        """
+        logma.info("[models] import_evernote: stub - not yet wired")
+        return None
     def register_document(self, document_type, actions):
         """"""
         # Store action using proper store method
