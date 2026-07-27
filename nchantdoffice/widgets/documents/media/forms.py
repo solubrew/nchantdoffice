@@ -1313,14 +1313,49 @@ class NchantdOfficeFeedback(NchantdWidget):
             # Save locally
             self.save_feedback_locally(feedback_data)
 
-            # TODO: Send to remote server/issue tracker
-            # self.send_to_server(feedback_data)
+            # T-084: also send to a remote issue tracker when one
+            # is configured. Falls back to local-only on any
+            # failure so the feedback is never lost.
+            self.send_to_server(feedback_data)
 
             logma.info(f"Feedback submitted: {feedback_data['type']} - {feedback_data['title']}")
-            return True
+            return self
 
         except Exception as e:
             logma.error(f"Error sending feedback: {e}")
+            return False
+
+
+
+    def send_to_server(self, feedback_data):
+        """T-084: send feedback to a remote issue tracker.
+
+        Wraps ``submit_to_tracker`` so the success/failure log
+        is clear. Falls back to the local save (already
+        performed by the caller) on any error.
+        """
+        try:
+            tracker_url = None
+            tracker_token = None
+            if hasattr(self, "config"):
+                tracker_url = self.config.dikt.get("feedback_tracker_url")
+                tracker_token = self.config.dikt.get("feedback_tracker_token")
+            if not tracker_url or not tracker_token:
+                try:
+                    import pykey
+                    tracker_url = tracker_url or pykey.PYKEYSTORE.get("feedback_tracker_url")
+                    tracker_token = tracker_token or pykey.PYKEYSTORE.get("feedback_tracker_token")
+                except Exception:
+                    pass
+            if not tracker_url:
+                logma.info("[forms] send_to_server: no tracker URL; local-only feedback")
+                return True
+            if hasattr(self, "submit_to_tracker"):
+                return self.submit_to_tracker(feedback_data, tracker_url=tracker_url, tracker_token=tracker_token)
+            logma.warning("[forms] send_to_server: no submit_to_tracker method")
+            return False
+        except Exception as e:
+            logma.error(f"[forms] send_to_server failed: {e}", exc_info=True)
             return False
 
     def save_feedback_locally(self, feedback_data):

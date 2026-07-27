@@ -1994,10 +1994,74 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return self
 
     def save(self):
-        """"""
-        # TODO get current content from sheet...need parse and dense methods
+        """Save the spreadsheet document.
+
+        T-083: previously left a "TODO get current content from
+        sheet" comment. Now:
+
+          1. Walks the table widget row-by-row and column-by-
+             column via ``_read_table_to_grid`` which produces
+             a 2D ``grid`` (rows = list of lists of cell text)
+             and a parallel ``formulas`` grid for cell values
+             starting with ``=``.
+          2. Stores the grid + formulas on the document at
+             ``document.content['grid']`` / ``['formulas']``.
+          3. Delegates the actual persistence to super().save().
+        """
+        try:
+            grid, formulas = self._read_table_to_grid()
+            if hasattr(self, "document") and self.document is not None:
+                if not isinstance(self.document.content, dict):
+                    self.document.content = {"content": self.document.content}
+                self.document.content["grid"] = grid
+                self.document.content["formulas"] = formulas
+                self.document.content["num_rows"] = len(grid)
+                self.document.content["num_cols"] = max((len(r) for r in grid), default=0)
+        except Exception as e:
+            logma.error(f"[matricies] save: grid capture failed: {e}", exc_info=True)
         super().save()
         return self
+
+    def _read_table_to_grid(self):
+        """T-083 helper - walk the table and return (grid, formulas).
+
+        Returns a tuple of:
+
+          - ``grid``: list of rows, each row a list of cell
+            text strings
+          - ``formulas``: list of rows with the formula text
+            (starts with ``=``) for any cell whose text starts
+            with ``=``
+
+        Returns ``([], [])`` if the table is missing.
+        """
+        grid = []
+        formulas = []
+        try:
+            table = getattr(self, "table", None)
+            if table is None:
+                return grid, formulas
+            row_count = table.rowCount() if hasattr(table, "rowCount") else 0
+            col_count = table.columnCount() if hasattr(table, "columnCount") else 0
+            for r in range(row_count):
+                row = []
+                frow = []
+                for c in range(col_count):
+                    try:
+                        item = table.item(r, c)
+                        text = (item.text() if item is not None and hasattr(item, "text") else "")
+                    except Exception:
+                        text = ""
+                    row.append(text or "")
+                    if text and text.startswith("="):
+                        frow.append(text)
+                    else:
+                        frow.append("")
+                grid.append(row)
+                formulas.append(frow)
+        except Exception as e:
+            logma.error(f"[matricies] _read_table_to_grid failed: {e}", exc_info=True)
+        return grid, formulas
 
     def save_auto(self):
         """Auto-save the current document"""

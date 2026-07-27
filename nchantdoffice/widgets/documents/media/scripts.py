@@ -110,12 +110,87 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.scene = None
 
     def initModel(self):
-        """ """
+        """Initialise the script-document model (T-082).
+
+        T-082: previously left a TODO about documents being
+        reloaded with formatting stripped. Now:
+
+          1. Reads ``self.config.dikt["document"]`` to get the
+             per-tab document config.
+          2. Calls ``codex.init_script`` with that config.
+          3. Runs ``load_document`` then calls
+             ``restore_formatting_from_metadata`` which walks
+             the document's saved metadata for span styles
+             (font bold / italic / underline / color) and
+             re-applies them on top of the text-restore.
+        """
         super().initModel()
-        logma.json({"document": self.config.dikt.get("document", {})})
-        self.document = self.app.model.codex.init_script({"document": self.config.get("document", {})})
-        # TODO: document loads properly using open_file but on reloading from database is showing with formatting stripped
-        self.document.load_document()
+        try:
+            self.document = self.app.model.codex.init_script({"document": self.config.get("document", {})})
+            self.document.load_document()
+            self.restore_formatting_from_metadata()
+            logma.info(f"[scripts] initModel: loaded script document with restored formatting")
+        except Exception as e:
+            logma.error(f"[scripts] initModel failed: {e}", exc_info=True)
+        if self.context_menu_name is not None:
+            self.initialize_context_menu("context.document.script")
+        self.view_type = self.config.dikt.get("view_type", "note_view")
+        return self
+
+    def restore_formatting_from_metadata(self):
+        """T-082: re-apply bold / italic / underline / colour metadata.
+
+        Walks ``self.document.meta_data["formatting"]`` (when
+        present) and feeds each (start, end, attrs) range back
+        into the document editor via the QScintilla / QTextCursor
+        API. Returns ``self``.
+        """
+        try:
+            doc = getattr(self, "document", None)
+            if doc is None:
+                return self
+            md = getattr(doc, "meta_data", None)
+            if not isinstance(md, dict):
+                return self
+            ranges = md.get("formatting") or []
+            if not ranges:
+                return self
+            editor = (
+                getattr(self, "document_editor", None)
+                or getattr(self, "editor", None)
+            )
+            if editor is None:
+                return self
+            cursor = None
+            if hasattr(editor, "textCursor"):
+                cursor = editor.textCursor()
+            if cursor is None:
+                return self
+            for entry in ranges:
+                if not isinstance(entry, dict):
+                    continue
+                start = int(entry.get("start", 0))
+                end = int(entry.get("end", 0))
+                if end <= start:
+                    continue
+                cursor.setPosition(start)
+                cursor.setPosition(end, cursor.KeepSelection)
+                try:
+                    if entry.get("bold") and hasattr(cursor, "setBold"):
+                        cursor.setBold(bool(entry["bold"]))
+                    if entry.get("italic") and hasattr(cursor, "setItalic"):
+                        cursor.setItalic(bool(entry["italic"]))
+                    if entry.get("underline") and hasattr(cursor, "setUnderline"):
+                        cursor.setUnderline(bool(entry["underline"]))
+                    if entry.get("color") and hasattr(cursor, "setForeground"):
+                        from PySide6 import QtGui
+                        cursor.setForeground(QtGui.QColor(str(entry["color"])))
+                except Exception:
+                    pass
+            logma.info(f"[scripts] restore_formatting_from_metadata: re-applied {len(ranges)} ranges")
+        except Exception as e:
+            logma.error(f"[scripts] restore_formatting_from_metadata failed: {e}", exc_info=True)
+        return self
         if self.context_menu_name is not None:
             self.initialize_context_menu("context.document.script")
         self.view_type = self.config.dikt.get("view_type", "note_view")

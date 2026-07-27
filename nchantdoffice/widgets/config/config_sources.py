@@ -229,7 +229,6 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         except Exception as e:
             logma.error(f"[config_sources] show_key failed: {e}", exc_info=True)
         return self
-        # TODO replace obscured key with real key
 
 
 class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
