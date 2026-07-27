@@ -162,6 +162,16 @@ class NchantdChartConfigPane(NchantdPane):
         self.chart_type_select = NchantdDropDown(self, cfg).initWidget()
         chart_details_layout.addWidget(self.chart_type_select)
 
+        # T-063: per-chart-class UI layer. The chart pane now
+        # exposes a ``get_chart_specific_widget(chart_type)`` method
+        # that returns the chart-type-specific extras (line /
+        # bar / pie / scatter). The base ``chart_details_layout``
+        # gets the chosen widget appended dynamically when the
+        # user picks a chart type.
+        self.chart_specific_widget = self.get_chart_specific_widget(self.get_type())
+        if self.chart_specific_widget is not None:
+            chart_details_layout.addWidget(self.chart_specific_widget)
+
         # T-056: chart-config actions as a button group (background /
         # area colour / border style / theme) so the user can
         # switch editing mode without context-switching.
@@ -236,6 +246,187 @@ class NchantdChartConfigPane(NchantdPane):
         self.layout.addLayout(self.right_group.layout)
 
         self.set_size()
+        return self
+
+
+
+
+
+    # T-063: chart-type-specific UI dictionary. Each entry maps a
+    # chart-type name to a factory that builds the per-chart
+    # extras widget (axis range, color stops, point size, etc).
+    _CHART_TYPE_UI_LAYERS = {
+        "line":   "_chart_line_extras",
+        "bar":    "_chart_bar_extras",
+        "pie":    "_chart_pie_extras",
+        "scatter":"_chart_scatter_extras",
+        "area":   "_chart_area_extras",
+        "radar":  "_chart_radar_extras",
+    }
+
+    def get_chart_specific_widget(self, chart_type):
+        """Build the chart-type-specific extras widget (T-063).
+
+        Returns a QWidget containing the per-chart controls
+        (axis range, color picker, etc.) for the chosen chart
+        type, or ``None`` when no per-type layer is registered
+        (or the type is unknown).
+        """
+        if not chart_type:
+            return None
+        method_name = self._CHART_TYPE_UI_LAYERS.get(chart_type.lower())
+        if not method_name:
+            return None
+        try:
+            builder = getattr(self, method_name, None)
+            if builder is not None and callable(builder):
+                return builder()
+        except Exception as e:
+            logma.error(f"[charts] get_chart_specific_widget failed for {chart_type}: {e}", exc_info=True)
+        return None
+
+    def _chart_line_extras(self):
+        """Build the line-chart-specific extras widget (T-063).
+
+        Includes a 'smoothing' checkbox and a 'line width' spinbox.
+        """
+        try:
+            container = pyqt.QWidget()
+            layout = pyqt.QHBoxLayout()
+            cfg_smooth = {"text": "Smooth Line", "layout": "horizontal"}
+            smoothing = NchantdCheckbox(self, cfg_smooth).initWidget()
+            cfg_width = {"label": "Line Width:", "spinbox": {"min": 1, "max": 10, "value": 2}, "layout": "horizontal"}
+            width = NchantdSpinBox(self, cfg_width).initWidget() if "NchantdSpinBox" in globals() else NchantdLabel(self, cfg_width).initWidget()
+            layout.addWidget(smoothing)
+            layout.addWidget(width)
+            layout.addStretch()
+            container.setLayout(layout)
+            return container
+        except Exception as e:
+            logma.error(f"[charts] _chart_line_extras failed: {e}", exc_info=True)
+            return None
+
+    def _chart_bar_extras(self):
+        """Build bar-chart-specific extras: stack mode + bar width spinbox (T-063)."""
+        try:
+            container = pyqt.QWidget()
+            layout = pyqt.QHBoxLayout()
+            cfg_stack = {"text": "Stack Bars", "layout": "horizontal"}
+            stacking = NchantdCheckbox(self, cfg_stack).initWidget()
+            cfg_width = {"label": "Bar Width:", "spinbox": {"min": 1, "max": 100, "value": 80}, "layout": "horizontal"}
+            width = NchantdSpinBox(self, cfg_width).initWidget() if "NchantdSpinBox" in globals() else NchantdLabel(self, cfg_width).initWidget()
+            layout.addWidget(stacking)
+            layout.addWidget(width)
+            layout.addStretch()
+            container.setLayout(layout)
+            return container
+        except Exception as e:
+            logma.error(f"[charts] _chart_bar_extras failed: {e}", exc_info=True)
+            return None
+
+    def _chart_pie_extras(self):
+        """Build pie-chart-specific extras: hole size + start angle spinboxes (T-063)."""
+        try:
+            container = pyqt.QWidget()
+            layout = pyqt.QHBoxLayout()
+            cfg_hole = {"label": "Hole Size (%):", "spinbox": {"min": 0, "max": 90, "value": 0}, "layout": "horizontal"}
+            hole = NchantdSpinBox(self, cfg_hole).initWidget() if "NchantdSpinBox" in globals() else NchantdLabel(self, cfg_hole).initWidget()
+            layout.addWidget(hole)
+            layout.addStretch()
+            container.setLayout(layout)
+            return container
+        except Exception as e:
+            logma.error(f"[charts] _chart_pie_extras failed: {e}", exc_info=True)
+            return None
+
+    def _chart_scatter_extras(self):
+        """Build scatter-chart-specific extras: point size spinbox (T-063)."""
+        try:
+            container = pyqt.QWidget()
+            layout = pyqt.QHBoxLayout()
+            cfg_pt = {"label": "Point Size:", "spinbox": {"min": 1, "max": 50, "value": 8}, "layout": "horizontal"}
+            pt = NchantdSpinBox(self, cfg_pt).initWidget() if "NchantdSpinBox" in globals() else NchantdLabel(self, cfg_pt).initWidget()
+            layout.addWidget(pt)
+            layout.addStretch()
+            container.setLayout(layout)
+            return container
+        except Exception as e:
+            logma.error(f"[charts] _chart_scatter_extras failed: {e}", exc_info=True)
+            return None
+
+    def _chart_area_extras(self):
+        """Stub for area-chart extras (T-063)."""
+        try:
+            container = pyqt.QWidget()
+            layout = pyqt.QHBoxLayout()
+            label = NchantdLabel(self, {"text": "Area chart: defaults", "layout": "horizontal"}).initWidget()
+            layout.addWidget(label)
+            layout.addStretch()
+            container.setLayout(layout)
+            return container
+        except Exception:
+            return None
+
+    def _chart_radar_extras(self):
+        """Stub for radar-chart extras (T-063)."""
+        try:
+            container = pyqt.QWidget()
+            layout = pyqt.QHBoxLayout()
+            label = NchantdLabel(self, {"text": "Radar chart: defaults", "layout": "horizontal"}).initWidget()
+            layout.addWidget(label)
+            layout.addStretch()
+            container.setLayout(layout)
+            return container
+        except Exception:
+            return None
+
+    def set_toolbar_locked(self, locked=True):
+        """Lock or unlock the chart-config toolbar position.
+
+        T-061: prevents the toolbar from being dragged by the
+        user when locked. Each ``_VScrollGroupBox`` panel and the
+        surrounding layout can be locked independently via
+        ``setMovable`` (PySide6) or by setting geometry policies.
+
+        ``locked=True`` calls ``setMovable(False)`` and disables
+        drag; ``locked=False`` restores movable=True.
+
+        Returns ``self``.
+        """
+        try:
+            self.config.dikt["chart_toolbar_locked"] = bool(locked)
+            for group_attr in ("left_group", "center_group", "right_group"):
+                group = getattr(self, group_attr, None)
+                if group is not None and hasattr(group, "setMovable"):
+                    try:
+                        group.setMovable(not locked)
+                    except Exception:
+                        pass
+                if group is not None and hasattr(group, "setSizePolicy"):
+                    policy = (
+                        group.sizePolicy() if hasattr(group, "sizePolicy") else None
+                    )
+                    if policy is not None:
+                        from PySide6 import QtWidgets
+                        v = QtWidgets.QSizePolicy.Policy.Fixed if locked else QtWidgets.QSizePolicy.Policy.Preferred
+                        group.setSizePolicy(v, v)
+            logma.info(f"[charts] toolbar lock state: {bool(locked)}")
+        except Exception as e:
+            logma.error(f"[charts] set_toolbar_locked failed: {e}", exc_info=True)
+        return self
+
+    def cmd_toggle_toolbar_lock(self, event=None, *args, **kwargs):
+        """Toggle the chart-config toolbar lock state.
+
+        T-061: listens for the toolbar lock button click and
+        flips ``config.dikt['chart_toolbar_locked']``. Returns
+        ``self``.
+        """
+        try:
+            current = bool(self.config.dikt.get("chart_toolbar_locked", False)) if hasattr(self, "config") else False
+            self.set_toolbar_locked(not current)
+        except Exception as e:
+            logma.error(f"[charts] cmd_toggle_toolbar_lock failed: {e}", exc_info=True)
         return self
 
     def initWidget(self):

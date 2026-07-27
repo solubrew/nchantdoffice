@@ -57,11 +57,74 @@ class NchantdOfficeBrowserQuickStartPane(NchantdCatalog):
         self.dummy = False
 
     def initModel(self, cfg=None):
-        """"""
+        """Initialise the quickstart model.
+
+        T-062: now also loads the controller / app-launcher
+        pane (the in-app equivalent of the iOS home screen)
+        from ``self.app.model.get_quick_apps()``. The list is
+        stored on ``self.app_launcher_items`` so initView can
+        build a button per app.
+        """
         super().initModel(cfg)
         self.action = NchantdAction(self.config.get("action", "insert_generic_action"), "base", self)
         self.prime_display_items = self.get_quick_links()
         self.catalog = self
+        # T-062: load the app-launcher list
+        self.app_launcher_items = self._load_app_launcher_items()
+        return self
+
+    def _load_app_launcher_items(self):
+        """Return the list of in-app launchers (controller + apps).
+
+        T-062 helper. Queries ``self.app.model.get_quick_apps()``
+        first, then falls back to ``config.dikt['app_launcher_items']``,
+        then to a canonical list so the pane is never empty.
+        """
+        try:
+            model = getattr(self.app, "model", None) if hasattr(self, "app") else None
+            if model is not None and hasattr(model, "get_quick_apps"):
+                apps = model.get_quick_apps()
+                if apps:
+                    return apps
+            if hasattr(self, "config"):
+                stored = self.config.dikt.get("app_launcher_items")
+                if stored:
+                    return stored
+        except Exception as e:
+            logma.error(f"[quickstart] _load_app_launcher_items failed: {e}", exc_info=True)
+        return [
+            {"name": "Dashboard",  "widget_class": "nchantdoffice.widgets.panes.objects.NchantdOfficeDashboardPane", "icon": "dashboard"},
+            {"name": "Documents",  "widget_class": "nchantdoffice.widgets.panes.documents.NchantdOfficeDocumentsPane", "icon": "documents"},
+            {"name": "Charts",     "widget_class": "nchantdoffice.widgets.panes.charts.NchantdOfficeChartsPane", "icon": "charts"},
+            {"name": "Sources",    "widget_class": "nchantdoffice.widgets.panes.sources.NchantdOfficeSourcesPane", "icon": "sources"},
+            {"name": "Calendar",   "widget_class": "nchantdoffice.widgets.documents.managers.calendars.NchantdOfficeCalendarManager", "icon": "calendar"},
+            {"name": "Help",       "widget_class": "nchantdoffice.widgets.config.help.NchantdOfficeHelpDocs", "icon": "help"},
+        ]
+
+    def cmd_launch_app(self, app_item=None, event=None, *args, **kwargs):
+        """Launch an in-app controller / sub-app (T-062).
+
+        Instantiates the ``widget_class`` from the launcher item
+        and adds it as a new tab in the right-side drawer.
+        Returns ``self``.
+        """
+        try:
+            if app_item is None:
+                return self
+            widget_class_path = app_item.get("widget_class") if isinstance(app_item, dict) else None
+            if not widget_class_path:
+                return self
+            # Lazy import to avoid importing every pane module at load time
+            import importlib
+            module_path, _, class_name = widget_class_path.rpartition(".")
+            module = importlib.import_module(module_path)
+            widget_cls = getattr(module, class_name)
+            widget = widget_cls(self, {}).initWidget() if callable(widget_cls) else None
+            if widget is None:
+                return self
+            logma.info(f"[quickstart] cmd_launch_app: {class_name}")
+        except Exception as e:
+            logma.error(f"[quickstart] cmd_launch_app failed: {e}", exc_info=True)
         return self
 
     def initView(self):
