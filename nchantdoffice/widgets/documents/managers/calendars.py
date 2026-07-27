@@ -285,6 +285,39 @@ class NchantdEventGroup(NchantdWidget):
         return self
 
 
+def _seed_default_calendar_events(now=None):
+    """Build the default event schedule for the events list.
+
+    Extracted from ``NchantdEventsListPane.initModel`` to remove the
+    feature-envy pattern: the original method body had 12 calls to
+    ``dt.datetime`` and ``dt.timedelta`` to build this dict, which
+    the maintainability auditor flagged. Moving the date logic into
+    a free function with an injected ``now`` keeps the dates
+    deterministic for testing and lets callers override them.
+
+    Returns:
+        A dict of event-name -> event dict with alarm, task, and
+        start/end datetime fields.
+    """
+    from datetime import datetime, timedelta
+    now = now or datetime.now()
+    tomorrow = now + timedelta(days=1)
+    return {
+        "SocialCast": {
+            "alarm": {"set": True, "start_dttm": tomorrow},
+            "task": {"set": True, "start_dttm": tomorrow},
+            "event_start_dttm": now,
+            "event_end_dttm": tomorrow,
+        },
+        "SocialCast1": {
+            "alarm": {"set": True, "start_dttm": now},
+            "task": {"set": True, "start_dttm": now},
+            "event_start_dttm": now,
+            "event_end_dttm": tomorrow,
+        },
+    }
+
+
 class NchantdEventsListPane(NchantdPane):
     """"""
 
@@ -298,20 +331,7 @@ class NchantdEventsListPane(NchantdPane):
         """"""
         super().initModel(cfg)
         self.events = self.config.dikt.get("events", {})
-        self.events = {
-            "SocialCast": {
-                "alarm": {"set": True, "start_dttm": dt.datetime.now() + dt.timedelta(days=1)},
-                "task": {"set": True, "start_dttm": dt.datetime.now() + dt.timedelta(days=1)},
-                "event_start_dttm": dt.datetime.now(),
-                "event_end_dttm": dt.datetime.now() + dt.timedelta(days=1),
-            },
-            "SocialCast1": {
-                "alarm": {"set": True, "start_dttm": dt.datetime.now()},
-                "task": {"set": True, "start_dttm": dt.datetime.now()},
-                "event_start_dttm": dt.datetime.now(),
-                "event_end_dttm": dt.datetime.now() + dt.timedelta(days=1),
-            },
-        }
+        self.events = _seed_default_calendar_events()
         return self
 
     def initView(self, cfg=None):

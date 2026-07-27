@@ -557,27 +557,45 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
         return self
 
+def _format_contact_as_vcard(contact):
+    """Return the vCard 3.0 textual representation of one contact.
+
+    Extracted from ``NchantdOfficeRolodex.export_to_vcard`` so the
+    contact-attribute-access logic lives next to the dataclass, not
+    buried in a UI method. Reads ``get_full_name``, ``last_name``,
+    ``first_name``, ``email``, ``phone``, ``mobile``, ``company``,
+    and ``title`` from ``contact``.
+    """
+    lines = [
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+        f"FN:{contact.get_full_name()}",
+        f"N:{contact.last_name};{contact.first_name};;;",
+    ]
+    if contact.email:
+        lines.append(f"EMAIL:{contact.email}")
+    if contact.phone:
+        lines.append(f"TEL;TYPE=WORK:{contact.phone}")
+    if contact.mobile:
+        lines.append(f"TEL;TYPE=CELL:{contact.mobile}")
+    if contact.company:
+        lines.append(f"ORG:{contact.company}")
+    if contact.title:
+        lines.append(f"TITLE:{contact.title}")
+    lines.append("END:VCARD")
+    return "\n".join(lines) + "\n"
+
+
+def _write_vcard_file(file_path, contacts):
+    """Write a vCard 3.0 file containing one record per contact."""
+    with open(file_path, "w", encoding="utf-8") as f:
+        for contact in contacts:
+            f.write(_format_contact_as_vcard(contact))
+
+
     def export_to_vcard(self, file_path):
         """Export contacts to vCard file"""
-        # Basic vCard export
-        with open(file_path, "w", encoding="utf-8") as f:
-            for contact in self.contacts:
-                f.write("BEGIN:VCARD\n")
-                f.write("VERSION:3.0\n")
-                f.write(f"FN:{contact.get_full_name()}\n")
-                f.write(f"N:{contact.last_name};{contact.first_name};;;\n")
-                if contact.email:
-                    f.write(f"EMAIL:{contact.email}\n")
-                if contact.phone:
-                    f.write(f"TEL;TYPE=WORK:{contact.phone}\n")
-                if contact.mobile:
-                    f.write(f"TEL;TYPE=CELL:{contact.mobile}\n")
-                if contact.company:
-                    f.write(f"ORG:{contact.company}\n")
-                if contact.title:
-                    f.write(f"TITLE:{contact.title}\n")
-                f.write("END:VCARD\n")
-
+        _write_vcard_file(file_path, self.contacts)
         return self
 
 
