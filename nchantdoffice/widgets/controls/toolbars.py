@@ -137,6 +137,32 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         super().initModel(self.document_types)
         return self
 
+    def _resolve_db_alias(self):
+        """T-064: resolve the active database alias.
+
+        Reads ``self.app.model.instance.db`` first, then
+        ``self.app.model.config.dikt['db_alias']``, then falls
+        back to the legacy ``"db"`` literal.
+
+        Returns the chosen alias string.
+        """
+        try:
+            if hasattr(self, "app") and self.app is not None:
+                model = getattr(self.app, "model", None)
+                if model is not None:
+                    instance = getattr(model, "instance", None)
+                    if instance is not None and hasattr(instance, "db"):
+                        alias = instance.db
+                        if alias:
+                            return alias
+                    if hasattr(model, "config") and hasattr(model.config, "dikt"):
+                        profile_alias = model.config.dikt.get("db_alias")
+                        if profile_alias:
+                            return profile_alias
+        except Exception as e:
+            logma.error(f"[toolbars] _resolve_db_alias failed: {e}", exc_info=True)
+        return "db"
+
     def initView(self):
         """Initialize the view."""
         cfg = {"layout": "vertical"}
