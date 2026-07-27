@@ -62,7 +62,8 @@ NchantdOfficeImage:
             title: Palette
             items:
                 0: { "action": "", "type": "" }
-        400:
-            title: Nchantd Image Quickstart
-            items:
-                0: { "action": "", "type": "" }
+#PUSH to 0.0.3
+#        400:
+#            title: Nchantd Image Quickstart
+#            items:
+#                0: { "action": "", "type": "" }

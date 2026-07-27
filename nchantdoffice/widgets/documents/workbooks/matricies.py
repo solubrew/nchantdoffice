@@ -1551,7 +1551,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # user can toggle text formatting without typing the
         # font commands.
         slot = self._ensure_drawer_item(items, cnt)
-        slot["widget"] = self.font_format_buttons = self._build_font_format_buttons()
+        #slot["widget"] = self.font_format_buttons = self._build_font_format_buttons()
         cnt += 1
 
         # Font config bar (family + size only now that
