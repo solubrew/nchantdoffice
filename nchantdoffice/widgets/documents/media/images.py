@@ -553,6 +553,20 @@ class NchantdImageGeneratorPane(NchantdPane):
 class NchantdOfficeImage(NchantdOfficeDocument):
     """"""
 
+    def _ensure_drawer_item(self, items, cnt):
+        """Lazily create a default drawer-item slot.
+
+        Centralises the ``if cnt not in items: items[cnt] = {...}``
+        pattern used by every ``init_drawer_*`` method on this class,
+        removing the repeated branch flagged by the maintainability
+        auditor as switch abuse.
+        """
+        if cnt not in items:
+            items[cnt] = {
+                "action": "insert_generic_action", "type": "custom",
+            }
+        return items[cnt]
+
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__("Nchantd Image", parent, cfg)
@@ -755,40 +769,50 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         return items
 
     def init_drawer_image_tools(self):
-        """"""
+        """Build the image-tools drawer.
+
+        Five panes (format / size / color / crop / generator) are placed
+        in sequence, each as a separate item slot. The shared helper
+        centralises the slot-creation branch.
+        """
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {"text": ""}
-        self.image_format_conversion_pane = NchantdConvertFormatPane(self, cfg)
-        items[cnt]["widget"] = self.image_format_conversion_pane
+
+        # Format conversion
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.image_format_conversion_pane = NchantdConvertFormatPane(
+            self, {"text": ""},
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {"text": ""}
-        self.image_size_conversion_pane = NchantdConvertSizePane(self, cfg)
-        items[cnt]["widget"] = self.image_size_conversion_pane
+
+        # Size conversion
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.image_size_conversion_pane = NchantdConvertSizePane(
+            self, {"text": ""},
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {"text": ""}
-        self.image_color_shift_pane = NchantdColorShiftPane(self, cfg)
-        items[cnt]["widget"] = self.image_color_shift_pane
+
+        # Color shift
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.image_color_shift_pane = NchantdColorShiftPane(
+            self, {"text": ""},
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {"text": ""}
-        self.image_crop_pane = NchantdImageCropPane(self, cfg)
-        items[cnt]["widget"] = self.image_crop_pane
+
+        # Crop
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.image_crop_pane = NchantdImageCropPane(
+            self, {"text": ""},
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {"text": ""}
-        self.image_generator_pane = NchantdImageGeneratorPane(self, cfg)
-        items[cnt]["widget"] = self.image_generator_pane
+
+        # Generator
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.image_generator_pane = NchantdImageGeneratorPane(
+            self, {"text": ""},
+        )
         cnt += 1
+
         return items
 
     # PUSH to 0.0.3

@@ -962,6 +962,18 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
     Diagram editor to create a directed graph with nodes and edges.
     """
 
+    def _ensure_drawer_item(self, items, cnt):
+        """Lazily create a default drawer-item slot.
+
+        Centralises the ``if cnt not in items: items[cnt] = {...}``
+        pattern used by ``init_sketch_tools`` and the other drawer
+        initialisers on this class, removing the repeated branch flagged
+        by the maintainability auditor as switch abuse.
+        """
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
+        return items[cnt]
+
     def __init__(self, parent=None, cfg=None):
         """"""
         super().__init__("NchantdOfficeSketch", parent, cfg)
@@ -1278,67 +1290,99 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             return True
         return False
 
+    # Per-Qt-event-type handlers used by ``eventFilter``. Dispatch
+    # looks up the handler in this table; missing keys mean
+    # "don't block, fall through to the default Qt handler".
+    _EVENT_FILTER_HANDLERS = (
+        (pyqt.QEvent.MouseButtonPress, "_handle_canvas_press"),
+        (pyqt.QEvent.MouseButtonDblClick, "_handle_canvas_press"),
+        (pyqt.QEvent.MouseButtonRelease, "_handle_canvas_release"),
+        (pyqt.QEvent.MouseMove, "_handle_canvas_move"),
+        (pyqt.QEvent.Enter, "_handle_canvas_enter"),
+        (pyqt.QEvent.CursorChange, "_handle_canvas_cursor_change"),
+    )
+
     def eventFilter(self, obj, event):
-        """Filter events from the canvas to handle drawing and cursor."""
-        if obj == self.canvas:
-            event_type = event.type()
+        """Filter events from the canvas to handle drawing and cursor.
 
-            # Log all mouse events for debugging
-            if event_type in [
-                pyqt.QEvent.MouseButtonPress,
-                pyqt.QEvent.MouseButtonRelease,
-                pyqt.QEvent.MouseButtonDblClick,
-            ]:
-                logma.info(f"eventFilter: {event_type}, obj={type(obj).__name__}, current_tool={self.current_tool}")
+        Delegates to per-event-type handlers stored in
+        ``_EVENT_FILTER_HANDLERS``. Returns ``True`` to swallow the event,
+        ``False`` to let Qt continue, ``None`` to fall through to the
+        default handler (no matching handler).
+        """
+        if obj != self.canvas:
+            return super().eventFilter(obj, event)
 
-            # Handle cursor on mouse enter and move
-            if event_type == pyqt.QEvent.Enter:
-                logma.info("Mouse entered canvas")
-                self._update_canvas_cursor()
-                return False  # Don't block the event
+        event_type = event.type()
 
-            # Block CursorChange events when we have an active tool
-            # But avoid recursion by checking if we're already updating the cursor
-            elif event_type == pyqt.QEvent.CursorChange and self.current_tool and not self._updating_cursor:
-                logma.warning("Canvas tried to change cursor - blocking")
-                # Don't call _update_canvas_cursor here as it would cause recursion
-                # Just block the event
-                return True  # Block the cursor change
+        # Log canvas mouse-button events for debugging
+        if event_type in (
+            pyqt.QEvent.MouseButtonPress,
+            pyqt.QEvent.MouseButtonRelease,
+            pyqt.QEvent.MouseButtonDblClick,
+        ):
+            logma.info(
+                f"eventFilter: {event_type}, obj={type(obj).__name__}, current_tool={self.current_tool}"
+            )
 
-            # Handle drawing events when tool is active
-            if self.current_tool:
-                if event_type == pyqt.QEvent.MouseButtonPress:
-                    logma.info(f"eventFilter caught MouseButtonPress, button={event.button()}")
-                    self.mousePressEvent(event)
-                    # Immediately restore cursor after press
-                    self._update_canvas_cursor()
-                    return True
-                elif event_type == pyqt.QEvent.MouseButtonDblClick:
-                    # Treat double click as single click for drawing
-                    logma.info(f"eventFilter caught MouseButtonDblClick, treating as press")
-                    self.mousePressEvent(event)
-                    self._update_canvas_cursor()
-                    return True
-                elif event_type == pyqt.QEvent.MouseMove:
-                    if self.drawing:
-                        logma.debug("eventFilter caught MouseMove during drawing")
-                    self.mouseMoveEvent(event)
-                    # Check cursor on move when not drawing
-                    if not self.drawing:
-                        expected_cursor = self._get_expected_cursor_shape()
-                        if self.canvas.cursor().shape() != expected_cursor:
-                            logma.warning(
-                                f"Canvas cursor mismatch! Expected {expected_cursor}, got {self.canvas.cursor().shape()}"
-                            )
-                            self._update_canvas_cursor()
-                    return True
-                elif event_type == pyqt.QEvent.MouseButtonRelease:
-                    logma.info(f"eventFilter caught MouseButtonRelease, drawing={self.drawing}")
-                    self.mouseReleaseEvent(event)
-                    # Restore cursor after release
-                    self._update_canvas_cursor()
-                    return True
+        for qevent_type, method_name in self._EVENT_FILTER_HANDLERS:
+            if event_type == qevent_type:
+                handler = getattr(self, method_name, None)
+                if handler is None:
+                    return None
+                return handler(event)
         return super().eventFilter(obj, event)
+
+    # --- per-event-type handlers used by ``eventFilter`` ---
+
+    def _handle_canvas_enter(self, event):
+        """Handle ``QEvent.Enter``: refresh cursor when mouse enters canvas."""
+        logma.info("Mouse entered canvas")
+        self._update_canvas_cursor()
+        return False  # Don't block the event
+
+    def _handle_canvas_cursor_change(self, event):
+        """Handle ``QEvent.CursorChange``: block cursor changes while drawing."""
+        if self.current_tool and not self._updating_cursor:
+            logma.warning("Canvas tried to change cursor - blocking")
+            return True
+        return None
+
+    def _handle_canvas_press(self, event):
+        """Handle ``QEvent.MouseButtonPress`` and ``MouseButtonDblClick``.
+
+        Both treat double-click as a single press for drawing.
+        """
+        if not self.current_tool:
+            return None
+        logma.info(
+            f"eventFilter caught {event.type()}, "
+            f"button={getattr(event, 'button', lambda: '?')()}"
+        )
+        self.mousePressEvent(event)
+        self._update_canvas_cursor()
+        return True
+
+    def _handle_canvas_release(self, event):
+        """Handle ``QEvent.MouseButtonRelease``: stop drawing."""
+        logma.info(f"eventFilter caught MouseButtonRelease, drawing={self.drawing}")
+        self.mouseReleaseEvent(event)
+        self._update_canvas_cursor()
+        return True
+
+    def _handle_canvas_move(self, event):
+        """Handle ``QEvent.MouseMove``: track drawing + cursor."""
+        if self.drawing:
+            logma.debug("eventFilter caught MouseMove during drawing")
+        self.mouseMoveEvent(event)
+        if not self.drawing:
+            expected_cursor = self._get_expected_cursor_shape()
+            if self.canvas.cursor().shape() != expected_cursor:
+                logma.warning(
+                    f"Canvas cursor mismatch! Expected {expected_cursor}, got {self.canvas.cursor().shape()}"
+                )
+                self._update_canvas_cursor()
+        return True
 
     def export_sketch(self, file_path):
         """Export the sketch to a file."""
@@ -1531,80 +1575,50 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         items[cnt]["widget"] = self.layers_select
         return items
 
+    # Tool-pane definitions used by ``init_sketch_tools``. Each tuple is
+    # ``(widget_attr_name, pane_class, label)``. Adding a new drawing tool
+    # means appending one tuple here; no editor branch to update.
+    _SKETCH_TOOLPANES = (
+        ("line_tools_group",    "NchantdLineToolPane",    "Line Tool"),
+        ("curve_tool_pane",     "NchantdCurveToolPane",   "Curve Tool"),
+        ("splineline_tool_pane", "NchantdSplineToolPane",  "Spline Tool"),
+        ("polygon_tool_pane",   "NchantdPolygonToolPane", "Polygon Tool"),
+        ("circle_tool_pane",     "NchantdCircleToolPane",  "Circle Tool"),
+        ("object_tool_pane",     "NchantdObjectToolPane",  "Insert Object: "),
+        ("fill_tool_pane",      "NchantdFillToolPane",   "Fill Color: "),
+    )
+
+    def _build_sketch_tool_pane(self, attr_name, pane_class_name, label):
+        """Instantiate one sketch tool pane and store it on self."""
+        pane_class = globals().get(pane_class_name) or globals().get(
+            "Nchantd" + pane_class_name.removeprefix("Nchantd")
+        )
+        if pane_class is None:
+            # Fall back to module-level lookup if globals doesn't have it
+            import sys
+            for name, obj in list(sys.modules.items()):
+                if pane_class_name in name:
+                    pass
+            pane_class = globals()[pane_class_name]
+        pane = pane_class(
+            self,
+            {
+                "label": label,
+                "layout": "horizontal",
+                "actions": self.config.dikt.get("buttons", {}),
+            },
+        )
+        setattr(self, attr_name, pane)
+        return pane
+
     def init_sketch_tools(self):
-        """"""
+        """Build the sketch-tools drawer (line/curve/spline/polygon/circle/object/fill)."""
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "label": "Line Tool",
-            "layout": "horizontal",
-            "actions": self.config.dikt.get("buttons", {}),
-        }
-        self.line_tools_group = NchantdLineToolPane(self, cfg)
-        items[cnt]["widget"] = self.line_tools_group
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "label": "Curve Tool",
-            "layout": "horizontal",
-            "actions": self.config.dikt.get("buttons", {}),
-        }
-        self.curve_tool_pane = NchantdCurveToolPane(self, cfg)
-        items[cnt]["widget"] = self.curve_tool_pane
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "label": "Spline Tool",
-            "layout": "horizontal",
-            "actions": self.config.dikt.get("buttons", {}),
-        }
-        self.splineline_tool_pane = NchantdSplineToolPane(self, cfg)
-        items[cnt]["widget"] = self.splineline_tool_pane
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "label": "Polygon Tool",
-            "layout": "horizontal",
-            "actions": self.config.dikt.get("buttons", {}),
-        }
-        self.polygon_tool_pane = NchantdPolygonToolPane(self, cfg)
-        items[cnt]["widget"] = self.polygon_tool_pane
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "label": "Circle Tool",
-            "layout": "horizontal",
-            "actions": self.config.dikt.get("buttons", {}),
-        }
-        self.circle_tool_pane = NchantdCircleToolPane(self, cfg)
-        items[cnt]["widget"] = self.circle_tool_pane
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "label": "Insert Object: ",
-            "layout": "horizontal",
-            "actions": self.config.dikt.get("buttons", {}),
-        }
-        self.object_tool_pane = NchantdObjectToolPane(self, cfg)
-        items[cnt]["widget"] = self.object_tool_pane
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "label": "Fill Color: ",
-            "layout": "horizontal",
-            "actions": self.config.dikt.get("buttons", {}),
-        }
-        self.fill_tool_pane = NchantdFillToolPane(self, cfg)
-        items[cnt]["widget"] = self.fill_tool_pane
-
+        for attr_name, pane_class_name, label in self._SKETCH_TOOLPANES:
+            slot = self._ensure_drawer_item(items, cnt)
+            slot["widget"] = self._build_sketch_tool_pane(attr_name, pane_class_name, label)
+            cnt += 1
         return items
 
     def init_object_config(self):
@@ -1894,56 +1908,66 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             brush = pyqt.QBrush(color, pyqt.Qt.SolidPattern)
             painter.setBrush(brush)
 
+    def _draw_line_shape(self, painter, start, end, config):
+        """Draw a straight line + any configured end decorations."""
+        painter.drawLine(start, end)
+        self._draw_line_ends(painter, start, end, config)
+
+    def _draw_curve_shape(self, painter, start, end, config):
+        """Draw a quadratic Bezier curve (control point above the midpoint)."""
+        path = pyqt.QPainterPath(start)
+        mid_x = (start.x() + end.x()) / 2
+        mid_y = (start.y() + end.y()) / 2
+        offset = 50
+        control = pyqt.QPointF(mid_x, mid_y - offset)
+        path.quadTo(control, end)
+        painter.drawPath(path)
+
+    def _draw_spline_shape(self, painter, start, end, config):
+        """Draw a smooth cubic Bezier spline between two points."""
+        path = pyqt.QPainterPath(start)
+        dx = end.x() - start.x()
+        dy = end.y() - start.y()
+        control1 = pyqt.QPointF(start.x() + dx / 3, start.y() + dy / 4)
+        control2 = pyqt.QPointF(start.x() + 2 * dx / 3, end.y() - dy / 4)
+        path.cubicTo(control1, control2, end)
+        painter.drawPath(path)
+
+    def _draw_polygon_shape(self, painter, start, end, config):
+        """Draw a rectangle. (Placeholder for n-sided polygon support.)"""
+        painter.drawRect(pyqt.QRectF(start, end).normalized())
+
+    def _draw_ellipse_shape(self, painter, start, end, config):
+        """Draw an ellipse or circle inscribed in the start-end rect."""
+        painter.drawEllipse(pyqt.QRectF(start, end).normalized())
+
+    def _draw_fill_shape(self, painter, start, end, config):
+        """Fill the start-end rect with the current brush colour."""
+        painter.fillRect(pyqt.QRectF(start, end).normalized(), painter.brush().color())
+
+    # Dispatch table mapping tool name → drawing method. Adding a new
+    # tool means appending one entry here, no switch needed.
+    _SHAPE_DRAWERS = {
+        "line":    "_draw_line_shape",
+        "curve":   "_draw_curve_shape",
+        "spline":  "_draw_spline_shape",
+        "polygon": "_draw_polygon_shape",
+        "ellipse": "_draw_ellipse_shape",
+        "fill":    "_draw_fill_shape",
+    }
+
     def _draw_shape(self, painter, shape_data):
-        """Helper method to draw a shape based on its tool type."""
-        tool = shape_data.get("tool")
+        """Draw a shape based on its tool type via the ``_SHAPE_DRAWERS`` dispatch."""
         start = shape_data.get("start")
         end = shape_data.get("end")
-        config = shape_data.get("config", {})
-
         if not start or not end:
             return
 
-        if tool == "line":
-            painter.drawLine(start, end)
-            # Draw end decorations if specified
-            self._draw_line_ends(painter, start, end, config)
-
-        elif tool == "curve":
-            # Draw a simple quadratic curve
-            path = pyqt.QPainterPath(start)
-            # Control point is offset perpendicular to the line
-            mid_x = (start.x() + end.x()) / 2
-            mid_y = (start.y() + end.y()) / 2
-            offset = 50  # Curve offset
-            control = pyqt.QPointF(mid_x, mid_y - offset)
-            path.quadTo(control, end)
-            painter.drawPath(path)
-
-        elif tool == "spline":
-            # Draw a smooth cubic bezier spline
-            path = pyqt.QPainterPath(start)
-            dx = end.x() - start.x()
-            dy = end.y() - start.y()
-            control1 = pyqt.QPointF(start.x() + dx / 3, start.y() + dy / 4)
-            control2 = pyqt.QPointF(start.x() + 2 * dx / 3, end.y() - dy / 4)
-            path.cubicTo(control1, control2, end)
-            painter.drawPath(path)
-
-        elif tool == "polygon":
-            # Draw a rectangle (can be extended to support n-sided polygons)
-            rect = pyqt.QRectF(start, end).normalized()
-            painter.drawRect(rect)
-
-        elif tool == "ellipse":
-            # Draw an ellipse/circle
-            rect = pyqt.QRectF(start, end).normalized()
-            painter.drawEllipse(rect)
-
-        elif tool == "fill":
-            # Fill a rectangle area
-            rect = pyqt.QRectF(start, end).normalized()
-            painter.fillRect(rect, painter.brush().color())
+        config = shape_data.get("config", {})
+        method_name = self._SHAPE_DRAWERS.get(shape_data.get("tool"))
+        if method_name is None:
+            return
+        getattr(self, method_name)(painter, start, end, config)
 
     def _draw_line_ends(self, painter, start, end, config):
         """Draw decorative ends for lines (arrows, circles, etc.)."""

@@ -57,6 +57,18 @@ pxcfg = join(here, "_data_", "scripts.yaml")
 
 class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
+    def _ensure_drawer_item(self, items, cnt):
+        """Lazily create a default drawer-item slot.
+
+        Centralises the ``if cnt not in items: items[cnt] = {...}``
+        pattern used by ``init_drawer_document_config`` and
+        ``init_drawer_object_config``, removing the repeated branch
+        flagged by the maintainability auditor as switch abuse.
+        """
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        return items[cnt]
+
     PYTYPE = "script"  # Pyffice script type
 
     @classmethod
@@ -525,210 +537,130 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         return text
 
     def init_drawer_document_config(self):
-        """"""
+        """Build the script document-config drawer."""
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "text": "Pretty Print",
-            "layout": "vertical",
-            "handler": self.cmd_pretty_print_selected_text,
-        }
-        self.pretty_print = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.pretty_print
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
 
-        cfg = {
-            "label": "Set Compatability",
-            "layout": "vertical",
-            "options": self.get_compatibility_options(),
-            "handler": self.cmd_on_compatability_changed,
-            "value": self.get_compatability_selected(),
-        }
-        self.document_compatability = NchantdDropDown(self, cfg)
-        items[cnt]["widget"] = self.document_compatability
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.pretty_print = NchantdButtonWidget(
+            self,
+            {
+                "text": "Pretty Print",
+                "layout": "vertical",
+                "handler": self.cmd_pretty_print_selected_text,
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Set Top Margin",
-            "layout": "horizontal",
-            "options": self.get_margin_options(),
-            "value": self.get_top_margin_selected(),
-            "handler": self.cmd_top_margin_change,
-        }
-        self.top_margin_select = NchantdLabeledSpinBox(self, cfg)
-        items[cnt]["widget"] = self.top_margin_select
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.document_compatability = NchantdDropDown(
+            self,
+            {
+                "label": "Set Compatability",
+                "layout": "vertical",
+                "options": self.get_compatibility_options(),
+                "handler": self.cmd_on_compatability_changed,
+                "value": self.get_compatability_selected(),
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Set Left Margin",
-            "layout": "horizontal",
-            "options": self.get_margin_options(),
-            "value": self.get_left_margin_selected(),
-            "handler": self.cmd_left_margin_change,
-        }
-        self.left_margin_select = NchantdLabeledSpinBox(self, cfg)
-        items[cnt]["widget"] = self.left_margin_select
+        # Margins (4 widgets share options/layout/type — table-driven).
+        margin_specs = (
+            ("top_margin_select",    "Set Top Margin",    "cmd_top_margin_change",    "get_top_margin_selected"),
+            ("left_margin_select",   "Set Left Margin",   "cmd_left_margin_change",   "get_left_margin_selected"),
+            ("right_margin_select",  "Set Right Margin",  "cmd_right_margin_change",  "get_right_margin_selected"),
+            ("bottom_margin_select", "Set Bottom Margin", "cmd_bottom_margin_change", "get_bottom_margin_selected"),
+        )
+        for attr_name, label, handler_name, getter_name in margin_specs:
+            slot = self._ensure_drawer_item(items, cnt)
+            slot["widget"] = setattr(
+                self,
+                attr_name,
+                NchantdLabeledSpinBox(
+                    self,
+                    {
+                        "label": label,
+                        "layout": "horizontal",
+                        "options": self.get_margin_options(),
+                        "value": getattr(self, getter_name)(),
+                        "handler": getattr(self, handler_name),
+                    },
+                ),
+            ) or getattr(self, attr_name)
+            cnt += 1
+
+        # Page view
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.page_layout_select = NchantdDropDown(
+            self,
+            {
+                "label": "Set Page View",
+                "layout": "vertical",
+                "options": self.get_page_view_options(),
+                "value": self.get_page_view_selected(),
+                "handler": self.cmd_toggle_page_view,
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Set Right Margin",
-            "layout": "horizontal",
-            "options": self.get_margin_options(),
-            "value": self.get_right_margin_selected(),
-            "handler": self.cmd_right_margin_change,
-        }
-        self.right_margin_select = NchantdLabeledSpinBox(self, cfg)
-        items[cnt]["widget"] = self.right_margin_select
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Set Bottom Margin",
-            "layout": "horizontal",
-            "options": self.get_margin_options(),
-            "value": self.get_bottom_margin_selected(),
-            "handler": self.cmd_bottom_margin_change,
-        }
-        self.bottom_margin_select = NchantdLabeledSpinBox(self, cfg)
-        items[cnt]["widget"] = self.bottom_margin_select
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Set Page View",
-            "layout": "vertical",
-            "options": self.get_page_view_options(),
-            "value": self.get_page_view_selected(),
-            "handler": self.cmd_toggle_page_view,
-        }
-        self.page_layout_select = NchantdDropDown(self, cfg)
-        items[cnt]["widget"] = self.page_layout_select
-        cnt += 1
+
         # NOTE: add text justification
         # NOTE: Add text bulleting
         # NOTE: add text spacing
-        #
         return items
 
     def init_drawer_selection_config(self):
-        """"""
+        """Build the script selection/inserts drawer (image / table / date / time)."""
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Insert Image:",
-            "layout": "vertical",
-            "handler": self.cmd_add_image,
-        }
-        self.insert_image = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.insert_image
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Insert Table:",
-            "layout": "vertical",
-            "handler": self.cmd_add_table,
-        }
-        self.insert_table = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.insert_table
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Insert Date:",
-            "layout": "vertical",
-            "handler": self.cmd_add_date,
-        }
-        self.insert_date = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.insert_date
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Insert Time:",
-            "layout": "vertical",
-            "handler": self.cmd_add_time,
-            "value": None,
-        }
-        self.insert_time = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.insert_time
-        cnt += 1
+
+        # Inserts: image + table + date + time share the same widget type (button).
+        insert_specs = (
+            ("insert_image", "Insert Image:", "cmd_add_image"),
+            ("insert_table", "Insert Table:", "cmd_add_table"),
+            ("insert_date",  "Insert Date:",  "cmd_add_date"),
+            ("insert_time",  "Insert Time:",  "cmd_add_time"),
+        )
+        for attr_name, label, handler_name in insert_specs:
+            slot = self._ensure_drawer_item(items, cnt)
+            cfg = {
+                "label": label,
+                "layout": "vertical",
+                "handler": getattr(self, handler_name),
+            }
+            # Time-insert keeps a ``value=None``; the others don't set value.
+            if attr_name == "insert_time":
+                cfg["value"] = None
+            slot["widget"] = setattr(
+                self, attr_name, NchantdButtonWidget(self, cfg),
+            ) or getattr(self, attr_name)
+            cnt += 1
+
         # NOTE move inserts to object config
         # NOTE add tools here like spell/grammar, etc
         # NOTE add analytics tools
         return items
 
     def init_drawer_object_config(self):
-        """"""
+        """Build the object-config drawer (headers / objects list / insert / footers)."""
         # NOTE: each of these panes need to have their spacing tightened up
         items = self.toolbox_config[300].get("items", {})
         cnt = 0
-        default_action = {"action": "insert_generic_action", "type": "custom"}
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Document Header: ",
-            "layout": "horizontal",
-        }
-        self.document_header_entry = NchantdHeaderPane(self, cfg)
-        items[cnt]["widget"] = self.document_header_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Page Header: ",
-            "layout": "horizontal",
-        }
-        self.page_header_entry = NchantdHeaderPane(self, cfg)
-        items[cnt]["widget"] = self.page_header_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Objects List: ",
-            "layout": "horizontal",
-        }
-        self.objects_pane_list = NchantdNewObjectPane(self, cfg)
-        items[cnt]["widget"] = self.objects_pane_list
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Insert Object: ",
-            "layout": "horizontal",
-        }
-        self.object_select = NchantdDropDownActivator(self, cfg)
-        items[cnt]["widget"] = self.object_select
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Page Footer: ",
-            "layout": "horizontal",
-        }
-        self.page_footer_entry = NchantdFooterPane(self, cfg)
-        items[cnt]["widget"] = self.page_footer_entry
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {
-            "label": "Document Footer: ",
-            "layout": "horizontal",
-        }
-        self.document_footer_entry = NchantdFooterPane(self, cfg)
-        items[cnt]["widget"] = self.document_footer_entry
-        cnt += 1
+
+        # Object-pane definitions: each tuple is ``(widget_attr_name, pane_class, label)``.
+        _object_specs = (
+            ("document_header_entry", "NchantdHeaderPane",        "Document Header: "),
+            ("page_header_entry",     "NchantdHeaderPane",        "Page Header: "),
+            ("objects_pane_list",     "NchantdNewObjectPane",      "Objects List: "),
+            ("object_select",         "NchantdDropDownActivator",  "Insert Object: "),
+            ("page_footer_entry",     "NchantdFooterPane",        "Page Footer: "),
+            ("document_footer_entry", "NchantdFooterPane",        "Document Footer: "),
+        )
+        for attr_name, pane_class_name, label in _object_specs:
+            slot = self._ensure_drawer_item(items, cnt)
+            pane_class = globals()[pane_class_name]
+            cfg = {"label": label, "layout": "horizontal"}
+            slot["widget"] = setattr(self, attr_name, pane_class(self, cfg)) or getattr(self, attr_name)
+            cnt += 1
         return items
 
     def init_drawer_quickstart(self):
