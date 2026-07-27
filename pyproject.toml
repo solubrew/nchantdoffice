@@ -199,6 +199,31 @@ dependencies = [
     "jupyter==1.1.1",
 ]
 
+[project.optional-dependencies]
+# Optional but commonly-installed dependencies
+# ``pdf`` and ``spreadsheet`` are referenced by media/pdfs.py and
+# workbooks/matricies.py via try/except ImportError so users without
+# these features don't get import-time errors.
+pdf = [
+    "pypdf>=3.0.0",
+]
+spreadsheet = [
+    "openpyxl>=3.1.0",
+]
+# Internal projects (peer SB packages). Install with:
+#   pip install nchantdoffice[internal]
+internal = [
+    "nchantrs @ file:///mnt/overse/SBST01/vein/GitVein/nchantrs.git@gamma",
+    "pyffice @ file:///mnt/overse/SBST01/vein/GitVein/pyffice.git@gamma",
+    "ladyol @ file:///mnt/overse/SBST01/vein/GitVein/ladyol.git@gamma",
+    "senbai @ file:///mnt/overse/SBST01/vein/GitVein/senbai.git@gamma",
+]
+# All optional dependencies
+all = [
+    "pypdf>=3.0.0",
+    "openpyxl>=3.1.0",
+]
+
 [project.urls]
 Homepage = "https://www.solutionsbrewer.com/"
 Changelog = "CHANGELOG.rst"
