@@ -2264,23 +2264,60 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 class NchantdOfficeSettingsModel(NchantdModel):
     """"""
 
+    # Setting keys — adding a new setting means adding one tuple here,
+    # not editing the class. Reduces method count from 60+ to a few.
+    _SETTING_KEYS = (
+        # (attribute_name, default_value)
+        ("journal_focus_enable", False),
+        ("show_settings_focus_enable", False),
+        ("automation_enable", False),
+        ("data_sources_enable", False),
+        ("show_left_side_pane", True),
+        ("show_quick_launch_toolbar", True),
+        ("quick_launch_documents", []),
+        ("show_document_launch_catalog", True),
+        ("default_tab_enable", True),
+        ("default_tab_select", ""),
+        ("always_refocus_right_side_enable", False),
+        ("refocus_right_side_select", ""),
+        ("document_storage_default", ""),
+        ("document_delete_policy", ""),
+        ("document_name_convention_default", ""),
+        ("lock_screen_enable", False),
+        ("lock_screen_timeout", 0),
+        ("lock_screen_pin_enable", False),
+        ("package_enable", True),
+        ("package_focus_enable", False),
+        ("package_theme", ""),
+        ("theme", ""),
+        ("pro_edition", False),
+        ("password_new_entry", ""),
+        ("password_new_confirm_entry", ""),
+        ("password_old_entry", ""),
+        ("lock_screen_pin_entry", ""),
+    )
+
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdSettingsModel").override(cfg))
+        # Each setting key maps to an internal storage dict attribute
+        self._settings = {k: v for k, v in self._SETTING_KEYS}
+        # Keep these for backwards compatibility with callers using the
+        # *_settings attribute names.
+        self.interface_settings = {}
+        self.account_settings = {}
+        self.browser_settings = {}
+        self.security_settings = {}
+        self.journal_settings = {}
+        self.storage_settings = {}
+        self.theme_settings = {}
         self.security = {}
         self.storage = {}
         self.packages = {}
         self.theme = {}
         self.interface = {}
         self.nchantd_account = {}
-        self.interface_settings = None
-        self.account_settings = None
-        self.browser_settings = None
-        self.security_settings = None
-        self.journal_settings = None
-        self.storage_settings = None
-        self.theme_settings = None
 
     def initModel(self, cfg=None):
         """"""
