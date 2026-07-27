@@ -86,7 +86,6 @@ class NchantdContextListPane(NchantdPane):
         return self
 
 
-# TODO: unsure how to integrate this at the moment
 class NchantdOfficePromptManager(NchantdManager):
     """"""
 
@@ -96,9 +95,45 @@ class NchantdOfficePromptManager(NchantdManager):
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePromptManager").override(cfg))
 
     def initModel(self):
-        """"""
-        super().initModel()
+        """Initialise the prompt-registry model.
 
+        T-023: the integration pattern is now:
+
+          1. Load the static prompt catalogue from
+             ``config.dikt["prompt_catalog"]`` (a list of dicts).
+          2. Augment it with prompts stored in the
+             ``app_prompt_registry`` table when the store is
+             reachable.
+          3. Add a default "blank" prompt so users can always
+             start a new conversation.
+
+        Falls back to the static catalogue when the store or
+        the registry table is missing.
+        """
+        super().initModel()
+        # Static catalogue from the YAML config
+        self.prompts = list(self.config.dikt.get("prompt_catalog", []) or [])
+        # Live registry from the database when available
+        try:
+            if hasattr(self, "store") and self.store is not None and hasattr(self.store, "get_table"):
+                df = self.store.get_table(
+                    "app_prompt_registry",
+                    {"WHERE": {"EQUAL": {"active_bit": 1}}},
+                )
+                if df is not None and not getattr(df, "empty", True):
+                    for _, row in df.iterrows():
+                        self.prompts.append({
+                            "name": row.get("name_txt") or row.get("name") or "Prompt",
+                            "topic": row.get("topic_txt", "general"),
+                            "template": row.get("template_txt", ""),
+                            "style": row.get("style_txt", "neutral"),
+                            "source": "registry",
+                        })
+        except Exception as e:
+            logma.error(f"[prompts] initModel registry load failed: {e}", exc_info=True)
+        # Always provide a blank entry
+        if not any(p.get("name") == "Blank" for p in self.prompts):
+            self.prompts.insert(0, {"name": "Blank", "topic": "general", "template": "", "style": "neutral", "source": "default"})
         return self
 
     def initView(self):
@@ -313,8 +348,94 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         self.models_select = NchantdNewModelPane(self, cfg)
         items[cnt]["widget"] = self.models_select
         cnt += 1
-        # TODO: show either a connection available or create connection to handle apis for the model
+
+        # T-025: model-API connection pane. Shows a status indicator
+        # (connected / not connected) plus a 'Test Connection' button
+        # that pings the configured API endpoint. The actual API
+        # handshake is delegated to ``self.test_model_connection``.
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self._build_model_connection_pane()
+        cnt += 1
         return items
+
+    def _build_model_connection_pane(self):
+        """Build the model-API-connection status + button widget.
+
+        T-025: a small inline pane with a label showing the current
+        connection status and a button to test the connection. The
+        actual network handshake lives in ``self.test_model_connection``
+        so it can be called from a CLI / test harness too.
+        """
+        try:
+            status = self.config.dikt.get("model_connection_status", "Not Connected")
+            cfg_status = {
+                "label": f"API Connection: {status}",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+            }
+            status_label = NchantdLabel(self, cfg_status).initWidget()
+            cfg_btn = {
+                "text": "Test Connection",
+                "handler": self.cmd_test_model_connection,
+                "layout": "horizontal",
+            }
+            btn = NchantdButton(self, cfg_btn).initWidget()
+
+            container = pyqt.QWidget()
+            layout = pyqt.QHBoxLayout()
+            layout.addWidget(status_label)
+            layout.addWidget(btn)
+            layout.addStretch()
+            container.setLayout(layout)
+            return container
+        except Exception as e:
+            logma.error(f"[prompts] _build_model_connection_pane failed: {e}", exc_info=True)
+            placeholder = NchantdLabel(self, {"text": "Model connection pane unavailable", "layout": "horizontal"})
+            return placeholder.initWidget()
+
+    def cmd_test_model_connection(self, event=None, *args, **kwargs):
+        """Test the configured model-API connection.
+
+        T-025: reads the model endpoint from
+        ``config.dikt["model_api_endpoint"]`` and the API key from
+        ``config.dikt["model_api_key"]`` (falls back to
+        ``pycurity.PYKEYSTORE`` when present), then issues a HEAD
+        request to the endpoint with a short timeout. Stores the
+        result ("Connected" or the error message) on the config so
+        the connection-pane label can show the new state.
+        """
+        try:
+            endpoint = (
+                self.config.dikt.get("model_api_endpoint", "https://api.nchantrs.com/v1/models")
+                if hasattr(self, "config") else "https://api.nchantrs.com/v1/models"
+            )
+            api_key = None
+            if hasattr(self, "config"):
+                api_key = self.config.dikt.get("model_api_key")
+            if not api_key:
+                try:
+                    import pykey
+                    api_key = pykey.PYKEYSTORE.get("model_api_key")
+                except Exception:
+                    pass
+            headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+            try:
+                import requests  # type: ignore
+                response = requests.head(endpoint, headers=headers, timeout=5)
+                if response.status_code < 400:
+                    self.config.dikt["model_connection_status"] = "Connected"
+                    logma.info("[prompts] cmd_test_model_connection: OK")
+                else:
+                    self.config.dikt["model_connection_status"] = f"Error {response.status_code}"
+                    logma.warning(
+                        f"[prompts] cmd_test_model_connection: status {response.status_code}"
+                    )
+            except Exception as e:
+                self.config.dikt["model_connection_status"] = f"Error: {e}"
+                logma.error(f"[prompts] cmd_test_model_connection failed: {e}", exc_info=True)
+        except Exception as e:
+            logma.error(f"[prompts] cmd_test_model_connection outer failed: {e}", exc_info=True)
+        return self
 
     def init_drawer_context_inputs(self):
         """"""
