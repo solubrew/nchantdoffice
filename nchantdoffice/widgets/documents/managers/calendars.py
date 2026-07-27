@@ -214,9 +214,12 @@ class NchantdAlarmsEditPane(NchantdPane):
         return self
 
     def cmd_name_changed(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_name_changed.
+        """
+        logma.info(f"[calendars] {self.__class__.__name__}.cmd_name_changed invoked (stub)")
+        return self
     def cmd_scope_changed(self):
         """Handle alarm scope/interval change."""
         if hasattr(self, "alarm_scope_select"):

@@ -578,25 +578,40 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             return None
 
     def get_kernel(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_kernel.
+        """
+        logma.info(f"[notebooks] {self.__class__.__name__}.get_kernel (stub returning None)")
+        return None
     def get_server_port(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_server_port.
+        """
+        logma.info(f"[notebooks] {self.__class__.__name__}.get_server_port (stub returning None)")
+        return None
     def get_config_autostart_server(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_config_autostart_server.
+        """
+        logma.info(f"[notebooks] {self.__class__.__name__}.get_config_autostart_server (stub returning None)")
+        return None
     def cmd_cell_type_change(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_cell_type_change.
+        """
+        logma.info(f"[notebooks] {self.__class__.__name__}.cmd_cell_type_change invoked (stub)")
+        return self
     def get_cell_type(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_cell_type.
+        """
+        logma.info(f"[notebooks] {self.__class__.__name__}.get_cell_type (stub returning None)")
+        return None
     def get_completions(self, code, cursor_pos):
         """Get code completions at cursor position
 

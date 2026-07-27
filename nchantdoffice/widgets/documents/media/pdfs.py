@@ -79,13 +79,19 @@ class NchantdPageAddToolPane(NchantdPane):
         return self
 
     def cmd_page_number_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_page_number_change.
+        """
+        logma.info(f"[pdfs] {self.__class__.__name__}.cmd_page_number_change invoked (stub)")
+        return self
     def cmd_open_file(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_open_file.
+        """
+        logma.info(f"[pdfs] {self.__class__.__name__}.cmd_open_file invoked (stub)")
+        return self
     def initWidget(self):
         """"""
         self.initModel()
@@ -190,13 +196,19 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         return items
 
     def cmd_page_count_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_page_count_change.
+        """
+        logma.info(f"[pdfs] {self.__class__.__name__}.cmd_page_count_change invoked (stub)")
+        return self
     def get_page_count(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_page_count.
+        """
+        logma.info(f"[pdfs] {self.__class__.__name__}.get_page_count (stub returning None)")
+        return None
     def init_drawer_document_tools(self):
         """"""
         items = self.toolbox_config[200].get("items", {})
@@ -257,21 +269,33 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         # self.toolbox_config[300]["items"] = self.init_drawer_quickstart()
 
     def cmd_image_format_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_image_format_change.
+        """
+        logma.info(f"[pdfs] {self.__class__.__name__}.cmd_image_format_change invoked (stub)")
+        return self
     def cmd_image_convert_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_image_convert_change.
+        """
+        logma.info(f"[pdfs] {self.__class__.__name__}.cmd_image_convert_change invoked (stub)")
+        return self
     def get_file_format(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_file_format.
+        """
+        logma.info(f"[pdfs] {self.__class__.__name__}.get_file_format (stub returning None)")
+        return None
     def get_file_convert(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_file_convert.
+        """
+        logma.info(f"[pdfs] {self.__class__.__name__}.get_file_convert (stub returning None)")
+        return None
     def get_content(self):
         """"""
         return super().get_content()

@@ -409,45 +409,75 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         return ["Supermarket", "CoinGecko"]
 
     def get_data_source(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_data_source.
+        """
+        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_data_source (stub returning None)")
+        return None
     def get_new_object_types(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_new_object_types.
+        """
+        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_new_object_types (stub returning None)")
+        return None
     def cmd_source_edit_changes(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_source_edit_changes.
+        """
+        logma.info(f"[analytics_charts] {self.__class__.__name__}.cmd_source_edit_changes invoked (stub)")
+        return self
     def get_source_edit(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_source_edit.
+        """
+        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_source_edit (stub returning None)")
+        return None
     def get_sample_data(self, data_source):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_sample_data.
+        """
+        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_sample_data (stub returning None)")
+        return None
     def get_source_edit_changes(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_source_edit_changes.
+        """
+        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_source_edit_changes (stub returning None)")
+        return None
     def get_document_chart_type(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_document_chart_type.
+        """
+        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_document_chart_type (stub returning None)")
+        return None
     def get_document_capability(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_document_capability.
+        """
+        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_document_capability (stub returning None)")
+        return None
     def get_document_palette(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_document_palette.
+        """
+        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_document_palette (stub returning None)")
+        return None
     def get_document_theme(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_document_theme.
+        """
+        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_document_theme (stub returning None)")
+        return None
     def get_themes(self):
         """"""
         return ["Light", "Dark"]

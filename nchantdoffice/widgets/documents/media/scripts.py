@@ -220,56 +220,89 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         return self
 
     def cmd_add_chart(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_add_chart.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_chart invoked (stub)")
         return self
 
     def cmd_add_code(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_add_code.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_code invoked (stub)")
         return self
 
     def cmd_add_date(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_add_date.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_date invoked (stub)")
+        return self
     def cmd_add_image(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_add_image.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_image invoked (stub)")
         return self
 
     def cmd_add_shape(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_add_shape.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_shape invoked (stub)")
         return self
 
     def cmd_add_table(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_add_table.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_table invoked (stub)")
         return self
 
     def cmd_add_textbox(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_add_textbox.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_textbox invoked (stub)")
         return self
 
     def cmd_add_time(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_add_time.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_time invoked (stub)")
+        return self
     def cmd_on_compatability_changed(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_on_compatability_changed.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_on_compatability_changed invoked (stub)")
         return self
 
     def cmd_on_change_document_format(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_on_change_document_format.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_on_change_document_format invoked (stub)")
         return self
 
     def cmd_on_change_document_syntax(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_on_change_document_syntax.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_on_change_document_syntax invoked (stub)")
         return self
 
     def cmd_open_local_file(self, event=None, *args, **kwargs):
@@ -289,37 +322,58 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         return self
 
     def cmd_set_margin_top(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_set_margin_top.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_set_margin_top invoked (stub)")
         return self
 
     def cmd_set_margin_bottom(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_set_margin_bottom.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_set_margin_bottom invoked (stub)")
         return self
 
     def cmd_set_margin_left(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_set_margin_left.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_set_margin_left invoked (stub)")
         return self
 
     def cmd_set_margin_right(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_set_margin_right.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_set_margin_right invoked (stub)")
         return self
 
     def cmd_toggle_selection_bold(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_toggle_selection_bold.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_toggle_selection_bold invoked (stub)")
+        return self
     def cmd_toggle_selection_italic(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_toggle_selection_italic.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_toggle_selection_italic invoked (stub)")
+        return self
     def cmd_toggle_selection_underline(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_toggle_selection_underline.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.cmd_toggle_selection_underline invoked (stub)")
+        return self
     def cmd_toggle_page_view(self, event, *args, **kwargs):
         """"""
         # NOTE: Change between a full screen and a standard 8.5x11/whatever the current page size is set to
@@ -348,8 +402,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             logma.info(f"Total images extracted: {image_count}")
 
     def get_text_background_color_options(self, event, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
+
+        Stub implementation of get_text_background_color_options.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.get_text_background_color_options (stub returning None)")
         return self
 
     def get_compatability_selected(self):
@@ -690,33 +747,51 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
     def insert_chart(self):
-        """"""
-        # TODO implement method
+        """Stub implementation of insert_chart.
+
+        Returns None; callers should not depend on this value.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.insert_chart (stub)")
         return self
 
     def insert_shape(self):
-        """"""
-        # TODO implement method
+        """Stub implementation of insert_shape.
+
+        Returns None; callers should not depend on this value.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.insert_shape (stub)")
         return self
 
     def insert_symbol(self):
-        """"""
-        # TODO implement method
+        """Stub implementation of insert_symbol.
+
+        Returns None; callers should not depend on this value.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.insert_symbol (stub)")
         return self
 
     def insert_table(self):
-        """"""
-        # TODO implement method
+        """Stub implementation of insert_table.
+
+        Returns None; callers should not depend on this value.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.insert_table (stub)")
         return self
 
     def insert_code(self):
-        """"""
-        # TODO implement method
+        """Stub implementation of insert_code.
+
+        Returns None; callers should not depend on this value.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.insert_code (stub)")
         return self
 
     def insert_document(self):
-        """"""
-        # TODO implement method
+        """Stub implementation of insert_document.
+
+        Returns None; callers should not depend on this value.
+        """
+        logma.info(f"[scripts] {self.__class__.__name__}.insert_document (stub)")
         return self
 
     def insert_image(self):

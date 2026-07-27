@@ -264,29 +264,48 @@ class NchantdImportPane(NchantdPane):
         return self
 
     def cmd_automate_import(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_automate_import.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_automate_import invoked (stub)")
+        return self
     def cmd_file_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_file_change.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_file_change invoked (stub)")
+        return self
     def cmd_import_file(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_import_file.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_import_file invoked (stub)")
+        return self
     def get_file(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_file.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.get_file (stub returning None)")
+        return None
     def get_file_options(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_file_options.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.get_file_options (stub returning None)")
+        return None
     def set_file(self, path):
-        """"""
-        # TODO implement method
+        """Stub implementation of set_file.
 
+        Returns None; the underlying state change has not been
+        wired up yet.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.set_file (stub)")
+        return None
 
 class NchantdMovePane(NchantdPane):
     """"""
@@ -399,9 +418,12 @@ class NchantdRenamePane(NchantdPane):
         return self
 
     def cmd_format_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation of cmd_format_change.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_format_change invoked (stub)")
+        return self
     def cmd_automate_rename(self, event=None, *args, **kwargs):
         """Set up automated file renaming rules"""
         logma.info("Setting up rename automation...")
@@ -474,13 +496,20 @@ class NchantdRenamePane(NchantdPane):
         return formats
 
     def get_file_rename_format(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_file_rename_format.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.get_file_rename_format (stub returning None)")
+        return None
     def set_file(self, path):
-        """"""
-        # TODO implement method
+        """Stub implementation of set_file.
 
+        Returns None; the underlying state change has not been
+        wired up yet.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.set_file (stub)")
+        return None
 
 class NchantdStorageEditPane(NchantdPane):
     """"""
@@ -515,9 +544,13 @@ class NchantdStorageEditPane(NchantdPane):
         return self
 
     def set_file(self, path):
-        """"""
-        # TODO implement method
+        """Stub implementation of set_file.
 
+        Returns None; the underlying state change has not been
+        wired up yet.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.set_file (stub)")
+        return None
 
 class NchantdOfficeFileSystem(NchantdOfficeDocument):
     """ ""File system document - implements PyfficeFileSystem"""
@@ -630,28 +663,43 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         return self
 
     def cmd_flatten_files(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_flatten_files.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_flatten_files invoked (stub)")
         return self
 
     def cmd_on_file_search_method_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_on_file_search_method_change.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_on_file_search_method_change invoked (stub)")
         return self
 
     def cmd_on_file_search_edit(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_on_file_search_edit.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_on_file_search_edit invoked (stub)")
         return self
 
     def cmd_on_file_search_clear(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_on_file_search_clear.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_on_file_search_clear invoked (stub)")
         return self
 
     def cmd_on_node_expansion(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
+
+        Stub implementation of cmd_on_node_expansion.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_on_node_expansion invoked (stub)")
         return self
 
     def cmd_on_node_selection(self, event=None, *args, **kwargs):
@@ -1006,9 +1054,12 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         return self
 
     def get_binary(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_binary.
+        """
+        logma.info(f"[filesystems] {self.__class__.__name__}.get_binary (stub returning None)")
+        return None
     def show_tree(self, file=None):
         """"""
         if file is None or file == "":
