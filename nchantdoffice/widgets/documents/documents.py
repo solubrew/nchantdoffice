@@ -185,7 +185,6 @@ class NchantdOfficeDocumentMixin:
 
     def cmd_show_pane_left(self, event=None, *args, **kwargs):
         """"""
-        # NOTE flip icon
         if self.app.view.panes["left"].isHidden():
             self.app.view.panes["left"].show()
         else:
@@ -194,7 +193,6 @@ class NchantdOfficeDocumentMixin:
 
     def cmd_show_pane_right(self, event=None, *args, **kwargs):
         """"""
-        # NOTE flip icon
         if self.app.view.panes["right"].isHidden():
             self.app.view.panes["right"].show()
         else:
@@ -316,7 +314,6 @@ class NchantdOfficeDocumentMixin:
             101: {"action": "save", "handler": self.cmd_save_tab},
             150: {"action": "redo", "handler": self.cmd_redo},
             200: {"action": "undo", "handler": self.cmd_undo},
-            # NOTE: i'm not sure this has any other uses that arent' handled by the toolbox tab trashcan
             400: {"action": "cancel", "handler": self.cmd_delete_tab},
             1000: {"action": "show_pane_right", "handler": self.cmd_show_pane_right},
         }

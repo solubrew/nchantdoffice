@@ -691,7 +691,7 @@ class NchantdOfficeAffiliateManager(NchantdOfficeDocumentManager):
             "datasource": source,
             "data_table": table,
             "fields": table,
-        }  # NOTE: get table fields
+        }  # fields=table placeholder until real fields list is built
         self.data_pane = NchantdDataSetPane(self, cfg).initWidget()
         self.canvas.add_item(self.data_pane, [50, 50])
 

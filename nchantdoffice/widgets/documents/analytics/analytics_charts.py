@@ -378,7 +378,6 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     def cmd_toggle_config_pane(self, event, *args, **kwargs):
         """"""
-        # NOTE: starts hear but once toggle is used it won't come back to the right size
         self.set_pane("config")
         return self
 

@@ -216,7 +216,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             "handler": self.cmd_on_change_document_syntax,
         }
         self.document_syntax_select = NchantdDropDown(self, dfs_cfg)
-        if self.format_type == "plaintext":  # NOTE: change to richtext
+        if self.format_type == "plaintext":
             add_image = {"action": "insert_image", "handler": self.cmd_add_image}
             add_table = {"action": "insert_table", "handler": self.cmd_add_table}
             add_chart = {"action": "insert_chart", "handler": self.cmd_add_chart}

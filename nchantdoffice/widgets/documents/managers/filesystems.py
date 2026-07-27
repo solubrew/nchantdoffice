@@ -981,7 +981,6 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
     def cmd_toggle_compare_directory(self, event=None, *args, **kwargs):
         """"""
-        # NOTE needs to be implemented
         self.compare_fs = not self.compare_fs
         return self
 

@@ -282,7 +282,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def cmd_pin_page(self, event, *args, **kwargs):
         """"""
-        # self.make_webapp() # NOTE: unsure what is needed to make webapp over pinning
         self.pin_page()
         return self
 
@@ -823,7 +822,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #         "size": ["auto", "auto"],
     #         "value": self.current_profile.contact.street_name or "",
     #     }
-    #     self.address_street_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
     #     items[cnt]["widget"] = self.address_street_entry
     #     cnt += 1
     #     if cnt not in items:
@@ -834,7 +832,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #         "size": ["auto", "auto"],
     #         "value": self.current_profile.contact.city_name or "",
     #     }
-    #     self.address_city_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
     #     items[cnt]["widget"] = self.address_city_entry
     #     cnt += 1
     #     if cnt not in items:
@@ -845,7 +842,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #         "size": ["auto", "auto"],
     #         "value": self.current_profile.contact.state_name or "",
     #     }
-    #     self.address_state_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
     #     items[cnt]["widget"] = self.address_state_entry
     #     cnt += 1
     #     if cnt not in items:
@@ -856,7 +852,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #         "size": ["auto", "auto"],
     #         "value": self.current_profile.contact.zip_code or "",
     #     }
-    #     self.address_zip_entry = NchantdLabeledEntry(self, cfg)  # NOTE Build an Address Input widget
     #     items[cnt]["widget"] = self.address_zip_entry
     #     cnt += 1
     #     if cnt not in items:

@@ -124,7 +124,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         # cfg["buttons"][14] = {
         #     "action": "start_kernel",
         #     "handler": self.cmd_start_kernel,
-        # }  # NOTE consolidate to only restart
         # cfg["buttons"][15] = {"action": "interrupt_kernel", "handler": self.cmd_interrupt_kernel}
         cfg["buttons"][14] = {
             "name": "select_url",
