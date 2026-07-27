@@ -620,40 +620,67 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             return None
 
     def get_kernel(self):
-        """Return None as a default value.
-
-        Stub implementation of get_kernel.
-        """
-        logma.info(f"[notebooks] {self.__class__.__name__}.get_kernel (stub returning None)")
-        return None
+        """Return the stored value of get_kernel."""
+        return getattr(self, 'kernel_name', 'python3') or 'python3'
     def get_server_port(self):
-        """Return None as a default value.
-
-        Stub implementation of get_server_port.
-        """
-        logma.info(f"[notebooks] {self.__class__.__name__}.get_server_port (stub returning None)")
-        return None
+        """Return the stored value of get_server_port."""
+        return getattr(self, 'server_port', 8888) or 8888
     def get_config_autostart_server(self):
-        """Return None as a default value.
+        """Return the auto-start-server flag from the config.
 
-        Stub implementation of get_config_autostart_server.
+        Reads ``config.dikt["autostart_server"]`` and returns it as a
+        boolean. Defaults to ``False`` when not set.
         """
-        logma.info(f"[notebooks] {self.__class__.__name__}.get_config_autostart_server (stub returning None)")
-        return None
-    def cmd_cell_type_change(self):
-        """Log the invocation and return self for method chaining.
+        return bool(self.config.dikt.get("autostart_server", False))
+    def cmd_cell_type_change(self, event=None, *args, **kwargs):
+        """Update the active cell's cell_type based on the dropdown.
 
-        Stub implementation of cmd_cell_type_change.
+        Reads the current selection from ``self.cell_type_select`` and
+        writes it into the currently selected cell's ``cell_type``
+        field. No-op if no cell is selected or the dropdown is empty.
         """
-        logma.info(f"[notebooks] {self.__class__.__name__}.cmd_cell_type_change invoked (stub)")
+        if not hasattr(self, "cell_type_select") or self.cell_type_select is None:
+            return self
+        new_type = None
+        getter = getattr(self.cell_type_select, "currentText", None) or getattr(self.cell_type_select, "get_value", None)
+        if callable(getter):
+            new_type = getter()
+        if not new_type:
+            return self
+        # Find active cell
+        active_cell = None
+        if hasattr(self, "table") and self.table is not None:
+            try:
+                active_cell = self.table.currentItem()
+            except Exception:
+                active_cell = None
+        if active_cell is not None:
+            row = active_cell.row()
+            try:
+                if 0 <= row < len(self.cells):
+                    self.cells[row]["cell_type"] = new_type
+            except (TypeError, KeyError):
+                pass
+        self.config.dikt["cell_type"] = new_type
         return self
     def get_cell_type(self):
-        """Return None as a default value.
+        """Return the cell type of the currently active cell.
 
-        Stub implementation of get_cell_type.
+        Reads the active cell's ``cell_type`` (defaults to ``"code"``
+        for Jupyter notebooks). Returns ``"code"`` if no cell is
+        selected.
         """
-        logma.info(f"[notebooks] {self.__class__.__name__}.get_cell_type (stub returning None)")
-        return None
+        if hasattr(self, "cells") and self.cells:
+            if hasattr(self, "table") and self.table is not None:
+                try:
+                    item = self.table.currentItem()
+                    if item is not None:
+                        idx = item.row()
+                        if 0 <= idx < len(self.cells):
+                            return self.cells[idx].get("cell_type", "code")
+                except Exception:
+                    pass
+        return self.config.dikt.get("cell_type", "code")
     def get_completions(self, code, cursor_pos):
         """Get code completions at cursor position
 

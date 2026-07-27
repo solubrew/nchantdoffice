@@ -159,8 +159,6 @@ class NchantdOfficeNote(NchantdSigil):
         to store it. Returns ``self`` for chainable call sites.
         """
         return self.save()
-        logma.info(f"[notes] {self.__class__.__name__}.store_note invoked (stub)")
-        return self
 
 
 class NchantdOfficeNoteDocument(NchantdOfficeDocument):

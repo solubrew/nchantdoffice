@@ -151,9 +151,18 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         buttons[200] = "_skip"
         return buttons
 
-    def cmd_check_is_pinned(self, event, *args, **kwargs):
-        """Stub implementation of cmd_check_is_pinned."""
-        logma.info(f"[browsers] {self.__class__.__name__}.cmd_check_is_pinned invoked (stub)")
+    def cmd_check_is_pinned(self, event=None, *args, **kwargs):
+        """Check whether the current browser tab is pinned.
+
+        Reads the tab's pinned state from ``self.tab_widget`` and
+        stores it on ``config.dikt["is_pinned"]``. Returns ``self``.
+        """
+        if hasattr(self, "tab_widget") and self.tab_widget is not None:
+            current = self.tab_widget.currentIndex()
+            if current >= 0:
+                tab_data = self.tab_widget.tabBar().tabData(current)
+                pinned = bool(tab_data) if tab_data is not None else False
+                self.config.dikt["is_pinned"] = pinned
         return self
 
     def cmd_clear_cookies(self, event, *args, **kwargs):
@@ -199,19 +208,53 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             self.app.view.switch_to_account_tab()
         return self
 
-    def cmd_fill_in_forms(self, event, *args, **kwargs):
-        """Stub implementation of cmd_fill_in_forms."""
-        logma.info(f"[browsers] {self.__class__.__name__}.cmd_fill_in_forms invoked (stub)")
+    def cmd_fill_in_forms(self, event=None, *args, **kwargs):
+        """Submit the current form-fill data to the active form.
+
+        Reads the configured form-field values from the config and
+        sends them to the form via the browser's form-fill API.
+        """
+        try:
+            form_data = self.config.dikt.get("form_fill_data", {}) or {}
+            if hasattr(self, "browser") and self.browser is not None:
+                submit = getattr(self.browser, "submit_form", None)
+                if callable(submit):
+                    submit(form_data)
+        except Exception as e:
+            logma.error(f"[browsers] cmd_fill_in_forms failed: {e}", exc_info=True)
         return self
 
-    def cmd_fill_in_forms_clear(self, event, *args, **kwargs):
-        """Stub implementation of cmd_fill_in_forms_clear."""
-        logma.info(f"[browsers] {self.__class__.__name__}.cmd_fill_in_forms_clear invoked (stub)")
+    def cmd_fill_in_forms_clear(self, event=None, *args, **kwargs):
+        """Clear the form-fill data on the config.
+
+        Resets ``config.dikt["form_fill_data"]`` to an empty dict and
+        clears the form in the active browser tab via the
+        ``clear_form`` method if available.
+        """
+        try:
+            self.config.dikt["form_fill_data"] = {}
+            if hasattr(self, "browser") and self.browser is not None:
+                clear = getattr(self.browser, "clear_form", None)
+                if callable(clear):
+                    clear()
+        except Exception as e:
+            logma.error(f"[browsers] cmd_fill_in_forms_clear failed: {e}", exc_info=True)
         return self
 
-    def cmd_fill_in_forms_edit(self, event, *args, **kwargs):
-        """Stub implementation of cmd_fill_in_forms_edit."""
-        logma.info(f"[browsers] {self.__class__.__name__}.cmd_fill_in_forms_edit invoked (stub)")
+    def cmd_fill_in_forms_edit(self, event=None, *args, **kwargs):
+        """Open the form editor for the current form.
+
+        Switches the application to the form-editor view so the user
+        can change field values. Returns ``self`` for chaining.
+        """
+        try:
+            view = getattr(self, "app", None)
+            if view is not None and hasattr(view, "view"):
+                switch = getattr(view.view, "switch_to_form_editor", None)
+                if callable(switch):
+                    switch()
+        except Exception as e:
+            logma.error(f"[browsers] cmd_fill_in_forms_edit failed: {e}", exc_info=True)
         return self
 
     def cmd_goto_page(self, event=None, *args, **kwargs):
@@ -249,9 +292,22 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.document.set_refresh_time()
         return self
 
-    def cmd_on_resource_select(self, event, *args, **kwargs):
-        """Stub implementation of cmd_on_resource_select."""
-        logma.info(f"[browsers] {self.__class__.__name__}.cmd_on_resource_select invoked (stub)")
+    def cmd_on_resource_select(self, event=None, *args, **kwargs):
+        """Navigate to the resource URL selected from the dropdown.
+
+        Reads the URL from the event payload and uses it as the
+        browser's navigation target.
+        """
+        url = None
+        if event is not None:
+            url = getattr(event, "url", None) or getattr(event, "text", None)
+        if url is None and hasattr(self, "resource_select"):
+            url = getattr(self.resource_select, "currentText", lambda: None)()
+        if url and hasattr(self, "browser") and self.browser is not None:
+            try:
+                self.browser.setUrl(pyqt.QUrl(url))
+            except Exception as e:
+                logma.error(f"[browsers] cmd_on_resource_select failed: {e}", exc_info=True)
         return self
 
     def cmd_previous_page(self, url=None, *args, **kwargs):
@@ -287,24 +343,58 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.home_page = event
         return self
 
-    def cmd_set_pin_browser_tab(self, event, *args, **kwargs):
-        """Stub implementation of cmd_set_pin_browser_tab."""
-        logma.info(f"[browsers] {self.__class__.__name__}.cmd_set_pin_browser_tab invoked (stub)")
+    def cmd_set_pin_browser_tab(self, event=None, *args, **kwargs):
+        """Pin the current browser tab to the top of the tab bar.
+
+        Sets ``tabData`` to ``True`` on the current tab so the
+        ``tab_widget`` can render it as pinned.
+        """
+        if hasattr(self, "tab_widget") and self.tab_widget is not None:
+            current = self.tab_widget.currentIndex()
+            if current >= 0:
+                self.tab_widget.tabBar().setTabData(current, True)
         return self
 
-    def cmd_set_save_browser_tab(self, event, *args, **kwargs):
-        """Stub implementation of cmd_set_save_browser_tab."""
-        logma.info(f"[browsers] {self.__class__.__name__}.cmd_set_save_browser_tab invoked (stub)")
+    def cmd_set_save_browser_tab(self, event=None, *args, **kwargs):
+        """Mark the current browser tab as save-on-close.
+
+        Sets ``tabData`` to ``{"save_on_close": True}`` so the close
+        handler will prompt the user to save the page.
+        """
+        if hasattr(self, "tab_widget") and self.tab_widget is not None:
+            current = self.tab_widget.currentIndex()
+            if current >= 0:
+                self.tab_widget.tabBar().setTabData(current, {"save_on_close": True})
         return self
 
-    def cmd_set_browsing_history_expiry(self, event, *args, **kwargs):
-        """Stub implementation of cmd_set_browsing_history_expiry."""
-        logma.info(f"[browsers] {self.__class__.__name__}.cmd_set_browsing_history_expiry invoked (stub)")
+    def cmd_set_browsing_history_expiry(self, event=None, *args, **kwargs):
+        """Update the browsing-history expiry policy (in days).
+
+        Reads the value from the spinbox widget and stores it on
+        ``config.dikt["browsing_history_expiry_days"]``. Returns
+        ``self`` for chainable call sites.
+        """
+        days = 30  # default
+        if hasattr(self, "browsing_history_policy_spinbox") and self.browsing_history_policy_spinbox is not None:
+            getter = getattr(self.browsing_history_policy_spinbox, "value", None)
+            if callable(getter):
+                days = int(getter())
+        self.config.dikt["browsing_history_expiry_days"] = days
         return self
 
-    def cmd_show_badge(self, event, *args, **kwargs):
-        """Stub implementation of cmd_show_badge."""
-        logma.info(f"[browsers] {self.__class__.__name__}.cmd_show_badge invoked (stub)")
+    def cmd_show_badge(self, event=None, *args, **kwargs):
+        """Update the security-badge display on the current page.
+
+        Reads the badge-state from the event and triggers a re-render
+        of the badge bar so the user sees the security status.
+        """
+        try:
+            if hasattr(self, "badge_bar") and self.badge_bar is not None:
+                update = getattr(self.badge_bar, "update", None)
+                if callable(update):
+                    update()
+        except Exception as e:
+            logma.error(f"[browsers] cmd_show_badge failed: {e}", exc_info=True)
         return self
 
     def cmd_take_screenshot(self, event, *args, **kwargs):

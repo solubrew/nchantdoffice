@@ -213,12 +213,19 @@ class NchantdAlarmsEditPane(NchantdPane):
         self.initView()
         return self
 
-    def cmd_name_changed(self):
-        """Log the invocation and return self for method chaining.
+    def cmd_name_changed(self, event=None, *args, **kwargs):
+        """Record the alarm-name entry value into the config.
 
-        Stub implementation of cmd_name_changed.
+        Reads the current value from ``self.name_entry`` and stores it
+        on ``config.dikt["name"]`` so downstream event creation knows
+        what to call this alarm.
         """
-        logma.info(f"[calendars] {self.__class__.__name__}.cmd_name_changed invoked (stub)")
+        if hasattr(self, "name_entry") and self.name_entry is not None:
+            getter = getattr(self.name_entry, "get_value", None)
+            if callable(getter):
+                value = getter()
+                if value is not None:
+                    self.config.dikt["name"] = value
         return self
     def cmd_scope_changed(self):
         """Handle alarm scope/interval change."""

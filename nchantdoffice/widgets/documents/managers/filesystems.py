@@ -265,40 +265,69 @@ class NchantdImportPane(NchantdPane):
         return self
 
     def cmd_automate_import(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Auto-import files matching the configured search pattern.
 
-        Stub implementation of cmd_automate_import.
+        Reads the file-search pattern from the config and runs an
+        import for each matching file under the configured root.
         """
-        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_automate_import invoked (stub)")
+        try:
+            root = self.config.dikt.get("file_root", ".")
+            pattern = self.config.dikt.get("file_search_pattern", "*")
+            from os.path import join
+            from glob import glob
+            matches = glob(join(root, pattern), recursive=True)
+            for path in matches:
+                self.cmd_import_file(path=path)
+        except Exception as e:
+            logma.error(f"[filesystems] cmd_automate_import failed: {e}", exc_info=True)
         return self
     def cmd_file_change(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Record the user-selected file from the file picker.
 
-        Stub implementation of cmd_file_change.
+        Reads the current value from ``self.file_select`` and stores
+        the path on ``self.file_path`` so subsequent commands know
+        which file to operate on.
         """
-        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_file_change invoked (stub)")
+        if hasattr(self, "file_select") and self.file_select is not None:
+            getter = getattr(self.file_select, "currentText", None) or getattr(self.file_select, "get_value", None)
+            if callable(getter):
+                value = getter()
+                if value:
+                    self.file_path = value
+                    self.config.dikt["file_path"] = value
         return self
     def cmd_import_file(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Import a file from disk into the active filesystem view.
 
-        Stub implementation of cmd_import_file.
+        Accepts the path via ``path=`` keyword argument or falls back
+        to ``self.file_path``. Re-loads the file's content into the
+        table and records the action on the config.
         """
-        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_import_file invoked (stub)")
+        path = kwargs.get("path") or getattr(self, "file_path", None)
+        if not path:
+            return self
+        try:
+            from os.path import exists
+            if not exists(path):
+                logma.warning(f"[filesystems] cmd_import_file: not found: {path}")
+                return self
+            if hasattr(self, "load_file"):
+                self.load_file(path)
+            history = list(self.config.dikt.get("file_import_history", []) or [])
+            if path in history:
+                history.remove(path)
+            history.insert(0, path)
+            self.config.dikt["file_import_history"] = history[:50]
+            self.config.dikt["file_path"] = path
+        except Exception as e:
+            logma.error(f"[filesystems] cmd_import_file failed: {e}", exc_info=True)
         return self
     def get_file(self):
-        """Return None as a default value.
-
-        Stub implementation of get_file.
-        """
-        logma.info(f"[filesystems] {self.__class__.__name__}.get_file (stub returning None)")
-        return None
+        """Return the stored value of get_file."""
+        return getattr(self, 'file_path', None) or self.config.dikt.get('file_path', '')
     def get_file_options(self):
-        """Return None as a default value.
-
-        Stub implementation of get_file_options.
-        """
-        logma.info(f"[filesystems] {self.__class__.__name__}.get_file_options (stub returning None)")
-        return None
+        """Return the stored value of get_file_options."""
+        return self.config.dikt.get('file_options', []) or []
     def set_file(self, path):
         """Stub implementation of set_file.
 
@@ -422,11 +451,18 @@ class NchantdRenamePane(NchantdPane):
         return self
 
     def cmd_format_change(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Update the file-format selection on the config.
 
-        Stub implementation of cmd_format_change.
+        Reads the current value from the format-selector widget and
+        stores it on ``config.dikt["file_format"]`` so subsequent
+        import/export commands know which format to use.
         """
-        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_format_change invoked (stub)")
+        if hasattr(self, "format_select") and self.format_select is not None:
+            getter = getattr(self.format_select, "currentText", None) or getattr(self.format_select, "get_value", None)
+            if callable(getter):
+                value = getter()
+                if value:
+                    self.config.dikt["file_format"] = value
         return self
     def cmd_automate_rename(self, event=None, *args, **kwargs):
         """Set up automated file renaming rules"""
@@ -516,12 +552,8 @@ class NchantdRenamePane(NchantdPane):
         return list(self._RENAME_FORMATS.keys())
 
     def get_file_rename_format(self):
-        """Return None as a default value.
-
-        Stub implementation of get_file_rename_format.
-        """
-        logma.info(f"[filesystems] {self.__class__.__name__}.get_file_rename_format (stub returning None)")
-        return None
+        """Return the stored value of get_file_rename_format."""
+        return self.config.dikt.get('file_rename_format', '') or ''
     def set_file(self, path):
         """Stub implementation of set_file.
 
@@ -683,43 +715,107 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         return self
 
     def cmd_flatten_files(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Flatten the directory tree of the current file root.
 
-        Stub implementation of cmd_flatten_files.
+        Reads ``config.dikt["file_root"]`` and the active file list,
+        then writes a flat list of (path, size, mtime) tuples to
+        ``config.dikt["flat_file_list"]``.
         """
-        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_flatten_files invoked (stub)")
+        try:
+            from os import walk
+            from os.path import join, getsize, getmtime
+            root = self.config.dikt.get("file_root", ".")
+            flat = []
+            for dirpath, _dirnames, filenames in walk(root):
+                for name in filenames:
+                    full = join(dirpath, name)
+                    try:
+                        flat.append((full, getsize(full), getmtime(full)))
+                    except OSError:
+                        continue
+            self.config.dikt["flat_file_list"] = flat
+        except Exception as e:
+            logma.error(f"[filesystems] cmd_flatten_files failed: {e}", exc_info=True)
         return self
 
     def cmd_on_file_search_method_change(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Record the file-search method change on the config.
 
-        Stub implementation of cmd_on_file_search_method_change.
+        Reads the selection from the search-method widget and stores
+        it on ``config.dikt["file_search_method"]`` so the next search
+        uses the chosen strategy (e.g. "glob", "regex", "name").
         """
-        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_on_file_search_method_change invoked (stub)")
+        if hasattr(self, "file_search_method_select") and self.file_search_method_select is not None:
+            getter = getattr(self.file_search_method_select, "currentText", None) or getattr(self.file_search_method_select, "get_value", None)
+            if callable(getter):
+                value = getter()
+                if value:
+                    self.config.dikt["file_search_method"] = value
         return self
 
     def cmd_on_file_search_edit(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Run the file search with the current search pattern.
 
-        Stub implementation of cmd_on_file_search_edit.
+        Reads the configured search method (``glob``, ``regex``,
+        ``name``) and pattern, then writes the matching file list to
+        ``config.dikt["file_search_results"]``.
         """
-        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_on_file_search_edit invoked (stub)")
+        try:
+            method = self.config.dikt.get("file_search_method", "glob")
+            pattern = self.config.dikt.get("file_search_pattern", "")
+            root = self.config.dikt.get("file_root", ".")
+            results = []
+            if method == "glob":
+                from glob import glob
+                from os.path import join
+                results = glob(join(root, pattern), recursive=True)
+            elif method == "regex":
+                import re
+                from os import walk
+                from os.path import join
+                compiled = re.compile(pattern)
+                for dirpath, _dirnames, filenames in walk(root):
+                    for name in filenames:
+                        if compiled.search(name):
+                            results.append(join(dirpath, name))
+            elif method == "name":
+                from os import walk
+                from os.path import join
+                for dirpath, _dirnames, filenames in walk(root):
+                    for name in filenames:
+                        if pattern and pattern in name:
+                            results.append(join(dirpath, name))
+            self.config.dikt["file_search_results"] = results
+        except Exception as e:
+            logma.error(f"[filesystems] cmd_on_file_search_edit failed: {e}", exc_info=True)
         return self
 
     def cmd_on_file_search_clear(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Clear the current file-search state.
 
-        Stub implementation of cmd_on_file_search_clear.
+        Resets ``file_search_pattern`` and ``file_search_results`` on
+        the config so the next search starts fresh.
         """
-        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_on_file_search_clear invoked (stub)")
+        self.config.dikt["file_search_pattern"] = ""
+        self.config.dikt["file_search_results"] = []
         return self
 
     def cmd_on_node_expansion(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Handle a node expansion event in the file tree.
 
-        Stub implementation of cmd_on_node_expansion.
+        Reads the expanded node's path from the event and writes it
+        on ``config.dikt["expanded_node"]`` so downstream code can
+        react to the user's navigation.
         """
-        logma.info(f"[filesystems] {self.__class__.__name__}.cmd_on_node_expansion invoked (stub)")
+        path = None
+        if event is not None:
+            data = getattr(event, "data", None) or getattr(event, "path", None)
+            if data is not None:
+                path = str(data)
+            elif hasattr(event, "node"):
+                path = getattr(event.node, "path", None)
+        if path is not None:
+            self.config.dikt["expanded_node"] = path
         return self
 
     def cmd_on_node_selection(self, event=None, *args, **kwargs):
@@ -1074,12 +1170,8 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         return self
 
     def get_binary(self):
-        """Return None as a default value.
-
-        Stub implementation of get_binary.
-        """
-        logma.info(f"[filesystems] {self.__class__.__name__}.get_binary (stub returning None)")
-        return None
+        """Return the stored value of get_binary."""
+        return self.config.dikt.get('file_binary', b'') or b''
     def show_tree(self, file=None):
         """"""
         if file is None or file == "":

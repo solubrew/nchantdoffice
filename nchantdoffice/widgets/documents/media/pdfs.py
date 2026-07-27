@@ -79,18 +79,47 @@ class NchantdPageAddToolPane(NchantdPane):
         return self
 
     def cmd_page_number_change(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Update the current page based on the page-number spinbox.
 
-        Stub implementation of cmd_page_number_change.
+        Reads the new page number from the spinbox widget and
+        re-renders the page if the document is loaded.
         """
-        logma.info(f"[pdfs] {self.__class__.__name__}.cmd_page_number_change invoked (stub)")
+        if not getattr(self, "pdf_document", None):
+            return self
+        try:
+            spinbox = getattr(self, "page_number_spinbox", None)
+            if spinbox is not None and hasattr(spinbox, "value"):
+                new_page = int(spinbox.value())
+            else:
+                new_page = getattr(self, "current_page", 0)
+            new_page = max(0, min(new_page, self.pdf_document.pageCount() - 1))
+            self.current_page = new_page
+            if hasattr(self, "load_page"):
+                self.load_page()
+        except Exception as e:
+            logma.error(f"[pdfs] cmd_page_number_change failed: {e}", exc_info=True)
         return self
     def cmd_open_file(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Open a PDF file selected via the file dialog.
 
-        Stub implementation of cmd_open_file.
+        Reads ``self.file_path`` (or accepts a path argument), loads
+        the PDF document, and refreshes the viewer.
         """
-        logma.info(f"[pdfs] {self.__class__.__name__}.cmd_open_file invoked (stub)")
+        path = getattr(self, "file_path", None)
+        if not path:
+            return self
+        try:
+            try:
+                from pyffice.workbooks.pdfs import load_pdf
+            except ImportError:
+                logma.warning("[pdfs] pyffice not available; cannot open PDF")
+                return self
+            self.pdf_document = load_pdf(path)
+            self.current_page = 0
+            if hasattr(self, "load_page"):
+                self.load_page()
+        except Exception as e:
+            logma.error(f"[pdfs] cmd_open_file failed: {e}", exc_info=True)
         return self
     def initWidget(self):
         """"""
@@ -196,19 +225,24 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         return items
 
     def cmd_page_count_change(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Update the document page count from the current PDF.
 
-        Stub implementation of cmd_page_count_change.
+        Refreshes ``self.page_count`` from the loaded PDF document and
+        updates the spinbox widget if present.
         """
-        logma.info(f"[pdfs] {self.__class__.__name__}.cmd_page_count_change invoked (stub)")
+        if not getattr(self, "pdf_document", None):
+            return self
+        try:
+            self.page_count = self.pdf_document.pageCount()
+            spinbox = getattr(self, "page_count_spinbox", None)
+            if spinbox is not None and hasattr(spinbox, "setValue"):
+                spinbox.setValue(self.page_count)
+        except Exception as e:
+            logma.error(f"[pdfs] cmd_page_count_change failed: {e}", exc_info=True)
         return self
     def get_page_count(self):
-        """Return None as a default value.
-
-        Stub implementation of get_page_count.
-        """
-        logma.info(f"[pdfs] {self.__class__.__name__}.get_page_count (stub returning None)")
-        return None
+        """Return the stored value of get_page_count."""
+        return getattr(self, 'page_count', 0) or self.config.dikt.get('page_count', 0)
     def init_drawer_document_tools(self):
         """"""
         items = self.toolbox_config[200].get("items", {})
@@ -269,33 +303,49 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         # self.toolbox_config[300]["items"] = self.init_drawer_quickstart()
 
     def cmd_image_format_change(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Record the selected image-output format on the config.
 
-        Stub implementation of cmd_image_format_change.
+        Reads the format selection from the format-select widget and
+        stores it on ``config.dikt["image_format"]`` so the next
+        convert step uses it.
         """
-        logma.info(f"[pdfs] {self.__class__.__name__}.cmd_image_format_change invoked (stub)")
+        if hasattr(self, "image_format_select") and self.image_format_select is not None:
+            getter = getattr(self.image_format_select, "currentText", None) or getattr(self.image_format_select, "get_value", None)
+            if callable(getter):
+                value = getter()
+                if value:
+                    self.config.dikt["image_format"] = value
         return self
     def cmd_image_convert_change(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Convert the current page to an image using the configured format.
 
-        Stub implementation of cmd_image_convert_change.
+        Reads the current page plus the configured image format and
+        converts it through the PDF → image pipeline. Stores the
+        resulting path on ``config.dikt["image_convert_path"]``.
         """
-        logma.info(f"[pdfs] {self.__class__.__name__}.cmd_image_convert_change invoked (stub)")
+        if not getattr(self, "pdf_document", None):
+            return self
+        try:
+            fmt = self.config.dikt.get("image_format", "png")
+            page = self.pdf_document.page(self.current_page)
+            if page is None:
+                return self
+            output_path = self.config.dikt.get("image_convert_path")
+            if not output_path:
+                output_path = self.file_path + f".page{self.current_page}.{fmt}" if getattr(self, "file_path", None) else None
+            if not output_path:
+                return self
+            page.render_to_image(output_path, format=fmt)
+            self.config.dikt["image_convert_path"] = output_path
+        except Exception as e:
+            logma.error(f"[pdfs] cmd_image_convert_change failed: {e}", exc_info=True)
         return self
     def get_file_format(self):
-        """Return None as a default value.
-
-        Stub implementation of get_file_format.
-        """
-        logma.info(f"[pdfs] {self.__class__.__name__}.get_file_format (stub returning None)")
-        return None
+        """Return the stored value of get_file_format."""
+        return self.config.dikt.get('file_format', '') or ''
     def get_file_convert(self):
-        """Return None as a default value.
-
-        Stub implementation of get_file_convert.
-        """
-        logma.info(f"[pdfs] {self.__class__.__name__}.get_file_convert (stub returning None)")
-        return None
+        """Return the stored value of get_file_convert."""
+        return self.config.dikt.get('file_convert', '') or ''
     def get_content(self):
         """"""
         return super().get_content()

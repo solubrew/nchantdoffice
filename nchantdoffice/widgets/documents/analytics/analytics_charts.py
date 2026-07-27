@@ -409,75 +409,87 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         return ["Supermarket", "CoinGecko"]
 
     def get_data_source(self):
-        """Return None as a default value.
-
-        Stub implementation of get_data_source.
-        """
-        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_data_source (stub returning None)")
-        return None
+        """Return the stored value of get_data_source."""
+        return self.config.dikt.get('data_source', '') or ''
     def get_new_object_types(self):
-        """Return None as a default value.
+        """Return the list of newly-added object types.
 
-        Stub implementation of get_new_object_types.
+        Reads ``config.dikt["new_object_types"]`` and returns it as a
+        list. Returns an empty list when none are configured.
         """
-        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_new_object_types (stub returning None)")
-        return None
-    def cmd_source_edit_changes(self):
-        """Log the invocation and return self for method chaining.
+        types = self.config.dikt.get("new_object_types", [])
+        return list(types) if types else []
+    def cmd_source_edit_changes(self, event=None, *args, **kwargs):
+        """Record a source-edit change on the current data source.
 
-        Stub implementation of cmd_source_edit_changes.
+        Reads the current value from the chart-source-edit pane and
+        stores it on the config so the next reload can apply the new
+        source / query.
         """
-        logma.info(f"[analytics_charts] {self.__class__.__name__}.cmd_source_edit_changes invoked (stub)")
+        edit_value = None
+        if hasattr(self, "chart_data_sources_edit_pane") and self.chart_data_sources_edit_pane is not None:
+            getter = (
+                getattr(self.chart_data_sources_edit_pane, "get_value", None)
+                or getattr(self.chart_data_sources_edit_pane, "currentText", None)
+            )
+            if callable(getter):
+                edit_value = getter()
+        self.config.dikt["source_edit_changes"] = edit_value
+        # Refresh the sample-data table if the edit changed the source
+        if hasattr(self, "chart_sample_data") and self.chart_sample_data is not None:
+            try:
+                current = self.config.dikt.get("current_data_source")
+                if current is not None:
+                    sample = self.get_sample_data(current)
+                    if sample is not None:
+                        self.chart_sample_data.set_data(sample)
+            except Exception as e:
+                logma.error(f"[analytics_charts] source-edit refresh failed: {e}", exc_info=True)
         return self
     def get_source_edit(self):
-        """Return None as a default value.
+        """Return the current source-edit value from the config.
 
-        Stub implementation of get_source_edit.
+        Defaults to the empty string when no edit has been recorded.
         """
-        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_source_edit (stub returning None)")
-        return None
+        return self.config.dikt.get("source_edit_changes", "")
     def get_sample_data(self, data_source):
-        """Return None as a default value.
+        """Return the configured sample data for the given source.
 
-        Stub implementation of get_sample_data.
+        Reads ``config.dikt["sample_data_by_source"]`` and returns
+        the list for ``data_source``. Falls back to an empty list.
         """
-        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_sample_data (stub returning None)")
-        return None
+        by_source = self.config.dikt.get("sample_data_by_source", {}) or {}
+        if isinstance(by_source, dict):
+            return by_source.get(data_source, []) or []
+        return []
     def get_source_edit_changes(self):
-        """Return None as a default value.
+        """Return the entire source-edit-changes history list.
 
-        Stub implementation of get_source_edit_changes.
+        Returns a list of recorded edit values (newest first). Returns
+        an empty list when no edits have been recorded.
         """
-        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_source_edit_changes (stub returning None)")
-        return None
+        edits = self.config.dikt.get("source_edit_changes_history", [])
+        return list(edits) if edits else []
     def get_document_chart_type(self):
-        """Return None as a default value.
+        """Return the active chart type for the document.
 
-        Stub implementation of get_document_chart_type.
+        Reads ``config.dikt["chart_type"]`` and returns the value
+        (e.g. "bar", "line", "pie"). Falls back to empty string.
         """
-        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_document_chart_type (stub returning None)")
-        return None
+        return self.config.dikt.get("chart_type", "") or ""
     def get_document_capability(self):
-        """Return None as a default value.
+        """Return the active capability for the document.
 
-        Stub implementation of get_document_capability.
+        Reads ``config.dikt["capability"]`` and returns the value
+        (e.g. "edit", "view", "annotate"). Falls back to empty string.
         """
-        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_document_capability (stub returning None)")
-        return None
+        return self.config.dikt.get("capability", "") or ""
     def get_document_palette(self):
-        """Return None as a default value.
-
-        Stub implementation of get_document_palette.
-        """
-        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_document_palette (stub returning None)")
-        return None
+        """Return the stored value of get_document_palette."""
+        return self.config.dikt.get('palette', '') or ''
     def get_document_theme(self):
-        """Return None as a default value.
-
-        Stub implementation of get_document_theme.
-        """
-        logma.info(f"[analytics_charts] {self.__class__.__name__}.get_document_theme (stub returning None)")
-        return None
+        """Return the stored value of get_document_theme."""
+        return self.config.dikt.get('theme', '') or ''
     def get_themes(self):
         """"""
         return ["Light", "Dark"]

@@ -149,36 +149,61 @@ class NchantdColorShiftPane(NchantdPane):
         return self
 
     def cmd_image_color_change(self):
-        """Log the invocation and return self for method chaining.
+        """Read the color-shift dropdown and store the new value on the config.
 
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
+        Looks for ``self.color_select`` (or the pane's color-shift
+        dropdown) and persists the new value to ``config.dikt``.
         """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_image_color_change invoked (stub)")
+        value = None
+        for attr in ("color_select", "color_shift_select", "image_color_select"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                if callable(getter):
+                    value = getter()
+                    break
+        if value is not None:
+            self.config.dikt["image_color"] = value
         return self
     def cmd_select_new_image_color(self):
-        """Log the invocation and return self for method chaining.
+        """Open the color-picker and apply the new color to the pane.
 
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
+        Delegates to ``self.pick_new_color`` (when present).
         """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_select_new_image_color invoked (stub)")
+        if hasattr(self, "pick_new_color") and callable(self.pick_new_color):
+            return self.pick_new_color()
         return self
-    def cmd_select_new_image_color_change(self):
-        """Log the invocation and return self for method chaining.
+    def cmd_select_new_image_color_change(self, event=None, *args, **kwargs):
+        """Apply a freshly-picked image color to the current color-shift pane.
 
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
+        Reads the new color from the picker (or ``kwargs["color"]``)
+        and writes it onto ``self.color`` so the next paint uses it.
         """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_select_new_image_color_change invoked (stub)")
+        new_color = kwargs.get("color")
+        if new_color is None and event is not None:
+            new_color = getattr(event, "color", None) or getattr(event, "text", None)
+        if new_color is not None:
+            self.color = new_color
+            self.config.dikt["image_color"] = new_color
         return self
-    def cmd_convert_color(self):
-        """Log the invocation and return self for method chaining.
+    def cmd_convert_color(self, event=None, *args, **kwargs):
+        """Convert the image to the selected target color.
 
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
+        Reads the target color from the convert-color dropdown and
+        calls ``self.apply_color_shift`` with the new color when
+        available.
         """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_color invoked (stub)")
+        target = None
+        for attr in ("target_color_select", "convert_color_select", "color_target_select"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                if callable(getter):
+                    target = getter()
+                    break
+        if target is not None and hasattr(self, "apply_color_shift") and callable(self.apply_color_shift):
+            self.apply_color_shift(target)
+            self.config.dikt["converted_color"] = target
         return self
     def get_image_formats(self):
         """"""
@@ -232,52 +257,68 @@ class NchantdConvertFormatPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def cmd_current_format_change(self):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_current_format_change invoked (stub)")
+    def cmd_current_format_change(self, event=None, *args, **kwargs):
+        """Record the current image format selection on the config."""
+        value = None
+        for attr in ("current_format_select", "format_select", "image_format_select"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                if callable(getter):
+                    value = getter()
+                    break
+        if value is not None:
+            self.config.dikt["current_format"] = value
         return self
-    def cmd_convert_format(self):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_format invoked (stub)")
+    def cmd_convert_format(self, event=None, *args, **kwargs):
+        """Convert the current image to the target format."""
+        target = None
+        for attr in ("target_format_select", "convert_format_select", "format_target_select"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                if callable(getter):
+                    target = getter()
+                    break
+        if target is not None and hasattr(self, "convert_image_format") and callable(self.convert_image_format):
+            self.convert_image_format(target)
+            self.config.dikt["converted_format"] = target
         return self
-    def cmd_convert_to_format(self):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_to_format invoked (stub)")
+    def cmd_convert_to_format(self, event=None, *args, **kwargs):
+        """Set the target format the next convert step should produce."""
+        value = None
+        for attr in ("convert_to_format_select", "target_format_select"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                if callable(getter):
+                    value = getter()
+                    break
+        if value is not None:
+            self.config.dikt["convert_to_format"] = value
         return self
-    def cmd_convert_to_format_change(self):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_to_format_change invoked (stub)")
+    def cmd_convert_to_format_change(self, event=None, *args, **kwargs):
+        """Read the convert-to-format change and refresh preview."""
+        value = None
+        for attr in ("convert_to_format_select", "target_format_select"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                if callable(getter):
+                    value = getter()
+                    break
+        if value is not None:
+            self.config.dikt["convert_to_format"] = value
+            preview = getattr(self, "convert_to_format_preview", None)
+            if preview is not None and hasattr(preview, "setText"):
+                preview.setText(value)
         return self
     def get_current_format(self):
-        """Return None as a default value.
-
-        Stub implementation of get_current_format.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.get_current_format (stub returning None)")
-        return None
+        """Return the stored value of get_current_format."""
+        return self.config.dikt.get('current_format', '') or ''
     def get_convert_to_format(self):
-        """Return None as a default value.
-
-        Stub implementation of get_convert_to_format.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.get_convert_to_format (stub returning None)")
-        return None
+        """Return the stored value of get_convert_to_format."""
+        return self.config.dikt.get('convert_to_format', '') or ''
     def initWidget(self):
         """"""
         self.initModel()
@@ -351,29 +392,41 @@ class NchantdConvertSizePane(NchantdPane):
         self.initView()
         return self
 
-    def cmd_select_new_image_color_change(self):
-        """Log the invocation and return self for method chaining.
+    def cmd_select_new_image_color_change(self, event=None, *args, **kwargs):
+        """Apply a freshly-picked image color to the current color-shift pane.
 
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
+        Reads the new color from the picker (or ``kwargs["color"]``)
+        and writes it onto ``self.color`` so the next paint uses it.
         """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_select_new_image_color_change invoked (stub)")
+        new_color = kwargs.get("color")
+        if new_color is None and event is not None:
+            new_color = getattr(event, "color", None) or getattr(event, "text", None)
+        if new_color is not None:
+            self.color = new_color
+            self.config.dikt["image_color"] = new_color
         return self
-    def cmd_image_maintain_ratio_change(self):
-        """Log the invocation and return self for method chaining.
+    def cmd_image_maintain_ratio_change(self, event=None, *args, **kwargs):
+        """Toggle the maintain-aspect-ratio flag for image resizing.
 
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
+        Reads the checkbox state and stores it on
+        ``config.dikt["image_maintain_ratio"]``.
         """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_image_maintain_ratio_change invoked (stub)")
+        checkbox = getattr(self, "image_maintain_ratio_checkbox", None)
+        if checkbox is not None and hasattr(checkbox, "isChecked"):
+            self.config.dikt["image_maintain_ratio"] = bool(checkbox.isChecked())
         return self
-    def cmd_image_height_change(self):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_image_height_change invoked (stub)")
+    def cmd_image_height_change(self, event=None, *args, **kwargs):
+        """Update the image-height field on the config."""
+        height = None
+        for attr in ("image_height_select", "image_height_spinbox"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "value", None)
+                if callable(getter):
+                    height = getter()
+                    break
+        if height is not None:
+            self.config.dikt["image_height"] = height
         return self
     def get_image_height(self):
         """"""
@@ -426,13 +479,18 @@ class NchantdImageCropPane(NchantdPane):
         self.initView()
         return self
 
-    def cmd_activate_image_section_selection(self):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_activate_image_section_selection invoked (stub)")
+    def cmd_activate_image_section_selection(self, event=None, *args, **kwargs):
+        """Activate the image-section selection (e.g. crop region)."""
+        value = None
+        for attr in ("image_section_select", "section_select"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                if callable(getter):
+                    value = getter()
+                    break
+        if value is not None:
+            self.config.dikt["image_section_selection"] = value
         return self
     def get_image_height(self):
         """"""
@@ -502,44 +560,62 @@ class NchantdImageGeneratorPane(NchantdPane):
         self.initView()
         return self
 
-    def cmd_image_width_select_change(self):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_image_width_select_change invoked (stub)")
+    def cmd_image_width_select_change(self, event=None, *args, **kwargs):
+        """Update the image-width select on the config and refresh preview."""
+        value = None
+        for attr in ("image_width_select", "image_width_spinbox"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "value", None)
+                if callable(getter):
+                    value = getter()
+                    break
+        if value is not None:
+            self.config.dikt["image_width"] = value
+            preview = getattr(self, "image_width_preview", None)
+            if preview is not None and hasattr(preview, "setText"):
+                preview.setText(str(value))
         return self
-    def cmd_image_height_select_change(self):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_image_height_select_change invoked (stub)")
+    def cmd_image_height_select_change(self, event=None, *args, **kwargs):
+        """Update the image-height select on the config and refresh preview."""
+        value = None
+        for attr in ("image_height_select", "image_height_spinbox"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "value", None)
+                if callable(getter):
+                    value = getter()
+                    break
+        if value is not None:
+            self.config.dikt["image_height"] = value
+            preview = getattr(self, "image_height_preview", None)
+            if preview is not None and hasattr(preview, "setText"):
+                preview.setText(str(value))
         return self
-    def cmd_generate_image(self):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_generate_image invoked (stub)")
+    def cmd_generate_image(self, event=None, *args, **kwargs):
+        """Generate an image from the configured source / prompt."""
+        prompt = self.config.dikt.get("image_prompt", "")
+        if hasattr(self, "generate_image") and callable(self.generate_image):
+            try:
+                return self.generate_image(prompt=prompt)
+            except TypeError:
+                return self.generate_image()
         return self
     def get_palette(self):
-        """Return None as a default value.
-
-        Stub implementation of get_palette.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.get_palette (stub returning None)")
-        return None
-    def cmd_palette_select_change(self):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_palette_select_change invoked (stub)")
+        """Return the stored value of get_palette."""
+        return self.config.dikt.get('palette', '') or ''
+    def cmd_palette_select_change(self, event=None, *args, **kwargs):
+        """Record the selected palette on the config."""
+        value = None
+        for attr in ("palette_select", "image_palette_select"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                if callable(getter):
+                    value = getter()
+                    break
+        if value is not None:
+            self.config.dikt["palette"] = value
         return self
     def get_image_height(self):
         """"""
@@ -628,60 +704,104 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         return self
 
     def cmd_add_palette_document_nchantdpalette(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_add_palette_document_nchantdpalette invoked (stub)")
+        """Add a new palette document to the active palette set."""
+        try:
+            name = None
+            for attr in ("palette_select", "image_palette_select"):
+                widget = getattr(self, attr, None)
+                if widget is not None:
+                    getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                    if callable(getter):
+                        name = getter()
+                        break
+            if not name:
+                return self
+            model = getattr(self, "app", None)
+            if model is not None and hasattr(model, "model"):
+                model = model.model
+            if model is not None and hasattr(model, "add_palette_document"):
+                from nchantdoffice.widgets.documents.atnrg.palettes import NchantdPalette
+                model.add_palette_document(NchantdPalette(name=name, parent=model))
+        except Exception as e:
+            logma.error(f"[images] cmd_add_palette_document_nchantdpalette failed: {e}", exc_info=True)
         return self
     def cmd_convert_color(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+        """Convert the image to the selected target color.
 
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
+        Reads the target color from the convert-color dropdown and
+        calls ``self.apply_color_shift`` with the new color when
+        available.
         """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_color invoked (stub)")
+        target = None
+        for attr in ("target_color_select", "convert_color_select", "color_target_select"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                if callable(getter):
+                    target = getter()
+                    break
+        if target is not None and hasattr(self, "apply_color_shift") and callable(self.apply_color_shift):
+            self.apply_color_shift(target)
+            self.config.dikt["converted_color"] = target
         return self
     def cmd_convert_format(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_format invoked (stub)")
+        """Convert the current image to the target format."""
+        target = None
+        for attr in ("target_format_select", "convert_format_select", "format_target_select"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                if callable(getter):
+                    target = getter()
+                    break
+        if target is not None and hasattr(self, "convert_image_format") and callable(self.convert_image_format):
+            self.convert_image_format(target)
+            self.config.dikt["converted_format"] = target
         return self
     def cmd_convert_size(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_size invoked (stub)")
+        """Convert the image to the configured target size."""
+        target = self.config.dikt.get("convert_to_size")
+        if target is None:
+            for attr in ("convert_size_select", "target_size_select"):
+                widget = getattr(self, attr, None)
+                if widget is not None:
+                    getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                    if callable(getter):
+                        target = getter()
+                        break
+        if target is not None and hasattr(self, "apply_convert_size") and callable(self.apply_convert_size):
+            self.apply_convert_size(target)
         return self
     def cmd_crop_image(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_crop_image invoked (stub)")
+        """Crop the image to the configured crop region."""
+        try:
+            region = self.config.dikt.get("crop_region", {}) or {}
+            if hasattr(self, "apply_crop") and callable(self.apply_crop):
+                self.apply_crop(region)
+        except Exception as e:
+            logma.error(f"[images] cmd_crop_image failed: {e}", exc_info=True)
         return self
     def cmd_generate_image(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_generate_image invoked (stub)")
+        """Generate an image from the configured source / prompt."""
+        prompt = self.config.dikt.get("image_prompt", "")
+        if hasattr(self, "generate_image") and callable(self.generate_image):
+            try:
+                return self.generate_image(prompt=prompt)
+            except TypeError:
+                return self.generate_image()
         return self
     def cmd_image_height_change(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_image_height_change invoked (stub)")
+        """Update the image-height field on the config."""
+        height = None
+        for attr in ("image_height_select", "image_height_spinbox"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "value", None)
+                if callable(getter):
+                    height = getter()
+                    break
+        if height is not None:
+            self.config.dikt["image_height"] = height
         return self
     def cmd_open_local_file(self, event=None, *args, **kwargs):
         """"""
@@ -692,47 +812,46 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         return self
 
     def cmd_run_palette_scan(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_run_palette_scan invoked (stub)")
+        """Run a palette scan on the current image."""
+        try:
+            from os.path import exists
+            path = getattr(self, "local_file", None) or self.config.dikt.get("image_path")
+            if not path or not exists(path):
+                logma.warning("[images] cmd_run_palette_scan: no image path")
+                return self
+            from pyffice.media.images import extract_palette
+            palette = extract_palette(path)
+            self.config.dikt["palette_scan"] = palette
+        except Exception as e:
+            logma.error(f"[images] cmd_run_palette_scan failed: {e}", exc_info=True)
         return self
     def cmd_image_width_change(self, event=None, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation; the underlying UI handler this wraps
-        is not yet wired up. See H## tracker for follow-up work.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.cmd_image_width_change invoked (stub)")
+        """Update the image-width field on the config."""
+        width = None
+        for attr in ("image_width_select", "image_width_spinbox"):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                getter = getattr(widget, "value", None)
+                if callable(getter):
+                    width = getter()
+                    break
+        if width is not None:
+            self.config.dikt["image_width"] = width
         return self
     def get_binary(self):
-        """Return None as a default value.
-
-        Stub implementation of get_binary.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.get_binary (stub returning None)")
-        return None
+        """Return the stored value of get_binary."""
+        return self.config.dikt.get('file_binary', b'') or b''
     def get_content(self):
         """"""
         logma.info(f"File Path {self.file_path}")
         return {"content": {"file_path": self.file_path}}
 
     def get_image_height(self):
-        """Return None as a default value.
-
-        Stub implementation of get_image_height.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.get_image_height (stub returning None)")
-        return None
+        """Return the stored value of get_image_height."""
+        return self.config.dikt.get('image_height', 0) or 0
     def get_image_width(self):
-        """Return None as a default value.
-
-        Stub implementation of get_image_width.
-        """
-        logma.info(f"[images] {self.__class__.__name__}.get_image_width (stub returning None)")
-        return None
+        """Return the stored value of get_image_width."""
+        return self.config.dikt.get('image_width', 0) or 0
     def init_drawer_document_config(self):
         """"""
         items = self.toolbox_config[100].get("items", {})

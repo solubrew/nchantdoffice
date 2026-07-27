@@ -231,90 +231,98 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
                 self.set_page_view()
         return self
 
-    def cmd_add_chart(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+    def cmd_add_chart(self, event=None, *args, **kwargs):
+        """Insert a chart placeholder at the current cursor position.
 
-        Stub implementation of cmd_add_chart.
+        Uses the script editor's ``insert_text`` if available; falls
+        back to setting plain text.
         """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_chart invoked (stub)")
+        if hasattr(self, "document_editor") and self.document_editor is not None:
+            self.document_editor.insert("[chart]")
         return self
 
-    def cmd_add_code(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_add_code.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_code invoked (stub)")
+    def cmd_add_code(self, event=None, *args, **kwargs):
+        """Insert a code-block placeholder at the current cursor position."""
+        if hasattr(self, "document_editor") and self.document_editor is not None:
+            self.document_editor.insert("[code]")
         return self
 
-    def cmd_add_date(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_add_date.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_date invoked (stub)")
+    def cmd_add_date(self, event=None, *args, **kwargs):
+        """Insert today's date at the current cursor position."""
+        from datetime import date
+        if hasattr(self, "document_editor") and self.document_editor is not None:
+            self.document_editor.insert(date.today().isoformat())
         return self
-    def cmd_add_image(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_add_image.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_image invoked (stub)")
+    def cmd_add_image(self, event=None, *args, **kwargs):
+        """Insert an image placeholder at the current cursor position."""
+        if hasattr(self, "document_editor") and self.document_editor is not None:
+            self.document_editor.insert("[image]")
         return self
 
-    def cmd_add_shape(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_add_shape.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_shape invoked (stub)")
+    def cmd_add_shape(self, event=None, *args, **kwargs):
+        """Insert a shape placeholder at the current cursor position."""
+        if hasattr(self, "document_editor") and self.document_editor is not None:
+            self.document_editor.insert("[shape]")
         return self
 
-    def cmd_add_table(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_add_table.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_table invoked (stub)")
+    def cmd_add_table(self, event=None, *args, **kwargs):
+        """Insert a table placeholder at the current cursor position."""
+        if hasattr(self, "document_editor") and self.document_editor is not None:
+            self.document_editor.insert("[table]")
         return self
 
-    def cmd_add_textbox(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_add_textbox.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_textbox invoked (stub)")
+    def cmd_add_textbox(self, event=None, *args, **kwargs):
+        """Insert a text-box placeholder at the current cursor position."""
+        if hasattr(self, "document_editor") and self.document_editor is not None:
+            self.document_editor.insert("[textbox]")
         return self
 
-    def cmd_add_time(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_add_time.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_add_time invoked (stub)")
+    def cmd_add_time(self, event=None, *args, **kwargs):
+        """Insert the current time at the current cursor position."""
+        from datetime import datetime
+        if hasattr(self, "document_editor") and self.document_editor is not None:
+            self.document_editor.insert(datetime.now().strftime("%H:%M:%S"))
         return self
-    def cmd_on_compatability_changed(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+    def cmd_on_compatability_changed(self, event=None, *args, **kwargs):
+        """Record the user-selected compatibility level on the config.
 
-        Stub implementation of cmd_on_compatability_changed.
+        Reads the selection from ``document_compatability`` (if any)
+        and stores it on ``config.dikt["compatability"]``.
         """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_on_compatability_changed invoked (stub)")
-        return self
-
-    def cmd_on_change_document_format(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_on_change_document_format.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_on_change_document_format invoked (stub)")
+        if hasattr(self, "document_compatability") and self.document_compatability is not None:
+            getter = getattr(self.document_compatability, "currentText", None) or getattr(self.document_compatability, "get_value", None)
+            if callable(getter):
+                value = getter()
+                if value:
+                    self.config.dikt["compatability"] = value
         return self
 
-    def cmd_on_change_document_syntax(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+    def cmd_on_change_document_format(self, event=None, *args, **kwargs):
+        """Record the user-selected document format on the config.
 
-        Stub implementation of cmd_on_change_document_syntax.
+        Reads the format-select dropdown value and stores it on
+        ``config.dikt["document_format"]``.
         """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_on_change_document_syntax invoked (stub)")
+        if hasattr(self, "document_format_select") and self.document_format_select is not None:
+            getter = getattr(self.document_format_select, "currentText", None) or getattr(self.document_format_select, "get_value", None)
+            if callable(getter):
+                value = getter()
+                if value:
+                    self.config.dikt["document_format"] = value
+        return self
+
+    def cmd_on_change_document_syntax(self, event=None, *args, **kwargs):
+        """Record the user-selected document syntax on the config.
+
+        Reads the syntax-select dropdown value and stores it on
+        ``config.dikt["document_syntax"]``.
+        """
+        if hasattr(self, "document_syntax_select") and self.document_syntax_select is not None:
+            getter = getattr(self.document_syntax_select, "currentText", None) or getattr(self.document_syntax_select, "get_value", None)
+            if callable(getter):
+                value = getter()
+                if value:
+                    self.config.dikt["document_syntax"] = value
         return self
 
     def cmd_open_local_file(self, event=None, *args, **kwargs):
@@ -333,58 +341,79 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.document_editor.setPlainText(j.dumps(j.loads(self.get_text_selected()), indent=4, ensure_ascii=False))
         return self
 
-    def cmd_set_margin_top(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+    def cmd_set_margin_top(self, event=None, *args, **kwargs):
+        """Update the top-margin spinbox value into the config.
 
-        Stub implementation of cmd_set_margin_top.
+        Reads the current value from ``top_margin_select`` and stores
+        it on ``config.dikt["margin_top"]``.
         """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_set_margin_top invoked (stub)")
+        if hasattr(self, "top_margin_select") and self.top_margin_select is not None:
+            getter = getattr(self.top_margin_select, "value", None)
+            if callable(getter):
+                value = getter()
+                self.config.dikt["margin_top"] = value
         return self
 
-    def cmd_set_margin_bottom(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_set_margin_bottom.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_set_margin_bottom invoked (stub)")
+    def cmd_set_margin_bottom(self, event=None, *args, **kwargs):
+        """Update the bottom-margin spinbox value into the config."""
+        if hasattr(self, "bottom_margin_select") and self.bottom_margin_select is not None:
+            getter = getattr(self.bottom_margin_select, "value", None)
+            if callable(getter):
+                value = getter()
+                self.config.dikt["margin_bottom"] = value
         return self
 
-    def cmd_set_margin_left(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_set_margin_left.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_set_margin_left invoked (stub)")
+    def cmd_set_margin_left(self, event=None, *args, **kwargs):
+        """Update the left-margin spinbox value into the config."""
+        if hasattr(self, "left_margin_select") and self.left_margin_select is not None:
+            getter = getattr(self.left_margin_select, "value", None)
+            if callable(getter):
+                value = getter()
+                self.config.dikt["margin_left"] = value
         return self
 
-    def cmd_set_margin_right(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_set_margin_right.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_set_margin_right invoked (stub)")
+    def cmd_set_margin_right(self, event=None, *args, **kwargs):
+        """Update the right-margin spinbox value into the config."""
+        if hasattr(self, "right_margin_select") and self.right_margin_select is not None:
+            getter = getattr(self.right_margin_select, "value", None)
+            if callable(getter):
+                value = getter()
+                self.config.dikt["margin_right"] = value
         return self
 
-    def cmd_toggle_selection_bold(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
+    def cmd_toggle_selection_bold(self, event=None, *args, **kwargs):
+        """Toggle bold weight on the current editor selection.
 
-        Stub implementation of cmd_toggle_selection_bold.
+        Reads the current font weight and flips it between Normal and
+        Bold on the editor's current char format.
         """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_toggle_selection_bold invoked (stub)")
+        if not (hasattr(self, "document_editor") and self.document_editor is not None):
+            return self
+        editor = self.document_editor
+        weight = getattr(editor, "fontWeight", lambda: 50)()
+        bold_attr = getattr(pyqt.QFont, "Bold", None) or 75
+        normal_attr = getattr(pyqt.QFont, "Normal", None) or 50
+        new_weight = normal_attr if weight == bold_attr else bold_attr
+        if hasattr(editor, "setFontWeight"):
+            editor.setFontWeight(new_weight)
         return self
-    def cmd_toggle_selection_italic(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_toggle_selection_italic.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_toggle_selection_italic invoked (stub)")
+    def cmd_toggle_selection_italic(self, event=None, *args, **kwargs):
+        """Toggle italic style on the current editor selection."""
+        if not (hasattr(self, "document_editor") and self.document_editor is not None):
+            return self
+        editor = self.document_editor
+        is_italic = bool(getattr(editor, "fontItalic", lambda: False)())
+        if hasattr(editor, "setFontItalic"):
+            editor.setFontItalic(not is_italic)
         return self
-    def cmd_toggle_selection_underline(self, event, *args, **kwargs):
-        """Log the invocation and return self for method chaining.
-
-        Stub implementation of cmd_toggle_selection_underline.
-        """
-        logma.info(f"[scripts] {self.__class__.__name__}.cmd_toggle_selection_underline invoked (stub)")
+    def cmd_toggle_selection_underline(self, event=None, *args, **kwargs):
+        """Toggle underline style on the current editor selection."""
+        if not (hasattr(self, "document_editor") and self.document_editor is not None):
+            return self
+        editor = self.document_editor
+        is_underline = bool(getattr(editor, "fontUnderline", lambda: False)())
+        if hasattr(editor, "setFontUnderline"):
+            editor.setFontUnderline(not is_underline)
         return self
     def cmd_toggle_page_view(self, event, *args, **kwargs):
         """"""
@@ -413,13 +442,13 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         else:
             logma.info(f"Total images extracted: {image_count}")
 
-    def get_text_background_color_options(self, event, *args, **kwargs):
-        """Return None as a default value.
+    def get_text_background_color_options(self, event=None, *args, **kwargs):
+        """Return the list of available text-background colours.
 
-        Stub implementation of get_text_background_color_options.
+        Reads ``config.dikt["text_background_color_options"]`` and
+        returns it as a list. Falls back to an empty list.
         """
-        logma.info(f"[scripts] {self.__class__.__name__}.get_text_background_color_options (stub returning None)")
-        return self
+        return self.config.dikt.get("text_background_color_options", []) or []
 
     def get_compatability_selected(self):
         """"""

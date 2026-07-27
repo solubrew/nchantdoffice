@@ -232,12 +232,8 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         return self
 
     def get_filter_option(self):
-        """Return None as a default value.
-
-        Stub implementation of get_filter_option.
-        """
-        logma.info(f"[contacts] {self.__class__.__name__}.get_filter_option (stub returning None)")
-        return None
+        """Return the stored value of get_filter_option."""
+        return self.config.dikt.get('filter_option', '') or ''
 
     def init_drawer_document_config(self):
         """"""
