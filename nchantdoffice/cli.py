@@ -21,14 +21,19 @@ import hashlib
 from pathlib import Path
 from datetime import datetime
 
+from kahndor.logma import Logma
+
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+logma = Logma(__name__)
 
 
 @click.group()
 @click.version_option(version="0.0.1")
 def cli():
     """NchantdOffice - Document Management System"""
+    logma.info("[cli] cli group invoked")
     pass
 
 
@@ -60,6 +65,7 @@ def get_documents_dir():
     home = Path.home()
     docs_dir = home / ".nchantdoffice" / "documents"
     docs_dir.mkdir(parents=True, exist_ok=True)
+    logma.debug(f"[cli] get_documents_dir: {docs_dir}")
     return docs_dir
 
 
@@ -67,7 +73,9 @@ def get_recent_files_path():
     """Get the recent files list path."""
     config_dir = Path.home() / ".nchantdoffice"
     config_dir.mkdir(parents=True, exist_ok=True)
-    return config_dir / "recent_files.json"
+    path = config_dir / "recent_files.json"
+    logma.debug(f"[cli] get_recent_files_path: {path}")
+    return path
 
 
 def load_recent_files():
@@ -76,9 +84,13 @@ def load_recent_files():
     if path.exists():
         try:
             with open(path, 'r') as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
+                data = json.load(f)
+                logma.debug(f"[cli] load_recent_files: {len(data)} entries")
+                return data
+        except (json.JSONDecodeError, IOError) as e:
+            logma.warning(f"[cli] load_recent_files: parse failed, returning empty: {e}")
             return []
+    logma.debug("[cli] load_recent_files: no recent_files.json yet")
     return []
 
 
@@ -115,8 +127,11 @@ def calculate_hash(filepath):
                 if not chunk:
                     break
                 sha256.update(chunk)
-        return sha256.hexdigest()
-    except Exception:
+        digest = sha256.hexdigest()
+        logma.debug(f"[cli] calculate_hash: {filepath} -> {digest[:12]}...")
+        return digest
+    except Exception as e:
+        logma.warning(f"[cli] calculate_hash: {filepath} failed: {e}")
         return None
 
 
@@ -162,6 +177,7 @@ def new(filepath, doc_type, template):
     docs_dir = get_documents_dir()
     full_path = docs_dir / filepath
     
+    logma.info(f"[cli] new command: filepath={filepath!r} doc_type={doc_type!r} template={template!r}")
     click.echo(f"Creating new {doc_type} document: {full_path}")
     
     try:
@@ -407,6 +423,7 @@ def save(filepath, backup):
 @cli.command()
 @click.option('--limit', '-n', default=10, help='Maximum number of documents to show')
 def list(limit):
+    """List recent documents"""
     """List recent documents"""
     click.echo("Recent documents:")
     click.echo("-" * 60)
