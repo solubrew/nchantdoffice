@@ -1889,6 +1889,36 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             self.store_instance(instance)
         return self
 
+    def _resolve_widget_from_registry(self, lookup_code, fallback=None):
+        """Resolve a widget class path from the app_document_type registry.
+
+        T-063 (helper): queries ``self.store.get_table("app_document_type", ...)``
+        matching ``document_type_txt == lookup_code``. Returns the
+        ``widget_class_txt`` (or legacy ``widget_txt``) column when
+        the registry has a row, falling back to ``fallback`` when
+        the store is unreachable or the lookup misses.
+
+        Returns ``fallback`` (or ``None``) when no resolution is
+        available. Used by both models.py (per-tab widget lookup
+        during tab rebuild) and toolbars.py (the new-document
+        toolbar's ``add_document`` button).
+        """
+        try:
+            store = getattr(self, "store", None)
+            if store is not None and hasattr(store, "get_table"):
+                df = store.get_table(
+                    "app_document_type",
+                    {"WHERE": {"EQUAL": {"document_type_txt": lookup_code}}},
+                )
+                if df is not None and not getattr(df, "empty", True):
+                    row = df.iloc[0].to_dict()
+                    widget = row.get("widget_class_txt") or row.get("widget_txt")
+                    if widget:
+                        return widget
+        except Exception as e:
+            logma.error(f"[models] _resolve_widget_from_registry failed: {e}", exc_info=True)
+        return fallback
+
     def store_node(self):
         """Persist the current node tree to the database.
 

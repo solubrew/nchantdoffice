@@ -167,7 +167,11 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         # registry returns nothing.
         lookup_code = cfg["lookup_code_txt"]
         widget = args[0]["action"].action.get("widget_txt")
-        widget = self._resolve_widget_from_registry(lookup_code, widget)
+        # T-063: route through self.app.model so the registry helper
+        # (defined on NchantdOfficeCloakModel) is the single source of
+        # truth for widget-class lookup. Falls back to the legacy
+        # widget_txt when the registry is unreachable or missing.
+        widget = self.app.model._resolve_widget_from_registry(lookup_code, widget)
         logma.info(f"Widget {widget}")
         # T-064: db goes through MultiInstance adapter
         db = self._resolve_db_alias()
