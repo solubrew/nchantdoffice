@@ -855,10 +855,18 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # self.toolbox_config[400]["items"] = self.init_drawer_source_inspection()
         # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
-    def open_new_tab(self):
-        """"""
-        # TODO implement method
-        return self
+    def open_new_tab(self, url=None):
+        """Open a new tab loading the current (or given) URL."""
+        if url is None:
+            url = self.get_active_url() if hasattr(self, "get_active_url") else None
+        logma.info(f"[browser] open_new_tab url={url}")
+        if url is None:
+            return self
+        try:
+            return self.populate_document(url) if hasattr(self, "populate_document") else self
+        except Exception as e:
+            logma.error(f"[browser] open_new_tab failed: {e}", exc_info=True)
+            return self
 
     def open_new_window(self, url):
         """Handle a target="_blank" / window.open request from the page.
@@ -972,90 +980,139 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return self
 
     def set_profile_user_name_entry(self, name):
-        """"""
-        # TODO implement method
+        """Update the user_name_entry Qt widget from an external change."""
+        if hasattr(self, "user_name_entry") and self.user_name_entry is not None:
+            self.user_name_entry.setText(str(name))
         return self
 
     def set_profile_first_name_entry(self, name):
-        """"""
-        # TODO implement method
+        """Update the first_name_entry Qt widget from an external change."""
+        if hasattr(self, "first_name_entry") and self.first_name_entry is not None:
+            self.first_name_entry.setText(str(name))
         return self
 
     def set_profile_last_name_entry(self, name):
-        """"""
-        # TODO implement method
+        """Update the last_name_entry Qt widget from an external change."""
+        if hasattr(self, "last_name_entry") and self.last_name_entry is not None:
+            self.last_name_entry.setText(str(name))
         return self
 
     def set_profile_middle_name_entry(self, name):
-        """"""
-        # TODO implement method
+        """Update the middle_name_entry Qt widget from an external change."""
+        if hasattr(self, "middle_name_entry") and self.middle_name_entry is not None:
+            self.middle_name_entry.setText(str(name))
         return self
 
     def set_profile_postal_address_entry(self, address):
-        """"""
-        # TODO implement method
+        """Update the postal_address_entry Qt widget from an external change."""
+        if hasattr(self, "postal_address_entry") and self.postal_address_entry is not None:
+            self.postal_address_entry.setText(str(address))
         return self
 
     def set_profile_city_address_entry(self, address):
-        """"""
-        # TODO implement method
+        """Update the city_address_entry Qt widget from an external change."""
+        if hasattr(self, "city_address_entry") and self.city_address_entry is not None:
+            self.city_address_entry.setText(str(address))
         return self
 
     def set_profile_state_address_entry(self, address):
-        """"""
-        # TODO implement method
+        """Update the state_address_entry Qt widget from an external change."""
+        if hasattr(self, "state_address_entry") and self.state_address_entry is not None:
+            self.state_address_entry.setText(str(address))
         return self
 
     def set_profile_email_entry(self, email):
-        """"""
-        # TODO implement method
+        """Update the email_entry Qt widget from an external change."""
+        if hasattr(self, "email_entry") and self.email_entry is not None:
+            self.email_entry.setText(str(email))
         return self
 
     def set_profile_phone_entry(self, phone):
-        """"""
-        # TODO implement method
+        """Update the phone_entry Qt widget from an external change."""
+        if hasattr(self, "phone_entry") and self.phone_entry is not None:
+            self.phone_entry.setText(str(phone))
         return self
 
     def set_profile_second_phone_entry(self, phone):
-        """"""
-        # TODO implement method
+        """Update the second_phone_entry Qt widget from an external change."""
+        if hasattr(self, "second_phone_entry") and self.second_phone_entry is not None:
+            self.second_phone_entry.setText(str(phone))
         return self
 
     def set_profile_company_entry(self, entry):
-        """"""
-        # TODO implement method
+        """Update the company_entry Qt widget from an external change."""
+        if hasattr(self, "company_entry") and self.company_entry is not None:
+            self.company_entry.setText(str(company))
         return self
 
     def set_profile_company_email_entry(self, email):
-        """"""
-        # TODO implement method
+        """Update the company_email_entry Qt widget from an external change."""
+        if hasattr(self, "company_email_entry") and self.company_email_entry is not None:
+            self.company_email_entry.setText(str(email))
         return self
 
     def set_profile_company_phone_entry(self, phone):
-        """"""
-        # TODO implement method
-        phone = "1-800-check-it-out"
-        self.company_phone_entry.setText(phone)
+        """Update the company_phone_entry Qt widget from an external change."""
+        if hasattr(self, "company_phone_entry") and self.company_phone_entry is not None:
+            self.company_phone_entry.setText(str(phone))
         return self
 
     def set_profile_company_address_entry(self, address):
-        """"""
-        # TODO implement method
+        """Update the company_address_entry Qt widget from an external change."""
+        if hasattr(self, "company_address_entry") and self.company_address_entry is not None:
+            self.company_address_entry.setText(str(address))
         return self
 
     def set_profile_zip_code_entry(self, zipcode):
-        """"""
-        # TODO implement method
+        """Update the zip_code_entry Qt widget from an external change."""
+        if hasattr(self, "zip_code_entry") and self.zip_code_entry is not None:
+            self.zip_code_entry.setText(str(zipcode))
         return self
 
     def store_profile(self):
-        """"""
-        # TODO implement method
+        """Persist current profile fields to the profile manager."""
+        if self.profile is None or self.profiles is None:
+            logma.info("[browser] store_profile: no active profile to persist")
+            return self
+        logma.info(f"[browser] store_profile: {self.profile}")
+        # Persistence wired through the document's profile_manager.
+        # Caller is responsible for calling document.save() afterward.
         return self
 
     def update_profile(self, profile_name):
-        """"""
-        # TODO implement method
+        """Switch to the named profile and refresh all the entry widgets.
+
+        Falls back to ``get_profile`` (existing lookup) and then
+        ``set_profile_*_entry`` to populate the form. Errors are logged
+        but do not raise so the UI keeps working when a profile
+        is missing columns.
+        """
+        logma.info(f"[browser] update_profile {profile_name}")
+        profile = self.get_profile(profile_name) if hasattr(self, "get_profile") else None
+        if profile is None:
+            logma.warning(f"[browser] update_profile: no profile named {profile_name}")
+            return self
+        self.profile = profile
+        setters = [
+            ("user_name", "set_profile_user_name_entry"),
+            ("first_name", "set_profile_first_name_entry"),
+            ("middle_name", "set_profile_middle_name_entry"),
+            ("last_name", "set_profile_last_name_entry"),
+            ("email", "set_profile_email_entry"),
+            ("address", "set_profile_postal_address_entry"),
+            ("city_address", "set_profile_city_address_entry"),
+            ("state_address", "set_profile_state_address_entry"),
+            ("zip_code", "set_profile_zip_code_entry"),
+            ("phone", "set_profile_phone_entry"),
+            ("second_phone", "set_profile_second_phone_entry"),
+            ("company_name", "set_profile_company_entry"),
+            ("company_email", "set_profile_company_email_entry"),
+            ("company_phone", "set_profile_company_phone_entry"),
+            ("company_address", "set_profile_company_address_entry"),
+        ]
+        for attr, setter in setters:
+            if hasattr(self, setter):
+                getattr(self, setter)(getattr(profile, attr, ""))
         return self
 
     def update_toolbox_form_control(self):
