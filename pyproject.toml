@@ -1,5 +1,7 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+# Build dependencies: setuptools + wheel only. Version is declared
+# statically in the [project] section below.
+requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
