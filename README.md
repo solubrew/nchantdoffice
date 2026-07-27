@@ -3,7 +3,7 @@
 
 > Office automation suite built on the nchantrs framework
 
-## Overview
+## Project overview
 
 NchantdOffice is a desktop application providing office automation capabilities including document management, calendar, contacts, and more. Built on PySide6 with deep integration into the nchantrs ecosystem.
 
@@ -18,11 +18,22 @@ NchantdOffice is a desktop application providing office automation capabilities 
 - **Agent-Ready**: Structured output (JSON/YAML) for AI agent integration
 - **CLI Interface**: Programmatic access via `nchantdoffice` CLI
 
-## Installation
+## Quick start
+
+Get a working nchantdoffice setup in 3 commands:
 
 ```bash
-pip install -e .
+# 1. Install with the recommended extras (internal SB packages)
+pip install -e .[internal]
+
+# 2. Launch the GUI
+nchantdoffice
+
+# 3. Or use the CLI for scripted operations
+nchantdoffice-cli --help
 ```
+
+## Installation
 
 ## Usage
 
@@ -37,6 +48,46 @@ nchantdoffice
 ```bash
 nchantdoffice-cli --help
 ```
+
+## Development
+
+### Setting up a development environment
+
+```bash
+# Clone the source repo (uses the gamma branch per team convention)
+git clone -b gamma file:///mnt/overse/SBST01/vein/GitVein/nchantdoffice.git
+cd nchantdoffice
+
+# Create / activate a virtualenv (project's preferred path)
+python -m venv .venv && source .venv/bin/activate
+
+# Install in editable mode with dev + internal extras
+pip install -e .[internal]
+
+# Run the test suite (continue-on-collection-errors is set for aspirational tests)
+pytest tests/ --continue-on-collection-errors
+```
+
+### Code style
+
+- **Class naming**: All public widget / document / manager classes are named ``Nchantd<Document>`` (preserved per user direction — do not rename).
+- **Logging**: Use ``kahndor.logma.Logma(__name__)`` — never ``print()``.
+- **Configuration**: Read project-wide constants from ``nchantdoffice.config``.
+- **Internal projects**: All SB packages (``nchantrs``, ``pyffice``, ``ladyol``, ``senbai``, ``kahndor``, ``glain``) are internal — never substitute PyPI alternatives.
+
+### Running sasquatch
+
+The auditor is invoked from any project root via:
+
+```bash
+sasquatch analyze -p . --skip-pii-secrets
+```
+
+Score is written to ``PROJECT_TRACKER.yaml`` and ``FALCON_TEST.yaml``.
+
+### Active work
+
+See [TODOs.md](./TODOs.md) for the active task inventory and H## tracker.
 
 ## Project Structure
 
