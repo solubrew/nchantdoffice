@@ -108,9 +108,10 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
             layout.addWidget(button)
         full_layout.addLayout(layout)
         layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
-        # TODO: get apikey from pycurity and populate using an obscured version
-        # key = PYKEYSTORE.get(source["value_txt"].lower()) #need to use the overall model store mechanism
-        key = None
+        # Pull the API key from the pycurity keystore (obscured).
+        # Falls back to None when pycurity isn't available or the
+        # key isn't stored yet.
+        key = self._load_api_key(source)
         cfg = {"label": "Enter API Key", "layout": "horizontal"}
         if key:
             cfg["label"] = "Active API Key"
@@ -119,24 +120,69 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         self.apikeys[source["app_option_PK"]] = NchantdLabeledEntry(self, cfg).initWidget()
         layout = pyqt.QHBoxLayout()
         layout.addWidget(self.apikeys[source["app_option_PK"]])
-        cfg = {"text": "..."}
+        cfg = {
+            "text": "Show",
+            "handler": self.cmd_toggle_apikey_visibility,
+            "apikey_id": source["app_option_PK"],
+        }
         visibility_switch = NchantdButton(self, cfg).initWidget()
         layout.addWidget(visibility_switch)
-        # TODO: add a visibliity switch at the end of the entry box
         full_layout.addLayout(layout)
         source_group.layout.addLayout(full_layout)
         self.layout.addWidget(source_group)
 
-    def cmd_launch_site(self, event, *args, **kwargs):
-        """"""
-        btn = self.sender()
-        url = btn.config.get("url", None)
-        if url is None:
-            raise Exception("No URL")
-        # TODO: create a new NchantdOfficeWebBrowser Document
-        #  also create a popup in the webbrowser document where the api key can be pasted and saved
-        #  navigate to the url
-        #  switch user to the new tab
+    def cmd_launch_site(self, event=None, *args, **kwargs):
+        """Open the source's API-key URL in a new WebBrowser document.
+
+        Reads the URL from the sender widget's config, creates a new
+        ``NchantdOfficeWebBrowser`` document via the application
+        model (when supported), navigates the new tab to the URL,
+        and switches the active tab so the user can paste the
+        API key.
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            btn = self.sender() if event is None else event
+            if btn is None:
+                return self
+            url = None
+            if hasattr(btn, "config"):
+                url = (btn.config or {}).get("url") if hasattr(btn.config, "get") else None
+            if url is None:
+                logma.warning("[config_sources] cmd_launch_site: no URL configured")
+                return self
+
+            # Create a new browser document via the app model
+            model = getattr(self.app, "model", None)
+            if model is None or not hasattr(model, "codex") or not hasattr(model.codex, "init_browser"):
+                logma.warning("[config_sources] cmd_launch_site: app model does not support browser init")
+                return self
+
+            document_cfg = {"document": {"url": url}}
+            browser = model.codex.init_browser(document_cfg)
+            if browser is None:
+                logma.warning("[config_sources] cmd_launch_site: browser init returned None")
+                return self
+
+            # Navigate the new browser to the URL
+            if hasattr(browser, "setUrl"):
+                try:
+                    from PySide6 import QtCore
+                    browser.setUrl(QtCore.QUrl(url))
+                except Exception:
+                    if hasattr(browser, "load_url"):
+                        browser.load_url(url)
+
+            # Switch the active tab to the new browser
+            if hasattr(self.app, "view") and hasattr(self.app.view, "switch_to_tab"):
+                try:
+                    self.app.view.switch_to_tab(browser)
+                except Exception as e:
+                    logma.error(f"[config_sources] switch_to_tab failed: {e}", exc_info=True)
+        except Exception as e:
+            logma.error(f"[config_sources] cmd_launch_site failed: {e}", exc_info=True)
+        return self
 
     def get_sources(self):
         """"""
@@ -146,8 +192,20 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         """"""
         return key[:3] + "..." + key[-3:]
 
-    def show_key(self):
-        """"""
+    def show_key(self, event=None, *args, **kwargs):
+        """Show all API keys in plain text by iterating the apikeys dict.
+
+        For each entry that has a ``key`` config attribute, replaces
+        the obscured text with the full key. Returns ``self``.
+        """
+        try:
+            for apikey_id, entry in self.apikeys.items():
+                key = getattr(entry.config, "get", lambda k: None)("key")
+                if key and hasattr(entry, "setText"):
+                    entry.setText(key)
+        except Exception as e:
+            logma.error(f"[config_sources] show_key failed: {e}", exc_info=True)
+        return self
         # TODO replace obscured key with real key
 
 
