@@ -608,9 +608,11 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             "context": context,
         }
         self.store.store_doc_media_content(content)
-        # self.add_document_content(
-        #     document, media_fk, page_n, entry_n, version, hash_, policy
-        # )  # TODO: does this need to be moved to the app set of tables
+        # T-096: app schema content is already routed through
+        # self.store.store_doc_media_content. The doc schema
+        # version remains in self.store.store_doc_media (not
+        # moved) because the doc_* tables are part of the legacy
+        # schema migration path
         return self
 
     def add_tab(
@@ -739,9 +741,37 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """"""
 
     def convert_db_to_journal(self, document_):
-        """Convert a DB row to a journal document. Delegates to the free function."""
-        #TODO fix convert db to journal
-        #return _convert_db_to_journal(document_, convert_encoding=self.convert_encoding)
+        """T-093: convert a DB row into a journal document.
+
+        Reads ``document_`` (a dict or pandas Series) and
+        returns a journal-ready dict with the canonical
+        keys (``name``, ``text``, ``content``, ``type``,
+        ``created_at``, ``tags``). Each value is run
+        through ``self.convert_encoding`` so bytes / base64
+        strings are decoded.
+        """
+        if document_ is None:
+            return None
+        try:
+            if hasattr(document_, "to_dict"):
+                row = document_.to_dict()
+            elif isinstance(document_, dict):
+                row = dict(document_)
+            else:
+                row = {"value": document_}
+            journal = {
+                "name": str(self.convert_encoding(row.get("name_txt") or row.get("name") or "")),
+                "text": str(self.convert_encoding(row.get("text", ""))),
+                "content": self.convert_encoding(row.get("content", "")),
+                "type": "journal",
+                "created_at": str(row.get("CREON_DTTM", row.get("created_at", ""))),
+                "tags": self.convert_encoding(row.get("tags", [])),
+            }
+            logma.info(f"[models] convert_db_to_journal: built journal for {journal['name']!r}")
+            return journal
+        except Exception as e:
+            logma.error(f"[models] convert_db_to_journal failed: {e}", exc_info=True)
+            return None
 
     def convert_encoding(self, entry):
         """"""
@@ -1344,7 +1374,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         last_affilate_update_dttm = self.get_link_last_affiliate_update()
         update_affilate_links(self, last_affilate_update_dttm)
         super().initialize_application()
-        # self.store.create_virtual_table() #TODO: relocat
+        # T-094: vector table init now lives on the store
+        # (T-007 migration). The model no longer owns the
+        # vec0 schema.
         return self
 
     def initialize_instance(self, instance_object=None):
@@ -1390,15 +1422,25 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         for tab in node["tabs"]:
             logma.info(f"Tab {tab["name"]}")
             logma.info(f"Text {tab['rich_text']}")
-            # TODO change this so that a tab code, images and tables
+            # T-095: tab content is now stored in a single
+            # ``content`` field (rich_text.data when set, falling
+            # back to rich_text.unit). The widget class is
+            # resolved via the registry helper added in T-063,
+            # with the legacy get_document_type fallback kept
+            # for backward compatibility.
             tab["content"] = tab["rich_text"].get(
                 "data", tab["rich_text"].get("unit", {})
-            )  # how to store content universally?
+            )
             logma.info(f"Content {tab['content']}")
             tab["uuid"] = tab["unique_id"]
             logma.info(f"Tab Type {tab['type']}")
-            # tab["widget"] = lookup_widget(tab["type"])
-            tab["widget"] = self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
+            widget_resolver = (
+                getattr(self.app.model, "_resolve_widget_from_registry", None)
+            )
+            if callable(widget_resolver):
+                tab["widget"] = widget_resolver(tab["type"], fallback=None) or self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
+            else:
+                tab["widget"] = self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
             tab["did"] = uuid()
             self.add_document(tab, tab["did"], pid, pos)
         return self
