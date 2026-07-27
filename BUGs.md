@@ -8,6 +8,76 @@
 
 
 
+2026-07-27 13:50:29,075 - nchantdoffice.models                     2956: INFO     - Tabset center
+2026-07-27 13:50:29,075 - nchantdoffice.models                     2957: INFO     - Document {'data': None, 'data_str': None, 'did': '06a679a5-2119-782f-8000-6ef0d5d8cade', 'syntax': nan, 'name': 'nchantdsketch 8cade', 'position': 9, 'document_type': nan, 'readonly': 0, 'editable': 1, 'visible': 1, 'moveable': 1, 'tid': '06a679a5-215a-77c1-8000-8a7fb0446073', 'pid': '067ca837-17f6-74e7-8000-f7de9b7927f1', 'widget': '', 'widgdata': '{"file_type": "sketch", "google_drive_bit": 0, "local_drive_bit": 0, "import": 0}', 'version': None, 'tab_type': 'add_sketch_document_nchantdsketch', 'location': None, 'encoding': nan, 'tags': nan, 'hash': nan, 'meta_data': {'creon': nan, 'modon': nan}}
+2026-07-27 13:50:29,075 - nchantdoffice.models                     2958: INFO     - Tab Type custom_widget
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/widgets.py", line 149, in on_tab_focus
+    #   1) insertTab at an index <= the current index increments Qt's
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 2950, in load_tab
+    by ``on_tab_focus`` / ``set_focus`` the first time a tab receives focus.
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 237, in load_tab
+    self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab), tabset, tab))
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 2984, in load_widget
+    """
+        
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 263, in load_widget
+    tabW = loadWidget(self.parent, cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 1057, in loadWidget
+    registered_widget = lookupWidget(list(cfg.keys())[0])
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 1065, in lookupWidget
+    return kahndor.Instruct(pxcfg).select("RegisteredWidgets").dikt[key]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+KeyError: 'NchantdWidget'
+
+
+
+s': nan, 'hash': nan, 'meta_data': {'creon': nan, 'modon': nan}}
+2026-07-27 13:49:48,904 - nchantdoffice.models                     2958: INFO     - Tab Type custom_widget
+2026-07-27 13:49:48,906 - nchantrs.widgets.widgets                 1054: WARNING  - Failed to load widget: nchantdoffice.widgets.documents.media.images.NchantdOfficeImage
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/widgets.py", line 149, in on_tab_focus
+    #   1) insertTab at an index <= the current index increments Qt's
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 2950, in load_tab
+    by ``on_tab_focus`` / ``set_focus`` the first time a tab receives focus.
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 237, in load_tab
+    self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab), tabset, tab))
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 2984, in load_widget
+    """
+        
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 263, in load_widget
+    tabW = loadWidget(self.parent, cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 1035, in loadWidget
+    widget = thingify(f"{cfg['widget']}", None, None, True)(parent, cfg)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Projects/Kahndor/3_Work/1_DELTA/kahndor/kahndor/utils.py", line 956, in thingify
+    module = import_module(module_path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/importlib/__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/media/images.py", line 38, in <module>
+    from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/panes/files.py", line 26, in <module>
+    from pycurity.pyhash import get_file_hash
+ImportError: cannot import name 'get_file_hash' from 'pycurity.pyhash' (/mnt/iverse/SB/3_Functions/Projects/Pycurity/3_Work/1_DELTA/pycurity/pycurity/pyhash.py)
+
+
 
 
 2026-07-27 13:41:59,844 - nchantdoffice.widgets.tabs                 52: INFO     - [tabs] NchantdOfficeTab.initModel cfg_provided=False
