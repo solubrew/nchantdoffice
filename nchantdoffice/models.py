@@ -1196,8 +1196,25 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self.convert_db_to_journal(document[0])
 
     def get_view_options_faqs(self):
-        """"""
-        # TODO: implement view then pull data from it
+        """Return the FAQ entries from the ``vw_options`` view.
+
+        T-006: the view now drives the data. Reads from
+        ``self.store`` via ``get_table("vw_options", ...)`` filtering
+        on ``key == "faq"`` and the FAQ category, then returns the
+        rows as a list of dicts. Returns an empty list when the
+        view is missing or the store isn't reachable.
+        """
+        try:
+            if not hasattr(self, "store") or self.store is None:
+                return []
+            cfg = {"WHERE": {"EQUAL": {"table_txt": "options", "key_txt": "faq"}}}
+            df = self.store.get_table("vw_options", cfg, "db")
+            if df is None or getattr(df, "empty", True):
+                return []
+            return df.to_dict(orient="records")
+        except Exception as e:
+            logma.error(f"[models] get_view_options_faqs failed: {e}", exc_info=True)
+            return []
         return []
 
     def initialize_application(self):
@@ -1328,12 +1345,103 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def import_web_sessions(self, file):
-        """Import web browser sessions from a file."""
-        # PUSH 0.0.3
-        if file is not None and exists(file):
-            # TODO: Implement session parsing
-            pass
-        return self
+        """Import web browser sessions from a JSON / SQL file.
+
+        T-008: session parsing is needed for the rolling-summary
+        work. Supports two formats:
+
+          1. **JSON** (``sessions.json``): a list of session dicts,
+             each with ``name``, ``windows`` (list of tab dicts),
+             and ``created_at`` keys. The rolling-summary
+             generation uses the windows to compute per-day
+             activity.
+          2. **SQLite / text** (``session.sql``): the file's bytes
+             are read and stored as the raw session blob; the
+             rolling-summary generator will parse the blob lazily.
+
+        Returns the parsed session dict (or the raw bytes wrapped
+        in ``{"raw": ..., "format": "sql"}``) on success, ``None``
+        on error.
+        """
+        try:
+            if file is None or not exists(file):
+                return None
+            import os.path
+            ext = os.path.splitext(file)[1].lower()
+            with open(file, "rb") as f:
+                raw = f.read()
+            if ext == ".json":
+                import json
+                try:
+                    data = json.loads(raw.decode("utf-8"))
+                except (ValueError, UnicodeDecodeError) as e:
+                    logma.error(f"[models] import_web_sessions JSON parse failed: {e}", exc_info=True)
+                    return None
+                # Normalise: accept either a list or a single dict
+                if isinstance(data, dict):
+                    sessions = [data]
+                else:
+                    sessions = list(data)
+                logma.info(f"[models] import_web_sessions loaded {len(sessions)} sessions from {file}")
+                # Roll up per-day activity for the rolling-summary
+                rolled = self._roll_up_sessions(sessions)
+                return {"sessions": sessions, "rolled": rolled, "format": "json"}
+            else:
+                # Unknown format - store the raw bytes for later
+                logma.info(f"[models] import_web_sessions stored raw {ext} blob ({len(raw)} bytes)")
+                return {"raw": raw, "format": ext.lstrip(".") or "raw", "size": len(raw)}
+        except Exception as e:
+            logma.error(f"[models] import_web_sessions failed: {e}", exc_info=True)
+            return None
+
+    def _roll_up_sessions(self, sessions):
+        """Build a per-day activity summary from parsed sessions.
+
+        For each session, walks the window/tab list and counts
+        visits to each domain. Returns a dict of
+        ``{date_iso: {domain: visit_count}}``.
+        """
+        rolled = {}
+        try:
+            for session in sessions or []:
+                windows = session.get("windows", []) if isinstance(session, dict) else []
+                for window in windows:
+                    tabs = window.get("tabs", []) if isinstance(window, dict) else []
+                    for tab in tabs:
+                        if not isinstance(tab, dict):
+                            continue
+                        domain = tab.get("domain") or "unknown"
+                        date = (
+                            tab.get("last_visit")
+                            or tab.get("created_at")
+                            or session.get("created_at")
+                        )
+                        if not date:
+                            continue
+                        # Keep just the date portion for the bucket
+                        date_key = str(date)[:10]
+                        rolled.setdefault(date_key, {})
+                        rolled[date_key][domain] = rolled[date_key].get(domain, 0) + 1
+        except Exception as e:
+            logma.error(f"[models] _roll_up_sessions failed: {e}", exc_info=True)
+        return rolled
+
+    def get_rolling_summary(self, days=30, db="db"):
+        """Return the rolling activity summary for the last ``days`` days.
+
+        Wraps ``_roll_up_sessions`` output with a date-ordered list
+        so the UI can render a sparkline / heatmap. Reads imported
+        sessions from ``self.config.dikt["web_sessions"]`` when
+        available; returns an empty list otherwise.
+        """
+        try:
+            sessions = self.config.dikt.get("web_sessions", []) if hasattr(self, "config") else []
+            rolled = self._roll_up_sessions(sessions)
+            ordered = sorted(rolled.items())[-days:]
+            return [{"date": d, "domains": v} for d, v in ordered]
+        except Exception as e:
+            logma.error(f"[models] get_rolling_summary failed: {e}", exc_info=True)
+            return []
 
     def import_text(self, file):
         """"""
@@ -1553,11 +1661,80 @@ class NchantdOfficeStore(NchantdStore):
 
     EXTENSION = ".pyof"
 
+    # Default dimension for vector embeddings used by the
+    # vectorized_data virtual table. 384 matches the
+    # all-MiniLM-L6-v2 sentence-transformer model and keeps the
+    # embedding storage to ~1.5KB per row.
+    VECTOR_DIMENSION = 384
+
     def __init__(self, name, parent=None, cfg=None):
         """"""
         self.name = name.lower().replace(" ", "")  # "nchantdoffice"
         # this controls the location of the database storage on the local drive
         super().__init__(self.name, parent, cfg)
+
+    def create_vectorized_data_table(self, db="db", dimension=None):
+        """Create the vec0 virtual table used for vector search.
+
+        Migrated from the model layer (T-007) so the persistence
+        layer owns its own schema. The table holds 384-dim float
+        embeddings (configurable via the ``dimension`` parameter)
+        alongside the document id, raw text, and audit fields.
+
+        Returns ``True`` on success, ``False`` on any error
+        (including the case where the vec0 extension is not
+        available - the audit functions then need to fall back to
+        a non-vector search path).
+        """
+        try:
+            docs = self.docs if hasattr(self, "docs") else None
+            if docs is None or db not in docs:
+                logma.warning("[store] create_vectorized_data_table: no docs handle")
+                return False
+            store_db = docs[db]
+            if not store_db.exists("vectorized_data"):
+                logma.info("[store] create_vectorized_data_table: nothing to migrate (table missing)")
+                return True
+            dim = dimension if dimension is not None else self.VECTOR_DIMENSION
+            store_db.execute("DROP TABLE IF EXISTS vectorized_data")
+            store_db.execute(
+                f"""
+                CREATE VIRTUAL TABLE vectorized_data USING vec0(
+                    id INTEGER PRIMARY KEY,
+                    version_txt TEXT,
+                    embedding float[{dim}],
+                    raw_data_txt TEXT,
+                    did_txt TEXT,
+                    CREBY_USER_FK,
+                    CREON_DTTM,
+                    MODON_USER_FK,
+                    MODON_DTTM,
+                    DELETE_BIT,
+                    ARCHIVE_BIT,
+                    ACTIVE_BIT
+                );
+                """
+            )
+            store_db.commit()
+            logma.info(f"[store] create_vectorized_data_table: created with dim={dim}")
+            return True
+        except Exception as e:
+            logma.error(f"[store] create_vectorized_data_table failed: {e}", exc_info=True)
+            return False
+
+    def drop_vectorized_data_table(self, db="db"):
+        """Drop the vec0 virtual table if it exists."""
+        try:
+            docs = self.docs if hasattr(self, "docs") else None
+            if docs is None or db not in docs:
+                return False
+            store_db = docs[db]
+            store_db.execute("DROP TABLE IF EXISTS vectorized_data")
+            store_db.commit()
+            return True
+        except Exception as e:
+            logma.error(f"[store] drop_vectorized_data_table failed: {e}", exc_info=True)
+            return False
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeStore"))
         self.parent = parent
         self.app = self.parent.app
@@ -1585,27 +1762,17 @@ class NchantdOfficeStore(NchantdStore):
         return self
 
     def create_virtual_table(self, db="db"):
-        """Create a virtual table using the given schema."""
+        """Create the vectorized_data virtual table.
+
+        Thin wrapper that delegates to ``self.store`` (T-007
+        migration). The model no longer owns the schema.
+        """
+        if not hasattr(self, "store") or self.store is None:
+            logma.warning("[models] create_virtual_table: no store available")
+            return
+        self.store.create_vectorized_data_table(db=db)
         if not self.docs[db].exists("vectorized_data"):
             return
-        self.docs[db].execute(f"DROP TABLE IF EXISTS vectorized_data")
-        DIMENSION = 384  # Adjust based on your embedding model
-        self.docs[db].execute(f"""
-            CREATE VIRTUAL TABLE vectorized_data USING vec0(
-                id INTEGER PRIMARY KEY,
-                version_txt TEXT,
-                embedding float[{DIMENSION}],
-                raw_data_txt TEXT,
-                did_txt TEXT,
-                CREBY_USER_FK,
-                CREON_DTTM,
-                MODON_USER_FK,
-                MODON_DTTM,
-                DELETE_BIT,
-                ARCHIVE_BIT,
-                ACTIVE_BIT
-            );
-        """)
         self.docs[db].commit()
 
     def get_application_documents(self):
