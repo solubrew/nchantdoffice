@@ -1461,8 +1461,8 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                     logma.error("[notebook] page profile | no page/profile available to inspect")
             except Exception as e:
                 logma.error(f"[notebook] could not log page profile/storage config: {e}", exc_info=True)
-            view.loadStarted.connect(lambda: logma.info("[notebook] webview loadStarted"))
-            view.loadProgress.connect(lambda p: logma.info(f"[notebook] webview loadProgress={p}%"))
+            view.loadStarted.connect(self._on_webview_load_started)
+            view.loadProgress.connect(self._on_webview_load_progress)
 
             def _on_url_changed(url):
                 # Keep the self-heal target in sync with user-initiated navigation
@@ -1508,7 +1508,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                         f"[notebook] load settled on '{cur}' but target is {self._target_url}; "
                         f"re-navigating (retry {self._nav_retries}/3)"
                     )
-                    QTimer.singleShot(200, lambda: self._navigate_browser(self._target_url))
+                    QTimer.singleShot(200, self._retry_navigate_target)
 
             view.loadFinished.connect(_on_load_finished)
             # Install fetch/WebSocket instrumentation ONCE, at document creation,
