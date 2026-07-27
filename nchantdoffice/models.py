@@ -1917,12 +1917,29 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.info("[models] store_node: no in-memory nodes to persist")
             return self
         try:
-            count = len(self.nodes)
-            logma.info(f"[models] store_node: would persist {count} nodes (stub)")
-            return self
+            # Persist each in-memory node through the store via
+            # ``store_app_tree_node`` (the project's real
+            # serialization helper). Falls back to ``store._store``
+            # when the typed helper isn't reachable.
+            store = getattr(self, "store", None)
+            if store is None:
+                logma.info("[models] store_node: no store available; skipping")
+                return self
+            persisted = 0
+            for node in self.nodes:
+                try:
+                    if hasattr(store, "store_app_tree_node"):
+                        store.store_app_tree_node(node)
+                    else:
+                        payload = node.to_dict() if hasattr(node, "to_dict") else (dict(node) if isinstance(node, dict) else {"value": node})
+                        store._store("app_tree_node", [payload])
+                    persisted += 1
+                except Exception as e:
+                    logma.error(f"[models] store_node: persist node failed: {e}", exc_info=True)
+            logma.info(f"[models] store_node: persisted {persisted}/{len(self.nodes)} nodes")
         except Exception as e:
             logma.error(f"[models] store_node failed: {e}", exc_info=True)
-            return self
+        return self
 
     def store_rss_feeds(self, df, how=None):
         """"""

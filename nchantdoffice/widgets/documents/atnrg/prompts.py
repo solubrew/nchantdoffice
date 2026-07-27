@@ -252,9 +252,30 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         self.initView()
         return self
 
-    def cmd_select_model_new(self, event, *args, **kwargs):
-        """Stub implementation of cmd_select_model_new."""
-        logma.info(f"[stub] {self.__class__.__name__}.cmd_select_model_new invoked")
+    def cmd_select_model_new(self, event=None, *args, **kwargs):
+        """Select a new primary model for the prompt.
+
+        Reads the chosen model name from the dropdown
+        (or ``self.models_select`` widget), stores it on
+        ``self.config.dikt['default_model_one']``, and logs
+        the selection. Returns ``self``.
+        """
+        try:
+            widget = getattr(self, "models_select", None)
+            selected = None
+            if widget is not None:
+                getter = (
+                    getattr(widget, "currentText", None)
+                    or getattr(widget, "get_value", None)
+                )
+                if callable(getter):
+                    selected = getter()
+            if hasattr(self, "config"):
+                self.config.dikt["default_model_one"] = str(selected or "Grok-3")
+            self.model_one = selected
+            logma.info(f"[prompts] cmd_select_model_new: {selected!r}")
+        except Exception as e:
+            logma.error(f"[prompts] cmd_select_model_new failed: {e}", exc_info=True)
         return self
 
     def cmd_set_chat_history_expiry(self, event=None, *args, **kwargs):
@@ -284,9 +305,25 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
             logma.error(f"[prompts] cmd_set_chat_history_expiry failed: {e}", exc_info=True)
         return self
 
-    def cmd_toggle_dual_models(self, event, *args, **kwargs):
-        """Stub implementation of cmd_toggle_dual_models."""
-        logma.info(f"[stub] {self.__class__.__name__}.cmd_toggle_dual_models invoked")
+    def cmd_toggle_dual_models(self, event=None, *args, **kwargs):
+        """Toggle the dual-model comparison mode.
+
+        Stores ``self.compare_models = True`` (when toggled
+        on) or ``False`` (when toggled off), persists the
+        choice on ``self.config.dikt['compare_models']``,
+        and rebuilds the prompt pane widgets so the second
+        model slot is shown / hidden. Returns ``self``.
+        """
+        try:
+            current = bool(getattr(self, "compare_models", False))
+            self.compare_models = not current
+            if hasattr(self, "config"):
+                self.config.dikt["compare_models"] = self.compare_models
+            if hasattr(self, "initView"):
+                self.initView()
+            logma.info(f"[prompts] cmd_toggle_dual_models: {self.compare_models}")
+        except Exception as e:
+            logma.error(f"[prompts] cmd_toggle_dual_models failed: {e}", exc_info=True)
         return self
 
     def get_prompt_max_length(self):

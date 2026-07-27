@@ -341,9 +341,39 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"cmd_insert_object failed: {exc}")
         return self
 
-    def cmd_search_data_sources(self):
-        """Stub implementation of cmd_search_data_sources."""
-        logma.info(f"[stub] {self.__class__.__name__}.cmd_search_data_sources invoked")
+    def cmd_search_data_sources(self, event=None, *args, **kwargs):
+        """Search the registered data sources for matches.
+
+        Reads a query from ``self.search_entry`` (when set),
+        walks the data-source registry (via
+        ``self.app.model.get_sources()``), and filters by
+        substring match on the source name. Updates
+        ``self.filtered_sources`` so the UI re-renders with
+        the filtered list.
+        """
+        try:
+            query = ""
+            widget = getattr(self, "search_entry", None)
+            if widget is not None:
+                getter = (
+                    getattr(widget, "text", None)
+                    or getattr(widget, "get_value", None)
+                )
+                if callable(getter):
+                    query = str(getter() or "")
+                elif hasattr(widget, "text"):
+                    query = widget.text()
+            query = (query or "").lower().strip()
+            sources = []
+            if hasattr(self.app, "model"):
+                sources = self.app.model.get_sources() or []
+            self.filtered_sources = [
+                s for s in sources
+                if query in (s.get("name_txt", "") if isinstance(s, dict) else str(s)).lower()
+            ] or sources
+            logma.info(f"[analytics_charts] cmd_search_data_sources: {len(self.filtered_sources)} matches")
+        except Exception as e:
+            logma.error(f"[analytics_charts] cmd_search_data_sources failed: {e}", exc_info=True)
         return self
 
     def cmd_toggle_config_pane(self, event, *args, **kwargs):

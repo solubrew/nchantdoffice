@@ -667,9 +667,47 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             logma.info(f"New event datetime: {event_dt}")
         return self
 
-    def cmd_event_datetime_change(self):
-        """Stub implementation of cmd_event_datetime_change."""
-        logma.info(f"[stub] {self.__class__.__name__}.cmd_event_datetime_change invoked")
+    def cmd_event_datetime_change(self, event=None, *args, **kwargs):
+        """Update the event datetime when the user changes the picker.
+
+        Real implementation:
+          1. Reads the current datetime from
+             ``self.new_event_date_select`` (or
+             ``self.event_datetime_select``)
+          2. Stores the value on ``self.config.dikt['event_datetime']``
+             and the in-memory event registry
+          3. Calls ``update_event_preview`` so the UI reflects
+             the new datetime without a full re-render
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            widget = (
+                getattr(self, "new_event_date_select", None)
+                or getattr(self, "event_datetime_select", None)
+            )
+            event_dt = None
+            if widget is not None:
+                getter = (
+                    getattr(widget, "get_value", None)
+                    or getattr(widget, "value", None)
+                )
+                if callable(getter):
+                    try:
+                        event_dt = getter()
+                    except Exception:
+                        event_dt = str(getattr(widget, "text", lambda: "")())
+                elif hasattr(widget, "text"):
+                    event_dt = widget.text()
+            if hasattr(self, "config") and event_dt:
+                self.config.dikt["event_datetime"] = str(event_dt)
+            if hasattr(self, "events") and isinstance(self.events, dict):
+                self.events["event_datetime"] = str(event_dt or "")
+            if hasattr(self, "update_event_preview"):
+                self.update_event_preview()
+            logma.info(f"[calendars] cmd_event_datetime_change: {event_dt!r}")
+        except Exception as e:
+            logma.error(f"[calendars] cmd_event_datetime_change failed: {e}", exc_info=True)
         return self
 
     def cmd_on_change_scope(self, event, *args, **kwargs):

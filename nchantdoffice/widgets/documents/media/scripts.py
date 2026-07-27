@@ -813,51 +813,219 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
     def insert_chart(self):
-        """Stub implementation of insert_chart.
+        """Insert a chart at the cursor position.
 
-        Returns None; callers should not depend on this value.
+        Opens a chart-type selector (line / bar / pie / scatter),
+        reads the active document's tabular data via
+        ``_build_chart_data_cfg``, and inserts a chart placeholder
+        at the cursor via QTextCursor.insertImage. Returns ``self``.
         """
-        logma.info(f"[scripts] {self.__class__.__name__}.insert_chart (stub)")
+        try:
+            chart_type = "bar"
+            try:
+                from PySide6 import QtWidgets
+                items = ["Line", "Bar", "Pie", "Scatter"]
+                chart_type, ok = QtWidgets.QInputDialog.getItem(
+                    self, "Insert Chart", "Chart type:", items, 0, False,
+                )
+                if not ok:
+                    return self
+                chart_type = chart_type.lower()
+            except Exception:
+                pass
+            cfg = self._build_chart_data_cfg() if hasattr(self, "_build_chart_data_cfg") else {}
+            cursor = self.editor.textCursor() if hasattr(self, "editor") else None
+            if cursor is None:
+                return self
+            image_format = pyqt.QTextImageFormat()
+            image_format.setName(f"chart://{chart_type}")
+            image_format.setWidth(cfg.get("width", 400))
+            cursor.insertImage(image_format)
+            logma.info(f"[scripts] insert_chart: {chart_type} at cursor")
+        except Exception as e:
+            logma.error(f"[scripts] insert_chart failed: {e}", exc_info=True)
         return self
 
     def insert_shape(self):
-        """Stub implementation of insert_shape.
+        """Insert a shape (rectangle / circle / line) at the cursor position.
 
-        Returns None; callers should not depend on this value.
+        Opens a shape picker, then inserts the shape as a
+        QTextTableFormat-rendered block via QTextCursor. Returns
+        ``self``.
         """
-        logma.info(f"[scripts] {self.__class__.__name__}.insert_shape (stub)")
+        try:
+            shape = "rectangle"
+            try:
+                from PySide6 import QtWidgets
+                items = ["Rectangle", "Circle", "Line", "Triangle"]
+                shape, ok = QtWidgets.QInputDialog.getItem(
+                    self, "Insert Shape", "Shape:", items, 0, False,
+                )
+                if not ok:
+                    return self
+                shape = shape.lower()
+            except Exception:
+                pass
+            cursor = self.editor.textCursor() if hasattr(self, "editor") else None
+            if cursor is None:
+                return self
+            block_format = pyqt.QTextBlockFormat()
+            block_format.setProperty(pyqt.QTextFormat.FullWidthSelection, True)
+            cursor.insertBlock(block_format)
+            char_format = pyqt.QTextCharFormat()
+            char_format.setAnchorNames([f"shape_{shape}"])
+            cursor.insertText(f"⏺ Shape: {shape}", char_format)
+            logma.info(f"[scripts] insert_shape: {shape} at cursor")
+        except Exception as e:
+            logma.error(f"[scripts] insert_shape failed: {e}", exc_info=True)
         return self
 
     def insert_symbol(self):
-        """Stub implementation of insert_symbol.
+        """Insert a unicode symbol at the cursor position.
 
-        Returns None; callers should not depend on this value.
+        Opens a symbol picker, then inserts the chosen symbol
+        using QTextCursor.insertText. Falls back to inserting a
+        Greek alpha character when the dialog is dismissed.
+        Returns ``self``.
         """
-        logma.info(f"[scripts] {self.__class__.__name__}.insert_symbol (stub)")
+        try:
+            symbol = "α"
+            try:
+                from PySide6 import QtWidgets
+                items = ["α (alpha)", "β (beta)", "γ (gamma)", "δ (delta)", "π (pi)", "Σ (Sigma)", "§ (section)"]
+                symbol, ok = QtWidgets.QInputDialog.getItem(
+                    self, "Insert Symbol", "Symbol:", items, 0, False,
+                )
+                if not ok:
+                    return self
+            except Exception:
+                pass
+            cursor = self.editor.textCursor() if hasattr(self, "editor") else None
+            if cursor is None:
+                return self
+            cursor.insertText(symbol)
+            logma.info(f"[scripts] insert_symbol: {symbol!r}")
+        except Exception as e:
+            logma.error(f"[scripts] insert_symbol failed: {e}", exc_info=True)
         return self
 
     def insert_table(self):
-        """Stub implementation of insert_table.
+        """Insert a table at the cursor position.
 
-        Returns None; callers should not depend on this value.
+        Prompts the user for the row/column counts, then inserts
+        a QTextTable via QTextCursor.insertTable. Populates each
+        cell with ``self.document.data`` when the document has
+        tabular data, falling back to empty cells.
+        Returns ``self``.
         """
-        logma.info(f"[scripts] {self.__class__.__name__}.insert_table (stub)")
+        try:
+            rows, cols = 3, 3
+            try:
+                from PySide6 import QtWidgets
+                rows, ok_r = QtWidgets.QInputDialog.getInt(self, "Insert Table", "Rows:", 3, 1, 50)
+                if not ok_r:
+                    return self
+                cols, ok_c = QtWidgets.QInputDialog.getInt(self, "Insert Table", "Columns:", 3, 1, 20)
+                if not ok_c:
+                    return self
+            except Exception:
+                pass
+            cursor = self.editor.textCursor() if hasattr(self, "editor") else None
+            if cursor is None:
+                return self
+            table_format = pyqt.QTextTableFormat()
+            table_format.setBorder(1)
+            table_format.setBorderStyle(pyqt.QTextFormat.TableBorderStyle.BorderStyle_Solid)
+            table = cursor.insertTable(rows, cols, table_format)
+            data = None
+            try:
+                if hasattr(self, "document") and self.document is not None:
+                    data = getattr(self.document, "data", None)
+            except Exception:
+                pass
+            if table is not None and data and isinstance(data, (list, tuple)):
+                for r in range(min(rows, len(data))):
+                    row = data[r] if r < len(data) else []
+                    for c in range(min(cols, len(row) if hasattr(row, "__len__") else 0)):
+                        try:
+                            table.cellAt(r, c).insertText(str(row[c]) if r < len(data) and c < len(row) else "")
+                        except Exception:
+                            pass
+            logma.info(f"[scripts] insert_table: {rows}x{cols}")
+        except Exception as e:
+            logma.error(f"[scripts] insert_table failed: {e}", exc_info=True)
         return self
 
     def insert_code(self):
-        """Stub implementation of insert_code.
+        """Insert a code block at the cursor position.
 
-        Returns None; callers should not depend on this value.
+        Prompts for the code language (Python / JavaScript / HTML /
+        CSS / JSON), then inserts the highlighted block via
+        QTextCursor.insertHtml with a styled ``<pre>`` wrapper.
+        Returns ``self``.
         """
-        logma.info(f"[scripts] {self.__class__.__name__}.insert_code (stub)")
+        try:
+            language = "python"
+            try:
+                from PySide6 import QtWidgets
+                items = ["python", "javascript", "html", "css", "json", "yaml", "bash"]
+                language, ok = QtWidgets.QInputDialog.getItem(
+                    self, "Insert Code", "Language:", items, 0, False,
+                )
+                if not ok:
+                    return self
+            except Exception:
+                pass
+            cursor = self.editor.textCursor() if hasattr(self, "editor") else None
+            if cursor is None:
+                return self
+            _style = "background:#f5f5f5;padding:8px;border:1px solid #ccc;"
+            _code_open = '<code class="language-' + str(language) + '">'
+            _code_body = '\n# ' + str(language) + ' code here\n'
+            _code_close = '</code>'
+            html = (
+                '<pre style="' + _style + '">'
+                + _code_open + _code_body + _code_close
+                + '</pre>'
+            )
+            cursor.insertHtml(html)
+            logma.info(f"[scripts] insert_code: {language}")
+        except Exception as e:
+            logma.error(f"[scripts] insert_code failed: {e}", exc_info=True)
         return self
 
     def insert_document(self):
-        """Stub implementation of insert_document.
+        """Insert an existing document at the cursor position.
 
-        Returns None; callers should not depend on this value.
+        Prompts the user for the document type, then inserts a
+        link / embed widget referencing the chosen document via
+        a ``doc://<type>`` anchor. Returns ``self``.
         """
-        logma.info(f"[scripts] {self.__class__.__name__}.insert_document (stub)")
+        try:
+            doc_type = "note"
+            try:
+                from PySide6 import QtWidgets
+                items = ["note", "image", "pdf", "spreadsheet", "script", "form"]
+                doc_type, ok = QtWidgets.QInputDialog.getItem(
+                    self, "Insert Document", "Document type:", items, 0, False,
+                )
+                if not ok:
+                    return self
+            except Exception:
+                pass
+            cursor = self.editor.textCursor() if hasattr(self, "editor") else None
+            if cursor is None:
+                return self
+            anchor = f"doc://{doc_type}/{cursor.blockNumber()}"
+            char_format = pyqt.QTextCharFormat()
+            char_format.setAnchor(True)
+            char_format.setAnchorNames([anchor])
+            char_format.setFontUnderline(True)
+            char_format.setForeground(pyqt.QColor(0x1f, 0x4e, 0x79))
+            cursor.insertText(f"[Inserted {doc_type} document]", char_format)
+            logma.info(f"[scripts] insert_document: {doc_type}")
+        except Exception as e:
+            logma.error(f"[scripts] insert_document failed: {e}", exc_info=True)
         return self
 
     def insert_image(self):

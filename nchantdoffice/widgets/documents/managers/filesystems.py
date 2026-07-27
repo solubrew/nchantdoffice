@@ -156,9 +156,38 @@ class NchantdCompressPane(NchantdPane):
 
         return self
 
-    def cmd_move_files_on_compress(self, event, *args, **kwargs):
-        """Stub implementation of cmd_move_files_on_compress."""
-        logma.info(f"[stub] {self.__class__.__name__}.cmd_move_files_on_compress invoked")
+    def cmd_move_files_on_compress(self, event=None, *args, **kwargs):
+        """Move files to a new folder when compressing an archive.
+
+        Real logic: reads the source folder from
+        ``self.from_folder``, the destination from
+        ``self.to_folder`` (both set up by set_from_folder),
+        and moves each file via shutil.move. Wraps the whole
+        operation in try/except + logs each step.
+        """
+        try:
+            from_dir = getattr(self, "from_folder", None)
+            to_dir = getattr(self, "to_folder", None)
+            if not from_dir or not to_dir:
+                logma.info("[filesystems] cmd_move_files_on_compress: from_folder / to_folder not set")
+                return self
+            import os as _os, shutil
+            if not _os.path.isdir(from_dir):
+                return self
+            _os.makedirs(to_dir, exist_ok=True)
+            moved = 0
+            for entry in _os.listdir(from_dir):
+                src = _os.path.join(from_dir, entry)
+                dst = _os.path.join(to_dir, entry)
+                if _os.path.isfile(src):
+                    try:
+                        shutil.move(src, dst)
+                        moved += 1
+                    except (OSError, shutil.Error) as e:
+                        logma.error(f"[filesystems] move {src} -> {dst} failed: {e}")
+            logma.info(f"[filesystems] cmd_move_files_on_compress moved {moved} files")
+        except Exception as e:
+            logma.error(f"[filesystems] cmd_move_files_on_compress failed: {e}", exc_info=True)
         return self
 
     def cmd_rename_on_compress(self, event, *args, **kwargs):
@@ -329,13 +358,22 @@ class NchantdImportPane(NchantdPane):
         """Return the stored value of get_file_options."""
         return self.config.dikt.get('file_options', []) or []
     def set_file(self, path):
-        """Stub implementation of set_file.
+        """Set the active file path (real implementation).
 
-        Returns None; the underlying state change has not been
-        wired up yet.
+        Stores ``path`` on ``self.file_path`` and on
+        ``self.config.dikt['file_path']``. Validates the file
+        exists when ``path`` is non-empty. Returns ``self``.
         """
-        logma.info(f"[filesystems] {self.__class__.__name__}.set_file (stub)")
-        return None
+        try:
+            import os as _os
+            self.file_path = path or ""
+            if hasattr(self, "config"):
+                self.config.dikt["file_path"] = self.file_path
+            if path and not _os.path.isfile(path):
+                logma.info(f"[filesystems] set_file: {path!r} not a file")
+        except Exception as e:
+            logma.error(f"[filesystems] set_file failed: {e}", exc_info=True)
+        return self
 
 class NchantdMovePane(NchantdPane):
     """"""
@@ -388,18 +426,99 @@ class NchantdMovePane(NchantdPane):
         return self
 
     def cmd_automate_move(self, event=None, *args, **kwargs):
-        """Stub implementation of cmd_automate_move."""
-        logma.info(f"[stub] {self.__class__.__name__}.cmd_automate_move invoked")
+        """Automate the file move flow.
+
+        Reads the user's automation rules from
+        ``self.config.dikt['move_rules']`` (a list of
+        {pattern, target_subdir} dicts), applies each rule to
+        the source folder, and persists progress on
+        ``self.config.dikt['last_move_timestamp']`` so the UI
+        can show "last run at HH:MM".
+        """
+        try:
+            import os as _os, shutil, re, datetime
+            from_dir = getattr(self, "from_folder", None)
+            if not from_dir or not _os.path.isdir(from_dir):
+                logma.info("[filesystems] cmd_automate_move: no from_folder")
+                return self
+            rules = []
+            if hasattr(self, "config"):
+                rules = self.config.dikt.get("move_rules", []) or []
+            moved = 0
+            for entry in _os.listdir(from_dir):
+                src = _os.path.join(from_dir, entry)
+                if not _os.path.isfile(src):
+                    continue
+                for rule in rules:
+                    if not isinstance(rule, dict):
+                        continue
+                    pattern = rule.get("pattern", ".*")
+                    target_subdir = rule.get("target_subdir", "")
+                    if re.search(pattern, entry):
+                        dst = _os.path.join(from_dir, target_subdir, entry)
+                        try:
+                            _os.makedirs(_os.path.dirname(dst), exist_ok=True)
+                            shutil.move(src, dst)
+                            moved += 1
+                        except (OSError, shutil.Error) as e:
+                            logma.error(f"[filesystems] automate move: {e}")
+            if hasattr(self, "config"):
+                self.config.dikt["last_move_timestamp"] = datetime.datetime.utcnow().isoformat() + "Z"
+            logma.info(f"[filesystems] cmd_automate_move ran {len(rules)} rules, moved {moved}")
+        except Exception as e:
+            logma.error(f"[filesystems] cmd_automate_move failed: {e}", exc_info=True)
         return self
 
     def cmd_move_files(self, event=None, *args, **kwargs):
-        """Stub implementation of cmd_move_files."""
-        logma.info(f"[stub] {self.__class__.__name__}.cmd_move_files invoked")
+        """Move all files from from_folder to to_folder.
+
+        Reads the source / destination paths (set by
+        set_from_folder), walks the source directory, and
+        moves each file via shutil.move. Skips empty
+        directories and subdirectories.
+        """
+        try:
+            from_dir = getattr(self, "from_folder", None)
+            to_dir = getattr(self, "to_folder", None)
+            if not from_dir or not to_dir:
+                logma.info("[filesystems] cmd_move_files: from_folder / to_folder not set")
+                return self
+            import os as _os, shutil
+            if not _os.path.isdir(from_dir):
+                return self
+            _os.makedirs(to_dir, exist_ok=True)
+            moved = 0
+            for entry in _os.listdir(from_dir):
+                src = _os.path.join(from_dir, entry)
+                dst = _os.path.join(to_dir, entry)
+                if _os.path.isfile(src):
+                    try:
+                        shutil.move(src, dst)
+                        moved += 1
+                    except (OSError, shutil.Error) as e:
+                        logma.error(f"[filesystems] move {src} -> {dst} failed: {e}")
+            logma.info(f"[filesystems] cmd_move_files moved {moved} files")
+        except Exception as e:
+            logma.error(f"[filesystems] cmd_move_files failed: {e}", exc_info=True)
         return self
 
     def set_from_folder(self):
-        """Stub implementation of set_from_folder."""
-        logma.info(f"[stub] {self.__class__.__name__}.set_from_folder invoked")
+        """Prompt for a source / destination folder pair.
+
+        Opens a NchantdFolderOpenSigil dialog for the source
+        folder and another for the destination, then stores
+        them on self.from_folder / self.to_folder. Returns
+        ``self``.
+        """
+        try:
+            from nchantrs.widgets.editors.entries import NchantdFolderOpenSigil
+            self.from_folder = NchantdFolderOpenSigil(self, {}).initWidget().get_path()
+            self.to_folder = NchantdFolderOpenSigil(self, {}).initWidget().get_path()
+            if hasattr(self, "config"):
+                self.config.dikt["from_folder"] = self.from_folder
+                self.config.dikt["to_folder"] = self.to_folder
+        except Exception as e:
+            logma.error(f"[filesystems] set_from_folder failed: {e}", exc_info=True)
         return self
 
 
@@ -555,13 +674,22 @@ class NchantdRenamePane(NchantdPane):
         """Return the stored value of get_file_rename_format."""
         return self.config.dikt.get('file_rename_format', '') or ''
     def set_file(self, path):
-        """Stub implementation of set_file.
+        """Set the active file path (real implementation).
 
-        Returns None; the underlying state change has not been
-        wired up yet.
+        Stores ``path`` on ``self.file_path`` and on
+        ``self.config.dikt['file_path']``. Validates the file
+        exists when ``path`` is non-empty. Returns ``self``.
         """
-        logma.info(f"[filesystems] {self.__class__.__name__}.set_file (stub)")
-        return None
+        try:
+            import os as _os
+            self.file_path = path or ""
+            if hasattr(self, "config"):
+                self.config.dikt["file_path"] = self.file_path
+            if path and not _os.path.isfile(path):
+                logma.info(f"[filesystems] set_file: {path!r} not a file")
+        except Exception as e:
+            logma.error(f"[filesystems] set_file failed: {e}", exc_info=True)
+        return self
 
 class NchantdStorageEditPane(NchantdPane):
     """"""
@@ -596,13 +724,22 @@ class NchantdStorageEditPane(NchantdPane):
         return self
 
     def set_file(self, path):
-        """Stub implementation of set_file.
+        """Set the active file path (real implementation).
 
-        Returns None; the underlying state change has not been
-        wired up yet.
+        Stores ``path`` on ``self.file_path`` and on
+        ``self.config.dikt['file_path']``. Validates the file
+        exists when ``path`` is non-empty. Returns ``self``.
         """
-        logma.info(f"[filesystems] {self.__class__.__name__}.set_file (stub)")
-        return None
+        try:
+            import os as _os
+            self.file_path = path or ""
+            if hasattr(self, "config"):
+                self.config.dikt["file_path"] = self.file_path
+            if path and not _os.path.isfile(path):
+                logma.info(f"[filesystems] set_file: {path!r} not a file")
+        except Exception as e:
+            logma.error(f"[filesystems] set_file failed: {e}", exc_info=True)
+        return self
 
 class NchantdOfficeFileSystem(NchantdOfficeDocument):
     """ ""File system document - implements PyfficeFileSystem"""
