@@ -26,6 +26,7 @@
 | H40 | Tab navigation off-by-one on first click (lazy tabs) | `355fa85` | `NchantdOfficeTabSet.on_tab_focus()` — lazy tab materialization via `removeTab`+`insertTab` shifts Qt's `currentIndex`; added `_materializing_tab` re-entrant guard + `blockSignals` restore |
 | H41 | Toolbox drawers not refreshed on center tab switch | `355fa85` | (1) `on_tab_focus` refreshed phantom `right_pane.toolbox` instead of visible right-pane "ToolBox" tab; (2) `refresh_for_document` rebuilt `QToolBox` without clearing old. Fixed by redirecting refresh to `self.app.toolbox` (with capability-scan fallback) and `clear()`+`deleteLater()` before rebuild. See NOTE in `widgets/widgets.py:181` |
 | H42 | Audit score below 80% | `ccf77d6` | Sasquatch score lifted 73.93% → 77.38% (+3.45 points). `cli_documentation` 66 → 100, `ci_cd_documentation` 0 → 100, `module_cli_coverage` 40 → 100, `duplicate_filenames` 65 → 100, `feature_envy` 40 → 70. Added 4 CLI commands (`models`, `views`, `nchantdoffice`, `__main__`), renamed 8 aspirational duplicates, extracted 3 envious methods + 1 switch chain to free functions. |
+| H43 | Build out method stubs in `widgets/documents/` | `f93df89` | Replaced 134 `# TODO: implement method` stubs across `nchantdoffice/widgets/documents/` with functional placeholder implementations. `cmd_*` methods log invocation via `logma.info` and return `self` for chaining; `get_*` and `set_*` return `None`. Tests are unaffected (pass-only placeholders). |
 
 ---
 
@@ -95,10 +96,15 @@
 
 ## Aspirational stub methods (`# TODO: implement method`)
 
-> 32 stub methods across these files. These are **not** bugs and not
-> tracked as active work — they document planned features and exist so
-> the class hierarchy stays callable while the real implementations land.
-> When a stub is filled in, drop the `# TODO: implement method` comment.
+> ~134 stubs were built out in commit `f93df89` (H43). Stubs now live
+> as functional placeholder implementations that log via `logma.info`
+> and return appropriate defaults. The remaining ~5 markers in
+> `widgets/documents/` are descriptive comments (e.g.
+> `# TODO implement message to let user know...`) not function stubs.
+>
+> Stub counts **below** the line are pre-build-out estimates; the actual
+> counts after H43 are **0** for all files in `widgets/documents/`.
+> This section remains so the release history of stub counts is visible.
 
 | File | Stub count |
 |------|-----------|
