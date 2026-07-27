@@ -149,21 +149,37 @@ class NchantdColorShiftPane(NchantdPane):
         return self
 
     def cmd_image_color_change(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_image_color_change invoked (stub)")
+        return self
     def cmd_select_new_image_color(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_select_new_image_color invoked (stub)")
+        return self
     def cmd_select_new_image_color_change(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_select_new_image_color_change invoked (stub)")
+        return self
     def cmd_convert_color(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_color invoked (stub)")
+        return self
     def get_image_formats(self):
         """"""
         formats = []
@@ -217,29 +233,51 @@ class NchantdConvertFormatPane(NchantdPane):
         return self
 
     def cmd_current_format_change(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_current_format_change invoked (stub)")
+        return self
     def cmd_convert_format(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_format invoked (stub)")
+        return self
     def cmd_convert_to_format(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_to_format invoked (stub)")
+        return self
     def cmd_convert_to_format_change(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_to_format_change invoked (stub)")
+        return self
     def get_current_format(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_current_format.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.get_current_format (stub returning None)")
+        return None
     def get_convert_to_format(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_convert_to_format.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.get_convert_to_format (stub returning None)")
+        return None
     def initWidget(self):
         """"""
         self.initModel()
@@ -314,17 +352,29 @@ class NchantdConvertSizePane(NchantdPane):
         return self
 
     def cmd_select_new_image_color_change(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_select_new_image_color_change invoked (stub)")
+        return self
     def cmd_image_maintain_ratio_change(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_image_maintain_ratio_change invoked (stub)")
+        return self
     def cmd_image_height_change(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_image_height_change invoked (stub)")
+        return self
     def get_image_height(self):
         """"""
         return 100
@@ -377,9 +427,13 @@ class NchantdImageCropPane(NchantdPane):
         return self
 
     def cmd_activate_image_section_selection(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_activate_image_section_selection invoked (stub)")
+        return self
     def get_image_height(self):
         """"""
         return 100
@@ -449,25 +503,44 @@ class NchantdImageGeneratorPane(NchantdPane):
         return self
 
     def cmd_image_width_select_change(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_image_width_select_change invoked (stub)")
+        return self
     def cmd_image_height_select_change(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_image_height_select_change invoked (stub)")
+        return self
     def cmd_generate_image(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_generate_image invoked (stub)")
+        return self
     def get_palette(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_palette.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.get_palette (stub returning None)")
+        return None
     def cmd_palette_select_change(self):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_palette_select_change invoked (stub)")
+        return self
     def get_image_height(self):
         """"""
         return 100
@@ -541,33 +614,61 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         return self
 
     def cmd_add_palette_document_nchantdpalette(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_add_palette_document_nchantdpalette invoked (stub)")
+        return self
     def cmd_convert_color(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_color invoked (stub)")
+        return self
     def cmd_convert_format(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_format invoked (stub)")
+        return self
     def cmd_convert_size(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_convert_size invoked (stub)")
+        return self
     def cmd_crop_image(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_crop_image invoked (stub)")
+        return self
     def cmd_generate_image(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_generate_image invoked (stub)")
+        return self
     def cmd_image_height_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_image_height_change invoked (stub)")
+        return self
     def cmd_open_local_file(self, event=None, *args, **kwargs):
         """"""
         super().cmd_open_local_file(event, *args, **kwargs)
@@ -577,30 +678,47 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         return self
 
     def cmd_run_palette_scan(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_run_palette_scan invoked (stub)")
+        return self
     def cmd_image_width_change(self, event=None, *args, **kwargs):
-        """"""
-        # TODO implement method
+        """Log the invocation and return self for method chaining.
 
+        Stub implementation; the underlying UI handler this wraps
+        is not yet wired up. See H## tracker for follow-up work.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.cmd_image_width_change invoked (stub)")
+        return self
     def get_binary(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_binary.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.get_binary (stub returning None)")
+        return None
     def get_content(self):
         """"""
         logma.info(f"File Path {self.file_path}")
         return {"content": {"file_path": self.file_path}}
 
     def get_image_height(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_image_height.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.get_image_height (stub returning None)")
+        return None
     def get_image_width(self):
-        """"""
-        # TODO implement method
+        """Return None as a default value.
 
+        Stub implementation of get_image_width.
+        """
+        logma.info(f"[images] {self.__class__.__name__}.get_image_width (stub returning None)")
+        return None
     def init_drawer_document_config(self):
         """"""
         items = self.toolbox_config[100].get("items", {})
