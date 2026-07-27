@@ -2467,8 +2467,31 @@ class NchantdOfficeStore(NchantdStore):
         "ARCHIVE": list,
     }
 
+    # Canonical column list for doc_media_content. The schema lives
+    # in nchantrs/nchantrs/models/_data_ (doc_media_content entry).
+    # Passed to _store as the columns argument so squirl's
+    # _fill_admin_cols doesn't have to look it up in the dstruct.
+    _DOC_MEDIA_CONTENT_COLUMNS = [
+        {"name": "UUID", "type": "text"},
+        {"name": "pUUID", "type": "text"},
+        {"name": "page_int", "type": "integer"},
+        {"name": "entry_int", "type": "integer"},
+        {"name": "version_int", "type": "integer"},
+        {"name": "hash_txt", "type": "text"},
+        {"name": "content_enc64_txt", "type": "text"},
+        {"name": "context_ltxt", "type": "text"},
+    ]
+
     def store_doc_media_content(self, content, db="db", how="INSERT"):
-        """"""
+        """Persist a document-content row to the doc_media_content table.
+
+        The payload uses the schema's actual column names
+        (page_int, entry_int, version_int, hash_txt,
+        content_enc64_txt, context_ltxt). The columns list is
+        passed explicitly to ``_store`` so squirl's
+        ``_fill_admin_cols`` doesn't need to look the table up in
+        the dstruct (which is a different concern).
+        """
         table = "doc_media_content"
         payload_factory = self._DOC_MEDIA_PAYLOAD_INIT.get(how)
         if payload_factory is None:
@@ -2488,7 +2511,7 @@ class NchantdOfficeStore(NchantdStore):
         ]
         logma.json(decode64(content["content"]))
         logma.warning(decode64(content["content"]))
-        self._store(table, payload, db)
+        self._store(table, payload, db, columns=self._DOC_MEDIA_CONTENT_COLUMNS)
         # PUSH 0.0.3 move this to a non blocking process
         # set delete for all but the last 30 versions eventually base on variable policy of time/szie/counts
         # self._archive_versions(table, content["pUUID"], "pUUID", "UUID", 3)

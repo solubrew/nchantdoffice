@@ -1094,16 +1094,29 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return self
 
     def populate_document(self, url=None):
-        """"""
-        # self.update_toolbox_url_inspection(self.browser.active_url)
+        """Populate the embedded browser with ``url`` and refresh the toolbox.
+
+        T-028-related: previously this method called self.save()
+        + self.document.save() on every focus, which cascaded
+        through add_document_content + _store and crashed when
+        the doc_media_content table dict didn't have columns
+        pre-registered. The save side-effect is now only fired
+        on real URL changes (handled by cmd_active_url_change in
+        init_drawer_url_inspection). The toolbox refresh runs
+        unconditionally so the user sees the current URL on
+        focus.
+        """
         if url is None:
             url = self.get_active_url()
         logma.info(f"Populate Document {url}")
         if self.pinned is False:
             self.browser.populate_document(url)
-            self.update_toolbox_url_inspection()
-        self.save()
-        self.document.save()
+        # Refresh the URL inspection toolbox (no DB write).
+        if hasattr(self, "update_toolbox_url_inspection"):
+            try:
+                self.update_toolbox_url_inspection()
+            except Exception as e:
+                logma.error(f"[browsers] populate_document: update_toolbox_url_inspection failed: {e}", exc_info=True)
         return self
 
     def get_content(self):
