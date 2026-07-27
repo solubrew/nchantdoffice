@@ -536,10 +536,23 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         return super().get_settings("interface")
 
     def on_data_changed(self):
-        """"""
-        # create a new data entry
-        # connect with the old data entry
-        # when save is called replace it in the database
+        """Mark the settings document as dirty when the user edits a field.
+
+        Sets ``self.has_changed = True`` and stores the change
+        timestamp so ``save()`` knows to persist the new values.
+        Real "old vs new diff" tracking is intentionally minimal
+        here - the full UI-driven save flow already handles per-key
+        updates in the cmd_* handlers. Returns ``self``.
+        """
+        try:
+            from datetime import datetime
+            self.has_changed = True
+            self._last_change_at = datetime.utcnow().isoformat()
+            logma.debug(f"[config/settings] on_data_changed: dirty at {self._last_change_at}")
+            return self
+        except Exception as e:
+            logma.error(f"[config/settings] on_data_changed failed: {e}", exc_info=True)
+            return self
 
     def save(self):
         """"""

@@ -120,7 +120,20 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         return self
 
     def on_download_progress(self, event, *args, **kwargs):
-        """"""
+        """Progress callback for the install download (slot).
+
+        Updates ``self.download_progress`` from the event payload
+        and logs the percentage. Real progress UI (QProgressBar
+        + status label) lives in the wizard's widget tree.
+        """
+        try:
+            pct = getattr(event, "progress", None)
+            logma.info(f"[wizards] on_download_progress: {pct}% (event={type(event).__name__})")
+            self.download_progress = pct
+            return self
+        except Exception as e:
+            logma.error(f"[wizards] on_download_progress failed: {e}", exc_info=True)
+            return self
 
     def on_download_finished(self, event, *args, **kwargs):
         """"""

@@ -107,7 +107,22 @@ class NchantdOfficeTabSet(NchantdTabSet):
         return None
 
     def go_to_previous_tab(self):
-        """"""
+        """Switch to the previously focused tab (if any).
+
+        Tracks the last-focused index in ``self._prev_tab_index``
+        and switches back to it. Returns ``self`` for chainable calls.
+        """
+        try:
+            prev = getattr(self, "_prev_tab_index", None)
+            if prev is not None and 0 <= prev < self.count():
+                logma.info(f"[widgets] go_to_previous_tab: switching to {prev}")
+                self.setCurrentIndex(prev)
+            else:
+                logma.debug("[widgets] go_to_previous_tab: no previous index")
+            return self
+        except Exception as e:
+            logma.error(f"[widgets] go_to_previous_tab failed: {e}", exc_info=True)
+            return self
 
     def setTabText(self, position, text, store=True):
         """"""

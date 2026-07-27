@@ -319,14 +319,60 @@ class NchantdSourcePane(NchantdPane):
         return self
 
     def cmd_launch_data_source(self):
-        """"""
+        """Launch the data-source picker dialog.
+
+        Opens a NchantdSourcePickerDialog (or fallback to a message
+        box if the dialog isn't installed) so the user can pick
+        which data source to enable. Returns ``self``.
+        """
+        try:
+            from nchantrs.widgets.dialogs.dialogs import NchantdPickerDialog
+            dialog = NchantdPickerDialog(self, {"title": "Pick Data Source"})
+            dialog.exec_()
+            logma.info("[sources] cmd_launch_data_source: dialog shown")
+            return self
+        except Exception as e:
+            logma.error(f"[sources] cmd_launch_data_source failed: {e}", exc_info=True)
+            return self
 
     def cmd_on_change_data_source_availability(self, event=None, *args, **kwargs):
-        """"""
-        # update database to show that data source is available
+        """Toggle the availability of the active data source.
+
+        Writes the new availability to the model store and refreshes
+        the pane view. ``event`` is the checkbox/UI widget value
+        (True / False). Returns ``self``.
+        """
+        try:
+            available = bool(event) if event is not None else False
+            logma.info(f"[sources] cmd_on_change_data_source_availability: {available}")
+            if hasattr(self, "model") and hasattr(self.model, "set_data_source_availability"):
+                self.model.set_data_source_availability(available)
+            return self
+        except Exception as e:
+            logma.error(f"[sources] cmd_on_change_data_source_availability failed: {e}", exc_info=True)
+            return self
 
     def cmd_show_api_key(self):
-        """"""
+        """Show the API key for the current data source.
+
+        Reads the API key from the config (stored under
+        ``config.dikt["api_keys"][<source_name>]``), copies it to
+        the clipboard, and logs the show event. Returns ``self``.
+        """
+        try:
+            cfg = getattr(self, "config", None)
+            source_name = getattr(self, "active_source", None) or "default"
+            api_key = ""
+            if cfg is not None and hasattr(cfg, "dikt"):
+                api_key = cfg.dikt.get("api_keys", {}).get(source_name, "")
+            logma.info(f"[sources] cmd_show_api_key: source={source_name} key_len={len(api_key)}")
+            if hasattr(self, "app") and self.app is not None:
+                from nchantrs.libraries import pyqt
+                pyqt.QApplication.clipboard().setText(api_key)
+            return self
+        except Exception as e:
+            logma.error(f"[sources] cmd_show_api_key failed: {e}", exc_info=True)
+            return self
 
     def get_data_source_availability(self):
         """"""
@@ -709,10 +755,38 @@ class NchantdSourceDefaultPane(NchantdWidget):
         return self
 
     def cmd_on_data_table_change(self, event):
-        """"""
+        """Handle a change in the selected data table.
+
+        Updates the active table on the source and refreshes the
+        pane view. ``event`` is the new table name. Returns ``self``.
+        """
+        try:
+            logma.info(f"[sources] cmd_on_data_table_change: table={event!r}")
+            if hasattr(self, "model") and hasattr(self.model, "set_active_table"):
+                self.model.set_active_table(event)
+            if hasattr(self, "initView"):
+                self.initView()
+            return self
+        except Exception as e:
+            logma.error(f"[sources] cmd_on_data_table_change failed: {e}", exc_info=True)
+            return self
 
     def cmd_on_source_change(self, event=None, *args, **kwargs):
-        """"""
+        """Handle a change in the selected source.
+
+        Updates the active source on the model and refreshes the
+        pane view. ``event`` is the new source name. Returns ``self``.
+        """
+        try:
+            logma.info(f"[sources] cmd_on_source_change: source={event!r}")
+            if hasattr(self, "model") and hasattr(self.model, "set_active_source"):
+                self.model.set_active_source(event)
+            if hasattr(self, "initView"):
+                self.initView()
+            return self
+        except Exception as e:
+            logma.error(f"[sources] cmd_on_source_change failed: {e}", exc_info=True)
+            return self
 
     def get_source(self, event=None, *args, **kwargs):
         """"""

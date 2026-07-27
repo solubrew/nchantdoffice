@@ -468,7 +468,22 @@ class NchantdChartConfigPane(NchantdPane):
         return self
 
     def cmd_connect_data_source(self):
-        """"""
+        """Connect the legend to a configured data source.
+
+        Reads the active source name from the model and updates
+        the legend's color/icon to match. Returns ``self``.
+        """
+        try:
+            source_name = None
+            if hasattr(self, "model") and hasattr(self.model, "get_active_data_source"):
+                source_name = self.model.get_active_data_source()
+            logma.info(f"[charts] cmd_connect_data_source (legend): source={source_name!r}")
+            if source_name and hasattr(self, "refresh_legend"):
+                self.refresh_legend(source_name)
+            return self
+        except Exception as e:
+            logma.error(f"[charts] cmd_connect_data_source failed: {e}", exc_info=True)
+            return self
         return self
 
     def cmd_launch_color_sigil(self, event=None, *args, **kwargs):
@@ -512,16 +527,75 @@ class NchantdChartConfigPane(NchantdPane):
         return self
 
     def cmd_on_name_change(self, event, *args, **kwargs):
-        """"""
+        """Persist the chart-name change to the model.
+
+        Reads the value from ``event`` and writes it via the model's
+        ``set_chart_name`` (or stores it locally as a fallback).
+        Returns ``self``.
+        """
+        try:
+            value = getattr(event, "text", None) if event is not None else None
+            logma.info(f"[charts] cmd_on_name_change: value={value!r}")
+            if hasattr(self, "model") and hasattr(self.model, "set_chart_name"):
+                self.model.set_chart_name(value)
+            elif hasattr(self, "config") and hasattr(self.config, "dikt"):
+                self.config.dikt["chart_name"] = value
+            return self
+        except Exception as e:
+            logma.error(f"[charts] cmd_on_name_change failed: {e}", exc_info=True)
+            return self
 
     def cmd_on_description_change(self, event, *args, **kwargs):
-        """"""
+        """Persist the chart-description change to the model.
+
+        Same pattern as ``cmd_on_name_change`` but writes to the
+        ``chart_description`` key. Returns ``self``.
+        """
+        try:
+            value = getattr(event, "text", None) if event is not None else None
+            logma.info(f"[charts] cmd_on_description_change: value_len={len(value) if value else 0}")
+            if hasattr(self, "model") and hasattr(self.model, "set_chart_description"):
+                self.model.set_chart_description(value)
+            elif hasattr(self, "config") and hasattr(self.config, "dikt"):
+                self.config.dikt["chart_description"] = value
+            return self
+        except Exception as e:
+            logma.error(f"[charts] cmd_on_description_change failed: {e}", exc_info=True)
+            return self
 
     def cmd_on_theme_change(self, event, *args, **kwargs):
-        """"""
+        """Persist the chart-theme change to the model.
+
+        Returns ``self``.
+        """
+        try:
+            value = getattr(event, "text", None) if event is not None else None
+            logma.info(f"[charts] cmd_on_theme_change: value={value!r}")
+            if hasattr(self, "model") and hasattr(self.model, "set_chart_theme"):
+                self.model.set_chart_theme(value)
+            elif hasattr(self, "config") and hasattr(self.config, "dikt"):
+                self.config.dikt["chart_theme"] = value
+            return self
+        except Exception as e:
+            logma.error(f"[charts] cmd_on_theme_change failed: {e}", exc_info=True)
+            return self
 
     def cmd_on_palette_change(self, event, *args, **kwargs):
-        """"""
+        """Persist the chart-palette change to the model.
+
+        Returns ``self``.
+        """
+        try:
+            value = getattr(event, "text", None) if event is not None else None
+            logma.info(f"[charts] cmd_on_palette_change: value={value!r}")
+            if hasattr(self, "model") and hasattr(self.model, "set_chart_palette"):
+                self.model.set_chart_palette(value)
+            elif hasattr(self, "config") and hasattr(self.config, "dikt"):
+                self.config.dikt["chart_palette"] = value
+            return self
+        except Exception as e:
+            logma.error(f"[charts] cmd_on_palette_change failed: {e}", exc_info=True)
+            return self
 
     def set_type(self, value):
         """"""
@@ -866,7 +940,25 @@ class NchantdChartDataSeriesPane(NchantdPane):
         return self
 
     def cmd_connect_data_source(self):
-        """"""
+        """Connect the chart series to a configured data source.
+
+        Reads the selected source name from the model and rebuilds
+        the series using ``self.parent.get_data_source()``. Returns
+        ``self``.
+        """
+        try:
+            source_name = None
+            if hasattr(self, "model") and hasattr(self.model, "get_active_data_source"):
+                source_name = self.model.get_active_data_source()
+            logma.info(f"[charts] cmd_connect_data_source: source={source_name!r}")
+            if source_name and hasattr(self, "parent") and hasattr(self.parent, "get_data_source"):
+                data = self.parent.get_data_source(source_name)
+                if hasattr(self, "update_chart_data"):
+                    self.update_chart_data(data)
+            return self
+        except Exception as e:
+            logma.error(f"[charts] cmd_connect_data_source failed: {e}", exc_info=True)
+            return self
 
 
 class NchantdChartLegendPane(NchantdPane):
@@ -955,7 +1047,22 @@ class NchantdChartLegendPane(NchantdPane):
         return self
 
     def cmd_connect_data_source(self):
-        """"""
+        """Connect the legend's trendline colour to the active data source.
+
+        Reads the active source name from the model and updates
+        the trendline colour/icon to match. Returns ``self``.
+        """
+        try:
+            source_name = None
+            if hasattr(self, "model") and hasattr(self.model, "get_active_data_source"):
+                source_name = self.model.get_active_data_source()
+            logma.info(f"[charts] cmd_connect_data_source (legend-pane): source={source_name!r}")
+            if source_name and hasattr(self, "refresh_legend"):
+                self.refresh_legend(source_name)
+            return self
+        except Exception as e:
+            logma.error(f"[charts] cmd_connect_data_source (legend-pane) failed: {e}", exc_info=True)
+            return self
 
     def get_color(self):
         """"""

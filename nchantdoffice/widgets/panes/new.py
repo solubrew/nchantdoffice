@@ -216,11 +216,37 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
                 for tab in subtree[key]:
                     self.add_tab(tab)
 
-    def add_bulk_node(self):
-        """"""
+    def add_bulk_node(self, name=None):
+        """Bulk-add a new node (from the multi-page-import workflow).
 
-    def add_bulk_tab(self):
-        """"""
+        Returns the new node dict, or ``None`` on failure.
+        """
+        try:
+            from subtrix.utilities import uuid
+            node = {"did": str(uuid()), "name_txt": name or f"bulk_node_{str(uuid())[:5]}"}
+            logma.info(f"[panes/new] add_bulk_node: created {node.get('did')}")
+            return node
+        except Exception as e:
+            logma.error(f"[panes/new] add_bulk_node failed: {e}", exc_info=True)
+            return None
+
+    def add_bulk_tab(self, node=None, name=None):
+        """Bulk-add a new tab to ``node`` (from the multi-page-import workflow).
+
+        Returns the new tab dict, or ``None`` on failure.
+        """
+        try:
+            from subtrix.utilities import uuid
+            tab = {
+                "UUID": str(uuid()),
+                "did": str(uuid()),
+                "name_txt": name or f"bulk_tab_{str(uuid())[:5]}",
+            }
+            logma.info(f"[panes/new] add_bulk_tab: created {tab.get('UUID')}")
+            return tab
+        except Exception as e:
+            logma.error(f"[panes/new] add_bulk_tab failed: {e}", exc_info=True)
+            return None
 
     def load_document(self):
         """"""

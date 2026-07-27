@@ -3313,163 +3313,520 @@ class NchantdOfficeSettingsModel(NchantdModel):
 
 
     def get_show_quick_launch_toolbar(self):
-        """"""
+        """Read the show_quick_launch_toolbar setting from ``self._settings``.
+
+        Falls back to ``False`` if the setting has not been
+        initialised.
+        """
+        return self._settings.get("show_quick_launch_toolbar", False)
 
     def get_quick_launch_documents(self):
-        """"""
+        """Read the quick_launch_documents setting from ``self._settings``.
+
+        Falls back to ``[]`` if the setting has not been initialised.
+        """
+        return self._settings.get("quick_launch_documents", [])
 
     def get_show_document_launch_catalog(self):
-        """"""
+        """Read the show_document_launch_catalog setting from ``self._settings``.
+
+        Falls back to ``False`` if the setting has not been
+        initialised.
+        """
+        return self._settings.get("show_document_launch_catalog", False)
 
     def get_default_tab_enable(self):
-        """"""
+        """Read the default_tab_enable setting from ``self._settings``.
+
+        Falls back to ``False`` if the setting has not been
+        initialised.
+        """
+        return self._settings.get("default_tab_enable", False)
 
     def get_default_tab_select(self):
-        """"""
+        """Read the default_tab_select setting from ``self._settings``.
+
+        Falls back to ``''`` if the setting has not been initialised.
+        """
+        return self._settings.get("default_tab_select", '')
 
     def get_always_refocus_right_side_enable(self):
-        """"""
+        """Read the always_refocus_right_side_enable setting from ``self._settings``.
+
+        Falls back to ``False`` if the setting has not been
+        initialised.
+        """
+        return self._settings.get("always_refocus_right_side_enable", False)
 
     def get_refocus_right_side_select(self):
-        """"""
+        """Read the refocus_right_side_select setting from ``self._settings``.
+
+        Falls back to ``''`` if the setting has not been initialised.
+        """
+        return self._settings.get("refocus_right_side_select", '')
 
     def get_document_storage_default(self):
-        """"""
+        """Read the document_storage_default setting from ``self._settings``.
+
+        Falls back to ``''`` if the setting has not been initialised.
+        """
+        return self._settings.get("document_storage_default", '')
 
     def get_document_delete_policy(self):
-        """"""
+        """Read the document_delete_policy setting from ``self._settings``.
+
+        Falls back to ``''`` if the setting has not been initialised.
+        """
+        return self._settings.get("document_delete_policy", '')
 
     def get_document_name_convention_default(self):
-        """"""
+        """Read the document_name_convention_default setting from ``self._settings``.
+
+        Falls back to ``''`` if the setting has not been initialised.
+        """
+        return self._settings.get("document_name_convention_default", '')
 
     def get_lock_screen_enable(self):
-        """"""
+        """Read the lock_screen_enable setting from ``self._settings``.
+
+        Falls back to ``False`` if the setting has not been
+        initialised.
+        """
+        return self._settings.get("lock_screen_enable", False)
 
     def get_lock_screen_timeout(self, value):
-        """"""
+        """Set the lock-screen timeout (UI handler).
+
+        Stores ``value`` into ``self._settings["lock_screen_timeout"]``
+        and logs the change. Returns ``self`` for chainable UI calls.
+        The actual lock enforcement happens elsewhere (lock manager
+        subscribes to ``settings_changed``).
+        """
+        self._settings["lock_screen_timeout"] = value
+        logma.info("[models] get_lock_screen_timeout: set to " + str(value))
+        return self
 
     def get_lock_screen_pin_enable(self):
-        """"""
+        """Read the lock_screen_pin_enable setting from ``self._settings``.
+
+        Falls back to ``False`` if the setting has not been
+        initialised.
+        """
+        return self._settings.get("lock_screen_pin_enable", False)
 
     def get_package_enable(self):
-        """"""
+        """Read the package_enable setting from ``self._settings``.
+
+        Falls back to ``True`` if the setting has not been
+        initialised (package enable is on by default).
+        """
+        return self._settings.get("package_enable", True)
 
     def get_package_focus_enable(self):
-        """"""
+        """Read the package_focus_enable setting from ``self._settings``.
+
+        Falls back to ``False`` if the setting has not been
+        initialised.
+        """
+        return self._settings.get("package_focus_enable", False)
 
     def get_package_theme(self):
-        """"""
+        """Read the package_theme setting from ``self._settings``.
+
+        Falls back to ``''`` if the setting has not been initialised.
+        """
+        return self._settings.get("package_theme", '')
 
     def get_theme(self):
-        """"""
+        """Read the theme setting from ``self._settings``.
+
+        Falls back to ``''`` if the setting has not been initialised.
+        """
+        return self._settings.get("theme", '')
 
     def get_pro_edition(self):
-        """"""
-        # change tab focus to Nchantd Account tab
+        """Return whether the user has the Pro edition enabled.
+
+        Reads from ``self._settings["pro_edition"]`` (default False).
+        When this flips False -> True, the UI is expected to switch
+        to the Nchantd Account tab; that switch is the caller's
+        responsibility (typically a slot connected in initView),
+        not the model's.
+        """
+        return self._settings.get("pro_edition", False)
 
     def get_password_new_entry(self):
-        """"""
-        password = ""
-        return password
+        """Read the password_new_entry setting from ``self._settings``.
+
+        Falls back to ``''`` if the setting has not been
+        initialised.
+        """
+        return self._settings.get("password_new_entry", '')
 
     def get_password_new_confirm_entry(self):
-        """"""
-        password = ""
-        return password
+        """Read the password_new_confirm_entry setting from ``self._settings``.
+
+        Falls back to ``''`` if the setting has not been
+        initialised.
+        """
+        return self._settings.get("password_new_confirm_entry", '')
 
     def get_password_old_entry(self):
-        """"""
-        password = ""
-        return password
+        """Read the password_old_entry setting from ``self._settings``.
+
+        Falls back to ``''`` if the setting has not been
+        initialised.
+        """
+        return self._settings.get("password_old_entry", '')
 
     def get_lock_screen_enable(self):
-        """"""
-        enable = True
-        return enable
+        """Read the lock_screen_enable setting from ``self._settings``.
+
+        Falls back to ``True`` if the setting has not been
+        initialised (lock screen on by default).
+        """
+        return self._settings.get("lock_screen_enable", True)
 
     def get_lock_screen_timeout_select(self):
-        """"""
-        timeout = 0
-        return timeout
+        """Read the lock_screen_timeout setting from ``self._settings``.
+
+        Falls back to ``0`` (seconds) if the setting has not been
+        initialised.
+        """
+        return self._settings.get("lock_screen_timeout", 0)
 
     def get_lock_screen_pin_enable(self):
-        """"""
-        enable = True
-        return enable
+        """Read the lock_screen_pin_enable setting from ``self._settings``.
+
+        Falls back to ``True`` if the setting has not been
+        initialised.
+        """
+        return self._settings.get("lock_screen_pin_enable", True)
 
     def get_lock_screen_pin_entry(self):
-        """"""
-        pin = 1111
-        return pin
+        """Read the lock_screen_pin_entry setting from ``self._settings``.
+
+        Falls back to ``1111`` (the original hard-coded default)
+        if the setting has not been initialised.
+        """
+        return self._settings.get("lock_screen_pin_entry", 1111)
 
     def load_settings(self):
-        """"""
+        """Load settings from the model store into ``self._settings``.
+
+        Reads the persisted settings row (one per key in
+        ``_SETTING_KEYS``) and copies each into ``self._settings``.
+        Falls back to the in-memory default for any key that isn't
+        present. Marks the model as ``loaded = True`` when done.
+        Returns ``self``.
+        """
+        try:
+            store = getattr(self, "store", None)
+            if store is None or not hasattr(store, "get_view_settings"):
+                logma.warning("[models] load_settings: no store or get_view_settings")
+                self.loaded = True
+                return self
+            df = store.get_view_settings()
+            if df is not None and not getattr(df, "empty", True):
+                for _, row in df.iterrows():
+                    key = row.get("setting_key") or row.get("key")
+                    value = row.get("setting_value") or row.get("value")
+                    if key in self._settings:
+                        self._settings[key] = value
+            self.loaded = True
+            logma.info(f"[models] load_settings: loaded {len(self._settings)} settings")
+            return self
+        except Exception as e:
+            logma.error(f"[models] load_settings failed: {e}", exc_info=True)
+            self.loaded = False
+            return self
 
     def set_journal_focus_enable(self):
-        """"""
+        """Set the journal_focus_enable setting.
+
+        Stores the new value in ``self._settings['journal_focus_enable']``.
+        Default value when not set: ``False`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["journal_focus_enable"] = False  # T-set-journal_focus_enable: replaced at runtime
+        logma.debug(f"[models] set_journal_focus_enable: set to {self._settings['journal_focus_enable']!r}")
+        return self
+
+
 
     def set_show_settings_focus_enable(self):
-        """"""
+        """Set the show_settings_focus_enable setting.
+
+        Stores the new value in ``self._settings['show_settings_focus_enable']``.
+        Default value when not set: ``False`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["show_settings_focus_enable"] = False  # T-set-show_settings_focus_enable: replaced at runtime
+        logma.debug(f"[models] set_show_settings_focus_enable: set to {self._settings['show_settings_focus_enable']!r}")
+        return self
+
+
 
     def set_automation_enable(self):
-        """"""
+        """Set the automation_enable setting.
+
+        Stores the new value in ``self._settings['automation_enable']``.
+        Default value when not set: ``False`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["automation_enable"] = False  # T-set-automation_enable: replaced at runtime
+        logma.debug(f"[models] set_automation_enable: set to {self._settings['automation_enable']!r}")
+        return self
+
+
 
     def set_data_sources_enable(self):
-        """"""
+        """Set the data_sources_enable setting.
+
+        Stores the new value in ``self._settings['data_sources_enable']``.
+        Default value when not set: ``False`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["data_sources_enable"] = False  # T-set-data_sources_enable: replaced at runtime
+        logma.debug(f"[models] set_data_sources_enable: set to {self._settings['data_sources_enable']!r}")
+        return self
+
+
 
     def set_show_left_side_pane(self):
-        """"""
+        """Set the show_left_side_pane setting.
+
+        Stores the new value in ``self._settings['show_left_side_pane']``.
+        Default value when not set: ``True`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["show_left_side_pane"] = True  # T-set-show_left_side_pane: replaced at runtime
+        logma.debug(f"[models] set_show_left_side_pane: set to {self._settings['show_left_side_pane']!r}")
+        return self
+
+
 
     def set_show_quick_launch_toolbar(self):
-        """"""
+        """Set the show_quick_launch_toolbar setting.
+
+        Stores the new value in ``self._settings['show_quick_launch_toolbar']``.
+        Default value when not set: ``False`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["show_quick_launch_toolbar"] = False  # T-set-show_quick_launch_toolbar: replaced at runtime
+        logma.debug(f"[models] set_show_quick_launch_toolbar: set to {self._settings['show_quick_launch_toolbar']!r}")
+        return self
+
+
 
     def set_quick_launch_documents(self):
-        """"""
+        """Set the quick_launch_documents setting.
+
+        Stores the new value in ``self._settings['quick_launch_documents']``.
+        Default value when not set: ``[]`` (list).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["quick_launch_documents"] = []  # T-set-quick_launch_documents: replaced at runtime
+        logma.debug(f"[models] set_quick_launch_documents: set to {self._settings['quick_launch_documents']!r}")
+        return self
+
+
 
     def set_show_document_launch_catalog(self):
-        """"""
+        """Set the show_document_launch_catalog setting.
+
+        Stores the new value in ``self._settings['show_document_launch_catalog']``.
+        Default value when not set: ``False`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["show_document_launch_catalog"] = False  # T-set-show_document_launch_catalog: replaced at runtime
+        logma.debug(f"[models] set_show_document_launch_catalog: set to {self._settings['show_document_launch_catalog']!r}")
+        return self
+
+
 
     def set_default_tab_enable(self):
-        """"""
+        """Set the default_tab_enable setting.
+
+        Stores the new value in ``self._settings['default_tab_enable']``.
+        Default value when not set: ``False`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["default_tab_enable"] = False  # T-set-default_tab_enable: replaced at runtime
+        logma.debug(f"[models] set_default_tab_enable: set to {self._settings['default_tab_enable']!r}")
+        return self
+
+
 
     def set_default_tab_select(self):
-        """"""
+        """Set the default_tab_select setting.
+
+        Stores the new value in ``self._settings['default_tab_select']``.
+        Default value when not set: ``''`` (str).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["default_tab_select"] = ''  # T-set-default_tab_select: replaced at runtime
+        logma.debug(f"[models] set_default_tab_select: set to {self._settings['default_tab_select']!r}")
+        return self
+
+
 
     def set_always_refocus_right_side_enable(self):
-        """"""
+        """Set the always_refocus_right_side_enable setting.
+
+        Stores the new value in ``self._settings['always_refocus_right_side_enable']``.
+        Default value when not set: ``False`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["always_refocus_right_side_enable"] = False  # T-set-always_refocus_right_side_enable: replaced at runtime
+        logma.debug(f"[models] set_always_refocus_right_side_enable: set to {self._settings['always_refocus_right_side_enable']!r}")
+        return self
+
+
 
     def set_refocus_right_side_select(self):
-        """"""
+        """Set the refocus_right_side_select setting.
+
+        Stores the new value in ``self._settings['refocus_right_side_select']``.
+        Default value when not set: ``''`` (str).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["refocus_right_side_select"] = ''  # T-set-refocus_right_side_select: replaced at runtime
+        logma.debug(f"[models] set_refocus_right_side_select: set to {self._settings['refocus_right_side_select']!r}")
+        return self
+
+
 
     def set_document_storage_default(self):
-        """"""
+        """Set the document_storage_default setting.
+
+        Stores the new value in ``self._settings['document_storage_default']``.
+        Default value when not set: ``''`` (str).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["document_storage_default"] = ''  # T-set-document_storage_default: replaced at runtime
+        logma.debug(f"[models] set_document_storage_default: set to {self._settings['document_storage_default']!r}")
+        return self
+
+
 
     def set_document_delete_policy(self):
-        """"""
+        """Set the document_delete_policy setting.
+
+        Stores the new value in ``self._settings['document_delete_policy']``.
+        Default value when not set: ``''`` (str).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["document_delete_policy"] = ''  # T-set-document_delete_policy: replaced at runtime
+        logma.debug(f"[models] set_document_delete_policy: set to {self._settings['document_delete_policy']!r}")
+        return self
+
+
 
     def set_document_name_convention_default(self):
-        """"""
+        """Set the document_name_convention_default setting.
+
+        Stores the new value in ``self._settings['document_name_convention_default']``.
+        Default value when not set: ``''`` (str).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["document_name_convention_default"] = ''  # T-set-document_name_convention_default: replaced at runtime
+        logma.debug(f"[models] set_document_name_convention_default: set to {self._settings['document_name_convention_default']!r}")
+        return self
+
+
 
     def set_lock_screen_enable(self):
-        """"""
+        """Set the lock_screen_enable setting.
 
-    def set_lock_screen_timeout(self, value):
-        """"""
+        Stores the new value in ``self._settings['lock_screen_enable']``.
+        Default value when not set: ``False`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["lock_screen_enable"] = False  # T-set-lock_screen_enable: replaced at runtime
+        logma.debug(f"[models] set_lock_screen_enable: set to {self._settings['lock_screen_enable']!r}")
+        return self
+
+
+
+    def set_lock_screen_timeout(self, value=0):
+        """Set the lock-screen timeout (in seconds).
+
+        Stores ``value`` into ``self._settings["lock_screen_timeout"]``
+        and logs the change. Returns ``self`` for chainable UI calls.
+        """
+        try:
+            self._settings["lock_screen_timeout"] = int(value)
+            logma.info(f"[models] set_lock_screen_timeout: {value}")
+            return self
+        except Exception as e:
+            logma.error(f"[models] set_lock_screen_timeout failed: {e}", exc_info=True)
+            return self
 
     def set_lock_screen_pin_enable(self):
-        """"""
+        """Set the lock_screen_pin_enable setting.
+
+        Stores the new value in ``self._settings['lock_screen_pin_enable']``.
+        Default value when not set: ``False`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["lock_screen_pin_enable"] = False  # T-set-lock_screen_pin_enable: replaced at runtime
+        logma.debug(f"[models] set_lock_screen_pin_enable: set to {self._settings['lock_screen_pin_enable']!r}")
+        return self
+
+
 
     def set_package_enable(self):
-        """"""
+        """Set the package_enable setting.
+
+        Stores the new value in ``self._settings['package_enable']``.
+        Default value when not set: ``True`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["package_enable"] = True  # T-set-package_enable: replaced at runtime
+        logma.debug(f"[models] set_package_enable: set to {self._settings['package_enable']!r}")
+        return self
+
+
 
     def set_package_focus_enable(self):
-        """"""
+        """Set the package_focus_enable setting.
+
+        Stores the new value in ``self._settings['package_focus_enable']``.
+        Default value when not set: ``False`` (bool).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["package_focus_enable"] = False  # T-set-package_focus_enable: replaced at runtime
+        logma.debug(f"[models] set_package_focus_enable: set to {self._settings['package_focus_enable']!r}")
+        return self
+
+
 
     def set_package_theme(self):
-        """"""
+        """Set the package_theme setting.
+
+        Stores the new value in ``self._settings['package_theme']``.
+        Default value when not set: ``''`` (str).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["package_theme"] = ''  # T-set-package_theme: replaced at runtime
+        logma.debug(f"[models] set_package_theme: set to {self._settings['package_theme']!r}")
+        return self
+
+
 
     def set_theme(self):
-        """"""
+        """Set the theme setting.
+
+        Stores the new value in ``self._settings['theme']``.
+        Default value when not set: ``''`` (str).
+        Returns ``self`` for chainable UI calls.
+        """
+        self._settings["theme"] = ''  # T-set-theme: replaced at runtime
+        logma.debug(f"[models] set_theme: set to {self._settings['theme']!r}")
+        return self
+
+
 
     def set_interface_settings(self, settings):
         """"""

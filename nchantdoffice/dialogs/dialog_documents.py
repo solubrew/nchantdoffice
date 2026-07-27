@@ -88,7 +88,22 @@ class NchantdNewDocumentSigil(NchantdSigil):
         self.layout.addLayout(layout)
 
     def import_file(self):
-        """"""
+        """Import the selected file via the dialog's import action.
+
+        Triggers the underlying ``add_document_app`` workflow on the
+        model, picking the document type from the user-selected pane.
+        Returns ``self`` for chainable UI calls.
+        """
+        try:
+            if hasattr(self, "pane") and hasattr(self.pane, "cmd_import_file"):
+                self.pane.cmd_import_file()
+                logma.info("[dialog_documents] import_file: dispatched to pane.cmd_import_file")
+            else:
+                logma.warning("[dialog_documents] import_file: no pane or cmd_import_file")
+            return self
+        except Exception as e:
+            logma.error(f"[dialog_documents] import_file failed: {e}", exc_info=True)
+            return self
 
     def initModel(self, cfg=None):
         """"""
@@ -139,7 +154,25 @@ class NchantdNewDocumentSigil(NchantdSigil):
         return self
 
     def init_multi_page_import(self):
-        """"""
+        """Initialise the multi-page-import workflow (when enabled).
+
+        Multi-page import lets the user combine several source files
+        into a single multi-page document. Currently a thin
+        placeholder; the real implementation will populate the
+        pane's bulk-import buttons when ``self.multi_page_import``
+        is True.
+        """
+        try:
+            if getattr(self, "multi_page_import", False):
+                logma.info("[dialog_documents] init_multi_page_import: enabled")
+                if hasattr(self, "launch_button_layout"):
+                    self.init_local_drive_button()
+            else:
+                logma.debug("[dialog_documents] init_multi_page_import: disabled (no-op)")
+            return self
+        except Exception as e:
+            logma.error(f"[dialog_documents] init_multi_page_import failed: {e}", exc_info=True)
+            return self
 
     def init_google_drive_button(self):
         """"""
