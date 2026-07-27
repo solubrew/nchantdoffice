@@ -66,7 +66,16 @@ def update_affilate_links(model, last_affilate_update_dttm: str = "2025-01-01 00
     non_affiliate_count = 0
     try:
         response = client.get("affiliate/links/", params=params)
-        links = response if isinstance(response, (list, tuple)) else response.get("links", [])
+        # Normalise the response shape: a list/tuple goes straight
+        # through, a dict is unwrapped via "links", and anything else
+        # (None when the API is unreachable, an unexpected type)
+        # becomes an empty list so the loop is a no-op.
+        if isinstance(response, (list, tuple)):
+            links = list(response)
+        elif isinstance(response, dict):
+            links = response.get("links", []) or []
+        else:
+            links = []
         affiliate_ids = _collect_known_affiliate_ids(model)
         for link in links:
             if not isinstance(link, dict):
