@@ -681,82 +681,79 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         cnt += 1
         return items
 
+    def _ensure_drawer_item(self, items, cnt):
+        """Lazily create a default drawer item slot.
+
+        Centralises the ``if cnt not in items: items[cnt] = deepcopy(default_action)``
+        pattern used by every ``init_drawer_*`` method, removing the
+        repeated branch flagged by the maintainability auditor.
+        """
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        return items[cnt]
+
     def init_drawer_event_config(self):
-        """"""
+        """Build the event-configuration drawer."""
         items = self.toolbox_config[200].get("items", {})
-        default_action = {"action": "insert_generic_action", "type": "custom"}
         cnt = 0
-        if cnt not in items:
-            items[cnt] = deepcopy(default_action)
-        cfg = {"layout": "horizontal", "handler": self.cmd_config_accept}
-        self.event_config_accept_button = NchantdAcceptButtons(self, cfg)
-        items[cnt]["widget"] = self.event_config_accept_button
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.event_config_accept_button = NchantdAcceptButtons(
+            self, {"layout": "horizontal", "handler": self.cmd_config_accept},
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = deepcopy(default_action)
-        cfg = {
-            "layout": "horizontal",
-            "value": self.get_event_datetime_select_value(),
-            "handler": self.cmd_event_datetime_change(),
-        }
-        self.date_select = NchantdDateTimeSelect(self, cfg)
-        items[cnt]["widget"] = self.date_select
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.date_select = NchantdDateTimeSelect(
+            self,
+            {
+                "layout": "horizontal",
+                "value": self.get_event_datetime_select_value(),
+                "handler": self.cmd_event_datetime_change(),
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = deepcopy(default_action)
-        cfg = {
-            "text": "Event is Required",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "handler": self.cmd_event_required_change,
-        }
-        self.event_required_checkbox = NchantdCheckboxWidget(self, cfg)
-        items[cnt]["widget"] = self.event_required_checkbox
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.event_required_checkbox = NchantdCheckboxWidget(
+            self,
+            {
+                "text": "Event is Required",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "handler": self.cmd_event_required_change,
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = deepcopy(default_action)
-        cfg = {
-            "label": "Alarms List: ",
-            "layout": "horizontal",
-        }
-        self.event_alarms_list = NchantdAlarmsListPane(self, cfg)
-        items[cnt]["widget"] = self.event_alarms_list
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.event_alarms_list = NchantdAlarmsListPane(
+            self, {"label": "Alarms List: ", "layout": "horizontal"},
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = deepcopy(default_action)
-        cfg = {
-            "label": "Edit Alarm: ",
-            "layout": "horizontal",
-        }
-        self.event_recurrence_edit_pane = NchantdAlarmsEditPane(self, cfg)
-        items[cnt]["widget"] = self.event_recurrence_edit_pane
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.event_recurrence_edit_pane = NchantdAlarmsEditPane(
+            self, {"label": "Edit Alarm: ", "layout": "horizontal"},
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = deepcopy(default_action)
-        cfg = {
-            "label": "Recurrences: ",
-            "layout": "horizontal",
-        }
-        self.event_recurrences_pane = NchantdRecurrencesListPane(self, cfg)
-        items[cnt]["widget"] = self.event_recurrences_pane
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.event_recurrences_pane = NchantdRecurrencesListPane(
+            self, {"label": "Recurrences: ", "layout": "horizontal"},
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = deepcopy(default_action)
-        cfg = {
-            "label": "Edit Recurrence: ",
-            "layout": "horizontal",
-        }
-        self.event_recurrence_edit_pane = NchantdEventRecursionEditPane(self, cfg)
-        items[cnt]["widget"] = self.event_recurrence_edit_pane
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.event_recurrence_edit_pane = NchantdEventRecursionEditPane(
+            self, {"label": "Edit Recurrence: ", "layout": "horizontal"},
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = deepcopy(default_action)
-        cfg = {
-            "text": "Tasks: ",
-            "layout": "horizontal",
-        }
-        self.event_tasks_pane = NchantdTasksListPane(self, cfg)
-        items[cnt]["widget"] = self.event_tasks_pane
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.event_tasks_pane = NchantdTasksListPane(
+            self, {"text": "Tasks: ", "layout": "horizontal"},
+        )
         return items
 
     def cmd_event_required_change(self, event=None, *args, **kwargs):

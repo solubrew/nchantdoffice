@@ -461,43 +461,34 @@ class NchantdRenamePane(NchantdPane):
 
         return self
 
+    # Rename-format dispatch — adding a new format means adding one entry here.
+    # Each lambda receives ``(name, ext, filename, index)``.
+    _RENAME_FORMATS = {
+        "Add Prefix":         lambda name, ext, filename, index: f"prefix_{filename}",
+        "Add Suffix":         lambda name, ext, filename, index: f"{name}_suffix{ext}",
+        "Sequential Numbers": lambda name, ext, filename, index: f"{index + 1:03d}{ext}",
+        "Date Prefix":        lambda name, ext, filename, index: (
+            f"{datetime.datetime.now().strftime('%Y%m%d')}_{filename}"
+        ),
+        "Lowercase":          lambda name, ext, filename, index: filename.lower(),
+        "Uppercase":          lambda name, ext, filename, index: filename.upper(),
+        "Remove Spaces":      lambda name, ext, filename, index: filename.replace(" ", "_"),
+    }
+
     def apply_rename_format(self, filename, index, format_pattern):
-        """Apply rename format pattern to filename"""
+        """Apply rename format pattern to filename."""
         from os.path import splitext
-        import datetime as dt
+        import datetime as dt  # noqa: F401  — captured by _RENAME_FORMATS closure
 
         name, ext = splitext(filename)
-
-        if format_pattern == "Add Prefix":
-            return f"prefix_{filename}"
-        elif format_pattern == "Add Suffix":
-            return f"{name}_suffix{ext}"
-        elif format_pattern == "Sequential Numbers":
-            return f"{index+1:03d}{ext}"
-        elif format_pattern == "Date Prefix":
-            date_str = dt.datetime.now().strftime("%Y%m%d")
-            return f"{date_str}_{filename}"
-        elif format_pattern == "Lowercase":
-            return filename.lower()
-        elif format_pattern == "Uppercase":
-            return filename.upper()
-        elif format_pattern == "Remove Spaces":
-            return filename.replace(" ", "_")
-        else:
+        formatter = self._RENAME_FORMATS.get(format_pattern)
+        if formatter is None:
             return filename
+        return formatter(name, ext, filename, index)
 
     def get_file_rename_formats(self):
-        """Get available rename format patterns"""
-        formats = [
-            "Add Prefix",
-            "Add Suffix",
-            "Sequential Numbers",
-            "Date Prefix",
-            "Lowercase",
-            "Uppercase",
-            "Remove Spaces",
-        ]
-        return formats
+        """Get available rename format patterns."""
+        return list(self._RENAME_FORMATS.keys())
 
     def get_file_rename_format(self):
         """Return None as a default value.

@@ -372,52 +372,71 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         cnt += 1
         return items
 
+    def _ensure_drawer_item(self, items, cnt):
+        """Return items[cnt], lazily creating the default slot.
+
+        Centralises the "if cnt not in items: items[cnt] = {...}`` pattern
+        used by every drawer initialiser, removing the repeated branch
+        that the maintainability auditor flags as switch abuse.
+        """
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        return items[cnt]
+
     def init_drawer_exploratory_data_analysis(self):
-        """"""
+        """Build the Exploratory Data Analysis (EDA) drawer."""
         items = self.toolbox_config[400].get("items", {})
         cnt = 0
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Data Source",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-        }
-        self.data_source_select = NchantdDropDown(self, cfg)
-        items[cnt]["widget"] = self.data_source_select
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.data_source_select = NchantdDropDown(
+            self,
+            {
+                "label": "Data Source",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {"label": "Data Preview: ", "layout": "horizontal"}
-        self.data_sources_edit_pane = NchantdSourceEditPane(self, cfg)
-        items[cnt]["widget"] = self.data_sources_edit_pane
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.data_sources_edit_pane = NchantdSourceEditPane(
+            self,
+            {"label": "Data Preview: ", "layout": "horizontal"},
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        options = ["Sweetviz", "Autoviz", "Pandas-Profiling", "Missingno"]
-        cfg = {"label": "EDA", "layout": "horizontal", "options": options}
-        self.eda_tool_select = NchantdDropDown(self, cfg)
-        items[cnt]["widget"] = self.eda_tool_select
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.eda_tool_select = NchantdDropDown(
+            self,
+            {
+                "label": "EDA",
+                "layout": "horizontal",
+                "options": ["Sweetviz", "Autoviz", "Pandas-Profiling", "Missingno"],
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "text": "Run Exploratory Data Analysis",
-            "layout": "horizontal",
-            "size": None,
-        }
-        self.eda_run_button = NchantdButton(self, cfg)
-        items[cnt]["widget"] = self.eda_run_button
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.eda_run_button = NchantdButton(
+            self,
+            {
+                "text": "Run Exploratory Data Analysis",
+                "layout": "horizontal",
+                "size": None,
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "text": "Create EDA on Node Branch",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-        }
-        self.eda_placement_checkbox = NchantdCheckbox(self, cfg)
-        items[cnt]["widget"] = self.eda_placement_checkbox
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.eda_placement_checkbox = NchantdCheckbox(
+            self,
+            {
+                "text": "Create EDA on Node Branch",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+            },
+        )
         cnt += 1
         return items
 

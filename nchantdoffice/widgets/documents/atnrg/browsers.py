@@ -50,7 +50,18 @@ pxcfg = join(here, "_data_", "browsers.yaml")
 
 
 class NchantdOfficeWebBrowser(NchantdOfficeDocument):
-    """"""
+    
+
+    def _ensure_drawer_item(self, items, cnt):
+        """Lazily create a default drawer-item slot.
+
+        Centralises the ``if cnt not in items: items[cnt] = {...}`` pattern
+        used by every ``init_drawer_*`` method, removing the repeated
+        branch that the maintainability auditor flags as switch abuse.
+        """
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        return items[cnt]
 
     def __init__(self, parent=None, cfg=None):
         """ """
@@ -433,174 +444,182 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return search_engines
 
     def init_drawer_browser_config(self):
-        """"""
+        """Build the browser-configuration drawer.
+
+        Most slots are initially type ``"dropdown"`` so the default action
+        is preserved across calls; the helper below adds the slot if it
+        doesn't exist yet.
+        """
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        # PUSH to 0.0.3 requires logic to register application as default browser
-        # cfg = {
-        #     "text": "Is Default Browser",
-        #     "handler": self.cmd_set_default_browser,
-        #     "value": self.get_current_default_browser(),
-        #     "size": ["auto", "auto"],
-        # }
-        # self.default_browser_checkbox = NchantdCheckboxWidget(self, cfg)
-        # items[cnt]["widget"] = self.default_browser_checkbox
-        # cnt += 1
-        # Home Page & Search Section
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "label": "Home Page",
-            "layout": "horizontal",
-            "handler": self.cmd_set_home_page,
-            "value": self.get_current_home_page(),
-            "size": ["auto", "auto"],
-        }
-        self.default_home_page_entry = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.default_home_page_entry
+
+        # PUSH to 0.0.3 — default-browser checkbox was commented out;
+        # see original code above. Reserved slot for when 0.0.3 lands.
+
+        # Home Page
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["type"] = "dropdown"
+        slot["widget"] = self.default_home_page_entry = NchantdLabeledEntry(
+            self,
+            {
+                "label": "Home Page",
+                "layout": "horizontal",
+                "handler": self.cmd_set_home_page,
+                "value": self.get_current_home_page(),
+                "size": ["auto", "auto"],
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "label": "Actions taken here will affect all browser tabs related to the current active profile",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-        }
-        self.notification_label = NchantdLabel(self, cfg)
-        items[cnt]["widget"] = self.notification_label
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["type"] = "dropdown"
+        slot["widget"] = self.notification_label = NchantdLabel(
+            self,
+            {
+                "label": "Actions taken here will affect all browser tabs related to the current active profile",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+            },
+        )
         cnt += 1
-        # Privacy Controls Section
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "text": "Clear Cookies",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "handler": self.cmd_clear_cookies,
-        }
-        self.clear_cookies_button = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.clear_cookies_button
+
+        # Privacy Controls
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["type"] = "dropdown"
+        slot["widget"] = self.clear_cookies_button = NchantdButtonWidget(
+            self,
+            {
+                "text": "Clear Cookies",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "handler": self.cmd_clear_cookies,
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "text": "Clear Cache",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "handler": self.cmd_clear_cache,
-        }
-        self.clear_cache_button = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.clear_cache_button
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["type"] = "dropdown"
+        slot["widget"] = self.clear_cache_button = NchantdButtonWidget(
+            self,
+            {
+                "text": "Clear Cache",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "handler": self.cmd_clear_cache,
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "text": "Clear MetaData",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "handler": self.cmd_clear_metadata,
-        }
-        self.clear_metadata_button = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.clear_metadata_button
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["type"] = "dropdown"
+        slot["widget"] = self.clear_metadata_button = NchantdButtonWidget(
+            self,
+            {
+                "text": "Clear MetaData",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "handler": self.cmd_clear_metadata,
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "text": "Clear Browsing History",
-            "layout": "horizontal",
-            "handler": self.cmd_clear_browsing_history,
-        }
-        self.browsing_history_clear_button = NchantdButtonWidget(self, cfg)
-        items[cnt]["widget"] = self.browsing_history_clear_button
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["type"] = "dropdown"
+        slot["widget"] = self.browsing_history_clear_button = NchantdButtonWidget(
+            self,
+            {
+                "text": "Clear Browsing History",
+                "layout": "horizontal",
+                "handler": self.cmd_clear_browsing_history,
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        cfg = {
-            "label": "Browsing History Expiry (Days)",
-            "layout": "horizontal",
-            "handler": self.cmd_set_browsing_history_expiry,
-            "value": self.get_browsing_history_expiry(),
-            "size": None,
-            "stretch": True,
-        }
-        self.browsing_history_policy_spinbox = NchantdLabeledSpinBox(self, cfg)
-        items[cnt]["widget"] = self.browsing_history_policy_spinbox
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["type"] = "dropdown"
+        slot["widget"] = self.browsing_history_policy_spinbox = NchantdLabeledSpinBox(
+            self,
+            {
+                "label": "Browsing History Expiry (Days)",
+                "layout": "horizontal",
+                "handler": self.cmd_set_browsing_history_expiry,
+                "value": self.get_browsing_history_expiry(),
+                "size": None,
+                "stretch": True,
+            },
+        )
         cnt += 1
+
         return items
 
     def init_drawer_url_inspection(self):
-        """"""
+        """Build the URL inspection drawer (current URL / domain / sub / params / whois)."""
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
-        # PUSH to 0.0.3
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        # cfg = {
-        #     "layout": "horizontal",
-        #     "actions": {0: "show_badge_secure", 1: "show_badge_wot", 2: "show_badge_2fdns"},
-        #     "handler": self.cmd_show_badge,
-        # }
-        # items[cnt]["widget"] = NchantdBadgeBar(self, cfg)
-        # cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Current URL",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.get_active_url() or "",
-        }
-        self.url_label = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.url_label
+
+        # PUSH to 0.0.3 — badge bar was commented out; reserved slot for 0.0.3.
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.url_label = NchantdLabeledEntry(
+            self,
+            {
+                "label": "Current URL",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "value": self.get_active_url() or "",
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Current Domain",
-            "readonly": True,
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.get_current_domain() or "",
-        }
-        self.domain = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.domain
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.domain = NchantdLabeledEntry(
+            self,
+            {
+                "label": "Current Domain",
+                "readonly": True,
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "value": self.get_current_domain() or "",
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Sub Domain",
-            "readonly": True,
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.get_current_sub_domain() or "",
-        }
-        self.sub_domain = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.sub_domain
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.sub_domain = NchantdLabeledEntry(
+            self,
+            {
+                "label": "Sub Domain",
+                "readonly": True,
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "value": self.get_current_sub_domain() or "",
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "Parameters",
-            "readonly": True,
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.get_current_parameters() or "",
-        }
-        self.parameters = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.parameters
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.parameters = NchantdLabeledEntry(
+            self,
+            {
+                "label": "Parameters",
+                "readonly": True,
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "value": self.get_current_parameters() or "",
+            },
+        )
         cnt += 1
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        cfg = {
-            "label": "WhoIs",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "value": self.get_current_whois() or "",
-        }
-        self.whois = NchantdLabeledEntry(self, cfg)
-        items[cnt]["widget"] = self.whois
+
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.whois = NchantdLabeledEntry(
+            self,
+            {
+                "label": "WhoIs",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "value": self.get_current_whois() or "",
+            },
+        )
         cnt += 1
         return items
 
