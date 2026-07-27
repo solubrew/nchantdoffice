@@ -740,52 +740,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
     def convert_db_to_tab_doc(self):
         """"""
 
-    def convert_db_to_journal(self, row):
-        """Convert a journal-view row into the project's journal-document shape.
-
-        The journal document is a plain dict that the
-        ``NchantdOfficeJournalEditor`` (and the rest of the
-        app schema) consumes as ``{"document": <journal_dict>}``.
-        The shape matches the in-memory dict that the
-        create-new-journal branch above already builds
-        (``did``, ``name``, ``compatibility``, ``type``,
-        ``syntax``, ``description``, ``store_location``,
-        ``encoding``, ``meta_data``, ``widget``) plus the
-        row's own fields hoisted onto the dict when present.
-
-        Returns ``None`` when ``row`` is None.
-        """
-        if row is None:
-            return None
-        if hasattr(row, "to_dict"):
-            row = row.to_dict()
-        if not isinstance(row, dict):
-            return None
-        # Decode bytes / base64 strings via self.convert_encoding
-        # so the caller doesn't need to.
-        decoded = {}
-        for key, value in row.items():
-            try:
-                if isinstance(value, (bytes, str)):
-                    decoded[key] = self.convert_encoding(value)
-                else:
-                    decoded[key] = value
-            except Exception:
-                decoded[key] = value
-        journal = {
-            "did": str(decoded.get("did") or decoded.get("UUID") or ""),
-            "name": str(decoded.get("name_txt") or decoded.get("name") or "Journal"),
-            "compatibility": str(decoded.get("compatibility") or "pyffice"),
-            "type": "journal",
-            "syntax": str(decoded.get("syntax") or "plain-text"),
-            "description": str(decoded.get("description") or "internal"),
-            "store_location": str(decoded.get("store_location") or ""),
-            "encoding": str(decoded.get("encoding") or "utf-8"),
-            "meta_data": decoded.get("meta_data") if isinstance(decoded.get("meta_data"), dict) else {},
-            "widget": str(decoded.get("widget_txt") or decoded.get("widget") or ""),
-        }
-        return journal
-
     def convert_encoding(self, entry):
         """"""
         if isinstance(entry, bytes):
@@ -1332,16 +1286,17 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return document_data
 
     def get_view_journal(self, cfg):
-        """Return the journal document for ``cfg``, creating one if missing.
+        """Return the journal row for ``cfg``, creating one if missing.
 
-        Returns the first row from ``self.store.get_view_journal``
-        shaped as the project's internal journal document (see
-        ``convert_db_to_journal`` for the shape contract). If the
-        view is empty, registers a fresh journal document via
-        ``self.add_document_app`` and re-queries.
+        The journal widget reads a dict (text + did) from this
+        method - no conversion needed. We just query the
+        journal view and return the first row as a plain
+        dict, registering a fresh journal via
+        ``self.add_document_app`` if the view is empty.
 
-        Returns the journal-document dict, or ``None`` when the
-        view stays empty after the create-or-fetch cycle.
+        Returns the first row as a plain dict, or ``None``
+        when the view stays empty after the create-or-fetch
+        cycle.
         """
         try:
             rows = self.store.get_view_journal(cfg).to_dict(orient="records")
@@ -1353,28 +1308,27 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             document_dict = {
                 "did": did,
                 "name": "Journal",
-                "compatibility": "pyffice",
                 "type": "journal",
-                "syntax": "plain-text",
-                "description": "internal",
-                "store_location": "",
-                "encoding": "utf-8",
-                "meta_data": {},
-                "widget": "",
+                "text": "",
             }
             logma.info(f"[models] get_view_journal: creating new journal did={did}")
-            self.add_document_app(
-                document_dict, did, "0", 0,
-                "journal", {}, "journal", "center", "db", False,
-            )
             try:
+                self.add_document_app(
+                    document_dict, did, "0", 0,
+                    "journal", {}, "journal", "center", "db", False,
+                )
                 rows = self.store.get_view_journal(cfg).to_dict(orient="records")
             except Exception as e:
-                logma.error(f"[models] get_view_journal: re-query failed: {e}", exc_info=True)
+                logma.error(f"[models] get_view_journal: create-and-refetch failed: {e}", exc_info=True)
                 return None
         if not rows:
             return None
-        return self.convert_db_to_journal(rows[0])
+        row = rows[0]
+        if hasattr(row, "to_dict"):
+            row = row.to_dict()
+        if not isinstance(row, dict):
+            return None
+        return dict(row)
 
     def get_view_options_faqs(self):
         """Return the FAQ entries from the ``vw_options`` view.

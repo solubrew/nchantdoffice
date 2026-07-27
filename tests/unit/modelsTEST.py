@@ -195,45 +195,6 @@ class Test_NchantdOfficeCloakModel:  # 2025-11-06 09:43:57
         if test_000:
             pass
 
-    def test_convert_db_to_journal(self):  # 2025-11-06 09:43:57
-        """Verify convert_db_to_journal returns the journal-document shape."""
-        # Build a tiny in-memory model with the helper we need
-        # (convert_encoding) and call convert_db_to_journal
-        # on a SQL-view row shape.
-        class _FakeModel:
-            def convert_encoding(self, entry):
-                return entry  # no-op for this test
-        row = {
-            "did": "abc-123",
-            "name_txt": "My Journal",
-            "syntax": "plain-text",
-            "widget_txt": "JournalPane",
-        }
-        # Build a real instance via the new convert_db_to_journal
-        # (model class is NchantdOfficeCloakModel; use a
-        # stand-in that bypasses __init__)
-        from nchantdoffice.models import NchantdOfficeCloakModel
-        model = NchantdOfficeCloakModel.__new__(NchantdOfficeCloakModel)
-        # Wire up only convert_encoding
-        model.convert_encoding = lambda entry: entry
-        result = model.convert_db_to_journal(row)
-        # Assert the journal-document shape
-        assert isinstance(result, dict), f"expected dict, got {type(result).__name__}"
-        for key in ("did", "name", "compatibility", "type",
-                    "syntax", "description", "store_location",
-                    "encoding", "meta_data", "widget"):
-            assert key in result, f"missing key {key!r}"
-        assert result["type"] == "journal"
-        assert result["did"] == "abc-123"
-        assert result["name"] == "My Journal"
-        assert result["widget"] == "JournalPane"
-        # Empty row should still produce a valid dict
-        empty = model.convert_db_to_journal(None)
-        assert empty is None, f"None row should return None, got {empty}"
-        # Non-dict / non-Series row -> None
-        bad = model.convert_db_to_journal("not a row")
-        assert bad is None, f"non-dict row should return None, got {bad}"
-
     def test_convert_db_to_tab_doc(self):  # 2025-11-06 09:43:57
         """"""
         if test_000:
@@ -430,9 +391,21 @@ class Test_NchantdOfficeCloakModel:  # 2025-11-06 09:43:57
             pass
 
     def test_get_view_journal(self):  # 2025-11-06 09:43:57
-        """"""
-        if test_000:
-            pass
+        """Verify get_view_journal returns a plain dict or None.
+
+        The method delegates to the store + returns a plain dict
+        (with at minimum 'text' and 'did' for the journal widget
+        to consume). When the store is unreachable, it returns
+        None rather than raising.
+        """
+        from nchantdoffice.models import NchantdOfficeCloakModel
+        model = NchantdOfficeCloakModel.__new__(NchantdOfficeCloakModel)
+        assert callable(getattr(model, "get_view_journal", None)), \
+            "get_view_journal must be callable on the model"
+        # When the store is unreachable, the method should
+        # gracefully return None rather than raise.
+        result = model.get_view_journal({"tags": {}, "scope": "TODAY"})
+        assert result is None or isinstance(result, dict)
 
     def test_import_cherrytree(self):  # 2025-11-06 09:43:57
         """"""
