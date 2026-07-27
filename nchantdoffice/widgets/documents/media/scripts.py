@@ -114,6 +114,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         super().initModel()
         logma.json({"document": self.config.dikt.get("document", {})})
         self.document = self.app.model.codex.init_script({"document": self.config.get("document", {})})
+        # TODO: document loads properly using open_file but on reloading from database is showing with formatting stripped
         self.document.load_document()
         if self.context_menu_name is not None:
             self.initialize_context_menu("context.document.script")
@@ -250,9 +251,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
     def cmd_add_date(self, event=None, *args, **kwargs):
         """Insert today's date at the current cursor position."""
         from datetime import date
+
         if hasattr(self, "document_editor") and self.document_editor is not None:
             self.document_editor.insert(date.today().isoformat())
         return self
+
     def cmd_add_image(self, event=None, *args, **kwargs):
         """Insert an image placeholder at the current cursor position."""
         if hasattr(self, "document_editor") and self.document_editor is not None:
@@ -280,9 +283,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
     def cmd_add_time(self, event=None, *args, **kwargs):
         """Insert the current time at the current cursor position."""
         from datetime import datetime
+
         if hasattr(self, "document_editor") and self.document_editor is not None:
             self.document_editor.insert(datetime.now().strftime("%H:%M:%S"))
         return self
+
     def cmd_on_compatability_changed(self, event=None, *args, **kwargs):
         """Record the user-selected compatibility level on the config.
 
@@ -290,7 +295,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         and stores it on ``config.dikt["compatability"]``.
         """
         if hasattr(self, "document_compatability") and self.document_compatability is not None:
-            getter = getattr(self.document_compatability, "currentText", None) or getattr(self.document_compatability, "get_value", None)
+            getter = getattr(self.document_compatability, "currentText", None) or getattr(
+                self.document_compatability, "get_value", None
+            )
             if callable(getter):
                 value = getter()
                 if value:
@@ -304,7 +311,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         ``config.dikt["document_format"]``.
         """
         if hasattr(self, "document_format_select") and self.document_format_select is not None:
-            getter = getattr(self.document_format_select, "currentText", None) or getattr(self.document_format_select, "get_value", None)
+            getter = getattr(self.document_format_select, "currentText", None) or getattr(
+                self.document_format_select, "get_value", None
+            )
             if callable(getter):
                 value = getter()
                 if value:
@@ -318,7 +327,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         ``config.dikt["document_syntax"]``.
         """
         if hasattr(self, "document_syntax_select") and self.document_syntax_select is not None:
-            getter = getattr(self.document_syntax_select, "currentText", None) or getattr(self.document_syntax_select, "get_value", None)
+            getter = getattr(self.document_syntax_select, "currentText", None) or getattr(
+                self.document_syntax_select, "get_value", None
+            )
             if callable(getter):
                 value = getter()
                 if value:
@@ -397,6 +408,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         if hasattr(editor, "setFontWeight"):
             editor.setFontWeight(new_weight)
         return self
+
     def cmd_toggle_selection_italic(self, event=None, *args, **kwargs):
         """Toggle italic style on the current editor selection."""
         if not (hasattr(self, "document_editor") and self.document_editor is not None):
@@ -406,6 +418,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         if hasattr(editor, "setFontItalic"):
             editor.setFontItalic(not is_italic)
         return self
+
     def cmd_toggle_selection_underline(self, event=None, *args, **kwargs):
         """Toggle underline style on the current editor selection."""
         if not (hasattr(self, "document_editor") and self.document_editor is not None):
@@ -415,6 +428,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         if hasattr(editor, "setFontUnderline"):
             editor.setFontUnderline(not is_underline)
         return self
+
     def cmd_toggle_page_view(self, event, *args, **kwargs):
         """"""
         # NOTE: Change between a full screen and a standard 8.5x11/whatever the current page size is set to
@@ -595,9 +609,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         cnt += 1
         # Margins (4 widgets share options/layout/type — table-driven).
         margin_specs = (
-            ("top_margin_select",    "Set Top Margin",    "cmd_top_margin_change",    "get_top_margin_selected"),
-            ("left_margin_select",   "Set Left Margin",   "cmd_left_margin_change",   "get_left_margin_selected"),
-            ("right_margin_select",  "Set Right Margin",  "cmd_right_margin_change",  "get_right_margin_selected"),
+            ("top_margin_select", "Set Top Margin", "cmd_top_margin_change", "get_top_margin_selected"),
+            ("left_margin_select", "Set Left Margin", "cmd_left_margin_change", "get_left_margin_selected"),
+            ("right_margin_select", "Set Right Margin", "cmd_right_margin_change", "get_right_margin_selected"),
             ("bottom_margin_select", "Set Bottom Margin", "cmd_bottom_margin_change", "get_bottom_margin_selected"),
         )
         for attr_name, label, handler_name, getter_name in margin_specs:
@@ -646,8 +660,8 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         insert_specs = (
             ("insert_image", "Insert Image:", "cmd_add_image"),
             ("insert_table", "Insert Table:", "cmd_add_table"),
-            ("insert_date",  "Insert Date:",  "cmd_add_date"),
-            ("insert_time",  "Insert Time:",  "cmd_add_time"),
+            ("insert_date", "Insert Date:", "cmd_add_date"),
+            ("insert_time", "Insert Time:", "cmd_add_time"),
         )
         for attr_name, label, handler_name in insert_specs:
             slot = self._ensure_drawer_item(items, cnt)
@@ -660,7 +674,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             if attr_name == "insert_time":
                 cfg["value"] = None
             slot["widget"] = setattr(
-                self, attr_name, NchantdButtonWidget(self, cfg),
+                self,
+                attr_name,
+                NchantdButtonWidget(self, cfg),
             ) or getattr(self, attr_name)
             cnt += 1
 
@@ -677,12 +693,12 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
 
         # Object-pane definitions: each tuple is ``(widget_attr_name, pane_class, label)``.
         _object_specs = (
-            ("document_header_entry", "NchantdHeaderPane",        "Document Header: "),
-            ("page_header_entry",     "NchantdHeaderPane",        "Page Header: "),
-            ("objects_pane_list",     "NchantdNewObjectPane",      "Objects List: "),
-            ("object_select",         "NchantdDropDownActivator",  "Insert Object: "),
-            ("page_footer_entry",     "NchantdFooterPane",        "Page Footer: "),
-            ("document_footer_entry", "NchantdFooterPane",        "Document Footer: "),
+            ("document_header_entry", "NchantdHeaderPane", "Document Header: "),
+            ("page_header_entry", "NchantdHeaderPane", "Page Header: "),
+            ("objects_pane_list", "NchantdNewObjectPane", "Objects List: "),
+            ("object_select", "NchantdDropDownActivator", "Insert Object: "),
+            ("page_footer_entry", "NchantdFooterPane", "Page Footer: "),
+            ("document_footer_entry", "NchantdFooterPane", "Document Footer: "),
         )
         for attr_name, pane_class_name, label in _object_specs:
             slot = self._ensure_drawer_item(items, cnt)

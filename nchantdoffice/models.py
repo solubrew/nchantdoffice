@@ -740,7 +740,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def convert_db_to_journal(self, document_):
         """Convert a DB row to a journal document. Delegates to the free function."""
-        return _convert_db_to_journal(document_, convert_encoding=self.convert_encoding)
+        #TODO fix convert db to journal
+        #return _convert_db_to_journal(document_, convert_encoding=self.convert_encoding)
 
     def convert_encoding(self, entry):
         """"""
