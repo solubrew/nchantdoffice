@@ -741,39 +741,50 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """"""
 
     def convert_db_to_journal(self, row):
-        """Hydrate a PyfficeDocument from a journal-view row.
+        """Convert a journal-view row into the project's journal-document shape.
 
-        Thin wrapper around ``_hydrate_document_from_row`` that
-        specifically targets the journal document type. The
-        returned object is a ``PyfficeDocument`` (same shape
-        as ``get_view_journal`` returns) - NOT a dict, since
-        callers elsewhere treat this as a document object.
+        The journal document is a plain dict that the
+        ``NchantdOfficeJournalEditor`` (and the rest of the
+        app schema) consumes as ``{"document": <journal_dict>}``.
+        The shape matches the in-memory dict that the
+        create-new-journal branch above already builds
+        (``did``, ``name``, ``compatibility``, ``type``,
+        ``syntax``, ``description``, ``store_location``,
+        ``encoding``, ``meta_data``, ``widget``) plus the
+        row's own fields hoisted onto the dict when present.
 
-        Returns ``None`` when ``row`` is None or the hydrate
-        step fails.
+        Returns ``None`` when ``row`` is None.
         """
-        try:
-            from pyffice.documents.text import PyfficeDocument
-        except Exception as e:
-            logma.error(f"[models] convert_db_to_journal: PyfficeDocument import failed: {e}", exc_info=True)
-            return None
         if row is None:
             return None
-        try:
-            if hasattr(row, "to_dict"):
-                row = row.to_dict()
-            row_dict = dict(row) if isinstance(row, dict) else {"value": row}
-            doc = PyfficeDocument()
-            for key, value in row_dict.items():
-                if hasattr(doc, key):
-                    try:
-                        setattr(doc, key, self.convert_encoding(value) if isinstance(value, (bytes, str)) else value)
-                    except Exception:
-                        continue
-            return doc
-        except Exception as e:
-            logma.error(f"[models] convert_db_to_journal failed: {e}", exc_info=True)
+        if hasattr(row, "to_dict"):
+            row = row.to_dict()
+        if not isinstance(row, dict):
             return None
+        # Decode bytes / base64 strings via self.convert_encoding
+        # so the caller doesn't need to.
+        decoded = {}
+        for key, value in row.items():
+            try:
+                if isinstance(value, (bytes, str)):
+                    decoded[key] = self.convert_encoding(value)
+                else:
+                    decoded[key] = value
+            except Exception:
+                decoded[key] = value
+        journal = {
+            "did": str(decoded.get("did") or decoded.get("UUID") or ""),
+            "name": str(decoded.get("name_txt") or decoded.get("name") or "Journal"),
+            "compatibility": str(decoded.get("compatibility") or "pyffice"),
+            "type": "journal",
+            "syntax": str(decoded.get("syntax") or "plain-text"),
+            "description": str(decoded.get("description") or "internal"),
+            "store_location": str(decoded.get("store_location") or ""),
+            "encoding": str(decoded.get("encoding") or "utf-8"),
+            "meta_data": decoded.get("meta_data") if isinstance(decoded.get("meta_data"), dict) else {},
+            "widget": str(decoded.get("widget_txt") or decoded.get("widget") or ""),
+        }
+        return journal
 
     def convert_encoding(self, entry):
         """"""
@@ -1323,20 +1334,14 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
     def get_view_journal(self, cfg):
         """Return the journal document for ``cfg``, creating one if missing.
 
-        Behaviour:
-          1. Query the journal view via
-             ``self.store.get_view_journal(cfg)``.
-          2. If the view has rows, take the first row and
-             convert it to a ``PyfficeDocument`` (the project's
-             canonical document class).
-          3. If the view is empty, register a brand-new
-             journal document via ``self.codex.init_journal``
-             and ``add_document_app``, then re-query the view
-             so we return a real document (not the in-memory
-             stub).
+        Returns the first row from ``self.store.get_view_journal``
+        shaped as the project's internal journal document (see
+        ``convert_db_to_journal`` for the shape contract). If the
+        view is empty, registers a fresh journal document via
+        ``self.add_document_app`` and re-queries.
 
-        Returns a ``PyfficeDocument`` instance, or ``None``
-        when neither the store nor the codex is reachable.
+        Returns the journal-document dict, or ``None`` when the
+        view stays empty after the create-or-fetch cycle.
         """
         try:
             rows = self.store.get_view_journal(cfg).to_dict(orient="records")
@@ -1369,21 +1374,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 return None
         if not rows:
             return None
-        row = rows[0]
-        try:
-            from pyffice.documents.text import PyfficeDocument
-            doc = PyfficeDocument()
-            for key, value in row.items():
-                if hasattr(doc, key):
-                    try:
-                        setattr(doc, key, value)
-                    except Exception:
-                        continue
-            logma.info(f"[models] get_view_journal: returned document did={getattr(doc, 'did', '?')!r}")
-            return doc
-        except Exception as e:
-            logma.error(f"[models] get_view_journal: PyfficeDocument init failed: {e}", exc_info=True)
-            return None
+        return self.convert_db_to_journal(rows[0])
 
     def get_view_options_faqs(self):
         """Return the FAQ entries from the ``vw_options`` view.
