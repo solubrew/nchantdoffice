@@ -36,6 +36,7 @@ from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.groups import NchantdVScrollGroupBox, NchantdHGroupBox
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
+
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
@@ -223,6 +224,8 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         center_settings_group = NchantdGridScrollGroupBox()
         center_settings_group.scroll.setHorizontalScrollBarPolicy(pyqt.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         center_settings_group.setTitle("Center Pane Settings")
+        # TODO add a config pane for each document type
+        # TODO config if user wants a tab/node name log dialog popup when using the app toolbar
         primary_layout.addLayout(center_settings_group.layout)
         # cfg = {
         #     "text": "Show Document Launch Catalog",
