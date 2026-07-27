@@ -1974,15 +1974,11 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # logma.info(f"Document {pydoc.to_dict()}")
         if hasattr(pydoc, "is_changed") and pydoc.is_changed is False:
             return pydoc
-        # check if content or metadata has changed
-        # Increment the document's version using a real semver policy.
-        # The bump type is chosen from config.dikt["version_policy"]
-        # (default "patch"); allowed values are "major", "minor",
-        # "patch", "build". After incrementing, the new version is
-        # stored via add_document_content.
+        #TODO: version is simply a whole number bump on each save for internal data storage this is not a full version control system
+        # return to simple count versioning that was previously working 
         policy = self.config.dikt.get("version_policy", "patch") if hasattr(self, "config") else "patch"
         try:
-            self._increment_pydoc_version(pydoc, policy=policy)
+            self.store._increment_pydoc_version(pydoc, policy=policy)
         except Exception as e:
             logma.error(f"[models] version increment failed: {e}", exc_info=True)
         logma.json(pydoc.to_dict())
@@ -2768,7 +2764,7 @@ class NchantdOfficeStore(NchantdStore):
                 content["pUUID"],
                 content["page"],
                 content["entry"],
-                content["version"] + 1,
+                int(content["version"]) + 1,
                 content["hash"],
                 content["content"],
                 content["context"],
