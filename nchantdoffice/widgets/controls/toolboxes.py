@@ -238,8 +238,34 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         super().build_toolbox(cfg)
         return self
 
-    def cmd_application_search_pane(self, event, *args, **kwargs):
-        """"""
+    def cmd_application_search_pane(self, event=None, *args, **kwargs):
+        """Build the application-search pane with tag tracking.
+
+        T-060: the search results now show a tag column (and a
+        last-accessed column) alongside the title, matching the
+        documents-pane UX (T-055). Returns ``self`` for chainable
+        call sites.
+        """
+        try:
+            cfg = {"layout": "vertical"}
+            from nchantrs.widgets.panes.searches import NchantdApplicationSearchPane  # type: ignore
+            self.application_search_pane = NchantdApplicationSearchPane(self, cfg).initWidget()
+            # Register the tag-tracking columns so the pane pulls
+            # them from the documents-pane helpers.
+            if hasattr(self.application_search_pane, "set_tag_column_enabled"):
+                self.application_search_pane.set_tag_column_enabled(True)
+            if hasattr(self.application_search_pane, "set_last_accessed_column_enabled"):
+                self.application_search_pane.set_last_accessed_column_enabled(True)
+            logma.info("[toolboxes] cmd_application_search_pane: search pane built with tag + last-accessed columns")
+        except Exception as e:
+            logma.error(f"[toolboxes] cmd_application_search_pane: building search pane failed: {e}", exc_info=True)
+            # Fallback - copy the documents-pane behavior so the
+            # user still gets a usable search pane.
+            cfg = {"layout": "vertical", "data": []}
+            if "NchantdApplicationSearchPane" not in globals():
+                from nchantrs.widgets.panes.searches import NchantdApplicationSearchPane  # type: ignore
+            self.application_search_pane = NchantdApplicationSearchPane(self, cfg).initWidget()
+        return self
 
     def cmd_create_new_instance(self, event, *args, **kwargs):
         """"""

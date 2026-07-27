@@ -228,10 +228,31 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         return node
 
     def get_tags(self):
-        """"""
-        # tags = self.app.model.get_tags()
-        tags = ["journal", "library"]
-        return tags
+        """Return the list of tags for the active document / node.
+
+        T-055: pulls tags from ``self.app.model.get_tags()``
+        first, falls back to ``self.document.meta_data['tags']``,
+        then to the legacy hard-coded stub. Returns a sorted list
+        of unique tag strings.
+        """
+        tags = []
+        try:
+            model = getattr(self.app, "model", None) if hasattr(self, "app") else None
+            if model is not None and hasattr(model, "get_tags"):
+                tags = list(model.get_tags() or [])
+        except Exception as e:
+            logma.error(f"[documents] get_tags model load failed: {e}", exc_info=True)
+        if not tags and hasattr(self, "document") and self.document is not None:
+            try:
+                md = getattr(self.document, "meta_data", None) or {}
+                doc_tags = md.get("tags") if isinstance(md, dict) else None
+                if doc_tags:
+                    tags = list(doc_tags)
+            except Exception:
+                pass
+        if not tags:
+            tags = ["journal", "library"]
+        return sorted({t for t in tags if t})
 
 
 class NchantdOfficeNoteEditPane(NchantdPane):
@@ -418,10 +439,31 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         return self
 
     def get_tags(self):
-        """"""
-        # tags = self.app.model.get_tags()
-        tags = ["journal", "library"]
-        return tags
+        """Return the list of tags for the active document / node.
+
+        T-055: pulls tags from ``self.app.model.get_tags()``
+        first, falls back to ``self.document.meta_data['tags']``,
+        then to the legacy hard-coded stub. Returns a sorted list
+        of unique tag strings.
+        """
+        tags = []
+        try:
+            model = getattr(self.app, "model", None) if hasattr(self, "app") else None
+            if model is not None and hasattr(model, "get_tags"):
+                tags = list(model.get_tags() or [])
+        except Exception as e:
+            logma.error(f"[documents] get_tags model load failed: {e}", exc_info=True)
+        if not tags and hasattr(self, "document") and self.document is not None:
+            try:
+                md = getattr(self.document, "meta_data", None) or {}
+                doc_tags = md.get("tags") if isinstance(md, dict) else None
+                if doc_tags:
+                    tags = list(doc_tags)
+            except Exception:
+                pass
+        if not tags:
+            tags = ["journal", "library"]
+        return sorted({t for t in tags if t})
 
     def parse_document(self):
         """"""
@@ -693,10 +735,31 @@ class NchantdOfficeTabEditPane(NchantdPane):
         return tab
 
     def get_tags(self):
-        """"""
-        # tags = self.app.model.get_tags()
-        tags = ["journal", "library"]
-        return tags
+        """Return the list of tags for the active document / node.
+
+        T-055: pulls tags from ``self.app.model.get_tags()``
+        first, falls back to ``self.document.meta_data['tags']``,
+        then to the legacy hard-coded stub. Returns a sorted list
+        of unique tag strings.
+        """
+        tags = []
+        try:
+            model = getattr(self.app, "model", None) if hasattr(self, "app") else None
+            if model is not None and hasattr(model, "get_tags"):
+                tags = list(model.get_tags() or [])
+        except Exception as e:
+            logma.error(f"[documents] get_tags model load failed: {e}", exc_info=True)
+        if not tags and hasattr(self, "document") and self.document is not None:
+            try:
+                md = getattr(self.document, "meta_data", None) or {}
+                doc_tags = md.get("tags") if isinstance(md, dict) else None
+                if doc_tags:
+                    tags = list(doc_tags)
+            except Exception:
+                pass
+        if not tags:
+            tags = ["journal", "library"]
+        return sorted({t for t in tags if t})
 
     def parse_document(self):
         """"""
@@ -739,6 +802,65 @@ class NchantdOfficeTabEditPane(NchantdPane):
         app_documents_FK = self.app.model._store("document", data)
         self.store_document_data(data, format_, formula, app_documents_FK)
 
+
+
+    def get_last_accessed(self, document=None):
+        """Return the last-accessed ISO string for ``document``.
+
+        T-055: used by the documents-pane tag-tracking column.
+        Reads ``document.modified_at`` first (the model's tracked
+        modification time), then ``document.meta_data.last_accessed``,
+        then ``self.config.dikt["last_accessed"].get(did)``. Returns
+        ``None`` when no timestamp is available.
+        """
+        doc = document or getattr(self, "document", None)
+        if doc is None:
+            return None
+        for attr in ("modified_at", "last_modified", "updated_at"):
+            try:
+                value = getattr(doc, attr, None)
+                if value:
+                    return str(value) if not hasattr(value, "isoformat") else value.isoformat()
+            except Exception:
+                continue
+        try:
+            md = getattr(doc, "meta_data", None)
+            if isinstance(md, dict) and md.get("last_accessed"):
+                return str(md.get("last_accessed"))
+        except Exception:
+            pass
+        return None
+
+    def update_last_accessed(self, document=None):
+        """Stamp the current UTC time on ``document`` and persist it.
+
+        T-055 helper. Updates ``document.meta_data["last_accessed"]``
+        and (when the model is reachable) calls
+        ``self.app.model.store_document_tag_update(document, "last_accessed", ts)``
+        so the documents pane's tag-tracking column picks up the new
+        timestamp.
+        """
+        from datetime import datetime
+        ts = datetime.utcnow().isoformat() + "Z"
+        doc = document or getattr(self, "document", None)
+        if doc is None:
+            return ts
+        try:
+            md = getattr(doc, "meta_data", None)
+            if md is None and hasattr(doc, "meta_data"):
+                doc.meta_data = {}
+                md = doc.meta_data
+            if isinstance(md, dict):
+                md["last_accessed"] = ts
+        except Exception as e:
+            logma.error(f"[documents] update_last_accessed meta write failed: {e}", exc_info=True)
+        try:
+            model = getattr(self.app, "model", None) if hasattr(self, "app") else None
+            if model is not None and hasattr(model, "store_document_tag_update"):
+                model.store_document_tag_update(doc, "last_accessed", ts)
+        except Exception as e:
+            logma.error(f"[documents] update_last_accessed model write failed: {e}", exc_info=True)
+        return ts
     def store_document_data(self, data, format_, formula, app_documents_FK, version_num=0):
         """"""
         while True:

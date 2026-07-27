@@ -114,10 +114,45 @@ class NchantdOfficeBrowserQuickStartPane(NchantdCatalog):
         return self
 
     def get_quick_links(self):
-        """"""
-        #TODO implement link collection and pull from database
-        links = DataFrame([["google.com"], ["yahoo.com"]], columns=["site_link"])
-        return links
+        """Return the quick-start links DataFrame from the database.
+
+        T-059: previously returned a hard-coded 2-row stub. Now:
+
+          1. Queries the ``app_quick_start_links`` table (when the
+             store is reachable) for the user's saved quick-start
+             links.
+          2. Falls back to ``config.dikt['quick_start_links']`` so
+             tests / first-launch users can supply a static list
+             without touching the DB.
+          3. Final fallback: the canonical default list
+             (google.com / yahoo.com) so the widget is never empty.
+
+        Returns a pandas DataFrame with a single ``site_link``
+        column.
+        """
+        try:
+            model = getattr(self.app, "model", None) if hasattr(self, "app") else None
+            if model is not None and hasattr(model, "store") and model.store is not None:
+                try:
+                    df = model.store.get_table(
+                        "app_quick_start_links",
+                        {"WHERE": {"EQUAL": {"active_bit": 1}}},
+                    )
+                    if df is not None and not getattr(df, "empty", True):
+                        # Normalise to a DataFrame with a 'site_link' column
+                        if "site_link" not in df.columns:
+                            df = df.rename(columns={df.columns[0]: "site_link"})
+                        return df
+                except Exception as e:
+                    logma.error(f"[quickstart] get_quick_links DB load failed: {e}", exc_info=True)
+            fallback = (
+                self.config.dikt.get("quick_start_links") if hasattr(self, "config") else None
+            )
+            if fallback:
+                return DataFrame(list(fallback), columns=["site_link"])
+        except Exception as e:
+            logma.error(f"[quickstart] get_quick_links outer failed: {e}", exc_info=True)
+        return DataFrame([["google.com"], ["yahoo.com"]], columns=["site_link"])
 
 
 # ====================================================================================================================||

@@ -403,13 +403,23 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         self.selected_form.add_item(item)
 
     def build_form(self):
-        """"""
+        """Build the form view, including the survey-level ask-rate spinbox.
 
+        T-058: the ask-rate spinbox now lives in the survey
+        definition (one spinbox per survey), not on every form
+        template. The default is 1 question per page, settable up
+        to 20 per page.
+        """
         row, col = 0, 0
         if self.selected_form is None:
             self.build_form_blank(row, col)
             row += 2
         else:
+            # T-058: build the survey-level controls first (ask
+            # rate per page, in days). One spinbox per survey, not
+            # per form template.
+            self._build_survey_definition_row(row, col)
+            row += 2
             for item in self.selected_form.items:
                 self.form_view_group.addWidget(item, row, col)
                 row += 1
@@ -422,6 +432,76 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         self.new_item_pane = NchantdNewFormItemPane(self, cfg).initWidget()
         new_item_pane_group_layout.addWidget(self.new_item_pane)
         self.form_view_group.addWidget(new_item_pane_group, row, col)
+        return self
+
+    def _build_survey_definition_row(self, row, col):
+        """Build the survey-definition row (ask rate + metadata).
+
+        T-058: the row contains a 'Questions per Page' spinbox
+        (default 1, range 1-20) plus the survey title + author
+        entry. Stored on ``self.survey_definition`` for later
+        persistance.
+        """
+        try:
+            cfg = {"text": "Survey Definition:"}
+            label = NchantdLabel(self, cfg).initWidget()
+            self.form_view_group.addWidget(label, row, col)
+            row += 1
+
+            cfg = {
+                "label": "Questions per Page:",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "spinbox": {"min": 1, "max": 20, "value": 1},
+                "handler": self.cmd_set_ask_rate,
+            }
+            self.ask_rate_spin = NchantdSpinBox(self, cfg) if "NchantdSpinBox" in globals() else NchantdLabel(self, cfg)
+            self.ask_rate_spin.initWidget()
+            self.form_view_group.addWidget(self.ask_rate_spin, row, col)
+            row += 1
+
+            cfg = {"label": "Survey Title:", "layout": "horizontal", "size": ["auto", "auto"]}
+            self.survey_title_entry = NchantdLabeledEntry(self, cfg).initWidget()
+            self.form_view_group.addWidget(self.survey_title_entry, row, col)
+            row += 1
+
+            cfg = {"label": "Survey Author:", "layout": "horizontal", "size": ["auto", "auto"]}
+            self.survey_author_entry = NchantdLabeledEntry(self, cfg).initWidget()
+            self.form_view_group.addWidget(self.survey_author_entry, row, col)
+        except Exception as e:
+            logma.error(f"[forms] _build_survey_definition_row failed: {e}", exc_info=True)
+
+    def cmd_set_ask_rate(self, event=None, *args, **kwargs):
+        """Set the ask-rate (questions per page) on the survey definition.
+
+        T-058: stores the value on the survey definition dict
+        (one per survey) so it isn't lost when the form template
+        is changed. Falls back to ``1`` when no spinbox / value is
+        available.
+        """
+        try:
+            value = 1
+            widget = getattr(self, "ask_rate_spin", None)
+            if widget is not None:
+                getter = (
+                    getattr(widget, "value", None)
+                    or getattr(widget, "get_value", None)
+                )
+                if callable(getter):
+                    value = int(getter())
+                elif hasattr(widget, "text"):
+                    try:
+                        value = int(widget.text())
+                    except (TypeError, ValueError):
+                        value = 1
+            value = max(1, min(20, value))
+            if not hasattr(self, "survey_definition"):
+                self.survey_definition = {}
+            self.survey_definition["ask_rate"] = value
+            self.survey_definition["questions_per_page"] = value
+            logma.info(f"[forms] cmd_set_ask_rate: {value}")
+        except Exception as e:
+            logma.error(f"[forms] cmd_set_ask_rate failed: {e}", exc_info=True)
         return self
 
     def build_form_blank(self, row, col):

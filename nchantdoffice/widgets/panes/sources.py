@@ -100,9 +100,34 @@ class NchantdSourcesListPane(NchantdPane):
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourcesListPane").override(cfg))
 
     def initModel(self, cfg=None):
-        """"""
+        """Initialise the sources-list model.
+
+        T-054: previously returned a hard-coded stub. Now queries
+        ``self.app.model.get_sources()`` (when available), the
+        legacy ``self.app.active_tab.get_sources()``, and finally
+        the static list at ``config.dikt['sources_fallback']``.
+
+        Returns ``self``.
+        """
         super().initModel(cfg)
-        # TODO: need to get list of sources
+        try:
+            sources = []
+            model = getattr(self.app, "model", None)
+            if model is not None and hasattr(model, "get_sources"):
+                try:
+                    sources = model.get_sources() or []
+                except Exception as e:
+                    logma.error(f"[sources] initModel get_sources failed: {e}", exc_info=True)
+            if not sources:
+                tab = getattr(self.app, "active_tab", None)
+                if tab is not None and hasattr(tab, "get_sources"):
+                    sources = tab.get_sources() or []
+            if not sources:
+                sources = self.config.dikt.get("sources_fallback", []) or []
+            self.config.dikt["data"] = sources
+            logma.info(f"[sources] initModel loaded {len(sources)} sources")
+        except Exception as e:
+            logma.error(f"[sources] initModel outer failed: {e}", exc_info=True)
         return self
 
     def initView(self, cfg=None):

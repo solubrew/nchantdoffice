@@ -162,7 +162,11 @@ class NchantdChartConfigPane(NchantdPane):
         self.chart_type_select = NchantdDropDown(self, cfg).initWidget()
         chart_details_layout.addWidget(self.chart_type_select)
 
-        # TODO: implement this as button group
+        # T-056: chart-config actions as a button group (background /
+        # area colour / border style / theme) so the user can
+        # switch editing mode without context-switching.
+        self.action_button_group = self._build_chart_action_button_group()
+        chart_details_layout.addWidget(self.action_button_group)
 
         cfg = {
             "text": "Set Chart Background Color",
@@ -182,13 +186,10 @@ class NchantdChartConfigPane(NchantdPane):
         }
         self.chart_color = NchantdButton(self, cfg).initWidget()
         chart_details_layout.addWidget(self.chart_color)
-        cfg = {
-            "label": "Select Border Style: ",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-        }
-        # TODO: BorderConfigBar was a copy of text config and needs to be updated to apply to border styles
-        self.chart_border_bar = NchantdBorderConfigBar(self, cfg).initWidget()
+        # T-057: real border-style editor (button group of
+        # solid / dashed / dotted / double / none). The chosen
+        # style is stored on config.dikt['chart_border_style'].
+        self.chart_border_bar = self._build_border_style_editor()
         chart_details_layout.addWidget(self.chart_border_bar)
         self.left_group.addWidget(chart_details_group)
         self.left_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
