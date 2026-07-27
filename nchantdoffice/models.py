@@ -2509,6 +2509,25 @@ class NchantdOfficeStore(NchantdStore):
         """
         return self.store_app_media(document, db, how, table="doc_media")
 
+    _DOC_MEDIA_COLUMNS = [
+        {"name": "did", "type": "text"},
+        {"name": "compatibility_txt", "type": "text"},
+        {"name": "document_type_txt", "type": "text"},
+        {"name": "syntax_txt", "type": "text"},
+        {"name": "name_txt", "type": "text"},
+        {"name": "filename_txt", "type": "text"},
+        {"name": "description_ltxt", "type": "text"},
+        {"name": "path_txt", "type": "text"},
+        {"name": "store_location_txt", "type": "text"},
+        {"name": "encoding_txt", "type": "text"},
+        {"name": "tags_dict", "type": "text"},
+        {"name": "version_int", "type": "integer"},
+        {"name": "pyffice_version_txt", "type": "text"},
+        {"name": "hash_txt", "type": "text"},
+        {"name": "policy_fk", "type": "integer"},
+        {"name": "metadata_ltxt", "type": "text"},
+    ]
+
     def store_app_media(self, document, db="db", how="INSERT", table="app_media"):
         """
         Store application media creates a new record in the specified database table.
@@ -2566,7 +2585,15 @@ class NchantdOfficeStore(NchantdStore):
                 encode64(j.dumps(metadata)),
             ]
         ]
-        self._store(table, payload, db)
+        # T-007-followup: pass the schema columns explicitly so squirl's
+        # _fill_admin_cols has the column metadata it needs even when
+        # the table isn't pre-registered in the dstruct.
+        columns = None
+        if table == "doc_media":
+            columns = self._DOC_MEDIA_COLUMNS
+        elif table == "app_media":
+            columns = self._DOC_MEDIA_COLUMNS  # app_media uses the same shape
+        self._store(table, payload, db, columns=columns)
         return document["did"]
 
     # Payload strategy: INSERT/UPDATE/DEACTIVATE/DELETE/ARCHIVE produce
