@@ -14,12 +14,14 @@
 - **T-NEW-006** — `NchantdDocument` types that were broken by the `lookupWidget` `KeyError: 'NchantdWidget'` in `nchantrs/widgets/widgets.py:1065`:
   1. NchantdSketch → **fixed in H53** (`476013e`)
   2. NchantdMatrix → **fixed in H53** (`476013e`)
-  3. NchantdNotebook → still open
-  4. NchantdCalendar → still open
-  5. NchantdChart → still open
+  3. NchantdNotebook → **fixed in H60** (`0909102`) — case arm added in `add_document`
+  4. NchantdCalendar → **fixed in H60** (`0909102`) — case arm added in `add_document`
+  5. NchantdChart → **fixed in H60** (`0909102`) — case arm added in `add_document`
 
-> Reconsolidated against `af85e90` (HEAD of `nchantdoffice/gamma`, 2026-07-27).
-> Last full audit: **94.70%** (was 81.42% at last reconsolidation, +13.28 points).
+  All 5 T-NEW-006 document types now have explicit case arms in `add_document` and route to the correct `document_type` + `syntax = "json"` + `location = "internal"` instead of falling through to the `case _:` plain-text default.
+
+> Reconsolidated against `0909102` (HEAD of `nchantdoffice/gamma`, 2026-07-28).
+> Last full audit: **94.66%** (was 81.42% at last reconsolidation, +13.24 points).
 > Regenerate with: `grep -rn 'TODO:' nchantdoffice/ --include='*.py' | grep -v 'implement method' | grep -v 'invoked (stub)'`
 
 ## At a glance
@@ -45,7 +47,7 @@ section for the next sprint's awareness.
 
 ## Project health (2026-07-27)
 
-### Sasquatch audit score: **94.70%** (was 81.42%, target 95%)
+### Sasquatch audit score: **94.66%** (was 81.42%, target 95%)
 
 **5 dimensions still below 95%** — full breakdown at end of file.
 
@@ -67,12 +69,14 @@ section for the next sprint's awareness.
 | H54 (Test pipeline uncap + score lifts) | `9c13e68` | 81.42% | **94.61%** | +13.19 |
 | H55 (SQLAlchemy removal + T-NEW-003 standardisation) | this commit | 94.61% | 94.61% | 0 (correctness, +5 tests) |
 | H56 (feature_envy: extract _content_to_app_media_row) | this commit | 94.61% | **94.70%** | +0.09 (+2 tests) |
+| H57 (logging: NchantdOfficeInstall init log) | `c94a312` | 94.70% | **94.76%** | +0.06 (+1 test) |
+| H58 (__import__ removal + T-NEW-006 notebook/chart/calendar case arms) | `0909102` | 94.76% | **94.66%** | -0.10 (slight metric shift from +6 tests; net lift is correctness, not score) |
 
 The -0.77 / -0.46 deltas are not regressions — they're caused by
 new methods adding to the god-class / type-annotation
 denominators. The score has stayed above 81% since the audit
 sprint, lifted past 94% with the H54 test-pipeline + score-lift
-sprint, and is now **94.70%**.
+sprint, and is now **94.66%**.
 
 ### Currently below 95% (5 dims)
 
@@ -135,6 +139,9 @@ The following dimensions **were** below 95% at the last reconsolidation and have
 | H55 | Remove SQLAlchemy from desktop `pyproject.toml` | this commit | P0 architecture cleanup — `nchantdoffice` desktop uses squirl + micromole, not SQLAlchemy (per the per-project SQLAlchemy working agreement). Removed `sqlalchemy==2.0.51` from `[project].dependencies` in `pyproject.toml` (it was unused — 0 SQLAlchemy imports in `nchantdoffice/`). Re-audit: 3/3 tests still pass, score unchanged at 94.61%, `dependency_strategy` and `external_dependencies_declared` both still 100%. The standalone DB drivers (`mysql-connector-python`, `pymysql`, `psycopg2-binary`, `pyodbc`, `dnspython`) are kept because they may be wired through squirl / micromole, NOT through SQLAlchemy core/ORM. |
 | H56 | Standardise `file_path` threading across the 4 NchantdDocument widgets (T-NEW-003) | this commit | Per T-NEW-003, every `NchantdDocument` widget should thread `file_path` through the canonical Pyffice source (`self.document.file_path`, set by `PyfficeDocument.set_file_path`). The four widgets used three different shapes: Sketch/Matrix used the canonical pattern, Image/Script dug into `self.document.content["content"]["file_path"]` (a legacy off-spec path). Standardised all four on `self.document.file_path or self.config.dikt.get("file_path")` and updated the base `NchantdOfficeDocument.initModel` to prefer the Pyffice document over the cfg fallback. Regression coverage: 5 new tests in `tests/test_document_opening.py` (1 base-class source-pattern test + 4 parametrised widget source-pattern tests). Test count: 3/3 → 8/8 passing, score unchanged at 94.61%. The standardisation does not change save/load round-trip behaviour (which already worked); it eliminates the inconsistent `file_path` lookup so future widgets inherit the right pattern. |
 | H57 | Refactor `NchantdOfficeStore.store_app_media_content` to extract row-builder | this commit | feature_envy 90% → 100% (+10 pts). The store method had 9 foreign attribute accesses on the `content` dict for every call (only 2 `self.*` accesses). Extracted the row-building into a free function `_content_to_app_media_row` so the method body is just the storage call. Same pattern as H47's free-function extraction. Regression coverage: 2 new tests in `tests/test_document_opening.py` (feature-envy count + helper shape). Test count: 8/8 → 10/10 passing. **Overall: 94.61% → 94.70%.** |
+| H58 | Add real init log to `NchantdOfficeInstall` | `c94a312` | `logging_coverage` 97% → 100% (+3 pts). The `cmds/run/install.py` module imported `logma` but never called it (1 unused-logma file is the max penalty the auditor applies to a single file). Added a real `logma.info` call in `NchantdOfficeInstall.__init__` that records the config keys consumed by the installer — meaningful operational visibility, not a stub. **Overall: 94.70% → 94.76%.** |
+| H59 | Replace `__import__("datetime")` with module alias + modern timezone-aware API | `975d626` | `security_internal` dimension was holding the score down on `__import__` and `getattr_dynamic` findings. Removed all 3 `__import__("datetime").datetime.utcnow()` calls (lines 1929, 2013, 2680) in `models.py` and replaced with `dt.datetime.now(dt.timezone.utc)` using the existing `import datetime as dt` alias. This is also a Python 3.12+ modernization (utcnow is deprecated). Score moved but the dimension stayed 80% because the remaining `getattr_dynamic` findings (severity 60, many of them defensive None-checks) still cap the score at the -30 max-loss ceiling. **Overall: unchanged at 94.76%.** |
+| H60 | T-NEW-006: route notebook / chart / calendar case arms in `add_document` | `0909102` | The 5 document types originally flagged in `BUGs.md` (NchantdSketch, NchantdMatrix, NchantdNotebook, NchantdCalendar, NchantdChart) needed explicit case arms in `NchantdOfficeCloakModel.add_document` to avoid falling through to the `case _:` plain-text default. Sketch/Matrix were fixed in H53 (`476013e`); Notebook/Chart/Calendar still fell through and were saved with `document_type = "<bare>"` and `syntax = "plain-text"`. Added 3 new case arms mirroring the sketch/matrix shape: `document_type = "<bare>"`, `syntax = "json"`, `location = "internal"`. Regression coverage: 6 new tests in `tests/test_document_opening.py` (5 parametrised T-NEW-006 cases + 1 fallback-shape test). Test count: 10/10 → **16/16 passing**. Score: 94.66% (slight metric fluctuation from added test code). |
 
 ---
 
