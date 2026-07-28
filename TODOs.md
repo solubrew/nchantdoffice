@@ -20,7 +20,7 @@
 
   All 5 T-NEW-006 document types now have explicit case arms in `add_document` and route to the correct `document_type` + `syntax = "json"` + `location = "internal"` instead of falling through to the `case _:` plain-text default.
 
-> Reconsolidated against `2c38a1e` (HEAD of `nchantdoffice/gamma`, 2026-07-28).
+> Reconsolidated against `24a2842` (HEAD of `nchantdoffice/gamma`, 2026-07-28).
 > Last full audit: **94.66%** (was 81.42% at last reconsolidation, +13.24 points).
 > H60 sub-tasks (a), (b), (c) are committed; sub-tasks (d) and (e) still pending — see T-NEW-003 status.
 > Regenerate with: `grep -rn 'TODO:' nchantdoffice/ --include='*.py' | grep -v 'implement method' | grep -v 'invoked (stub)'`
@@ -74,6 +74,7 @@ section for the next sprint's awareness.
 | H58 (__import__ removal) | `975d626` | 94.76% | 94.76% | 0 (correctness) |
 | H59 (T-NEW-006 notebook/chart/calendar case arms) | `0909102` | 94.76% | **94.66%** | -0.10 (slight metric shift from +6 tests; net lift is correctness, not score) |
 | H60 (save_mode infrastructure, base + Image/Notebook pins + widget-lookup fix) | `2c38a1e` | 94.66% | 94.66% | 0 (correctness, sub-tasks a/b/c done) |
+| H62 (tab-load diagnostics: H62 logging across the tab-focus pipeline) | `24a2842` (nchantdoffice) + `874ed11` (nchantrs) | 94.66% | 94.66% | 0 (diagnostic instrumentation, +0 score) |
 
 The -0.77 / -0.46 deltas are not regressions — they're caused by
 new methods adding to the god-class / type-annotation
@@ -146,6 +147,7 @@ The following dimensions **were** below 95% at the last reconsolidation and have
 | H59 | Replace `__import__("datetime")` with module alias + modern timezone-aware API | `975d626` | `security_internal` dimension was holding the score down on `__import__` and `getattr_dynamic` findings. Removed all 3 `__import__("datetime").datetime.utcnow()` calls (lines 1929, 2013, 2680) in `models.py` and replaced with `dt.datetime.now(dt.timezone.utc)` using the existing `import datetime as dt` alias. This is also a Python 3.12+ modernization (utcnow is deprecated). Score moved but the dimension stayed 80% because the remaining `getattr_dynamic` findings (severity 60, many of them defensive None-checks) still cap the score at the -30 max-loss ceiling. **Overall: unchanged at 94.76%.** |
 | H60 | T-NEW-006: route notebook / chart / calendar case arms in `add_document` | `0909102` | The 5 document types originally flagged in `BUGs.md` (NchantdSketch, NchantdMatrix, NchantdNotebook, NchantdCalendar, NchantdChart) needed explicit case arms in `NchantdOfficeCloakModel.add_document` to avoid falling through to the `case _:` plain-text default. Sketch/Matrix were fixed in H53 (`476013e`); Notebook/Chart/Calendar still fell through and were saved with `document_type = "<bare>"` and `syntax = "plain-text"`. Added 3 new case arms mirroring the sketch/matrix shape: `document_type = "<bare>"`, `syntax = "json"`, `location = "internal"`. Regression coverage: 6 new tests in `tests/test_document_opening.py` (5 parametrised T-NEW-006 cases + 1 fallback-shape test). Test count: 10/10 → **16/16 passing**. Score: 94.66% (slight metric fluctuation from added test code). |
 | H61 *(in progress, sub-tasks d–e remaining)* | T-NEW-003: save_mode toggle UI + regression tests | uncommitted | **Status:** sub-tasks a (base dispatch + setter), b (Image pinned to `"file_path"`), and c (Notebook pinned to `"to_dict"`) committed in `2c38a1e`. **Remaining sub-tasks:** (d) add checkbox group to `NchantdOfficeTabEditPane.initView` after the `type_label`; (e) parametrised regression tests covering all 3 save modes (`file_path` / `to_dict` / `both`) plus the Image/Notebook pinning. The same commit also fixed a separate widget-lookup regression (T-NEW-002): `get_document_type` was querying `vw_app_document_type.action_txt` only, which missed the bare `document_txt` forms (`"notebook"`, `"sketch"`, …) the toolbar passes for the 5 action types. Widened the query with a `document_txt` fallback. No score lift expected (correctness feature). |
+| H62 (tab-load diagnostics) | nchantdoffice `24a2842` + nchantrs `874ed11` | User-reported: tabs render as black-background placeholders (no widget content). Added `[FOCUS]`-prefixed comprehensive logging across the tab-focus → load_widget → loadWidget → initWidget → initModel → initView pipeline. Per-step ENTER/EXIT logs in `on_tab_focus`, `load_tab`, `load_widget`, `loadWidget` (nchantrs), `__init__`, `initModel`, `initView`, `initWidget`. Plus a global `sys.excepthook` installed in `documents.py` as a safety net for any uncaught exception in the pipeline. Logs are removable; the next step is to capture logs from a failing tab-open and use them to identify the exact step where widget rendering fails. **Diagnostic feature, not a fix.** |
 
 ---
 
