@@ -86,61 +86,6 @@ def web_url_label(url):
         return "New Tab"
 
 
-def _registry_row_to_widget(row, fallback=None):
-    """Extract ``widget_txt`` from a ``get_document_type`` registry row.
-
-    ``get_document_type`` returns a pandas DataFrame row (or None)
-    from ``vw_app_document_type``. Older versions returned a dict;
-    newer versions return a Series. Handle both.
-    """
-    if row is None:
-        return fallback
-    # DataFrame row → dict-like; to_dict() gives a plain dict.
-    if hasattr(row, "to_dict"):
-        d = row.to_dict()
-    elif hasattr(row, "iloc"):
-        # Single-row DataFrame — take iloc[0] and recurse.
-        try:
-            return _registry_row_to_widget(row.iloc[0], fallback)
-        except (IndexError, AttributeError):
-            return fallback
-    else:
-        d = row
-    return d.get("widget_txt") or d.get("widget_class_txt") or fallback
-
-
-def _widget_path_looks_stale(dotted_path):
-    """Heuristic check: return True if ``dotted_path`` looks like a legacy
-    pre-rename short path that should be replaced.
-
-    T-NEW-002 stale-path fix: some saved tabs carry widget paths from
-    before the nchantdoffice ↔ nchantrs rename (e.g.
-    ``"widgets.trees.NchantdOfficeApplicationTree"`` without an app
-    prefix) that the modern loader can't resolve. The pattern:
-    either the path starts with a legacy short prefix (e.g.
-    ``"widgets."``) without an app name, OR it lacks a known app
-    prefix entirely.
-
-    We avoid actually trying to import the path here (Qt metaclass
-    conflicts and partial module initialisation in tests make
-    ``importlib.import_module`` unreliable). The widget loader's
-    apps-loop is the safer place to do the actual resolution.
-    This helper just flags the obvious-stale cases so we can route
-    them straight to the registry fallback.
-    """
-    if not dotted_path or not isinstance(dotted_path, str):
-        return False
-    parts = dotted_path.split(".")
-    if len(parts) < 3:
-        # A fully-qualified widget path has at least 3 segments:
-        #   ``app.widgets.<...>`` — anything shorter is legacy.
-        return True
-    # First segment must be a known app prefix. Anything else
-    # (e.g. ``"widgets.trees.<...>"``) is legacy.
-    KNOWN_APPS = ("nchantdoffice", "nchantrs", "pyffice", "kahndor")
-    return parts[0] not in KNOWN_APPS
-
-
 class NchantdOfficeInstance(NchantdInstance):
     """"""
 
@@ -3366,200 +3311,54 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         return self
 
     def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0):
-        # H62 DIAGNOSTIC-INSTRUMENTATION
-        logma.info(
-            f"[FOCUS] load_tab ENTER tabn={tabn} tabset={tabset!r} "
-            f"tab={tab}"
-        )
-        try:
-            # Workaround for bug in nchantrs.models.tabsetmodels.NchantdTabSetModel.load_tab
-            # which uses 'tabn in self.tab_widgets' incorrectly for a list.
-            if tabn < len(self.tab_widgets):
-                # remove from parent QTabWidget
-                logma.info(
-                    f"[FOCUS] load_tab removing existing widget at tabn={tabn} "
-                    f"(len(self.tab_widgets)={len(self.tab_widgets)})"
-                )
-                self.parent.removeTab(tabn)
-                # remove from our internal list so super().load_tab doesn't shift other tabs
-                self.tab_widgets.pop(tabn)
+        """"""
+        # Workaround for bug in nchantrs.models.tabsetmodels.NchantdTabSetModel.load_tab
+        # which uses 'tabn in self.tab_widgets' incorrectly for a list.
+        if tabn < len(self.tab_widgets):
+            # remove from parent QTabWidget
+            self.parent.removeTab(tabn)
+            # remove from our internal list so super().load_tab doesn't shift other tabs
+            self.tab_widgets.pop(tabn)
 
-            # super().load_tab calls self.load_widget, which we override.
-            # Ensure we pass the converted document if needed, but nchantrs' load_tab
-            # expects the 'tab' dict which it then passes to parse_widget_data.
-            logma.info(f"[FOCUS] load_tab calling super().load_tab")
-            super().load_tab(tab, tabn, tabset, active_tab_position)
-            logma.info(
-                f"[FOCUS] load_tab EXIT tabn={tabn} tabsdata_len={len(self.tabsdata)} "
-                f"tab_widgets_len={len(self.tab_widgets)}"
-            )
-            return self
-        except Exception as exc:
-            import traceback
-            logma.error(
-                f"[FOCUS] load_tab EXCEPTION tabn={tabn} tabset={tabset} "
-                f"type={type(exc).__name__} message={exc!r}"
-            )
-            logma.error(f"[FOCUS] load_tab traceback:\n{traceback.format_exc()}")
-            raise
-
-    def _resolve_widget_name(self, cfg, document):
-        """Resolve widget_name from cfg/document or the registry fallback.
-
-        T-NEW-002 + saved-tab fix: returns the dotted widget path
-        string for the given tab/document config, falling back to
-        the ``app_document_type`` registry when both ``cfg.widget``
-        and ``cfg.tab.widget`` are empty. The saved-tab shape is
-        ``{"widget": "", "tab_type": "add_<doc>_<type>_<name>"}``;
-        the fallback probes both the synthesised ``tab_type`` form
-        and the bare ``document_txt`` form (via the widening in
-        ``NchantdOfficeCloakModel.get_document_type`` from H53).
-
-        The registry helper ``_resolve_widget_from_registry`` on
-        ``NchantdOfficeCloakModel`` queries the raw
-        ``app_document_type`` table (no view), so its
-        ``document_type_txt`` WHERE clause references a column that
-        doesn't exist there — it always returns None. Reach the
-        fixed ``get_document_type`` (which queries
-        ``vw_app_document_type`` and handles both forms) via
-        ``self.app.model`` instead.
-
-        Also validates that any widget path read from ``cfg.widget``
-        or ``cfg.tab.widget`` actually resolves to an importable
-        module attribute. Stale saved tabs (pre-rename) carry
-        legacy short paths like ``"widgets.trees.<Class>"`` that
-        fail thingify. When validation fails, fall through to the
-        registry to find the current path.
-
-        The same indirection the toolbar uses at line 1656. Falls
-        back to a direct attribute lookup if ``self.app`` is
-        unavailable (e.g. during construction).
-
-        Extracted as a helper so the resolution logic is unit-testable
-        without instantiating Qt widgets. Returns the resolved widget
-        path string or ``None`` if nothing matched.
-        """
-        widget_name = None
-        if document:
-            widget_name = document.get(
-                "widget", document.get("widget_txt", cfg.get("widget"))
-            )
-        else:
-            widget_name = cfg.get("widget")
-        if (not widget_name) and "tab" in cfg:
-            tab_data = cfg["tab"]
-            widget_name = tab_data.get("widget", tab_data.get("widget_txt", None))
-
-        # T-NEW-002 stale-path fix: if the resolved path looks like a
-        # legacy short path (pre-rename, e.g. ``"widgets.trees.<...>"``
-        # with fewer than 2 dots), discard it and fall through to the
-        # registry below. We avoid actually importing here because Qt
-        # metaclass conflicts in test environments make importlib
-        # unreliable; the heuristic check is enough to flag the
-        # obvious-stale cases the user reported.
-        if widget_name and _widget_path_looks_stale(widget_name):
-            logma.warning(
-                f"[FOCUS] _resolve_widget_name stale path: {widget_name!r} "
-                f"looks legacy; falling back to registry"
-            )
-            widget_name = None
-
-        if not widget_name:
-            tab_type = (
-                document.get("tab_type", document.get("tab_type_txt", ""))
-                if document
-                else cfg.get("tab", {}).get("tab_type", "")
-            )
-            document_txt = (
-                document.get("document_type", document.get("document_txt", ""))
-                if document
-                else ""
-            )
-            # Reach the CloakModel helper via the app model (it's a
-            # sibling class — not in NchantdOfficeTabSetModel's MRO).
-            # We use ``get_document_type`` (queries ``vw_app_document_type``
-            # with the widening for both action_txt and document_txt
-            # from H53, commit 2c38a1e) rather than
-            # ``_resolve_widget_from_registry`` (queries the raw
-            # table with a column name that doesn't exist there).
-            resolve = None
-            app_model = getattr(self, "app", None) and getattr(self.app, "model", None)
-            if app_model is not None and hasattr(app_model, "get_document_type"):
-                resolve = lambda code, fallback=None: _registry_row_to_widget(
-                    app_model.get_document_type(code), fallback
-                )
-            elif hasattr(self, "_resolve_widget_from_registry"):
-                # Direct attribute (allows tests to inject a stub).
-                resolve = self._resolve_widget_from_registry
-            if resolve is not None:
-                if tab_type:
-                    widget_name = resolve(tab_type, None)
-                if not widget_name and document_txt:
-                    widget_name = resolve(document_txt, None)
-        return widget_name
+        # super().load_tab calls self.load_widget, which we override.
+        # Ensure we pass the converted document if needed, but nchantrs' load_tab
+        # expects the 'tab' dict which it then passes to parse_widget_data.
+        super().load_tab(tab, tabn, tabset, active_tab_position)
+        return self
 
     def load_widget(self, cfg, tabset="center", document=None, tab_type="custom_widget"):
-        # H62 DIAGNOSTIC-INSTRUMENTATION: every step logged at INFO
-        # with [FOCUS] prefix. Use logma.warning/error for failure paths
-        # so the user can grep for these.
-        logma.info(
-            f"[FOCUS] load_widget ENTER cfg_keys={list(cfg.keys()) if isinstance(cfg, dict) else 'NOT_DICT'} "
-            f"tabset={tabset!r} document_present={document is not None} tab_type={tab_type!r}"
-        )
+        """"""
         logma.info(f"Load Widget {cfg}")
         logma.info(f"Tabset {tabset}")
         logma.info(f"Document {document}")
         logma.info(f"Tab Type {tab_type}")
 
-        # Initialised outside the try so the except-block log message
-        # can reference ``widget_name`` even when ``_resolve_widget_name``
-        # raises before assignment (e.g. AttributeError on a missing
-        # sibling-class helper). Without this the except log itself
-        # raises UnboundLocalError and obscures the real cause.
-        widget_name = None
-        try:
-            # Build one coherent config before calling the nchantrs loader. A complete
-            # dotted widget path always takes the dynamic import branch in loadWidget;
-            # no registry placeholder is a valid document-opening result.
-            widget_name = self._resolve_widget_name(cfg, document)
-            logma.info(
-                f"[FOCUS] load_widget resolved widget_name={widget_name!r} "
-                f"from cfg={cfg!r} document={document!r}"
-            )
-            cfg["tid"] = document.get("tid", document.get("tid_txt", cfg.get("tid"))) if document else cfg.get("tid")
+        # Build one coherent config before calling the nchantrs loader. A complete
+        # dotted widget path always takes the dynamic import branch in loadWidget;
+        # no registry placeholder is a valid document-opening result.
+        if document:
+            widget_name = document.get("widget", document.get("widget_txt", cfg.get("widget")))
+            cfg["tid"] = document.get("tid", document.get("tid_txt", cfg.get("tid")))
             cfg["document"] = document
-            if not widget_name:
-                logma.error(
-                    f"[FOCUS] load_widget FAILING — no widget_name found in "
-                    f"document={document!r} cfg_keys={list(cfg.keys()) if isinstance(cfg, dict) else cfg!r}"
-                )
-                raise LookupError(f"No widget registered for document tab: {document or cfg.get('tab', cfg)}")
-            cfg["widget"] = widget_name
-            logma.info(f"[FOCUS] load_widget calling super().load_widget with widget={widget_name!r}")
+        else:
+            widget_name = cfg.get("widget")
+        if (not widget_name) and "tab" in cfg:
+            tab_data = cfg["tab"]
+            widget_name = tab_data.get("widget", tab_data.get("widget_txt", None))
+        if not widget_name:
+            raise LookupError(f"No widget registered for document tab: {document or cfg.get('tab', cfg)}")
+        cfg["widget"] = widget_name
 
-            tabW = super().load_widget(cfg, tabset, document, tab_type)
-            logma.info(
-                f"[FOCUS] load_widget super().load_widget returned type={type(tabW).__name__} "
-                f"id={id(tabW) if tabW is not None else 'NONE'}"
-            )
-            if tabW is None:
-                raise RuntimeError(f"Widget loader returned None for {widget_name}")
-            # ``super().load_widget`` already calls initWidget through the
-            # dynamic loader. Mark the widget as initialised so the
-            # tabset's later set_focus() / on_tab_focus() doesn't try to
-            # re-initialise the same widget (which would clobber state and
-            # re-build the canvas for a sketch or the table for a matrix).
-            tabW.widget_initialized = True
-            logma.info(f"[FOCUS] load_widget EXIT success widget={type(tabW).__name__}")
-            return tabW
-        except Exception as exc:
-            import traceback
-            logma.error(
-                f"[FOCUS] load_widget EXCEPTION widget_name={widget_name!r} "
-                f"type={type(exc).__name__} message={exc!r}"
-            )
-            logma.error(f"[FOCUS] load_widget traceback:\n{traceback.format_exc()}")
-            raise
+        tabW = super().load_widget(cfg, tabset, document, tab_type)
+        if tabW is None:
+            raise RuntimeError(f"Widget loader returned None for {widget_name}")
+        # ``super().load_widget`` already calls initWidget through the
+        # dynamic loader. Mark the widget as initialised so the
+        # tabset's later set_focus() / on_tab_focus() doesn't try to
+        # re-initialise the same widget (which would clobber state and
+        # re-build the canvas for a sketch or the table for a matrix).
+        tabW.widget_initialized = True
+        return tabW
 
     def set_focus(self):
         """"""
