@@ -1000,7 +1000,12 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         document = {"document": self.config.get("document", {})}
         self.document = self.app.model.codex.init_sketch(document)
         self.document.load_document()
-        self.file_path = self.document.file_path or self.config.dikt.get("file_path")
+        self.file_path = (
+            self.document.file_path
+            or self.config.dikt.get("file_path")
+            or (self.document.content or {}).get("file_path")
+            or (self.document.content or {}).get("content", {}).get("file_path")
+        )
         self.context_menu_name = "context.document.sketch"
         self.initialize_context_menu(self.context_menu_name)
         self.current_tool = None
@@ -1513,8 +1518,8 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         return self.size()
 
     def get_content(self):
-        """Return sketch content for serialization - layers, shapes, and canvas config."""
-        content = {}
+        """Return sketch content for serialization - file path, layers, shapes, canvas config."""
+        content = {"file_path": self.file_path}
         content["layers"] = self.layers if self.layers else []
         content["active_layer_index"] = self.active_layer_index
         content["layer_properties"] = self.layer_properties

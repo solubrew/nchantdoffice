@@ -236,7 +236,12 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         logma.info(f"Document {document}")
         self.document = self.app.model.codex.init_matrix(document)
         self.document.load_document()
-        self.file_path = self.document.file_path or self.config.dikt.get("file_path")
+        self.file_path = (
+            self.document.file_path
+            or self.config.dikt.get("file_path")
+            or (self.document.content or {}).get("file_path")
+            or (self.document.content or {}).get("content", {}).get("file_path")
+        )
         self.context_menu_name = "context.document.matrix"
         self.initialize_context_menu(self.context_menu_name)
         return self
@@ -1725,7 +1730,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         if not file:
             return self
         self._show_unsupported_feature_message()
-        self.file_path = file
+        self.set_file_path(file)
         self.document.open_file(file)
         self.document.set_location("external")
         self.populate_document()

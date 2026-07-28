@@ -101,6 +101,18 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.initialize_context_menu("context.document.browser")
         cfg = {}
         self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
+        # Plain-string URL mirror for reopen: same 4-tier fallback
+        # pattern as NchantdOfficeImage.file_path. The URL is on
+        # the document's nested active_page.active_url.active_url
+        # attribute (set by load_document on the codex side), but
+        # we also peek at the saved content payload and the config
+        # in case Pyffice's load ran before the codex initialised.
+        self.url = (
+            getattr(self.active_url, "active_url", None)
+            or self.config.dikt.get("url")
+            or (self.document.content or {}).get("url")
+            or (self.document.content or {}).get("content", {}).get("url")
+        )
         self.library = self.document.library
         self.profiles = self.document.profile_manager
         self.get_current_profile()

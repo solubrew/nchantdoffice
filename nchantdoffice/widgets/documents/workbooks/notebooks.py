@@ -105,10 +105,16 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.pinned = False
 
     def initModel(self):
-        """"""
+        """ """
         super().initModel()
         self.document = self.app.model.codex.init_notebook({"document": self.config.dikt.get("document", {})})
         self.document.load_document()
+        self.file_path = (
+            self.document.file_path
+            or self.config.dikt.get("file_path")
+            or (self.document.content or {}).get("file_path")
+            or (self.document.content or {}).get("content", {}).get("file_path")
+        )
         self.context_menu.get_menu("context.document.notebook")
         return self
 

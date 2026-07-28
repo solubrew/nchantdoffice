@@ -234,7 +234,12 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # ``PyfficeDocument.set_file_path`` is a no-op. This matches the
         # pattern already used by NchantdOfficeSketch and NchantdOfficeMatrix.
         if self.file_path is None:
-            self.file_path = self.document.file_path or self.config.dikt.get("file_path")
+            self.file_path = (
+                self.document.file_path
+                or self.config.dikt.get("file_path")
+                or (self.document.content or {}).get("file_path")
+                or (self.document.content or {}).get("content", {}).get("file_path")
+            )
         cfg = {
             "buttons": {
                 10: {"action": "set_page_view", "handler": self.cmd_toggle_page_view},
