@@ -806,9 +806,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
-        self.toolbox_config[200]["items"] = self.init_drawer_selection_config()
+        # self.toolbox_config[200]["items"] = self.init_drawer_selection_config()
         self.toolbox_config[300]["items"] = self.init_drawer_object_config()
-        self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
+        # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
     def insert_chart(self):
         """Insert a chart at the cursor position.
