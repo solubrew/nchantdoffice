@@ -989,17 +989,19 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
     def initModel(self):
         """Initialize the sketch model with document, context menu, and layers."""
         super().initModel()
-        cfg = {"file_path": self.file_path}
-        self.document = self.app.model.codex.init_sketch(cfg)
+        document = {"document": self.config.get("document", {})}
+        self.document = self.app.model.codex.init_sketch(document)
         self.document.load_document()
+        self.file_path = self.document.file_path or self.config.dikt.get("file_path")
         self.context_menu_name = "context.document.sketch"
         self.initialize_context_menu(self.context_menu_name)
-        self.layers = self.get_layers()
         self.current_tool = None
         self.current_shape = None
         self.shapes = []
+        self.layers = ["Layer 0 - Canvas Layer"]
         self.active_layer_index = 0
-        self.layer_properties = {}  # Store layer properties (transparency, color, size)
+        self.layer_properties = {}
+        self._restore_document_content()
         self.undo_stack = []
         self.redo_stack = []
         self.current_tool_config = {
@@ -1054,6 +1056,59 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self._setup_canvas_mouse_handlers()
 
         self.layout.addWidget(self.canvas)
+        self.populate_document()
+        return self
+
+    def _restore_document_content(self):
+        """Restore persisted layers, shape geometry, and canvas settings."""
+        content = getattr(self.document, "content", None) or {}
+        if isinstance(content, dict) and isinstance(content.get("content"), dict):
+            content = content["content"]
+        if not isinstance(content, dict):
+            return self
+
+        layers = content.get("layers") or ["Layer 0 - Canvas Layer"]
+        self.layers = list(layers)
+        if "New Layer" not in self.layers:
+            self.layers.append("New Layer")
+        self.layer_properties = dict(content.get("layer_properties") or {})
+        try:
+            self.active_layer_index = int(content.get("active_layer_index", 0))
+        except (TypeError, ValueError):
+            self.active_layer_index = 0
+        self.active_layer_index = max(0, min(self.active_layer_index, len(self.layers) - 1))
+
+        self.shapes = []
+        for shape_data in content.get("shapes") or []:
+            if not isinstance(shape_data, dict):
+                continue
+            start = shape_data.get("start") or {}
+            end = shape_data.get("end") or {}
+            if not all(axis in start and axis in end for axis in ("x", "y")):
+                continue
+            config = dict(shape_data.get("config") or {})
+            config["color"] = pyqt.QColor(config.get("color", "#000000"))
+            self.shapes.append(
+                {
+                    "tool": shape_data.get("tool"),
+                    "start": pyqt.QPointF(start["x"], start["y"]),
+                    "end": pyqt.QPointF(end["x"], end["y"]),
+                    "layer": shape_data.get("layer"),
+                    "config": config,
+                }
+            )
+        self._restored_canvas_size = content.get("canvas_size") or {}
+        return self
+
+    def populate_document(self):
+        """Render the restored sketch content into the initialized canvas."""
+        canvas_size = getattr(self, "_restored_canvas_size", {})
+        if self.canvas is not None and isinstance(canvas_size, dict):
+            width = canvas_size.get("width")
+            height = canvas_size.get("height")
+            if width and height:
+                self.canvas.resize(int(width), int(height))
+        self.render_on_canvas()
         return self
 
     def initWidget(self):

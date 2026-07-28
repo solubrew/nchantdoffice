@@ -171,8 +171,13 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         else:
             tab = document
         if widget is None:  # or widget == "":
-            # tab["widget"] = lookup_widget(tab["type"])
-            tab["widget"] = self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
+            document_type = self.get_document_type(tab["type"])
+            if document_type is None:
+                raise LookupError(f"Document type {tab['type']} is not registered")
+            tab["widget"] = document_type.get("widget_txt", None)
+        if not tab.get("widget"):
+            raise LookupError(f"Document type {tab['type']} has no registered widget")
+        widget = tab["widget"]
         name = tab["name"]
         if widgdata is None:
             widgdata = {"name": name, "type": tab["type"], "focus": "userapp"}
@@ -244,9 +249,20 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 document["document_type"] = "image"
                 syntax = "bytes"
                 document["location"] = "internal"
+            case "add_sketch_document_nchantdsketch" | "sketch":
+                document["document_type"] = "sketch"
+                syntax = "json"
+                document["location"] = "internal"
+            case "add_matrix_document_nchantdmatrix" | "matrix":
+                document["document_type"] = "matrix"
+                syntax = "json"
+                document["location"] = "internal"
             case _:
-                syntax = "plain-text"
-                document["document_type"] = "note"
+                document_type = self.get_document_type(document["type"])
+                if document_type is None:
+                    raise LookupError(f"Document type {document['type']} is not registered")
+                document["document_type"] = document_type.get("document_txt", document["type"])
+                syntax = document.get("syntax") or "plain-text"
         document["syntax"] = syntax
         self.store.store_doc_media(document)
         page_n = 0
@@ -3265,73 +3281,31 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         logma.info(f"Document {document}")
         logma.info(f"Tab Type {tab_type}")
 
-        # If document is not None, use it to populate cfg, similar to base load_widget
+        # Build one coherent config before calling the nchantrs loader. A complete
+        # dotted widget path always takes the dynamic import branch in loadWidget;
+        # no registry placeholder is a valid document-opening result.
         if document:
-            cfg["widget"] = document.get("widget", document.get("widget_txt", cfg.get("widget")))
+            widget_name = document.get("widget", document.get("widget_txt", cfg.get("widget")))
             cfg["tid"] = document.get("tid", document.get("tid_txt", cfg.get("tid")))
             cfg["document"] = document
-
-        # Workaround for KeyError: 'tab' in lookupWidget
-        # This happens when 'widget' is not in cfg, and 'tab' is the first key.
-        widget_name = cfg.get("widget")
+        else:
+            widget_name = cfg.get("widget")
         if (not widget_name) and "tab" in cfg:
             tab_data = cfg["tab"]
             widget_name = tab_data.get("widget", tab_data.get("widget_txt", None))
+        if not widget_name:
+            raise LookupError(f"No widget registered for document tab: {document or cfg.get('tab', cfg)}")
+        cfg["widget"] = widget_name
 
-        if widget_name:
-            # Rebuild cfg so the widget name is the FIRST key,
-            # which is what nchantrs.widgets.widgets.lookupWidget expects:
-            # registered_widget = lookupWidget(list(cfg.keys())[0])
-            new_cfg = {widget_name: cfg.get(widget_name, {})}
-            for k, v in cfg.items():
-                if k != widget_name:
-                    new_cfg[k] = v
-            cfg = new_cfg
-            cfg["widget"] = widget_name
-
-        # FIX P8 (lookupWidget KeyError):
-        # If the parent nchantrs loadWidget doesn't find the widget class
-        # in the registered-widget registry, the cfg's first key gets passed
-        # to lookupWidget(), which raises KeyError. That blocks the tabset
-        # rebuild on every startup until the data is hand-fixed.
-        #
-        # Wrap the super().load_widget call so any KeyError from
-        # lookupWidget falls back to a lightweight QWidget placeholder.
-        # The placeholder still carries the tab's name/position so
-        # the rest of the UI keeps working.
-        try:
-            tabW = super().load_widget(cfg, tabset, document, tab_type)
-        except KeyError as e:
-            logma.warning(
-                f"[load_widget] widget not in registry, "
-                f"using placeholder (missing key={e!s}); cfg_keys={list(cfg.keys())[:3]}"
-            )
-            from nchantrs.libraries import pyqt as _pyqt
-            tabW = _pyqt.QWidget()
-            tabW.setObjectName(cfg.get("widget", "missing_widget"))
-
-            # FIX P8b: tabset.set_focus() unconditionally calls
-            # ``tabW.initWidget()`` on every tab it focuses. The bare
-            # QWidget placeholder has no such method, which would
-            # raise AttributeError. Install no-op stubs for the common
-            # focus/refresh methods so the focus machinery can call
-            # into the placeholder without crashing the tabset rebuild.
-            # The placeholder remains a no-render empty shell — these
-            # are intentionally callable no-ops.
-            def _noop(*args, **kwargs):
-                return tabW
-            tabW.initWidget = _noop
-            tabW.refresh_for_document = _noop
-            tabW.build_toolbox = _noop
-            tabW.name = cfg.get("widget", "missing_widget")
-            tabW.type = tab_type
-            tabW.position = cfg.get("position", 0)
-            tabW.dummy = True
-            tabW.toolbox_config = {}
-            return tabW
-
-        if hasattr(tabW, "initWidget"):
-            tabW.initWidget()
+        tabW = super().load_widget(cfg, tabset, document, tab_type)
+        if tabW is None:
+            raise RuntimeError(f"Widget loader returned None for {widget_name}")
+        # ``super().load_widget`` already calls initWidget through the
+        # dynamic loader. Mark the widget as initialised so the
+        # tabset's later set_focus() / on_tab_focus() doesn't try to
+        # re-initialise the same widget (which would clobber state and
+        # re-build the canvas for a sketch or the table for a matrix).
+        tabW.widget_initialized = True
         return tabW
 
     def set_focus(self):

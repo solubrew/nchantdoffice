@@ -235,7 +235,9 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         logma.info(f"Document {document}")
         self.document = self.app.model.codex.init_matrix(document)
         self.document.load_document()
-        self.context_menu.get_menu("context.document.matrix")
+        self.file_path = self.document.file_path or self.config.dikt.get("file_path")
+        self.context_menu_name = "context.document.matrix"
+        self.initialize_context_menu(self.context_menu_name)
         return self
 
     def initView(self, cfg=None):
@@ -1716,34 +1718,17 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.set_cell_value(address, formula)
 
     def open_file(self, file=None):
-        """Open a spreadsheet file"""
-        # T-073: surface an informational message when opening an
-        # Excel file that the spreadsheet widget only supports a
-        # subset of Excel features (formulas, basic formatting,
-        # single sheet). Persist it in self.user_messages so the
-        # UI can display it in the cell-info bar.
-        if self.file_path or file:
-            self._show_unsupported_feature_message()
-
-        self.file_path = file
+        """Open a spreadsheet using the Pyffice matrix importer."""
         if file is None:
             file = self.file_path
-        if file is not None:
-            # T-074: pick the correct file-type handler based on
-            # the file extension + the magic bytes (when the file
-            # is readable). Defaults to the generic xlsx handler.
-            handler_name = self._resolve_file_type_handler(file)
-            logma.info(f"[matricies] open_external_file: handler={handler_name} for {file}")
-            if hasattr(self, handler_name):
-                try:
-                    getattr(self, handler_name)(file)
-                except Exception as e:
-                    logma.error(f"[matricies] open_external_file handler failed: {e}", exc_info=True)
-                    self.document.open_file(file)
-            else:
-                self.document.open_file(file)
+        if not file:
+            return self
+        self._show_unsupported_feature_message()
+        self.file_path = file
+        self.document.open_file(file)
         self.document.set_location("external")
         self.populate_document()
+        return self
 
     def _show_unsupported_feature_message(self):
         """T-073: record an informational message about Excel-feature coverage.
@@ -1912,8 +1897,20 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         setFont.
         """
         logma.info(f"[matricies] Populate worksheet {self.file_path}")
-        self.table.update_data(self.document.data)
+        content = getattr(self.document, "content", None) or {}
+        if isinstance(content, dict) and isinstance(content.get("content"), dict):
+            content = content["content"]
+        grid = content.get("grid") if isinstance(content, dict) else None
+        data = grid if isinstance(grid, list) else getattr(self.document, "data", None)
+        if isinstance(data, dict):
+            nested = data.get("content", data)
+            if isinstance(nested, dict):
+                data = nested.get("grid", [])
+        if data is None:
+            data = []
+        self.table.update_data(data)
         self._apply_cell_sizes()
+        self.connect_signals()
         return self
 
     def _apply_cell_sizes(self):
