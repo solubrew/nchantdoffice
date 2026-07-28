@@ -211,4 +211,93 @@ def example_with_client():
 
 # ====================================================================================================================||
 
+# T-DESK: track_quicklink_click helper (DESK-3 / ATNRG spec §1 analytics).
+#
+# Posts a click event to nchantdoffice_com's /api/affiliate/track/click/<id>
+# endpoint whenever a quicklink is opened. Best-effort: never raises so a
+# network failure doesn't block the click itself. Designed to be called
+# from anywhere a quicklink UI item is invoked (catalog item, browser,
+# quickstart pane, etc.).
+
+DEFAULT_AFFILIATE_API_BASE = "https://nchantdoffice.com/api/affiliate"
+
+
+def track_quicklink_click(offer_id: Optional[int] = None,
+                           *,
+                           service_slug: Optional[str] = None,
+                           session_id: Optional[str] = None,
+                           tier: Optional[str] = None,
+                           api_base: str = DEFAULT_AFFILIATE_API_BASE,
+                           timeout: float = 3.0,
+                           user=None) -> bool:
+    """POST a quicklink click event to nchantdoffice_com.
+
+    Args:
+        offer_id: numeric offer id (preferred). If absent the call still
+            goes through with the service_slug — the server resolves it.
+        service_slug: stable slug for the affiliate (e.g. "notion").
+        session_id: client session id for funnel analysis.
+        tier: user tier at click time ("free" / "pro") for segmentation.
+        api_base: override for testing (default: production URL).
+        timeout: HTTP timeout in seconds (kept small to not block UI).
+        user: optional in-app user object. When provided, the upgrade
+            prompt logic is fired at the "after 5th quicklink"
+            friction point per ATNRG spec §5.
+
+    Returns:
+        True if the server accepted the event, False otherwise. Never
+        raises — the click must succeed regardless of telemetry state.
+    """
+    payload: Dict[str, Any] = {}
+    if service_slug:
+        payload["service_slug"] = service_slug
+    if session_id:
+        payload["session_id"] = session_id
+    if tier:
+        payload["tier"] = tier
+    if offer_id is not None:
+        payload["offer_id"] = offer_id
+
+    # T-DESK: attach the local device_id (ATNRG spec §8 anti-abuse).
+    # The server uses this to reject self-referrals where the
+    # clicker and the referrer are on the same device.
+    try:
+        from nchantdoffice.utilities.device_id import get_device_id
+        payload["device_id"] = get_device_id()
+    except Exception as e:
+        logma.warning(f"[links] device_id not available: {e}")
+
+    endpoint = f"track/click/{offer_id}" if offer_id is not None else "track/click"
+    url = f"{api_base.rstrip('/')}/{endpoint.lstrip('/')}"
+    accepted = False
+    try:
+        response = requests.post(url, json=payload, timeout=timeout)
+        response.raise_for_status()
+        accepted = True
+        logma.info(
+            f"[links] quicklink click tracked: offer_id={offer_id} "
+            f"slug={service_slug} tier={tier}"
+        )
+    except requests.exceptions.RequestException as e:
+        logma.warning(
+            f"[links] quicklink click track failed (offer_id={offer_id}): {e}"
+        )
+    except Exception as e:
+        logma.error(
+            f"[links] quicklink click track crashed (offer_id={offer_id}): {e}",
+            exc_info=True,
+        )
+
+    # T-DESK: fire upgrade prompt at "after 5th quicklink" friction
+    # point per ATNRG spec §5. Best-effort — never affects the
+    # return value of the telemetry call.
+    try:
+        from nchantdoffice.utilities.upgrades import maybe_prompt_for_upgrade
+        maybe_prompt_for_upgrade(user, on_quicklink_click=True)
+    except Exception as e:
+        logma.warning(f"[links] upgrade-prompt fire failed: {e}")
+
+    return accepted
+
+
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||

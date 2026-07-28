@@ -105,6 +105,19 @@ sprint and is now 81.42%.
 
 ---
 
+## P0 — Architecture
+
+- [ ] **Remove SQLAlchemy from dependencies entirely** (2026-07-27)
+  - The desktop app (`nchantdoffice`) must NOT use SQLAlchemy. It uses
+    the SB internal stack (squirl + micromole) for data persistence.
+  - Current state: **0 SQLAlchemy imports found** in
+    `nchantdoffice/` source — the desktop app is already clean.
+  - Action needed: verify `pyproject.toml` and `requirements.txt`
+    don't list SQLAlchemy as a dependency. If found, remove it.
+  - **Scope**: LOW — just dependency cleanup (no code changes needed).
+
+---
+
 ## Completed items
 
 | ID | Title | Resolved in | Notes |

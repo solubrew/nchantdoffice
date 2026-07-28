@@ -605,190 +605,51 @@ class NchantdOfficeThemeSettings(NchantdThemeSettings):
         return self
 
 
-class NchantdOfficeAffiliateManager(NchantdOfficeDocumentManager):
-    """"""
+# T-DESK: NchantdOfficeAffiliateManager (the old placeholder that just
+# rendered an external /affiliate_marketing webview) was replaced by
+# ``NchantdOfficeReferralPanel`` (see ``widgets/config/referral_panel.py``).
+# The class name is preserved here as a re-export so any existing
+# registry/init code that references ``NchantdOfficeAffiliateManager``
+# keeps working without changes.
+try:
+    from nchantdoffice.widgets.config.referral_panel import NchantdOfficeReferralPanel
+    NchantdOfficeAffiliateManager = NchantdOfficeReferralPanel
+except ImportError:
+    class NchantdOfficeAffiliateManager(NchantdOfficeDocumentManager):  # noqa: F811
+        """Fallback shim if referral_panel.py cannot be imported.
 
-    def __init__(self, parent=None, cfg=None):
-        """ """
-        super().__init__(parent, cfg)
-        self.name = "NchantdOffice Affiliate Manager"
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDataSourceManager").override(cfg))
-        self.user = pyqt.QApplication.instance().model.user
-        self.canvas = None
-        self.data_series = None
-        self.source_select = None
-        self.source_table_select = None
-        self.data_pane = None
-        self.source_config_pane = None
-
-    def initModel(self):
-        """"""
-        super().initModel()
-        self.document = self.app.model.codex.init_source_manager()
-        self.document.load_document()
-        self.context_menu.get_menu("document_data_context")
-        return self
-
-    def initView(self, cfg=None):
-        """"""
-        if cfg is None:
-            cfg = {}
-        dss_cfg = {
-            "label": "Source: ",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": self.get_sources()},
-        }
-        self.source_select = NchantdDropDown(self, dss_cfg).initWidget()
-        dsvs_cfg = {
-            "label": "Data Table: ",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": self.get_source_tables(self.get_source())},
-        }
-        self.source_table_select = NchantdDropDown(self, dsvs_cfg).initWidget()
-        if cfg.get("buttons", None) is None:
-            cfg["buttons"] = {}
-        cfg["buttons"][0] = {"action": "show_config_pane", "type": "custom", "handler": self.cmd_toggle_config_pane}
-        cfg["buttons"][1] = {
-            "action": "insert_generic_action",
-            "type": "custom",
-            "widget": self.source_select,
-        }
-        cfg["buttons"][2] = {
-            "action": "insert_generic_action",
-            "type": "custom",
-            "widget": self.source_table_select,
-        }
-        cfg["buttons"][3] = {"action": "add_source", "handler": self.cmd_add_dataset}
-        cfg["buttons"][49] = "_insert_stretch"
-        super().initView(cfg)
-        layout = pyqt.QHBoxLayout()
-        cfg = {
-            "url": "https://www.nchantdoffice.com/affiliate_marketing",
-            "size": [1600, 750],
-            "is_simple": True,
-        }
-        if self.user.has_pro:
-            cfg["url"] = "https://www.nchantdoffice.com/affiliate_account"
-        elif self.user.has_account:
-            cfg["url"] = "https://www.nchantdoffice.com/affiliate_account"
-        self.browser = NchantdWebViewer(self, cfg).initWidget()
-        layout.addWidget(self.browser)
-        self.layout.addLayout(layout)
-        return self
-
-    def initWidget(self):
-        """"""
-        self.initModel()
-        self.initView()
-        return self
-
-    def add_dataset(self):
-        """"""
-        source = self.get_source()
-        table = self.get_source_table()
-        cfg = {
-            "size": ["auto", 250],
-            "datasource": source,
-            "data_table": table,
-            "fields": table,
-        }  # fields=table placeholder until real fields list is built
-        self.data_pane = NchantdDataSetPane(self, cfg).initWidget()
-        self.canvas.add_item(self.data_pane, [50, 50])
-
-    def cmd_add_dataset(self, event=None, *args, **kwargs):
-        """"""
-        self.add_dataset()
-        return self
-
-    def cmd_on_source_change(self, event=None, *args, **kwargs):
-        """"""
-        return self
-
-    def cmd_on_data_table_change(self, event=None, *args, **kwargs):
-        """"""
-        return self
-
-    def cmd_toggle_config_pane(self, event=None, *args, **kwargs):
-        """"""
-        self.set_pane("config")
-        return self
-
-    def cmd_toggle_full_screen_pane(self, event=None, *args, **kwargs):
-        """"""
-        self.set_pane("full")
-        return self
-
-    def cmd_toggle_data_pane(self, event=None, *args, **kwargs):
-        """"""
-        self.set_pane("data")
-        return self
-
-    def get_source(self):
-        """"""
-        self.source = "DictionaryAPI"
-        return self.source
-
-    def get_sources(self, full=False):
-        """Return the available data sources (T-090).
-
-        Reads ``self.app.model.get_sources()`` and returns
-        either the full DataFrame (``full=True``) or the
-        ``name_txt`` column as a list. Falls back to an empty
-        list when the model is unreachable or returns
-        nothing.
+        Renders a minimal stub webview pointing at the affiliate
+        marketing page so the app doesn't crash if the new panel
+        module has an import error.
         """
-        try:
-            self.sources = self.app.model.get_sources()
-        except Exception as e:
-            logma.error(f"[settings] get_sources: model.get_sources failed: {e}", exc_info=True)
-            self.sources = None
-        if self.sources is None:
-            return [] if not full else self.sources
-        if full:
-            return self.sources
-        try:
-            if hasattr(self.sources, "name_txt"):
-                return list(self.sources["name_txt"].tolist())
-            if isinstance(self.sources, (list, tuple)):
-                return list(self.sources)
-            if isinstance(self.sources, dict):
-                return list(self.sources.values())
-        except Exception as e:
-            logma.error(f"[settings] get_sources: coercion failed: {e}", exc_info=True)
-        return []
+        def __init__(self, parent=None, cfg=None):
+            super().__init__(parent, cfg)
+            self.name = "NchantdOffice Affiliate Manager (fallback)"
+            self.user = pyqt.QApplication.instance().model.user
+            self.canvas = None
+            self.data_series = None
 
-    def get_source_table(self):
-        """Return the source-table widget (T-090).
+        def initModel(self):
+            super().initModel()
+            return self
 
-        T-090: returns ``self.source_table`` when the
-        attribute exists (set up by initView). Falls back to
-        an empty string when not available, so callers can
-        use the return value as truthy/falsy.
-        """
-        try:
-            return getattr(self, "source_table", "") or ""
-        except Exception as e:
-            logma.error(f"[settings] get_source_table failed: {e}", exc_info=True)
-            return ""
+        def initView(self, cfg=None):
+            super().initView(cfg or {})
+            layout = pyqt.QHBoxLayout()
+            url_cfg = {
+                "url": "https://www.nchantdoffice.com/affiliate_marketing",
+                "size": [1600, 750],
+                "is_simple": True,
+            }
+            self.browser = NchantdWebViewer(self, url_cfg).initWidget()
+            layout.addWidget(self.browser)
+            self.layout.addLayout(layout)
+            return cfg
 
-    def get_source_tables(self, source):
-        """"""
-        return ["Supermarket", "CoinGecko"]
-
-    def get_data_view(self):
-        """"""
-        self.data_view = ""
-        return self.data_view
-
-    def get_data_view_fields(self):
-        """"""
-        fields = ["UUID", "Name", "Description", "Value", "CREON_DTTM", "MODON_DTTM", "CREBY_INT", "MODBY_INT"]
-        return fields
-
-    def init_toolbox(self):
-        """"""
-        super().init_toolbox()
-
+        def initWidget(self):
+            self.initModel()
+            self.initView()
+            return self
 
 # ====================================================================================================================||
 

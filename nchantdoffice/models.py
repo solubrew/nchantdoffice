@@ -31,6 +31,11 @@ from nchantrs.models.applicationmodels import NchantdCloakModel
 from nchantrs.models.models import NchantdStore
 from nchantrs.models.applicationmodels import NchantdModel
 from nchantdoffice.utilities.links import update_affilate_links
+from nchantdoffice.utilities.referral import (
+    ReferralCode as _ReferralCode,
+    generate_referral_code as _generate_referral_code,
+    validate_referral_code as _validate_referral_code,
+)
 from nchantdoffice.widgets.catalogs import NchantdOfficeDocumentsCatalog
 from kahndor.logma import Logma
 from pyffice.document import PyfficeDocument
@@ -531,7 +536,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         page_n = 0
         entry_n = 0
         media_fk = None
-        logma.info(f"Tab {note.get("content", "")}")
+        logma.info(f"Tab {note.get('content', '')}")
         content = {
             "uuid": uuid(),
             "pUUID": document["did"],
@@ -595,7 +600,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         page_n = 0
         entry_n = 0
         media_fk = None
-        logma.info(f"Tab {note.get("content", "")}")
+        logma.info(f"Tab {note.get('content', '')}")
         content = {
             "uuid": uuid(),
             "pUUID": document["did"],
@@ -635,6 +640,16 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """
         tab = super().add_tab(name, pid, pos, widget, widgdata, did, doc_type, tabset, in_doc, db)
         self.has_changed = True
+        # T-DESK: Fire upgrade prompt at the "after 3rd tab" friction
+        # point per ATNRG spec §5. Best-effort — if the upgrades
+        # module isn't importable, skip silently so this hot path
+        # never breaks the app.
+        try:
+            from nchantdoffice.utilities.upgrades import maybe_prompt_for_upgrade
+            user = getattr(self, "user", None)
+            maybe_prompt_for_upgrade(user, on_tab_created=True)
+        except Exception as e:
+            logma.warning(f"[models] add_tab upgrade-prompt skipped: {e}")
         return tab
 
     def add_day_node(self, day, month, year, pid=None):
@@ -1446,14 +1461,95 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return []
 
     def initialize_application(self):
-        """"""
+        """Initialize the application on first launch.
+
+        T-DESK: also generates a referral code (ATNRG spec §3, NB-X7K2-PQ
+        format) for the current user and persists it in their config
+        so the Referral Panel can render it. Falls back gracefully if
+        no user is available or the config layer is read-only.
+        """
         last_affilate_update_dttm = self.get_link_last_affiliate_update()
         update_affilate_links(self, last_affilate_update_dttm)
+        self._ensure_referral_code()
         super().initialize_application()
         # T-094: vector table init now lives on the store
         # (T-007 migration). The model no longer owns the
         # vec0 schema.
         return self
+
+    def _ensure_referral_code(self):
+        """Generate and persist a referral code for the current user.
+
+        T-DESK: idempotent — only generates a code if the user doesn't
+        already have one. The code is derived deterministically from
+        the user's identifier so it survives across reinstalls of
+        the same user.
+
+        Also persists ``device_id`` (ATNRG spec §8 anti-abuse) so
+        the server can reject self-referrals when the same device
+        clicks its own code.
+        """
+        try:
+            user = getattr(self, "user", None)
+            if user is None:
+                # user is wired in later; nothing to persist here.
+                return
+            user_cfg = getattr(user, "config", None)
+            cfg_dikt = getattr(user_cfg, "dikt", None) if user_cfg else None
+            if cfg_dikt is None or not isinstance(cfg_dikt, dict):
+                return
+
+            existing = cfg_dikt.get("referral_code")
+            if existing:
+                valid, _ = _validate_referral_code(existing)
+                if valid:
+                    logma.debug(f"[models] existing referral code ok: {existing}")
+                    self._ensure_device_id()
+                    return
+                logma.warning(
+                    f"[models] stored referral code {existing!r} invalid; regenerating"
+                )
+
+            user_id = (
+                getattr(user, "id", None)
+                or getattr(user, "user_name", None)
+                or getattr(user, "email", None)
+                or "anonymous"
+            )
+            new_code = _generate_referral_code(str(user_id))
+            cfg_dikt["referral_code"] = new_code
+            logma.info(f"[models] generated referral code for user {user_id}: {new_code}")
+
+            # Best-effort persistence; ignore save errors so a missing
+            # config layer doesn't break startup.
+            save = getattr(user_cfg, "_save", None) or getattr(user_cfg, "save", None)
+            if callable(save):
+                try:
+                    save()
+                except Exception as e:
+                    logma.warning(f"[models] could not persist referral code: {e}")
+
+            self._ensure_device_id()
+        except Exception as e:
+            logma.error(f"[models] _ensure_referral_code failed: {e}", exc_info=True)
+
+    def _ensure_device_id(self):
+        """Persist the device fingerprint in user config (ATNRG spec §8).
+
+        Best-effort — if the device_id module isn't importable or the
+        config layer is read-only, skip silently.
+        """
+        try:
+            from nchantdoffice.utilities.device_id import get_device_id
+            device_id = get_device_id()
+            user = getattr(self, "user", None)
+            user_cfg = getattr(user, "config", None)
+            cfg_dikt = getattr(user_cfg, "dikt", None) if user_cfg else None
+            if cfg_dikt is not None and isinstance(cfg_dikt, dict):
+                cfg_dikt["device_id"] = device_id
+                logma.debug(f"[models] device_id persisted: {device_id[:8]}...")
+        except Exception as e:
+            logma.warning(f"[models] _ensure_device_id failed: {e}")
 
     def initialize_instance(self, instance_object=None):
         """"""
@@ -1496,7 +1592,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """"""
         logma.info(f"Tabs {node['tabs']}")
         for tab in node["tabs"]:
-            logma.info(f"Tab {tab["name"]}")
+            logma.info(f"Tab {tab['name']}")
             logma.info(f"Text {tab['rich_text']}")
             # T-095: tab content is now stored in a single
             # ``content`` field (rich_text.data when set, falling
@@ -2893,9 +2989,9 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         """"""
         logma.info(f"\n\n{document_}\n\n")
         document = {}
-        logma.info(f"ENCODED {document_["content_enc64_txt"]}")
+        logma.info(f"ENCODED {document_['content_enc64_txt']}")
         document["data"] = decode64(document_["content_enc64_txt"])
-        logma.info(f"DECODED {document["data"]}")
+        logma.info(f"DECODED {document['data']}")
         try:
             document["data"] = j.loads(document["data"])
         except Exception as e:

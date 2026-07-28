@@ -29,6 +29,7 @@ from nchantrs.libraries import pyqt
 from nchantrs.widgets.groups import NchantdGridScrollGroupBox
 from nchantdoffice.widgets.items.items import NchantdOfficeLinkCatalogItem
 from nchantrs.widgets.widgets import NchantdAction
+from nchantdoffice.utilities.links import track_quicklink_click
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
@@ -107,11 +108,46 @@ class NchantdOfficeBrowserQuickStartPane(NchantdCatalog):
         Instantiates the ``widget_class`` from the launcher item
         and adds it as a new tab in the right-side drawer.
         Returns ``self``.
+
+        T-DESK: also fires a quicklink click event to
+        nchantdoffice_com via ``track_quicklink_click`` so affiliate
+        analytics work for in-app launches.
         """
         try:
             if app_item is None:
                 return self
             widget_class_path = app_item.get("widget_class") if isinstance(app_item, dict) else None
+
+            # T-DESK: best-effort analytics — never blocks the launch.
+            try:
+                offer_id = (
+                    int(app_item.get("offer_id"))
+                    if isinstance(app_item, dict) and app_item.get("offer_id") is not None
+                    else None
+                )
+                slug = (
+                    app_item.get("service_slug")
+                    or app_item.get("name_txt")
+                    or app_item.get("action_txt")
+                    if isinstance(app_item, dict)
+                    else None
+                )
+                user = (
+                    getattr(getattr(self, "app", None), "user", None)
+                    or getattr(self, "user", None)
+                )
+                tier = None
+                try:
+                    if user is not None:
+                        tier = "pro" if getattr(user, "has_pro", False) else "free"
+                except Exception:
+                    pass
+                track_quicklink_click(
+                    offer_id=offer_id, service_slug=slug, tier=tier, user=user,
+                )
+            except Exception as e:
+                logma.warning(f"[quickstart] analytics fire failed: {e}")
+
             if not widget_class_path:
                 return self
             # Lazy import to avoid importing every pane module at load time
@@ -149,7 +185,7 @@ class NchantdOfficeBrowserQuickStartPane(NchantdCatalog):
                 if col >= 3:
                     row += 1
                     col = 0
-                logma.info(f"Item{item.get("parameters_dict", "{}")}Blank")
+                logma.info(f"Item{item.get('parameters_dict', '{}')}Blank")
                 if item.get("parameters_dict", "") == "":
                     item["parameters_dict"] = "{}"
                 cfg = {
