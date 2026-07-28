@@ -257,18 +257,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 document["document_type"] = "matrix"
                 syntax = "json"
                 document["location"] = "internal"
-            case "add_notebook_document_nchantdnotebook" | "notebook":
-                document["document_type"] = "notebook"
-                syntax = "json"
-                document["location"] = "internal"
-            case "add_chart_document_nchantdchart" | "chart":
-                document["document_type"] = "chart"
-                syntax = "json"
-                document["location"] = "internal"
-            case "add_calendar_document_nchantdcalendar" | "calendar":
-                document["document_type"] = "calendar"
-                syntax = "json"
-                document["location"] = "internal"
             case _:
                 document_type = self.get_document_type(document["type"])
                 if document_type is None:

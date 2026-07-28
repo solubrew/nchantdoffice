@@ -3,7 +3,11 @@ analysis:
   counts:
     files: 429
     python_files: 172
+<<<<<<< HEAD
     python_lines: 61276
+=======
+    python_lines: 60270
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
     test_files: 87
 audit_date: '1785166530.110188'
 dimensions:
@@ -127,7 +131,11 @@ dimensions:
   dependency_strategy:
     details:
       details:
+<<<<<<< HEAD
         external_imports: 554
+=======
+        external_imports: 552
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
         info: 'Hint: 28 GitVein projects available but not used: condor, eaglis, falcon,
           glain, goalt...'
         internal_import_details:
@@ -163,6 +171,7 @@ dimensions:
           project: nchantdoffice
         internal_imports: 331
         internal_projects_used:
+<<<<<<< HEAD
         - nchantdoffice
         - nchantrs
         - kahndor
@@ -170,6 +179,15 @@ dimensions:
         score: 100
         status: pass
         total_imports: 885
+=======
+        - kahndor
+        - nchantdoffice
+        - nchantrs
+        leverage_score: 37.49
+        score: 100
+        status: pass
+        total_imports: 883
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
       score: 100
       status: pass
     score: 100
@@ -252,7 +270,11 @@ dimensions:
         - file: nchantdoffice/models.py
           rule: File too large
           severity: medium
+<<<<<<< HEAD
           size_kb: 174.791015625
+=======
+          size_kb: 163.7265625
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
         large_file_count: 1
         score: 80
         status: pass
@@ -268,7 +290,11 @@ dimensions:
           branches:
             local: []
             remote: []
+<<<<<<< HEAD
           commit_count: 510
+=======
+          commit_count: 492
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           commits: []
           contributors: []
           is_repo: true
@@ -296,7 +322,11 @@ dimensions:
           items:
           - class: NchantdOfficeCloakModel
             file: nchantdoffice/models.py
+<<<<<<< HEAD
             line_count: 2203
+=======
+            line_count: 2173
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
             method_count: 110
           - class: NchantdOfficeSettingsModel
             file: nchantdoffice/models.py
@@ -440,20 +470,17 @@ dimensions:
         issues:
         - fix: Refactor long methods into smaller functions
           items:
-          - file: nchantdoffice/models.py
-            line_count: 153
-            method: add_document
           - file: nchantdoffice/widgets/config/settings.py
             line_count: 204
             method: initView
-          rule: 'Long methods detected: 2'
+          rule: 'Long methods detected: 1'
           severity: medium
-        long_method_count: 2
-        score: 90
+        long_method_count: 1
+        score: 95
         status: pass
-      score: 90
+      score: 95
       status: pass
-    score: 90
+    score: 95
     status: pass
   memory:
     details:
@@ -519,7 +546,11 @@ dimensions:
         count: 27
         examples:
         - file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2600
+=======
+          line: 2515
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           text: '# NOTE: sorts by (name, type) for stable display. Version'
         - file: nchantdoffice/utilities/util_helpers.py
           line: 77
@@ -676,11 +707,16 @@ dimensions:
       details:
         issues:
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1744
+=======
+          line: 1659
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           rule: 'Bandit: Pickle and modules that wrap it can be unsafe when used to
             deserialize untrusted data, possible security issue.'
           severity: medium
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2793
           rule: 'Bandit: Possible binding to all interfaces.'
           severity: medium
@@ -690,6 +726,17 @@ dimensions:
           severity: medium
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/models.py
           line: 3087
+=======
+          line: 2708
+          rule: 'Bandit: Possible binding to all interfaces.'
+          severity: medium
+        - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/models.py
+          line: 2708
+          rule: 'Bandit: Possible binding to all interfaces.'
+          severity: medium
+        - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/models.py
+          line: 3002
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           rule: 'Bandit: Use of weak MD5 hash for security. Consider usedforsecurity=False'
           severity: high
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/widgets/controls/toolboxes.py
@@ -735,252 +782,413 @@ dimensions:
         - category: getattr_dynamic
           content: user = getattr(self, "user", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 732
+=======
+          line: 665
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if existing is not None and not getattr(existing, "empty", True):'
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1034
+=======
+          line: 967
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if df is None or getattr(df, "empty", True):'
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1165
+=======
+          line: 1098
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1346
+=======
+          line: 1261
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if df is None or getattr(df, "empty", True):'
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1556
+=======
+          line: 1471
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: user = getattr(self, "user", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1594
+=======
+          line: 1509
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: user_cfg = getattr(user, "config", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1598
+=======
+          line: 1513
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg_dikt = getattr(user_cfg, "dikt", None) if user_cfg else None
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1599
+=======
+          line: 1514
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getattr(user, "id", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1615
+=======
+          line: 1530
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: or getattr(user, "user_name", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1616
+=======
+          line: 1531
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: or getattr(user, "email", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1617
+=======
+          line: 1532
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: save = getattr(user_cfg, "_save", None) or getattr(user_cfg, "save",
             None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1626
+=======
+          line: 1541
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: save = getattr(user_cfg, "_save", None) or getattr(user_cfg, "save",
             None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1626
+=======
+          line: 1541
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: user = getattr(self, "user", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1646
+=======
+          line: 1561
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: user_cfg = getattr(user, "config", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1647
+=======
+          line: 1562
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg_dikt = getattr(user_cfg, "dikt", None) if user_cfg else None
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1648
+=======
+          line: 1563
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getattr(self.app.model, "_resolve_widget_from_registry", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 1711
+=======
+          line: 1626
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: df = getattr(self, "document_types_df", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2000
+=======
+          line: 1915
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2001
+=======
+          line: 1916
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: doc_id = getattr(self, "active_document", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2042
+=======
+          line: 1957
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2046
+=======
+          line: 1961
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: notify_url = getattr(self.config, "dikt", {}).get("notify_url")
             if hasattr(self, "config") else None
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2084
+=======
+          line: 1999
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '"trace": getattr(self, "_last_error_trace", None) or {},'
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2099
+=======
+          line: 2014
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2225
+=======
+          line: 2140
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if df is not None and not getattr(df, "empty", True):'
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2231
+=======
+          line: 2146
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2255
+=======
+          line: 2170
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2299
+=======
+          line: 2214
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: tab = getattr(self, "active_tab", None) or getattr(self, "current_tab",
             None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2329
+=======
+          line: 2244
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: tab = getattr(self, "active_tab", None) or getattr(self, "current_tab",
             None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2329
+=======
+          line: 2244
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2335
+=======
+          line: 2250
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '"name_txt": getattr(tab, "name", "Tab"),'
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2339
+=======
+          line: 2254
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '"position_int": getattr(tab, "position", 0) or 0,'
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2340
+=======
+          line: 2255
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '"type_txt": getattr(tab, "type", "generic") or "generic",'
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2341
+=======
+          line: 2256
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '"pid_txt": getattr(tab, "pid", None) or "",'
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2342
+=======
+          line: 2257
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: agent_manager = getattr(self.app, "agent_manager", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2458
+=======
+          line: 2373
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: agent = agent_manager.assign_agent(getattr(self, "mole", None))
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2463
+=======
+          line: 2378
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "docs", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2749
+=======
+          line: 2664
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: parent_delete = getattr(super(), "_delete", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2753
+=======
+          line: 2668
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '"MODBY_FK": getattr(self, "user_FK", 0),'
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2766
+=======
+          line: 2681
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: current = str(getattr(pydoc, "version", "0.0.0.0") or "0.0.0.0")
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2793
+=======
+          line: 2708
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: instance_version = getattr(self.app.model.instance, "version",
             "0.0.0")
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2884
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
@@ -996,68 +1204,111 @@ dimensions:
             None)
           file: nchantdoffice/models.py
           line: 3486
+=======
+          line: 2799
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: viewer = getattr(widget, "browser", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 3573
+=======
+          line: 3342
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: view = getattr(viewer, "browser", None) if viewer is not None else
             None
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 3574
+=======
+          line: 3343
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 3692
+=======
+          line: 3461
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 3708
+=======
+          line: 3477
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 3724
+=======
+          line: 3493
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 3740
+=======
+          line: 3509
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 3756
+=======
+          line: 3525
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 3974
+=======
+          line: 3743
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if df is not None and not getattr(df, "empty", True):'
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 3980
+=======
+          line: 3749
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: url_open
           content: response = requests.post(notify_url, json=payload, headers=headers,
             timeout=5)
           file: nchantdoffice/models.py
+<<<<<<< HEAD
           line: 2106
+=======
+          line: 2021
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
           pattern: requests\.post\(
           severity: 50
         - category: getattr_dynamic
@@ -3434,7 +3685,11 @@ dimensions:
       status: pass
     score: 100
     status: pass
+<<<<<<< HEAD
 overall_score: 94.65
+=======
+overall_score: 94.76
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
 project: nchantdoffice
 summary:
   failing: 1
@@ -3444,6 +3699,7 @@ summary:
   total_auditors: 11
   total_dimensions: 53
 test_execution:
+<<<<<<< HEAD
   duration_seconds: 17.254521131515503
   project_score: 94.66
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
@@ -3451,6 +3707,15 @@ test_execution:
     tests_failed: 0
     tests_passed: 26
     tests_run: 26
+=======
+  duration_seconds: 17.196481227874756
+  project_score: 94.76
+  report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
+  results:
+    tests_failed: 0
+    tests_passed: 10
+    tests_run: 10
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
     tests_skipped: 0
   runner: falcon
   score_adjustment: 2
@@ -3460,7 +3725,11 @@ test_execution:
   status_message: +2% bonus (100% tests passed)
   timestamp: ''
 versions:
+<<<<<<< HEAD
   project: 7768c00
+=======
+  project: c94a312
+>>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
   project_status: dirty
   project_uncommitted_changes: 3
   sasquatch: 120e86d
