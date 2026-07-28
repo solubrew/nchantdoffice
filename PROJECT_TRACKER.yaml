@@ -3,7 +3,7 @@ analysis:
   counts:
     files: 429
     python_files: 172
-    python_lines: 60261
+    python_lines: 60270
     test_files: 87
 audit_date: '1785166530.110188'
 dimensions:
@@ -163,9 +163,9 @@ dimensions:
           project: nchantdoffice
         internal_imports: 331
         internal_projects_used:
+        - nchantdoffice
         - nchantrs
         - kahndor
-        - nchantdoffice
         leverage_score: 37.49
         score: 100
         status: pass
@@ -268,7 +268,7 @@ dimensions:
           branches:
             local: []
             remote: []
-          commit_count: 490
+          commit_count: 491
           commits: []
           contributors: []
           is_repo: true
@@ -418,20 +418,15 @@ dimensions:
       details:
         examples:
           silent_classes: []
-          unused_logma:
-          - file: cmds/run/install.py
-            logma_imported: true
-        issues:
-        - dimension: logging_coverage
-          rule: Add logging to silent modules/classes
-          severity: medium
-        score: 97
+          unused_logma: []
+        issues: []
+        score: 100
         silent_classes: 0
         status: pass
-        unused_logma_files: 1
-      score: 97
+        unused_logma_files: 0
+      score: 100
       status: pass
-    score: 97
+    score: 100
     status: pass
   long_method:
     details:
@@ -3422,7 +3417,7 @@ dimensions:
       status: pass
     score: 100
     status: pass
-overall_score: 94.7
+overall_score: 94.76
 project: nchantdoffice
 summary:
   failing: 1
@@ -3432,7 +3427,7 @@ summary:
   total_auditors: 11
   total_dimensions: 53
 test_execution:
-  duration_seconds: 17.20538306236267
+  duration_seconds: 17.188133716583252
   project_score: 94.7
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
   results:
@@ -3448,7 +3443,7 @@ test_execution:
   status_message: +2% bonus (100% tests passed)
   timestamp: ''
 versions:
-  project: af85e90
+  project: a4fda44
   project_status: dirty
-  project_uncommitted_changes: 6
+  project_uncommitted_changes: 5
   sasquatch: 120e86d

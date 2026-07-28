@@ -36,9 +36,18 @@ class NchantdOfficeInstall(Package):
     """"""
 
     def __init__(self, cfg=None):
-        """"""
+        """Initialise the NchantdOffice installer and log the start.
+
+        Records the config keys we actually consume (vs. the full
+        cfg dict) so an operator can confirm what was passed in
+        without dumping the entire payload. This is the canonical
+        entry-point for installation — every install run should be
+        visible in the log without grepping.
+        """
         super().__init__(cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeInstall").override(cfg))
+        cfg_keys = sorted((cfg or {}).keys()) if isinstance(cfg, dict) else []
+        logma.info(f"NchantdOfficeInstall init: cfg_keys={cfg_keys}")
 
     def get_manifest(self):
         """"""
