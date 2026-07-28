@@ -888,3 +888,95 @@ def test_resolve_widget_name_resolves_chart_via_synthesised_tab_type():
         f"Chart fallback failed; got {name!r}"
     )
     assert "add_chart_document_nchantdchart" in registry_calls
+
+
+def test_resolve_widget_name_replaces_stale_legacy_short_path():
+    """Stale saved-tab widget path is discarded and registry wins.
+
+    Pin for the H62 stale-path bug: a saved tab carries the legacy
+    pre-rename short form ``"widgets.trees.<Class>"`` (only 1 dot,
+    missing the app prefix). The user's log showed this exact shape
+    for the ApplicationTree: thingify fails on the bare path, the
+    apps-loop fallback fails (no such class in nchantrs), and the
+    tab renders as an empty shell.
+
+    The heuristic check ``_widget_path_looks_stale`` discards the
+    legacy form and falls through to the registry via
+    ``get_document_type``.
+    """
+    registry_calls = []
+
+    def _stub_get_document_type(lookup_code):
+        registry_calls.append(lookup_code)
+        if lookup_code == "add_navigation_document_nchantdnavigation":
+            return {"widget_txt": "nchantdoffice.widgets.trees.NchantdOfficeApplicationTree"}
+        return None
+
+    try:
+        model = NchantdOfficeTabSetModel.__new__(NchantdOfficeTabSetModel)
+    except (TypeError, AttributeError):
+        model = object.__new__(NchantdOfficeTabSetModel)
+    class _FakeAppModel:
+        get_document_type = staticmethod(_stub_get_document_type)
+    class _FakeApp:
+        model = _FakeAppModel()
+    model.app = _FakeApp()
+
+    # The exact failing shape from the user's log: legacy short
+    # path + synthesised tab_type + a fully-qualified path available
+    # via the registry.
+    saved_tab = {
+        "widget": "widgets.trees.NchantdOfficeApplicationTree",  # legacy short path
+        "tab_type": "add_navigation_document_nchantdnavigation",
+        "widgdata": "{}",
+        "name": "Navigation",
+        "size": [60, 800],
+        "apps": ["nchantrs", "nchantdoffice"],
+        "app": "nchantdoffice",
+        "pos": "left",
+    }
+    cfg = {"tab": saved_tab}
+    name = model._resolve_widget_name(cfg, saved_tab)
+    # The legacy path was discarded; the registry resolved.
+    assert name == "nchantdoffice.widgets.trees.NchantdOfficeApplicationTree", (
+        f"Stale-path replacement failed; got {name!r}"
+    )
+    assert "add_navigation_document_nchantdnavigation" in registry_calls
+
+
+def test_resolve_widget_name_keeps_fully_qualified_path():
+    """Fully-qualified widget paths are NOT marked stale.
+
+    Pin for the heuristic: a 3+ dot path like the real
+    ``nchantdoffice.widgets.documents.<...>`` should pass through
+    without consulting the registry (the loader handles resolution).
+    """
+    registry_calls = []
+
+    def _stub_get_document_type(lookup_code):
+        registry_calls.append(lookup_code)
+        return None
+
+    try:
+        model = NchantdOfficeTabSetModel.__new__(NchantdOfficeTabSetModel)
+    except (TypeError, AttributeError):
+        model = object.__new__(NchantdOfficeTabSetModel)
+    class _FakeAppModel:
+        get_document_type = staticmethod(_stub_get_document_type)
+    class _FakeApp:
+        model = _FakeAppModel()
+    model.app = _FakeApp()
+
+    saved_tab = {
+        "widget": "nchantdoffice.widgets.documents.media.sketches.NchantdOfficeSketch",
+        "widgdata": "{}",
+    }
+    cfg = {"tab": saved_tab}
+    name = model._resolve_widget_name(cfg, saved_tab)
+    # Fully-qualified path passes through unchanged.
+    assert name == "nchantdoffice.widgets.documents.media.sketches.NchantdOfficeSketch", (
+        f"Valid path was incorrectly replaced; got {name!r}"
+    )
+    assert registry_calls == [], (
+        f"Registry should not be consulted for a valid path; got {registry_calls}"
+    )

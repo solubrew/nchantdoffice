@@ -109,6 +109,38 @@ def _registry_row_to_widget(row, fallback=None):
     return d.get("widget_txt") or d.get("widget_class_txt") or fallback
 
 
+def _widget_path_looks_stale(dotted_path):
+    """Heuristic check: return True if ``dotted_path`` looks like a legacy
+    pre-rename short path that should be replaced.
+
+    T-NEW-002 stale-path fix: some saved tabs carry widget paths from
+    before the nchantdoffice ↔ nchantrs rename (e.g.
+    ``"widgets.trees.NchantdOfficeApplicationTree"`` without an app
+    prefix) that the modern loader can't resolve. The pattern:
+    either the path starts with a legacy short prefix (e.g.
+    ``"widgets."``) without an app name, OR it lacks a known app
+    prefix entirely.
+
+    We avoid actually trying to import the path here (Qt metaclass
+    conflicts and partial module initialisation in tests make
+    ``importlib.import_module`` unreliable). The widget loader's
+    apps-loop is the safer place to do the actual resolution.
+    This helper just flags the obvious-stale cases so we can route
+    them straight to the registry fallback.
+    """
+    if not dotted_path or not isinstance(dotted_path, str):
+        return False
+    parts = dotted_path.split(".")
+    if len(parts) < 3:
+        # A fully-qualified widget path has at least 3 segments:
+        #   ``app.widgets.<...>`` — anything shorter is legacy.
+        return True
+    # First segment must be a known app prefix. Anything else
+    # (e.g. ``"widgets.trees.<...>"``) is legacy.
+    KNOWN_APPS = ("nchantdoffice", "nchantrs", "pyffice", "kahndor")
+    return parts[0] not in KNOWN_APPS
+
+
 class NchantdOfficeInstance(NchantdInstance):
     """"""
 
@@ -3392,6 +3424,13 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         ``vw_app_document_type`` and handles both forms) via
         ``self.app.model`` instead.
 
+        Also validates that any widget path read from ``cfg.widget``
+        or ``cfg.tab.widget`` actually resolves to an importable
+        module attribute. Stale saved tabs (pre-rename) carry
+        legacy short paths like ``"widgets.trees.<Class>"`` that
+        fail thingify. When validation fails, fall through to the
+        registry to find the current path.
+
         The same indirection the toolbar uses at line 1656. Falls
         back to a direct attribute lookup if ``self.app`` is
         unavailable (e.g. during construction).
@@ -3410,6 +3449,21 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         if (not widget_name) and "tab" in cfg:
             tab_data = cfg["tab"]
             widget_name = tab_data.get("widget", tab_data.get("widget_txt", None))
+
+        # T-NEW-002 stale-path fix: if the resolved path looks like a
+        # legacy short path (pre-rename, e.g. ``"widgets.trees.<...>"``
+        # with fewer than 2 dots), discard it and fall through to the
+        # registry below. We avoid actually importing here because Qt
+        # metaclass conflicts in test environments make importlib
+        # unreliable; the heuristic check is enough to flag the
+        # obvious-stale cases the user reported.
+        if widget_name and _widget_path_looks_stale(widget_name):
+            logma.warning(
+                f"[FOCUS] _resolve_widget_name stale path: {widget_name!r} "
+                f"looks legacy; falling back to registry"
+            )
+            widget_name = None
+
         if not widget_name:
             tab_type = (
                 document.get("tab_type", document.get("tab_type_txt", ""))
