@@ -1,20 +1,9 @@
-<<<<<<< HEAD
-duration: 17.254521131515503
-=======
-duration: 17.196481227874756
->>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
+duration: 17.193180561065674
 runner_type: pytest
 status: unknown
 summary:
   failed: 0
-<<<<<<< HEAD
-  passed: 26
+  passed: 13
   skipped: 0
-  total: 26
-timestamp: '2026-07-28 13:14:50'
-=======
-  passed: 10
-  skipped: 0
-  total: 10
-timestamp: '2026-07-28 09:50:13'
->>>>>>> parent of 0909102 (fix(models): route notebook/chart/calendar add_document cases (T-NEW-006))
+  total: 13
+timestamp: '2026-07-28 13:41:52'
