@@ -1,8 +1,8 @@
 {
-  "tabs_created": 2,
+  "tabs_created": 3,
   "quicklinks_clicked": 0,
   "prompts_shown": {
-    "after_3rd_tab": false,
+    "after_3rd_tab": true,
     "after_5th_quicklink": false
   },
   "prompt_dismissed": {
