@@ -3348,6 +3348,47 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             logma.error(f"[FOCUS] load_tab traceback:\n{traceback.format_exc()}")
             raise
 
+    def _resolve_widget_name(self, cfg, document):
+        """Resolve widget_name from cfg/document or the registry fallback.
+
+        T-NEW-002 + saved-tab fix: returns the dotted widget path
+        string for the given tab/document config, falling back to
+        ``_resolve_widget_from_registry`` when both ``cfg.widget`` and
+        ``cfg.tab.widget`` are empty. Try the synthesised ``tab_type``
+        first (e.g. ``add_sketch_document_nchantdsketch``) then the
+        bare ``document_txt`` (e.g. ``"sketch"``).
+
+        Extracted as a helper so the resolution logic is unit-testable
+        without instantiating Qt widgets. Returns the resolved widget
+        path string or ``None`` if nothing matched.
+        """
+        widget_name = None
+        if document:
+            widget_name = document.get(
+                "widget", document.get("widget_txt", cfg.get("widget"))
+            )
+        else:
+            widget_name = cfg.get("widget")
+        if (not widget_name) and "tab" in cfg:
+            tab_data = cfg["tab"]
+            widget_name = tab_data.get("widget", tab_data.get("widget_txt", None))
+        if not widget_name:
+            tab_type = (
+                document.get("tab_type", document.get("tab_type_txt", ""))
+                if document
+                else cfg.get("tab", {}).get("tab_type", "")
+            )
+            document_txt = (
+                document.get("document_type", document.get("document_txt", ""))
+                if document
+                else ""
+            )
+            if tab_type:
+                widget_name = self._resolve_widget_from_registry(tab_type, None)
+            if not widget_name and document_txt:
+                widget_name = self._resolve_widget_from_registry(document_txt, None)
+        return widget_name
+
     def load_widget(self, cfg, tabset="center", document=None, tab_type="custom_widget"):
         # H62 DIAGNOSTIC-INSTRUMENTATION: every step logged at INFO
         # with [FOCUS] prefix. Use logma.warning/error for failure paths
@@ -3365,23 +3406,13 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             # Build one coherent config before calling the nchantrs loader. A complete
             # dotted widget path always takes the dynamic import branch in loadWidget;
             # no registry placeholder is a valid document-opening result.
-            if document:
-                widget_name = document.get("widget", document.get("widget_txt", cfg.get("widget")))
-                logma.info(
-                    f"[FOCUS] load_widget resolving widget_name from document: "
-                    f"document.widget={document.get('widget')!r} "
-                    f"document.widget_txt={document.get('widget_txt')!r} "
-                    f"cfg.widget={cfg.get('widget')!r} -> widget_name={widget_name!r}"
-                )
-                cfg["tid"] = document.get("tid", document.get("tid_txt", cfg.get("tid")))
-                cfg["document"] = document
-            else:
-                widget_name = cfg.get("widget")
-                logma.info(f"[FOCUS] load_widget using cfg.widget={widget_name!r}")
-            if (not widget_name) and "tab" in cfg:
-                tab_data = cfg["tab"]
-                widget_name = tab_data.get("widget", tab_data.get("widget_txt", None))
-                logma.info(f"[FOCUS] load_widget resolved widget_name from cfg.tab={widget_name!r}")
+            widget_name = self._resolve_widget_name(cfg, document)
+            logma.info(
+                f"[FOCUS] load_widget resolved widget_name={widget_name!r} "
+                f"from cfg={cfg!r} document={document!r}"
+            )
+            cfg["tid"] = document.get("tid", document.get("tid_txt", cfg.get("tid"))) if document else cfg.get("tid")
+            cfg["document"] = document
             if not widget_name:
                 logma.error(
                     f"[FOCUS] load_widget FAILING — no widget_name found in "

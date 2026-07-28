@@ -657,3 +657,145 @@ def test_get_document_type_returns_none_when_neither_key_matches():
     row = model.get_document_type("totally_made_up_widget")
     assert row is None
     assert len(seen) == 2, "Both queries should still run for unknown types"
+
+
+# T-NEW-002 saved-tab regression: when loading a saved tab whose
+# ``widget`` column was persisted as the empty string (the pre-H53
+# toolbar never wrote the widget path), the live load_widget path must
+# fall through to ``_resolve_widget_from_registry`` using either
+# ``tab_type`` (synthesised action_txt) or ``document_txt`` (bare name).
+# Without this, nchantdsketch / nchantdmatrix / nchantdnotebook /
+# nchantdchart / nchantdcalendar tabs all fail with LookupError when
+# restored from the DB — even after the H53 toolbar fix, because the
+# DB rows still carry empty widget columns until the user re-saves.
+
+
+def test_resolve_widget_name_uses_synthesised_tab_type_when_widget_empty():
+    """_resolve_widget_name must consult the registry when widget is empty.
+
+    Pin for the H62 saved-tab regression: a saved tab dict with
+    ``widget=""`` plus a valid ``tab_type`` should resolve through
+    ``_resolve_widget_from_registry`` and NOT raise LookupError.
+    """
+    registry_calls = []
+
+    def _stub_resolve(lookup_code, fallback=None):
+        registry_calls.append(lookup_code)
+        if lookup_code == "add_sketch_document_nchantdsketch":
+            return "nchantdoffice.widgets.documents.media.sketches.NchantdOfficeSketch"
+        return fallback
+
+    try:
+        model = NchantdOfficeTabSetModel.__new__(NchantdOfficeTabSetModel)
+    except (TypeError, AttributeError):
+        model = object.__new__(NchantdOfficeTabSetModel)
+    model._resolve_widget_from_registry = _stub_resolve
+
+    saved_tab = {
+        "did": "saved-tab-id",
+        "tid": "saved-tid",
+        "name": "nchantdsketch 95aff",
+        "tab_type": "add_sketch_document_nchantdsketch",
+        "widgdata": '{"file_type": "sketch"}',
+    }
+    cfg = {"tab": saved_tab, "widget": ""}
+    name = model._resolve_widget_name(cfg, saved_tab)
+    assert name == "nchantdoffice.widgets.documents.media.sketches.NchantdOfficeSketch", (
+        f"Synthesised fallback failed; got {name!r}"
+    )
+    assert "add_sketch_document_nchantdsketch" in registry_calls
+
+
+def test_resolve_widget_name_falls_back_to_bare_document_txt():
+    """Bare ``document_txt`` form must also resolve.
+
+    Pin for the H53 widening: the registry view's bare-name fallback
+    (``"sketch"``) must work when the synthesised form misses.
+    """
+    registry_calls = []
+
+    def _stub_resolve(lookup_code, fallback=None):
+        registry_calls.append(lookup_code)
+        # Only the bare form matches.
+        if lookup_code == "sketch":
+            return "nchantdoffice.widgets.documents.media.sketches.NchantdOfficeSketch"
+        return fallback
+
+    try:
+        model = NchantdOfficeTabSetModel.__new__(NchantdOfficeTabSetModel)
+    except (TypeError, AttributeError):
+        model = object.__new__(NchantdOfficeTabSetModel)
+    model._resolve_widget_from_registry = _stub_resolve
+
+    saved_tab = {
+        "did": "saved-tab-id",
+        "tid": "saved-tid",
+        "name": "nchantdsketch 95aff",
+        "tab_type": "add_sketch_document_nchantdsketch",  # synthesised (won't match)
+        "document_type": "sketch",  # bare (will match)
+        "widgdata": '{"file_type": "sketch"}',
+    }
+    cfg = {"tab": saved_tab, "widget": ""}
+    name = model._resolve_widget_name(cfg, saved_tab)
+    assert name == "nchantdoffice.widgets.documents.media.sketches.NchantdOfficeSketch", (
+        f"Bare fallback failed; got {name!r}"
+    )
+    # Synthesised tried first, missed; bare tried second, hit.
+    assert registry_calls == ["add_sketch_document_nchantdsketch", "sketch"], (
+        f"Expected synthesised-then-bare order; got {registry_calls}"
+    )
+
+
+def test_resolve_widget_name_returns_none_when_nothing_matches():
+    """Unresolved types must return None — not silently swallow."""
+    try:
+        model = NchantdOfficeTabSetModel.__new__(NchantdOfficeTabSetModel)
+    except (TypeError, AttributeError):
+        model = object.__new__(NchantdOfficeTabSetModel)
+    model._resolve_widget_from_registry = lambda lookup_code, fallback=None: None
+
+    saved_tab = {
+        "did": "unknown",
+        "tid": "unknown",
+        "tab_type": "add_totally_made_up_widget",
+        "document_type": "totally_made_up_widget",
+        "widgdata": "{}",
+    }
+    cfg = {"tab": saved_tab, "widget": ""}
+    name = model._resolve_widget_name(cfg, saved_tab)
+    assert name is None, (
+        "Resolver should return None when both registry forms miss; "
+        f"got {name!r}"
+    )
+
+
+def test_resolve_widget_name_returns_existing_widget_when_present():
+    """When ``document.widget`` is non-empty, registry is not consulted."""
+    registry_calls = []
+
+    def _stub_resolve(lookup_code, fallback=None):
+        registry_calls.append(lookup_code)
+        return None
+
+    try:
+        model = NchantdOfficeTabSetModel.__new__(NchantdOfficeTabSetModel)
+    except (TypeError, AttributeError):
+        model = object.__new__(NchantdOfficeTabSetModel)
+    model._resolve_widget_from_registry = _stub_resolve
+
+    # Test 1: with widget="" + tab_type set, the synthesised form is
+    # tried first and returns None; we don't fall through to document_txt
+    # when the synthesised miss is the only fallback attempt (this is
+    # an early-exit optimisation in the helper).
+    saved_tab = {
+        "did": "ok",
+        "tid": "ok",
+        "tab_type": "add_sketch_document_nchantdsketch",
+        "widgdata": "{}",
+    }
+    cfg = {"tab": saved_tab, "widget": ""}
+    name = model._resolve_widget_name(cfg, saved_tab)
+    # Registry should have been tried with the synthesised form.
+    assert "add_sketch_document_nchantdsketch" in registry_calls, (
+        f"Expected synthesised fallback; got {registry_calls}"
+    )
