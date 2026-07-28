@@ -639,8 +639,24 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         return bottom_margin
 
     def get_document_syntax(self):
-        """"""
-        return "plaintext"
+        """Return the document syntax, falling back to the saved payload
+        when ``PyfficeDocument.load_document`` hasn't restored ``syntax``.
+
+        PyfficeDocument.load_document sets ``self.syntax`` only via
+        ``meta_data["syntax"]``; the column-name mismatch with
+        pyffice's read path leaves ``self.syntax = None`` on reopen.
+        So we look at the same 4-tier chain we use for file_path.
+        """
+        if self.document is None:
+            return "plaintext"
+        meta = getattr(self.document, "meta_data", {}) or {}
+        return (
+            getattr(self.document, "syntax", None)
+            or meta.get("syntax")
+            or self.config.dikt.get("document_syntax")
+            or self.config.dikt.get("syntax")
+            or "plaintext"
+        )
 
     def get_document_syntaxs(self):
         """"""
