@@ -3,7 +3,7 @@ analysis:
   counts:
     files: 429
     python_files: 172
-    python_lines: 60699
+    python_lines: 60706
     test_files: 87
 audit_date: '1785166530.110188'
 dimensions:
@@ -163,9 +163,9 @@ dimensions:
           project: nchantdoffice
         internal_imports: 331
         internal_projects_used:
+        - nchantdoffice
         - nchantrs
         - kahndor
-        - nchantdoffice
         leverage_score: 37.44
         score: 100
         status: pass
@@ -286,7 +286,7 @@ dimensions:
         - file: nchantdoffice/models.py
           rule: File too large
           severity: medium
-          size_kb: 167.771484375
+          size_kb: 168.1689453125
         large_file_count: 1
         score: 80
         status: pass
@@ -302,7 +302,7 @@ dimensions:
           branches:
             local: []
             remote: []
-          commit_count: 523
+          commit_count: 525
           commits: []
           contributors: []
           is_repo: true
@@ -720,7 +720,7 @@ dimensions:
           rule: 'Bandit: Possible binding to all interfaces.'
           severity: medium
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/models.py
-          line: 3097
+          line: 3104
           rule: 'Bandit: Use of weak MD5 hash for security. Consider usedforsecurity=False'
           severity: high
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/widgets/controls/toolboxes.py
@@ -1037,62 +1037,62 @@ dimensions:
           content: instance_version = getattr(self.app.model.instance, "version",
             "0.0.0")
           file: nchantdoffice/models.py
-          line: 2894
+          line: 2901
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: viewer = getattr(widget, "browser", None)
           file: nchantdoffice/models.py
-          line: 3439
+          line: 3446
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: view = getattr(viewer, "browser", None) if viewer is not None else
             None
           file: nchantdoffice/models.py
-          line: 3440
+          line: 3447
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3558
+          line: 3565
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3574
+          line: 3581
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3590
+          line: 3597
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3606
+          line: 3613
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3622
+          line: 3629
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
-          line: 3840
+          line: 3847
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if df is not None and not getattr(df, "empty", True):'
           file: nchantdoffice/models.py
-          line: 3846
+          line: 3853
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: url_open
@@ -3491,7 +3491,7 @@ summary:
   total_auditors: 11
   total_dimensions: 53
 test_execution:
-  duration_seconds: 17.205854654312134
+  duration_seconds: 17.251993894577026
   project_score: 93.78
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
   results:
@@ -3507,7 +3507,7 @@ test_execution:
   status_message: +2% bonus (100% tests passed)
   timestamp: ''
 versions:
-  project: 09f2bb5
+  project: 38f2e5c
   project_status: dirty
   project_uncommitted_changes: 3
   sasquatch: 120e86d
