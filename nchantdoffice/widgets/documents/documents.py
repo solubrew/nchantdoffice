@@ -591,71 +591,8 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def set_file_path(self, path):
-        """Set ``self.file_path`` and mirror it onto the live tab dict.
-
-        The tab dict lives at ``self.app.model.tabsdata[tabn]`` and
-        is the source of truth that gets persisted to the DB on
-        the next ``store_doc_tab`` call (via ``save()`` /
-        ``add_tab``). For external-file documents (script, image,
-        matrix, sketch, notebook, etc.) the on-disk path must be
-        in ``tab["widgdata_dict"]["file_path"]`` so that
-        ``parse_widget_data`` reads it back into ``cfg`` on the
-        next reopen, where ``_load_external_file`` picks it up.
-
-        T-NEW-006 follow-up: external-file documents were
-        failing to reopen their source file because the path
-        was only on ``self.file_path`` (in-memory) and never
-        written back to the tab dict, so the persisted tab
-        always carried the empty ``file_path`` from
-        ``parse_widget_data``'s default.
-        """
+        """ """
         self.file_path = path
-        try:
-            model = getattr(getattr(self, "app", None), "model", None)
-            if model is None:
-                return self
-            tabsdata = getattr(model, "tabsdata", None)
-            if not tabsdata:
-                return self
-            # Identify the tab by tid_txt (preferred) or did — both are
-            # unique within a tabset and were set when the tab was
-            # created.
-            tid = None
-            doc = getattr(self, "document", None)
-            if doc is not None:
-                tid = getattr(doc, "tid", None) or getattr(doc, "tid_txt", None)
-            if tid is None:
-                return self
-            for tab in tabsdata:
-                if not isinstance(tab, dict):
-                    continue
-                if tab.get("tid_txt") == tid or tab.get("tid") == tid:
-                    # widgdata_dict is a JSON string in the stored
-                    # row; parse, mutate, re-serialise.
-                    widgdata_dict = tab.get("widgdata_dict", "{}")
-                    if isinstance(widgdata_dict, str):
-                        try:
-                            widgdata = j.loads(widgdata_dict)
-                        except Exception:
-                            widgdata = {}
-                    elif isinstance(widgdata_dict, dict):
-                        widgdata = dict(widgdata_dict)
-                    else:
-                        widgdata = {}
-                    widgdata["file_path"] = path
-                    tab["widgdata_dict"] = j.dumps(widgdata)
-                    # Also surface the path on the top-level tab dict
-                    # so consumers that read ``tab["file_path"]``
-                    # directly (e.g. models.add_document line 189)
-                    # pick it up too.
-                    tab["file_path"] = path
-                    logma.info(
-                        f"[documents] set_file_path: updated live tab "
-                        f"tid={tid} file_path={path!r}"
-                    )
-                    break
-        except Exception as e:
-            logma.warning(f"[documents] set_file_path: tab dict update failed: {e}")
         return self
 
     # def store_document(self):
