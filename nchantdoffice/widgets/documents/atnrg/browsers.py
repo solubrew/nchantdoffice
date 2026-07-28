@@ -1131,30 +1131,23 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return content
 
     def save(self):
-        """Save the browser document and refresh the content section.
+        """Save the browser document.
 
-        The save flow:
-          1. Refresh the URL inspection toolbox (so the
-             current-url / current-domain / current-parameters
-             fields reflect the active page)
-          2. Skip the save entirely if the tab is pinned (pinned
-             tabs persist their content from the parent document)
-          3. Delegate the actual document save to the parent class
-             (which handles version bumps and database persistence)
-          4. Refresh the content section via the active URL so the
-             user sees the latest content for the page they're on
+        Delegates to the parent ``save()`` (the line-843 form which
+        calls ``get_content()`` -> ``set_content()`` -> the line-467
+        unconditional form which writes both the doc_media row and
+        the doc_media_content.content_enc64_txt blob).
+
+        The previous override also called ``self.document.save()``
+        directly (the pyffice file-side save) AND ``super().save()``
+        -- but never went through ``get_content()`` / ``set_content()``,
+        so ``self.document.content`` stayed empty and the saved
+        ``content_enc64_txt`` ended up with ``{}``. Mirroring the
+        NchantdImage pattern (which is just ``super().save()``) lets
+        the parent flow do the right thing.
         """
-        logma.info(f"Save Browser Profile")
-        # Refresh URL inspection so the content section shows the
-        # current URL (T-028 fix - was previously not updating).
-        if hasattr(self, "update_toolbox_url_inspection"):
-            try:
-                self.update_toolbox_url_inspection()
-            except Exception as e:
-                logma.error(f"[browsers] save: update_toolbox_url_inspection failed: {e}", exc_info=True)
         if self.pinned:
             return self
-        self.document.save()
         super().save()
         return self
 
