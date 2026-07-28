@@ -3358,6 +3358,13 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         first (e.g. ``add_sketch_document_nchantdsketch``) then the
         bare ``document_txt`` (e.g. ``"sketch"``).
 
+        The registry helper lives on ``NchantdOfficeCloakModel`` (a
+        sibling class, not an ancestor of ``NchantdOfficeTabSetModel``)
+        so we reach it via ``self.app.model._resolve_widget_from_registry``
+        — the same indirection the toolbar uses. Falls back to a
+        direct attribute lookup if ``self.app`` is unavailable (e.g.
+        during construction).
+
         Extracted as a helper so the resolution logic is unit-testable
         without instantiating Qt widgets. Returns the resolved widget
         path string or ``None`` if nothing matched.
@@ -3383,10 +3390,20 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 if document
                 else ""
             )
-            if tab_type:
-                widget_name = self._resolve_widget_from_registry(tab_type, None)
-            if not widget_name and document_txt:
-                widget_name = self._resolve_widget_from_registry(document_txt, None)
+            # Reach the CloakModel helper via the app model (it's a
+            # sibling class — not in NchantdOfficeTabSetModel's MRO).
+            resolve = None
+            app_model = getattr(self, "app", None) and getattr(self.app, "model", None)
+            if app_model is not None and hasattr(app_model, "_resolve_widget_from_registry"):
+                resolve = app_model._resolve_widget_from_registry
+            elif hasattr(self, "_resolve_widget_from_registry"):
+                # Direct attribute (allows tests to inject a stub).
+                resolve = self._resolve_widget_from_registry
+            if resolve is not None:
+                if tab_type:
+                    widget_name = resolve(tab_type, None)
+                if not widget_name and document_txt:
+                    widget_name = resolve(document_txt, None)
         return widget_name
 
     def load_widget(self, cfg, tabset="center", document=None, tab_type="custom_widget"):
@@ -3402,6 +3419,12 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         logma.info(f"Document {document}")
         logma.info(f"Tab Type {tab_type}")
 
+        # Initialised outside the try so the except-block log message
+        # can reference ``widget_name`` even when ``_resolve_widget_name``
+        # raises before assignment (e.g. AttributeError on a missing
+        # sibling-class helper). Without this the except log itself
+        # raises UnboundLocalError and obscures the real cause.
+        widget_name = None
         try:
             # Build one coherent config before calling the nchantrs loader. A complete
             # dotted widget path always takes the dynamic import branch in loadWidget;
