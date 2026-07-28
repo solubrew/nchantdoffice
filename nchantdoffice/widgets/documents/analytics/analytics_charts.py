@@ -247,6 +247,10 @@ class NchantdOfficeChart(NchantdOfficeDocument):
                 logma.error(f"Error applying chart config: {e}")
         return self
 
+    def _build_chart_data_cfg(self):
+        """"""
+        #TODO implement method
+
     def cmd_add_data_view(self):
         """Add a new data view to the chart.
 

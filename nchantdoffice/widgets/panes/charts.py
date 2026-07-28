@@ -27,6 +27,7 @@ from nchantrs.libraries import pyqt
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox, NchantdLabeledDoubleSpinBox
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons, NchantdBorderConfigBar
 from nchantrs.widgets.controls.buttons import NchantdButton
+from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.checkboxes import NchantdCheckboxGroup, NchantdCheckbox
 from nchantrs.widgets.groups import NchantdVScrollGroupBox
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
@@ -248,10 +249,6 @@ class NchantdChartConfigPane(NchantdPane):
         self.set_size()
         return self
 
-
-
-
-
     # T-063: chart-type-specific UI dictionary. Each entry maps a
     # chart-type name to a factory that builds the per-chart
     # extras widget (axis range, color stops, point size, etc).
@@ -284,6 +281,9 @@ class NchantdChartConfigPane(NchantdPane):
         except Exception as e:
             logma.error(f"[charts] get_chart_specific_widget failed for {chart_type}: {e}", exc_info=True)
         return None
+    def _build_chart_action_button_group(self):
+        """"""
+        #TODO implement method
 
     def _chart_line_extras(self):
         """Build the line-chart-specific extras widget (T-063).
