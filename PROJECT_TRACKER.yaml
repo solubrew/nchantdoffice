@@ -3,7 +3,7 @@ analysis:
   counts:
     files: 429
     python_files: 172
-    python_lines: 60354
+    python_lines: 60455
     test_files: 87
 audit_date: '1785166530.110188'
 dimensions:
@@ -164,8 +164,8 @@ dimensions:
         internal_imports: 331
         internal_projects_used:
         - nchantrs
-        - nchantdoffice
         - kahndor
+        - nchantdoffice
         leverage_score: 37.44
         score: 100
         status: pass
@@ -268,7 +268,7 @@ dimensions:
           branches:
             local: []
             remote: []
-          commit_count: 493
+          commit_count: 499
           commits: []
           contributors: []
           is_repo: true
@@ -1194,101 +1194,119 @@ dimensions:
         - category: exec_calls
           content: self.context_menu.exec(global_pos)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 107
+          line: 129
           pattern: \bexec\(
           severity: 100
         - category: getattr_dynamic
           content: getattr(self.app.model.user, "has_pro", False)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 71
+          line: 79
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: doc_path = getattr(getattr(self, "document", None), "file_path",
             None)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 88
+          line: 96
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: doc_cfg = getattr(getattr(self, "document", None), "config", None)
+          file: nchantdoffice/widgets/documents/documents.py
+          line: 107
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: tree = getattr(self.app.view.panes["left"], "tree", None)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 180
+          line: 202
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: tags = getattr(self.document, "tags", []) if self.document else
             []
           file: nchantdoffice/widgets/documents/documents.py
-          line: 215
+          line: 237
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '#         self.app = getattr(self.parent, "app", None)'
           file: nchantdoffice/widgets/documents/documents.py
-          line: 319
+          line: 341
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: mode = getattr(self, "save_mode", "file_path") or "file_path"
+          file: nchantdoffice/widgets/documents/documents.py
+          line: 506
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: doc_cfg = getattr(getattr(self, "document", None), "config", None)
+          file: nchantdoffice/widgets/documents/documents.py
+          line: 565
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: path = dirname(self.path) if self.path else getattr(self.app, "base_path",
             "")
           file: nchantdoffice/widgets/documents/documents.py
-          line: 501
+          line: 602
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: path = dirname(self.path) if self.path else getattr(self.app, "base_path",
             "")
           file: nchantdoffice/widgets/documents/documents.py
-          line: 517
+          line: 618
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getattr(self, "document_editor", None)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 548
+          line: 649
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: or getattr(self, "browser", None)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 549
+          line: 650
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: or getattr(self, "image", None)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 550
+          line: 651
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: path = getattr(self, "snapshot_path", None) or (
           file: nchantdoffice/widgets/documents/documents.py
-          line: 559
+          line: 660
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: view = getattr(self, "app", None)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 713
+          line: 814
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: account_switch = getattr(view.view, "switch_to_account_tab", None)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 715
+          line: 816
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'logma.info(f''Remote document opened: {getattr(doc, "did", "unknown")}'')'
           file: nchantdoffice/widgets/documents/documents.py
-          line: 760
+          line: 861
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: setattr(self.document, key, value)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 597
+          line: 698
           pattern: setattr\(
           severity: 60
         - category: getattr_dynamic
@@ -3349,13 +3367,13 @@ dimensions:
         issues:
         - rule: low_coverage
           severity: medium
-          total: 2311
+          total: 2312
           typed: 43
         score: 1
         status: partial
-        total_functions: 2311
+        total_functions: 2312
         typed_functions: 43
-        untyped_functions: 2268
+        untyped_functions: 2269
       score: 1
       status: partial
     score: 1
@@ -3393,8 +3411,8 @@ summary:
   total_auditors: 11
   total_dimensions: 53
 test_execution:
-  duration_seconds: 17.222357511520386
-  project_score: 94.76
+  duration_seconds: 17.206196546554565
+  project_score: 94.66
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
   results:
     tests_failed: 0
@@ -3409,7 +3427,7 @@ test_execution:
   status_message: +2% bonus (100% tests passed)
   timestamp: ''
 versions:
-  project: 975d626
+  project: f74a058
   project_status: dirty
-  project_uncommitted_changes: 5
+  project_uncommitted_changes: 3
   sasquatch: 120e86d
