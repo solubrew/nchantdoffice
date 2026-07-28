@@ -74,10 +74,20 @@ class NchantdOfficeDocumentMixin:
         )
 
     def initModel(self, cfg=None, objects=None):
-        """"""
+        """ """
         super().initModel(cfg)  # Pass through usage even though the Mixin has no permeate parent class
         self.toolbox_config = self.config.dikt.get("toolbox", None)
-        self.set_file_path(self.config.dikt.get("file_path", None))
+        # T-NEW-003: thread ``self.file_path`` from the canonical sources
+        # in priority order:
+        #   1. ``self.document.file_path`` when a Pyffice document is
+        #      already attached (this is what ``PyfficeDocument.set_file_path``
+        #      sets after a real ``open_file`` round-trip).
+        #   2. ``self.config.dikt["file_path"]`` for new-document create
+        #      paths where the on-disk file does not exist yet and
+        #      ``PyfficeDocument.set_file_path`` is a no-op.
+        doc_path = getattr(getattr(self, "document", None), "file_path", None)
+        cfg_path = self.config.dikt.get("file_path", None)
+        self.set_file_path(doc_path or cfg_path)
         self.data = {}
         self.context_menu_name = "context.document"
         if self.context_menu_name is not None:

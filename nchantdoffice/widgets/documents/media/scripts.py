@@ -227,9 +227,14 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             add_textbox = "_skip"
             add_shape = "_skip"
         logma.info(f"Content {self.document.content}")
-        # self.file_path = self.document.content.get("file_path")
+        # T-NEW-003: standardize on the canonical ``self.document.file_path``
+        # source (set by ``PyfficeDocument.set_file_path``), with the
+        # explicit ``cfg.dikt["file_path"]`` fallback for new-document
+        # create paths where the on-disk file does not exist yet and
+        # ``PyfficeDocument.set_file_path`` is a no-op. This matches the
+        # pattern already used by NchantdOfficeSketch and NchantdOfficeMatrix.
         if self.file_path is None:
-            self.file_path = self.document.content.get("content", {}).get("file_path")
+            self.file_path = self.document.file_path or self.config.dikt.get("file_path")
         cfg = {
             "buttons": {
                 10: {"action": "set_page_view", "handler": self.cmd_toggle_page_view},

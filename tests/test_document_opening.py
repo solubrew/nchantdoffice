@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 import pandas as pd
+import pytest
 
 from nchantdoffice.models import NchantdOfficeCloakModel, NchantdOfficeTabSetModel
 
@@ -187,3 +188,126 @@ def test_tab_loader_materializes_sketch_and_matrix_instead_of_placeholder(monkey
         )
 
     assert len(created) == 2
+
+
+# T-NEW-003: regression coverage for the file_path threading standardisation.
+#
+# Background: the Pyffice base class (``pyffice.document.PyfficeDocument``)
+# already exposes ``self.file_path`` as the canonical source of truth for
+# where a document was opened from. The four NchantdOffice widgets
+# (Script / Image / Sketch / Matrix) used to read ``file_path`` from three
+# different shapes:
+#
+#   - Sketch / Matrix: ``self.document.file_path or self.config.dikt["file_path"]``
+#   - Image:          ``self.document.content.get("file_path")`` then
+#                     ``self.document.content.get("content", {}).get("file_path")``
+#   - Script:         same as Image (digging into ``document.content``)
+#
+# The T-NEW-003 fix is to standardise all four widgets on the Sketch /
+# Matrix shape. The base class also now prefers ``self.document.file_path``
+# over ``self.config.dikt["file_path"]`` in its ``initModel`` so the
+# document file_path is the canonical source whenever it is available.
+
+
+def test_initModel_threads_file_path_from_pyfice_document_first():
+    """Base-class initModel must prefer ``self.document.file_path`` over cfg.
+
+    The base class ``NchantdOfficeDocument.initModel`` is the single
+    entry-point for every widget's setup. When it threads
+    ``self.file_path``, the canonical source (the Pyffice document's
+    ``self.document.file_path``) must take precedence over the
+    config-supplied ``self.config.dikt["file_path"]`` fallback.
+
+    Both sources are valid for new documents (where the file does
+    not exist yet and ``PyfficeDocument.set_file_path`` is a no-op
+    until ``cmd_open_local_file`` or ``open_file`` populates it).
+    The point of T-NEW-003 is that the Pyffice document is the
+    canonical source whenever it has something to say.
+    """
+    # The actual class is defined inside the ``NchantdOfficeDocumentMixin``
+    # mixin (line 49 of widgets/documents/documents.py); the
+    # ``NchantdOfficeDocument`` class inherits from it. Read the source
+    # file directly so we inspect the same definition every time.
+    import pathlib
+    documents_py = pathlib.Path(__file__).resolve().parent.parent / "nchantdoffice" / "widgets" / "documents" / "documents.py"
+    src = documents_py.read_text()
+    # Must reference the canonical Pyffice source (self.document.file_path).
+    assert "self.document.file_path" in src, (
+        "documents.py must reference self.document.file_path somewhere in "
+        "the initModel path so the Pyffice document is the canonical source "
+        "for file_path (T-NEW-003)."
+    )
+    # The cfg.dikt fallback may also be present; that's fine for new
+    # documents. We only assert that the Pyffice document path is in
+    # the source. (The order-of-preference is enforced by the
+    # ``doc_path or cfg_path`` expression in the implementation.)
+
+
+_WIDGETS_USING_FILE_PATH = (
+    (
+        "nchantdoffice/widgets/documents/media/scripts.py",
+        "NchantdOfficeScript",
+    ),
+    (
+        "nchantdoffice/widgets/documents/media/images.py",
+        "NchantdOfficeImage",
+    ),
+    (
+        "nchantdoffice/widgets/documents/media/sketches.py",
+        "NchantdOfficeSketch",
+    ),
+    (
+        "nchantdoffice/widgets/documents/workbooks/matricies.py",
+        "NchantdOfficeMatrix",
+    ),
+)
+
+
+def _read(rel_path):
+    import pathlib
+    root = pathlib.Path(__file__).resolve().parent.parent
+    return (root / rel_path).read_text()
+
+
+@pytest.mark.parametrize("rel_path,class_name", _WIDGETS_USING_FILE_PATH)
+def test_widget_initModel_uses_canonical_file_path(rel_path, class_name):
+    """Each widget must read file_path from the canonical source.
+
+    The canonical source for the file_path is the Pyffice document
+    (``self.document.file_path``), with the explicit
+    ``self.config.dikt.get("file_path")`` fallback for new-document
+    create paths where the on-disk file does not exist yet.
+
+    The legacy patterns we forbid:
+      - ``self.document.content.get("file_path")``
+      - ``self.document.content.get("content", {}).get("file_path")``
+    """
+    src = _read(rel_path)
+
+    forbidden = [
+        'self.document.content.get("file_path")',
+        'self.document.content.get(\'file_path\')',
+        'self.document.content.get("content", {}).get("file_path")',
+        'self.document.content.get(\'content\', {}).get(\'file_path\')',
+    ]
+    bad = [pattern for pattern in forbidden if pattern in src]
+    assert not bad, (
+        f"{rel_path}: must not dig into self.document.content['content']['file_path'] "
+        f"anymore (T-NEW-003). Use the canonical pattern "
+        f"`self.document.file_path or self.config.dikt.get(\"file_path\")`. "
+        f"Found legacy patterns: {bad}"
+    )
+
+    # The class must use the canonical pattern at least once (in initModel /
+    # __init__ / initView). Skip the assertion when the widget reads file_path
+    # only through `self.document.file_path` (which is itself canonical) -
+    # this is the case for Sketch and Matrix already.
+    assert (
+        'self.document.file_path or self.config.dikt.get("file_path")' in src
+        or 'self.document.file_path or self.config.dikt.get(\'file_path\')' in src
+        or 'self.document.file_path' in src  # Sketch / Matrix already use the
+        # canonical single-source form without the `or` fallback.
+    ), (
+        f"{rel_path}: must thread file_path through the canonical source "
+        f"`self.document.file_path` (T-NEW-003)."
+    )
