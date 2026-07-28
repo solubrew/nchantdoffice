@@ -465,34 +465,16 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def save(self, path=None, format_=None, encrypt=False):
-        """Save the current document according to its ``save_mode``.
+        """
+        Save method saves the current document in its most recent format ie internal or external file saving
+        this can be different than a store_document command
 
-        T-NEW-003 save_mode dispatch:
-
-        - ``"file_path"``: writes the on-disk file (when ``path`` is
-          set and the on-disk file is the source of truth) and skips
-          the DB store. The DB row's ``doc_media.file_path`` column
-          already records the reference from the previous open path.
-        - ``"to_dict"``: writes the full ``self.document.to_dict()``
-          payload to the DB via ``store_document`` and skips the
-          external file write. The on-disk file is no longer the
-          source of truth.
-        - ``"both"`` (legacy default): writes the file AND stores
-          the DB row, matching pre-toggle behaviour. This mode is
-          still supported for documents that have not been migrated.
-
-        Per-widget overrides can pin ``self.save_mode`` to one of the
-        two canonical values (e.g. ``NchantdOfficeImage`` always uses
-        ``"file_path"`` because binary blobs don't serialise cleanly
-        to JSON).
-
-        :return: self for chaining
+        :return:
         """
         if self.document is None:
             return self
         logma.info(f"Save Content {self.document.content}")
         logma.info(f"Save Path {path}")
-        logma.info(f"Save Mode {self.save_mode}")
         self.set_file_path(path)
         if self.app.view.panes["left"].tree.model.current_node is None:
             return self
@@ -503,37 +485,19 @@ class NchantdOfficeDocumentMixin:
         pos = self.app.view.panes["center"].model.current_tab.position
         logma.info(f"Save Pos {pos}")
         logma.info(f"Save DID {self.document.did}")
-        mode = getattr(self, "save_mode", "file_path") or "file_path"
-        # Mode dispatch.
-        if mode == "file_path":
-            # Write the on-disk file (when path is set). The DB row
-            # already records file_path from the open path; we don't
-            # need to re-write it here.
-            if self.file_path:
-                self.document.save(self.file_path)  # increments versions
-            else:
-                # No file_path yet — fall back to a DB-only store so
-                # the user doesn't lose their work. (The user can
-                # toggle to ``to_dict`` or pick a file via
-                # ``cmd_open_local_file`` to switch back.)
-                self.app.model.store_document(self.document)
-        elif mode == "to_dict":
-            # Persist the full document payload to the DB. Skip the
-            # external file write — the on-disk file is no longer
-            # the source of truth.
-            self.app.model.store_document(self.document)
-        elif mode == "both":
-            # Legacy dual-write path. Same body as the original
-            # pre-toggle implementation.
-            self.document.save(self.file_path)  # increments versions
-            self.app.model.store_document(self.document)
-        else:
-            logma.error(
-                f"[documents] save: unknown save_mode={mode!r}; "
-                f"falling back to legacy 'both' behaviour"
-            )
-            self.document.save(self.file_path)
-            self.app.model.store_document(self.document)
+        # T-NEW-003 (35c050e4 working form): always write the
+        # external file (when file_path is set) AND always write
+        # the DB row. The two writes serve different purposes —
+        # the file is the user-edited source of truth, the DB
+        # row carries ``doc_media_content.content_enc64_txt``
+        # which lets the document be recovered if the on-disk
+        # file is deleted/moved and lets the doc be queried via
+        # SQL. Skipping the DB write (the save_mode="file_path"
+        # behaviour added in H60) leaves ``content_enc64_txt``
+        # empty and breaks the reopen path when the external
+        # file is unavailable.
+        self.document.save(self.file_path)  # increments versions and (internal encryption..future)
+        self.app.model.store_document(self.document)
         return self
 
     def set_save_mode(self, mode):
