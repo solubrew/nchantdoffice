@@ -163,9 +163,9 @@ dimensions:
           project: nchantdoffice
         internal_imports: 331
         internal_projects_used:
+        - kahndor
         - nchantdoffice
         - nchantrs
-        - kahndor
         leverage_score: 37.49
         score: 100
         status: pass
@@ -252,7 +252,7 @@ dimensions:
         - file: nchantdoffice/models.py
           rule: File too large
           severity: medium
-          size_kb: 163.75
+          size_kb: 163.7265625
         large_file_count: 1
         score: 80
         status: pass
@@ -268,7 +268,7 @@ dimensions:
           branches:
             local: []
             remote: []
-          commit_count: 491
+          commit_count: 492
           commits: []
           contributors: []
           is_repo: true
@@ -723,25 +723,6 @@ dimensions:
           line: 516
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
-        - category: dynamic_import
-          content: '"modified_dttm": __import__("datetime").datetime.utcnow().isoformat(),'
-          file: nchantdoffice/models.py
-          line: 1929
-          pattern: __import__\(
-          severity: 80
-        - category: dynamic_import
-          content: '"timestamp": __import__("datetime").datetime.utcnow().isoformat()
-            + "Z",'
-          file: nchantdoffice/models.py
-          line: 2013
-          pattern: __import__\(
-          severity: 80
-        - category: dynamic_import
-          content: '"MODON_DTTM": __import__("datetime").datetime.utcnow().isoformat(),'
-          file: nchantdoffice/models.py
-          line: 2680
-          pattern: __import__\(
-          severity: 80
         - category: getattr_dynamic
           content: user = getattr(self, "user", None)
           file: nchantdoffice/models.py
@@ -1056,24 +1037,6 @@ dimensions:
           line: 2021
           pattern: requests\.post\(
           severity: 50
-        - category: dynamic_import_ast
-          content: __import__(...)
-          file: nchantdoffice/models.py
-          line: 2013
-          pattern: ast_call
-          severity: 80
-        - category: dynamic_import_ast
-          content: __import__(...)
-          file: nchantdoffice/models.py
-          line: 1929
-          pattern: ast_call
-          severity: 80
-        - category: dynamic_import_ast
-          content: __import__(...)
-          file: nchantdoffice/models.py
-          line: 2680
-          pattern: ast_call
-          severity: 80
         - category: getattr_dynamic
           content: store = getattr(model, "store", None)
           file: nchantdoffice/utilities/links.py
@@ -3427,8 +3390,8 @@ summary:
   total_auditors: 11
   total_dimensions: 53
 test_execution:
-  duration_seconds: 17.188133716583252
-  project_score: 94.7
+  duration_seconds: 17.196481227874756
+  project_score: 94.76
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
   results:
     tests_failed: 0
@@ -3443,7 +3406,7 @@ test_execution:
   status_message: +2% bonus (100% tests passed)
   timestamp: ''
 versions:
-  project: a4fda44
+  project: c94a312
   project_status: dirty
   project_uncommitted_changes: 5
   sasquatch: 120e86d

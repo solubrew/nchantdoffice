@@ -1926,7 +1926,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     "data": {
                         "quick_launch_bit": int(row.get("quick_launch_bit", 1) or 1),
                         "registered_bit": 1,
-                        "modified_dttm": __import__("datetime").datetime.utcnow().isoformat(),
+                        "modified_dttm": dt.datetime.now(dt.timezone.utc).isoformat(),
                     },
                 }
                 try:
@@ -2010,7 +2010,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 api_key = self.config.dikt.get("notify_api_key")
             payload = {
                 "service": "nchantdoffice",
-                "timestamp": __import__("datetime").datetime.utcnow().isoformat() + "Z",
+                "timestamp": dt.datetime.now(dt.timezone.utc).isoformat() + "Z",
                 "trace": getattr(self, "_last_error_trace", None) or {},
             }
             try:
@@ -2677,7 +2677,7 @@ class NchantdOfficeStore(NchantdStore):
                         "data": {
                             "DELETE_BIT": dbit,
                             "ACTIVE_BIT": abit,
-                            "MODON_DTTM": __import__("datetime").datetime.utcnow().isoformat(),
+                            "MODON_DTTM": dt.datetime.now(dt.timezone.utc).isoformat(),
                             "MODBY_FK": getattr(self, "user_FK", 0),
                         },
                         "WHERE": cfg.get("WHERE", {}),

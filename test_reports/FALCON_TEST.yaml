@@ -1,4 +1,4 @@
-duration: 17.188133716583252
+duration: 17.196481227874756
 runner_type: pytest
 status: unknown
 summary:
@@ -6,4 +6,4 @@ summary:
   passed: 10
   skipped: 0
   total: 10
-timestamp: '2026-07-28 09:18:04'
+timestamp: '2026-07-28 09:50:13'
