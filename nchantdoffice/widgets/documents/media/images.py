@@ -654,7 +654,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeImage").override(cfg))
 
     def initModel(self):
-        """ """
+        """"""
         super().initModel()
         document = {"document": self.config.get("document", {})}
 
@@ -663,16 +663,6 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         self.context_menu_name = "context.document.image"
         if self.context_menu_name is not None:
             self.initialize_context_menu(self.context_menu_name)
-        # T-NEW-003 (H60 sub-task b): pin image save_mode to
-        # ``"file_path"``. Binary image content does not serialise
-        # cleanly to JSON (the ``to_dict`` payload would either
-        # bloat the doc_media_content table with base64-encoded
-        # pixels or lose fidelity on round-trip). The on-disk file
-        # is the canonical source of truth for images; the DB row
-        # records the file_path reference. ``set_save_mode`` also
-        # persists the value on ``self.document.config`` so the
-        # pin survives a reload.
-        self.set_save_mode("file_path")
         return self
 
     def initView(self, cfg=None):
