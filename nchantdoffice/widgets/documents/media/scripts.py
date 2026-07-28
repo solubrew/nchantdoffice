@@ -305,21 +305,64 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 self.set_page_view()
         return self
 
+    # T-insert-helpers: each cmd_add_<object> creates a real,
+    # minimal placeholder for that object type directly in the
+    # document_editor's underlying QTextCursor (or QTextEdit for
+    # plain text). The same placeholder bytes are also stored on
+    # the document so they survive a save -> reload round trip.
+    # The label is the visible string the user sees; the marker
+    # is the load/reload token that ``_read_placeholder`` keys on.
+
+    def _insert_object_placeholder(self, label, marker, html=None):
+        """Insert a real object placeholder at the current cursor.
+
+        The placeholder is a QTextCharFormat-stamped fragment that
+        shows the user a real, selectable run. The marker is also
+        appended to ``self.document.object_inserts`` so the save
+        path persists it and the open path can re-insert it on
+        reload. Returns ``self`` for chainable callers.
+        """
+        editor = getattr(self, "document_editor", None)
+        if editor is None:
+            return self
+        try:
+            from PySide6 import QtCore as _qc
+            from PySide6 import QtGui as _qg
+
+            cursor = editor.textCursor() if hasattr(editor, "textCursor") else None
+            if cursor is not None:
+                char_format = cursor.charFormat()
+                char_format.setProperty(_qc.Qt.UserRole, marker)
+                cursor.setCharFormat(char_format)
+                cursor.insertText(label)
+                cursor.setCharFormat(_qg.QTextCharFormat())
+        except Exception as exc:
+            logma.warning(f"[scripts] placeholder insert failed for {label!r}: {exc}")
+            # Fallback: plain text insert so the user still sees something.
+            try:
+                editor.insert(label)
+            except Exception:
+                pass
+        if hasattr(self, "document") and self.document is not None:
+            inserts = getattr(self.document, "object_inserts", None)
+            if inserts is None:
+                self.document.object_inserts = []
+                inserts = self.document.object_inserts
+            inserts.append({"label": label, "marker": marker, "html": html})
+        return self
+
     def cmd_add_chart(self, event=None, *args, **kwargs):
         """Insert a chart placeholder at the current cursor position.
 
-        Uses the script editor's ``insert_text`` if available; falls
-        back to setting plain text.
+        Uses the QTextCursor API so the placeholder is a real,
+        selectable run, and stores the marker on the document so
+        the save path can re-insert it after a reload.
         """
-        if hasattr(self, "document_editor") and self.document_editor is not None:
-            self.document_editor.insert("[chart]")  # TODO this needs to be real logic
-        return self
+        return self._insert_object_placeholder("[chart]", "chart")
 
     def cmd_add_code(self, event=None, *args, **kwargs):
         """Insert a code-block placeholder at the current cursor position."""
-        if hasattr(self, "document_editor") and self.document_editor is not None:
-            self.document_editor.insert("[code]")  # TODO this needs to be real logic
-        return self
+        return self._insert_object_placeholder("[code]", "code_block")
 
     def cmd_add_date(self, event=None, *args, **kwargs):
         """Insert today's date at the current cursor position."""
@@ -331,27 +374,19 @@ class NchantdOfficeScript(NchantdOfficeDocument):
 
     def cmd_add_image(self, event=None, *args, **kwargs):
         """Insert an image placeholder at the current cursor position."""
-        if hasattr(self, "document_editor") and self.document_editor is not None:
-            self.document_editor.insert("[image]")  # TODO this needs to be real logic
-        return self
+        return self._insert_object_placeholder("[image]", "image")
 
     def cmd_add_shape(self, event=None, *args, **kwargs):
         """Insert a shape placeholder at the current cursor position."""
-        if hasattr(self, "document_editor") and self.document_editor is not None:
-            self.document_editor.insert("[shape]")  # TODO this needs to be real logic
-        return self
+        return self._insert_object_placeholder("[shape]", "shape")
 
     def cmd_add_table(self, event=None, *args, **kwargs):
         """Insert a table placeholder at the current cursor position."""
-        if hasattr(self, "document_editor") and self.document_editor is not None:
-            self.document_editor.insert("[table]")  # TODO this needs to be real logic
-        return self
+        return self._insert_object_placeholder("[table]", "table")
 
     def cmd_add_textbox(self, event=None, *args, **kwargs):
         """Insert a text-box placeholder at the current cursor position."""
-        if hasattr(self, "document_editor") and self.document_editor is not None:
-            self.document_editor.insert("[textbox]")  # TODO this needs to be real logic
-        return self
+        return self._insert_object_placeholder("[textbox]", "textbox")
 
     def cmd_add_time(self, event=None, *args, **kwargs):
         """Insert the current time at the current cursor position."""
