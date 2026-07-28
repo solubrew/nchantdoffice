@@ -2907,7 +2907,7 @@ class NchantdOfficeStore(NchantdStore):
             [
                 document["did"],
                 document.get("compatibility", "pyffice"),
-                document["document_type"] if document["document_type"] != "note" else "doc",  # PUSH to 0.0.3
+                document["document_type"],
                 document["syntax"],
                 document["name"],
                 document.get("file_name", ""),
