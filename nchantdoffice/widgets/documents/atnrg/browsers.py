@@ -1545,6 +1545,7 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdOfficeSlimTabSearch init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSlimTabSearch").override(cfg))
 
@@ -1578,6 +1579,7 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdOfficeWebViewer init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebViewer").override(cfg))
 

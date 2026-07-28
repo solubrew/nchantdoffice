@@ -182,6 +182,7 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdOfficeSourceCatalogItem init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSourceCatalogItem").override(cfg))
         self.requires_api_key = None

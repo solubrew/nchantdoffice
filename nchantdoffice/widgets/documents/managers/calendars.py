@@ -168,6 +168,7 @@ class NchantdAlarmsEditPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdAlarmsEditPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdEventRecursionEditPane").override(cfg))
 
@@ -397,6 +398,7 @@ class NchantdTasksListPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdTasksListPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdTasksListPane").override(cfg))
         self.tasks_list = None

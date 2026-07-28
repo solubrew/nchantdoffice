@@ -49,6 +49,7 @@ class NchantdOfficeForm(NchantdForm):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdOfficeForm init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeForm"))

@@ -500,6 +500,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
 
 class NchantdOfficePDFMarkup(pyqt.QGraphicsView):
     def __init__(self, pdf_document, parent=None):
+        logma.info(f"NchantdOfficePDFMarkup init: parent={type(parent).__name__}")
         super().__init__(parent)
 
         self.pdf_document = pdf_document  # The loaded PDF document

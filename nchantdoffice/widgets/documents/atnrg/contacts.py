@@ -47,6 +47,7 @@ class NchantdOfficeContact(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdOfficeContact init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeContact").override(cfg))
         self.document = PyfficeContact()

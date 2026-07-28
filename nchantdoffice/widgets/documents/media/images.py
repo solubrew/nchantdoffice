@@ -102,6 +102,7 @@ class NchantdColorShiftPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdColorShiftPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdColorShiftPane").override(cfg))
 
@@ -216,6 +217,7 @@ class NchantdConvertFormatPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdConvertFormatPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertFormatPane").override(cfg))
 
@@ -336,6 +338,7 @@ class NchantdConvertSizePane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdConvertSizePane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertSizePane").override(cfg))
 
@@ -442,6 +445,7 @@ class NchantdImageCropPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdImageCropPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdImageCropPane").override(cfg))
 
@@ -506,6 +510,7 @@ class NchantdImageGeneratorPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdImageGeneratorPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdConvertSizePane").override(cfg))
 

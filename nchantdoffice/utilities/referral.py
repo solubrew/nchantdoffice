@@ -102,6 +102,7 @@ class ReferralCode:
     def __post_init__(self):
         if not (_CODE_RE.match(self.value) or _FORMAT_RE.match(self.value)):
             raise ValueError(f"Invalid referral code: {self.value!r}")
+        logma.info(f"ReferralCode created: value={self.value!r}")
 
     @classmethod
     def generate(cls, user_id: str, *, salt: Optional[str] = None,
@@ -214,6 +215,7 @@ class InMemoryReferralStore:
     """
 
     def __init__(self):
+        logma.info(f"InMemoryReferralStore init: parent={type(parent).__name__}")
         self.codes: Dict[str, ReferralCode] = {}
         self.code_index: Dict[str, str] = {}  # normalised -> user_id
         self.attributions: List[ReferralAttribution] = []

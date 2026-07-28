@@ -1156,10 +1156,19 @@ class NchantdChartLegendPane(NchantdPane):
 
 
 class NchantdChartTrendlinePane(NchantdPane):
-    """"""
+    """T-charts-trendline: chart trendline configuration pane.
+
+    Wraps a NchantdPane with a dropdown of trendline formulas
+    (linear, exponential, polynomial, logarithmic) and a colour
+    selector. initModel() is the model hook; initView() builds the
+    GUI; the public API is ``set_data(formula)`` / ``color()``.
+    """
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(
+            f"NchantdChartTrendlinePane init: parent={type(parent).__name__}"
+        )
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartTrendlinePane").override(cfg))
         self.color = None

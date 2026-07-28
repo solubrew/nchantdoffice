@@ -188,6 +188,7 @@ class NchantdOfficeEDA(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdOfficeEDA init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeEDA").override(cfg))
         self.slim_tab = True
@@ -406,6 +407,7 @@ class NchantdDataSetPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdDataSetPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSetPane").override(cfg))
 
@@ -485,6 +487,7 @@ class NchantdViewEditPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdViewEditPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdViewEditGroup").override(cfg))
 
@@ -614,6 +617,7 @@ class NchantdDataSetConfigPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdDataSetConfigPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSetConfigPane").override(cfg))
         self.name = None

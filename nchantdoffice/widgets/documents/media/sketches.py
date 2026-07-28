@@ -84,6 +84,7 @@ class NchantdEditLayerPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdEditLayerPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdEditorLayerPane").override(cfg))
 
@@ -197,6 +198,7 @@ class NchantdLineToolPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdLineToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
@@ -328,6 +330,7 @@ class NchantdCurveToolPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdCurveToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
@@ -444,6 +447,7 @@ class NchantdSplineToolPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdSplineToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
@@ -555,6 +559,7 @@ class NchantdPolygonToolPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdPolygonToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdPolygonToolPane").override(cfg))
 
@@ -660,6 +665,7 @@ class NchantdCircleToolPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdCircleToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdCircleToolPane").override(cfg))
 
@@ -765,6 +771,7 @@ class NchantdObjectToolPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdObjectToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdObjectToolPane").override(cfg))
 
@@ -864,6 +871,7 @@ class NchantdFillToolPane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdFillToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdFillToolPane").override(cfg))
 
@@ -2255,6 +2263,7 @@ class NchantdOfficePalette(NchantdOfficeDocument):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdOfficePalette init: parent={type(parent).__name__}")
         super().__init__("Nchantd Palette", parent, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePalette"))
