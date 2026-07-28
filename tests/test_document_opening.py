@@ -311,3 +311,150 @@ def test_widget_initModel_uses_canonical_file_path(rel_path, class_name):
         f"{rel_path}: must thread file_path through the canonical source "
         f"`self.document.file_path` (T-NEW-003)."
     )
+
+
+# T-NEW-003 / feature-envy regression: ``store_app_media_content`` used
+# to live entirely inside ``NchantdOfficeStore`` and pulled 9 foreign
+# attribute accesses off the ``content`` dict for every store call.
+# The sasquatch feature_envy dimension flagged it at 90% (1 method, 9
+# foreign / 2 own). The fix is to extract the row-building into a
+# free function (``_content_to_app_media_row``) so the store method
+# only calls ``self._store`` and lets the function handle the
+# content-shape transformation.
+#
+# This test reproduces the auditor's feature-envy counting logic
+# locally so future refactors can validate their work without having
+# to re-run the full sasquatch pipeline.
+
+
+import ast
+import pathlib
+
+
+_FEATURE_ENVY_EXTERNAL_LIBS = frozenset({
+    "requests", "urllib", "http", "json", "datetime", "time", "os",
+    "sys", "pathlib", "typing", "collections", "functools",
+    "itertools", "operator", "abc", "copy", "io", "pickle", "shelve",
+    "sqlite3", "csv", "configparser", "logging", "re", "ast",
+    "unittest", "pytest", "click", "typer", "rich", "yaml", "toml",
+    "kahndor", "ogma", "logma",
+})
+
+
+def _count_feature_envy(method_src, external_libs=_FEATURE_ENVY_EXTERNAL_LIBS):
+    """Reproduce the auditor's per-method foreign-vs-own attribute count.
+
+    Returns ``(foreign_calls, own_calls, foreign_objs)`` for the
+    method body. The auditor's threshold is "foreign > 8 AND foreign >
+    3 * own" so this helper makes it easy to assert each method stays
+    under the threshold.
+    """
+    tree = ast.parse(method_src)
+    foreign = {}
+    own = 0
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Attribute):
+            continue
+        if not isinstance(node.value, ast.Name):
+            continue
+        name_id = node.value.id
+        if name_id == "self":
+            own += 1
+        elif name_id in external_libs:
+            continue
+        elif name_id[:1].isupper():
+            continue  # enum / constant reference
+        else:
+            foreign[name_id] = foreign.get(name_id, 0) + 1
+    return sum(foreign.values()), own, foreign
+
+
+def test_store_app_media_content_no_longer_envies_content_dict():
+    """``NchantdOfficeStore.store_app_media_content`` must not envy the
+    content dict — the data-transformation belongs in the free
+    function ``_content_to_app_media_row`` that the method delegates
+    to.
+    """
+    models_py = (
+        pathlib.Path(__file__).resolve().parent.parent
+        / "nchantdoffice" / "models.py"
+    )
+    src = models_py.read_text()
+    tree = ast.parse(src)
+
+    target = None
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef):
+            continue
+        if node.name != "NchantdOfficeStore":
+            continue
+        for method in node.body:
+            if (
+                isinstance(method, ast.FunctionDef)
+                and method.name == "store_app_media_content"
+            ):
+                target = method
+                break
+        if target is not None:
+            break
+    assert target is not None, (
+        "NchantdOfficeStore.store_app_media_content not found in models.py"
+    )
+
+    method_src = ast.get_source_segment(src, target)
+    foreign, own, objs = _count_feature_envy(method_src)
+    # Auditor threshold: foreign > 8 AND foreign > 3 * own.
+    # The post-refactor method body should be tiny (just _store +
+    # logma.error); any envy-of-content access now lives in the
+    # _content_to_app_media_row free function.
+    assert foreign <= 8 or foreign <= 3 * own, (
+        f"store_app_media_content still envies the content dict "
+        f"(foreign={foreign}, own={own}, objs={objs}). "
+        f"Extract the data-transformation into a free function. "
+        f"Source:\n{method_src}"
+    )
+
+
+def test_content_to_app_media_row_helper_exists_and_returns_eight_values():
+    """The extracted helper must exist and produce the row expected
+    by ``_APP_MEDIA_CONTENT_COLUMNS``.
+    """
+    models_py = (
+        pathlib.Path(__file__).resolve().parent.parent
+        / "nchantdoffice" / "models.py"
+    )
+    src = models_py.read_text()
+    assert "def _content_to_app_media_row(" in src, (
+        "_content_to_app_media_row helper missing from models.py "
+        "(feature-envy fix)."
+    )
+    # The helper must produce the same 8-column row as
+    # _APP_MEDIA_CONTENT_COLUMNS. We import it and verify shape
+    # against a minimal content dict.
+    from nchantdoffice.models import _content_to_app_media_row
+
+    content = {
+        "uuid": "u-1",
+        "pUUID": "p-1",
+        "page": 3,
+        "entry": 7,
+        "version": 4,
+        "hash": "h",
+        "content": "abc",
+        "context": "ctx",
+    }
+    row = _content_to_app_media_row(content)
+    assert isinstance(row, list)
+    assert len(row) == 8, (
+        f"row should have 8 columns to match _APP_MEDIA_CONTENT_COLUMNS, "
+        f"got {len(row)}: {row}"
+    )
+    assert row[0] == "u-1"
+    assert row[1] == "p-1"
+    assert row[2] == 3  # page
+    assert row[3] == 7  # entry
+    assert row[4] == 5  # version + 1 (default 0 -> 1)
+    # Hash, content, context are passed through unchanged
+    assert row[5] == "h"
+    assert row[6] == "abc"
+    assert row[7] == "ctx"

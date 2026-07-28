@@ -2926,21 +2926,15 @@ class NchantdOfficeStore(NchantdStore):
         Also coerces ``content["version"]`` via ``_coerce_doc_version``
         so legacy / partial version values (e.g. ``0.0`` floats,
         ``"1.0.1.0"`` strings) don't crash the int+1 step.
+
+        The row-mapping is delegated to a free function
+        (``_content_to_app_media_row``) so this method body is just
+        the storage call; the data-transformation belongs to the
+        content shape, not to ``NchantdOfficeStore``.
         """
         table = "app_media_content"
         try:
-            payload = [
-                [
-                    content["uuid"],
-                    content["pUUID"],
-                    content.get("page", 0),
-                    content.get("entry", 0),
-                    _coerce_doc_version(content.get("version")) + 1,
-                    content.get("hash", ""),
-                    content.get("content", ""),
-                    content.get("context", ""),
-                ]
-            ]
+            payload = [_content_to_app_media_row(content)]
         except KeyError as e:
             logma.error(
                 f"[store_app_media_content] missing required field {e!s}; "
@@ -2955,6 +2949,31 @@ class NchantdOfficeStore(NchantdStore):
             columns=self._APP_MEDIA_CONTENT_COLUMNS,
         )
         return content.get("uuid")
+
+
+def _content_to_app_media_row(content):
+    """Build the single ``app_media_content`` row from a content dict.
+
+    Extracted from ``NchantdOfficeStore.store_app_media_content`` so
+    that the store class no longer envies the content dict (the
+    feature-envy dimension was flagging the original method at
+    9 foreign / 2 own attribute accesses). The row columns are the
+    same set declared in ``_APP_MEDIA_CONTENT_COLUMNS``.
+
+    Returns a list of 8 values matching ``_APP_MEDIA_CONTENT_COLUMNS``:
+        uuid, pUUID, page_int, entry_int, version_int,
+        hash_txt, content_enc64_txt, context_ltxt
+    """
+    return [
+        content["uuid"],
+        content["pUUID"],
+        content.get("page", 0),
+        content.get("entry", 0),
+        _coerce_doc_version(content.get("version")) + 1,
+        content.get("hash", ""),
+        content.get("content", ""),
+        content.get("context", ""),
+    ]
 
 
 def _coerce_doc_version(raw) -> int:  # noqa: ANN201

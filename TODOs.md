@@ -18,8 +18,8 @@
   4. NchantdCalendar → still open
   5. NchantdChart → still open
 
-> Reconsolidated against `9c13e68` (HEAD of `nchantdoffice/gamma`, 2026-07-27).
-> Last full audit: **94.61%** (was 81.42% at last reconsolidation, +13.19 points).
+> Reconsolidated against `af85e90` (HEAD of `nchantdoffice/gamma`, 2026-07-27).
+> Last full audit: **94.70%** (was 81.42% at last reconsolidation, +13.28 points).
 > Regenerate with: `grep -rn 'TODO:' nchantdoffice/ --include='*.py' | grep -v 'implement method' | grep -v 'invoked (stub)'`
 
 ## At a glance
@@ -45,9 +45,9 @@ section for the next sprint's awareness.
 
 ## Project health (2026-07-27)
 
-### Sasquatch audit score: **94.61%** (was 81.42%, target 95%)
+### Sasquatch audit score: **94.70%** (was 81.42%, target 95%)
 
-**6 dimensions still below 95%** — full breakdown at end of file.
+**5 dimensions still below 95%** — full breakdown at end of file.
 
 ### Recent lift across the sprint series
 
@@ -66,14 +66,15 @@ section for the next sprint's awareness.
 | H53 (NchantdDocument open regression) | `476013e` | 81.42% | 81.42% | 0 (correctness) |
 | H54 (Test pipeline uncap + score lifts) | `9c13e68` | 81.42% | **94.61%** | +13.19 |
 | H55 (SQLAlchemy removal + T-NEW-003 standardisation) | this commit | 94.61% | 94.61% | 0 (correctness, +5 tests) |
+| H56 (feature_envy: extract _content_to_app_media_row) | this commit | 94.61% | **94.70%** | +0.09 (+2 tests) |
 
 The -0.77 / -0.46 deltas are not regressions — they're caused by
 new methods adding to the god-class / type-annotation
 denominators. The score has stayed above 81% since the audit
 sprint, lifted past 94% with the H54 test-pipeline + score-lift
-sprint, and is now **94.61%**.
+sprint, and is now **94.70%**.
 
-### Currently below 95% (6 dims)
+### Currently below 95% (5 dims)
 
 | Dim | Score | Why it can't be fully fixed from the project side |
 |---|---|---|
@@ -91,6 +92,7 @@ The following dimensions **were** below 95% at the last reconsolidation and have
 - `lambda_antipattern` 84% → **100%** (H54: 4 click-handler lambdas replaced with named factory functions)
 - `long_method` 90% → **95%** (H54: 164-line `populate_document` split into 3 helpers; 1 remaining `initView` is intentional `# PUSH 0.0.3` release-marker content)
 - `duplicate_filenames` 0% → **95%** (H54: stale `build/` dist directory removed — the auditor was double-scanning `nchantdoffice/widgets/` and `build/lib/nchantdoffice/widgets/` for the same source files)
+- `feature_envy` 90% → **100%** (H57: extracted `_content_to_app_media_row` free function from `NchantdOfficeStore.store_app_media_content`, removing the last 9-vs-2 envy case)
 
 ---
 
@@ -132,6 +134,7 @@ The following dimensions **were** below 95% at the last reconsolidation and have
 | H54 | Test pipeline uncap + score lifts (94.61%) | `9c13e68` | Eight commits lifting the project from 81.42% to **94.61%** (+13.19 points). (a) `fad90b7` scoped pytest to the real test (legacy `tests/unit/` template files were broken + skipped). (b) `66b16f0` added real `logma.info()` calls to 10 zero-log modules. (c) `7d6e99a` replaced 6 `# TODO this needs to be real logic` placeholders with real `QTextCharFormat`-stamped `_insert_object_placeholder`. (d) `d826e50` cleared 2 stale TODOs. (e) `db98966` replaced 4 click-handler lambdas with named factory functions. (f) `45d2a14` covered 30 silent classes with real init log calls. (g) `9c13e68` extracted `_resolve_document_text`/`_apply_syntax_highlighting` from the 164-line `populate_document` + `# PUSH 0.0.3` marker on `settings.initView`. Also fixed `nchantrs.libraries.qpandas` (resilient import shim for the broken upstream `pyside6pandas==0.0.0` placeholder) and `falcon.cli` (defined `__version__`, made `pytest-jsonreport` optional) so the sasquatch test pipeline actually runs. |
 | H55 | Remove SQLAlchemy from desktop `pyproject.toml` | this commit | P0 architecture cleanup — `nchantdoffice` desktop uses squirl + micromole, not SQLAlchemy (per the per-project SQLAlchemy working agreement). Removed `sqlalchemy==2.0.51` from `[project].dependencies` in `pyproject.toml` (it was unused — 0 SQLAlchemy imports in `nchantdoffice/`). Re-audit: 3/3 tests still pass, score unchanged at 94.61%, `dependency_strategy` and `external_dependencies_declared` both still 100%. The standalone DB drivers (`mysql-connector-python`, `pymysql`, `psycopg2-binary`, `pyodbc`, `dnspython`) are kept because they may be wired through squirl / micromole, NOT through SQLAlchemy core/ORM. |
 | H56 | Standardise `file_path` threading across the 4 NchantdDocument widgets (T-NEW-003) | this commit | Per T-NEW-003, every `NchantdDocument` widget should thread `file_path` through the canonical Pyffice source (`self.document.file_path`, set by `PyfficeDocument.set_file_path`). The four widgets used three different shapes: Sketch/Matrix used the canonical pattern, Image/Script dug into `self.document.content["content"]["file_path"]` (a legacy off-spec path). Standardised all four on `self.document.file_path or self.config.dikt.get("file_path")` and updated the base `NchantdOfficeDocument.initModel` to prefer the Pyffice document over the cfg fallback. Regression coverage: 5 new tests in `tests/test_document_opening.py` (1 base-class source-pattern test + 4 parametrised widget source-pattern tests). Test count: 3/3 → 8/8 passing, score unchanged at 94.61%. The standardisation does not change save/load round-trip behaviour (which already worked); it eliminates the inconsistent `file_path` lookup so future widgets inherit the right pattern. |
+| H57 | Refactor `NchantdOfficeStore.store_app_media_content` to extract row-builder | this commit | feature_envy 90% → 100% (+10 pts). The store method had 9 foreign attribute accesses on the `content` dict for every call (only 2 `self.*` accesses). Extracted the row-building into a free function `_content_to_app_media_row` so the method body is just the storage call. Same pattern as H47's free-function extraction. Regression coverage: 2 new tests in `tests/test_document_opening.py` (feature-envy count + helper shape). Test count: 8/8 → 10/10 passing. **Overall: 94.61% → 94.70%.** |
 
 ---
 

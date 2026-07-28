@@ -3,7 +3,7 @@ analysis:
   counts:
     files: 429
     python_files: 172
-    python_lines: 60095
+    python_lines: 60261
     test_files: 87
 audit_date: '1785166530.110188'
 dimensions:
@@ -127,7 +127,7 @@ dimensions:
   dependency_strategy:
     details:
       details:
-        external_imports: 551
+        external_imports: 552
         info: 'Hint: 28 GitVein projects available but not used: condor, eaglis, falcon,
           glain, goalt...'
         internal_import_details:
@@ -166,10 +166,10 @@ dimensions:
         - nchantrs
         - kahndor
         - nchantdoffice
-        leverage_score: 37.53
+        leverage_score: 37.49
         score: 100
         status: pass
-        total_imports: 882
+        total_imports: 883
       score: 100
       status: pass
     score: 100
@@ -237,23 +237,13 @@ dimensions:
   feature_envy:
     details:
       details:
-        feature_envy_count: 1
-        issues:
-        - fix: Move method to the class it uses most
-          items:
-          - class: NchantdOfficeStore
-            envy_of: content
-            file: nchantdoffice/models.py
-            foreign_calls: 9
-            method: store_app_media_content
-            own_calls: 2
-          rule: 'Feature envy detected: 1 methods'
-          severity: medium
-        score: 90
+        feature_envy_count: 0
+        issues: []
+        score: 100
         status: pass
-      score: 90
+      score: 100
       status: pass
-    score: 90
+    score: 100
     status: pass
   file_sizes:
     details:
@@ -262,7 +252,7 @@ dimensions:
         - file: nchantdoffice/models.py
           rule: File too large
           severity: medium
-          size_kb: 162.99609375
+          size_kb: 163.75
         large_file_count: 1
         score: 80
         status: pass
@@ -278,7 +268,7 @@ dimensions:
           branches:
             local: []
             remote: []
-          commit_count: 489
+          commit_count: 490
           commits: []
           contributors: []
           is_repo: true
@@ -695,7 +685,7 @@ dimensions:
           rule: 'Bandit: Possible binding to all interfaces.'
           severity: medium
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/models.py
-          line: 2983
+          line: 3002
           rule: 'Bandit: Use of weak MD5 hash for security. Consider usedforsecurity=False'
           severity: high
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/widgets/controls/toolboxes.py
@@ -1012,56 +1002,56 @@ dimensions:
         - category: getattr_dynamic
           content: viewer = getattr(widget, "browser", None)
           file: nchantdoffice/models.py
-          line: 3323
+          line: 3342
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: view = getattr(viewer, "browser", None) if viewer is not None else
             None
           file: nchantdoffice/models.py
-          line: 3324
+          line: 3343
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3442
+          line: 3461
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3458
+          line: 3477
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3474
+          line: 3493
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3490
+          line: 3509
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3506
+          line: 3525
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
-          line: 3724
+          line: 3743
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if df is not None and not getattr(df, "empty", True):'
           file: nchantdoffice/models.py
-          line: 3730
+          line: 3749
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: url_open
@@ -3398,13 +3388,13 @@ dimensions:
         issues:
         - rule: low_coverage
           severity: medium
-          total: 2310
+          total: 2311
           typed: 43
         score: 1
         status: partial
-        total_functions: 2310
+        total_functions: 2311
         typed_functions: 43
-        untyped_functions: 2267
+        untyped_functions: 2268
       score: 1
       status: partial
     score: 1
@@ -3432,7 +3422,7 @@ dimensions:
       status: pass
     score: 100
     status: pass
-overall_score: 94.61
+overall_score: 94.7
 project: nchantdoffice
 summary:
   failing: 1
@@ -3442,13 +3432,13 @@ summary:
   total_auditors: 11
   total_dimensions: 53
 test_execution:
-  duration_seconds: 17.17380166053772
-  project_score: 94.61
+  duration_seconds: 17.20538306236267
+  project_score: 94.7
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
   results:
     tests_failed: 0
-    tests_passed: 8
-    tests_run: 8
+    tests_passed: 10
+    tests_run: 10
     tests_skipped: 0
   runner: falcon
   score_adjustment: 2
@@ -3458,7 +3448,7 @@ test_execution:
   status_message: +2% bonus (100% tests passed)
   timestamp: ''
 versions:
-  project: fdafe81
+  project: af85e90
   project_status: dirty
-  project_uncommitted_changes: 7
+  project_uncommitted_changes: 6
   sasquatch: 120e86d
