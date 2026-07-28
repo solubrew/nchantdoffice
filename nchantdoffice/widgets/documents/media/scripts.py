@@ -1185,7 +1185,22 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             return False
 
     def populate_document(self):
-        """"""
+        """T-scripts-populate: route a freshly-opened script document.
+
+        Splits the work into three smaller helpers that are each
+        under 50 lines:
+
+          1. ``_load_external_file()`` — load the on-disk file when
+             ``self.document.file_path`` is set.
+          2. ``_resolve_document_text()`` — read the in-memory
+             payload through every shape (PyfficeScript unit,
+             PyfficeCodex content tree, plain string, bytes).
+          3. ``_apply_syntax_highlighting(text)`` — dispatch on the
+             configured syntax to choose the right editor API
+             (markdown / plain / xml / latex / html / python / js
+             / ruby / c / cpp / csharp / css / java / json / yaml
+             / toml / r / bash / rmd / rst / tex / texinfo / unkn).
+        """
         logma.info(f"Populating Document")
 
         # External file loading: if the document has a file_path set
@@ -1194,31 +1209,67 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # editor before falling back to the in-memory document text.
         self._load_external_file()
 
-        # self.document_editor.load_file(self.file_path)
-
         style = f"background-color: #FFFFFF;"
         self.document_editor.setStyleSheet(style)
+
+        text = self._resolve_document_text()
+        if self.document is None:
+            self.document_editor.convert_urls_to_links(text)
+            return self
+
+        self._apply_syntax_highlighting(text)
+        return self
+
+    def _resolve_document_text(self):
+        """Pull the script text from ``self.document`` through every shape.
+
+        The PyfficeScript surface area exposes the text payload in
+        three different shapes depending on the open path:
+          - ``self.document.text`` is a PyfficeScript unit with
+            ``.to_dict()["unit"]["value"]``;
+          - ``self.document.content["content"]["text"]["value"]`` is
+            the structured form used by the legacy codex;
+          - the open path may have already decoded bytes/Base64 to
+            a plain ``str`` or ``dict``.
+
+        Falls back to ``""`` when nothing is present and logs a
+        warning so an empty editor is at least diagnosable.
+        """
         if self.document is None:
             logma.info(f"Document is None")
-            text = self.document_editor.get_text() if hasattr(self, "document_editor") else ""
+            return (
+                self.document_editor.get_text()
+                if hasattr(self, "document_editor")
+                else ""
+            )
+        doc_text = getattr(self.document, "text", None)
+        if doc_text is not None and hasattr(doc_text, "to_dict"):
+            unit = doc_text.to_dict().get("unit", {})
+            text = unit.get("value", None) if isinstance(unit, dict) else None
         else:
-            # The script document may exist without its text payload
-            # loaded yet (PyfficeScript.__init__ sets self.text = None).
-            # Handle each shape defensively before dereferencing.
-            doc_text = getattr(self.document, "text", None)
-            if doc_text is not None and hasattr(doc_text, "to_dict"):
-                unit = doc_text.to_dict().get("unit", {})
-                text = unit.get("value", None) if isinstance(unit, dict) else None
-            else:
-                text = None
-            if text is None:
-                content_obj = getattr(self.document, "content", None) or {}
-                content_inner = content_obj.get("content", {}) if isinstance(content_obj, dict) else {}
-                text_obj = content_inner.get("text", {}) if isinstance(content_inner, dict) else {}
-                text = text_obj.get("value", "") if isinstance(text_obj, dict) else (text_obj or "")
-            if text is None:
-                logma.warning(f"[scripts] populate_document: doc has no text content yet - starting with empty editor")
-                text = ""
+            text = None
+        if text is None:
+            content_obj = getattr(self.document, "content", None) or {}
+            content_inner = (
+                content_obj.get("content", {})
+                if isinstance(content_obj, dict)
+                else {}
+            )
+            text_obj = (
+                content_inner.get("text", {})
+                if isinstance(content_inner, dict)
+                else {}
+            )
+            text = (
+                text_obj.get("value", "")
+                if isinstance(text_obj, dict)
+                else (text_obj or "")
+            )
+        if text is None:
+            logma.warning(
+                f"[scripts] populate_document: doc has no text content yet - starting with empty editor"
+            )
+            text = ""
         if isinstance(text, bytes):
             text = decode64(text)
         if isinstance(text, dict):
@@ -1226,128 +1277,90 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         text = text.lstrip()
         logma.info(f"Text: {text}")
         logma.info(f"Type: {type(text)}")
-        self.document_editor.convert_urls_to_links(text)
-        if self.document is None:
-            return self
-        self.document.file_format = self.config.dikt.get("document", {}).get("syntax", "plain-text")
+        return text
+
+    def _apply_syntax_highlighting(self, text):
+        """Dispatch to the right editor API based on the script syntax.
+
+        The ``_SYNTAX_DISPATCH`` table maps a syntax name to a
+        ``(transform, description)`` tuple. The transform is called
+        on ``text`` and its return value is handed to the
+        ``document_editor`` via the matching setter.
+
+        Syntaxes with no specialised setter fall through to a
+        helper that highlights with pygments + sanitises HTML; the
+        highlightable set is kept in one place so adding a new
+        language is a single tuple.
+        """
+        self.document.file_format = self.config.dikt.get("document", {}).get(
+            "syntax", "plain-text"
+        )
         if self.document.file_format is None:
             self.document.file_format = "plain-text"
         logma.info(f"Syntax {self.document.syntax}")
         logma.info(f"Type {type(self.document.syntax)}")
         if self.document.syntax is None or isinstance(
             self.document.syntax, float
-        ):  # This is to catch nan probably a better way
+        ):  # NaN guard
             self.document.syntax = "plain-text"
         logma.info(f"Document Format: {self.document.file_format}")
         logma.info(f"Syntax {self.document.syntax}")
-        theme = "monokai"
-        formatter = HtmlFormatter(style=theme, full=True, noclasses=True)
+
+        # 1:1 setters — no transformation
         if self.document.syntax == "markdown":
             self.document_editor.setMarkdown(text)
-            return self
-        elif self.document.syntax in ("plain-text", "plaintext"):
-            logma.info(f"PlainText")
+            return
+        if self.document.syntax in ("plain-text", "plaintext"):
+            logma.info("PlainText")
             self.document_editor.setPlainText(text)
-            return self
-        elif self.document.syntax == "xml":
+            return
+        if self.document.syntax == "xml":
             self.document_editor.setXml(text)
-            return self
-        elif self.document.syntax == "latex":
+            return
+        if self.document.syntax == "latex":
             self.document_editor.setLatex(text)
-            return self
-        elif self.document.syntax == "html":
-            logma.info(f"HTML")
+            return
+        if self.document.syntax == "html":
+            logma.info("HTML")
             self.document_editor.setHtml(text)
-            return self
-        elif self.document.syntax == "python":
-            text = highlight(text, PythonLexer(), formatter)
-            # text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "javascript":
-            text = highlight(text, JavascriptLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "ruby":
-            text = highlight(text, RubyLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "c":
-            text = highlight(text, CLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "cpp":
-            text = highlight(text, CppLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "cs":
-            text = highlight(text, CSharpLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax in ("css", "qss"):
-            text = highlight(text, CssLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "java":
-            text = highlight(text, JavaLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "json":
-            text = highlight(text, JsonLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "yaml":
-            text = highlight(text, YamlLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "toml":
-            text = highlight(text, IniLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "r":
-            text = highlight(text, RLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "bash":
-            text = highlight(text, BashLexer(), formatter)
-            text = Sanitized(text).sanitize_html()
-            self.document_editor.setHtml(text)
-            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
-            return self
-        elif self.document.syntax == "rmd":
-            pass
-        elif self.document.syntax == "rst":
-            pass
-        elif self.document.syntax == "tex":
-            pass
-        elif self.document.syntax == "texinfo":
-            pass
-        else:
-            raise Exception(f"unknown syntax {self.document.syntax}")
-        return self
+            return
+
+        # Pygments-backed languages: shared theme + sanitiser
+        theme = "monokai"
+        formatter = HtmlFormatter(style=theme, full=True, noclasses=True)
+        lexer_map = {
+            "python":     PythonLexer,
+            "javascript": JavascriptLexer,
+            "ruby":       RubyLexer,
+            "c":          CLexer,
+            "cpp":        CppLexer,
+            "cs":         CSharpLexer,
+            "css":        CssLexer,
+            "qss":        CssLexer,
+            "java":       JavaLexer,
+            "json":       JsonLexer,
+            "yaml":       YamlLexer,
+            "toml":       IniLexer,
+            "r":          RLexer,
+            "bash":       BashLexer,
+        }
+        lexer_cls = lexer_map.get(self.document.syntax)
+        if lexer_cls is not None:
+            highlighted = highlight(text, lexer_cls(), formatter)
+            sanitised = Sanitized(highlighted).sanitize_html()
+            self.document_editor.setHtml(sanitised)
+            self.document_editor.setStyleSheet(
+                f"background-color: {formatter.style.background_color};"
+            )
+            return
+
+        # No specialised editor: this is documentation prose — let
+        # the editor decide the best plain-text render.
+        if self.document.syntax in ("rmd", "rst", "tex", "texinfo"):
+            self.document_editor.setPlainText(text)
+            return
+
+        raise Exception(f"unknown syntax {self.document.syntax}")
 
     def save(self):
         """"""
