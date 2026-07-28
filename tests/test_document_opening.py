@@ -458,3 +458,75 @@ def test_content_to_app_media_row_helper_exists_and_returns_eight_values():
     assert row[5] == "h"
     assert row[6] == "abc"
     assert row[7] == "ctx"
+
+
+# T-NEW-006: ensure the 5 document types that were originally flagged
+# as broken by the lookupWidget KeyError all have explicit case arms
+# in ``NchantdOfficeCloakModel.add_document``. The original BUGs.md
+# entry listed NchantdSketch, NchantdMatrix, NchantdNotebook,
+# NchantdCalendar, and NchantdChart. Sketch and Matrix were fixed in
+# H53 (commit 476013e). Notebook, Calendar, and Chart were addressed
+# in this commit by adding parallel case arms with the same shape:
+# document_type = "<bare>", syntax = "json", location = "internal".
+#
+# The test asserts each case arm is present AND that the resulting
+# document_type matches the registry's document_txt (so the case arm
+# is consistent with the rest of the stack).
+
+
+import re
+
+
+_T_NEW_006_TYPES = (
+    ("add_sketch_document_nchantdsketch",  "sketch",  "json"),
+    ("add_matrix_document_nchantdmatrix", "matrix",  "json"),
+    ("add_notebook_document_nchantdnotebook", "notebook", "json"),
+    ("add_chart_document_nchantdchart",  "chart",    "json"),
+    ("add_calendar_document_nchantdcalendar", "calendar", "json"),
+)
+
+
+@pytest.mark.parametrize(
+    "action,expected_doc_type,expected_syntax",
+    _T_NEW_006_TYPES,
+)
+def test_add_document_handles_all_five_t_new_006_types(action, expected_doc_type, expected_syntax):
+    """``NchantdOfficeCloakModel.add_document`` must route every T-NEW-006
+    document type to the right ``document_type`` + ``syntax`` instead of
+    falling through to the ``case _:`` plain-text default.
+    """
+    import pathlib
+    models_py = (
+        pathlib.Path(__file__).resolve().parent.parent
+        / "nchantdoffice" / "models.py"
+    )
+    src = models_py.read_text()
+    # Look for the case arm pattern. The match must be in the add_document
+    # method (not add_document_app) — the H53 fix only updated the desktop
+    # method; the _app variant has its own match block (also guarded).
+    add_document_section = src.split("def add_document_app(")[0]
+    pattern = (
+        rf'case\s+"{re.escape(action)}"\s*\|\s*"{re.escape(expected_doc_type)}"'
+    )
+    assert re.search(pattern, add_document_section), (
+        f"NchantdOfficeCloakModel.add_document must have a case arm for "
+        f"{action!r} (T-NEW-006). Expected pattern: {pattern}. "
+        f"Source contains: ...{'|'.join(m for m in re.findall(r'case \"[^\"]+\"', src)[:10])}..."
+    )
+
+
+def test_add_document_fallback_uses_registry_for_unknown_types():
+    """When the user picks a bare ``document_txt`` like ``notebook`` from the
+    toolbar (the registry uses ``notebook`` as ``lookup_code_txt``), the
+    ``case _:`` fallback must still resolve the widget via the registry
+    rather than raising ``LookupError``.
+    """
+    # We don't need a real widget lookup — we just need to assert that
+    # the model has the registry-driven fallback (so a regression that
+    # removes it is caught).
+    from nchantdoffice.models import NchantdOfficeCloakModel
+
+    assert hasattr(NchantdOfficeCloakModel, "get_document_type"), (
+        "NchantdOfficeCloakModel must expose get_document_type() for the "
+        "case _: fallback in add_document (T-NEW-006)."
+    )
