@@ -175,8 +175,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             if document_type is None:
                 raise LookupError(f"Document type {tab['type']} is not registered")
             tab["widget"] = document_type.get("widget_txt", None)
-        if not tab.get("widget"):
-            raise LookupError(f"Document type {tab['type']} has no registered widget")
         widget = tab["widget"]
         name = tab["name"]
         if widgdata is None:
