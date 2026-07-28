@@ -2874,6 +2874,69 @@ class NchantdOfficeStore(NchantdStore):
         # self._archive_versions(table, content["pUUID"], "pUUID", "UUID", 3)
         return content["uuid"]
 
+    # T-removed (FIX P8): explicit column schema for app_media_content.
+    # The parent NchantdStore.store_app_media_content() calls
+    # self._store(table, payload, db) WITHOUT passing columns=,
+    # which forces squirl's _fill_admin_cols() to look up the
+    # table schema in db_objects["table"][table]["columns"].
+    # The desktop's loaded dstruct (nchantdoffice/_data/models.yaml)
+    # does not include app_media_content, so that lookup yields
+    # ``None``, then ``list(None)`` raises
+    # ``TypeError: 'NoneType' object is not iterable``.
+    #
+    # Passing columns= explicitly bypasses the dstruct lookup, the
+    # same pattern the parent itself uses for doc_media_content.
+    _APP_MEDIA_CONTENT_COLUMNS = [
+        {"name": "UUID", "type": "text"},
+        {"name": "pUUID", "type": "text"},
+        {"name": "page_int", "type": "integer"},
+        {"name": "entry_int", "type": "integer"},
+        {"name": "version_int", "type": "integer"},
+        {"name": "hash_txt", "type": "text"},
+        {"name": "content_enc64_txt", "type": "text"},
+        {"name": "context_ltxt", "type": "text"},
+    ]
+
+    def store_app_media_content(self, content, db="db", how="INSERT"):
+        """Persist a document-content row to the app_media_content table.
+
+        Same shape as ``store_doc_media_content``; explicit columns
+        so the desktop's loaded dstruct doesn't need to register
+        the table.
+
+        Also coerces ``content["version"]`` via ``_coerce_doc_version``
+        so legacy / partial version values (e.g. ``0.0`` floats,
+        ``"1.0.1.0"`` strings) don't crash the int+1 step.
+        """
+        table = "app_media_content"
+        try:
+            payload = [
+                [
+                    content["uuid"],
+                    content["pUUID"],
+                    content.get("page", 0),
+                    content.get("entry", 0),
+                    _coerce_doc_version(content.get("version")) + 1,
+                    content.get("hash", ""),
+                    content.get("content", ""),
+                    content.get("context", ""),
+                ]
+            ]
+        except KeyError as e:
+            logma.error(
+                f"[store_app_media_content] missing required field {e!s}; "
+                f"content_keys={list(content.keys()) if isinstance(content, dict) else 'not-a-dict'}"
+            )
+            return content.get("uuid") if isinstance(content, dict) else None
+
+        self._store(
+            table,
+            payload,
+            db,
+            columns=self._APP_MEDIA_CONTENT_COLUMNS,
+        )
+        return content.get("uuid")
+
 
 def _coerce_doc_version(raw) -> int:  # noqa: ANN201
     """Best-effort integer document-version coercion.
@@ -3246,6 +3309,20 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             from nchantrs.libraries import pyqt as _pyqt
             tabW = _pyqt.QWidget()
             tabW.setObjectName(cfg.get("widget", "missing_widget"))
+
+            # FIX P8b: tabset.set_focus() unconditionally calls
+            # ``tabW.initWidget()`` on every tab it focuses. The bare
+            # QWidget placeholder has no such method, which would
+            # raise AttributeError. Install no-op stubs for the common
+            # focus/refresh methods so the focus machinery can call
+            # into the placeholder without crashing the tabset rebuild.
+            # The placeholder remains a no-render empty shell — these
+            # are intentionally callable no-ops.
+            def _noop(*args, **kwargs):
+                return tabW
+            tabW.initWidget = _noop
+            tabW.refresh_for_document = _noop
+            tabW.build_toolbox = _noop
             tabW.name = cfg.get("widget", "missing_widget")
             tabW.type = tab_type
             tabW.position = cfg.get("position", 0)
