@@ -675,21 +675,29 @@ def test_resolve_widget_name_uses_synthesised_tab_type_when_widget_empty():
 
     Pin for the H62 saved-tab regression: a saved tab dict with
     ``widget=""`` plus a valid ``tab_type`` should resolve through
-    ``_resolve_widget_from_registry`` and NOT raise LookupError.
+    ``get_document_type`` (the H53 widening) and NOT raise
+    LookupError.
     """
     registry_calls = []
 
-    def _stub_resolve(lookup_code, fallback=None):
+    def _stub_get_document_type(lookup_code):
         registry_calls.append(lookup_code)
         if lookup_code == "add_sketch_document_nchantdsketch":
-            return "nchantdoffice.widgets.documents.media.sketches.NchantdOfficeSketch"
-        return fallback
+            # Return a dict-like that _registry_row_to_widget can extract.
+            return {"widget_txt": "nchantdoffice.widgets.documents.media.sketches.NchantdOfficeSketch"}
+        return None
 
     try:
         model = NchantdOfficeTabSetModel.__new__(NchantdOfficeTabSetModel)
     except (TypeError, AttributeError):
         model = object.__new__(NchantdOfficeTabSetModel)
-    model._resolve_widget_from_registry = _stub_resolve
+    # Wire get_document_type on a fake app.model so the production
+    # code path (self.app.model.get_document_type) is exercised.
+    class _FakeAppModel:
+        get_document_type = staticmethod(_stub_get_document_type)
+    class _FakeApp:
+        model = _FakeAppModel()
+    model.app = _FakeApp()
 
     saved_tab = {
         "did": "saved-tab-id",
@@ -714,18 +722,22 @@ def test_resolve_widget_name_falls_back_to_bare_document_txt():
     """
     registry_calls = []
 
-    def _stub_resolve(lookup_code, fallback=None):
+    def _stub_get_document_type(lookup_code):
         registry_calls.append(lookup_code)
         # Only the bare form matches.
         if lookup_code == "sketch":
-            return "nchantdoffice.widgets.documents.media.sketches.NchantdOfficeSketch"
-        return fallback
+            return {"widget_txt": "nchantdoffice.widgets.documents.media.sketches.NchantdOfficeSketch"}
+        return None
 
     try:
         model = NchantdOfficeTabSetModel.__new__(NchantdOfficeTabSetModel)
     except (TypeError, AttributeError):
         model = object.__new__(NchantdOfficeTabSetModel)
-    model._resolve_widget_from_registry = _stub_resolve
+    class _FakeAppModel:
+        get_document_type = staticmethod(_stub_get_document_type)
+    class _FakeApp:
+        model = _FakeAppModel()
+    model.app = _FakeApp()
 
     saved_tab = {
         "did": "saved-tab-id",
@@ -748,11 +760,18 @@ def test_resolve_widget_name_falls_back_to_bare_document_txt():
 
 def test_resolve_widget_name_returns_none_when_nothing_matches():
     """Unresolved types must return None — not silently swallow."""
+    def _stub_get_document_type(lookup_code):
+        return None
+
     try:
         model = NchantdOfficeTabSetModel.__new__(NchantdOfficeTabSetModel)
     except (TypeError, AttributeError):
         model = object.__new__(NchantdOfficeTabSetModel)
-    model._resolve_widget_from_registry = lambda lookup_code, fallback=None: None
+    class _FakeAppModel:
+        get_document_type = staticmethod(_stub_get_document_type)
+    class _FakeApp:
+        model = _FakeAppModel()
+    model.app = _FakeApp()
 
     saved_tab = {
         "did": "unknown",
@@ -773,7 +792,7 @@ def test_resolve_widget_name_returns_existing_widget_when_present():
     """When ``document.widget`` is non-empty, registry is not consulted."""
     registry_calls = []
 
-    def _stub_resolve(lookup_code, fallback=None):
+    def _stub_get_document_type(lookup_code):
         registry_calls.append(lookup_code)
         return None
 
@@ -781,9 +800,13 @@ def test_resolve_widget_name_returns_existing_widget_when_present():
         model = NchantdOfficeTabSetModel.__new__(NchantdOfficeTabSetModel)
     except (TypeError, AttributeError):
         model = object.__new__(NchantdOfficeTabSetModel)
-    model._resolve_widget_from_registry = _stub_resolve
+    class _FakeAppModel:
+        get_document_type = staticmethod(_stub_get_document_type)
+    class _FakeApp:
+        model = _FakeAppModel()
+    model.app = _FakeApp()
 
-    # Test 1: with widget="" + tab_type set, the synthesised form is
+    # Test: with widget="" + tab_type set, the synthesised form is
     # tried first and returns None; we don't fall through to document_txt
     # when the synthesised miss is the only fallback attempt (this is
     # an early-exit optimisation in the helper).
@@ -799,3 +822,69 @@ def test_resolve_widget_name_returns_existing_widget_when_present():
     assert "add_sketch_document_nchantdsketch" in registry_calls, (
         f"Expected synthesised fallback; got {registry_calls}"
     )
+
+
+def test_resolve_widget_name_resolves_chart_via_synthesised_tab_type():
+    """Regression for the H62 chart failure: tab_type='add_chart_document_nchantdchart'.
+
+    The user's log showed this exact shape failing LookupError. The
+    registry row for chart is
+        ['uuid', 'chart', 'document', 'Nchantd Chart',
+         ..., 'nchantdoffice.widgets.documents.analytics.charts.NchantdOfficeChart',
+         ...]
+
+    The view synthesises action_txt as 'add_chart_document_nchantdchart'
+    (matching the tab_type). The resolver must hit via get_document_type.
+    """
+    registry_calls = []
+
+    def _stub_get_document_type(lookup_code):
+        registry_calls.append(lookup_code)
+        # Both synthesised forms that the view produces.
+        if lookup_code == "add_chart_document_nchantdchart":
+            return {"widget_txt": "nchantdoffice.widgets.documents.analytics.charts.NchantdOfficeChart"}
+        if lookup_code == "chart":
+            return {"widget_txt": "nchantdoffice.widgets.documents.analytics.charts.NchantdOfficeChart"}
+        return None
+
+    try:
+        model = NchantdOfficeTabSetModel.__new__(NchantdOfficeTabSetModel)
+    except (TypeError, AttributeError):
+        model = object.__new__(NchantdOfficeTabSetModel)
+    class _FakeAppModel:
+        get_document_type = staticmethod(_stub_get_document_type)
+    class _FakeApp:
+        model = _FakeAppModel()
+    model.app = _FakeApp()
+
+    # The exact failing tab shape from the user's log.
+    saved_tab = {
+        "data": None,
+        "data_str": None,
+        "did": "06a67ef1-825b-7d54-8000-f71e94a65a2f",
+        "syntax": None,
+        "name": "nchantdchart 65a2f",
+        "position": 7,
+        "document_type": None,
+        "readonly": 0,
+        "editable": 1,
+        "visible": 1,
+        "moveable": 1,
+        "tid": "06a67ef1-82a1-7780-8000-697b9c6bbc38",
+        "pid": "067ca837-17f6-74e7-8000-f7de9b7927f1",
+        "widget": "",  # the empty widget that triggers the fallback
+        "widgdata": '{"file_type": "chart", "google_drive_bit": 0, "local_drive_bit": 0, "import": 0}',
+        "version": None,
+        "tab_type": "add_chart_document_nchantdchart",
+        "location": None,
+        "encoding": None,
+        "tags": None,
+        "hash": None,
+        "meta_data": {"creon": None, "modon": None},
+    }
+    cfg = {"tab": saved_tab, "file_path": ""}
+    name = model._resolve_widget_name(cfg, saved_tab)
+    assert name == "nchantdoffice.widgets.documents.analytics.charts.NchantdOfficeChart", (
+        f"Chart fallback failed; got {name!r}"
+    )
+    assert "add_chart_document_nchantdchart" in registry_calls

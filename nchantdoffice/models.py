@@ -86,6 +86,29 @@ def web_url_label(url):
         return "New Tab"
 
 
+def _registry_row_to_widget(row, fallback=None):
+    """Extract ``widget_txt`` from a ``get_document_type`` registry row.
+
+    ``get_document_type`` returns a pandas DataFrame row (or None)
+    from ``vw_app_document_type``. Older versions returned a dict;
+    newer versions return a Series. Handle both.
+    """
+    if row is None:
+        return fallback
+    # DataFrame row → dict-like; to_dict() gives a plain dict.
+    if hasattr(row, "to_dict"):
+        d = row.to_dict()
+    elif hasattr(row, "iloc"):
+        # Single-row DataFrame — take iloc[0] and recurse.
+        try:
+            return _registry_row_to_widget(row.iloc[0], fallback)
+        except (IndexError, AttributeError):
+            return fallback
+    else:
+        d = row
+    return d.get("widget_txt") or d.get("widget_class_txt") or fallback
+
+
 class NchantdOfficeInstance(NchantdInstance):
     """"""
 
@@ -3353,17 +3376,25 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
         T-NEW-002 + saved-tab fix: returns the dotted widget path
         string for the given tab/document config, falling back to
-        ``_resolve_widget_from_registry`` when both ``cfg.widget`` and
-        ``cfg.tab.widget`` are empty. Try the synthesised ``tab_type``
-        first (e.g. ``add_sketch_document_nchantdsketch``) then the
-        bare ``document_txt`` (e.g. ``"sketch"``).
+        the ``app_document_type`` registry when both ``cfg.widget``
+        and ``cfg.tab.widget`` are empty. The saved-tab shape is
+        ``{"widget": "", "tab_type": "add_<doc>_<type>_<name>"}``;
+        the fallback probes both the synthesised ``tab_type`` form
+        and the bare ``document_txt`` form (via the widening in
+        ``NchantdOfficeCloakModel.get_document_type`` from H53).
 
-        The registry helper lives on ``NchantdOfficeCloakModel`` (a
-        sibling class, not an ancestor of ``NchantdOfficeTabSetModel``)
-        so we reach it via ``self.app.model._resolve_widget_from_registry``
-        — the same indirection the toolbar uses. Falls back to a
-        direct attribute lookup if ``self.app`` is unavailable (e.g.
-        during construction).
+        The registry helper ``_resolve_widget_from_registry`` on
+        ``NchantdOfficeCloakModel`` queries the raw
+        ``app_document_type`` table (no view), so its
+        ``document_type_txt`` WHERE clause references a column that
+        doesn't exist there — it always returns None. Reach the
+        fixed ``get_document_type`` (which queries
+        ``vw_app_document_type`` and handles both forms) via
+        ``self.app.model`` instead.
+
+        The same indirection the toolbar uses at line 1656. Falls
+        back to a direct attribute lookup if ``self.app`` is
+        unavailable (e.g. during construction).
 
         Extracted as a helper so the resolution logic is unit-testable
         without instantiating Qt widgets. Returns the resolved widget
@@ -3392,10 +3423,17 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             )
             # Reach the CloakModel helper via the app model (it's a
             # sibling class — not in NchantdOfficeTabSetModel's MRO).
+            # We use ``get_document_type`` (queries ``vw_app_document_type``
+            # with the widening for both action_txt and document_txt
+            # from H53, commit 2c38a1e) rather than
+            # ``_resolve_widget_from_registry`` (queries the raw
+            # table with a column name that doesn't exist there).
             resolve = None
             app_model = getattr(self, "app", None) and getattr(self.app, "model", None)
-            if app_model is not None and hasattr(app_model, "_resolve_widget_from_registry"):
-                resolve = app_model._resolve_widget_from_registry
+            if app_model is not None and hasattr(app_model, "get_document_type"):
+                resolve = lambda code, fallback=None: _registry_row_to_widget(
+                    app_model.get_document_type(code), fallback
+                )
             elif hasattr(self, "_resolve_widget_from_registry"):
                 # Direct attribute (allows tests to inject a stub).
                 resolve = self._resolve_widget_from_registry
