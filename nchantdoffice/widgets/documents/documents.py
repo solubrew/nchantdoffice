@@ -42,6 +42,32 @@ log = True
 if not log:
     logma.off()
 
+# H62 DIAGNOSTIC-INSTRUMENTATION: install a global excepthook that logs
+# every uncaught exception with the [FOCUS] prefix and full traceback.
+# This is a safety net for the tab-loading pipeline: any exception that
+# bubbles up past per-method try/except blocks (e.g. swallowed by a Qt
+# slot) still gets logged here. Remove once the open regression is
+# diagnosed and fixed.
+_PREV_EXCEPTHOOK = None
+
+
+def _focus_excepthook(exc_type, exc_value, exc_tb):
+    import traceback
+    logma.error(
+        f"[FOCUS] UNCAUGHT EXCEPTION type={exc_type.__name__} "
+        f"message={exc_value!r}"
+    )
+    logma.error(f"[FOCUS] traceback:\n{''.join(traceback.format_exception(exc_type, exc_value, exc_tb))}")
+    if _PREV_EXCEPTHOOK is not None:
+        _PREV_EXCEPTHOOK(exc_type, exc_value, exc_tb)
+
+
+import sys  # noqa: E402  (kept near the excepthook for locality)
+if _PREV_EXCEPTHOOK is None:
+    _PREV_EXCEPTHOOK = sys.excepthook
+    sys.excepthook = _focus_excepthook
+    logma.info("[FOCUS] installed sys.excepthook for H62 diagnostics")
+
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "documents.yaml")
 
@@ -49,6 +75,31 @@ pxcfg = join(here, "_data_", "documents.yaml")
 class NchantdOfficeDocumentMixin:
     """Nchantd Office Document contains elements to create virtual documents to be stored. This is primarily to handle
     storage and generally will equate to what is shown in a tab"""
+
+    def __init__(self, *args, **kwargs):
+        # H62 DIAGNOSTIC-INSTRUMENTATION: trace widget construction.
+        logma.info(
+            f"[FOCUS] {type(self).__name__}.__init__ ENTER "
+            f"args_len={len(args)} kwargs_keys={list(kwargs.keys())}"
+        )
+        try:
+            super().__init__(*args, **kwargs)
+            logma.info(
+                f"[FOCUS] {type(self).__name__}.__init__ super().__init__ returned"
+            )
+        except Exception as exc:
+            import traceback
+            logma.error(
+                f"[FOCUS] {type(self).__name__}.__init__ EXCEPTION "
+                f"type={type(exc).__name__} message={exc!r}"
+            )
+            logma.error(
+                f"[FOCUS] {type(self).__name__}.__init__ traceback:\n{traceback.format_exc()}"
+            )
+            raise
+        logma.info(
+            f"[FOCUS] {type(self).__name__}.__init__ EXIT"
+        )
 
     def init_variables(self, name=None):
         """ """
@@ -82,6 +133,11 @@ class NchantdOfficeDocumentMixin:
         )
 
     def initModel(self, cfg=None, objects=None):
+        # H62 DIAGNOSTIC-INSTRUMENTATION
+        logma.info(
+            f"[FOCUS] {type(self).__name__}.initModel ENTER "
+            f"cfg_is_none={cfg is None} cfg_keys={list(cfg.keys()) if isinstance(cfg, dict) else 'NOT_DICT'}"
+        )
         """ """
         super().initModel(cfg)  # Pass through usage even though the Mixin has no permeate parent class
         self.toolbox_config = self.config.dikt.get("toolbox", None)
@@ -130,17 +186,43 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def initView(self, cfg=None):
-        """"""
+        # H62 DIAGNOSTIC-INSTRUMENTATION
+        logma.info(
+            f"[FOCUS] {type(self).__name__}.initView ENTER "
+            f"cfg_is_none={cfg is None} default_toolbar={self.config.dikt.get('default_toolbar', True)}"
+        )
+        """ """
         super().initView(cfg)
         if self.config.dikt.get("default_toolbar", True):
             self.init_toolbar(cfg)
         self.init_toolbox()
+        logma.info(f"[FOCUS] {type(self).__name__}.initView EXIT")
         return self
 
     def initWidget(self, pos=0):
+        # H62 DIAGNOSTIC-INSTRUMENTATION
+        logma.info(
+            f"[FOCUS] {type(self).__name__}.initWidget ENTER pos={pos}"
+        )
+        try:
+            return self._initWidget_body(pos)
+        except Exception as exc:
+            import traceback
+            logma.error(
+                f"[FOCUS] {type(self).__name__}.initWidget EXCEPTION "
+                f"pos={pos} type={type(exc).__name__} message={exc!r}"
+            )
+            logma.error(
+                f"[FOCUS] {type(self).__name__}.initWidget traceback:\n{traceback.format_exc()}"
+            )
+            raise
+
+    def _initWidget_body(self, pos):
+        """Body of initWidget for H62 try/except wrapping."""
         """ """
         self.initModel()
         self.initView()
+        logma.info(f"[FOCUS] {type(self).__name__}._initWidget_body EXIT")
         return self
 
     def align_left(self, selection=""):

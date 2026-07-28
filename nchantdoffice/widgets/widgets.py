@@ -132,16 +132,53 @@ class NchantdOfficeTabSet(NchantdTabSet):
             self.app.model.update_tab(self.app.model.get_current_tab(), cfg)
 
     def on_tab_focus(self, tabn=None):
-        """"""
+        # DIAGNOSTIC-INSTRUMENTATION (H62): every step of the tab-focus
+        # pipeline logs at INFO with a [FOCUS] prefix so we can
+        # reconstruct the full path from log output. Remove once the
+        # open regression is diagnosed and fixed.
+        logma.info(
+            f"[FOCUS] on_tab_focus ENTER tabn={tabn!r} pane={self.pane_position!r} "
+            f"tabsdata_len={len(self.model.tabsdata) if self.model and getattr(self.model, 'tabsdata', None) else 'NO_MODEL'}"
+        )
         # logma.inspect_caller()
         if tabn is None:
             tabn = self.currentIndex()
+        logma.info(f"[FOCUS] on_tab_focus resolved tabn={tabn}")
 
-        logma.info(f"on_tab_focus: tabn={tabn}, pane={self.pane_position}")
+        try:
+            return self._on_tab_focus_body(tabn)
+        except Exception as exc:
+            import traceback
+            logma.error(
+                f"[FOCUS] on_tab_focus EXCEPTION tabn={tabn} pane={self.pane_position} "
+                f"type={type(exc).__name__} message={exc!r}"
+            )
+            logma.error(f"[FOCUS] traceback:\n{traceback.format_exc()}")
+            raise
+        finally:
+            logma.info(
+                f"[FOCUS] on_tab_focus EXIT tabn={tabn} pane={self.pane_position} "
+                f"currentIndex={self.currentIndex()}"
+            )
+
+    def _on_tab_focus_body(self, tabn):
+        """Body of on_tab_focus, separated for H62 diagnostic instrumentation.
+
+        Same logic as the original on_tab_focus body, lifted into its
+        own method so the outer ``on_tab_focus`` can wrap it in a
+        try/except/finally that always logs ENTER and EXIT. Keeping the
+        body identical to pre-H62 ensures the existing tests still
+        pass without modification.
+        """
 
         # check if it's the " + " tab (it won't be in model.tabsdata)
         if tabn >= 0 and tabn < len(self.model.tabsdata):
             widget = self.widget(tabn)
+            logma.info(
+                f"[FOCUS] existing widget at tabn={tabn}: type={type(widget).__name__} "
+                f"hasattr_dummy={hasattr(widget, 'dummy')} "
+                f"dummy={getattr(widget, 'dummy', None)!r}"
+            )
             if hasattr(widget, "dummy") and widget.dummy:
                 # [off-by-one FIX] Materializing a lazy tab replaces the dummy via
                 # removeTab(tabn)+insertTab(tabn, real_widget) (QTabWidget has no
@@ -156,18 +193,28 @@ class NchantdOfficeTabSet(NchantdTabSet):
                 # The guard swallows the re-entrant signal; the outer call restores
                 # the current index (signals blocked) to the tab the user clicked.
                 if getattr(self, "_materializing_tab", False):
+                    logma.info(f"[FOCUS] _materializing_tab guard tripped at tabn={tabn}; returning self")
                     return self
-                logma.info(f"Loading Lazy Tab {tabn}")
+                logma.info(f"[FOCUS] Loading Lazy Tab {tabn}; calling model.load_tab")
+                logma.info(f"[FOCUS] tabsdata[{tabn}]={self.model.tabsdata[tabn]}")
                 self._materializing_tab = True
                 try:
                     self.model.load_tab(self.model.tabsdata[tabn], tabn, self.pane_position)
+                    logma.info(f"[FOCUS] model.load_tab returned; currentIndex={self.currentIndex()}")
                     if self.currentIndex() != tabn:
+                        logma.info(
+                            f"[FOCUS] currentIndex drift detected after load_tab "
+                            f"(got {self.currentIndex()}, expected {tabn}); restoring"
+                        )
                         self.blockSignals(True)
                         self.setCurrentIndex(tabn)
                         self.blockSignals(False)
                 finally:
                     self._materializing_tab = False
                 widget = self.widget(tabn)
+                logma.info(
+                    f"[FOCUS] post-materialize widget at tabn={tabn}: type={type(widget).__name__}"
+                )
 
             # Persist last selected tab
             # if self.model.current_node:
@@ -202,8 +249,12 @@ class NchantdOfficeTabSet(NchantdTabSet):
             # from scratch).
             if self.pane_position == "center":
                 toolbox = self._find_right_toolbox()
+                logma.info(
+                    f"[FOCUS] center pane focus; right-pane toolbox lookup "
+                    f"result={toolbox!r}"
+                )
                 if toolbox is not None:
-                    logma.info("Refreshing right-pane toolbox for focused document")
+                    logma.info("[FOCUS] Refreshing right-pane toolbox for focused document")
                     # The toolbox widget itself owns the refresh logic;
                     # it exposes refresh_for_document(doc_widget). We pass
                     # the just-focused center widget so the toolbox can
@@ -213,25 +264,24 @@ class NchantdOfficeTabSet(NchantdTabSet):
                         self._make_toolbox_refresh_handler(toolbox, widget),
                     )
 
-    def _make_toolbox_refresh_handler(self, toolbox, widget):
-        """Return a QTimer singleShot slot that refreshes ``toolbox``.
-
-        Replaces the previous ``lambda tb=toolbox, w=widget:`` form
-        with a named factory; satisfies the lambda-antipattern
-        auditor and lets the slot be unit-tested in isolation.
-        """
-        def _handler(_tb=toolbox, _w=widget):
-            _tb.refresh_for_document(_w)
-        return _handler
-
         # Ensure tabn is valid for super class to avoid IndexError in set_focus.
         # RESOLVED [off-by-one]: the first-click-off-by-one on center/right tabsets
         # was caused by lazy-tab materialization shifting Qt's currentIndex (see the
         # restore in the dummy-load branch above), NOT by this boundary check. The
         # `<= len - 1` guard below is equivalent to the earlier strict `<` check and
         # is intentionally kept.
+        logma.info(
+            f"[FOCUS] pre-super.on_tab_focus: tabn={tabn} "
+            f"tabn_in_range={0 <= tabn <= max(0, len(self.model.tabsdata) - 1)}"
+        )
         if tabn >= 0 and tabn <= len(self.model.tabsdata) - 1:
             super().on_tab_focus(tabn)
+            logma.info(f"[FOCUS] super().on_tab_focus returned")
+        else:
+            logma.warning(
+                f"[FOCUS] super().on_tab_focus SKIPPED: tabn={tabn} out of range "
+                f"(tabsdata_len={len(self.model.tabsdata)})"
+            )
         return self
 
 

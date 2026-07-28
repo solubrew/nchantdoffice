@@ -3311,54 +3311,109 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         return self
 
     def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0):
-        """"""
-        # Workaround for bug in nchantrs.models.tabsetmodels.NchantdTabSetModel.load_tab
-        # which uses 'tabn in self.tab_widgets' incorrectly for a list.
-        if tabn < len(self.tab_widgets):
-            # remove from parent QTabWidget
-            self.parent.removeTab(tabn)
-            # remove from our internal list so super().load_tab doesn't shift other tabs
-            self.tab_widgets.pop(tabn)
+        # H62 DIAGNOSTIC-INSTRUMENTATION
+        logma.info(
+            f"[FOCUS] load_tab ENTER tabn={tabn} tabset={tabset!r} "
+            f"tab={tab}"
+        )
+        try:
+            # Workaround for bug in nchantrs.models.tabsetmodels.NchantdTabSetModel.load_tab
+            # which uses 'tabn in self.tab_widgets' incorrectly for a list.
+            if tabn < len(self.tab_widgets):
+                # remove from parent QTabWidget
+                logma.info(
+                    f"[FOCUS] load_tab removing existing widget at tabn={tabn} "
+                    f"(len(self.tab_widgets)={len(self.tab_widgets)})"
+                )
+                self.parent.removeTab(tabn)
+                # remove from our internal list so super().load_tab doesn't shift other tabs
+                self.tab_widgets.pop(tabn)
 
-        # super().load_tab calls self.load_widget, which we override.
-        # Ensure we pass the converted document if needed, but nchantrs' load_tab
-        # expects the 'tab' dict which it then passes to parse_widget_data.
-        super().load_tab(tab, tabn, tabset, active_tab_position)
-        return self
+            # super().load_tab calls self.load_widget, which we override.
+            # Ensure we pass the converted document if needed, but nchantrs' load_tab
+            # expects the 'tab' dict which it then passes to parse_widget_data.
+            logma.info(f"[FOCUS] load_tab calling super().load_tab")
+            super().load_tab(tab, tabn, tabset, active_tab_position)
+            logma.info(
+                f"[FOCUS] load_tab EXIT tabn={tabn} tabsdata_len={len(self.tabsdata)} "
+                f"tab_widgets_len={len(self.tab_widgets)}"
+            )
+            return self
+        except Exception as exc:
+            import traceback
+            logma.error(
+                f"[FOCUS] load_tab EXCEPTION tabn={tabn} tabset={tabset} "
+                f"type={type(exc).__name__} message={exc!r}"
+            )
+            logma.error(f"[FOCUS] load_tab traceback:\n{traceback.format_exc()}")
+            raise
 
     def load_widget(self, cfg, tabset="center", document=None, tab_type="custom_widget"):
-        """"""
+        # H62 DIAGNOSTIC-INSTRUMENTATION: every step logged at INFO
+        # with [FOCUS] prefix. Use logma.warning/error for failure paths
+        # so the user can grep for these.
+        logma.info(
+            f"[FOCUS] load_widget ENTER cfg_keys={list(cfg.keys()) if isinstance(cfg, dict) else 'NOT_DICT'} "
+            f"tabset={tabset!r} document_present={document is not None} tab_type={tab_type!r}"
+        )
         logma.info(f"Load Widget {cfg}")
         logma.info(f"Tabset {tabset}")
         logma.info(f"Document {document}")
         logma.info(f"Tab Type {tab_type}")
 
-        # Build one coherent config before calling the nchantrs loader. A complete
-        # dotted widget path always takes the dynamic import branch in loadWidget;
-        # no registry placeholder is a valid document-opening result.
-        if document:
-            widget_name = document.get("widget", document.get("widget_txt", cfg.get("widget")))
-            cfg["tid"] = document.get("tid", document.get("tid_txt", cfg.get("tid")))
-            cfg["document"] = document
-        else:
-            widget_name = cfg.get("widget")
-        if (not widget_name) and "tab" in cfg:
-            tab_data = cfg["tab"]
-            widget_name = tab_data.get("widget", tab_data.get("widget_txt", None))
-        if not widget_name:
-            raise LookupError(f"No widget registered for document tab: {document or cfg.get('tab', cfg)}")
-        cfg["widget"] = widget_name
+        try:
+            # Build one coherent config before calling the nchantrs loader. A complete
+            # dotted widget path always takes the dynamic import branch in loadWidget;
+            # no registry placeholder is a valid document-opening result.
+            if document:
+                widget_name = document.get("widget", document.get("widget_txt", cfg.get("widget")))
+                logma.info(
+                    f"[FOCUS] load_widget resolving widget_name from document: "
+                    f"document.widget={document.get('widget')!r} "
+                    f"document.widget_txt={document.get('widget_txt')!r} "
+                    f"cfg.widget={cfg.get('widget')!r} -> widget_name={widget_name!r}"
+                )
+                cfg["tid"] = document.get("tid", document.get("tid_txt", cfg.get("tid")))
+                cfg["document"] = document
+            else:
+                widget_name = cfg.get("widget")
+                logma.info(f"[FOCUS] load_widget using cfg.widget={widget_name!r}")
+            if (not widget_name) and "tab" in cfg:
+                tab_data = cfg["tab"]
+                widget_name = tab_data.get("widget", tab_data.get("widget_txt", None))
+                logma.info(f"[FOCUS] load_widget resolved widget_name from cfg.tab={widget_name!r}")
+            if not widget_name:
+                logma.error(
+                    f"[FOCUS] load_widget FAILING — no widget_name found in "
+                    f"document={document!r} cfg_keys={list(cfg.keys()) if isinstance(cfg, dict) else cfg!r}"
+                )
+                raise LookupError(f"No widget registered for document tab: {document or cfg.get('tab', cfg)}")
+            cfg["widget"] = widget_name
+            logma.info(f"[FOCUS] load_widget calling super().load_widget with widget={widget_name!r}")
 
-        tabW = super().load_widget(cfg, tabset, document, tab_type)
-        if tabW is None:
-            raise RuntimeError(f"Widget loader returned None for {widget_name}")
-        # ``super().load_widget`` already calls initWidget through the
-        # dynamic loader. Mark the widget as initialised so the
-        # tabset's later set_focus() / on_tab_focus() doesn't try to
-        # re-initialise the same widget (which would clobber state and
-        # re-build the canvas for a sketch or the table for a matrix).
-        tabW.widget_initialized = True
-        return tabW
+            tabW = super().load_widget(cfg, tabset, document, tab_type)
+            logma.info(
+                f"[FOCUS] load_widget super().load_widget returned type={type(tabW).__name__} "
+                f"id={id(tabW) if tabW is not None else 'NONE'}"
+            )
+            if tabW is None:
+                raise RuntimeError(f"Widget loader returned None for {widget_name}")
+            # ``super().load_widget`` already calls initWidget through the
+            # dynamic loader. Mark the widget as initialised so the
+            # tabset's later set_focus() / on_tab_focus() doesn't try to
+            # re-initialise the same widget (which would clobber state and
+            # re-build the canvas for a sketch or the table for a matrix).
+            tabW.widget_initialized = True
+            logma.info(f"[FOCUS] load_widget EXIT success widget={type(tabW).__name__}")
+            return tabW
+        except Exception as exc:
+            import traceback
+            logma.error(
+                f"[FOCUS] load_widget EXCEPTION widget_name={widget_name!r} "
+                f"type={type(exc).__name__} message={exc!r}"
+            )
+            logma.error(f"[FOCUS] load_widget traceback:\n{traceback.format_exc()}")
+            raise
 
     def set_focus(self):
         """"""
