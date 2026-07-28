@@ -163,9 +163,9 @@ dimensions:
           project: nchantdoffice
         internal_imports: 331
         internal_projects_used:
-        - nchantrs
-        - nchantdoffice
         - kahndor
+        - nchantdoffice
+        - nchantrs
         leverage_score: 37.53
         score: 100
         status: pass
@@ -278,7 +278,7 @@ dimensions:
           branches:
             local: []
             remote: []
-          commit_count: 487
+          commit_count: 488
           commits: []
           contributors: []
           is_repo: true
@@ -3435,7 +3435,7 @@ summary:
   total_auditors: 11
   total_dimensions: 53
 test_execution:
-  duration_seconds: 17.133795022964478
+  duration_seconds: 17.136704206466675
   project_score: 94.61
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
   results:
@@ -3451,7 +3451,7 @@ test_execution:
   status_message: +2% bonus (100% tests passed)
   timestamp: ''
 versions:
-  project: 45d2a14
+  project: 9c13e68
   project_status: dirty
   project_uncommitted_changes: 6
   sasquatch: 120e86d
