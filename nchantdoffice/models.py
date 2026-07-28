@@ -2855,8 +2855,15 @@ class NchantdOfficeStore(NchantdStore):
         {"name": "version_int", "type": "integer"},
         {"name": "pyffice_version_txt", "type": "text"},
         {"name": "hash_txt", "type": "text"},
-        {"name": "policy_fk", "type": "integer"},
-        {"name": "metadata_ltxt", "type": "text"},
+        # Match the dstruct column names exactly:
+        # nchantrs/models/_data_/applicationmodels.yaml line 1668
+        # has ``policy_FK`` (capital F) and ``meta_data_enc64_dict``
+        # (not ``policy_fk`` / ``metadata_ltxt``). The dstruct
+        # created the table with those names and the INSERT must
+        # use the same names or SQLite raises
+        # ``no such column: policy_fk``.
+        {"name": "policy_FK", "type": "integer"},
+        {"name": "meta_data_enc64_dict", "type": "text"},
     ]
 
     def store_app_media(self, document, db="db", how="INSERT", table="app_media"):
