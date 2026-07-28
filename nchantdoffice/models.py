@@ -2088,12 +2088,19 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # the per-save bump policy is configurable through ``version_policy``
         # in the office config (default = "patch"). The simple count
         # versioning used by the legacy editor has been replaced by the
-        # semver-aware ``_increment_pydoc_version`` below.
+        # semver-aware ``_bump_doc_save_version`` below.
+        #
+        # T-NEW-005: this bumps the doc_save_version only (object #1
+        # of the 3 version-control objects). The pyffice schema
+        # version (object #2) is bumped separately by
+        # ``_bump_content_schema_version`` when the ``content`` dict
+        # shape changes; the multi-instance version (object #3) is
+        # read-only from ``self.app.model.instance``.
         policy = self.config.dikt.get("version_policy", "patch") if hasattr(self, "config") else "patch"
         try:
-            self.store._increment_pydoc_version(pydoc, policy=policy)
+            self._bump_doc_save_version(pydoc, policy=policy)
         except Exception as e:
-            logma.error(f"[models] version increment failed: {e}", exc_info=True)
+            logma.error(f"[models] doc_save_version increment failed: {e}", exc_info=True)
         logma.json(pydoc.to_dict())
         self.add_document_content(pydoc.to_dict(), version=pydoc.version)
         return pydoc
@@ -2688,19 +2695,26 @@ class NchantdOfficeStore(NchantdStore):
             logma.error(f"[models] _delete({table}) failed: {e}", exc_info=True)
         return self
 
-    def _increment_pydoc_version(self, pydoc, policy="patch"):
-        """Bump ``pydoc.version`` using a real semver policy.
+    def _bump_doc_save_version(self, pydoc, policy="patch"):
+        """Bump the per-save version counter on a ``NchantdDocument``.
 
-        Treats ``pydoc.version`` as a 4-part dotted version
-        (major.minor.patch.build) and bumps one component per
-        save based on ``policy`` ("major" / "minor" / "patch" /
-        "build"). Default is "patch".
+        T-NEW-005: this is object #1 of the 3 version-control objects
+        — ``doc_media.version`` / ``content_version_int``. Tracks
+        how many times this specific ``NchantdDocument`` instance
+        has been saved (incremented on every ``store_pydoc`` /
+        auto-save / explicit save call).
 
-        Writes the new version back to ``pydoc.version`` so the
-        subsequent ``add_document_content`` records the bump.
+        Distinct from:
+          - ``_bump_content_schema_version`` (object #2, pyffice
+            schema migrations — bumped only when the ``content``
+            dict shape changes)
+          - ``instance_version`` (object #3, multi-instance
+            compatibility — read-only from
+            ``self.app.model.instance.version``, never bumped
+            here)
 
-        Returns ``True`` when the version was incremented,
-        ``False`` on any failure.
+        Policy is a real semver bump on a 4-part dotted version
+        (major.minor.patch.build) defaulting to "patch".
         """
         try:
             current = str(getattr(pydoc, "version", "0.0.0.0") or "0.0.0.0")
@@ -2723,11 +2737,94 @@ class NchantdOfficeStore(NchantdStore):
                 nums = [nums[0], nums[1], nums[2], nums[3] + 1]
             new_version = ".".join(str(n) for n in nums)
             pydoc.version = new_version
-            logma.info(f"[models] _increment_pydoc_version: {current} -> {new_version} (policy={policy})")
+            logma.info(
+                f"[models] _bump_doc_save_version (T-NEW-005 #1 doc_media): "
+                f"{current} -> {new_version} (policy={policy})"
+            )
             return True
         except Exception as e:
-            logma.error(f"[models] _increment_pydoc_version failed: {e}", exc_info=True)
+            logma.error(f"[models] _bump_doc_save_version failed: {e}", exc_info=True)
             return False
+
+    def _bump_content_schema_version(self, pydoc, schema_change="minor"):
+        """Bump the pyffice ``content`` dict schema version.
+
+        T-NEW-005: this is object #2 of the 3 version-control
+        objects — ``pyffice_documents`` schema version. Tracks
+        migrations of the ``content`` dict structure (new keys,
+        renamed keys, dropped keys). Bumped only when the
+        schema actually changes — not on every save.
+
+        Lives on the PyfficeDocument's ``content_schema_version``
+        attribute (mirrors ``pyffice.document.PyfficeDocument.
+        versions`` which holds the full migration history dict).
+        Reads through to the existing ``versions`` dict so older
+        readers still see the migration history; new code reads
+        the explicit string version.
+        """
+        try:
+            current = str(getattr(pydoc, "content_schema_version", "0.0.0") or "0.0.0")
+            parts = current.split(".")
+            while len(parts) < 3:
+                parts.append("0")
+            nums = []
+            for p in parts[:3]:
+                try:
+                    nums.append(int(p))
+                except ValueError:
+                    nums.append(0)
+            if schema_change == "major":
+                nums = [nums[0] + 1, 0, 0]
+            elif schema_change == "minor":
+                nums = [nums[0], nums[1] + 1, 0]
+            else:  # "patch" or unknown
+                nums = [nums[0], nums[1], nums[2] + 1]
+            new_version = ".".join(str(n) for n in nums)
+            pydoc.content_schema_version = new_version
+            logma.info(
+                f"[models] _bump_content_schema_version (T-NEW-005 #2 "
+                f"pyffice_documents): {current} -> {new_version} (change={schema_change})"
+            )
+            return True
+        except Exception as e:
+            logma.error(
+                f"[models] _bump_content_schema_version failed: {e}",
+                exc_info=True,
+            )
+            return False
+
+    def get_instance_version(self):
+        """Read the multi-instance version from the current ``NchantdInstance``.
+
+        T-NEW-005: this is object #3 of the 3 version-control
+        objects — ``nchantd_instance.version``. Read-only from
+        here; the instance is owned by ``self.app.model.instance``
+        and the version is bumped when a new ``.pyof`` DB file is
+        forked from a primary instance. Returns "0.0.0" when the
+        app is not initialised or the instance has no version.
+        """
+        try:
+            instance = getattr(getattr(self, "app", None), "model", None)
+            if instance is not None:
+                inst = getattr(instance, "instance", None)
+                if inst is not None:
+                    return str(getattr(inst, "version", "0.0.0") or "0.0.0")
+        except Exception as e:
+            logma.error(f"[models] get_instance_version failed: {e}", exc_info=True)
+        return "0.0.0"
+
+    # Backwards-compat alias: keep ``_increment_pydoc_version``
+    # working for any external caller that still references the
+    # older name. Routes through the new doc-save-version bumper.
+    def _increment_pydoc_version(self, pydoc, policy="patch"):
+        """DEPRECATED: prefer ``_bump_doc_save_version`` (T-NEW-005).
+
+        Kept as a thin alias so external callers and test fixtures
+        that target the original method name still work. New code
+        should call ``_bump_doc_save_version`` directly to make
+        intent clear.
+        """
+        return self._bump_doc_save_version(pydoc, policy=policy)
     def store_app_instance(self, instance, db="db"):
         """Build payload from instance dict and dispatch. Delegates to the free function."""
         self._store("app_instance", [_build_app_instance_payload(instance)], db)

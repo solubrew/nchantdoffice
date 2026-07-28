@@ -532,3 +532,129 @@ def test_add_document_fallback_uses_registry_for_unknown_types():
         "NchantdOfficeCloakModel must expose get_document_type() for the "
         "case _: fallback in add_document (T-NEW-006)."
     )
+
+
+
+# T-NEW-005: regression coverage for the 3 distinct version-control
+# objects on NchantdOfficeCloakModel. Each tracks a different
+# lifecycle and must be bumped by a SEPARATE method so the
+# numbers never get conflated (the legacy code used a single
+# ``_increment_pydoc_version`` that bumped everything in lockstep).
+
+
+class _StubPydoc:
+    """Bare object to stand in for a PyfficeDocument."""
+
+    def __init__(self, version="0.0.0", content_schema_version=None,
+                 versions=None):
+        self.version = version
+        # PyfficeDocument default is content_schema_version = "0.0"
+        # (the attribute is added by _bump_content_schema_version if absent).
+        if content_schema_version is not None:
+            self.content_schema_version = content_schema_version
+        self.versions = versions or {}
+
+
+def test_bump_doc_save_version_only_touches_doc_save_version():
+    """Object #1 (doc_media.version) is bumped independently."""
+    from nchantdoffice.models import NchantdOfficeCloakModel
+
+    model = object.__new__(NchantdOfficeCloakModel)
+    pydoc = _StubPydoc(version="0.0.5")
+
+    assert model._bump_doc_save_version(pydoc, policy="patch") is True
+    assert pydoc.version == "0.0.6.0", (
+        f"doc_save_version should bump patch: got {pydoc.version}"
+    )
+    # Object #2 (content_schema_version) is NOT touched here.
+    assert not hasattr(pydoc, "content_schema_version"), (
+        "doc_save_version must NOT touch content_schema_version"
+    )
+
+
+def test_bump_content_schema_version_only_touches_schema_version():
+    """Object #2 (pyffice_documents schema) is bumped independently."""
+    from nchantdoffice.models import NchantdOfficeCloakModel
+
+    model = object.__new__(NchantdOfficeCloakModel)
+    pydoc = _StubPydoc(version="0.0.5.0", content_schema_version="1.2.3")
+
+    assert model._bump_content_schema_version(pydoc, schema_change="minor") is True
+    assert pydoc.content_schema_version == "1.3.0", (
+        f"schema_version should bump minor: got {pydoc.content_schema_version}"
+    )
+    # Object #1 (doc_save_version) is NOT touched here.
+    assert pydoc.version == "0.0.5.0", (
+        f"content_schema_version bump must NOT touch doc_save_version: got {pydoc.version}"
+    )
+
+
+def test_doc_save_and_schema_version_are_independent():
+    """Bumping one version doesn't change the other."""
+    from nchantdoffice.models import NchantdOfficeCloakModel
+
+    model = object.__new__(NchantdOfficeCloakModel)
+    pydoc = _StubPydoc(version="0.0.0", content_schema_version="1.0.0")
+
+    # Bump doc_save_version three times
+    for _ in range(3):
+        model._bump_doc_save_version(pydoc, policy="patch")
+    # Bump schema_version once
+    model._bump_content_schema_version(pydoc, schema_change="minor")
+
+    assert pydoc.version == "0.0.3.0", (
+        f"doc_save_version should be 0.0.3.0 after 3 patch bumps: got {pydoc.version}"
+    )
+    assert pydoc.content_schema_version == "1.1.0", (
+        f"schema_version should be 1.1.0 after 1 minor bump: got {pydoc.content_schema_version}"
+    )
+
+
+def test_get_instance_version_returns_default_when_no_instance():
+    """Object #3 (nchantd_instance.version) reads from app.model.instance.
+
+    Returns "0.0.0" when the app is not initialised (no instance
+    attribute) — common during early bootstrap.
+    """
+    from nchantdoffice.models import NchantdOfficeCloakModel
+
+    # Bare model with no app attribute.
+    model = object.__new__(NchantdOfficeCloakModel)
+    assert model.get_instance_version() == "0.0.0", (
+        f"Default instance_version should be '0.0.0' when no app: got {model.get_instance_version()!r}"
+    )
+
+
+def test_get_instance_version_reads_from_app_model_instance():
+    """When app.model.instance.version is set, get_instance_version returns it."""
+    from nchantdoffice.models import NchantdOfficeCloakModel
+
+    model = object.__new__(NchantdOfficeCloakModel)
+
+    class _Instance:
+        version = "2.5.7"
+
+    class _AppModel:
+        instance = _Instance()
+
+    class _App:
+        model = _AppModel()
+
+    model.app = _App()
+    assert model.get_instance_version() == "2.5.7", (
+        f"Expected '2.5.7', got {model.get_instance_version()!r}"
+    )
+
+
+def test_increment_pydoc_version_alias_still_works():
+    """Backwards-compat: the legacy name routes to doc_save_version."""
+    from nchantdoffice.models import NchantdOfficeCloakModel
+
+    model = object.__new__(NchantdOfficeCloakModel)
+    pydoc = _StubPydoc(version="0.0.0")
+
+    # The old method name should still bump pydoc.version.
+    assert model._increment_pydoc_version(pydoc, policy="major") is True
+    assert pydoc.version == "1.0.0.0", (
+        f"Alias should route to _bump_doc_save_version: got {pydoc.version}"
+    )
