@@ -28,6 +28,7 @@ from pygments.lexers.r import SLexer as RLexer
 from pygments.lexers.shell import BashLexer
 from pygments.formatters import HtmlFormatter
 from numpy import isnan, nan
+
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
 from nchantrs.libraries import pyqt
@@ -55,7 +56,7 @@ if not log:
 pxcfg = join(here, "_data_", "scripts.yaml")
 
 
-class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
+class NchantdOfficeScript(NchantdOfficeDocument):
 
     def _ensure_drawer_item(self, items, cnt):
         """Lazily create a default drawer-item slot.
@@ -89,7 +90,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
         substitute for PySide2"""
         icfg = {}
         super().__init__("Nchantd Script", parent, icfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeScript").override(cfg))
         self.format_type = None
         self.document_editor = None
@@ -1199,7 +1199,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):  # (pyqt.QsciScintillaBase):
             self.document.file_format = "plain-text"
         logma.info(f"Syntax {self.document.syntax}")
         logma.info(f"Type {type(self.document.syntax)}")
-        if self.document.syntax is None or isinstance(self.document.syntax, float):#This is to catch nan probably a better way
+        if self.document.syntax is None or isinstance(
+            self.document.syntax, float
+        ):  # This is to catch nan probably a better way
             self.document.syntax = "plain-text"
         logma.info(f"Document Format: {self.document.file_format}")
         logma.info(f"Syntax {self.document.syntax}")

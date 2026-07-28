@@ -42,11 +42,12 @@ NchantdOfficeScript:
           3: {"action": "set_page_margin_bottom", "type": ""}
           4: {"action": "set_page_margin_right", "type": ""}
           5: {"action": "set_page_layout", "type": ""}
-    200:
-        title: Selection Configuration
-        items:
-            0: {"action": "show_selected_text", "type": "entryeditor", "readonly": True}
-            1: {"action": "select_text_font_style", "type": ""}
+#PUSH to 0.0.3
+#    200:
+#        title: Selection Configuration
+#        items:
+#            0: {"action": "show_selected_text", "type": "entryeditor", "readonly": True}
+#            1: {"action": "select_text_font_style", "type": ""}
     300:
       title: Object Configuration
       items:
@@ -55,7 +56,8 @@ NchantdOfficeScript:
           2: {"action": "insert_object", "type": ""}
           3: {"action": "set_page_footer", "type": ""}
           4: {"action": "set_document_footer", "type": ""}
-    400:
-        title: Nchantd Script Quickstart
-        items:
-            0: {"action": "", "type": ""}
+#PUSH to 0.0.3
+#    400:
+#        title: Nchantd Script Quickstart
+#        items:
+#            0: {"action": "", "type": ""}
