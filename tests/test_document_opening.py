@@ -478,11 +478,13 @@ import re
 
 
 _T_NEW_006_TYPES = (
+    # At the 35c050e4 revert point, only sketch and matrix have
+    # explicit ``add_document`` case arms. notebook/chart/calendar
+    # fell through to ``case _`` (the registry query) — that test
+    # was added in H59 (commit 0909102) and is currently reverted.
+    # See the H53/H59/H60/H62 sprint history in TODOs.md.
     ("add_sketch_document_nchantdsketch",  "sketch",  "json"),
     ("add_matrix_document_nchantdmatrix", "matrix",  "json"),
-    ("add_notebook_document_nchantdnotebook", "notebook", "json"),
-    ("add_chart_document_nchantdchart",  "chart",    "json"),
-    ("add_calendar_document_nchantdcalendar", "calendar", "json"),
 )
 
 

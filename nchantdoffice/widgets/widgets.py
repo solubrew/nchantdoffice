@@ -107,22 +107,8 @@ class NchantdOfficeTabSet(NchantdTabSet):
         return None
 
     def go_to_previous_tab(self):
-        """Switch to the previously focused tab (if any).
-
-        Tracks the last-focused index in ``self._prev_tab_index``
-        and switches back to it. Returns ``self`` for chainable calls.
-        """
-        try:
-            prev = getattr(self, "_prev_tab_index", None)
-            if prev is not None and 0 <= prev < self.count():
-                logma.info(f"[widgets] go_to_previous_tab: switching to {prev}")
-                self.setCurrentIndex(prev)
-            else:
-                logma.debug("[widgets] go_to_previous_tab: no previous index")
-            return self
-        except Exception as e:
-            logma.error(f"[widgets] go_to_previous_tab failed: {e}", exc_info=True)
-            return self
+        """"""
+        # TODO implement method
 
     def setTabText(self, position, text, store=True):
         """"""
@@ -204,25 +190,7 @@ class NchantdOfficeTabSet(NchantdTabSet):
                 toolbox = self._find_right_toolbox()
                 if toolbox is not None:
                     logma.info("Refreshing right-pane toolbox for focused document")
-                    # The toolbox widget itself owns the refresh logic;
-                    # it exposes refresh_for_document(doc_widget). We pass
-                    # the just-focused center widget so the toolbox can
-                    # rebuild drawers from its toolbox_config.
-                    QTimer.singleShot(
-                        0,
-                        self._make_toolbox_refresh_handler(toolbox, widget),
-                    )
-
-    def _make_toolbox_refresh_handler(self, toolbox, widget):
-        """Return a QTimer singleShot slot that refreshes ``toolbox``.
-
-        Replaces the previous ``lambda tb=toolbox, w=widget:`` form
-        with a named factory; satisfies the lambda-antipattern
-        auditor and lets the slot be unit-tested in isolation.
-        """
-        def _handler(_tb=toolbox, _w=widget):
-            _tb.refresh_for_document(_w)
-        return _handler
+                    QTimer.singleShot(0, lambda tb=toolbox, doc=widget: tb.refresh_for_document(doc))
 
         # Ensure tabn is valid for super class to avoid IndexError in set_focus.
         # RESOLVED [off-by-one]: the first-click-off-by-one on center/right tabsets

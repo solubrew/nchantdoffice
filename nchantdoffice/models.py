@@ -3297,37 +3297,39 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         return self
 
     def load_widget(self, cfg, tabset="center", document=None, tab_type="custom_widget"):
-        """"""
+        """ """
         logma.info(f"Load Widget {cfg}")
         logma.info(f"Tabset {tabset}")
         logma.info(f"Document {document}")
         logma.info(f"Tab Type {tab_type}")
 
-        # Build one coherent config before calling the nchantrs loader. A complete
-        # dotted widget path always takes the dynamic import branch in loadWidget;
-        # no registry placeholder is a valid document-opening result.
+        # If document is not None, use it to populate cfg, similar to base load_widget
         if document:
-            widget_name = document.get("widget", document.get("widget_txt", cfg.get("widget")))
+            cfg["widget"] = document.get("widget", document.get("widget_txt", cfg.get("widget")))
             cfg["tid"] = document.get("tid", document.get("tid_txt", cfg.get("tid")))
             cfg["document"] = document
-        else:
-            widget_name = cfg.get("widget")
+
+        # Workaround for KeyError: 'tab' in lookupWidget
+        # This happens when 'widget' is not in cfg, and 'tab' is the first key.
+        widget_name = cfg.get("widget")
         if (not widget_name) and "tab" in cfg:
             tab_data = cfg["tab"]
             widget_name = tab_data.get("widget", tab_data.get("widget_txt", None))
-        if not widget_name:
-            raise LookupError(f"No widget registered for document tab: {document or cfg.get('tab', cfg)}")
-        cfg["widget"] = widget_name
+
+        if widget_name:
+            # Rebuild cfg so the widget name is the FIRST key,
+            # which is what nchantrs.widgets.widgets.lookupWidget expects:
+            # registered_widget = lookupWidget(list(cfg.keys())[0])
+            new_cfg = {widget_name: cfg.get(widget_name, {})}
+            for k, v in cfg.items():
+                if k != widget_name:
+                    new_cfg[k] = v
+            cfg = new_cfg
+            cfg["widget"] = widget_name
 
         tabW = super().load_widget(cfg, tabset, document, tab_type)
-        if tabW is None:
-            raise RuntimeError(f"Widget loader returned None for {widget_name}")
-        # ``super().load_widget`` already calls initWidget through the
-        # dynamic loader. Mark the widget as initialised so the
-        # tabset's later set_focus() / on_tab_focus() doesn't try to
-        # re-initialise the same widget (which would clobber state and
-        # re-build the canvas for a sketch or the table for a matrix).
-        tabW.widget_initialized = True
+        if hasattr(tabW, "initWidget"):
+            tabW.initWidget()
         return tabW
 
     def set_focus(self):
