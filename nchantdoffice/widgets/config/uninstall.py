@@ -37,6 +37,7 @@ class NchantdOfficeUninstallSettings(NchantdUninstallSettings):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdOfficeUninstallSettings init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeUninstallSettings").override(cfg))
 

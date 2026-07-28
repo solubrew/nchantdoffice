@@ -37,6 +37,7 @@ class NchantdOfficeContextMenu(NchantdContextMenu):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdOfficeContextMenu init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdContextMenu").override(cfg))
 

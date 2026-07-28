@@ -40,7 +40,8 @@ class NchantdOfficeDataPolicy(NchantdDataPolicy):
     """"""
 
     def __init__(self, parent=None, cfg=None):
-        """"""
+        """ """
+        logma.info(f"NchantdOfficeDataPolicy init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDataPolicy").override(cfg))

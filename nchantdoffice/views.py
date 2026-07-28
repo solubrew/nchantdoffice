@@ -39,6 +39,7 @@ class NchantdOfficeCloakView(NchantdCloakView):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdOfficeCloakView init: parent={type(parent).__name__}")
         super().__init__(parent, None)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCloakView").override(cfg))

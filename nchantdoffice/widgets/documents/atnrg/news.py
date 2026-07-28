@@ -41,6 +41,7 @@ class NchantdCommunitiesSummary(NchantdWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
+        logma.info(f"NchantdCommunitiesSummary init: parent={type(parent).__name__}")
         self.parent = parent
         self.config = kahndor.Instruct(pxcfg).select("NchantdCommunitiesSummaryTab")
         if self.parent:

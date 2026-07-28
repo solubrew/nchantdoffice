@@ -49,6 +49,9 @@ def build_dropdown_cfg(label, options, value=None, handler=None, layout="horizon
 
     Returns a cfg dict ready to pass to NchantdDropDown.
     """
+    logma.info(
+        f"build_dropdown_cfg: label={label!r} options={len(options) if hasattr(options, '__len__') else '?'}"
+    )
     if size is None:
         size = ["auto", "auto"]
     cfg = {
