@@ -1178,10 +1178,28 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             return DataFrame()
 
     def get_document_type(self, action_code):
-        """"""
+        """Resolve a document-type registry row by either of its keys.
+
+        The toolbar passes ``lookup_code_txt`` which for some types
+        (notebook, matrix, chart, calendar, sketch) is the bare
+        ``document_txt`` (``"notebook"``, ``"sketch"``, …) rather than
+        the synthesised ``action_txt`` (``"add_notebook_document_nchantnotebook"``,
+        built by the ``vw_app_document_type`` view in ``nchantrs``).
+
+        Query either field so both forms resolve. Falls through to the
+        legacy ``action_txt`` query first (matches the
+        ``add_<doc>_<type>_<name>`` pattern produced by the view)
+        then widens to ``document_txt``.
+        """
         if action_code is None:
             return None
+        # 1. Synthesised ``action_txt`` (e.g. ``add_script_document_nchantscript``).
         cfg = {"WHERE": {"EQUAL": {"action_txt": action_code}}}
+        df = self.store.get_view_documents_all(cfg)
+        if not df.empty:
+            return df.iloc[0]
+        # 2. Bare ``document_txt`` (e.g. ``"notebook"``, ``"sketch"``).
+        cfg = {"WHERE": {"EQUAL": {"document_txt": action_code}}}
         df = self.store.get_view_documents_all(cfg)
         return df.iloc[0] if not df.empty else None
 

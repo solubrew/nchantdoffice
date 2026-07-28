@@ -105,11 +105,21 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.pinned = False
 
     def initModel(self):
-        """"""
+        """ """
         super().initModel()
         self.document = self.app.model.codex.init_notebook({"document": self.config.dikt.get("document", {})})
         self.document.load_document()
         self.context_menu.get_menu("context.document.notebook")
+        # T-NEW-003 (H60 sub-task c): pin notebook save_mode to
+        # ``"to_dict"``. Notebooks are JSON-shaped by definition
+        # (``.ipynb`` is just ``{cells: [...], metadata: ...}``) and
+        # the ``save()`` override already serializes the notebook
+        # via ``get_binary()`` into ``document.content['notebook_bytes']``
+        # for DB persistence. The on-disk file is therefore a
+        # cache, not the source of truth. ``set_save_mode`` also
+        # persists the value on ``self.document.config`` so the
+        # pin survives a reload.
+        self.set_save_mode("to_dict")
         return self
 
     def initView(self, cfg=None):
