@@ -3,7 +3,7 @@ analysis:
   counts:
     files: 419
     python_files: 171
-    python_lines: 59448
+    python_lines: 59501
     test_files: 86
 audit_date: '1785166530.110188'
 dimensions:
@@ -163,9 +163,9 @@ dimensions:
           project: nchantdoffice
         internal_imports: 331
         internal_projects_used:
-        - nchantrs
         - kahndor
         - nchantdoffice
+        - nchantrs
         leverage_score: 37.61
         score: 100
         status: pass
@@ -203,16 +203,12 @@ dimensions:
   embedded_todos:
     details:
       details:
-        count: 8
+        count: 7
         examples:
         - file: nchantdoffice/models.py
           line: 2073
           text: '#TODO: version is simply a whole number bump on each save for internal
             data storage this is not a full version control s'
-        - file: nchantdoffice/models.py
-          line: 2863
-          text: 'int(content["version"]) + 1, #TODO need to move back to an integer
-            based version'
         - file: nchantdoffice/widgets/documents/media/scripts.py
           line: 315
           text: 'self.document_editor.insert("[chart]")  # TODO this needs to be real
@@ -241,11 +237,11 @@ dimensions:
         - dimension: embedded_todos
           rule: Inline TODOs need tracking
           severity: medium
-        score: 84
+        score: 86
         status: pass
-      score: 84
+      score: 86
       status: pass
-    score: 84
+    score: 86
     status: pass
   error_handling:
     details:
@@ -272,13 +268,23 @@ dimensions:
   feature_envy:
     details:
       details:
-        feature_envy_count: 0
-        issues: []
-        score: 100
+        feature_envy_count: 1
+        issues:
+        - fix: Move method to the class it uses most
+          items:
+          - class: NchantdOfficeTabSetModel
+            envy_of: cfg
+            file: nchantdoffice/models.py
+            foreign_calls: 9
+            method: load_widget
+            own_calls: 0
+          rule: 'Feature envy detected: 1 methods'
+          severity: medium
+        score: 90
         status: pass
-      score: 100
+      score: 90
       status: pass
-    score: 100
+    score: 90
     status: pass
   file_sizes:
     details:
@@ -287,7 +293,7 @@ dimensions:
         - file: nchantdoffice/models.py
           rule: File too large
           severity: medium
-          size_kb: 158.197265625
+          size_kb: 160.4287109375
         large_file_count: 1
         score: 80
         status: pass
@@ -303,7 +309,7 @@ dimensions:
           branches:
             local: []
             remote: []
-          commit_count: 472
+          commit_count: 473
           commits: []
           contributors: []
           is_repo: true
@@ -757,6 +763,10 @@ dimensions:
           line: 2689
           rule: 'Bandit: Possible binding to all interfaces.'
           severity: medium
+        - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/models.py
+          line: 2901
+          rule: 'Bandit: Use of weak MD5 hash for security. Consider usedforsecurity=False'
+          severity: high
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/widgets/controls/toolboxes.py
           line: 436
           rule: 'Bandit: Pickle and modules that wrap it can be unsafe when used to
@@ -1071,56 +1081,56 @@ dimensions:
         - category: getattr_dynamic
           content: viewer = getattr(widget, "browser", None)
           file: nchantdoffice/models.py
-          line: 3216
+          line: 3269
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: view = getattr(viewer, "browser", None) if viewer is not None else
             None
           file: nchantdoffice/models.py
-          line: 3217
+          line: 3270
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3335
+          line: 3388
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3351
+          line: 3404
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3367
+          line: 3420
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3383
+          line: 3436
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3399
+          line: 3452
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
-          line: 3617
+          line: 3670
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if df is not None and not getattr(df, "empty", True):'
           file: nchantdoffice/models.py
-          line: 3623
+          line: 3676
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: url_open
@@ -3395,17 +3405,17 @@ dimensions:
         - dimension: todo_tracking
           rule: Embedded TODOs require resolution
           severity: medium
-        score: 92
+        score: 93
         status: pass
-        total_todos: 8
+        total_todos: 7
         worst_offenders:
         - count: 6
           file: nchantdoffice/widgets/documents/media/scripts.py
-        - count: 2
+        - count: 1
           file: nchantdoffice/models.py
-      score: 92
+      score: 93
       status: pass
-    score: 92
+    score: 93
     status: pass
   type_annotations:
     details:
@@ -3413,12 +3423,12 @@ dimensions:
         issues:
         - rule: low_coverage
           severity: medium
-          total: 2295
-          typed: 42
+          total: 2296
+          typed: 43
         score: 1
         status: partial
-        total_functions: 2295
-        typed_functions: 42
+        total_functions: 2296
+        typed_functions: 43
         untyped_functions: 2253
       score: 1
       status: partial
@@ -3457,7 +3467,7 @@ summary:
   total_auditors: 11
   total_dimensions: 53
 test_execution:
-  duration_seconds: 3.067917585372925
+  duration_seconds: 3.065673351287842
   project_score: 80.69
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
   results:
@@ -3473,7 +3483,7 @@ test_execution:
   status_message: -10% penalty (0 tests ran)
   timestamp: ''
 versions:
-  project: 58f4c2b
+  project: 31f5163
   project_status: dirty
-  project_uncommitted_changes: 11
+  project_uncommitted_changes: 5
   sasquatch: 120e86d

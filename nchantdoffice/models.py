@@ -2860,7 +2860,7 @@ class NchantdOfficeStore(NchantdStore):
                 content["pUUID"],
                 content["page"],
                 content["entry"],
-                int(content["version"]) + 1, #TODO need to move back to an integer based version
+                _coerce_doc_version(content.get("version")) + 1,
                 content["hash"],
                 content["content"],
                 content["context"],
@@ -2873,6 +2873,33 @@ class NchantdOfficeStore(NchantdStore):
         # set delete for all but the last 30 versions eventually base on variable policy of time/szie/counts
         # self._archive_versions(table, content["pUUID"], "pUUID", "UUID", 3)
         return content["uuid"]
+
+
+def _coerce_doc_version(raw) -> int:  # noqa: ANN201
+    """Best-effort integer document-version coercion.
+
+    The desktop app historically stored ``content["version"]`` as an
+    int, but a few legacy record formats (e.g. older PDF/Sketch saves,
+    hand-edited YAML records) carry version strings like ``"1.0.1.0"``.
+    Treating those as integers raised::
+
+        ValueError: invalid literal for int() with base 10: '1.0.1.0'
+
+    We keep the legacy behaviour (integer version) for new writes, but
+    accept legacy / partial values by falling back to a hash-derived
+    integer so the document still saves. This makes the failure
+    survivable without dropping the save.
+    """
+    try:
+        if raw is None or raw == "":
+            return 0
+        return int(raw)
+    except (TypeError, ValueError):
+        # Fall back to a stable numeric hash of the string so the
+        # version stays comparable across saves.
+        import hashlib
+        digest = hashlib.md5(str(raw).encode("utf-8")).hexdigest()
+        return int(digest[:8], 16) & 0x7FFFFFFF  # keep it positive int32
 
     def update_document_entry(self, uuid, content, db="db"):
         """"""
@@ -3199,7 +3226,33 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             cfg = new_cfg
             cfg["widget"] = widget_name
 
-        tabW = super().load_widget(cfg, tabset, document, tab_type)
+        # FIX P8 (lookupWidget KeyError):
+        # If the parent nchantrs loadWidget doesn't find the widget class
+        # in the registered-widget registry, the cfg's first key gets passed
+        # to lookupWidget(), which raises KeyError. That blocks the tabset
+        # rebuild on every startup until the data is hand-fixed.
+        #
+        # Wrap the super().load_widget call so any KeyError from
+        # lookupWidget falls back to a lightweight QWidget placeholder.
+        # The placeholder still carries the tab's name/position so
+        # the rest of the UI keeps working.
+        try:
+            tabW = super().load_widget(cfg, tabset, document, tab_type)
+        except KeyError as e:
+            logma.warning(
+                f"[load_widget] widget not in registry, "
+                f"using placeholder (missing key={e!s}); cfg_keys={list(cfg.keys())[:3]}"
+            )
+            from nchantrs.libraries import pyqt as _pyqt
+            tabW = _pyqt.QWidget()
+            tabW.setObjectName(cfg.get("widget", "missing_widget"))
+            tabW.name = cfg.get("widget", "missing_widget")
+            tabW.type = tab_type
+            tabW.position = cfg.get("position", 0)
+            tabW.dummy = True
+            tabW.toolbox_config = {}
+            return tabW
+
         if hasattr(tabW, "initWidget"):
             tabW.initWidget()
         return tabW
