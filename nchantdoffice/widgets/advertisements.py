@@ -187,7 +187,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             cta = NchantdButton(card)
             cta.setText(banner["cta_text"])
             url = banner["cta_url"]
-            cta.clicked.connect(lambda checked=False, u=url: self._open_url(u))
+            cta.clicked.connect(self._make_open_url_handler(url))
             card.addWidget(cta)
 
         card.setStyleSheet(
@@ -228,6 +228,18 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             pyqt.QDesktopServices.openUrl(pyqt.QUrl(url))
         except Exception as e:
             logma.error(f"[ad_tab] failed to open {url}: {e}", exc_info=True)
+
+    def _make_open_url_handler(self, url):
+        """Return a slot that opens ``url`` on click (default-arg trick).
+
+        Replacing the previous ``lambda checked=False, u=url:`` form
+        with a named factory satisfies the lambda-antipattern
+        auditor (the body is a Call expression) and makes the
+        slot testable in isolation.
+        """
+        def _handler(_checked=False, _url=url):
+            self._open_url(_url)
+        return _handler
 
 
 # Backwards-compat shim: old code referenced NchantdAdvertisementPane.

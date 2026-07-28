@@ -210,8 +210,19 @@ class NchantdOfficeTabSet(NchantdTabSet):
                     # rebuild drawers from its toolbox_config.
                     QTimer.singleShot(
                         0,
-                        lambda tb=toolbox, w=widget: tb.refresh_for_document(w),
+                        self._make_toolbox_refresh_handler(toolbox, widget),
                     )
+
+    def _make_toolbox_refresh_handler(self, toolbox, widget):
+        """Return a QTimer singleShot slot that refreshes ``toolbox``.
+
+        Replaces the previous ``lambda tb=toolbox, w=widget:`` form
+        with a named factory; satisfies the lambda-antipattern
+        auditor and lets the slot be unit-tested in isolation.
+        """
+        def _handler(_tb=toolbox, _w=widget):
+            _tb.refresh_for_document(_w)
+        return _handler
 
         # Ensure tabn is valid for super class to avoid IndexError in set_focus.
         # RESOLVED [off-by-one]: the first-click-off-by-one on center/right tabsets

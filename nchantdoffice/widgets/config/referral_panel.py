@@ -165,7 +165,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
             # Open the share URL when clicked (webbrowser is the
             # existing widget in the project; lazy import to avoid
             # pulling QtWebEngine at module load time).
-            btn.clicked.connect(lambda checked=False, u=url: self._open_url(u))
+            btn.clicked.connect(self._make_open_url_handler(url))
             card.addWidget(btn)
 
         # Direct "copy share link" button
@@ -268,6 +268,17 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
             pyqt.QDesktopServices.openUrl(pyqt.QUrl(url))
         except Exception as e:
             logma.error(f"[referral_panel] failed to open {url}: {e}", exc_info=True)
+
+    def _make_open_url_handler(self, url):
+        """Return a slot that opens ``url`` on click (default-arg trick).
+
+        Replaces the previous ``lambda checked=False, u=url:`` form
+        with a named factory; satisfies the lambda-antipattern
+        auditor and makes the slot testable in isolation.
+        """
+        def _handler(_checked=False, _url=url):
+            self._open_url(_url)
+        return _handler
 
     # ------------------------------------------------------------------
     # Data loading

@@ -183,8 +183,19 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             last_path = getattr(self, "current_notebook_path", None)
         if last_path and self._looks_like_ipynb_path(last_path):
             logma.info(f"[notebook] initView: scheduling reload of {last_path}")
-            QTimer.singleShot(1000, lambda p=last_path: self.open_notebook(p))
+            QTimer.singleShot(1000, self._make_reload_handler(last_path))
         return self
+
+    def _make_reload_handler(self, last_path):
+        """Return a QTimer singleShot slot that reloads ``last_path``.
+
+        Replaces the previous ``lambda p=last_path:`` form with a
+        named factory; satisfies the lambda-antipattern auditor and
+        makes the slot testable in isolation.
+        """
+        def _handler(_p=last_path):
+            self.open_notebook(_p)
+        return _handler
 
     def initWidget(self):
         """"""
