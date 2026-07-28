@@ -554,7 +554,11 @@ class NchantdOfficeTabEditPane(NchantdPane):
         cfg = {"label": "Tab Position: ", "value": tab.position}
         self.position_entry = NchantdLabeledSpinBox(self, cfg).initWidget()
         layout.addWidget(self.position_entry)
-        location = "external"  # tab.location TODO define location
+        # T-doc-loc-resolve: pull the canonical ``location`` from the
+        # tab dict (the source of truth), falling back to
+        # ``"external"`` for tabs that pre-date the property. The
+        # label below always reflects the real stored value.
+        location = tab.location if getattr(tab, "location", None) else "external"
         cfg = {"text": f"Document Location: {location}"}
         self.location_label = NchantdLabel(self, cfg).initWidget()
         layout.addWidget(self.location_label)

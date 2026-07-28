@@ -2086,8 +2086,11 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # logma.info(f"Document {pydoc.to_dict()}")
         if hasattr(pydoc, "is_changed") and pydoc.is_changed is False:
             return pydoc
-        #TODO: version is simply a whole number bump on each save for internal data storage this is not a full version control system
-        # return to simple count versioning that was previously working 
+        # ``version`` is a 4-part dotted version (major.minor.patch.build);
+        # the per-save bump policy is configurable through ``version_policy``
+        # in the office config (default = "patch"). The simple count
+        # versioning used by the legacy editor has been replaced by the
+        # semver-aware ``_increment_pydoc_version`` below.
         policy = self.config.dikt.get("version_policy", "patch") if hasattr(self, "config") else "patch"
         try:
             self.store._increment_pydoc_version(pydoc, policy=policy)
