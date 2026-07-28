@@ -1,6 +1,11 @@
 # TODOs
 
 ## NEW TODOs (open items not yet in a sprint)
+- NchantdChart causes segmentation fault every time it trys to render
+- NchantdBrowser is not saving and retrieving url
+- NchantdImage is blurry on inintial render from the db load but when returning to it will be properly displayed
+- NchantdScript is still loading with no formatting when returned to tab but loads properly when opened from a file directly.
+- 
 
 ### need integration into plan
 - **T-NEW-001** — replace tab creation name with the document-type tab icon and the generated 5-digit or user-entered name.
