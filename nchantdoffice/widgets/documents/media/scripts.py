@@ -277,6 +277,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             self.set_note_view()
         else:
             raise Exception("view_type must be 'page_view' or 'note_view'")
+        self._apply_extension_syntax(self.document.file_path)
         self.populate_document()
         return self
 
@@ -681,7 +682,8 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """"""
         if self.document is None:
             return []
-        return list(set(self.document.file_formats.values()))
+        #REGRESSION return list(set(self.document.file_formats.values()))
+        return []
 
     def get_font_color_selected(self):
         """"""
@@ -1521,7 +1523,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             self.document.syntax = "plain-text"
         logma.info(f"Document Format: {self.document.file_format}")
         logma.info(f"Syntax {self.document.syntax}")
-
+        #TODO: refactor and define the difference between file_format, and syntax
+        if self.document.file_format != self.document.syntax:
+            self.document.syntax = self.document.file_format
         # 1:1 setters — no transformation
         if self.document.syntax == "markdown":
             self.document_editor.setMarkdown(text)
