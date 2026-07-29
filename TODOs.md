@@ -116,16 +116,17 @@
   ``config.syntax``, ``document.syntax``, ``document.file_format``,
   and ``document.meta_data["syntax"]``. Regression tests in
   `tests/test_script_open_format.py` (5 new). Commit pending.
-- **Status (T-NEW-023 followup, _initial_load reset in initView):**
-  the reload path ``initView → populate_document`` was running
-  with `_initial_load = True` (left over from a prior
-  `open_file()` call) so the dispatch fired on reload and
-  stripped leading whitespace. The reset `self._initial_load =
-  False` inside `initView()` (which runs on every tab
-  materialise — initial open AND every reopen) ensures
-  ``populate_document`` short-circuits on reload but dispatches
-  on initial open. Tests in ``tests/test_script_open_format.py``
-  (5 new) verify both contracts. Commit pending.
+  - **Status (T-NEW-023, reload whitespace still lost as of
+    2026-07-29):** the user's reload contract — "reload should be
+    opening the file on disk again" with tabs and newlines
+    preserved verbatim — is NOT YET met. The previous
+    `_initial_load` flag fix in `initView()` restored the
+    dispatcher on initial open but reload from another tabset
+    still does not preserve indentation. Marked as a pin:
+    further investigation requires a Qt-parent subprocess
+    harness (the reproduction only surfaces when crossing
+    tabset boundaries, which the headless sasquatch env
+    cannot exercise). Deferred per user direction.
 
 ### NchantdNotebook — not storing the .ipynb location
 - **Status:** fixed in `06b76fb` (file_path resolution), extended in `0b7156a` (T-NEW-009 bytes-not-JSON save crash) and `654eeea` (T-NEW-011 reopen-from-disk).
