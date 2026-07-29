@@ -556,6 +556,18 @@ across `dialogs/`, `widgets/panes/charts.py`, `widgets/panes/sources.py`,
 `widgets/panes/documents.py` (replaced `pycrypt` references with
 `pycurity.pyhash.encode64` / `decode64`, plus deferred
 `decrypt` / `encrypt` to T-NEW-013). Test surface: 45 passed, 2 skipped.
+- **T-NEW-013 status update (Sprint 12, 2026-07-29):** per user
+  direction ("the encrypt/decrypt feature needs to be labelled
+  with the PUSH to 0.0.3 tag and commented out"), the four
+  cipher methods on ``NchantdOfficeDocument`` —
+  ``encode64`` / ``decode64`` / ``encrypt`` / ``decrypt`` in
+  ``nchantdoffice/widgets/panes/documents.py`` — now carry
+  explicit ``# PUSH 0.0.3`` markers with the T-NEW-013
+  reference. ``encode64`` / ``decode64`` continue to do the
+  base64 round-trip; ``encrypt`` / ``decrypt`` are no-op
+  stubs that log a warning. Regression test
+  ``tests/test_encrypt_decrypt_push_tag.py` verifies the
+  markers stay in place across future refactors.
 
 ### Prior activity (H51-H52 sprint + NOTE pattern split)
 

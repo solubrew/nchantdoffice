@@ -383,32 +383,41 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def decode64(self):
         """"""
+        # PUSH 0.0.3 - T-NEW-013 cipher selector for decrypt path.
+        # Currently this method (and encode64 below) do the base64
+        # round-trip; the cipher selection (RSA / AES / Fernet via
+        # pycurity.pycrypt) is deferred until the cipher selector
+        # pane ships.
         self.content = decode64(self.content).decode("utf-8")
         return self
 
     def decrypt(self):
         """"""
-        # T-NEW-013: was pycrypt.decrypt(self.content) — referenced
-        # an undefined `pycrypt` symbol. The actual crypto helper
-        # lives in pycurity.pycrypt; defer the integration until the
-        # desired cipher is selected (RSA / AES / Fernet).
+        # PUSH 0.0.3 - T-NEW-013: real cipher integration deferred.
+        # Was pycrypt.decrypt(self.content) (referenced an
+        # undefined symbol). The actual crypto helper lives in
+        # pycurity.pycrypt. No-op for now so save/reload
+        # round-trips through base64.
         logma.warning(
-            "[documents] decrypt: pycurity cipher not yet wired — " "no-op until the cipher selector is added."
+            "[documents] decrypt: pycurity cipher not yet wired (PUSH 0.0.3)"
         )
         return self
 
     def encode64(self):
         """"""
+        # PUSH 0.0.3 - T-NEW-013: see decrypt() above. The base64
+        # round-trip is the canonical format the panel currently
+        # persists.
         self.content = encode64(self.content.encode("utf-8"))
         return self
 
     def encrypt(self):
         """"""
-        # T-NEW-013: see decrypt() — actual cipher integration is
-        # deferred. The base64 round-trip is the canonical format
-        # the panel currently persists.
+        # PUSH 0.0.3 - T-NEW-013: see decrypt() - actual cipher
+        # integration deferred. Base64 round-trip is the format the
+        # panel currently persists.
         logma.warning(
-            "[documents] encrypt: pycurity cipher not yet wired — " "no-op until the cipher selector is added."
+            "[documents] encrypt: pycurity cipher not yet wired (PUSH 0.0.3)"
         )
         return self
 
