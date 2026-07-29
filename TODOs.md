@@ -50,6 +50,14 @@
     / indented-markdown documents now round-trip with their
     indentation intact. Regression test
     `tests/test_script_newline_roundtrip.py`. Commit `22b96c5`.
+  - Status (rich-text still lost on reopen, T-NEW-010): fixed.
+    `NchantdOfficeScript.get_content()` now records the raw
+    `toHtml()` into `self.document.text.html` so
+    `_preserved_unit_html()` can restore it on reopen (the
+    previous implementation only wrote a free-form `text` field
+    that the reopen path never inspected). Regression test
+    `tests/test_live_reopen_bugs.py::test_script_reopen_uses_preserved_html_when_saved`.
+    Commit `654eeea`.
 - NchantdNotebook is not storing the location when a specific .ipynb file is opened and always returns to the cwd file manager view
   - Status: fixed. `widgets/documents/workbooks/notebooks.py:107`
     `initModel` now derives `file_path` in this order: nested
@@ -68,6 +76,14 @@
     tests `tests/test_notebook_save_bytes.py` (6 new) plus an
     update to `tests/test_document_persistence.py`. Commit
     `0b7156a`.
+  - Status (reopen returns to cwd file manager, T-NEW-011): fixed.
+    `NchantdOfficeNotebook.initModel` now calls
+    `self.open_notebook(resolved_path)` when the saved
+    `file_path` points at an existing ``.ipynb``, so the user
+    returns to the last-viewed notebook instead of the cwd file
+    manager view. Regression test
+    `tests/test_live_reopen_bugs.py::test_notebook_reopen_invokes_open_notebook_with_saved_path`.
+    Commit `654eeea`.
 - NchantdBrowser is not saving and retrieving url
   - Status: fixed. `widgets/documents/atnrg/browsers.py:1126`
     `get_content()` returns `{"content": active_page.to_dict()}` so
@@ -75,6 +91,16 @@
     previously only saving `{}`). Regression test
     `tests/test_browser_db_roundtrip.py` decodes the actual stored
     blob. Commit `ebb6e84`.
+  - Status (still storing `{}` after Sprint 1 wrap, T-NEW-012):
+    fixed. `NchantdOfficeDocumentMixin.save` now calls
+    `self.get_content()` and pipes the result into
+    `self.document.set_content()` before persisting, so the
+    Browser's `get_content()` override is actually invoked on
+    save (previously the mixin went straight to
+    `store_document` which serialised the stale or empty
+    `document.content` directly). Regression test
+    `tests/test_live_reopen_bugs.py::test_browser_save_invokes_get_content_before_persistence`.
+    Commit `654eeea`.
 - NchantdFileSystem needs to store when a root change is made and return to that root and to store which directories are expanded and return them.
   - Status: BLOCKED. The qpandas metaclass conflict in
     `nchantrs.widgets.tables.tables` blocks importing
