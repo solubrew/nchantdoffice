@@ -2091,8 +2091,18 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # TODO: increment version
         # pydoc.increment_version()
         # how to address content versioning
-        logma.json(pydoc.to_dict())
-        self.add_document_content(pydoc.to_dict(), version=pydoc.version)
+        # T-NEW-009 followup: guard against non-JSON-serialisable
+        # values (e.g. raw bytes from a notebook payload) so the
+        # save flow never crashes. The persistence layer
+        # (``add_document_content``) re-encodes via ``j.dumps``
+        # internally; we only need to keep the log call from
+        # blowing up the user-visible save.
+        doc_payload = pydoc.to_dict()
+        try:
+            logma.json(_json_safe(doc_payload))
+        except Exception as _json_log_exc:
+            logma.error(f"[store_document] logma.json failed: {_json_log_exc}")
+        self.add_document_content(doc_payload, version=pydoc.version)
         return pydoc
 
     def store_event(self, state, action, cfg=None, db="db"):
@@ -2963,6 +2973,28 @@ def _coerce_doc_version(raw) -> int:  # noqa: ANN201
         import hashlib
         digest = hashlib.md5(str(raw).encode("utf-8")).hexdigest()
         return int(digest[:8], 16) & 0x7FFFFFFF  # keep it positive int32
+
+
+def _json_safe(value):
+    """Recursively convert ``value`` into a JSON-serialisable form.
+
+    Used by ``store_document`` so a payload that contains raw
+    ``bytes`` (e.g. ``NchantdNotebook.content.notebook_bytes``)
+    cannot crash the ``logma.json`` audit log. The actual
+    persistence layer is allowed to keep its own handling; this
+    helper only ensures the log call never aborts a save.
+    """
+    import base64
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    if isinstance(value, (bytes, bytearray)):
+        try:
+            return base64.b64encode(bytes(value)).decode("ascii")
+        except Exception:
+            return repr(value)
+    return value
 
 
 def _build_doc_media_payload(document):

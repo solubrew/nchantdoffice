@@ -83,10 +83,31 @@ def test_browser_content_keeps_payload_under_canonical_content_key():
 
 
 def test_notebook_content_keeps_location_and_serialized_notebook():
+    """T-NEW-009 followup: default save_mode is file_path (no bytes
+    in the payload); the serialised payload is opt-in via
+    ``save_mode == "to_dict"``. The .ipynb path is always present
+    so reopen reloads from the external file.
+    """
     notebook = _bare_qt_widget(NchantdOfficeNotebook)
     notebook.file_path = "/tmp/work.ipynb"
     notebook.cells = [{"cell_type": "code", "source": ["print('ok')"]}]
-    notebook.kernel_name = "python3"
+    notebook.save_mode = "file_path"
+
+    content = notebook.get_content()
+
+    assert content["content"]["file_path"] == "/tmp/work.ipynb"
+    assert "notebook_bytes" not in content["content"]
+
+
+def test_notebook_content_to_dict_mode_includes_serialized_notebook():
+    """When the user has toggled save_mode to "to_dict", the serialised
+    bytes are included so reopen can recover without the external
+    file.
+    """
+    notebook = _bare_qt_widget(NchantdOfficeNotebook)
+    notebook.file_path = "/tmp/work.ipynb"
+    notebook.cells = [{"cell_type": "code", "source": ["print('ok')"]}]
+    notebook.save_mode = "to_dict"
 
     content = notebook.get_content()
 
