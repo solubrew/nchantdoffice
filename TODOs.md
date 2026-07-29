@@ -10,6 +10,9 @@
 
   however all that is being saved is {}
 
+- Ad tab button is trying to launch a browser using the QService but we want to redirect to a tab under the Settings node / Nchantd Account tab which is a browser tab already pointed to the users account/create account of nchantdoffice.com
+- Ad tab size needs to be controlled as right side tabs are slim 360x900.  if ads need to be larger than that then we will have to implement the full page ad in the center tabset but this is more disruptive to users
+
 
 
 - **T-NEW-007 — Drop the `.pyof` single-instance pickle format.** All
