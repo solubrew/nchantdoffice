@@ -228,6 +228,7 @@ class NchantdAlarmsEditPane(NchantdPane):
                 if value is not None:
                     self.config.dikt["name"] = value
         return self
+
     def cmd_scope_changed(self):
         """Handle alarm scope/interval change."""
         if hasattr(self, "alarm_scope_select"):
@@ -301,6 +302,7 @@ def _seed_default_calendar_events(now=None):
         start/end datetime fields.
     """
     from datetime import datetime, timedelta
+
     now = now or datetime.now()
     tomorrow = now + timedelta(days=1)
     return {
@@ -600,6 +602,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
             "widget": self.calendar_unit_select,
         }
         cfg["buttons"][49] = "_insert_stretch"
+        cfg["buttons"][100] = "_skip"
         super().initView(cfg)
         cfg = {}
         self.calendar = NchantdCalendar(self, cfg).initWidget()
@@ -684,16 +687,10 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         Returns ``self`` for chainable call sites.
         """
         try:
-            widget = (
-                getattr(self, "new_event_date_select", None)
-                or getattr(self, "event_datetime_select", None)
-            )
+            widget = getattr(self, "new_event_date_select", None) or getattr(self, "event_datetime_select", None)
             event_dt = None
             if widget is not None:
-                getter = (
-                    getattr(widget, "get_value", None)
-                    or getattr(widget, "value", None)
-                )
+                getter = getattr(widget, "get_value", None) or getattr(widget, "value", None)
                 if callable(getter):
                     try:
                         event_dt = getter()
@@ -810,7 +807,8 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
 
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.event_config_accept_button = NchantdAcceptButtons(
-            self, {"layout": "horizontal", "handler": self.cmd_config_accept},
+            self,
+            {"layout": "horizontal", "handler": self.cmd_config_accept},
         )
         cnt += 1
 
@@ -839,31 +837,36 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
 
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.event_alarms_list = NchantdAlarmsListPane(
-            self, {"label": "Alarms List: ", "layout": "horizontal"},
+            self,
+            {"label": "Alarms List: ", "layout": "horizontal"},
         )
         cnt += 1
 
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.event_recurrence_edit_pane = NchantdAlarmsEditPane(
-            self, {"label": "Edit Alarm: ", "layout": "horizontal"},
+            self,
+            {"label": "Edit Alarm: ", "layout": "horizontal"},
         )
         cnt += 1
 
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.event_recurrences_pane = NchantdRecurrencesListPane(
-            self, {"label": "Recurrences: ", "layout": "horizontal"},
+            self,
+            {"label": "Recurrences: ", "layout": "horizontal"},
         )
         cnt += 1
 
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.event_recurrence_edit_pane = NchantdEventRecursionEditPane(
-            self, {"label": "Edit Recurrence: ", "layout": "horizontal"},
+            self,
+            {"label": "Edit Recurrence: ", "layout": "horizontal"},
         )
         cnt += 1
 
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.event_tasks_pane = NchantdTasksListPane(
-            self, {"text": "Tasks: ", "layout": "horizontal"},
+            self,
+            {"text": "Tasks: ", "layout": "horizontal"},
         )
         return items
 
