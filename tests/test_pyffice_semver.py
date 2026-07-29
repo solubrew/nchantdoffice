@@ -67,6 +67,42 @@ def test_each_pyffice_class_has_own_serialization_version():
         PyfficeDocumentManager,
         PyfficeDeque,
     ]
+    # Plus the document-type subclasses the user named
+    # explicitly: PyfficeScript, PyfficeMatrix, PyfficeImage,
+    # etc. Some live in modules that may not be importable
+    # in the sasquatch test env, so we look them up by name
+    # via the package's public surface where possible.
+    try:
+        from pyffice.script.script import PyfficeScript
+
+        classes.append(PyfficeScript)
+    except ImportError:
+        pass
+    try:
+        from pyffice.matrix.matrix import PyfficeMatrix
+
+        classes.append(PyfficeMatrix)
+    except ImportError:
+        pass
+    try:
+        from pyffice.notebooks.notebooks import PyfficeNotebook
+
+        classes.append(PyfficeNotebook)
+    except ImportError:
+        pass
+    try:
+        from pyffice.diagrams.diagrams import PyfficeDiagram
+
+        classes.append(PyfficeDiagram)
+    except ImportError:
+        pass
+    try:
+        from pyffice.filesystems.filesystems import PyfficeFileSystem
+
+        classes.append(PyfficeFileSystem)
+    except ImportError:
+        pass
+
     for cls in classes:
         assert hasattr(cls, "SERIALIZATION_VERSION"), (
             f"{cls.__name__} must declare SERIALIZATION_VERSION."
