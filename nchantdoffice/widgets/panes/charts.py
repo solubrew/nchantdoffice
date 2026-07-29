@@ -172,12 +172,13 @@ class NchantdChartConfigPane(NchantdPane):
         self.chart_specific_widget = self.get_chart_specific_widget(self.get_type())
         if self.chart_specific_widget is not None:
             chart_details_layout.addWidget(self.chart_specific_widget)
-
-        # T-056: chart-config actions as a button group (background /
-        # area colour / border style / theme) so the user can
-        # switch editing mode without context-switching.
-        self.action_button_group = self._build_chart_action_button_group()
-        chart_details_layout.addWidget(self.action_button_group)
+        #
+        # # T-056: chart-config actions as a button group (background /
+        # # area colour / border style / theme) so the user can
+        # # switch editing mode without context-switching.
+        # TODO causes segmentation fault
+        # self.action_button_group = self._build_chart_action_button_group()
+        # chart_details_layout.addWidget(self.action_button_group)
 
         cfg = {
             "text": "Set Chart Background Color",
@@ -197,19 +198,20 @@ class NchantdChartConfigPane(NchantdPane):
         }
         self.chart_color = NchantdButton(self, cfg).initWidget()
         chart_details_layout.addWidget(self.chart_color)
-        # T-057: real border-style editor (button group of
-        # solid / dashed / dotted / double / none). The chosen
-        # style is stored on config.dikt['chart_border_style'].
-        self.chart_border_bar = self._build_border_style_editor()
-        chart_details_layout.addWidget(self.chart_border_bar)
+        # # T-057: real border-style editor (button group of
+        # # solid / dashed / dotted / double / none). The chosen
+        # # style is stored on config.dikt['chart_border_style'].
+        # TODO causes segmentation fault
+        # self.chart_border_bar = self._build_border_style_editor()
+        # chart_details_layout.addWidget(self.chart_border_bar)
         self.left_group.addWidget(chart_details_group)
-        self.left_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
+        # self.left_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         self.layout.addLayout(self.left_group.layout)
         cfg = {"size": ["auto", 1000]}
         self.center_group = NchantdVScrollGroupBox(self, cfg)
         self.center_group.setTitle("Chart Format Configuration")
-        self.center_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
-        self.center_group.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
+        # self.center_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
+        # self.center_group.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         for axis in self.axes:
             cfg = {"label": axis, "size": ["auto", 350]}
             self.axes[axis]["widget"] = NchantdChartAxisPane(self, cfg).initWidget()
@@ -232,7 +234,7 @@ class NchantdChartConfigPane(NchantdPane):
         self.new_legend_button = NchantdButton(self, cfg).initWidget()
         self.center_group.addWidget(self.new_legend_button)
         self.layout.addLayout(self.center_group.layout)
-        self.center_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
+        # self.center_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         cfg = {"size": ["auto", "auto"]}
         self.right_group = NchantdVScrollGroupBox(self, cfg)
         self.right_group.setTitle("Chart Data Configuration")
@@ -243,7 +245,7 @@ class NchantdChartConfigPane(NchantdPane):
         cfg = {"text": "Add Data Series"}
         self.new_legend_button = NchantdButton(self, cfg).initWidget()
         self.right_group.addWidget(self.new_legend_button)
-        self.right_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
+        # self.right_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         self.layout.addLayout(self.right_group.layout)
 
         self.set_size()
@@ -253,13 +255,16 @@ class NchantdChartConfigPane(NchantdPane):
     # chart-type name to a factory that builds the per-chart
     # extras widget (axis range, color stops, point size, etc).
     _CHART_TYPE_UI_LAYERS = {
-        "line":   "_chart_line_extras",
-        "bar":    "_chart_bar_extras",
-        "pie":    "_chart_pie_extras",
-        "scatter":"_chart_scatter_extras",
-        "area":   "_chart_area_extras",
-        "radar":  "_chart_radar_extras",
+        "line": "_chart_line_extras",
+        "bar": "_chart_bar_extras",
+        "pie": "_chart_pie_extras",
+        "scatter": "_chart_scatter_extras",
+        "area": "_chart_area_extras",
+        "radar": "_chart_radar_extras",
     }
+
+    def _build_border_style_editor(self):
+        """"""
 
     def get_chart_specific_widget(self, chart_type):
         """Build the chart-type-specific extras widget (T-063).
@@ -281,9 +286,10 @@ class NchantdChartConfigPane(NchantdPane):
         except Exception as e:
             logma.error(f"[charts] get_chart_specific_widget failed for {chart_type}: {e}", exc_info=True)
         return None
+
     def _build_chart_action_button_group(self):
         """"""
-        #TODO implement method
+        # TODO implement method
 
     def _chart_line_extras(self):
         """Build the line-chart-specific extras widget (T-063).
@@ -296,7 +302,11 @@ class NchantdChartConfigPane(NchantdPane):
             cfg_smooth = {"text": "Smooth Line", "layout": "horizontal"}
             smoothing = NchantdCheckbox(self, cfg_smooth).initWidget()
             cfg_width = {"label": "Line Width:", "spinbox": {"min": 1, "max": 10, "value": 2}, "layout": "horizontal"}
-            width = NchantdSpinBox(self, cfg_width).initWidget() if "NchantdSpinBox" in globals() else NchantdLabel(self, cfg_width).initWidget()
+            width = (
+                NchantdSpinBox(self, cfg_width).initWidget()
+                if "NchantdSpinBox" in globals()
+                else NchantdLabel(self, cfg_width).initWidget()
+            )
             layout.addWidget(smoothing)
             layout.addWidget(width)
             layout.addStretch()
@@ -314,7 +324,11 @@ class NchantdChartConfigPane(NchantdPane):
             cfg_stack = {"text": "Stack Bars", "layout": "horizontal"}
             stacking = NchantdCheckbox(self, cfg_stack).initWidget()
             cfg_width = {"label": "Bar Width:", "spinbox": {"min": 1, "max": 100, "value": 80}, "layout": "horizontal"}
-            width = NchantdSpinBox(self, cfg_width).initWidget() if "NchantdSpinBox" in globals() else NchantdLabel(self, cfg_width).initWidget()
+            width = (
+                NchantdSpinBox(self, cfg_width).initWidget()
+                if "NchantdSpinBox" in globals()
+                else NchantdLabel(self, cfg_width).initWidget()
+            )
             layout.addWidget(stacking)
             layout.addWidget(width)
             layout.addStretch()
@@ -330,7 +344,11 @@ class NchantdChartConfigPane(NchantdPane):
             container = pyqt.QWidget()
             layout = pyqt.QHBoxLayout()
             cfg_hole = {"label": "Hole Size (%):", "spinbox": {"min": 0, "max": 90, "value": 0}, "layout": "horizontal"}
-            hole = NchantdSpinBox(self, cfg_hole).initWidget() if "NchantdSpinBox" in globals() else NchantdLabel(self, cfg_hole).initWidget()
+            hole = (
+                NchantdSpinBox(self, cfg_hole).initWidget()
+                if "NchantdSpinBox" in globals()
+                else NchantdLabel(self, cfg_hole).initWidget()
+            )
             layout.addWidget(hole)
             layout.addStretch()
             container.setLayout(layout)
@@ -345,7 +363,11 @@ class NchantdChartConfigPane(NchantdPane):
             container = pyqt.QWidget()
             layout = pyqt.QHBoxLayout()
             cfg_pt = {"label": "Point Size:", "spinbox": {"min": 1, "max": 50, "value": 8}, "layout": "horizontal"}
-            pt = NchantdSpinBox(self, cfg_pt).initWidget() if "NchantdSpinBox" in globals() else NchantdLabel(self, cfg_pt).initWidget()
+            pt = (
+                NchantdSpinBox(self, cfg_pt).initWidget()
+                if "NchantdSpinBox" in globals()
+                else NchantdLabel(self, cfg_pt).initWidget()
+            )
             layout.addWidget(pt)
             layout.addStretch()
             container.setLayout(layout)
@@ -403,11 +425,10 @@ class NchantdChartConfigPane(NchantdPane):
                     except Exception:
                         pass
                 if group is not None and hasattr(group, "setSizePolicy"):
-                    policy = (
-                        group.sizePolicy() if hasattr(group, "sizePolicy") else None
-                    )
+                    policy = group.sizePolicy() if hasattr(group, "sizePolicy") else None
                     if policy is not None:
                         from PySide6 import QtWidgets
+
                         v = QtWidgets.QSizePolicy.Policy.Fixed if locked else QtWidgets.QSizePolicy.Policy.Preferred
                         group.setSizePolicy(v, v)
             logma.info(f"[charts] toolbar lock state: {bool(locked)}")
@@ -1166,9 +1187,7 @@ class NchantdChartTrendlinePane(NchantdPane):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        logma.info(
-            f"NchantdChartTrendlinePane init: parent={type(parent).__name__}"
-        )
+        logma.info(f"NchantdChartTrendlinePane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartTrendlinePane").override(cfg))
         self.color = None

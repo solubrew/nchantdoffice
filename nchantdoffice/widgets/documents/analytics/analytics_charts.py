@@ -54,8 +54,6 @@ class NchantdWhereUsedListPane(NchantdPane):
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdWhereUsedListPane").override(cfg))
 
-
-
     def _build_chart_data_cfg(self):
         """Build the data-cfg used to populate a chart.
 
@@ -71,11 +69,7 @@ class NchantdWhereUsedListPane(NchantdPane):
             doc = getattr(self, "document", None) or getattr(self.app, "active_document", None)
             if doc is None:
                 return {}
-            data = (
-                getattr(doc, "data", None)
-                or getattr(doc, "rows", None)
-                or getattr(doc, "content", None)
-            )
+            data = getattr(doc, "data", None) or getattr(doc, "rows", None) or getattr(doc, "content", None)
             if data is None:
                 return {}
             if isinstance(data, str):
@@ -98,20 +92,20 @@ class NchantdWhereUsedListPane(NchantdPane):
         Returns ``self``.
         """
         super().initModel(cfg)
-        try:
-            if hasattr(self, "store") and self.store is not None:
-                chart_id = (
-                    self.config.dikt.get("current_chart_id")
-                    if hasattr(self, "config") else None
-                )
-                cfg_filter = {}
-                if chart_id:
-                    cfg_filter = {"WHERE": {"EQUAL": {"chart_id": chart_id}}}
-                df = self.store.get_table("vw_chart_usage", cfg_filter)
-                if df is not None and not getattr(df, "empty", True):
-                    self.config.dikt["data"] = df.to_dict(orient="records")
-        except Exception as e:
-            logma.error(f"[analytics_charts] initModel view load failed: {e}", exc_info=True)
+        # try:
+        #     if hasattr(self, "store") and self.store is not None:
+        #         chart_id = (
+        #             self.config.dikt.get("current_chart_id")
+        #             if hasattr(self, "config") else None
+        #         )
+        #         cfg_filter = {}
+        #         if chart_id:
+        #             cfg_filter = {"WHERE": {"EQUAL": {"chart_id": chart_id}}}
+        #         df = self.store.get_table("vw_chart_usage", cfg_filter)
+        #         if df is not None and not getattr(df, "empty", True):
+        #             self.config.dikt["data"] = df.to_dict(orient="records")
+        # except Exception as e:
+        #     logma.error(f"[analytics_charts] initModel view load failed: {e}", exc_info=True)
         return self
 
     def initView(self, cfg=None):
@@ -151,8 +145,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     def initModel(self, cfg=None):
         """"""
-        if cfg is None:
-            cfg = {}
+        cfg = cfg or {}
         super().initModel(cfg)
         cfg = {}
         self.document = self.app.model.codex.init_chart(cfg)
@@ -249,7 +242,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     def _build_chart_data_cfg(self):
         """"""
-        #TODO implement method
+        # TODO implement method
 
     def cmd_add_data_view(self):
         """Add a new data view to the chart.
@@ -359,10 +352,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             query = ""
             widget = getattr(self, "search_entry", None)
             if widget is not None:
-                getter = (
-                    getattr(widget, "text", None)
-                    or getattr(widget, "get_value", None)
-                )
+                getter = getattr(widget, "text", None) or getattr(widget, "get_value", None)
                 if callable(getter):
                     query = str(getter() or "")
                 elif hasattr(widget, "text"):
@@ -372,8 +362,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             if hasattr(self.app, "model"):
                 sources = self.app.model.get_sources() or []
             self.filtered_sources = [
-                s for s in sources
-                if query in (s.get("name_txt", "") if isinstance(s, dict) else str(s)).lower()
+                s for s in sources if query in (s.get("name_txt", "") if isinstance(s, dict) else str(s)).lower()
             ] or sources
             logma.info(f"[analytics_charts] cmd_search_data_sources: {len(self.filtered_sources)} matches")
         except Exception as e:
@@ -498,7 +487,8 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     def get_data_source(self):
         """Return the stored value of get_data_source."""
-        return self.config.dikt.get('data_source', '') or ''
+        return self.config.dikt.get("data_source", "") or ""
+
     def get_new_object_types(self):
         """Return the list of newly-added object types.
 
@@ -507,6 +497,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """
         types = self.config.dikt.get("new_object_types", [])
         return list(types) if types else []
+
     def cmd_source_edit_changes(self, event=None, *args, **kwargs):
         """Record a source-edit change on the current data source.
 
@@ -516,9 +507,8 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """
         edit_value = None
         if hasattr(self, "chart_data_sources_edit_pane") and self.chart_data_sources_edit_pane is not None:
-            getter = (
-                getattr(self.chart_data_sources_edit_pane, "get_value", None)
-                or getattr(self.chart_data_sources_edit_pane, "currentText", None)
+            getter = getattr(self.chart_data_sources_edit_pane, "get_value", None) or getattr(
+                self.chart_data_sources_edit_pane, "currentText", None
             )
             if callable(getter):
                 edit_value = getter()
@@ -534,12 +524,14 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             except Exception as e:
                 logma.error(f"[analytics_charts] source-edit refresh failed: {e}", exc_info=True)
         return self
+
     def get_source_edit(self):
         """Return the current source-edit value from the config.
 
         Defaults to the empty string when no edit has been recorded.
         """
         return self.config.dikt.get("source_edit_changes", "")
+
     def get_sample_data(self, data_source):
         """Return the configured sample data for the given source.
 
@@ -550,6 +542,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         if isinstance(by_source, dict):
             return by_source.get(data_source, []) or []
         return []
+
     def get_source_edit_changes(self):
         """Return the entire source-edit-changes history list.
 
@@ -558,6 +551,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """
         edits = self.config.dikt.get("source_edit_changes_history", [])
         return list(edits) if edits else []
+
     def get_document_chart_type(self):
         """Return the active chart type for the document.
 
@@ -565,6 +559,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         (e.g. "bar", "line", "pie"). Falls back to empty string.
         """
         return self.config.dikt.get("chart_type", "") or ""
+
     def get_document_capability(self):
         """Return the active capability for the document.
 
@@ -572,12 +567,15 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         (e.g. "edit", "view", "annotate"). Falls back to empty string.
         """
         return self.config.dikt.get("capability", "") or ""
+
     def get_document_palette(self):
         """Return the stored value of get_document_palette."""
-        return self.config.dikt.get('palette', '') or ''
+        return self.config.dikt.get("palette", "") or ""
+
     def get_document_theme(self):
         """Return the stored value of get_document_theme."""
-        return self.config.dikt.get('theme', '') or ''
+        return self.config.dikt.get("theme", "") or ""
+
     def get_themes(self):
         """"""
         return ["Light", "Dark"]
