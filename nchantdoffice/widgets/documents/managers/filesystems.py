@@ -1109,8 +1109,30 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         return self
 
     def get_content(self):
-        """"""
-        return {"content": {"file_path": self.file_path}}
+        """Return the file-system payload for persistence.
+
+        Carries:
+          - ``file_path``: the current ``self.file_path``
+            (canonical Pyffice source).
+          - ``root_path``: the directory the user is rooted at
+            (``self.fs_tree.current_level_path``). On reopen the
+            file tree re-expands to this directory so the user
+            returns to their working context. Live bug: missing
+            prior to this fix.
+          - ``expanded_paths``: the list of directories the user
+            had expanded before closing the tab. On reopen these
+            are re-expanded so the user's tree state is exactly
+            preserved. Live bug: missing prior to this fix.
+        """
+        root_path = getattr(getattr(self, "fs_tree", None), "current_level_path", None) or self.file_path
+        expanded_paths = list(getattr(getattr(self, "fs_tree", None), "expanded_paths", []) or [])
+        return {
+            "content": {
+                "file_path": self.file_path,
+                "root_path": root_path,
+                "expanded_paths": expanded_paths,
+            }
+        }
 
     def get_current_path(self):
         """"""
