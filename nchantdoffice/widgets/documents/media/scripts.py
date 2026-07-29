@@ -1442,13 +1442,12 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         raise Exception(f"unknown syntax {self.document.syntax}")
 
     def save(self):
-        """"""
-        # if self.document is None:
-        #     self.new_document()
-        # content = self.get_content()
-        # self.document.parse_content(content)
-        # if content != self.document.content:
-        #     self.document.set_content(content)
+        """Capture the current editor contents before persistence."""
+        if self.document is None:
+            self.new_document()
+        content = self.get_content()
+        if content != self.document.content:
+            self.document.set_content(content)
         super().save()
         return self
 

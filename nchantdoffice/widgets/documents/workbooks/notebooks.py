@@ -807,8 +807,13 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             return b""
 
     def get_content(self):
-        """"""
-        return {"content": {"file_path": self.file_path}}
+        """Return notebook location and serialized notebook as one payload."""
+        return {
+            "content": {
+                "file_path": self.file_path,
+                "notebook_bytes": self.get_binary(),
+            }
+        }
 
     def inspect_object(self, code, cursor_pos, detail_level=0):
         """Get object inspection/documentation
