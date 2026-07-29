@@ -1,4 +1,4 @@
-# Session Notes — 2026-07-27 to 2026-07-28
+# Session Notes — 2026-07-27 to 2026-07-28 (Sprint 1 + Sprint 2)
 
 ## Goal
 Make SB projects (nchantdoffice, nchantdoffice_com, etc.) 95%+ audit-clean.
@@ -9,7 +9,7 @@ Fix in project source, not auditor (unless real bug). All work on `gamma` branch
 | Project | Score | Status | Notes |
 |---|---|---|---|
 | nchantdoffice_com | 96.19% internal / 86.19% display | ✅ Closed | 96/96 pytest passing |
-| nchantdoffice (desktop) | 80.51% display / 90.51% internal | 🔄 Active | Bug-fix sprint ongoing |
+| nchantdoffice (desktop) | 80.51% display / 90.51% internal | 🔄 Active | Sprint 1 + Sprint 2 delivered (see below); Chart render + FileSystem persistence + .pyof pickle deferred |
 | nchantdofficeATNRG | 77.62% | ✅ Content repo, no work needed | |
 | sasquatch | 96.94% | ✅ Above 95% | |
 | falcon | 97.86% | ✅ Above 95% | |
@@ -185,6 +185,24 @@ Sasquatch score: 93.69% (was 80.69% at start of larger session).
 | 4 | `AttributeError: QWidget has no initWidget` | nchantdoffice/models.py:3240 | Attached `initWidget`/`refresh_for_document`/`build_toolbox` no-ops to placeholder |
 | 5 | `TypeError: 'NoneType' object is not iterable` | nchantdoffice/models.py:442 (add_document_content_app) | `store_app_media_content` override with explicit `columns=` |
 
+## Errors Fixed In Sprint 1 + Sprint 2 (2026-07-28 follow-up)
+
+| # | Error | File | Fix | Commit |
+|---|---|---|---|---|
+| 1 | `Save Content {self.document.content}` log-only stub | nchantdoffice/widgets/documents/documents.py:476 | Replaced with metadata-only logging (type + first 5 keys) | `5343e34` |
+| 2 | Normal Save clobbered existing external file path | widgets/documents/documents.py:467 | Only updates `file_path` when caller provides one; preserves canonical path otherwise | `4f9ea99` |
+| 3 | `save_internal()` serialized document to dict, then passed dict to object-based `store_document()` (would raise `AttributeError`) | widgets/documents/documents.py:557 | Pass the Pyffice document object directly | `4f9ea99` |
+| 4 | Browser save produced only `{}` for `content_enc64_txt` (live `TODOs.md` bug) | widgets/documents/atnrg/browsers.py:1126 | `get_content()` returns `{"content": active_page.to_dict()}` | `ebb6e84` + regression test `tests/test_browser_db_roundtrip.py` |
+| 5 | Notebook reopen lost selected `.ipynb` path (live `TODOs.md` bug) | widgets/documents/workbooks/notebooks.py:107 | `initModel` derivation order: nested `content.file_path` → saved content → cfg → `document.file_path` | `06b76fb` + regression test `tests/test_notebook_reopen.py` |
+| 6 | Script reopen lost rich-text HTML (live `TODOs.md` bug) | widgets/documents/media/scripts.py:1402 | `setHtml(preserved_html)` when full HTML envelope present, fallback to `setHtml(text)` | `06b76fb` + regression test `tests/test_script_reopen.py` |
+| 7 | NchantdImage initial-render blur (live `TODOs.md` bug) | nchantrs/widgets/media/images.py:178 | `resizeEvent` rescales from `self.original_pixmap` (set on `load_image`/`load_image_from_data`) instead of from the already-scaled label pixmap | `6eab336` (test only — nchantrs patch pending in sibling repo) |
+| 8 | Zip Slip in help updater (`zf.extractall(dest)` accepted `../escape`) | widgets/config/help.py:178 | Per-member path resolution + reject escapes; refuse absolute paths and directories | `5343e34` + regression test `tests/test_help_zip_slip.py` |
+| 9 | Python 3.11 imports fail — same-quote f-strings in 4 files | nchantdoffice.py:48, util_imports.py:52, catalogs.py:108, journal.py:102 | Switched to single-quoted f-string expressions | `5343e34` |
+| 10 | `create_doc_media`/`store_app_instance` raised `NameError` on `_build_doc_media_payload` / `_build_app_instance_payload` | models.py:803, 2690 | Added the missing free functions | `5343e34` |
+| 11 | `NchantdOfficeSettingsModel.initModel` referenced undefined `document` and routed `browser_settings` into `set_account_settings` | models.py:3380 | Reads from `self.document` (preferred) or `cfg`; `browser_settings` routes to `set_browser_settings` when available | `5343e34` |
+| 12 | `parse_document` (x2 in widgets/panes/documents.py) referenced undefined `document`, `media_fk`, `entry`, `version`, `hash_`, `content_enc64`, `context` | widgets/panes/documents.py:445, 734 | Self-contained derivation from `self.document` + `self.config` | `5343e34` |
+| 13 | CLI `save` truncated target file before serialisation succeeded | cli.py:407 | Write to `.tmp` sibling, `fsync`, then `os.replace` (atomic) | `5343e34` |
+
 ## Key Code Patterns Added
 
 ### `_coerce_doc_version(raw) -> int` (nchantdoffice/models.py)
@@ -267,21 +285,53 @@ device fingerprint) implemented in commit `31f5163`. New files:
 
 ## Active Issues
 
-None currently open. All NchantdDocument widget reopen bugs from
-2026-07-28 closed (see the NchantdDocument Widget Reopen Sprint
-section above).
+### Closed by Sprint 1 + Sprint 2 (2026-07-28)
+- Browser payload persistence (was producing `{}` in DB; now full
+  active_page profile).
+- Notebook reopen (selected `.ipynb` location restored).
+- Script rich-text reopen (HTML envelope preserved through setHtml).
+- Image blur on initial render (resizeEvent now scales from original).
+- Autosave-on-blur data loss (`save_internal` passes document object).
+- Normal Save overwriting existing external file path.
+- Zip Slip vulnerability in help updater.
+- Python 3.11 import failures (4 f-string sites).
+- `_build_doc_media_payload` / `_build_app_instance_payload` NameErrors.
+- `SettingsModel.initModel` undefined-`document` and `browser_settings`
+  routing.
+- `parse_document` undefined names (both panes).
+- CLI non-atomic write.
+- Full-payload logging in `Save Content`.
 
-Still pending from earlier sprints (not addressed in this session):
-- T-NEW-005 (3 version-control objects) — T-NEW-003 save_mode toggle —
-  T-NEW-006 (calendar/chart reopen) — flask+pyffice in sasquatch venv
-  to lift the -10% test penalty.
+### Deferred / on hold
+- **NchantdChart segmentation fault** — held per user direction;
+  reproduction requires a real Qt parent-app harness not available in
+  the test env. (Live `TODOs.md` bug.)
+- **NchantdFileSystem root + expanded-path persistence** — blocked by
+  upstream `qpandas` metaclass conflict in
+  `nchantrs.widgets.tables.tables`. Test in place (skips cleanly with
+  documented reason).
+- **T-NEW-007 — Drop `.pyof` single-instance pickle format.** Per user:
+  every NchantdOffice instance opens its own `.pyof` SQLite DB file;
+  primary instance holds the registry of secondary DBs. Affected
+  sites: `nchantdoffice/models.py:1634-1667`,
+  `nchantdoffice/widgets/controls/toolboxes.py:413-436`. No priority —
+  design decision first.
+- **NchantdCalendar reopen** — chart/calendar case arms reverted in
+  H62 (`537a641`); deferred until tab-load dispatch is consolidated.
 
 ## Next Steps (when session resumes)
 
 If continuing audit cleanup on nchantdoffice:
-1. Mechanical type_annotations sweep (+6 pts potential)
-2. logging_coverage sweep (+1-2 pts)
-3. Install flask+pyffice in sasquatch venv to lift the -10% test penalty
+1. **Resume Chart segmentation fault** with a parent-app harness so
+   the live bug can be reproduced + fixed.
+2. **Unblock FileSystem persistence** by addressing the upstream
+   `qpandas` metaclass conflict (out-of-project dependency).
+3. **T-NEW-007 design**: drop `.pyof` single-instance pickle format,
+   route every `.pyof` open through the SQLite DB path.
+4. **Mechanical type_annotations sweep** (+6 pts potential).
+5. **logging_coverage sweep** (+1-2 pts).
+6. **Install flask+pyffice in sasquatch venv** to lift the -10% test
+   penalty.
 
 If moving to other projects:
 - pyffice (83.04%) — switch_abuse 6 instances, feature_envy 13 methods

@@ -54,3 +54,19 @@ KeyError: 'NchantdWidget'
 
 
 
+## Status (2026-07-28)
+
+The 5 errors recorded above (H52/H53/H55 sprint) were fixed in the
+commits documented in `TODOs.md` under "H53–H55 sprint — sketch /
+matrix regression + score lifts". All historical traces above are
+preserved for audit reference.
+
+Sprint 1 + Sprint 2 (2026-07-28) closed the remaining live `TODOs.md`
+bugs and shipped defensive fixes. See
+`TODOs.md → Sprint 1 + Sprint 2 (2026-07-28) — persistence + safety
+pass` for the full commit list and the post-sprint test surface
+(26 passed, 2 skipped).
+
+No new error traces were added during Sprint 1 + Sprint 2 because the
+fixes were scoped to preventive coverage rather than crash-log
+capture.
