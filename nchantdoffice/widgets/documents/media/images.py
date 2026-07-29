@@ -26,6 +26,7 @@ from ogma.logma import Logma
 from nchantrs.widgets.managers import NchantdBasketManager
 from nchantrs.widgets.media.images import NchantdImage
 from nchantrs.widgets.media.palettes import NchantdPaletteTable
+
 try:
     from nchantrs.widgets.media.images import NchantdImageThumbnailViewer
 except ImportError:
@@ -682,12 +683,14 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """"""
         super().initModel()
         document = {"document": self.config.get("document", {})}
-
+        logma.info(f"Document {document}")
         self.document = self.app.model.codex.init_image(document)
         self.document.load_document()
         self.context_menu_name = "context.document.image"
         if self.context_menu_name is not None:
             self.initialize_context_menu(self.context_menu_name)
+        self.file_path = self.document.file_path
+        logma.info(f"[NchantdOfficeImage] - {self.file_path}")
         return self
 
     def initView(self, cfg=None):
@@ -903,7 +906,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
             items[cnt] = default_action
-        cfg = {"label": "File Name: ", "layout": "horizontal"}
+        cfg = {"label": "File Name: ", "layout": "horizontal", "file_path": self.document.file_path}
         self.file_pane = NchantdFileDetailsPane(self, cfg)
         items[cnt]["widget"] = self.file_pane
         cnt += 1

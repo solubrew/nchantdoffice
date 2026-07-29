@@ -277,6 +277,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             self.set_note_view()
         else:
             raise Exception("view_type must be 'page_view' or 'note_view'")
+        self._apply_extension_syntax(self.document.file_path)
         self.populate_document()
         return self
 
@@ -681,7 +682,8 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """"""
         if self.document is None:
             return []
-        return list(set(self.document.file_formats.values()))
+        #REGRESSION return list(set(self.document.file_formats.values()))
+        return []
 
     def get_font_color_selected(self):
         """"""
@@ -1234,25 +1236,25 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         import os
 
         ext_map = {
-            ".py":   "python",
-            ".pyi":  "python",
-            ".js":   "javascript",
-            ".md":   "markdown",
+            ".py": "python",
+            ".pyi": "python",
+            ".js": "javascript",
+            ".md": "markdown",
             ".json": "json",
             ".yaml": "yaml",
-            ".yml":  "yaml",
+            ".yml": "yaml",
             ".toml": "toml",
-            ".ini":  "toml",
-            ".xml":  "xml",
+            ".ini": "toml",
+            ".xml": "xml",
             ".html": "html",
-            ".htm":  "html",
-            ".css":  "css",
-            ".qss":  "css",
-            ".csv":  "csv",
-            ".sh":   "bash",
-            ".tex":  "tex",
-            ".rst":  "rst",
-            ".rmd":  "rmd",
+            ".htm": "html",
+            ".css": "css",
+            ".qss": "css",
+            ".csv": "csv",
+            ".sh": "bash",
+            ".tex": "tex",
+            ".rst": "rst",
+            ".rmd": "rmd",
         }
         ext = os.path.splitext(path or "")[1].lower()
         syntax = ext_map.get(ext, "plain-text")
@@ -1399,10 +1401,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 try:
                     import os
 
-                    path = (
-                        getattr(self, "file_path", None)
-                        or getattr(self, "current_notebook_path", None)
-                    )
+                    path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path", None)
                     if path:
                         path = os.path.abspath(path)
                         with open(path, "r", encoding="utf-8", errors="replace") as f:
@@ -1444,11 +1443,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """
         if self.document is None:
             logma.info(f"Document is None")
-            return (
-                self.document_editor.get_text()
-                if hasattr(self, "document_editor")
-                else ""
-            )
+            return self.document_editor.get_text() if hasattr(self, "document_editor") else ""
         doc_text = getattr(self.document, "text", None)
         if doc_text is not None and hasattr(doc_text, "to_dict"):
             unit = doc_text.to_dict().get("unit", {})
@@ -1457,25 +1452,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             text = None
         if text is None:
             content_obj = getattr(self.document, "content", None) or {}
-            content_inner = (
-                content_obj.get("content", {})
-                if isinstance(content_obj, dict)
-                else {}
-            )
-            text_obj = (
-                content_inner.get("text", {})
-                if isinstance(content_inner, dict)
-                else {}
-            )
-            text = (
-                text_obj.get("value", "")
-                if isinstance(text_obj, dict)
-                else (text_obj or "")
-            )
+            content_inner = content_obj.get("content", {}) if isinstance(content_obj, dict) else {}
+            text_obj = content_inner.get("text", {}) if isinstance(content_inner, dict) else {}
+            text = text_obj.get("value", "") if isinstance(text_obj, dict) else (text_obj or "")
         if text is None:
-            logma.warning(
-                f"[scripts] populate_document: doc has no text content yet - starting with empty editor"
-            )
+            logma.warning(f"[scripts] populate_document: doc has no text content yet - starting with empty editor")
             text = ""
         if isinstance(text, bytes):
             text = decode64(text)
@@ -1489,6 +1470,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # redundant AND harmful.
         logma.info(f"Text: {text}")
         logma.info(f"Type: {type(text)}")
+        logma.info(f"Syntax {self.document.syntax}")
         return text
 
     def _preserved_unit_html(self):
@@ -1548,20 +1530,18 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         highlightable set is kept in one place so adding a new
         language is a single tuple.
         """
-        self.document.file_format = self.config.dikt.get("document", {}).get(
-            "syntax", "plain-text"
-        )
+        self.document.file_format = self.config.dikt.get("document", {}).get("syntax", "plain-text")
         if self.document.file_format is None:
             self.document.file_format = "plain-text"
         logma.info(f"Syntax {self.document.syntax}")
         logma.info(f"Type {type(self.document.syntax)}")
-        if self.document.syntax is None or isinstance(
-            self.document.syntax, float
-        ):  # NaN guard
+        if self.document.syntax is None or isinstance(self.document.syntax, float):  # NaN guard
             self.document.syntax = "plain-text"
         logma.info(f"Document Format: {self.document.file_format}")
         logma.info(f"Syntax {self.document.syntax}")
-
+        #TODO: refactor and define the difference between file_format, and syntax
+        if self.document.file_format != self.document.syntax:
+            self.document.syntax = self.document.file_format
         # 1:1 setters — no transformation
         if self.document.syntax == "markdown":
             self.document_editor.setMarkdown(text)
@@ -1598,29 +1578,27 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         theme = "monokai"
         formatter = HtmlFormatter(style=theme, full=True, noclasses=True)
         lexer_map = {
-            "python":     PythonLexer,
+            "python": PythonLexer,
             "javascript": JavascriptLexer,
-            "ruby":       RubyLexer,
-            "c":          CLexer,
-            "cpp":        CppLexer,
-            "cs":         CSharpLexer,
-            "css":        CssLexer,
-            "qss":        CssLexer,
-            "java":       JavaLexer,
-            "json":       JsonLexer,
-            "yaml":       YamlLexer,
-            "toml":       IniLexer,
-            "r":          RLexer,
-            "bash":       BashLexer,
+            "ruby": RubyLexer,
+            "c": CLexer,
+            "cpp": CppLexer,
+            "cs": CSharpLexer,
+            "css": CssLexer,
+            "qss": CssLexer,
+            "java": JavaLexer,
+            "json": JsonLexer,
+            "yaml": YamlLexer,
+            "toml": IniLexer,
+            "r": RLexer,
+            "bash": BashLexer,
         }
         lexer_cls = lexer_map.get(self.document.syntax)
         if lexer_cls is not None:
             highlighted = highlight(text, lexer_cls(), formatter)
             sanitised = Sanitized(highlighted).sanitize_html()
             self.document_editor.setHtml(sanitised)
-            self.document_editor.setStyleSheet(
-                f"background-color: {formatter.style.background_color};"
-            )
+            self.document_editor.setStyleSheet(f"background-color: {formatter.style.background_color};")
             return
 
         # No specialised editor: this is documentation prose — let
