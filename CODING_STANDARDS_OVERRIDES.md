@@ -119,6 +119,31 @@
 
 ---
 
+## Override 7 — Logging uses `kahndor.logma`, not Python `logging`
+
+- **V9 / V24 §3.5 Logging Requirements MANDATORY:** "All projects must
+  use Python's built-in `logging` module" with
+  `format='%(asctime)s | %(levelname)-8s | %(filename)s:%(lineno)d | %(message)s'`.
+- **Local override:** nchantdoffice uses `kahndor.logma.Logma` (rebranded
+  upstream of `ogma.Logma`) for all logging. The internal `logma`
+  already includes file name and line number in every log line
+  (see `kahndor/logma.py::Logma._format`).
+- **Compatibility note:** V24 also requires "no raw `print()`". If
+  found, replace with `logma.info(...)` / `logma.error(...)` /
+  `logma.warning(...)` / `logma.debug(...)` / `logma.critical(...)`.
+- **Migration example (if V24 ever tightens to require `logging`):**
+  `from kahndor.logma import Logma; logma = Logma(__name__); logma.info(...);`
+  Same call shape (`logma.info()`), same filters, same traceback
+  handling, same file:line embedding — but routed through the
+  internal SB pipeline (rk and condor consumers, pyffice tests, etc.)
+  instead of Python's stdlib.
+- **User action:** When updating local copy of `CODING_STANDARDS.md`
+  to reflect V24, replace the V24 §3.5 example blocks with the
+  kahndor.logma equivalents (the imports-and-format example on
+  lines 436-448 and the usage example on lines 467-486).
+
+---
+
 ## Compliance summary (current state)
 
 | V9 § | Standard | Local state | Override? |
