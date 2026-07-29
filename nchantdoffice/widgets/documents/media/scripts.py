@@ -1347,32 +1347,13 @@ class NchantdOfficeScript(NchantdOfficeDocument):
 
         # T-NEW-023 (user-stated contract): the on-disk file is the
         # source-of-truth when it exists. Reload its raw text into
-        # the editor (preserving whitespace) and run the syntax
-        # dispatcher against that text. The DB payload is irrelevant
-        # in this branch — reopening must look like a fresh file
-        # open, not a DB round-trip.
+        # the editor so whitespace is preserved verbatim — do NOT
+        # run pygments or markdown conversion on the disk content
+        # because that collapses indentation. The user-stated
+        # followup (2026-07-29): "reload should be opening the file
+        # on disk again" — so the editor mirror the raw bytes,
+        # not a re-rendered version.
         if loaded_from_disk:
-            try:
-                import os
-
-                path = (
-                    getattr(self, "file_path", None)
-                    or getattr(self, "current_notebook_path", None)
-                )
-                if path:
-                    path = os.path.abspath(path)
-                    with open(path, "r", encoding="utf-8", errors="replace") as f:
-                        text = f.read()
-                    # Drive the dispatch on the freshly-read text so
-                    # markdown / python / js etc. all render through
-                    # the proper editor API. The text is the
-                    # whitespace-preserved on-disk source.
-                    self._apply_syntax_highlighting(text)
-            except Exception as e:
-                logma.error(
-                    f"[scripts] populate_document: on-disk dispatch failed: {e}",
-                    exc_info=True,
-                )
             return self
 
         text = self._resolve_document_text()

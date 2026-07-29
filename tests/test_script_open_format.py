@@ -171,25 +171,25 @@ def test_md_file_load_preserves_whitespace():
     finally:
         os.unlink(tmp)
 
-
 def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
     """T-NEW-024: on the reopen path (``populate_document``
     called when returning to the tab), the syntax detection
     must re-run from the file extension, then the dispatcher
-    must be invoked with the *file* content (not the DB
-    payload) so format-correct rendering (markdown, pygments,
-    etc.) is preserved.
+    must NOT re-render disk content (per T-NEW-023 followup:
+    "reload should be opening the file on disk again" — the
+    editor mirrors the raw bytes, not a re-rendered version).
     """
     import nchantdoffice.models  # noqa: F401
     from nchantdoffice.widgets.documents.media.scripts import (
         NchantdOfficeScript,
+        NchantdOfficeScript as _Cls,
     )
 
     md = tmp_path / "open_format_check.md"
     md_content = "# Hello\n\n    - indented bullet\n"
     md.write_text(md_content, encoding="utf-8")
 
-    widget = _bare_widget(NchantdOfficeScript)
+    widget = NchantdOfficeScript.__new__(NchantdOfficeScript)
     widget.file_path = str(md)
     widget.format_type = "plaintext"  # stale DB-cached value
     widget.config = SimpleNamespace(dikt={"syntax": "plaintext"})
@@ -199,7 +199,7 @@ def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
         meta_data={"syntax": "plaintext"},
     )
 
-    # Extension re-apply.
+    # Extension re-apply runs at the top of populate_document.
     if widget.file_path:
         widget._apply_extension_syntax(widget.file_path)
 
@@ -210,45 +210,67 @@ def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
     assert widget.document.syntax == "markdown"
     assert widget.document.meta_data["syntax"] == "markdown"
 
-    # Dispatcher must run with file content (NOT DB payload).
-    # Capture the args passed to the editor.
+    # Capture which editor setter fires during reload.
     captured = []
 
-    class _CapturingEditor:
-        def setPlainText(self, text):
-            captured.append(("plain", text))
+    class _FakeEditor:
+        def setPlainText(self, t):
+            captured.append(("plain", t))
+
         def setHtml(self, html):
             captured.append(("html", html))
+
         def setMarkdown(self, md):
             captured.append(("md", md))
+
         def setStyleSheet(self, sheet):
             pass
+
         def toHtml(self):
             return "<html></html>"
+
         def toPlainText(self):
             return ""
+
         def setXml(self, xml):
             captured.append(("xml", xml))
+
         def setLatex(self, l):
             captured.append(("latex", l))
+
         def convert_urls_to_links(self, t):
             captured.append(("urls", t))
 
-    widget.document_editor = _CapturingEditor()
-    # Drive the on-disk branch of populate_document.
-    widget._load_external_file()
-    import os
-    path = os.path.abspath(str(md))
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
-        text = f.read()
-    widget._apply_syntax_highlighting(text)
+    widget.document_editor = _FakeEditor()
 
-    # The dispatcher for markdown must use setMarkdown, NOT setPlainText.
-    md_calls = [c for c in captured if c[0] == "md"]
-    assert md_calls, (
-        f"populate_document never called setMarkdown for the .md "
-        f"file - dispatcher fell through to plaintext. "
+    # Drive the production reload body via the public helper.
+    widget._load_external_file()
+
+    # The reload must have called setPlainText with file content
+    # (NOT the dispatcher).
+    plain_calls = [c for c in captured if c[0] == "plain"]
+    assert plain_calls, (
+        f"Reload did not call setPlainText with file content. "
         f"Got: {captured}"
     )
-    # Whitespace preserved.
-    assert any("# Hello" in c[1] for c in md_calls)
+    # Whitespace preserved verbatim.
+    assert any(
+        "    - indented bullet" in c[1] for c in plain_calls
+    ), (
+        f"Reload setPlainText lost the indentation. "
+        f"Captured: {plain_calls}"
+    )
+    # No dispatcher output (markdown/html/pygments).
+    bad = [c for c in captured if c[0] in ("md", "html", "xml", "latex")]
+    assert not bad, (
+        f"Reload fired the syntax dispatcher on disk content — "
+        f"whitespace was re-rendered. Got: {bad}"
+    )
+
+    # Production source asserts: the reload branch short-circuits
+    # without _apply_syntax_highlighting.
+    import inspect
+    src = inspect.getsource(_Cls.populate_document)
+    assert "if loaded_from_disk:\n            return self" in src
+    assert "_resolve_document_text" in src
+    assert "_apply_syntax_highlighting" in src  # DB fallback only
