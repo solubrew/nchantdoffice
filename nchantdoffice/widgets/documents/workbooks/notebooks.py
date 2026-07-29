@@ -817,13 +817,23 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             return b""
 
     def get_content(self):
-        """Return notebook location and serialized notebook as one payload."""
-        return {
-            "content": {
-                "file_path": self.file_path,
-                "notebook_bytes": self.get_binary(),
-            }
-        }
+        """Return notebook location and (optionally) the serialized notebook.
+
+        The default contract is: store only the file_path; reopen
+        reloads the .ipynb from disk. The serialized payload is
+        included only when the user has opted into internal storage
+        via the save_mode toggle (``save_mode == "to_dict"`` or
+        ``save_mode == "both"``). The previous behaviour always
+        embedded raw bytes, which broke JSON-serialisation in
+        ``store_document`` (``TypeError: Object of type bytes is
+        not JSON serializable``) and conflicted with the canonical
+        "external file is the source of truth" model.
+        """
+        payload = {"file_path": self.file_path}
+        save_mode = getattr(self, "save_mode", "file_path")
+        if save_mode in ("to_dict", "both"):
+            payload["notebook_bytes"] = self.get_binary()
+        return {"content": payload}
 
     def inspect_object(self, code, cursor_pos, detail_level=0):
         """Get object inspection/documentation
@@ -1101,37 +1111,39 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         return self
 
     def save(self):
-        """Save the notebook, persisting it to both the file path AND the internal DB.
+        """Save the notebook.
 
-        T-076: previously only delegated to super().save(). Now:
+        Default contract (per T-NEW-003 / T-NEW-009 followup):
 
-          1. Serializes the notebook via get_binary() (the
-             existing implementation already produces .ipynb JSON)
-          2. Stores the serialized bytes on the document at
-             ``document.content['notebook_bytes']``
-          3. Calls super().save() to persist the document
-          4. Persists to the ``ds_document_internal_state`` DB
-             table (when the store is reachable) so the
-             notebook can be re-loaded internally without an
-             external file.
+          1. Always write the external .ipynb file when a file_path is
+             set (the on-disk file is the source of truth).
+          2. Persist ``file_path`` to the DB so reopen reloads from
+             the same .ipynb.
+          3. When the user has toggled save_mode to ``"to_dict"`` or
+             ``"both"``, also serialise the notebook and store the
+             bytes in the internal state table (``ds_document_internal_state``).
+
+        The previous implementation always embedded raw notebook bytes
+        in the DB payload — which crashed JSON-serialisation in
+        ``store_document`` (``TypeError: Object of type bytes is not
+        JSON serializable``) and violated the external-is-truth model.
 
         Returns ``self``.
         """
         try:
-            serialized = self.get_binary() if hasattr(self, "get_binary") else None
-            if serialized is not None:
-                if hasattr(self, "document") and self.document is not None:
-                    try:
-                        if not isinstance(self.document.content, dict):
-                            self.document.content = {"content": self.document.content}
-                        self.document.content["notebook_bytes"] = serialized
-                    except Exception as e:
-                        logma.error(f"[notebook] save: content write failed: {e}", exc_info=True)
+            if getattr(self, "file_path", None):
                 try:
+                    self.document.save(self.file_path)
+                except Exception as e:
+                    logma.error(f"[notebook] save: external write failed: {e}", exc_info=True)
+            save_mode = getattr(self, "save_mode", "file_path")
+            if save_mode in ("to_dict", "both"):
+                serialized = self.get_binary() if hasattr(self, "get_binary") else None
+                if serialized is not None and hasattr(self, "app"):
                     store = getattr(self.app.model, "store", None) if hasattr(self, "app") else None
                     if store is not None and hasattr(store, "execute"):
                         try:
-                            did = getattr(self.document, "did", None)
+                            did = getattr(self.document, "did", None) if hasattr(self, "document") else None
                             if did is not None:
                                 import json as _json
                                 store.execute(
@@ -1143,10 +1155,8 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                                     }), __import__("datetime").datetime.utcnow().isoformat()),
                                 )
                         except Exception:
-                            # Table may not exist yet - silently ignore
+                            # Table may not exist yet - silently ignore.
                             pass
-                except Exception as e:
-                    logma.error(f"[notebook] save: store write failed: {e}", exc_info=True)
         except Exception as e:
             logma.error(f"[notebook] save failed: {e}", exc_info=True)
         super().save()
