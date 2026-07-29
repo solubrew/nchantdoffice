@@ -5,7 +5,11 @@
 - NchantdBrowser is not saving and retrieving url
 - NchantdImage is blurry on inintial render from the db load but when returning to it will be properly displayed
 - NchantdScript is still loading with no formatting when returned to tab but loads properly when opened from a file directly.
+- NchantdNotebook is not storing the location when a specific .ipynb file is opened and always returns to the cwd file manager view
+- NchantdFileSystem needs to store when a root change is made and return to that root and to store which directories are expanded and return them.
 - 
+
+
 
 ### need integration into plan
 - **T-NEW-001** — replace tab creation name with the document-type tab icon and the generated 5-digit or user-entered name.
