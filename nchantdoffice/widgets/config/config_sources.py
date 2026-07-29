@@ -112,6 +112,10 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         self.initView()
         return self
 
+    def cmd_change_data_source_pane_size(self):
+        """"""
+        #TODO build out method
+
     def build_data_source_pane(self, source):
         """"""
         logma.info(f"Source {source}")
@@ -153,6 +157,9 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         full_layout.addLayout(layout)
         source_group.layout.addLayout(full_layout)
         self.layout.addWidget(source_group)
+
+    def cmd_toggle_apikey_visibility(self, event=None, *args, **kwargs):
+        """"""
 
     def cmd_launch_site(self, event=None, *args, **kwargs):
         """Open the source's API-key URL in a new WebBrowser document.
@@ -210,6 +217,10 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
     def get_sources(self):
         """"""
         return self.app.model.get_sources()
+
+    def _load_api_key(self, source=None):
+        """"""
+        #TODO implement method
 
     def obscure_key(self, key):
         """"""

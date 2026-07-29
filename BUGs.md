@@ -1,6 +1,36 @@
 
 
 
+
+
+, 'tab_type': 'custom_widget', 'location': None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon': None, 'modon': None}}
+2026-07-28 23:18:07,946 - nchantdoffice.widgets.tabs                 42: INFO     - [tabs] NchantdOfficeTab.__init__ parent=NchantdOfficeHelpDocs
+2026-07-28 23:18:07,949 - nchantdoffice.widgets.tabs                 52: INFO     - [tabs] NchantdOfficeTab.initModel cfg_provided=False
+2026-07-28 23:18:07,953 - nchantdoffice.widgets.config.help         118: INFO     - [help] initView: reader build failed: 'document'
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/config/help.py", line 115, in initView
+    self.reader = NchantdOfficePDF(self, {}).initWidget()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/media/pdfs.py", line 192, in initWidget
+    self.initModel()
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/media/pdfs.py", line 157, in initModel
+    logma.json(self.config.dikt["document"])
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'document'
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/widgets.py", line 149, in on_tab_focus
+    self.model.load_tab(self.model.tabsdata[tabn], tabn, self.pane_position)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3344, in load_tab
+    super().load_tab(tab, tabn, tabset, active_tab_position)
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 238, in load_tab
+    self.tab_widgets[tabn].dummy = False
+    ~~~~~~~~~~~~~~~~^^^^^^
+IndexError: list index out of range
+2026-07-28 23:18:11,296 - nchantrs.widgets.widgets                  414: INFO     - Focus Out
+
+
+
+
 2026-07-28 22:52:27,642 - nchantrs.widgets.widgets                  446: INFO     - Mouse Press Event
 2026-07-28 22:52:27,642 - nchantrs.widgets.widgets                  466: INFO     - Left Click <PySide6.QtGui.QMouseEvent(MouseButtonPress LeftButton pos=295,292 scn=641,361 gbl=641,387 dev=QInputDevice(QPointingDevice("Virtual core pointer" Mouse id=2 seat=30002 caps=Position|Scroll|Hover buttonCount=32))>
 2026-07-28 22:52:27,642 - nchantrs.widgets.widgets                  467: INFO     - Left Click
