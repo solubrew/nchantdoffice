@@ -1,11 +1,72 @@
 
 
 
+js: The resource https://ground.news/_next/static/chunks/328bfdd80a1e8090.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+2026-07-29 00:07:30,989 - nchantdoffice.widgets.documents.managers.calendars  728: INFO     - Calendar unit changed to: 
+2026-07-29 00:07:30,989 - nchantdoffice.widgets.documents.managers.calendars  728: INFO     - Calendar unit changed to: 
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/media/editors/selectors.py", line 133, in on_index_change
+    self.handler(index, self.itemText(index))
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/managers/calendars.py", line 715, in cmd_on_change_scope
+    self.set_scope(scope)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/managers/calendars.py", line 963, in set_scope
+    self.calendar = NchantdCalendar(self, cfg).initWidget()
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/calendars.py", line 108, in initWidget
+    self.initView()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/calendars.py", line 85, in initView
+    self.calendar = NchantdMonthCalendar(self, cfg).initWidget()
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/months.py", line 114, in initWidget
+    self.initView()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/months.py", line 68, in initView
+    super().initView()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/tabsets.py", line 105, in initView
+    super().initView(cfg)
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 921, in initView
+    super().initView(cfg)
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 206, in initView
+    self.initialize_context_menu()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 216, in initialize_context_menu
+    menu_name = self.context_menu_name
+                ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NchantdMonthCalendar' object has no attribute 'context_menu_name'
 
 
 
 
 
+js: The resource https://ground.news/_next/static/chunks/328bfdd80a1e8090.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+2026-07-29 00:07:09,748 - nchantrs.widgets.tables.tables            578: INFO     - Size 640 480
+2026-07-29 00:07:09,749 - nchantrs.widgets.tables.tables            580: INFO     - Size [58, 160]
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/media/editors/selectors.py", line 133, in on_index_change
+    self.handler(index, self.itemText(index))
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/managers/calendars.py", line 715, in cmd_on_change_scope
+    self.set_scope(scope)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/managers/calendars.py", line 963, in set_scope
+    self.calendar = NchantdCalendar(self, cfg).initWidget()
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/calendars.py", line 108, in initWidget
+    self.initView()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/calendars.py", line 91, in initView
+    self.calendar = NchantdYearCalendar(self, cfg).initWidget()
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 105, in initWidget
+    self.initView()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 89, in initView
+    self.month_tables[i] = NchantdGrid(self, cfg).initWidget()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 604, in initWidget
+    self.initView()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 592, in initView
+    grid_layout.addWidget(cell, row, col)
+TypeError: 'PySide6.QtWidgets.QGridLayout.addWidget' called with wrong argument types:
+  PySide6.QtWidgets.QGridLayout.addWidget(NchantdCell, int, int)
+Supported signatures:
+  PySide6.QtWidgets.QGridLayout.addWidget(w: PySide6.QtWidgets.QWidget, /)
+  PySide6.QtWidgets.QGridLayout.addWidget(arg__1: PySide6.QtWidgets.QWidget, row: int, column: int, /, alignment: PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
+  PySide6.QtWidgets.QGridLayout.addWidget(arg__1: PySide6.QtWidgets.QWidget, row: int, column: int, rowSpan: int, columnSpan: int, /, alignment: PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
 
 
 
