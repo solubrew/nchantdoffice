@@ -6,6 +6,31 @@
 
 
 
+
+
+
+', 'MIT'], ['email_validator', '2.2.0', 'The Unlicense (Unlicense)']
+2026-07-28 23:56:12,370 - nchantrs.widgets.tables.tables            298: INFO     - Num Columns 40
+2026-07-28 23:56:12,370 - nchantrs.widgets.tables.tables            300: INFO     - Columns None
+2026-07-28 23:56:12,370 - nchantrs.widgets.tables.tables            131: WARNING  - calc roman numerals
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/workbooks/matricies.py", line 1701, in on_cell_changed
+    address = f"{chr(65 + item.column())}{item.row() + 1}"
+                          ^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not callable
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/workbooks/matricies.py", line 1701, in on_cell_changed
+    address = f"{chr(65 + item.column())}{item.row() + 1}"
+                          ^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not callable
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/workbooks/matricies.py", line 1701, in on_cell_changed
+    address = f"{chr(65 + item.column())}{item.row() + 1}"
+                          ^^^^^^^^^^^^^
+
+
+
+
 ne}}, 'file_path': '', 'widget': 'nchantrs.widgets.calendars.years.NchantdYearCalendar', 'tid': '06a69701-b37d-7970-8000-debb2606a30e', 'document': {'data': None, 'data_str': None, 'did': '06a69701-b37d-77c7-8000-f0e6de3282a4', 'syntax': None, 'name': '2026', 'position': 0, 'document_type': None, 'readonly': 0, 'editable': 1, 'visible': 1, 'moveable': 1, 'tid': '06a69701-b37d-7970-8000-debb2606a30e', 'pid': '06a69701-b343-732f-8000-93abb6533a35', 'widget': 'nchantrs.widgets.calendars.years.NchantdYearCalendar', 'widgdata': '{}', 'version': None, 'tab_type': 'year', 'location': None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon': None, 'modon': None}}, 'apps': ['nchantrs', 'nchantdoffice'], 'app': 'nchantdoffice', 'pos': 'center'}
 2026-07-28 23:20:00,931 - nchantrs.widgets.widgets                 1034: INFO     - nchantrs.widgets.calendars.years.NchantdYearCalendar
 2026-07-28 23:20:00,938 - nchantrs.widgets.tables.tables            578: INFO     - Size 640 480
