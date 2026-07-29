@@ -133,3 +133,55 @@ def test_T_NEW_022_browser_store_link_uses_positional_args():
         "Browser store_link call was not converted to positional args "
         "— live T-NEW-022 crash returns."
     )
+
+
+def test_T_NEW_021_tabset_load_tab_bounds_check_on_widgets():
+    """``self.tab_widgets[tabn].dummy = ...`` raised
+    ``IndexError: list index out of range`` when ``insert`` did
+    not land the widget at ``tabn``. The fix bounds-checks the
+    list length after the insert and bails with a logged error.
+    """
+    root = Path(__file__).resolve().parent.parent.parent
+    text = (root / "nchantrs/nchantrs/models/tabsetmodels.py").read_text()
+    assert "len(self.tab_widgets) <= tabn" in text, (
+        "Tabset load_tab no longer bounds-checks the widget list "
+        "before indexing - live T-NEW-021 IndexError returns."
+    )
+
+
+def test_T_NEW_015_nchantd_widget_default_context_menu_name():
+    """``NchantdMonthCalendar`` raised ``AttributeError`` on
+    ``self.context_menu_name`` because the mixin's
+    ``init_variables`` never ran on the calendar init chain.
+    The fix puts a default ``context_menu_name = "widget"``
+    inside ``NchantdWidget.__init__``.
+    """
+    root = Path(__file__).resolve().parent.parent.parent
+    text = (root / "nchantrs/nchantrs/widgets/widgets.py").read_text()
+    # Look for the default inside NchantdWidget.__init__.
+    assert "self.context_menu_name = \"widget\"" in text, (
+        "NchantdWidget.__init__ no longer sets the context_menu_name "
+        "default - live T-NEW-015 AttributeError returns."
+    )
+    # The default must be inside __init__, not just anywhere.
+    tree = ast.parse(text)
+    init_with_default = False
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "__init__":
+            try:
+                parent_class = node.parent.name
+            except AttributeError:
+                # Python 3.12 has no node.parent.
+                src = ast.get_source_segment(text, node) or ""
+                if "self.context_menu_name" in src:
+                    init_with_default = True
+            else:
+                if parent_class == "NchantdWidget":
+                    src = ast.get_source_segment(text, node) or ""
+                    if "self.context_menu_name" in src:
+                        init_with_default = True
+    assert init_with_default, (
+        "context_menu_name default is set somewhere, but not "
+        "inside NchantdWidget.__init__ - subclass chains still "
+        "skip the assignment."
+    )
