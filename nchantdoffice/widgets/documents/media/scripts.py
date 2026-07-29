@@ -1234,21 +1234,37 @@ class NchantdOfficeScript(NchantdOfficeDocument):
              payload through every shape (PyfficeScript unit,
              PyfficeCodex content tree, plain string, bytes).
           3. ``_apply_syntax_highlighting(text)`` — dispatch on the
-             configured syntax to choose the right editor API
-             (markdown / plain / xml / latex / html / python / js
-             / ruby / c / cpp / csharp / css / java / json / yaml
-             / toml / r / bash / rmd / rst / tex / texinfo / unkn).
+             configured syntax to choose the right editor API.
+
+        T-NEW-023 (live "NchantdScript still not returning text
+        content with formatting"): the reopen path used to ignore
+        the on-disk file when ``file_path`` was set — it always
+        routed through the DB payload and ran pygments over the
+        plain text, dropping all rich-text formatting. The user
+        explicitly noted that the logic should reload the file
+        from path, so what is stored in the DB shouldn't matter
+        when the on-disk source-of-truth is available. Fixed by
+        short-circuiting the DB routing whenever
+        ``_load_external_file()`` actually loaded content from
+        disk; the editor's HTML is preserved verbatim.
         """
         logma.info(f"Populating Document")
 
         # External file loading: if the document has a file_path set
         # (e.g. the user opened an external .py / .js / .md / .txt
         # file via cmd_open_local_file), load its contents into the
-        # editor before falling back to the in-memory document text.
-        self._load_external_file()
+        # editor. Returns True when a file was loaded.
+        loaded_from_disk = self._load_external_file()
 
         style = f"background-color: #FFFFFF;"
         self.document_editor.setStyleSheet(style)
+
+        # T-NEW-023: if the on-disk source loaded successfully,
+        # short-circuit the DB path. The editor already carries
+        # the rich text from disk; running pygments over the DB
+        # payload would strip the formatting.
+        if loaded_from_disk:
+            return self
 
         text = self._resolve_document_text()
         if self.document is None:
