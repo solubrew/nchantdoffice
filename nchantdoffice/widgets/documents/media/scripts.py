@@ -682,8 +682,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """"""
         if self.document is None:
             return []
-        #REGRESSION return list(set(self.document.file_formats.values()))
-        return []
+        return list(set(self.document.file_formats.values()))
 
     def get_font_color_selected(self):
         """"""
