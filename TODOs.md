@@ -91,7 +91,17 @@
   - `widgets/documents/media/scripts.py:1402` now calls `setHtml(preserved_html)` when the full HTML envelope is preserved in the saved PyfficeText unit.
   - `_resolve_document_text()` no longer `lstrip()`s (that was destroying leading indentation for Python / YAML / indented-markdown documents).
   - `NchantdOfficeScript.get_content()` now records the raw `toHtml()` into `self.document.text.html` so `_preserved_unit_html()` can restore it on reopen (previously the reopen only inspected a free-form `text` field).
-- **Regression tests:** `tests/test_script_reopen.py`, `tests/test_script_newline_roundtrip.py`, `tests/test_live_reopen_bugs.py`.
+- **Status (still losing formatting on reopen, T-NEW-023): the
+  user's contract clarification — "the logic should be reloading
+  the file from path so what is stored in the database format
+  wise shouldn't matter" — refocused the fix on the
+  `populate_document` short-circuit, not on DB-round-tripping
+  rich text. `populate_document` now returns early when
+  `_load_external_file()` successfully reads from disk,
+  bypassing the DB / pygments fallback path. The user-stated
+  source-of-truth is the on-disk file whenever it exists; the
+  DB stays the fallback. Regression tests in
+  `tests/test_script_html_envelope.py` (2 new). Commit `1a7aa05`.
 
 ### NchantdNotebook — not storing the .ipynb location
 - **Status:** fixed in `06b76fb` (file_path resolution), extended in `0b7156a` (T-NEW-009 bytes-not-JSON save crash) and `654eeea` (T-NEW-011 reopen-from-disk).
