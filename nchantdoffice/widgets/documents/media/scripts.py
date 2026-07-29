@@ -1300,7 +1300,12 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             text = decode64(text)
         if isinstance(text, dict):
             text = text.get("value", "")
-        text = text.lstrip()
+        # Preserve leading whitespace verbatim — ``text.lstrip()`` was
+        # destroying indentation for Python / YAML / markdown lists
+        # (T-NEW-008 fix). The previous behaviour only made sense if
+        # the editor always re-emitted the text via toHtml() /
+        # toPlainText() — which it does on save, so lstrip was
+        # redundant AND harmful.
         logma.info(f"Text: {text}")
         logma.info(f"Type: {type(text)}")
         return text
