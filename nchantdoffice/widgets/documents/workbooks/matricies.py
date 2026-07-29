@@ -257,8 +257,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "handler": self.cmd_formula_bar_change,
         }
         self.formula_bar = NchantdLabeledEntry(self, cfg)
-        if self.file_path is None or not exists(self.file_path):
-            cfg = {"buttons": {49: "_insert_stretch"}, "layout": "vertical"}
+        #if self.file_path is None or not exists(self.file_path):
+        cfg = {"buttons": {49: "_insert_stretch"}, "layout": "vertical"}
 
         # dscfg = {
         #     "label": "Select Data Set: ",

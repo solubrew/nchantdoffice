@@ -1,6 +1,20 @@
 
 
 
+2026-07-28 22:52:27,642 - nchantrs.widgets.widgets                  446: INFO     - Mouse Press Event
+2026-07-28 22:52:27,642 - nchantrs.widgets.widgets                  466: INFO     - Left Click <PySide6.QtGui.QMouseEvent(MouseButtonPress LeftButton pos=295,292 scn=641,361 gbl=641,387 dev=QInputDevice(QPointingDevice("Virtual core pointer" Mouse id=2 seat=30002 caps=Position|Scroll|Hover buttonCount=32))>
+2026-07-28 22:52:27,642 - nchantrs.widgets.widgets                  467: INFO     - Left Click
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/workbooks/matricies.py", line 1713, in on_selection_changed
+    self.cell_ref_label.setText(address)
+    ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NchantdOfficeMatrix' object has no attribute 'cell_ref_label'
+
+
+
+
+
+
 2026-07-27 19:45:49,937 - nchantdoffice.models                      391: INFO     - Dumped Content {"content": {"file_path": "/home/solubrew/Downloads/ssrn-4668072.pdf"}, "path": "/home/solubrew/Downloads/ssrn-4668072.pdf"}
 2026-07-27 19:45:49,937 - nchantdoffice.models                      394: INFO     - Encoded Dictionary b'eyJjb250ZW50IjogeyJmaWxlX3BhdGgiOiAiL2hvbWUvc29sdWJyZXcvRG93bmxvYWRzL3Nzcm4tNDY2ODA3Mi5wZGYifSwgInBhdGgiOiAiL2hvbWUvc29sdWJyZXcvRG93bmxvYWRzL3Nzcm4tNDY2ODA3Mi5wZGYifQ=='
 Traceback (most recent call last):
