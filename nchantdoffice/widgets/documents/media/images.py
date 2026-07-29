@@ -26,6 +26,10 @@ from ogma.logma import Logma
 from nchantrs.widgets.managers import NchantdBasketManager
 from nchantrs.widgets.media.images import NchantdImage
 from nchantrs.widgets.media.palettes import NchantdPaletteTable
+try:
+    from nchantrs.widgets.media.images import NchantdImageThumbnailViewer
+except ImportError:
+    NchantdImageThumbnailViewer = None
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar

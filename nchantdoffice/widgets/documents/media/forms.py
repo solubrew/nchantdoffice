@@ -26,6 +26,7 @@ from nchantrs.widgets.groups import NchantdGridScrollGroupBox, NchantdGroup
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument, NchantdOfficeDocumentManager
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.items.catalogs import NchantdCatalogItem
+from nchantrs.widgets.controls.advanced_buttons import NchantdSpinBox
 from kahndor.logma import Logma
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.forms.forms import NchantdForm

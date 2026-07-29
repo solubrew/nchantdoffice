@@ -106,7 +106,10 @@ class NchantdOfficeTable(NchantdTable):
             buttonbar = NchantdButtonBar(self, cfg).initWidget()
             self.setCellWidget(x, y, buttonbar)
         else:
-            raise Exception(f"Unknown Widget {column_widget}")
+            logma.warning(
+                f"[tables] unknown column_widgets type {self.config.dikt['column_widgets'][column_name]!r} for column {column_name!r}"
+            )
+            raise Exception(f"Unknown Widget {self.config.dikt['column_widgets'][column_name]!r}")
 
 
 # ====================================================================================================================||

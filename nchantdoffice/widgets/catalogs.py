@@ -24,6 +24,7 @@ from pandas import DataFrame
 from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.catalogs import NchantdCatalog
+from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantdoffice.widgets.items.items import NchantdOfficeDocumentCatalogItem
 from nchantdoffice.widgets.panes.new import NchantdOfficeNewDocumentPane
 from nchantrs.widgets.groups import NchantdGridScrollGroupBox

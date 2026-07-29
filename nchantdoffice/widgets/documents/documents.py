@@ -30,6 +30,9 @@ from nchantrs.dialogs.files import NchantdFileOpenSigil
 from nchantdoffice.widgets.panes.documents import NchantdOfficeTabEditPane, NchantdOfficeNoteEditPane
 from nchantdoffice.widgets.panes.documents import NchantdOfficeNodeEditPane
 from nchantdoffice.widgets.tabs import NchantdOfficeTab
+# T-NEW-XXX: NchantdOfficeNote is imported inside ``set_notes``
+# (below) to avoid a circular import with
+# ``nchantdoffice.widgets.documents.media.notes``.
 from pyffice.document import PyfficeDocument
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.controls.buttons import NchantdButton
@@ -900,6 +903,12 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
 
     def set_notes(self, notes):
         """"""
+        # T-NEW-XXX: deferred import to break a circular import
+        # with notes.py (which imports from documents.py).
+        from nchantdoffice.widgets.documents.media.notes import (
+            NchantdOfficeNote,
+        )
+
         self.notes = [NchantdOfficeNote(self, note).initWidget() for note in notes]
         return self
 

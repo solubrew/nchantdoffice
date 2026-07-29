@@ -28,6 +28,14 @@ from nchantrs.widgets.controls.radios import NchantdRadioButtonGroup
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.buttons import NchantdButton
+try:
+    from nchantrs.widgets.tables.lists import NchantdBulletedList, NchantdFilmStrip
+except ImportError:
+    # Sibling modules that may fail to import (circular imports
+    # in nchantrs). These two are referenced by the dormant
+    # ATNRG prompt initView and the references are stub fallbacks.
+    NchantdBulletedList = None
+    NchantdFilmStrip = None
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox, NchantdEnableSpinBox
 from nchantrs.widgets.media.editors.editors import NchantdDocEditor

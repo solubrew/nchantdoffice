@@ -22,6 +22,8 @@ import datetime as dt
 from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
+from subtrix.utilities import uuid
+from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown

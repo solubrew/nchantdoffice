@@ -24,6 +24,17 @@ from kahndor import kahndor
 from subtrix.utilities import uuid
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.controls.toolbars import NchantdApplicationToolBar
+try:
+    from nchantrs.widgets.controls.buttons import NchantdButton
+    from nchantrs.utilities.utils import lookup
+except ImportError:
+    # Sibling modules that fail to import on broken nchantrs tabsets
+    # init (circular import in nchantrs.widgets.tabsets). The
+    # references in initView are also dormant (toolbars are mostly
+    # built via the bar classes above), so a NameError at runtime
+    # is bounded.
+    NchantdButton = None
+    lookup = None
 from kahndor.logma import Logma
 from nchantdoffice.dialogs.dialog_documents import NchantdNewDocumentSigil
 from nchantrs.libraries import pyqt
