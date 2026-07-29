@@ -475,7 +475,14 @@ class NchantdOfficeDocumentMixin:
             return self
         logma.info(f"Save Content {self.document.content}")
         logma.info(f"Save Path {path}")
-        self.set_file_path(path)
+        if path is not None:
+            self.set_file_path(path)
+            if hasattr(self.document, "set_file_path"):
+                self.document.set_file_path(path)
+            else:
+                self.document.file_path = path
+        elif self.file_path is None:
+            self.file_path = getattr(self.document, "file_path", None)
         if self.app.view.panes["left"].tree.model.current_node is None:
             return self
         pid = self.app.view.panes["left"].tree.model.current_node.nid
@@ -552,9 +559,8 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def save_internal(self):
-        """"""
-        doc = self.document.to_dict()
-        self.app.model.store_document(doc)
+        """Persist the active Pyffice document through the model API."""
+        self.app.model.store_document(self.document)
         return self
 
     def save_as(self, name, path=None):

@@ -1126,9 +1126,8 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return self
 
     def get_content(self):
-        """"""
-        content = self.document.active_page.to_dict()
-        return content
+        """Return the complete browser profile under the canonical content key."""
+        return {"content": self.document.active_page.to_dict()}
 
     def save(self):
         """Save the browser document.
