@@ -1,5 +1,91 @@
 
 
+
+
+
+
+
+
+ne}}, 'file_path': '', 'widget': 'nchantrs.widgets.calendars.years.NchantdYearCalendar', 'tid': '06a69701-b37d-7970-8000-debb2606a30e', 'document': {'data': None, 'data_str': None, 'did': '06a69701-b37d-77c7-8000-f0e6de3282a4', 'syntax': None, 'name': '2026', 'position': 0, 'document_type': None, 'readonly': 0, 'editable': 1, 'visible': 1, 'moveable': 1, 'tid': '06a69701-b37d-7970-8000-debb2606a30e', 'pid': '06a69701-b343-732f-8000-93abb6533a35', 'widget': 'nchantrs.widgets.calendars.years.NchantdYearCalendar', 'widgdata': '{}', 'version': None, 'tab_type': 'year', 'location': None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon': None, 'modon': None}}, 'apps': ['nchantrs', 'nchantdoffice'], 'app': 'nchantdoffice', 'pos': 'center'}
+2026-07-28 23:20:00,931 - nchantrs.widgets.widgets                 1034: INFO     - nchantrs.widgets.calendars.years.NchantdYearCalendar
+2026-07-28 23:20:00,938 - nchantrs.widgets.tables.tables            578: INFO     - Size 640 480
+2026-07-28 23:20:00,938 - nchantrs.widgets.tables.tables            580: INFO     - Size [58, 160]
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/views/treeviews.py", line 193, in onLeftClick
+    self.set_current_node(signal)
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/views/treeviews.py", line 275, in set_current_node
+    node.updateTabs("center")
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/items/nodes.py", line 551, in updateTabs
+    self.app.view.panes[view].model.buildTabSet(self, view)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3133, in buildTabSet
+    self.load_tab_set(tabset, active_tab_position)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3230, in load_tab_set
+    self.load_tab(tab, tabn, tabset, active_tab_position)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3344, in load_tab
+    super().load_tab(tab, tabn, tabset, active_tab_position)
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 237, in load_tab
+    self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab), tabset, tab))
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3380, in load_widget
+    tabW.initWidget()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 105, in initWidget
+    self.initView()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 89, in initView
+    self.month_tables[i] = NchantdGrid(self, cfg).initWidget()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 604, in initWidget
+    self.initView()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 592, in initView
+    grid_layout.addWidget(cell, row, col)
+TypeError: 'PySide6.QtWidgets.QGridLayout.addWidget' called with wrong argument types:
+  PySide6.QtWidgets.QGridLayout.addWidget(NchantdCell, int, int)
+Supported signatures:
+  PySide6.QtWidgets.QGridLayout.addWidget(w: PySide6.QtWidgets.QWidget, /)
+  PySide6.QtWidgets.QGridLayout.addWidget(arg__1: PySide6.QtWidgets.QWidget, row: int, column: int, /, alignment: PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
+  PySide6.QtWidgets.QGridLayout.addWidget(arg__1: PySide6.QtWidgets.QWidget, row: int, column: int, rowSpan: int, columnSpan: int, /, alignment: PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/views/treeviews.py", line 195, in onLeftClick
+    self.set_current_node(signal)
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/views/treeviews.py", line 275, in set_current_node
+    node.updateTabs("center")
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/items/nodes.py", line 551, in updateTabs
+    self.app.view.panes[view].model.buildTabSet(self, view)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3133, in buildTabSet
+    self.load_tab_set(tabset, active_tab_position)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3230, in load_tab_set
+    self.load_tab(tab, tabn, tabset, active_tab_position)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3344, in load_tab
+    super().load_tab(tab, tabn, tabset, active_tab_position)
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 237, in load_tab
+    self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab), tabset, tab))
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3380, in load_widget
+    tabW.initWidget()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 105, in initWidget
+    self.initView()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 89, in initView
+    self.month_tables[i] = NchantdGrid(self, cfg).initWidget()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 604, in initWidget
+    self.initView()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 592, in initView
+    grid_layout.addWidget(cell, row, col)
+TypeError: 'PySide6.QtWidgets.QGridLayout.addWidget' called with wrong argument types:
+  PySide6.QtWidgets.QGridLayout.addWidget(NchantdCell, int, int)
+Supported signatures:
+  PySide6.QtWidgets.QGridLayout.addWidget(w: PySide6.QtWidgets.QWidget, /)
+  PySide6.QtWidgets.QGridLayout.addWidget(arg__1: PySide6.QtWidgets.QWidget, row: int, column: int, /, alignment: PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
+  PySide6.QtWidgets.QGridLayout.addWidget(arg__1: PySide6.QtWidgets.QWidget, row: int, column: int, rowSpan: int, columnSpan: int, /, alignment: PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
+
+
+
+
+
+
+
 2026-07-28 23:19:14,162 - nchantrs.widgets.widgets                 1028: INFO     - Load Widget Config {'NchantdWidget': {'dstruct': {'database': {'objects': None}}}, 'RegisteredWidgets': {'<(CHART)>': None, '<(CUSTOM)>': "need a method for telling the widget where to read the data from widgetdata:\n  path: group000.label000\n  entry: 'Summary'\n  layer: data #format, formula, data\ngroup000.textbox000\n", '<(DOCEDIT)>': 'nchantrs.widgets.editors.NchantdDocEditor', '<(LABEL)>': 'nchantrs.widgets.annotations.NchantdLabel', '<(SCRATCHEDIT)>': 'nchantrs.widgets.editors.NchantdScratchEditor', '<(TEXTBOX)>': 'nchantrs.widgets.editors.NchantdEntryBox'}, 'expandCFG': {'fonts': {'default': {'font': 'Times', 'size': 12, 'style': 'regular'}}, 'styles': {'default': None}}, 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager': {}, 'tab': {'data': None, 'data_str': None, 'did': '024694d6-f14b-435b-a130-f86a7e4e447f', 'syntax': None, 'name': 'Affiliate Manager', 'position': 2, 'document_type': None, 'readonly': 0, 'editable': 1, 'visible': 1, 'moveable': 1, 'tid': '06a69701-b24f-78a4-8000-076ddb717b53', 'pid': '066a7cf6-5aca-79a2-8000-f4b5405a0427', 'widget': 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager', 'widgdata': '{}', 'version': None, 'tab_type': 'custom_widget', 'location': None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon': None, 'modon': None}}, 'file_path': '', 'widget': 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager', 'tid': '06a69701-b24f-78a4-8000-076ddb717b53', 'document': {'data': None, 'data_str': None, 'did': '024694d6-f14b-435b-a130-f86a7e4e447f', 'syntax': None, 'name': 'Affiliate Manager', 'position': 2, 'document_type': None, 'readonly': 0, 'editable': 1, 'visible': 1, 'moveable': 1, 'tid': '06a69701-b24f-78a4-8000-076ddb717b53', 'pid': '066a7cf6-5aca-79a2-8000-f4b5405a0427', 'widget': 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager', 'widgdata': '{}', 'version': None, 'tab_type': 'custom_widget', 'location': None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon': None, 'modon': None}}, 'apps': ['nchantrs', 'nchantdoffice'], 'app': 'nchantdoffice', 'pos': 'center'}
 2026-07-28 23:19:14,162 - nchantrs.widgets.widgets                 1034: INFO     - nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager
 Traceback (most recent call last):
