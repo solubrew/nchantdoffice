@@ -105,15 +105,25 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.pinned = False
 
     def initModel(self):
-        """ """
+        """Load the notebook document and resolve its file_path.
+
+        T-NEW-006 (T-NEW-005 followup): the previously-saved notebook
+        location lives at ``document.content["content"]["file_path"]``
+        after Sprint 1's persistence fix; the Pyffice document's
+        ``self.file_path`` is still the initial ``/default.ipynb`` until
+        ``open_file`` runs. We therefore prefer the saved content
+        location, then the cfg, then ``document.file_path``.
+        """
         super().initModel()
         self.document = self.app.model.codex.init_notebook({"document": self.config.dikt.get("document", {})})
         self.document.load_document()
+        saved_content = self.document.content or {}
+        nested_content = saved_content.get("content", {}) if isinstance(saved_content, dict) else {}
         self.file_path = (
-            self.document.file_path
+            nested_content.get("file_path")
+            or saved_content.get("file_path")
             or self.config.dikt.get("file_path")
-            or (self.document.content or {}).get("file_path")
-            or (self.document.content or {}).get("content", {}).get("file_path")
+            or self.document.file_path
         )
         self.context_menu.get_menu("context.document.notebook")
         return self

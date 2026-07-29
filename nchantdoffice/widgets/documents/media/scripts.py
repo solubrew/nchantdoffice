@@ -1401,7 +1401,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             return
         if self.document.syntax == "html":
             logma.info("HTML")
-            self.document_editor.setHtml(text)
+            preserved_html = self._preserved_unit_html()
+            if preserved_html and ("<html" in preserved_html.lower() or "<body" in preserved_html.lower()):
+                self.document_editor.setHtml(preserved_html)
+            else:
+                self.document_editor.setHtml(text)
             return
 
         # Pygments-backed languages: shared theme + sanitiser
