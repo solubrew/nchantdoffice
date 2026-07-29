@@ -411,6 +411,82 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             logma.error(f"[toolboxes] cmd_open_instance failed: {e}", exc_info=True)
         return self
 
+    def cmd_browse_app_instances(self, event=None, *args, **kwargs):
+        """T-NEW-005 (item 3): show the user the registered
+        secondary app instances from the ``app_instance``
+        table. The primary instance holds a registry of
+        secondary DB files (per the one-SQLite-per-app-
+        instance model). UI hook from the toolbox buttonbar
+        opens a list dialog so the user can pick a secondary
+        instance to switch into (``cmd_open_instance`` then
+        routes through ``_open_pyof_instance`` for the
+        selected path).
+        """
+        try:
+            model = (
+                getattr(self.app, "model", None) if hasattr(self, "app") else None
+            )
+            if model is None or not hasattr(model, "get_app_instances"):
+                logma.warning(
+                    "[toolboxes] cmd_browse_app_instances: no "
+                    "model.get_app_instances helper available."
+                )
+                return self
+            rows = model.get_app_instances() or []
+            logma.info(
+                f"[toolboxes] cmd_browse_app_instances: "
+                f"{len(rows)} registered secondary instance(s)"
+            )
+            # Surface to the UI: when a list dialog is available
+            # use it; otherwise log the names so the test harness
+            # (and headless environments) can verify the path.
+            picker = None
+            try:
+                from nchantrs.dialogs.selectors import (
+                    NchantdSelectionDialog,
+                )
+
+                picker = NchantdSelectionDialog
+            except Exception:
+                picker = None
+            if picker is not None and rows:
+                # NchantdSelectionDialog accepts a list of
+                # label/callback pairs; we map each row to a
+                # clickable label that re-opens the instance.
+                choices = [
+                    {
+                        "label": (
+                            f"{r.get('name', '?')} "
+                            f"({r.get('uuid', '?')})"
+                        ),
+                        "callback": (
+                            lambda r=r: self._open_pyof_instance(
+                                r.get("path", "")
+                            )
+                        ),
+                    }
+                    for r in rows
+                    if isinstance(r, dict)
+                ]
+                if choices:
+                    picker("Browse App Instances", choices, parent=self)
+                    return self
+            # Fallback: log every row so headless tests can
+            # observe the data path.
+            for r in rows:
+                if isinstance(r, dict):
+                    logma.info(
+                        f"[toolboxes] registered: "
+                        f"uuid={r.get('uuid')} name={r.get('name')}"
+                    )
+            return self
+        except Exception as e:
+            logma.error(
+                f"[toolboxes] cmd_browse_app_instances failed: {e}",
+                exc_info=True,
+            )
+        return self
+
     def _open_pyof_instance(self, path):
         """Open a .pyof Nchantd Office instance (T-077, T-NEW-007).
 

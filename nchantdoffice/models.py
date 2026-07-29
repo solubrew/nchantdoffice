@@ -1076,6 +1076,59 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         filters = {"WHERE": {"EQUAL": {"file_type_txt": "browse_history"}}, "LIMIT": limit}
         return self.get_table(table, filters, db)
 
+    def get_app_instances(self, db="db"):
+        """T-NEW-005 (item 3): return the list of registered
+        secondary app instances from the ``app_instance``
+        table. Per user direction (2026-07-29), the primary
+        instance holds a registry of secondary DB files (one
+        SQLite DB per app instance). The UI
+        (``cmd_browse_app_instances`` in toolboxes.py) calls
+        this so the user can see what other instances the
+        primary is tracking.
+
+        Returns a list of dicts (one per row), or an empty
+        list when no instances are registered (e.g. on a
+        fresh install before the user opens any secondary
+        ``.pyof`` file).
+        """
+        # Path A: the store layer has an active SQLite
+        # connection (one-per-app-instance, set by
+        # ``import_nchantdoffice``). Read rows directly via
+        # ``SELECT * FROM app_instance`` so we don't need
+        # the full store/table bootstrap chain.
+        conn = getattr(getattr(self, "store", None), "_sqlite_connection", None)
+        if conn is not None:
+            try:
+                cur = conn.execute("SELECT * FROM app_instance")
+                cols = [d[0] for d in cur.description] if cur.description else []
+                return [dict(zip(cols, row)) for row in cur.fetchall()]
+            except Exception as e:
+                logma.warning(
+                    f"[models] get_app_instances: SQLite "
+                    f"query failed: {e}"
+                )
+                # Fall through to the store layer.
+
+        # Path B: fall back to ``self.get_table`` (pandas /
+        # SQuiRL path).
+        try:
+            rows = self.get_table("app_instance", {}, db)
+        except Exception as e:
+            logma.warning(
+                f"[models] get_app_instances failed: {e}"
+            )
+            return []
+        if rows is None:
+            return []
+        if hasattr(rows, "to_dict"):
+            try:
+                return rows.to_dict(orient="records")
+            except Exception:
+                pass
+        if isinstance(rows, list):
+            return rows
+        return []
+
     def get_document(self, doc_action=None, did=None, db="db"):
         """Return the document matching the action or the document id.
 
