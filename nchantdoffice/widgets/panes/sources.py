@@ -328,6 +328,7 @@ class NchantdSourcePane(NchantdPane):
         """
         try:
             from nchantrs.widgets.dialogs.dialogs import NchantdPickerDialog
+
             dialog = NchantdPickerDialog(self, {"title": "Pick Data Source"})
             dialog.exec_()
             logma.info("[sources] cmd_launch_data_source: dialog shown")
@@ -369,6 +370,7 @@ class NchantdSourcePane(NchantdPane):
             logma.info(f"[sources] cmd_show_api_key: source={source_name} key_len={len(api_key)}")
             if hasattr(self, "app") and self.app is not None:
                 from nchantrs.libraries import pyqt
+
                 pyqt.QApplication.clipboard().setText(api_key)
             return self
         except Exception as e:
@@ -651,7 +653,7 @@ class NchantdDataSetConfigPane(NchantdPane):
         cfg = {"collapsable": False}
         chart_specifics_group = NchantdGroup(self, cfg)
         chart_specifics_group.setTitle("Data Source Specifics")
-        chart_specifics_layout = pyqt.QGridLayout()
+        chart_specifics_layout = pyqt.QVBoxLayout()
         chart_specifics_layout.setSpacing(3)
         chart_specifics_group.setLayout(chart_specifics_layout)
         cfg = {
@@ -670,6 +672,7 @@ class NchantdDataSetConfigPane(NchantdPane):
         }
         self.chart_description_entry = NchantdLabeledEntry(self, cfg).initWidget()
         chart_specifics_layout.addWidget(self.chart_description_entry)
+        chart_specifics_layout.addStretch()
         self.left_group.addWidget(chart_specifics_group)
         self.layout.addLayout(self.left_group.layout)
         cfg = {}

@@ -251,7 +251,6 @@ class NchantdChartConfigPane(NchantdPane):
         self.right_group.addWidget(self.new_legend_button)
         # self.right_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         self.layout.addLayout(self.right_group.layout)
-
         self.set_size()
         return self
 
