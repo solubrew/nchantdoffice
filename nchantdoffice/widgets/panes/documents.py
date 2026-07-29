@@ -109,6 +109,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         cfg = {"buttons": {"ok": {"handler": self.cmd_set_node_name}}}
         self.accept_button = NchantdOkButtons(self, cfg).initWidget()
         layout.addWidget(self.accept_button)
+        layout.addStretch()
         # T-removed: commented-out tag-tracking block (referenced
         # get_tags() / NchantdList that aren't wired in). Removed.
         self.layout.addWidget(group)
@@ -392,8 +393,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         # lives in pycurity.pycrypt; defer the integration until the
         # desired cipher is selected (RSA / AES / Fernet).
         logma.warning(
-            "[documents] decrypt: pycurity cipher not yet wired — "
-            "no-op until the cipher selector is added."
+            "[documents] decrypt: pycurity cipher not yet wired — " "no-op until the cipher selector is added."
         )
         return self
 
@@ -408,8 +408,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         # deferred. The base64 round-trip is the canonical format
         # the panel currently persists.
         logma.warning(
-            "[documents] encrypt: pycurity cipher not yet wired — "
-            "no-op until the cipher selector is added."
+            "[documents] encrypt: pycurity cipher not yet wired — " "no-op until the cipher selector is added."
         )
         return self
 
@@ -491,30 +490,34 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         if isinstance(content, dict):
             page = 0
             for entry in content.get("pages", []) or []:
-                doc_media_content.append([
-                    entry.get("uuid", ""),
-                    doc.get("uuid") or doc.get("did", ""),
-                    None,  # media_fk — resolved by the storage layer
-                    page,
-                    entry.get("entry", 0),
-                    entry.get("version", meta.get("version", 0)),
-                    entry.get("hash", meta.get("hash", "")),
-                    entry.get("content_enc64", entry.get("content", "")),
-                    entry.get("context", ""),
-                ])
+                doc_media_content.append(
+                    [
+                        entry.get("uuid", ""),
+                        doc.get("uuid") or doc.get("did", ""),
+                        None,  # media_fk — resolved by the storage layer
+                        page,
+                        entry.get("entry", 0),
+                        entry.get("version", meta.get("version", 0)),
+                        entry.get("hash", meta.get("hash", "")),
+                        entry.get("content_enc64", entry.get("content", "")),
+                        entry.get("context", ""),
+                    ]
+                )
                 page += 1
         elif content:
-            doc_media_content.append([
-                "",
-                doc.get("uuid") or doc.get("did", ""),
-                None,
-                0,
-                0,
-                meta.get("version", 0),
-                meta.get("hash", ""),
-                content,
-                meta.get("context", ""),
-            ])
+            doc_media_content.append(
+                [
+                    "",
+                    doc.get("uuid") or doc.get("did", ""),
+                    None,
+                    0,
+                    0,
+                    meta.get("version", 0),
+                    meta.get("hash", ""),
+                    content,
+                    meta.get("context", ""),
+                ]
+            )
         return doc_media, doc_media_content
 
     def store_document(self, doctype, name, description, meta_data, data, format_, formula):
@@ -612,6 +615,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
         cfg = {"buttons": {"ok": {"handler": self.cmd_set_tab_name}}}
         self.accept_buttons = NchantdOkButtons(self, cfg).initWidget()
         layout.addWidget(self.accept_buttons)
+        layout.addStretch()
         # notes_label = NchantdLabel(self, {"text": "Notes: "}).initWidget()
         # layout.addWidget(notes_label)
         # self.notes = self.get_notes()
@@ -806,30 +810,34 @@ class NchantdOfficeTabEditPane(NchantdPane):
         if isinstance(content, dict):
             page = 0
             for entry in content.get("pages", []) or []:
-                doc_media_content.append([
-                    entry.get("uuid", ""),
-                    doc.get("uuid") or doc.get("did", ""),
-                    None,  # media_fk — resolved by the storage layer
-                    page,
-                    entry.get("entry", 0),
-                    entry.get("version", meta.get("version", 0)),
-                    entry.get("hash", meta.get("hash", "")),
-                    entry.get("content_enc64", entry.get("content", "")),
-                    entry.get("context", ""),
-                ])
+                doc_media_content.append(
+                    [
+                        entry.get("uuid", ""),
+                        doc.get("uuid") or doc.get("did", ""),
+                        None,  # media_fk — resolved by the storage layer
+                        page,
+                        entry.get("entry", 0),
+                        entry.get("version", meta.get("version", 0)),
+                        entry.get("hash", meta.get("hash", "")),
+                        entry.get("content_enc64", entry.get("content", "")),
+                        entry.get("context", ""),
+                    ]
+                )
                 page += 1
         elif content:
-            doc_media_content.append([
-                "",
-                doc.get("uuid") or doc.get("did", ""),
-                None,
-                0,
-                0,
-                meta.get("version", 0),
-                meta.get("hash", ""),
-                content,
-                meta.get("context", ""),
-            ])
+            doc_media_content.append(
+                [
+                    "",
+                    doc.get("uuid") or doc.get("did", ""),
+                    None,
+                    0,
+                    0,
+                    meta.get("version", 0),
+                    meta.get("hash", ""),
+                    content,
+                    meta.get("context", ""),
+                ]
+            )
         return doc_media, doc_media_content
 
     def store_document(self, doctype, name, description, meta_data, data, format_, formula):
@@ -838,8 +846,6 @@ class NchantdOfficeTabEditPane(NchantdPane):
         data = [[uuid(), name, description, meta_data, app_document_types_FK]]
         app_documents_FK = self.app.model._store("document", data)
         self.store_document_data(data, format_, formula, app_documents_FK)
-
-
 
     def get_last_accessed(self, document=None):
         """Return the last-accessed ISO string for ``document``.
@@ -878,6 +884,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
         timestamp.
         """
         from datetime import datetime
+
         ts = datetime.utcnow().isoformat() + "Z"
         doc = document or getattr(self, "document", None)
         if doc is None:
@@ -898,6 +905,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
         except Exception as e:
             logma.error(f"[documents] update_last_accessed model write failed: {e}", exc_info=True)
         return ts
+
     def store_document_data(self, data, format_, formula, app_documents_FK, version_num=0):
         """"""
         while True:

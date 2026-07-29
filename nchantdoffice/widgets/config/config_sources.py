@@ -53,7 +53,7 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
     def __init__(self, parent, cfg=None):
         """"""
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSourcesSettingsTab").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDataSourcesSettings").override(cfg))
         self.data_sources = self.config.get("default_sources", {}) or {}
         self.apikeys = {}
 
@@ -114,7 +114,7 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
 
     def cmd_change_data_source_pane_size(self):
         """"""
-        #TODO build out method
+        # TODO build out method
 
     def build_data_source_pane(self, source):
         """"""
@@ -199,6 +199,7 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
             if hasattr(browser, "setUrl"):
                 try:
                     from PySide6 import QtCore
+
                     browser.setUrl(QtCore.QUrl(url))
                 except Exception:
                     if hasattr(browser, "load_url"):
@@ -220,7 +221,7 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
 
     def _load_api_key(self, source=None):
         """"""
-        #TODO implement method
+        # TODO implement method
 
     def obscure_key(self, key):
         """"""
@@ -304,6 +305,9 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         cfg = {"size": ["auto", self.size().height() / 3 - 18]}
         self.source_config_pane = NchantdDataSetConfigPane(self, cfg).initWidget()
         self.layout.addWidget(self.source_config_pane)
+        cfg = {}
+        self.source_data_view = NchantdTable(self, cfg).initWidget()
+        self.layout.addWidget(self.source_data_view)
         self.layout.setSpacing(3)
         self.layout.setContentsMargins(0, 0, 0, 0)
         return self
