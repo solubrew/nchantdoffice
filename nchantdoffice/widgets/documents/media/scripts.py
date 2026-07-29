@@ -682,8 +682,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """"""
         if self.document is None:
             return []
+        if self.document.file_formats is None:
+            self.document.set_file_format_options()
         return list(set(self.document.file_formats.values()))
-
+    
     def get_font_color_selected(self):
         """"""
         color = "Black"
@@ -1538,9 +1540,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             self.document.syntax = "plain-text"
         logma.info(f"Document Format: {self.document.file_format}")
         logma.info(f"Syntax {self.document.syntax}")
-        #TODO: refactor and define the difference between file_format, and syntax
-        if self.document.file_format != self.document.syntax:
-            self.document.syntax = self.document.file_format
         # 1:1 setters — no transformation
         if self.document.syntax == "markdown":
             self.document_editor.setMarkdown(text)
@@ -1572,7 +1571,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             else:
                 self.document_editor.setHtml(text)
             return
-
         # Pygments-backed languages: shared theme + sanitiser
         theme = "monokai"
         formatter = HtmlFormatter(style=theme, full=True, noclasses=True)
