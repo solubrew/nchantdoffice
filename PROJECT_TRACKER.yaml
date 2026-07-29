@@ -3,7 +3,7 @@ analysis:
   counts:
     files: 429
     python_files: 172
-    python_lines: 60706
+    python_lines: 60360
     test_files: 87
 audit_date: '1785166530.110188'
 dimensions:
@@ -163,9 +163,9 @@ dimensions:
           project: nchantdoffice
         internal_imports: 331
         internal_projects_used:
-        - nchantdoffice
-        - nchantrs
         - kahndor
+        - nchantrs
+        - nchantdoffice
         leverage_score: 37.44
         score: 100
         status: pass
@@ -203,8 +203,11 @@ dimensions:
   embedded_todos:
     details:
       details:
-        count: 9
+        count: 10
         examples:
+        - file: nchantdoffice/models.py
+          line: 2091
+          text: '# TODO: increment version'
         - file: nchantdoffice/widgets/widgets.py
           line: 111
           text: '# TODO implement method'
@@ -240,11 +243,11 @@ dimensions:
         - dimension: embedded_todos
           rule: Inline TODOs need tracking
           severity: medium
-        score: 82
+        score: 80
         status: pass
-      score: 82
+      score: 80
       status: pass
-    score: 82
+    score: 80
     status: pass
   error_handling:
     details:
@@ -286,7 +289,7 @@ dimensions:
         - file: nchantdoffice/models.py
           rule: File too large
           severity: medium
-          size_kb: 168.1689453125
+          size_kb: 161.837890625
         large_file_count: 1
         score: 80
         status: pass
@@ -302,7 +305,7 @@ dimensions:
           branches:
             local: []
             remote: []
-          commit_count: 525
+          commit_count: 536
           commits: []
           contributors: []
           is_repo: true
@@ -330,7 +333,7 @@ dimensions:
           items:
           - class: NchantdOfficeCloakModel
             file: nchantdoffice/models.py
-            line_count: 2178
+            line_count: 2168
             method_count: 110
           - class: NchantdOfficeSettingsModel
             file: nchantdoffice/models.py
@@ -342,11 +345,11 @@ dimensions:
             method_count: 62
           - class: NchantdOfficeWebBrowser
             file: nchantdoffice/widgets/documents/atnrg/browsers.py
-            line_count: 1488
+            line_count: 1493
             method_count: 91
           - class: NchantdOfficeSketch
             file: nchantdoffice/widgets/documents/media/sketches.py
-            line_count: 1290
+            line_count: 1295
             method_count: 85
           rule: 'God classes detected: 8'
           severity: high
@@ -550,7 +553,7 @@ dimensions:
         count: 27
         examples:
         - file: nchantdoffice/models.py
-          line: 2520
+          line: 2510
           text: '# NOTE: sorts by (name, type) for stable display. Version'
         - file: nchantdoffice/utilities/util_helpers.py
           line: 77
@@ -712,15 +715,7 @@ dimensions:
             deserialize untrusted data, possible security issue.'
           severity: medium
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/models.py
-          line: 2720
-          rule: 'Bandit: Possible binding to all interfaces.'
-          severity: medium
-        - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/models.py
-          line: 2720
-          rule: 'Bandit: Possible binding to all interfaces.'
-          severity: medium
-        - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/models.py
-          line: 3104
+          line: 2964
           rule: 'Bandit: Use of weak MD5 hash for security. Consider usedforsecurity=False'
           severity: high
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/widgets/controls/toolboxes.py
@@ -729,12 +724,12 @@ dimensions:
             deserialize untrusted data, possible security issue.'
           severity: medium
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 1411
+          line: 1416
           rule: 'Bandit: Possible SQL injection vector through string-based query
             construction.'
           severity: medium
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 1444
+          line: 1449
           rule: 'Bandit: Possible SQL injection vector through string-based query
             construction.'
           severity: medium
@@ -743,7 +738,7 @@ dimensions:
           rule: 'Bandit: Possible binding to all interfaces.'
           severity: medium
         - file: /home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 404
+          line: 409
           rule: 'Bandit: Use of possibly insecure function - consider using safer
             ast.literal_eval.'
           severity: medium
@@ -907,192 +902,161 @@ dimensions:
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
-          line: 2145
+          line: 2135
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if df is not None and not getattr(df, "empty", True):'
           file: nchantdoffice/models.py
-          line: 2151
+          line: 2141
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
-          line: 2175
+          line: 2165
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
-          line: 2219
+          line: 2209
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: tab = getattr(self, "active_tab", None) or getattr(self, "current_tab",
             None)
           file: nchantdoffice/models.py
-          line: 2249
+          line: 2239
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: tab = getattr(self, "active_tab", None) or getattr(self, "current_tab",
             None)
           file: nchantdoffice/models.py
-          line: 2249
+          line: 2239
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
-          line: 2255
+          line: 2245
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '"name_txt": getattr(tab, "name", "Tab"),'
           file: nchantdoffice/models.py
-          line: 2259
+          line: 2249
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '"position_int": getattr(tab, "position", 0) or 0,'
           file: nchantdoffice/models.py
-          line: 2260
+          line: 2250
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '"type_txt": getattr(tab, "type", "generic") or "generic",'
           file: nchantdoffice/models.py
-          line: 2261
+          line: 2251
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '"pid_txt": getattr(tab, "pid", None) or "",'
           file: nchantdoffice/models.py
-          line: 2262
+          line: 2252
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: agent_manager = getattr(self.app, "agent_manager", None)
           file: nchantdoffice/models.py
-          line: 2378
+          line: 2368
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: agent = agent_manager.assign_agent(getattr(self, "mole", None))
           file: nchantdoffice/models.py
-          line: 2383
+          line: 2373
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "docs", None)
           file: nchantdoffice/models.py
-          line: 2669
+          line: 2659
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: parent_delete = getattr(super(), "_delete", None)
           file: nchantdoffice/models.py
-          line: 2673
+          line: 2663
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '"MODBY_FK": getattr(self, "user_FK", 0),'
           file: nchantdoffice/models.py
-          line: 2686
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: current = str(getattr(pydoc, "version", "0.0.0.0") or "0.0.0.0")
-          file: nchantdoffice/models.py
-          line: 2720
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: current = str(getattr(pydoc, "content_schema_version", "0.0.0")
-            or "0.0.0")
-          file: nchantdoffice/models.py
-          line: 2766
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: instance = getattr(getattr(self, "app", None), "model", None)
-          file: nchantdoffice/models.py
-          line: 2807
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: inst = getattr(instance, "instance", None)
-          file: nchantdoffice/models.py
-          line: 2809
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: return str(getattr(inst, "version", "0.0.0") or "0.0.0")
-          file: nchantdoffice/models.py
-          line: 2811
+          line: 2676
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: instance_version = getattr(self.app.model.instance, "version",
             "0.0.0")
           file: nchantdoffice/models.py
-          line: 2901
+          line: 2761
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: viewer = getattr(widget, "browser", None)
           file: nchantdoffice/models.py
-          line: 3446
+          line: 3306
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: view = getattr(viewer, "browser", None) if viewer is not None else
             None
           file: nchantdoffice/models.py
-          line: 3447
+          line: 3307
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3565
+          line: 3425
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3581
+          line: 3441
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3597
+          line: 3457
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3613
+          line: 3473
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: cfg = getattr(self, "config", None)
           file: nchantdoffice/models.py
-          line: 3629
+          line: 3489
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self, "store", None)
           file: nchantdoffice/models.py
-          line: 3847
+          line: 3707
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if df is not None and not getattr(df, "empty", True):'
           file: nchantdoffice/models.py
-          line: 3853
+          line: 3713
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: url_open
@@ -1312,81 +1276,51 @@ dimensions:
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
-          content: model = getattr(getattr(self, "app", None), "model", None)
-          file: nchantdoffice/widgets/documents/documents.py
-          line: 614
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: tabsdata = getattr(model, "tabsdata", None)
-          file: nchantdoffice/widgets/documents/documents.py
-          line: 617
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: doc = getattr(self, "document", None)
-          file: nchantdoffice/widgets/documents/documents.py
-          line: 624
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: tid = getattr(doc, "tid", None) or getattr(doc, "tid_txt", None)
-          file: nchantdoffice/widgets/documents/documents.py
-          line: 626
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: tid = getattr(doc, "tid", None) or getattr(doc, "tid_txt", None)
-          file: nchantdoffice/widgets/documents/documents.py
-          line: 626
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
           content: getattr(self, "document_editor", None)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 676
+          line: 613
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: or getattr(self, "browser", None)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 677
+          line: 614
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: or getattr(self, "image", None)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 678
+          line: 615
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: path = getattr(self, "snapshot_path", None) or (
           file: nchantdoffice/widgets/documents/documents.py
-          line: 687
+          line: 624
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: view = getattr(self, "app", None)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 841
+          line: 778
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: account_switch = getattr(view.view, "switch_to_account_tab", None)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 843
+          line: 780
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'logma.info(f''Remote document opened: {getattr(doc, "did", "unknown")}'')'
           file: nchantdoffice/widgets/documents/documents.py
-          line: 888
+          line: 825
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: setattr(self.document, key, value)
           file: nchantdoffice/widgets/documents/documents.py
-          line: 725
+          line: 662
           pattern: setattr\(
           severity: 60
         - category: getattr_dynamic
@@ -2157,148 +2091,154 @@ dimensions:
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
+          content: getattr(self.active_url, "active_url", None)
+          file: nchantdoffice/widgets/documents/atnrg/browsers.py
+          line: 111
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
           content: '#     if getattr(self.app.model.user, "has_pro", False) if self.app.model.user
             else False:'
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 136
+          line: 148
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: submit = getattr(self.browser, "submit_form", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 220
+          line: 232
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: clear = getattr(self.browser, "clear_form", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 237
+          line: 249
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: view = getattr(self, "app", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 251
+          line: 263
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: switch = getattr(view.view, "switch_to_form_editor", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 253
+          line: 265
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: url = getattr(event, "url", None) or getattr(event, "text", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 302
+          line: 314
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: url = getattr(event, "url", None) or getattr(event, "text", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 302
+          line: 314
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'url = getattr(self.resource_select, "currentText", lambda: None)()'
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 304
+          line: 316
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.browsing_history_policy_spinbox, "value",
             None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 377
+          line: 389
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: update = getattr(self.badge_bar, "update", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 391
+          line: 403
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: instance = getattr(self.app.model, "instance", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 458
+          line: 470
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: browser_cfg = getattr(instance, "browser", None) if instance else
             None
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 459
+          line: 471
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '#     if not getattr(self.app.model.user, "has_pro", False) if
             self.app.model.user else False:'
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 741
+          line: 753
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: model = getattr(self.app, "model", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 1011
+          line: 1023
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: profile_id = getattr(profile, "id", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 1371
+          line: 1376
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: settings = getattr(self.app.model, "settings", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 1379
+          line: 1384
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self.app.model, "store", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 1403
+          line: 1408
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: profile_id = getattr(profile, "id", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 1431
+          line: 1436
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self.app.model, "store", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 1440
+          line: 1445
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: qweb = getattr(profile, "qweb_profile", None) if profile is not
             None else None
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 1465
+          line: 1470
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: qweb = getattr(profile, "qweb_profile", None) if profile is not
             None else None
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 1495
+          line: 1500
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: qweb = getattr(profile, "qweb_profile", None) if profile is not
             None else None
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 1524
+          line: 1529
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: phones = getattr(self.contact, "phones", None)
           file: nchantdoffice/widgets/documents/atnrg/browsers.py
-          line: 1757
+          line: 1762
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
@@ -2503,128 +2443,128 @@ dimensions:
           content: getter = getattr(widget, "currentText", None) or getattr(widget,
             "get_value", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 720
+          line: 719
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(widget, "currentText", None) or getattr(widget,
             "get_value", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 720
+          line: 719
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: model = getattr(self, "app", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 726
+          line: 725
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(widget, "currentText", None) or getattr(widget,
             "get_value", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 746
+          line: 745
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(widget, "currentText", None) or getattr(widget,
             "get_value", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 746
+          line: 745
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(widget, "currentText", None) or getattr(widget,
             "get_value", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 760
+          line: 759
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(widget, "currentText", None) or getattr(widget,
             "get_value", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 760
+          line: 759
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(widget, "currentText", None) or getattr(widget,
             "get_value", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 775
+          line: 774
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(widget, "currentText", None) or getattr(widget,
             "get_value", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 775
+          line: 774
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(widget, "value", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 806
+          line: 805
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: path = getattr(self, "local_file", None) or self.config.dikt.get("image_path")
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 825
+          line: 824
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(widget, "value", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 841
+          line: 840
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: doc = getattr(self, "document", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 1013
+          line: 1012
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getattr(doc, "binary", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 1017
+          line: 1016
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: or getattr(doc, "bytes", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 1018
+          line: 1017
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: or getattr(doc, "data", None)
           file: nchantdoffice/widgets/documents/media/images.py
-          line: 1019
+          line: 1018
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: content = getattr(self.document, "content", None) or {}
           file: nchantdoffice/widgets/documents/media/sketches.py
-          line: 1072
+          line: 1077
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: canvas_size = getattr(self, "_restored_canvas_size", {})
           file: nchantdoffice/widgets/documents/media/sketches.py
-          line: 1113
+          line: 1118
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'f"button={getattr(event, ''button'', lambda: ''?'')()}"'
           file: nchantdoffice/widgets/documents/media/sketches.py
-          line: 1423
+          line: 1428
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: setattr(self, attr_name, pane)
           file: nchantdoffice/widgets/documents/media/sketches.py
-          line: 1674
+          line: 1679
           pattern: setattr\(
           severity: 60
         - category: getattr_dynamic
@@ -2656,186 +2596,216 @@ dimensions:
         - category: getattr_dynamic
           content: editor = getattr(self, "document_editor", None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 330
+          line: 335
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: inserts = getattr(self.document, "object_inserts", None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 352
+          line: 357
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.document_compatability, "currentText", None)
             or getattr(
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 411
+          line: 416
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.document_compatability, "currentText", None)
             or getattr(
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 411
+          line: 416
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.document_format_select, "currentText", None)
             or getattr(
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 427
+          line: 432
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.document_format_select, "currentText", None)
             or getattr(
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 427
+          line: 432
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.document_syntax_select, "currentText", None)
             or getattr(
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 443
+          line: 448
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.document_syntax_select, "currentText", None)
             or getattr(
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 443
+          line: 448
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.top_margin_select, "value", None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 475
+          line: 480
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.bottom_margin_select, "value", None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 484
+          line: 489
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.left_margin_select, "value", None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 493
+          line: 498
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.right_margin_select, "value", None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 502
+          line: 507
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'weight = getattr(editor, "fontWeight", lambda: 50)()'
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 517
+          line: 522
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: bold_attr = getattr(pyqt.QFont, "Bold", None) or 75
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 518
+          line: 523
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: normal_attr = getattr(pyqt.QFont, "Normal", None) or 50
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 519
+          line: 524
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'is_italic = bool(getattr(editor, "fontItalic", lambda: False)())'
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 530
+          line: 535
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'is_underline = bool(getattr(editor, "fontUnderline", lambda: False)())'
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 540
+          line: 545
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getattr(self, "compatibility", None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 612
+          line: 617
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: or getattr(self.document, "syntax", None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 614
+          line: 619
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: meta = getattr(self.document, "meta_data", {}) or {}
+          file: nchantdoffice/widgets/documents/media/scripts.py
+          line: 652
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: getattr(self.document, "syntax", None)
+          file: nchantdoffice/widgets/documents/media/scripts.py
+          line: 654
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: data = getattr(self.document, "data", None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 1000
+          line: 1021
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path",
             None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 1150
+          line: 1171
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path",
             None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 1150
+          line: 1171
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: editor = getattr(self, "document_editor", None) or getattr(self,
             "editor", None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 1177
+          line: 1198
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: editor = getattr(self, "document_editor", None) or getattr(self,
             "editor", None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 1177
+          line: 1198
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: doc_text = getattr(self.document, "text", None)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 1250
+          line: 1271
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: content_obj = getattr(self.document, "content", None) or {}
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 1257
+          line: 1278
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: text_attr = getattr(self.document, "text", None)
+          file: nchantdoffice/widgets/documents/media/scripts.py
+          line: 1319
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: html = getattr(text_attr, "html", None)
+          file: nchantdoffice/widgets/documents/media/scripts.py
+          line: 1321
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: data = getattr(self.document, "data", None) or {}
+          file: nchantdoffice/widgets/documents/media/scripts.py
+          line: 1324
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: slot["widget"] = setattr(
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 746
+          line: 767
           pattern: setattr\(
           severity: 60
         - category: getattr_dynamic
           content: slot["widget"] = setattr(
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 803
+          line: 824
           pattern: setattr\(
           severity: 60
         - category: getattr_dynamic
           content: slot["widget"] = setattr(self, attr_name, pane_class(self, cfg))
             or getattr(self, attr_name)
           file: nchantdoffice/widgets/documents/media/scripts.py
-          line: 834
+          line: 855
           pattern: setattr\(
           severity: 60
         - category: getattr_dynamic
@@ -2990,112 +2960,105 @@ dimensions:
         - category: exec_calls
           content: dialog.exec()
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 1221
+          line: 1226
           pattern: \bexec\(
           severity: 100
         - category: exec_calls
           content: 'if dialog.exec() == pyqt.QDialog.DialogCode.Accepted:'
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 2179
+          line: 2184
           pattern: \bexec\(
           severity: 100
         - category: exec_calls
           content: 'if print_dialog.exec() == pyqt.QDialog.DialogCode.Accepted:'
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 2243
+          line: 2248
           pattern: \bexec\(
           severity: 100
         - category: exec_calls
           content: result = eval(
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 404
+          line: 409
           pattern: \beval\(
           severity: 100
         - category: getattr_dynamic
           content: 'if not getattr(self, "table", None):'
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 512
+          line: 517
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: get = getattr(self.formula_bar, "get_text", None) or getattr(self.formula_bar,
             "text", None)
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 516
+          line: 521
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: get = getattr(self.formula_bar, "get_text", None) or getattr(self.formula_bar,
             "text", None)
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 516
+          line: 521
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if not getattr(self, "table", None):'
-          file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 757
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: getter = getattr(self.font_config_bar, "get_value", None)
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
           line: 762
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
-          content: 'if not getattr(self, "table", None):'
-          file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 779
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: get = getattr(self.formula_bar, "get_text", None) or getattr(self.formula_bar,
-            "text", None)
-          file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 783
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: get = getattr(self.formula_bar, "get_text", None) or getattr(self.formula_bar,
-            "text", None)
-          file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 783
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: 'if not getattr(self, "table", None):'
-          file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 828
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: 'if not getattr(self, "table", None):'
-          file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 845
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
-          content: 'if not getattr(self, "table", None):'
-          file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 859
-          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
-          severity: 60
-        - category: getattr_dynamic
           content: getter = getattr(self.font_config_bar, "get_value", None)
+          file: nchantdoffice/widgets/documents/workbooks/matricies.py
+          line: 767
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: 'if not getattr(self, "table", None):'
+          file: nchantdoffice/widgets/documents/workbooks/matricies.py
+          line: 784
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: get = getattr(self.formula_bar, "get_text", None) or getattr(self.formula_bar,
+            "text", None)
+          file: nchantdoffice/widgets/documents/workbooks/matricies.py
+          line: 788
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: get = getattr(self.formula_bar, "get_text", None) or getattr(self.formula_bar,
+            "text", None)
+          file: nchantdoffice/widgets/documents/workbooks/matricies.py
+          line: 788
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: 'if not getattr(self, "table", None):'
+          file: nchantdoffice/widgets/documents/workbooks/matricies.py
+          line: 833
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: 'if not getattr(self, "table", None):'
+          file: nchantdoffice/widgets/documents/workbooks/matricies.py
+          line: 850
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: 'if not getattr(self, "table", None):'
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
           line: 864
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
-          content: 'if not getattr(self, "table", None):'
+          content: getter = getattr(self.font_config_bar, "get_value", None)
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 880
+          line: 869
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
-          content: getter = getattr(self.cell_format, "currentText", None) or getattr(self.cell_format,
-            "get_value", None)
+          content: 'if not getattr(self, "table", None):'
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
           line: 885
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
@@ -3104,217 +3067,224 @@ dimensions:
           content: getter = getattr(self.cell_format, "currentText", None) or getattr(self.cell_format,
             "get_value", None)
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 885
+          line: 890
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: getter = getattr(self.cell_format, "currentText", None) or getattr(self.cell_format,
+            "get_value", None)
+          file: nchantdoffice/widgets/documents/workbooks/matricies.py
+          line: 890
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if not getattr(self, "table", None):'
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 898
+          line: 903
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: content = getattr(self.document, "content", None) or {}
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 1901
+          line: 1906
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: data = grid if isinstance(grid, list) else getattr(self.document,
             "data", None)
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 1905
+          line: 1910
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: doc = getattr(self, "document", None)
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 1928
+          line: 1933
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: col_sizes = getattr(doc, "column_sizes", None) or {}
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 1931
+          line: 1936
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: row_sizes = getattr(doc, "row_sizes", None) or {}
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 1937
+          line: 1942
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: table = getattr(self, "table", None)
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 2039
+          line: 2044
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if not getattr(self, "table", None):'
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 2341
+          line: 2346
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: slot["widget"] = setattr(
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 1437
+          line: 1442
           pattern: setattr\(
           severity: 60
         - category: exec_calls_ast
           content: eval(...)
           file: nchantdoffice/widgets/documents/workbooks/matricies.py
-          line: 404
+          line: 409
           pattern: ast_call
           severity: 100
         - category: dynamic_import
           content: '}), __import__("datetime").datetime.utcnow().isoformat()),'
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 1122
+          line: 1128
           pattern: __import__\(
           severity: 80
         - category: getattr_dynamic
           content: 'if self.config and isinstance(getattr(self.config, "dikt", None),
             dict):'
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 163
+          line: 169
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: last_path = getattr(self, "current_notebook_path", None)
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 183
+          line: 189
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if getattr(self, "server_url", None):'
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 214
+          line: 220
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'for url in getattr(self, "_url_history", []) or []:'
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 217
+          line: 223
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: current = getattr(self, "_target_url", None)
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 264
+          line: 270
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: return getattr(self, "server_url", None) or ""
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 267
+          line: 273
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: history = list(getattr(self, "_url_history", []) or [])
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 279
+          line: 285
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: return getattr(self, 'kernel_name', 'python3') or 'python3'
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 683
+          line: 689
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: return getattr(self, 'server_port', 8888) or 8888
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 686
+          line: 692
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.cell_type_select, "currentText", None) or
             getattr(self.cell_type_select, "get_value", None)
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 704
+          line: 710
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.cell_type_select, "currentText", None) or
             getattr(self.cell_type_select, "get_value", None)
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 704
+          line: 710
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '"kernelspec": {"name": getattr(self, "kernel_name", "python3"),'
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 792
+          line: 798
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self.app.model, "store", None) if hasattr(self,
             "app") else None
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 1110
+          line: 1116
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: did = getattr(self.document, "did", None)
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 1113
+          line: 1119
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: did = getattr(self.document, "did", None)
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 1146
+          line: 1152
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: store = getattr(self.app.model, "store", None) if hasattr(self,
             "app") else None
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 1149
+          line: 1155
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getattr(self, "document_editor", None)
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 1174
+          line: 1180
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: or getattr(self, "editor", None)
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 1175
+          line: 1181
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: view = getattr(self.browser, "browser", None)
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 1586
+          line: 1592
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if getattr(self, "_net_instrumented", False):'
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 1699
+          line: 1705
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if getattr(self, "_error_instrumented", False):'
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 1768
+          line: 1774
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'if getattr(self, "_shutdown_hooks_installed", False):'
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 1854
+          line: 1860
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: dynamic_import_ast
           content: __import__(...)
           file: nchantdoffice/widgets/documents/workbooks/notebooks.py
-          line: 1122
+          line: 1128
           pattern: ast_call
           severity: 80
         score: 80
@@ -3413,26 +3383,28 @@ dimensions:
   todo_tracking:
     details:
       details:
-        files_with_todos: 4
+        files_with_todos: 5
         issues:
         - dimension: todo_tracking
           rule: Embedded TODOs require resolution
           severity: medium
-        score: 91
+        score: 90
         status: pass
-        total_todos: 9
+        total_todos: 10
         worst_offenders:
         - count: 6
           file: nchantdoffice/widgets/controls/toolbars.py
+        - count: 1
+          file: nchantdoffice/models.py
         - count: 1
           file: nchantdoffice/widgets/widgets.py
         - count: 1
           file: nchantdoffice/widgets/panes/charts.py
         - count: 1
           file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
-      score: 91
+      score: 90
       status: pass
-    score: 91
+    score: 90
     status: pass
   type_annotations:
     details:
@@ -3440,13 +3412,13 @@ dimensions:
         issues:
         - rule: low_coverage
           severity: medium
-          total: 2314
+          total: 2311
           typed: 43
         score: 1
         status: partial
-        total_functions: 2314
+        total_functions: 2311
         typed_functions: 43
-        untyped_functions: 2271
+        untyped_functions: 2268
       score: 1
       status: partial
     score: 1
@@ -3481,7 +3453,7 @@ dimensions:
       status: pass
     score: 100
     status: pass
-overall_score: 93.78
+overall_score: 93.69
 project: nchantdoffice
 summary:
   failing: 1
@@ -3491,13 +3463,13 @@ summary:
   total_auditors: 11
   total_dimensions: 53
 test_execution:
-  duration_seconds: 17.251993894577026
+  duration_seconds: 17.188477277755737
   project_score: 93.78
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
   results:
     tests_failed: 0
-    tests_passed: 22
-    tests_run: 22
+    tests_passed: 13
+    tests_run: 13
     tests_skipped: 0
   runner: falcon
   score_adjustment: 2
@@ -3507,7 +3479,7 @@ test_execution:
   status_message: +2% bonus (100% tests passed)
   timestamp: ''
 versions:
-  project: 38f2e5c
+  project: a7956d8
   project_status: dirty
   project_uncommitted_changes: 3
   sasquatch: 120e86d
