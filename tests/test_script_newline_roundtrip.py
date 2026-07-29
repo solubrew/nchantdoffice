@@ -65,12 +65,26 @@ class _EditorStub:
 def _make_script(syntax, content_text):
     script = NchantdOfficeScript.__new__(NchantdOfficeScript)
     script.file_path = None
-    script.config = SimpleNamespace(dikt={"compatibility": syntax})
+    # T-NEW-024 followup: the dispatch in _apply_syntax_highlighting
+    # reads config.dikt["document"]["syntax"] to populate
+    # self.document.file_format. The stub must mirror the
+    # post-_apply_extension_syntax shape so the dispatch sees the
+    # right syntax (the production path sets both top-level
+    # config.dikt["document_syntax"] and the nested
+    # config.dikt["document"]["syntax"]).
+    script.config = SimpleNamespace(
+        dikt={
+            "compatibility": syntax,
+            "document_syntax": syntax,
+            "syntax": syntax,
+            "document": {"syntax": syntax},
+        }
+    )
     script.document = SimpleNamespace(
         syntax=syntax,
         file_path=None,
         content={"content": {"file_path": None, "text": content_text}},
-        file_format="",
+        file_format=syntax,
         text=SimpleNamespace(html=""),
     )
     script.document_editor = _EditorStub()

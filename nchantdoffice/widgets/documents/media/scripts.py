@@ -1263,6 +1263,18 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         if hasattr(self, "config") and hasattr(self.config, "dikt"):
             self.config.dikt["document_syntax"] = syntax
             self.config.dikt["syntax"] = syntax
+            # T-NEW-024 followup: also write to the nested
+            # ``document.syntax`` dict that the
+            # ``_apply_syntax_highlighting`` dispatch reads via
+            # ``config.dikt["document"]["syntax"]``. Without this,
+            # the dispatch silently downgrades ``document.syntax``
+            # back to the stale ``plain-text`` default and the
+            # markdown / python / pygments branches never fire.
+            doc_cfg = self.config.dikt.get("document")
+            if not isinstance(doc_cfg, dict):
+                doc_cfg = {}
+                self.config.dikt["document"] = doc_cfg
+            doc_cfg["syntax"] = syntax
         # Push to document so the in-memory doc carries the right
         # syntax for the docs that read self.document.syntax.
         if getattr(self, "document", None) is not None:
@@ -1469,7 +1481,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # redundant AND harmful.
         logma.info(f"Text: {text}")
         logma.info(f"Type: {type(text)}")
-        logma.info(f"Syntax {self.document.syntax}")
+        logma.info(
+            f"Syntax {getattr(self.document, 'syntax', None) if self.document is not None else None}"
+        )
         return text
 
     def _preserved_unit_html(self):
