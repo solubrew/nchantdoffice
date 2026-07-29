@@ -49,7 +49,7 @@ class NchantdImport(object):
 
     def run(self):
         """"""
-        logma.info(f"[util_imports] NchantdImport.run: path={getattr(self, "path", None)!r}")
+        logma.info(f"[util_imports] NchantdImport.run: path={getattr(self, 'path', None)!r}")
         # Base class is a no-op; subclasses override with actual conversion logic.
         return None
 

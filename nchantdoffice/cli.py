@@ -401,11 +401,21 @@ def save(filepath, backup):
         # Update modified timestamp
         with open(path, 'r') as f:
             doc_data = json.load(f)
-        
+
         doc_data['modified'] = datetime.now().isoformat()
-        
-        with open(path, 'w') as f:
+
+        # Atomic write: serialise to a sibling temp file, fsync, then
+        # ``os.replace`` to swap into place. Interruption mid-write
+        # leaves the original intact instead of truncating it.
+        tmp_path = path.with_suffix(path.suffix + ".tmp")
+        with open(tmp_path, 'w') as f:
             json.dump(doc_data, f, indent=2)
+            f.flush()
+            try:
+                os.fsync(f.fileno())
+            except OSError:
+                pass
+        os.replace(tmp_path, path)
         
         click.echo("Document saved successfully!")
         

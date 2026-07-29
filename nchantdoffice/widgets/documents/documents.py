@@ -473,7 +473,20 @@ class NchantdOfficeDocumentMixin:
         """
         if self.document is None:
             return self
-        logma.info(f"Save Content {self.document.content}")
+        # PII / secrets guard: log metadata only, never the payload body
+        # or stored content blob.
+        try:
+            content = self.document.content if self.document is not None else None
+        except Exception:
+            content = None
+        if isinstance(content, (dict, list, str, bytes, int, float, type(None))):
+            content_repr = type(content).__name__
+        else:
+            content_repr = "unknown"
+        logma.info(
+            f"Save Content type={content_repr} "
+            f"keys={list(content.keys())[:5] if isinstance(content, dict) else 'n/a'}"
+        )
         logma.info(f"Save Path {path}")
         if path is not None:
             self.set_file_path(path)

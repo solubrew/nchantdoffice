@@ -99,7 +99,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.top_layout = pyqt.QHBoxLayout()
         cfg = {
             "layout": "horizontal",
-            "label": f"Date: {dt.datetime.now().strftime("%m/%d/%Y")}",
+            "label": f"Date: {dt.datetime.now().strftime('%m/%d/%Y')}",
             "options": ["Contextually", "Chronologically"],
         }
         self.settings = NchantdDropDown(self, cfg).initWidget()

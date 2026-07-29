@@ -2964,6 +2964,60 @@ def _coerce_doc_version(raw) -> int:  # noqa: ANN201
         digest = hashlib.md5(str(raw).encode("utf-8")).hexdigest()
         return int(digest[:8], 16) & 0x7FFFFFFF  # keep it positive int32
 
+
+def _build_doc_media_payload(document):
+    """Build the row list for the ``doc_media`` table from a document.
+
+    Mirrors the shape produced by ``NchantdOfficeStore.store_app_media``
+    so the column ordering matches ``_DOC_MEDIA_COLUMNS``. Returns a
+    list containing a single row dict so callers can pass it straight
+    into ``store.store_doc_media``.
+    """
+    metadata = document.get("metadata") or document.get("meta_data") or {}
+    if metadata is None:
+        metadata = {}
+    tags = document.get("tags", "")
+    if isinstance(tags, list):
+        tags = "|".join(tags)
+    return [
+        {
+            "did": document["did"],
+            "compatibility": document.get("compatibility", "pyffice"),
+            "document_type": document.get("document_type") or document.get("type", ""),
+            "syntax": document.get("syntax", "plain-text"),
+            "name": document.get("name", ""),
+            "file_name": document.get("file_name", ""),
+            "description": document.get("description", ""),
+            "path": document.get("path", ""),
+            "location": document.get("location", "internal"),
+            "encoding": document.get("encoding", "utf-8"),
+            "tags": tags,
+            "version": document.get("version", 0.0),
+            "hash": document.get("hash", ""),
+            "metadata": metadata,
+            "meta_data": metadata,
+        }
+    ]
+
+
+def _build_app_instance_payload(instance):
+    """Build the row dict for the ``app_instance`` table.
+
+    The instance may be a Pyffice instance object or a plain dict; the
+    helper accepts both via duck-typing on the ``to_dict``/attribute
+    access pattern.
+    """
+    if hasattr(instance, "to_dict") and callable(getattr(instance, "to_dict")):
+        data = instance.to_dict()
+    elif isinstance(instance, dict):
+        data = dict(instance)
+    else:
+        data = {"did": getattr(instance, "did", "")}
+    data.setdefault("version", getattr(instance, "version", 0))
+    data.setdefault("creon_dttm", getattr(instance, "creon_dttm", None))
+    data.setdefault("mod_dttm", getattr(instance, "mod_dttm", None))
+    return data
+
     def update_document_entry(self, uuid, content, db="db"):
         """"""
         media_PK, page, entry = self.archive_media_content(uuid, db)
@@ -3378,15 +3432,39 @@ class NchantdOfficeSettingsModel(NchantdModel):
         self.nchantd_account = {}
 
     def initModel(self, cfg=None):
-        """"""
+        """Initialise settings from the active document payload.
+
+        Settings are persisted on the document under
+        ``interface_settings``, ``account_settings``,
+        ``browser_settings``, ``security_settings``, ``journal_settings``,
+        ``storage_settings``, and ``theme_settings``. The legacy
+        ``document`` local was never bound in this method and triggered
+        ``NameError``; we now read from the active Pyffice document
+        (preferred) and fall back to cfg (for new documents that have
+        no document yet). ``browser_settings`` routes to the dedicated
+        ``set_browser_settings`` setter so it no longer overwrites the
+        account configuration.
+        """
         super().initModel(cfg)
-        self.set_interface_settings(document.get("interface_settings", {}))
-        self.set_account_settings(document.get("account_settings", {}))
-        self.set_account_settings(document.get("browser_settings", {}))
-        self.set_security_settings(document.get("security_settings", {}))
-        self.set_journal_settings(document.get("journal_settings", {}))
-        self.set_storage_settings(document.get("storage_settings", {}))
-        self.set_theme_settings(document.get("theme_settings", {}))
+        settings_doc = getattr(self, "document", None)
+        settings_cfg = (cfg.dikt if cfg is not None and hasattr(cfg, "dikt") else cfg) or {}
+        if hasattr(settings_doc, "to_dict") and callable(getattr(settings_doc, "to_dict")):
+            try:
+                settings_payload = settings_doc.to_dict() or {}
+            except Exception:
+                settings_payload = {}
+        else:
+            settings_payload = {}
+        def _section(key):
+            return settings_payload.get(key) or settings_cfg.get(key) or {}
+        self.set_interface_settings(_section("interface_settings"))
+        self.set_account_settings(_section("account_settings"))
+        if hasattr(self, "set_browser_settings"):
+            self.set_browser_settings(_section("browser_settings"))
+        self.set_security_settings(_section("security_settings"))
+        self.set_journal_settings(_section("journal_settings"))
+        self.set_storage_settings(_section("storage_settings"))
+        self.set_theme_settings(_section("theme_settings"))
         return self
 
     def change_user_password(self):

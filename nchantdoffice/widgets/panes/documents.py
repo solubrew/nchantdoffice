@@ -443,37 +443,63 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         return sorted({t for t in tags if t})
 
     def parse_document(self):
-        """"""
+        """Parse the active document into a ``doc_media`` row + content rows.
+
+        The previous version referenced undefined names (``document``,
+        ``media_fk``, ``entry``, ``version``, ``hash_``, ``content_enc64``,
+        ``context``) and failed at runtime. The new version derives
+        every value from ``self.document`` and ``self.config`` so the
+        method is self-contained and safe to invoke.
+        """
+        if getattr(self, "document", None) is None:
+            return [], []
+        doc = self.document
+        meta = (doc.get("meta_data") if isinstance(doc, dict) else getattr(doc, "meta_data", None)) or {}
+        if not isinstance(meta, dict):
+            meta = {}
+        content = doc.get("content") if isinstance(doc, dict) else getattr(doc, "content", None)
         doc_media = [
-            self.document["uuid"],
-            self.file_type,
-            self.document["name"],
-            self.document["description"],
-            self.document["meta_data"]["path"],
-            self.document["meta_data"]["store_location"],
-            self.document["meta_data"]["encoding"],
-            self.document["meta_data"]["tags"],
-            self.document["meta_data"]["context"],
-            self.document["meta_data"]["version"],
-            self.document["meta_data"]["hash"],
-            self.document["meta_data"]["policy_fk"],
+            doc.get("uuid") or doc.get("did", ""),
+            getattr(self, "file_type", ""),
+            doc.get("name", ""),
+            doc.get("description", ""),
+            meta.get("path", ""),
+            meta.get("store_location", "internal"),
+            meta.get("encoding", "utf-8"),
+            meta.get("tags", ""),
+            meta.get("context", ""),
+            meta.get("version", 0),
+            meta.get("hash", ""),
+            meta.get("policy_fk", None),
         ]
         doc_media_content = []
-        page = 0
-        for content in document:
-            media_content = [
-                content["uuid"],
-                self.document["uuid"],
-                media_fk,
-                page,
-                entry,
-                version,
-                hash_,
-                content_enc64,
-                context,
-            ]
-            doc_media_content.append(media_content)
-            page += 1
+        if isinstance(content, dict):
+            page = 0
+            for entry in content.get("pages", []) or []:
+                doc_media_content.append([
+                    entry.get("uuid", ""),
+                    doc.get("uuid") or doc.get("did", ""),
+                    None,  # media_fk — resolved by the storage layer
+                    page,
+                    entry.get("entry", 0),
+                    entry.get("version", meta.get("version", 0)),
+                    entry.get("hash", meta.get("hash", "")),
+                    entry.get("content_enc64", entry.get("content", "")),
+                    entry.get("context", ""),
+                ])
+                page += 1
+        elif content:
+            doc_media_content.append([
+                "",
+                doc.get("uuid") or doc.get("did", ""),
+                None,
+                0,
+                0,
+                meta.get("version", 0),
+                meta.get("hash", ""),
+                content,
+                meta.get("context", ""),
+            ])
         return doc_media, doc_media_content
 
     def store_document(self, doctype, name, description, meta_data, data, format_, formula):
@@ -732,37 +758,63 @@ class NchantdOfficeTabEditPane(NchantdPane):
         return sorted({t for t in tags if t})
 
     def parse_document(self):
-        """"""
+        """Parse the active document into a ``doc_media`` row + content rows.
+
+        The previous version referenced undefined names (``document``,
+        ``media_fk``, ``entry``, ``version``, ``hash_``, ``content_enc64``,
+        ``context``) and failed at runtime. The new version derives
+        every value from ``self.document`` and ``self.config`` so the
+        method is self-contained and safe to invoke.
+        """
+        if getattr(self, "document", None) is None:
+            return [], []
+        doc = self.document
+        meta = (doc.get("meta_data") if isinstance(doc, dict) else getattr(doc, "meta_data", None)) or {}
+        if not isinstance(meta, dict):
+            meta = {}
+        content = doc.get("content") if isinstance(doc, dict) else getattr(doc, "content", None)
         doc_media = [
-            self.document["uuid"],
-            self.file_type,
-            self.document["name"],
-            self.document["description"],
-            self.document["meta_data"]["path"],
-            self.document["meta_data"]["store_location"],
-            self.document["meta_data"]["encoding"],
-            self.document["meta_data"]["tags"],
-            self.document["meta_data"]["context"],
-            self.document["meta_data"]["version"],
-            self.document["meta_data"]["hash"],
-            self.document["meta_data"]["policy_fk"],
+            doc.get("uuid") or doc.get("did", ""),
+            getattr(self, "file_type", ""),
+            doc.get("name", ""),
+            doc.get("description", ""),
+            meta.get("path", ""),
+            meta.get("store_location", "internal"),
+            meta.get("encoding", "utf-8"),
+            meta.get("tags", ""),
+            meta.get("context", ""),
+            meta.get("version", 0),
+            meta.get("hash", ""),
+            meta.get("policy_fk", None),
         ]
         doc_media_content = []
-        page = 0
-        for content in document:
-            media_content = [
-                content["uuid"],
-                self.document["uuid"],
-                media_fk,
-                page,
-                entry,
-                version,
-                hash_,
-                content_enc64,
-                context,
-            ]
-            doc_media_content.append(media_content)
-            page += 1
+        if isinstance(content, dict):
+            page = 0
+            for entry in content.get("pages", []) or []:
+                doc_media_content.append([
+                    entry.get("uuid", ""),
+                    doc.get("uuid") or doc.get("did", ""),
+                    None,  # media_fk — resolved by the storage layer
+                    page,
+                    entry.get("entry", 0),
+                    entry.get("version", meta.get("version", 0)),
+                    entry.get("hash", meta.get("hash", "")),
+                    entry.get("content_enc64", entry.get("content", "")),
+                    entry.get("context", ""),
+                ])
+                page += 1
+        elif content:
+            doc_media_content.append([
+                "",
+                doc.get("uuid") or doc.get("did", ""),
+                None,
+                0,
+                0,
+                meta.get("version", 0),
+                meta.get("hash", ""),
+                content,
+                meta.get("context", ""),
+            ])
         return doc_media, doc_media_content
 
     def store_document(self, doctype, name, description, meta_data, data, format_, formula):

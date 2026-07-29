@@ -45,7 +45,7 @@ class NchantdOfficeCloak(NchantdCloak):
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCloak").override(cfg))
         self.config.override({"app": "nchantdoffice"})
         self.parent = parent
-        logma.info(f"NchantdOfficeCloak: {self.config.dikt.get("config", None)}")
+        logma.info(f"NchantdOfficeCloak: {self.config.dikt.get('config', None)}")
         if self.parent is None:
             self.parent = self
         self.main = NchantdOfficeMainWindow(self)

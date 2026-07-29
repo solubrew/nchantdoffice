@@ -174,10 +174,25 @@ class NchantdOfficeHelpDocs(NchantdHelpDocs):
             response.raise_for_status()
             content_type = response.headers.get("Content-Type", "")
             if "zip" in content_type:
-                # Extract a zip of PDFs
+                # Extract a zip of PDFs — refuse any member whose
+                # resolved path falls outside ``dest`` to block the
+                # Zip Slip vulnerability class (relative-path
+                # traversal, absolute-path writes, and link-based
+                # escapes).
                 import zipfile, io
+                real_dest = os.path.realpath(dest)
                 with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
-                    zf.extractall(dest)
+                    for member in zf.infolist():
+                        target = os.path.realpath(os.path.join(real_dest, member.filename))
+                        if target != real_dest and not target.startswith(real_dest + os.sep):
+                            log.warning(f"[help] refusing zip member {member.filename} (escapes dest)")
+                            continue
+                        if member.is_dir():
+                            os.makedirs(target, exist_ok=True)
+                            continue
+                        os.makedirs(os.path.dirname(target), exist_ok=True)
+                        with open(target, "wb") as f:
+                            f.write(zf.read(member.filename))
                 log.info(f"[help] update_help_docs: extracted zip to {dest}")
             else:
                 # Treat the response as a single PDF

@@ -105,7 +105,7 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
                 if col >= 4:
                     row += 1
                     col = 0
-                logma.info(f"Item{item.get("parameters_dict", "{}")}Blank")
+                logma.info(f"Item{item.get('parameters_dict', '{}')}Blank")
                 if item.get("parameters_dict", "") == "":
                     item["parameters_dict"] = "{}"
                 cfg = {
