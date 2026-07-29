@@ -116,19 +116,16 @@
   ``config.syntax``, ``document.syntax``, ``document.file_format``,
   and ``document.meta_data["syntax"]``. Regression tests in
   `tests/test_script_open_format.py` (5 new). Commit pending.
-- **Status (T-NEW-023 distinction: initial open vs reload):**
-  the user clarified both contracts in sequence — initial file
-  open must run the syntax dispatcher (markdown rendering etc.),
-  but reload from a different tabset must preserve tabs and
-  newlines verbatim. The two flows are now distinguished by a
-  ``_initial_load`` flag that ``open_file()`` flips on before
-  calling ``populate_document`` and off after. The
-  reload path (called from ``initView`` on tab-return) sees
-  ``_initial_load = False`` and short-circuits without
-  dispatching (raw bytes preserved). The initial-open path
-  sees ``_initial_load = True`` and runs the dispatcher. Tests
-  in ``tests/test_script_open_format.py`` (5 new) verify
-  both contracts. Commit pending.
+- **Status (T-NEW-023 followup, _initial_load reset in initView):**
+  the reload path ``initView → populate_document`` was running
+  with `_initial_load = True` (left over from a prior
+  `open_file()` call) so the dispatch fired on reload and
+  stripped leading whitespace. The reset `self._initial_load =
+  False` inside `initView()` (which runs on every tab
+  materialise — initial open AND every reopen) ensures
+  ``populate_document`` short-circuits on reload but dispatches
+  on initial open. Tests in ``tests/test_script_open_format.py``
+  (5 new) verify both contracts. Commit pending.
 
 ### NchantdNotebook — not storing the .ipynb location
 - **Status:** fixed in `06b76fb` (file_path resolution), extended in `0b7156a` (T-NEW-009 bytes-not-JSON save crash) and `654eeea` (T-NEW-011 reopen-from-disk).

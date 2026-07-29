@@ -264,6 +264,13 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         logma.info(f"Initialize View")
         super().initView(cfg)
         logma.info(f"View Initialized")
+        # T-NEW-023 reload marker: initView() runs every time the
+        # tab is materialised (initial open AND every reopen),
+        # so the flag must default to False here. ``open_file()``
+        # flips it back to True only on the *initial* file-open
+        # path, so the dispatch happens there but not on reload
+        # (which preserves raw bytes verbatim).
+        self._initial_load = False
         if self.view_type == "page_view":
             self.set_page_view()
         elif self.view_type == "note_view":

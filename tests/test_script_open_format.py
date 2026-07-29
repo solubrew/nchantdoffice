@@ -196,7 +196,10 @@ def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
     widget.document = SimpleNamespace(
         syntax="plaintext",
         file_format="plaintext",
+        file_path=str(md),
         meta_data={"syntax": "plaintext"},
+        open_file=lambda _path: None,  # T-NEW-023 reload stub
+        set_location=lambda _loc: None,  # T-NEW-023 reload stub
     )
 
     # Extension re-apply runs at the top of populate_document.
@@ -243,10 +246,15 @@ def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
 
     widget.document_editor = _FakeEditor()
 
-    # Simulate the production reload body: the widget is returning
-    # to the tab from another tabset, so _initial_load = False.
-    widget._initial_load = False
-    widget._load_external_file()
+    # Simulate the reload path: initView() resets _initial_load
+    # to False, then populate_document() runs. The reload must
+    # use setPlainText only (no dispatcher) so whitespace is
+    # preserved.
+    widget.initView = lambda cfg=None: (
+        setattr(widget, "_initial_load", False)
+        or widget.populate_document()
+    )
+    widget.initView(None)
 
     # Reload must call setPlainText with the raw file content so
     # tabs and newlines are preserved verbatim — NOT the syntax
@@ -269,16 +277,12 @@ def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
         f"whitespace was re-rendered. Got: {bad}"
     )
 
-    # Now simulate the initial file-open path: open_file() flips
-    # _initial_load = True before calling populate_document().
+    # Now simulate the initial open_file() path: opens with
+    # _initial_load = True so the dispatcher fires for syntax
+    # formatting (per T-NEW-024 + T-NEW-023 contract).
     captured.__init__()
     widget._initial_load = True
-    import os
-    path = os.path.abspath(str(md))
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
-        text = f.read()
-    widget._apply_syntax_highlighting(text)
-    widget._initial_load = False
+    widget.open_file(str(md))
 
     # The dispatcher must use setMarkdown for .md so the
     # initial-open rendering is correct.
