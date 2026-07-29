@@ -785,7 +785,7 @@ class NchantdChartAxisPane(NchantdPane):
         cfg["layout"] = "vertical"
         super().initView(cfg)
         # cfg = {"size": self.config.dikt.get("size", ["auto", "auto"])}
-        cfg = {"size": ["auto", "auto"], "collapsible": True, "collapsed": True}
+        cfg = {"size": ["auto", "auto"], "collapsible": False, "collapsed": False}
         new_axis_group = NchantdGroup(self.parent, cfg)  # pyqt.QGroupBox()
         label = self.config.dikt.get("label", None)
         if label is None:
@@ -794,7 +794,7 @@ class NchantdChartAxisPane(NchantdPane):
             label = f"Edit Axis: {label}"
         new_axis_group.setTitle(label)
         new_axis_layout = pyqt.QVBoxLayout()
-        new_axis_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
+        # new_axis_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         new_axis_group.setLayout(new_axis_layout)
         cfg = {
             "label": "Show Axis Label: ",
@@ -848,7 +848,7 @@ class NchantdChartAxisPane(NchantdPane):
         new_axis_group.set_height(new_axis_layout.sizeHint().height() * 1.2, False)
         self.layout.addWidget(new_axis_group)
         self.setSizePolicy(pyqt.QSizePolicy.Expanding, pyqt.QSizePolicy.Expanding)
-        self.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
+        # self.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         logma.info(f"Height {self.layout.sizeHint().height()} Width {self.layout.sizeHint().width()}")
         logma.info(f"Size {self.size().height()}")
         return self
