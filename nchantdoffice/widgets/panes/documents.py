@@ -32,6 +32,7 @@ from nchantrs.widgets.panes.panes import NchantdPane
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons, NchantdOkButtons
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
+from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.groups import NchantdGroup
 from kahndor.logma import Logma
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
@@ -620,6 +621,24 @@ class NchantdOfficeTabEditPane(NchantdPane):
         cfg = {"text": f"Tab Type: {tab.type}"}
         self.type_label = NchantdLabel(self, cfg).initWidget()
         layout.addWidget(self.type_label)
+        # T-NEW-003 (d): save_mode toggle UI. Three modes:
+        #   - "file_path"  — on-disk file is source of truth
+        #     (default for new documents).
+        #   - "to_dict"    — canonical Pyffice to_dict is
+        #     persisted; the on-disk file is unchanged.
+        #   - "both"       — both file and DB are written.
+        # The selected mode round-trips through
+        # ``self.document.config.dikt["save_mode"]`` so it
+        # persists across ``cmd_open_local_file``.
+        cfg = {
+            "label": "Save Mode: ",
+            "options": ["file_path", "to_dict", "both"],
+            "value": (
+                getattr(tab, "save_mode", None) or "file_path"
+            ),
+        }
+        self.save_mode_select = NchantdDropDown(self, cfg).initWidget()
+        layout.addWidget(self.save_mode_select)
         cfg = {"show_label": False, "layout": "horizontal", "two_rows": True, "size": ["auto", "auto"]}
         self.font_bar = NchantdFontConfigBar(self, cfg).initWidget()
         layout.addWidget(self.font_bar)
