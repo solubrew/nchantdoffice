@@ -102,6 +102,20 @@
   source-of-truth is the on-disk file whenever it exists; the
   DB stays the fallback. Regression tests in
   `tests/test_script_html_envelope.py` (2 new). Commit `1a7aa05`.
+- **Status (T-NEW-024, file-open format detection):** the
+  `populate_document` short-circuit in T-NEW-023 carried a
+  follow-up regression: opening a ``.md``/``.py``/``.json``
+  file from disk fell through to the ``plaintext`` dispatch in
+  ``_apply_syntax_highlighting`` because the saved
+  ``config.dikt`` carried ``syntax = "plaintext"`` and there
+  was no file-extension → syntax detection. The fix adds a
+  ``_apply_extension_syntax(path)`` helper called from
+  ``open_file`` (file-open) and re-applied on every
+  ``populate_document`` (reopen when ``file_path`` is set).
+  The syntax is mirrored to ``config.dikt``,
+  ``config.syntax``, ``document.syntax``, ``document.file_format``,
+  and ``document.meta_data["syntax"]``. Regression tests in
+  `tests/test_script_open_format.py` (5 new). Commit pending.
 
 ### NchantdNotebook — not storing the .ipynb location
 - **Status:** fixed in `06b76fb` (file_path resolution), extended in `0b7156a` (T-NEW-009 bytes-not-JSON save crash) and `654eeea` (T-NEW-011 reopen-from-disk).

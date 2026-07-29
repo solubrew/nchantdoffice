@@ -1147,18 +1147,94 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         return self
 
     def open_file(self, file=None):
-        """"""
+        """Open a script file from disk and update the widget state.
+
+        T-NEW-024 (live "NchantdScript breaks initial format
+        recognition on file open"): the saved ``config.dikt``
+        carried ``syntax = "plaintext"`` for every script, so
+        opening a ``.md``/``.py``/``.json`` file routed through
+        the plaintext dispatch in ``_apply_syntax_highlighting``
+        and the editor showed plain text only. The fix sets
+        ``format_type`` from the file extension BEFORE calling
+        ``populate_document`` so the reopen dispatch selects the
+        right editor API.
+
+        Extension-to-syntax map (mirrors PyfficeDocument's
+        ``file_formats`` table):
+          .py, .pyi -> python
+          .js -> javascript
+          .md -> markdown
+          .json -> json
+          .yaml, .yml -> yaml
+          .toml, .ini -> toml
+          .xml -> xml
+          .html, .htm -> html
+          .css, .qss -> css
+          .csv -> csv
+          .sh -> bash
+          everything else -> plain-text
+        """
         try:
             self.set_file_path(file)
             if file is not None:
+                # T-NEW-024: derive the syntax from the file extension
+                # so the reopen dispatch picks the right editor API.
+                self._apply_extension_syntax(file)
                 self.document.open_file(file)
         except Exception as e:
             logma.warning(e)
-            if debug:
-                raise e
+            logma.debug(f"[scripts] open_file traceback: {e}", exc_info=True)
         self.document.set_location("external")
         self.populate_document()
         return self
+
+    def _apply_extension_syntax(self, path):
+        """T-NEW-024: derive ``self.format_type`` + ``config.dikt``
+        from the file extension so a freshly-opened file routes
+        through the correct ``_apply_syntax_highlighting`` branch.
+        The mapping mirrors PyfficeDocument.file_formats.
+        """
+        import os
+
+        ext_map = {
+            ".py":   "python",
+            ".pyi":  "python",
+            ".js":   "javascript",
+            ".md":   "markdown",
+            ".json": "json",
+            ".yaml": "yaml",
+            ".yml":  "yaml",
+            ".toml": "toml",
+            ".ini":  "toml",
+            ".xml":  "xml",
+            ".html": "html",
+            ".htm":  "html",
+            ".css":  "css",
+            ".qss":  "css",
+            ".csv":  "csv",
+            ".sh":   "bash",
+            ".tex":  "tex",
+            ".rst":  "rst",
+            ".rmd":  "rmd",
+        }
+        ext = os.path.splitext(path or "")[1].lower()
+        syntax = ext_map.get(ext, "plain-text")
+        self.format_type = syntax
+        # Mirror onto the config so get_document_syntax() picks it
+        # up before the document is opened.
+        if hasattr(self, "config") and hasattr(self.config, "dikt"):
+            self.config.dikt["document_syntax"] = syntax
+            self.config.dikt["syntax"] = syntax
+        # Push to document so the in-memory doc carries the right
+        # syntax for the docs that read self.document.syntax.
+        if getattr(self, "document", None) is not None:
+            self.document.syntax = syntax
+            if hasattr(self.document, "file_format"):
+                self.document.file_format = syntax
+            meta = getattr(self.document, "meta_data", None) or {}
+            if isinstance(meta, dict):
+                meta["syntax"] = syntax
+        return syntax
 
     def _load_external_file(self):
         """Load an external script file into the document editor.
@@ -1249,6 +1325,18 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         disk; the editor's HTML is preserved verbatim.
         """
         logma.info(f"Populating Document")
+
+        # T-NEW-024: on reopen, re-derive the syntax from the file
+        # extension so the dispatch picks the right editor API
+        # even when the DB config.dikt carries a stale
+        # "plaintext" (the saved config predates the extension
+        # detection). The on-disk file is the source of truth.
+        if getattr(self, "file_path", None):
+            existing_syntax = getattr(self, "format_type", None)
+            detected = self._apply_extension_syntax(self.file_path)
+            if detected and detected != "plain-text":
+                # Force-set so the dropdown reflects the file format.
+                self.format_type = detected
 
         # External file loading: if the document has a file_path set
         # (e.g. the user opened an external .py / .js / .md / .txt
