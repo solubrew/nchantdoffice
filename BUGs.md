@@ -1,5 +1,25 @@
 
 
+2026-07-28 23:19:14,162 - nchantrs.widgets.widgets                 1028: INFO     - Load Widget Config {'NchantdWidget': {'dstruct': {'database': {'objects': None}}}, 'RegisteredWidgets': {'<(CHART)>': None, '<(CUSTOM)>': "need a method for telling the widget where to read the data from widgetdata:\n  path: group000.label000\n  entry: 'Summary'\n  layer: data #format, formula, data\ngroup000.textbox000\n", '<(DOCEDIT)>': 'nchantrs.widgets.editors.NchantdDocEditor', '<(LABEL)>': 'nchantrs.widgets.annotations.NchantdLabel', '<(SCRATCHEDIT)>': 'nchantrs.widgets.editors.NchantdScratchEditor', '<(TEXTBOX)>': 'nchantrs.widgets.editors.NchantdEntryBox'}, 'expandCFG': {'fonts': {'default': {'font': 'Times', 'size': 12, 'style': 'regular'}}, 'styles': {'default': None}}, 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager': {}, 'tab': {'data': None, 'data_str': None, 'did': '024694d6-f14b-435b-a130-f86a7e4e447f', 'syntax': None, 'name': 'Affiliate Manager', 'position': 2, 'document_type': None, 'readonly': 0, 'editable': 1, 'visible': 1, 'moveable': 1, 'tid': '06a69701-b24f-78a4-8000-076ddb717b53', 'pid': '066a7cf6-5aca-79a2-8000-f4b5405a0427', 'widget': 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager', 'widgdata': '{}', 'version': None, 'tab_type': 'custom_widget', 'location': None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon': None, 'modon': None}}, 'file_path': '', 'widget': 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager', 'tid': '06a69701-b24f-78a4-8000-076ddb717b53', 'document': {'data': None, 'data_str': None, 'did': '024694d6-f14b-435b-a130-f86a7e4e447f', 'syntax': None, 'name': 'Affiliate Manager', 'position': 2, 'document_type': None, 'readonly': 0, 'editable': 1, 'visible': 1, 'moveable': 1, 'tid': '06a69701-b24f-78a4-8000-076ddb717b53', 'pid': '066a7cf6-5aca-79a2-8000-f4b5405a0427', 'widget': 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager', 'widgdata': '{}', 'version': None, 'tab_type': 'custom_widget', 'location': None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon': None, 'modon': None}}, 'apps': ['nchantrs', 'nchantdoffice'], 'app': 'nchantdoffice', 'pos': 'center'}
+2026-07-28 23:19:14,162 - nchantrs.widgets.widgets                 1034: INFO     - nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/widgets.py", line 149, in on_tab_focus
+    self.model.load_tab(self.model.tabsdata[tabn], tabn, self.pane_position)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3344, in load_tab
+    super().load_tab(tab, tabn, tabset, active_tab_position)
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 237, in load_tab
+    self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab), tabset, tab))
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3380, in load_widget
+    tabW.initWidget()
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/documents.py", line 142, in initWidget
+    self.initModel()
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/config/referral_panel.py", line 82, in initModel
+    self._load_or_generate_code()
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/config/referral_panel.py", line 310, in _load_or_generate_code
+    getattr(self.user, "id", None)
+            ^^^^^^^^^
+AttributeError: 'NchantdOfficeReferralPanel' object has no attribute 'user'
 
 
 
