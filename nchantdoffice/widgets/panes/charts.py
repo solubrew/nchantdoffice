@@ -1061,10 +1061,12 @@ class NchantdChartLegendPane(NchantdPane):
         cfg = {}
         self.accept_buttons = NchantdAcceptButtons(self, cfg).initWidget()
         new_data_layout.addWidget(self.accept_buttons)
-        # T-NEW-014 followup: ``new_trendline_group`` was referenced
-        # but never defined in this method. Defer the trendline
-        # group setup to a dedicated init helper that builds the
-        # widget + layout together.
+        # T-NEW-014: trendline group is built by the dedicated
+        # ``initView`` helper for the trendline panel (defined
+        # further below) which constructs ``new_trendline_group``
+        # locally and adds it to ``self.layout``. The data-series
+        # init above only handles the right-side data group; the
+        # trendline group is its own pane init path.
         return self
 
     def initWidget(self):
