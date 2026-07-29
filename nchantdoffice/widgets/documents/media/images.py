@@ -37,6 +37,7 @@ from nchantrs.widgets.panes.panes import NchantdPane
 from nchantrs.widgets.groups import NchantdGroup
 from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
 from nchantrs.widgets.annotations import NchantdLabel
+from pyffice.images.palettes import PyfficeColorPalette
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -166,6 +167,7 @@ class NchantdColorShiftPane(NchantdPane):
         if value is not None:
             self.config.dikt["image_color"] = value
         return self
+
     def cmd_select_new_image_color(self):
         """Open the color-picker and apply the new color to the pane.
 
@@ -174,6 +176,7 @@ class NchantdColorShiftPane(NchantdPane):
         if hasattr(self, "pick_new_color") and callable(self.pick_new_color):
             return self.pick_new_color()
         return self
+
     def cmd_select_new_image_color_change(self, event=None, *args, **kwargs):
         """Apply a freshly-picked image color to the current color-shift pane.
 
@@ -187,6 +190,7 @@ class NchantdColorShiftPane(NchantdPane):
             self.color = new_color
             self.config.dikt["image_color"] = new_color
         return self
+
     def cmd_convert_color(self, event=None, *args, **kwargs):
         """Convert the image to the selected target color.
 
@@ -206,6 +210,7 @@ class NchantdColorShiftPane(NchantdPane):
             self.apply_color_shift(target)
             self.config.dikt["converted_color"] = target
         return self
+
     def get_image_formats(self):
         """"""
         formats = []
@@ -272,6 +277,7 @@ class NchantdConvertFormatPane(NchantdPane):
         if value is not None:
             self.config.dikt["current_format"] = value
         return self
+
     def cmd_convert_format(self, event=None, *args, **kwargs):
         """Convert the current image to the target format."""
         target = None
@@ -286,6 +292,7 @@ class NchantdConvertFormatPane(NchantdPane):
             self.convert_image_format(target)
             self.config.dikt["converted_format"] = target
         return self
+
     def cmd_convert_to_format(self, event=None, *args, **kwargs):
         """Set the target format the next convert step should produce."""
         value = None
@@ -299,6 +306,7 @@ class NchantdConvertFormatPane(NchantdPane):
         if value is not None:
             self.config.dikt["convert_to_format"] = value
         return self
+
     def cmd_convert_to_format_change(self, event=None, *args, **kwargs):
         """Read the convert-to-format change and refresh preview."""
         value = None
@@ -315,12 +323,15 @@ class NchantdConvertFormatPane(NchantdPane):
             if preview is not None and hasattr(preview, "setText"):
                 preview.setText(value)
         return self
+
     def get_current_format(self):
         """Return the stored value of get_current_format."""
-        return self.config.dikt.get('current_format', '') or ''
+        return self.config.dikt.get("current_format", "") or ""
+
     def get_convert_to_format(self):
         """Return the stored value of get_convert_to_format."""
-        return self.config.dikt.get('convert_to_format', '') or ''
+        return self.config.dikt.get("convert_to_format", "") or ""
+
     def initWidget(self):
         """"""
         self.initModel()
@@ -408,6 +419,7 @@ class NchantdConvertSizePane(NchantdPane):
             self.color = new_color
             self.config.dikt["image_color"] = new_color
         return self
+
     def cmd_image_maintain_ratio_change(self, event=None, *args, **kwargs):
         """Toggle the maintain-aspect-ratio flag for image resizing.
 
@@ -418,6 +430,7 @@ class NchantdConvertSizePane(NchantdPane):
         if checkbox is not None and hasattr(checkbox, "isChecked"):
             self.config.dikt["image_maintain_ratio"] = bool(checkbox.isChecked())
         return self
+
     def cmd_image_height_change(self, event=None, *args, **kwargs):
         """Update the image-height field on the config."""
         height = None
@@ -431,6 +444,7 @@ class NchantdConvertSizePane(NchantdPane):
         if height is not None:
             self.config.dikt["image_height"] = height
         return self
+
     def get_image_height(self):
         """"""
         return 100
@@ -496,6 +510,7 @@ class NchantdImageCropPane(NchantdPane):
         if value is not None:
             self.config.dikt["image_section_selection"] = value
         return self
+
     def get_image_height(self):
         """"""
         return 100
@@ -581,6 +596,7 @@ class NchantdImageGeneratorPane(NchantdPane):
             if preview is not None and hasattr(preview, "setText"):
                 preview.setText(str(value))
         return self
+
     def cmd_image_height_select_change(self, event=None, *args, **kwargs):
         """Update the image-height select on the config and refresh preview."""
         value = None
@@ -597,6 +613,7 @@ class NchantdImageGeneratorPane(NchantdPane):
             if preview is not None and hasattr(preview, "setText"):
                 preview.setText(str(value))
         return self
+
     def cmd_generate_image(self, event=None, *args, **kwargs):
         """Generate an image from the configured source / prompt."""
         prompt = self.config.dikt.get("image_prompt", "")
@@ -606,9 +623,11 @@ class NchantdImageGeneratorPane(NchantdPane):
             except TypeError:
                 return self.generate_image()
         return self
+
     def get_palette(self):
         """Return the stored value of get_palette."""
-        return self.config.dikt.get('palette', '') or ''
+        return self.config.dikt.get("palette", "") or ""
+
     def cmd_palette_select_change(self, event=None, *args, **kwargs):
         """Record the selected palette on the config."""
         value = None
@@ -622,6 +641,7 @@ class NchantdImageGeneratorPane(NchantdPane):
         if value is not None:
             self.config.dikt["palette"] = value
         return self
+
     def get_image_height(self):
         """"""
         return 100
@@ -644,7 +664,8 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """
         if cnt not in items:
             items[cnt] = {
-                "action": "insert_generic_action", "type": "custom",
+                "action": "insert_generic_action",
+                "type": "custom",
             }
         return items[cnt]
 
@@ -727,10 +748,12 @@ class NchantdOfficeImage(NchantdOfficeDocument):
                 model = model.model
             if model is not None and hasattr(model, "add_palette_document"):
                 from nchantdoffice.widgets.documents.atnrg.palettes import NchantdPalette
+
                 model.add_palette_document(NchantdPalette(name=name, parent=model))
         except Exception as e:
             logma.error(f"[images] cmd_add_palette_document_nchantdpalette failed: {e}", exc_info=True)
         return self
+
     def cmd_convert_color(self, event=None, *args, **kwargs):
         """Convert the image to the selected target color.
 
@@ -750,6 +773,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             self.apply_color_shift(target)
             self.config.dikt["converted_color"] = target
         return self
+
     def cmd_convert_format(self, event=None, *args, **kwargs):
         """Convert the current image to the target format."""
         target = None
@@ -764,6 +788,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             self.convert_image_format(target)
             self.config.dikt["converted_format"] = target
         return self
+
     def cmd_convert_size(self, event=None, *args, **kwargs):
         """Convert the image to the configured target size."""
         target = self.config.dikt.get("convert_to_size")
@@ -778,6 +803,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         if target is not None and hasattr(self, "apply_convert_size") and callable(self.apply_convert_size):
             self.apply_convert_size(target)
         return self
+
     def cmd_crop_image(self, event=None, *args, **kwargs):
         """Crop the image to the configured crop region."""
         try:
@@ -787,6 +813,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[images] cmd_crop_image failed: {e}", exc_info=True)
         return self
+
     def cmd_generate_image(self, event=None, *args, **kwargs):
         """Generate an image from the configured source / prompt."""
         prompt = self.config.dikt.get("image_prompt", "")
@@ -796,6 +823,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             except TypeError:
                 return self.generate_image()
         return self
+
     def cmd_image_height_change(self, event=None, *args, **kwargs):
         """Update the image-height field on the config."""
         height = None
@@ -809,6 +837,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         if height is not None:
             self.config.dikt["image_height"] = height
         return self
+
     def cmd_open_local_file(self, event=None, *args, **kwargs):
         """"""
         super().cmd_open_local_file(event, *args, **kwargs)
@@ -820,17 +849,18 @@ class NchantdOfficeImage(NchantdOfficeDocument):
     def cmd_run_palette_scan(self, event=None, *args, **kwargs):
         """Run a palette scan on the current image."""
         try:
-            from os.path import exists
+
             path = getattr(self, "local_file", None) or self.config.dikt.get("image_path")
             if not path or not exists(path):
                 logma.warning("[images] cmd_run_palette_scan: no image path")
                 return self
-            from pyffice.media.images import extract_palette
-            palette = extract_palette(path)
+            cfg = {}
+            palette = PyfficeColorPalette(cfg).extract_palette(path)
             self.config.dikt["palette_scan"] = palette
         except Exception as e:
             logma.error(f"[images] cmd_run_palette_scan failed: {e}", exc_info=True)
         return self
+
     def cmd_image_width_change(self, event=None, *args, **kwargs):
         """Update the image-width field on the config."""
         width = None
@@ -844,9 +874,11 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         if width is not None:
             self.config.dikt["image_width"] = width
         return self
+
     def get_binary(self):
         """Return the stored value of get_binary."""
-        return self.config.dikt.get('file_binary', b'') or b''
+        return self.config.dikt.get("file_binary", b"") or b""
+
     def get_content(self):
         """"""
         logma.info(f"File Path {self.file_path}")
@@ -854,10 +886,12 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
     def get_image_height(self):
         """Return the stored value of get_image_height."""
-        return self.config.dikt.get('image_height', 0) or 0
+        return self.config.dikt.get("image_height", 0) or 0
+
     def get_image_width(self):
         """Return the stored value of get_image_width."""
-        return self.config.dikt.get('image_width', 0) or 0
+        return self.config.dikt.get("image_width", 0) or 0
+
     def init_drawer_document_config(self):
         """"""
         items = self.toolbox_config[100].get("items", {})
@@ -906,35 +940,40 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         # Format conversion
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.image_format_conversion_pane = NchantdConvertFormatPane(
-            self, {"text": ""},
+            self,
+            {"text": ""},
         )
         cnt += 1
 
         # Size conversion
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.image_size_conversion_pane = NchantdConvertSizePane(
-            self, {"text": ""},
+            self,
+            {"text": ""},
         )
         cnt += 1
 
         # Color shift
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.image_color_shift_pane = NchantdColorShiftPane(
-            self, {"text": ""},
+            self,
+            {"text": ""},
         )
         cnt += 1
 
         # Crop
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.image_crop_pane = NchantdImageCropPane(
-            self, {"text": ""},
+            self,
+            {"text": ""},
         )
         cnt += 1
 
         # Generator
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.image_generator_pane = NchantdImageGeneratorPane(
-            self, {"text": ""},
+            self,
+            {"text": ""},
         )
         cnt += 1
 
@@ -980,6 +1019,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
         self.toolbox_config[200]["items"] = self.init_drawer_image_tools()
+        # PUSH to 0.0.3
         # self.toolbox_config[300]["items"] = self.init_drawer_palette()
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
         return self
@@ -1012,11 +1052,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         doc = getattr(self, "document", None)
         binary = None
         if doc is not None:
-            binary = (
-                getattr(doc, "binary", None)
-                or getattr(doc, "bytes", None)
-                or getattr(doc, "data", None)
-            )
+            binary = getattr(doc, "binary", None) or getattr(doc, "bytes", None) or getattr(doc, "data", None)
         if binary and hasattr(self.image, "load_image_bytes"):
             try:
                 self.image.load_image_bytes(binary)
