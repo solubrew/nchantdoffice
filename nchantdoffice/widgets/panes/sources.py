@@ -383,11 +383,7 @@ class NchantdSourcePane(NchantdPane):
         """
         :return:
         """
-        if self.active_item.requires_api_key is True:
-            data = {"key": key, "value": value}
-            self.app.model.store.store_secure_data(data)
         data = {
-            "uuid": uuid(),
             "key": self.active_item.slug,
             "label": "api_key",
             "value": self.active_item.secure_stored_key,

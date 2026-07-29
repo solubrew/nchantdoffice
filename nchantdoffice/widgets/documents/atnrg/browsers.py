@@ -33,7 +33,7 @@ from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.widgets import NchantdWidget
-from nchantrs.widgets.tables.lists import NchantdListWidget
+from nchantrs.widgets.tables.lists import NchantdList, NchantdListWidget
 from nchantrs.widgets.browsers.profiles import NchantdWebProfile
 from nchantdoffice.widgets.panes.new import NchantdOfficeNewDocumentPane
 from nchantdoffice.widgets.panes.quickstart import NchantdOfficeBrowserQuickStartPane
@@ -1248,7 +1248,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     def set_profile_company_entry(self, entry):
         """Update the company_entry Qt widget from an external change."""
         if hasattr(self, "company_entry") and self.company_entry is not None:
-            self.company_entry.setText(str(company))
+            self.company_entry.setText(str(entry))
         return self
 
     def set_profile_company_email_entry(self, email):

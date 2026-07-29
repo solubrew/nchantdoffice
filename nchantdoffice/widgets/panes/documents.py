@@ -20,6 +20,8 @@ import datetime as dt
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
+from kahndor.logma import Logma
+from pycurity.pyhash import decode64, encode64
 from subtrix.utilities import uuid
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.annotations import NchantdLabel
@@ -380,22 +382,35 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 
     def decode64(self):
         """"""
-        self.content = pycrypt.base64_decode(self.content).decode("utf-8")
+        self.content = decode64(self.content).decode("utf-8")
         return self
 
     def decrypt(self):
         """"""
-        self.content = pycrypt.decrypt(self.content)
+        # T-NEW-013: was pycrypt.decrypt(self.content) — referenced
+        # an undefined `pycrypt` symbol. The actual crypto helper
+        # lives in pycurity.pycrypt; defer the integration until the
+        # desired cipher is selected (RSA / AES / Fernet).
+        logma.warning(
+            "[documents] decrypt: pycurity cipher not yet wired — "
+            "no-op until the cipher selector is added."
+        )
         return self
 
     def encode64(self):
         """"""
-        self.content = pycrypt.base64_encode(self.content.encode("utf-8"))
+        self.content = encode64(self.content.encode("utf-8"))
         return self
 
     def encrypt(self):
         """"""
-        self.content = pycrypt.encrypt(self.content)
+        # T-NEW-013: see decrypt() — actual cipher integration is
+        # deferred. The base64 round-trip is the canonical format
+        # the panel currently persists.
+        logma.warning(
+            "[documents] encrypt: pycurity cipher not yet wired — "
+            "no-op until the cipher selector is added."
+        )
         return self
 
     def get_finger_print(self):

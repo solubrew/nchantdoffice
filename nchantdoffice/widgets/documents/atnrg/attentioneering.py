@@ -21,6 +21,12 @@ import datetime as dt
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor.logma import Logma
 from kahndor import kahndor
+try:
+    import feedparser
+except ImportError:  # optional dep — RSS widget is dormant
+    feedparser = None
+import nchantrs.widgets.annotations as annotations
+import nchantrs.widgets.tabsets as tabs
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.groups import NchantdVScrollGroupBox
 from nchantrs.widgets.widgets import NchantdWidget

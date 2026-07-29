@@ -27,6 +27,9 @@ from nchantrs.widgets.items.catalogs import NchantdCatalogItem
 from nchantrs.utilities.utils import lookup
 from nchantrs.widgets.widgets import NchantdAction
 from nchantrs.widgets.items.nodes import NchantdTreeNode
+from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
+from nchantrs.widgets.controls.radios import NchantdRadioButtonGroup
+from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 
 def _slugify_text(text):

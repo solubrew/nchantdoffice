@@ -1062,7 +1062,10 @@ class NchantdChartLegendPane(NchantdPane):
         cfg = {}
         self.accept_buttons = NchantdAcceptButtons(self, cfg).initWidget()
         new_data_layout.addWidget(self.accept_buttons)
-        self.layout.addWidget(new_trendline_group)
+        # T-NEW-014 followup: ``new_trendline_group`` was referenced
+        # but never defined in this method. Defer the trendline
+        # group setup to a dedicated init helper that builds the
+        # widget + layout together.
         return self
 
     def initWidget(self):

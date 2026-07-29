@@ -22,6 +22,10 @@ from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from kahndor.logma import Logma
+try:
+    import pymupdf as fitz  # PyMuPDF ≥ 1.24
+except ImportError:  # pragma: no cover — older PyMuPDF fallback
+    import fitz  # type: ignore[no-redef]
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.controls.advanced_buttons import NchantdEnableSpinBox
 from nchantrs.widgets.media.editors.selectors import NchantdDropDownActivator, NchantdDropDown
