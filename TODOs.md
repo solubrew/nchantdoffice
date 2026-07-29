@@ -31,6 +31,13 @@
      File" wording matches the SQLite reality.
   5. Add a regression test that opens a `.pyof` DB via the SQLite
      path and asserts no `pickle` module is loaded.
+  - Status: partially fixed in commit `c68bedd`. Both
+    `pickle.load` blocks removed; docstrings updated to
+    describe `.pyof` as a SQLite DB file; AST-based regression
+    test `tests/test_pyof_no_pickle.py` prevents re-introduction.
+    Outstanding: the model helper currently only records the
+    requested path — the actual SQLite DB open still needs to
+    be wired through the store layer.
 
 - NchantdImage is blurry on inintial render from the db load but when returning to it will be properly displayed
   - Status: fixed. `nchantrs/widgets/media/images.py:178` `resizeEvent`
