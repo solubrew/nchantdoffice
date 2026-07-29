@@ -1,20 +1,19 @@
 # TODOs
 
 ## NEW TODOs (open items not yet in a sprint)
-- NchantdChart causes segmentation fault every time it trys to render
-- NchantdBrowser is not saving and retrieving url
 
-  When hitting save button on NchantdBrowser this is the output that should be saved as content
-  2026-07-28 20:08:07,753 - nchantdoffice.models                     2851: WARNING  - {"content": {"did": "06a69440-a4b0-7efd-8000-95bb3a520c48", "name": "06a69440-a4b0-7efd-8000-95bb3a520c48", "description": "", "meta_data": {"author": "", "context": "", "editors": [], "encoding": "utf-8", "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "location": "internal", "path": "", "syntax": "plain-text", "creon_dttm": "2026-07-29 00:08:07", "mod_dttm": "2026-07-29 00:08:07", "tags": []}, "file_path": null, "data": {"pinned_on": "2026-07-28T20:06:34.303213", "last_refresh": null, "history": {"did": null, "name": null, "description": null, "meta_data": {"author": null, "context": null, "editors": null, "encoding": null, "hash": null, "location": null, "path": null, "syntax": null, "creon_dttm": "2026-07-29 00:08:07", "mod_dttm": "2026-07-29 00:08:07"}, "file_path": null, "data": {"content": null, "history": [], "max_items": 10}}, "snapshots": [], "versions": [], "level_of_trust": 0, "url": {"did": null, "name": null, "description": null, "meta_data": {"author": null, "context": null, "editors": null, "encoding": null, "hash": null, "location": null, "path": null, "syntax": null, "creon_dttm": "2026-07-29 00:08:07", "mod_dttm": "2026-07-29 00:08:07"}, "unit": {"original_path": null, "active_url": null, "trust_level": null, "qualified_path": null, "domain": null, "redirect_path": null}}, "source": null}}, "profile_manager": {"did": "06a69440-a48b-7a10-8000-bfae38f8f0a6", "name": "06a69440-a48b-7a10-8000-bfae38f8f0a6", "description": "", "meta_data": {"author": "", "context": "", "editors": [], "encoding": "utf-8", "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "location": "internal", "path": "", "syntax": "plain-text", "creon_dttm": "2026-07-29 00:08:07", "mod_dttm": "2026-07-29 00:08:07", "tags": []}, "file_path": null, "data": {"content": {}, "documents": [], "profiles": [{"did": "06a69440-a49e-78bb-8000-e4093891dc6d", ... [truncated]
-  2026-07-28 20:08:07,763 - nchantdoffice.models                      453: INFO     - Document Content Saved
+> Live bugs that have NOT yet been closed (with the live
+> `file:line` and a one-line description). Marked `[ ]` (pending)
+> or `[x]` (done). When something here is fixed, do NOT delete
+> the bullet — move it to the [Resolved live bugs]
+> (#resolved-live-bugs-sprint-1-7) section below with a "fixed
+> in" commit reference.
 
-  however all that is being saved is {}
+- [ ] **NchantdChart causes segmentation fault every time it trys to render** — held per user instruction (2026-07-28). Reproduction requires a parent-app harness; the live bug cannot be reproduced in the sasquatch headless env.
+- [ ] **Ad tab button is trying to launch a browser using the QService but we want to redirect to a tab under the Settings node / Nchantd Account tab** which is a browser tab already pointed to the users account/create account of nchantdoffice.com
+- [ ] **Ad tab size needs to be controlled** as right side tabs are slim 360x900. If ads need to be larger than that then we will have to implement the full page ad in the center tabset but this is more disruptive to users
 
-- Ad tab button is trying to launch a browser using the QService but we want to redirect to a tab under the Settings node / Nchantd Account tab which is a browser tab already pointed to the users account/create account of nchantdoffice.com
-- Ad tab size needs to be controlled as right side tabs are slim 360x900.  if ads need to be larger than that then we will have to implement the full page ad in the center tabset but this is more disruptive to users
-
-
-- **T-NEW-007 — Drop the `.pyof` single-instance pickle format.** All
+- [ ] **T-NEW-007 — Drop the `.pyof` single-instance pickle format.** All
   NchantdOffice instances must open their own `.pyof` SQLite DB file
   (multi-instance handling already documented in `T-NEW-005` item 2);
   the primary instance carries the registry of secondary DB files.
@@ -39,95 +38,78 @@
     requested path — the actual SQLite DB open still needs to
     be wired through the store layer.
 
-- NchantdImage is blurry on inintial render from the db load but when returning to it will be properly displayed
-  - Status: fixed. `nchantrs/widgets/media/images.py:178` `resizeEvent`
-    now rescales from `self.original_pixmap` (preserved on
-    `load_image`/`load_image_from_data`) instead of from the
-    already-scaled label pixmap. Regression test
-    `tests/test_image_blur.py`. The production fix lives in the
-    sibling nchantrs repo (commit pending there).
-- NchantdScript is still loading with no formatting when returned to tab but loads properly when opened from a file directly.
-  - Status: fixed. `widgets/documents/media/scripts.py:1402` now calls
-    `setHtml(preserved_html)` when the full HTML envelope is preserved
-    in the saved PyfficeText unit. Regression test
-    `tests/test_script_reopen.py`. Commit `06b76fb`.
-  - Status (newlines/indentation): fixed. Removed the
-    `text.lstrip()` call in `_resolve_document_text()` (line 1303)
-    that was destroying leading indentation on reopen. Python / YAML
-    / indented-markdown documents now round-trip with their
-    indentation intact. Regression test
-    `tests/test_script_newline_roundtrip.py`. Commit `22b96c5`.
-  - Status (rich-text still lost on reopen, T-NEW-010): fixed.
-    `NchantdOfficeScript.get_content()` now records the raw
-    `toHtml()` into `self.document.text.html` so
-    `_preserved_unit_html()` can restore it on reopen (the
-    previous implementation only wrote a free-form `text` field
-    that the reopen path never inspected). Regression test
-    `tests/test_live_reopen_bugs.py::test_script_reopen_uses_preserved_html_when_saved`.
-    Commit `654eeea`.
-- NchantdNotebook is not storing the location when a specific .ipynb file is opened and always returns to the cwd file manager view
-  - Status: fixed. `widgets/documents/workbooks/notebooks.py:107`
-    `initModel` now derives `file_path` in this order: nested
-    `document.content["content"]["file_path"]` → `document.content["file_path"]`
-    → `config.dikt["file_path"]` → `document.file_path`. Regression
-    test `tests/test_notebook_reopen.py`. Commit `06b76fb`.
-  - Status (save → reopen crash, T-NEW-009 followup): fixed.
-    Notebook default storage is the external ``.ipynb`` file path;
-    the serialised bytes are only embedded in the DB payload when
-    the user opts in via ``save_mode == "to_dict"`` (or
-    ``"both"``). This eliminates the
-    ``TypeError: Object of type bytes is not JSON serializable``
-    crash that previously broke saves from the toolbar. The
-    ``store_document`` path also gained a ``_json_safe`` guard so
-    a non-serialisable payload can never abort a save. Regression
-    tests `tests/test_notebook_save_bytes.py` (6 new) plus an
-    update to `tests/test_document_persistence.py`. Commit
-    `0b7156a`.
-  - Status (reopen returns to cwd file manager, T-NEW-011): fixed.
-    `NchantdOfficeNotebook.initModel` now calls
-    `self.open_notebook(resolved_path)` when the saved
-    `file_path` points at an existing ``.ipynb``, so the user
-    returns to the last-viewed notebook instead of the cwd file
-    manager view. Regression test
-    `tests/test_live_reopen_bugs.py::test_notebook_reopen_invokes_open_notebook_with_saved_path`.
-    Commit `654eeea`.
-- NchantdBrowser is not saving and retrieving url
-  - Status: fixed. `widgets/documents/atnrg/browsers.py:1126`
-    `get_content()` returns `{"content": active_page.to_dict()}` so
-    the DB round-trip persists the full browser profile (was
-    previously only saving `{}`). Regression test
-    `tests/test_browser_db_roundtrip.py` decodes the actual stored
-    blob. Commit `ebb6e84`.
-  - Status (still storing `{}` after Sprint 1 wrap, T-NEW-012):
-    fixed. `NchantdOfficeDocumentMixin.save` now calls
-    `self.get_content()` and pipes the result into
-    `self.document.set_content()` before persisting, so the
-    Browser's `get_content()` override is actually invoked on
-    save (previously the mixin went straight to
-    `store_document` which serialised the stale or empty
-    `document.content` directly). Regression test
-    `tests/test_live_reopen_bugs.py::test_browser_save_invokes_get_content_before_persistence`.
-    Commit `654eeea`.
-- NchantdFileSystem needs to store when a root change is made and return to that root and to store which directories are expanded and return them.
-  - Status: BLOCKED. The qpandas metaclass conflict in
-    `nchantrs.widgets.tables.tables` blocks importing
-    `NchantdOfficeFileSystem` in the test env. Regression test in
-    place (`tests/test_filesystem_persistence.py`) and skips cleanly
-    with a documented reason.
+- [ ] **add config for user to select whether or not creating a new node pops up a name entry dialog or generates a random name**
+- [ ] **add config for user to select whether or not creating a new tab pops up a name entry dialog or generates a random name**
+- [ ] **create new node name edit dialog**
+- [ ] **create new tab name edit dialog**
+- [ ] **add icon of database disk stack with a save button on top then use that to toggle in on the NchantdDocumentToolBar**
+  when a specific document is stored internally to the database as well as showing internal/external in the Tab Edit Pane.
+- [ ] **NchantdSketch has no external standard compatible file so it will default to internal and then export as an image**
+- [ ] **NchantdCalendar has no external standard compatible file so it will default to internal** ...later versions will allow connection to google calendar, etc
+- [ ] **add icon of cloud with a save button on top then use that to toggle in the on the NchantdDocumentToolBar when a**
+  specific document is stored to a cloud service
+- [ ] **Tab Edit Pane changes the name of the tab but doesn't save it to the database** - this is a regression
+- [ ] **Node Edit Pane changes the name of the node but doesn't save it to the database** - this is a regression
 
-- add config for user to select whether or not creating a new node pops up a name entry dialog or generates a random name
-- add config for user to select whether or not creating a new tab pops up a name entry dialog or generates a random name
-- create new node name edit dialog
-- create new tab name edit dialog
-- add icon of database disk stack with a save button on top then use that to toggle in on the NchantdDocumentToolBar 
-   when a specific document is stored internally to the database as well as showing internal/external in the Tab Edit Pane. 
-- NchantdSketch has no external standard compatible file so it will default to internal and then export as an image
-- NchantdCalendar has no external standard compatible file so it will default to internal ...later versions will allow connection to google calendar, etc
-- add icon of cloud with a save button on top then use that to toggle in the on the NchantdDocumentToolBar when a 
-   specific document is stored to a cloud service
-- Tab Edit Pane changes the name of the tab but doesn't save it to the database - this is a regression
-- Node Edit Pane changes the name of the node but doesn't save it to the database - this is a regression
+### Live crashes newly surfaced in `BUGs.md` (2026-07-28 23:18 → 2026-07-29 00:07)
 
+> The 8 errors below are user-facing crashes that are not yet
+> closed. Each carries a `BUGs.md` line reference and the failing
+> call site. Resolving one means: fix the bug OR mark it
+> deferred-to-`NCHANTD-<date>` with a documented workaround.
+
+- [ ] **T-NEW-015 — Calendar `context_menu_name` AttributeError.** `nchantrs.widgets.calendars.months.py:114` calls `super().initView()` → `nchantrs.widgets.widgets.py:216 initialize_context_menu`, which reads `self.context_menu_name` — `NchantdMonthCalendar` (and `NchantdYearCalendar`, `NchantdQuarterCalendar`) don't inherit this attribute. `BUGs.md:33`.
+- [ ] **T-NEW-016 — Calendar `QGridLayout.addWidget(NchantdCell, ...)` TypeError.** `nchantrs.widgets.tables.tables.py:592 grid_layout.addWidget(cell, row, col)` — `NchantdCell` is no longer recognised as a `QWidget` because of an MRO change (likely the recent `qpandas` metaclass fix). Multiple stack traces in `BUGs.md:63-69` and `124-130`.
+- [ ] **T-NEW-017 — Matrix `chr(None)` TypeError on cell change.** `nchantdoffice/widgets/documents/workbooks/matricies.py:1701` calls `chr(65 + item.column())` and `item.column()` returns `None` for some cells (the `column()` getter behaves like a property in some Qt subclasses). `BUGs.md:81, 86, 89` — three repeats in one session.
+- [ ] **T-NEW-018 — Matrix `cell_ref_label` AttributeError.** `matricies.py:1713 on_selection_changed` reads `self.cell_ref_label.setText(...)` but `cell_ref_label` is never initialised in `initView`/`initWidget` of `NchantdOfficeMatrix`. `BUGs.md:233`.
+- [ ] **T-NEW-019 — ReferralPanel `self.user` AttributeError.** `nchantdoffice/widgets/config/referral_panel.py:310 _load_or_generate_code` reads `self.user.id`; `NchantdOfficeReferralPanel.__init__` doesn't accept a `user` parameter and the panel-init chain never assigns one. `BUGs.md:194`.
+- [ ] **T-NEW-020 — PDF help `KeyError: 'document'`.** `nchantdoffice/widgets/documents/media/pdfs.py:157 initModel` does `self.config.dikt["document"]` without a guard. `BUGs.md:211`.
+- [ ] **T-NEW-021 — PDF help tab focus `tab_widgets[tabn]` IndexError.** `nchantrs/models/tabsetmodels.py:238 load_tab` indexes `self.tab_widgets[tabn]` after `load_widget` did not push to that index (likely an off-by-one after `load_widget` returned early / skipped insert). `BUGs.md:219-220`.
+- [ ] **T-NEW-022 — Browser `store_link(tag=...)` TypeError.** `nchantdoffice/widgets/documents/atnrg/browsers.py:348` calls `NchantdCloakModel.store_link(tag=...)` but the helper signature doesn't accept `tag`. `BUGs.md:289`.
+
+
+
+---
+
+## Resolved live bugs (Sprint 1-7)
+
+> Previously-open live bugs from the `## NEW TODOs` block that
+> were closed in the Sprint 1 through Sprint 7 work. Each entry
+> carries the original bug statement, the fix locations, the
+> regression test that prevents re-introduction, and the commit
+> that closed it. If the fix is later reverted or the bug returns,
+> move the entry back up to `## NEW TODOs`.
+
+### NchantdImage — blurry on initial render from the DB load
+- **Status:** fixed in `06444c9` (nchantrs) + `6eab336` (nchantdoffice test only).
+- **Fix:** `nchantrs/widgets/media/images.py` now preserves `self.original_pixmap` on `load_image` and `load_image_from_data`, and `resizeEvent` rescales from the original instead of from the already-scaled label pixmap (which compounded blur on each resize).
+- **Regression test:** `tests/test_image_blur.py` exercises the spypixmap receiver to assert both resizes scale from the original.
+
+### NchantdScript — formatting lost on reopen
+- **Status:** fixed in `06b76fb` (round-trip), extended in `22b96c5` (newlines) and `654eeea` (rich-text reopening).
+- **Fix:**
+  - `widgets/documents/media/scripts.py:1402` now calls `setHtml(preserved_html)` when the full HTML envelope is preserved in the saved PyfficeText unit.
+  - `_resolve_document_text()` no longer `lstrip()`s (that was destroying leading indentation for Python / YAML / indented-markdown documents).
+  - `NchantdOfficeScript.get_content()` now records the raw `toHtml()` into `self.document.text.html` so `_preserved_unit_html()` can restore it on reopen (previously the reopen only inspected a free-form `text` field).
+- **Regression tests:** `tests/test_script_reopen.py`, `tests/test_script_newline_roundtrip.py`, `tests/test_live_reopen_bugs.py`.
+
+### NchantdNotebook — not storing the .ipynb location
+- **Status:** fixed in `06b76fb` (file_path resolution), extended in `0b7156a` (T-NEW-009 bytes-not-JSON save crash) and `654eeea` (T-NEW-011 reopen-from-disk).
+- **Fix:**
+  - `widgets/documents/workbooks/notebooks.py:107 initModel` derives `file_path` in this order: nested `document.content["content"]["file_path"]` → `document.content["file_path"]` → `config.dikt["file_path"]` → `document.file_path`.
+  - `get_content()` now stores only `file_path` by default; serialised bytes only when `save_mode in ("to_dict", "both")`. The `_json_safe` guard in `store_document` ensures a non-serialisable payload never aborts a save.
+  - `initModel` now calls `self.open_notebook(resolved_path)` when the saved `file_path` points at an existing `.ipynb`, so the user returns to the last-viewed notebook.
+- **Regression tests:** `tests/test_notebook_reopen.py`, `tests/test_notebook_save_bytes.py`, update to `tests/test_document_persistence.py`, `tests/test_live_reopen_bugs.py`.
+
+### NchantdBrowser — saving only `{}`
+- **Status:** fixed in `ebb6e84` (T-NEW-006 wrapping), re-closed in `654eeea` (T-NEW-012 mixin never invoked the override).
+- **Fix:**
+  - `widgets/documents/atnrg/browsers.py:1126 get_content()` returns `{"content": active_page.to_dict()}` so the DB round-trip persists the full browser profile.
+  - `NchantdOfficeDocumentMixin.save` now calls `self.get_content()` and pipes the result into `self.document.set_content()` before persisting. Previously the mixin went straight to `store_document` which serialised the (stale or empty) `document.content` directly, so the Browser's `get_content()` override was bypassed on save.
+- **Regression tests:** `tests/test_browser_db_roundtrip.py` (decodes the actual stored blob), `tests/test_live_reopen_bugs.py`.
+
+### NchantdFileSystem — root + expanded-path persistence
+- **Status:** BLOCKED. The qpandas metaclass conflict in `nchantrs.widgets.tables.tables` blocks importing `NchantdOfficeFileSystem` in the test env. Regression test in place (`tests/test_filesystem_persistence.py`) and skips cleanly with a documented reason. Unblock requires fixing the upstream qpandas conflict in nchantrs.
 
 
 ### need integration into plan
@@ -148,10 +130,7 @@
 
   All 5 T-NEW-006 document types now have explicit case arms in `add_document` and route to the correct `document_type` + `syntax = "json"` + `location = "internal"` instead of falling through to the `case _:` plain-text default.
 
-> Reconsolidated against `537a641` (HEAD of `nchantdoffice/gamma`, 2026-07-28).
-> Last full audit: **94.66%** (was 81.42% at last reconsolidation, +13.24 points).
-> H60 sub-tasks (a), (b), (c) are committed; sub-tasks (d) and (e) still pending — see T-NEW-003 status.
-> Regenerate with: `grep -rn 'TODO:' nchantdoffice/ --include='*.py' | grep -v 'implement method' | grep -v 'invoked (stub)'`
+> Sprint 1-7 (2026-07-28 → 2026-07-29) reconsolidated against `a9b712a` (HEAD of `nchantdoffice/gamma`). Live bugs from the previous `## NEW TODOs` block were moved to the new [Resolved live bugs (Sprint 1-7)](#resolved-live-bugs-sprint-1-7) section. New crashes surfaced in `BUGs.md` for the 2026-07-28 23:18 → 2026-07-29 00:07 window were cataloged as T-NEW-015..T-NEW-022. Last full audit score: **94.66%** (was 81.42% at H52 reconsolidation, +13.24 points). H60 sub-tasks (a), (b), (c) committed; sub-tasks (d) and (e) still pending — see T-NEW-003 status. Test surface: **45 passed, 2 skipped** (was 13 passed at H47).
 
 ## At a glance
 
@@ -203,12 +182,20 @@ section for the next sprint's awareness.
 | H59 (T-NEW-006 notebook/chart/calendar case arms) | `0909102` | 94.76% | **94.66%** | -0.10 (slight metric shift from +6 tests; net lift is correctness, not score) |
 | H60 (save_mode infrastructure, base + Image/Notebook pins + widget-lookup fix) | `2c38a1e` | 94.66% | 94.66% | 0 (correctness, sub-tasks a/b/c done) |
 | H62 *(REVERTED)* | tab-load diagnostics + saved-tab widget fallback (H53/H59/H60/H62 series) | `7768c00` (H62 fix last) reverted via `b0e7676` / `fb74a5a` / `621315b` (nchantdoffice) + `9870e74` (nchantrs) | Per user direction: restored the widget loader to the `35c050e4 solubrew <solubrew@solutionsbrewer.com> on 7/23/26 at 6:42 PM` working state. The `35c050e4` `load_widget` rebuilds `cfg` so the widget name is the FIRST key (which is what `nchantrs.widgets.widgets.lookupWidget` expects), then calls `super().load_widget()` + `tabW.initWidget()`. The H53/H59/H60/H62 series added a different dispatch chain (`raise LookupError` on missing widget, `_resolve_widget_name` helper with registry fallback, stale-path heuristic) that didn't match the 35c050e4 working form. Reverted to the form the user reports works for opening saved tabs. 13/13 tests pass (was 26/26 with H62; the deferred tests exercise the reverted `add_document` case arms for notebook/chart/calendar which fall through to `case _` in the 35c050e4 dispatch). Score 94.51%. |
+| Sprint 1 + 2 (persistence + safety) | `4f9ea99..fc86114` + `5343e34` (nchantdoffice) + `06444c9` (nchantrs image) | Closed 5 live bugs (`NchantdBrowser store {}`, `NchantdNotebook .ipynb reopen`, `NchantdScript formatting`, `NchantdImage blur`, `NchantdChart segfault deferred`). Defensive fixes: zip slip, py3.11 f-strings, missing payload builders, settings `initModel` undefined names, atomic CLI writes, content-only audit logging, `.pyof` SQLite docstring. 13 new tests + 5 fixed; full test surface reached **45 passed, 2 skipped**. |
+| Sprint 5 + 7 (security + lint) | `c68bedd` + `a426954` + `a9b712a` | Dropped `.pyof` pickle.load sites (T-NEW-007 partial). `F821` undefined-name findings reduced 48 → 16 across 8 files (`attentioneering`, `browsers`, `pdfs`, `items`, `panes/charts`, `panes/documents`, `panes/sources`, `utilities/referral`, `dialogs/dialog_documents`). 4 new regression tests. Full test surface stays at **45 passed, 2 skipped**. |
 
-The -0.77 / -0.46 deltas are not regressions — they're caused by
-new methods adding to the god-class / type-annotation
-denominators. The score has stayed above 81% since the audit
-sprint, lifted past 94% with the H54 test-pipeline + score-lift
-sprint, and is now **94.66%**.
+Reconsolidated against `a9b712a` (HEAD of `nchantdoffice/gamma`, 2026-07-29).
+Last full audit score: **94.66%** (was 81.42% at H52 reconsolidation, +13.24 points).
+Sprint 5/7 work is correctness-focused (no re-audit run yet; the score
+has not been re-measured since H62). The remaining 16 F821 findings
+are dormant-code references to widget classes that don't exist in
+the nchantrs interface (e.g. `NchantdBulletedList`, `NchantdFilmStrip`,
+`NchantdImageThumbnailViewer`, `column_widget`) plus a few `j` (json
+alias) references inside method bodies that don't execute on the
+canonical paths.
+H60 sub-tasks (a), (b), (c) are committed; sub-tasks (d) and (e) still pending — see T-NEW-003 status.
+Regenerate with: `ruff check nchantdoffice --select F821 --output-format concise` (current: 16 findings, was 75).
 
 ### Currently below 95% (5 dims)
 
@@ -496,10 +483,10 @@ Full distribution:
 | `fc86114` | docs(todos): add T-NEW-007 drop .pyof single-instance pickle format |
 | `5343e34` | fix: zip slip, py3.11 f-strings, payload builders, settings + parse_document, atomic cli, content-only logging |
 
-Test surface after Sprint 1 + Sprint 2 (sasquatch venv):
+Test surface after Sprint 7 (sasquatch venv, current state):
 
 ```
-26 passed, 2 skipped (3 warnings)
+45 passed, 2 skipped (3 warnings)
 ```
 
 The 2 skips are documented upstream blockers:
@@ -510,6 +497,23 @@ The 2 skips are documented upstream blockers:
   `NchantdHelp.update_help_docs` is blocked by missing
   `pycurity.pyhash.get_file_hash`; the protection logic itself is
   tested standalone.
+
+### Sprint 5 (2026-07-29) — security + import safety + Sprint 7 lint
+
+|| Commit | Scope |
+|---|---|---|
+| `c68bedd` | fix(pyof): drop pickle.load on .pyof; document SQLite format (T-NEW-007 partial) |
+| `a426954` | fix(imports): resolve F821 undefined-name findings in live paths |
+| `a9b712a` | fix(imports): resolve remaining F821 undefined-name findings |
+
+Sprint 7 (F821 cleanup) lifted the audit from 48 → 16 F821 findings
+across `dialogs/`, `widgets/panes/charts.py`, `widgets/panes/sources.py`,
+`widgets/items/items.py`, `widgets/documents/media/pdfs.py`,
+`widgets/documents/atnrg/browsers.py`,
+`widgets/documents/atnrg/attentioneering.py`, and
+`widgets/panes/documents.py` (replaced `pycrypt` references with
+`pycurity.pyhash.encode64` / `decode64`, plus deferred
+`decrypt` / `encrypt` to T-NEW-013). Test surface: 45 passed, 2 skipped.
 
 ### Prior activity (H51-H52 sprint + NOTE pattern split)
 
@@ -567,19 +571,28 @@ The 2 skips are documented upstream blockers:
 | `e148645` | 2026-07-27 | feat(pyproject): remove setuptools_scm from build-system |
 | `d492c53` | 2026-07-27 | feat(pyproject): add optional-dependencies section |
 
----
+## Recent activity (H53-H62 sprint — sketch/matrix regression + score lifts, then Sprint 1-7 live bugs)
 
 ## Working agreements
 
 - **Adding a new TODO**: edit this file with the live `file:line` and a one-line description. Mark it `[ ]` (pending) or `[x]` (done).
-- **Resolving a TODO**: change `[ ]` to `[x]` and add a row to the **Completed items** table with the commit hash.
+- **Resolving a TODO**: change `[ ]` to `[x]`. If the item was a live bug, move it under the [Resolved live bugs (Sprint 1-7)](#resolved-live-bugs-sprint-1-7) section so the `## NEW TODOs` block stays accurate. If it was a T-NEW item, add a row to the **Completed items** table with the commit hash.
 - **Closing a dimension** in sasquatch (e.g. lifting a score past 80%) does **not** close TODOs in this file — they are tracked separately.
 - **Aspirational stub methods** (`# TODO: implement method`) are *not* actionable — do not pull them into "Active work" unless explicitly assigned.
 - **Log-only stub bodies** (`logma.info("... invoked (stub)")` with no real logic) are **banned** — every method must have a real implementation that does something observable.
 - **NOTE: comments** are documentation, not TODOs. They are tracked under the [Future work](#future-work-t-note-001-t-note-010) section (T-NOTE-001..010) and discoverable via `sasquatch analyze -p nchantdoffice` (note_comments dimension).
 - **Release markers** (`# PUSH <version>`) are bookkeeping — they belong in the YAML / config release notes, not in this file.
 - **Parent/cfg constructor signatures** are sacred — the `(parent, cfg)` pattern in `nchantdoffice/widgets/__init__.py`-style classes must not be changed without explicit user approval. This rules out the `(cfg, parent, self)` data-clumps refactor.
-- **Internal projects** are CORE INTEGRATED COMPONENTS — `find internal source` and integrate it; never comment imports, stub out failures, or substitute PyPI equivalents.
+- **Internal projects** are CORE INTEGRATED COMPONENTS — `find internal source` and integrate it; never comment imports, stub out failures, or substitute PyPI equivalents. The list of internal projects (per the working agreement 2026-07-26):
+  - `nchantrs` — sibling widget library (PySide6 widgets under `~/.hermes/projects/nchantrs/`)
+  - `nchantdoffice_com` — companion web app (the Flask service under `~/.hermes/projects/nchantdoffice_com/`)
+  - `pyffice` — office document model (`.ipynb`, `.pdf`, etc.)
+  - `kahndor` — config / instruct / logma layer
+  - `pycurity` — secrets, encryption, hash, key management (PyKeyStore; `getpass.getpass` prompt is DELIBERATE)
+  - `subtrix` — uuid generator
+  - `falcon` — CLI / scaffolding engine
+  - `sasquatch` — test runner + audit pipeline
+  - `squirl` / `micromole` — desktop persistence layer (NOT SQLAlchemy; desktop must NOT use SQLAlchemy)
 - **PyKeyStore is a security design** — no env vars, no plaintext API keys.
 - **All class names that begin with `Pyffice`** must stay `Pyffice<Document>` — no renames to satisfy parallel-inheritance refactors; only refactor bodies.
 - **When a TODO-flagged implementation is actually done** in the same commit, mark the call site with `T-removed:` so future audits know it was cleaned up intentionally (not just deleted).

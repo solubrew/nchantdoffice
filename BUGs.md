@@ -290,7 +290,7 @@ KeyError: 'NchantdWidget'
 
 
 
-## Status (2026-07-28)
+## Status (2026-07-29)
 
 The 5 errors recorded above (H52/H53/H55 sprint) were fixed in the
 commits documented in `TODOs.md` under "H53–H55 sprint — sketch /
@@ -301,8 +301,26 @@ Sprint 1 + Sprint 2 (2026-07-28) closed the remaining live `TODOs.md`
 bugs and shipped defensive fixes. See
 `TODOs.md → Sprint 1 + Sprint 2 (2026-07-28) — persistence + safety
 pass` for the full commit list and the post-sprint test surface
-(26 passed, 2 skipped).
+(`45 passed, 2 skipped` as of 2026-07-29).
 
-No new error traces were added during Sprint 1 + Sprint 2 because the
-fixes were scoped to preventive coverage rather than crash-log
-capture.
+Eight additional crashes (timestamped 2026-07-28 23:18 → 2026-07-29
+00:07) are catalogued as `T-NEW-015` through `T-NEW-022` in `TODOs.md →
+## NEW TODOs → Live crashes newly surfaced in BUGs.md`. Each carries
+the failing call site and the `BUGs.md` line reference. The full
+list:
+
+| ID | File:Line | Error |
+|---|---|---|
+| T-NEW-015 | `nchantrs.widgets.calendars.months.py:114` | Calendar `context_menu_name` AttributeError |
+| T-NEW-016 | `nchantrs.widgets.tables.tables.py:592` | Calendar `QGridLayout.addWidget(NchantdCell, ...)` TypeError |
+| T-NEW-017 | `nchantdoffice/widgets/documents/workbooks/matricies.py:1701` | Matrix `chr(None)` TypeError |
+| T-NEW-018 | `matricies.py:1713` | Matrix `cell_ref_label` AttributeError |
+| T-NEW-019 | `nchantdoffice/widgets/config/referral_panel.py:310` | ReferralPanel `self.user` AttributeError |
+| T-NEW-020 | `pdfs.py:157` | PDF help `KeyError: 'document'` |
+| T-NEW-021 | `nchantrs/models/tabsetmodels.py:238` | PDF help tab focus `tab_widgets[tabn]` IndexError |
+| T-NEW-022 | `nchantdoffice/widgets/documents/atnrg/browsers.py:348` | Browser `store_link(tag=...)` TypeError |
+
+No new error traces were added during Sprint 5 or Sprint 7 because
+those sprints were scoped to preventive coverage (Sprint 5: `.pyof`
+pickle removal + content-only logging) and import-safety lint fixes
+(Sprint 7: F821 cleanup) rather than crash-log capture.
