@@ -157,8 +157,11 @@ class NchantdOfficePDF(NchantdOfficeDocument):
     def initModel(self):
         """"""
         super().initModel()
-        document = {"document": self.config.dikt.get("document", {})}
-        logma.json(self.config.dikt["document"])
+        # T-NEW-020 (live crash): self.config.dikt["document"]
+        # raised KeyError when the help tab was opened with no
+        # document cfg. Guard with a default empty-dict.
+        document = self.config.dikt.get("document", {})
+        logma.json(document)
         self.document = self.app.model.codex.init_pdf(document)
         self.document.load_document()
         logma.json(self.document.to_dict())

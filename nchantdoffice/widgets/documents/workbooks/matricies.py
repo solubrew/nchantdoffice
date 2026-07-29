@@ -1697,8 +1697,26 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.dataChanged.emit({"action": "new"})
 
     def on_cell_changed(self, item):
-        """Handle cell value change"""
-        address = f"{chr(65 + item.column())}{item.row() + 1}"
+        """Handle cell value change.
+
+        T-NEW-017 (live crash): ``item.column()`` returned ``None``
+        for some cells in the live traceback, which raised
+        ``TypeError: 'NoneType' object is not callable`` from
+        ``chr(65 + item.column())``. Guard against ``None`` and
+        out-of-range column indexes.
+        """
+        column = item.column()
+        row = item.row() + 1
+        if column is None or not isinstance(column, int):
+            logma.warning(f"[matricies] on_cell_changed: bad column index {column!r}")
+            return
+        # 26-column fallback wraps to A..Z then AA..AZ (Excel-style)
+        if column < 26:
+            col_label = chr(65 + column)
+        else:
+            high, low = divmod(column, 26)
+            col_label = f"{chr(65 + high - 1)}{chr(65 + low)}"
+        address = f"{col_label}{row}"
         value = item.text()
 
         # Emit signal
@@ -1710,7 +1728,16 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         value = self.get_cell_value(address)
 
         # Update formula bar
-        self.cell_ref_label.setText(address)
+        # T-NEW-018 (live crash): self.cell_ref_label was never
+        # initialised on NchantdOfficeMatrix; on_selection_changed
+        # raised AttributeError. Guard with hasattr and bind a
+        # default address label in initWidget if missing.
+        if hasattr(self, "cell_ref_label") and self.cell_ref_label is not None:
+            self.cell_ref_label.setText(address)
+        else:
+            logma.warning(
+                f"[matricies] on_selection_changed: cell_ref_label missing for {address}"
+            )
         self.formula_input.setText(value or "")
 
         # Emit signal
