@@ -612,6 +612,12 @@ class NchantdOfficeScript(NchantdOfficeDocument):
           1. ``self.compatibility`` attribute
           2. ``self.config.dikt['compatibility']``
           3. ``self.document.syntax``
+
+        T-NEW-010 followup: also write the rich-text HTML into the
+        Pyffice unit's ``self.document.text.html`` so reopen can
+        restore the formatting (without this, ``_preserved_unit_html``
+        returns ``None`` and the editor falls through to
+        ``setPlainText``, dropping the rich text).
         """
         syntax = (
             getattr(self, "compatibility", None)
@@ -624,8 +630,14 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
             <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
             """
-            soup = BeautifulSoup(self.document_editor.toHtml(), "html.parser")
+            editor_html = self.document_editor.toHtml()
+            soup = BeautifulSoup(editor_html, "html.parser")
             text = html.replace("<[content]>", soup.body.decode_contents())
+            # Persist the editor HTML into the Pyffice unit so
+            # reopen can restore formatting (see _preserved_unit_html).
+            text_attr = getattr(self.document, "text", None)
+            if text_attr is not None and hasattr(text_attr, "html"):
+                text_attr.html = editor_html
         else:
             text = self.document_editor.toPlainText()
         logma.info(f"File Path {self.file_path}")

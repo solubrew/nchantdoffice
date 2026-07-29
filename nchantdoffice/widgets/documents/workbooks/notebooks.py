@@ -105,7 +105,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.pinned = False
 
     def initModel(self):
-        """Load the notebook document and resolve its file_path.
+        """Load the notebook document and reload the .ipynb from disk.
 
         T-NEW-006 (T-NEW-005 followup): the previously-saved notebook
         location lives at ``document.content["content"]["file_path"]``
@@ -113,19 +113,34 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         ``self.file_path`` is still the initial ``/default.ipynb`` until
         ``open_file`` runs. We therefore prefer the saved content
         location, then the cfg, then ``document.file_path``.
+
+        T-NEW-011 followup: when the resolved file_path points at an
+        existing .ipynb, actually reload the notebook via
+        ``open_notebook`` so the user returns to the last-viewed
+        directory (not the cwd file manager).
         """
         super().initModel()
         self.document = self.app.model.codex.init_notebook({"document": self.config.dikt.get("document", {})})
         self.document.load_document()
         saved_content = self.document.content or {}
         nested_content = saved_content.get("content", {}) if isinstance(saved_content, dict) else {}
-        self.file_path = (
+        resolved_path = (
             nested_content.get("file_path")
             or saved_content.get("file_path")
             or self.config.dikt.get("file_path")
             or self.document.file_path
         )
+        self.file_path = resolved_path
         self.context_menu.get_menu("context.document.notebook")
+        # Reload the .ipynb from disk so the user returns to the
+        # notebook they were last viewing (T-NEW-011).
+        if resolved_path and self._looks_like_ipynb_path(resolved_path):
+            try:
+                import os
+                if os.path.isfile(resolved_path):
+                    self.open_notebook(resolved_path)
+            except Exception as e:
+                logma.warning(f"[notebook] initModel: open_notebook failed: {e}")
         return self
 
     def initView(self, cfg=None):

@@ -508,6 +508,27 @@ class NchantdOfficeDocumentMixin:
         pos = self.app.view.panes["center"].model.current_tab.position
         logma.info(f"Save Pos {pos}")
         logma.info(f"Save DID {self.document.did}")
+        # T-NEW-012 followup: invoke the widget's ``get_content()``
+        # so subclass overrides (e.g. NchantdOfficeWebBrowser,
+        # NchantdOfficeNotebook) populate ``self.document.content``
+        # before persistence. Previously the mixin went straight
+        # to ``store_document`` which serialised the (often stale
+        # or empty) ``self.document.content`` directly, so the
+        # Browser/Notebook overrides were never actually used on
+        # save. The single-window ``get_content()`` here restores
+        # the canonical "widget -> set_content -> save" flow.
+        try:
+            widget_content = self.get_content()
+        except Exception as e:
+            widget_content = None
+            logma.error(f"[documents] save: get_content failed: {e}", exc_info=True)
+        if widget_content and self.document is not None:
+            try:
+                self.document.set_content(widget_content)
+            except Exception as e:
+                logma.error(
+                    f"[documents] save: set_content failed: {e}", exc_info=True
+                )
         # T-NEW-003 (35c050e4 working form): always write the
         # external file (when file_path is set) AND always write
         # the DB row. The two writes serve different purposes —
