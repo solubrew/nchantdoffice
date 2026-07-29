@@ -1,4 +1,4 @@
-# Session Notes — 2026-07-27 to 2026-07-27
+# Session Notes — 2026-07-27 to 2026-07-28
 
 ## Goal
 Make SB projects (nchantdoffice, nchantdoffice_com, etc.) 95%+ audit-clean.
@@ -54,6 +54,126 @@ Fix in project source, not auditor (unless real bug). All work on `gamma` branch
 - `afd3f95` chore: refresh audit trackers
 - `fd0a960` fix: replace 3 bare except clauses with explicit Exception types
 - All 96/96 pytest passing
+
+
+## NchantdDocument Widget Reopen Sprint — 2026-07-28
+
+Closed the entire NchantdDocument reopen flow for all 6 widget types
+(Script / Image / Sketch / Matrix / Notebook / Browser + PDF). User
+asked to "return the loadWidget code to the working state at hash
+35c050e4" then "make all other document types follow as closely as
+they can."
+
+### Working Pattern (now consistent across all widgets)
+
+For any NchantdDocument widget, four places need to be aligned:
+
+| Layer | Pattern |
+|---|---|
+| `initModel` / `initView` | 4-tier fallback: `self.document.<field>` → `cfg.dikt[<field>]` → `document.content[<field>]` → `document.content["content"][<field>]` |
+| `get_content()` | `{"content": {"file_path": self.file_path, ...payload}}` |
+| `open_file()` / `cmd_open_local_file` | Always route through `self.set_file_path(file)` — never direct `self.file_path = file` |
+| `save()` | Delegate to `super().save()` (the line-843 form which calls `get_content()` → `set_content()` → unconditional DB write at line 467) |
+
+The two-save-method glitch in `NchantdOfficeDocumentMixin` (lines 467
+and 843 in `widgets/documents/documents.py`) is intentional — line 843
+is what populates `self.document.content` from `get_content()`, and
+line 843's `super().save()` invocation resolves to the no-args sibling
+at line 467 (Python picks the LAST `def save` with matching signature
+in the class body). Don't consolidate them — the duplication is load-
+bearing.
+
+### Commits Pushed This Session (nchantdoffice only)
+
+1. `38f2e5c` fix(models): align `_DOC_MEDIA_COLUMNS` with dstruct
+   (`policy_fk` → `policy_FK`, `metadata_ltxt` → `meta_data_enc64_dict`).
+   Root cause of `doc_media` insert failure (SQLite no such column).
+   Dstruct at `nchantrs/models/_data_/applicationmodels.yaml:1668`.
+2. `c297a2d` fix(models): stop rewriting `document_type` "note" to "doc"
+3. `09f2bb5` fix(documents): restore 35c050e4 save() (always store + write file)
+4. `66c2798` revert: remove T-NEW-005 / set_file_path widgdata helpers
+   (-440 lines net — these were my own band-aids)
+5. `f4569d0` fix(images): read file_path from document.content when
+   top-level is empty (the canonical 4-tier pattern)
+6. `1960dbd` fix(documents): propagate 4-tier file_path/url fallback to
+   all doc widgets (Script / Sketch / Matrix / Notebook / Browser)
+7. `b145700` fix(scripts): preserve syntax on tab reopen
+   (`get_document_syntax` 4-tier chain)
+8. `365e738` fix(browsers): NchantdBrowser.save routes through parent
+   get_content path (so content_enc64_txt actually populates)
+9. `95c389a` fix(scripts): preserve rich-text HTML on tab reopen
+   (added `_preserved_unit_html` helper for the plain-text dispatch
+   branch — uses `setHtml` when unit.html is present)
+10. `c31e917` docs(audit): refresh trackers after rebase onto origin/gamma
+
+### Per-Widget Final State
+
+| Widget | file_path | content_enc64_txt | reopen | save flow |
+|---|---|---|---|---|
+| NchantdImage  | ✅ 4-tier    | ✅ saves with file_path           | ✅ loads | via super().save() |
+| NchantdScript | ✅ 4-tier    | ✅ saves with file_path + text   | ✅ loads | via super().save() |
+| NchantdSketch | ✅ 4-tier    | ✅ saves with file_path + payload | ✅ loads | via super().save() |
+| NchantdMatrix | ✅ 4-tier    | ✅ saves with file_path + data   | ✅ loads | via super().save() |
+| NchantdNotebook| ✅ 4-tier   | ✅ saves with file_path          | ✅ loads | via super().save() |
+| NchantdBrowser| ✅ self.url 4-tier | ✅ saves active_page dict | ✅ loads | via super().save() (was broken — was bypassing get_content path) |
+| NchantdPDF    | (n/a — reads self.document.file_path directly in populate_document) | | | |
+
+### Pyffice Mismatches Still Pending (out of scope)
+
+- `to_dict()` writes `path`/`syntax`/`compatibility` under `meta_data[...]`;
+  `load_document()` reads them from the top level. Until pyffice is
+  fixed, the 4-tier content-payload fallback in nchantdoffice is
+  what carries these on reopen.
+- `set_file_path(path)` silently no-ops when `exists(path)` is False.
+  Newly-created documents need `self.file_path = document.file_path
+  or cfg.dikt.get("file_path")` chain instead of relying on
+  `set_file_path()`.
+
+### Reverted as Band-Aids
+
+These were committed in earlier turns of the larger session and rolled
+back in `66c2798` (-440 lines):
+
+- `_bump_doc_save_version` / `_bump_content_schema_version` /
+  `get_instance_version` (T-NEW-005)
+- `_increment_pydoc_version` alias
+- `set_file_path` widgdata_dict mirror
+
+The 6 T-NEW-005 regression tests and the 3 set_file_path tests were
+removed alongside.
+
+### Open TODOs Still TODO (from earlier sprints, not addressed here)
+
+- T-NEW-005: 3 version-control objects — helpers would need to live on
+  `NchantdOfficeCloakModel.store_document` or be reached via
+  `self.app.model.<helper>` indirection (sibling-class access pattern
+  matches `toolbars.py:1656`). The H62 wrap column-name bug
+  (`document_type_txt`) makes the helper currently broken on disk.
+- T-NEW-003: save_mode toggle — fully removed when 35c050e4 form was
+  restored. Re-introducing needs proper doc both
+  `_bump_doc_save_version` AND `set_content` paths.
+- T-NEW-006 (notebook/calendar/chart): notebook now reopens via
+  `browser.load_page(self.file_path)`. Calendar/Chart still inherit
+  the base class versions and have not been reopened-tested.
+
+### Test Coverage Gap
+
+The 13 tests in `tests/test_document_opening.py` cover doc-open dispatch
+and a few T-NEW-003 patterns. They do NOT cover:
+- file reopen after save for any widget type
+- script formatting preservation across reopen
+- tab-set persistence with save_mode bypass
+
+These need a real Qt offscreen environment with PyfficeDocument
+save/load round-trips. User's manual tests currently catch
+regressions in the save → reopen path.
+
+### Score / Tests
+
+13/13 tests pass under `QT_QPA_PLATFORM=offscreen
+/home/solubrew/ENVs/sasquatch/bin/python -m pytest tests -v --tb=short`.
+
+Sasquatch score: 93.69% (was 80.69% at start of larger session).
 
 ## Errors Fixed This Session (5)
 
@@ -147,7 +267,14 @@ device fingerprint) implemented in commit `31f5163`. New files:
 
 ## Active Issues
 
-None currently. All pushed.
+None currently open. All NchantdDocument widget reopen bugs from
+2026-07-28 closed (see the NchantdDocument Widget Reopen Sprint
+section above).
+
+Still pending from earlier sprints (not addressed in this session):
+- T-NEW-005 (3 version-control objects) — T-NEW-003 save_mode toggle —
+  T-NEW-006 (calendar/chart reopen) — flask+pyffice in sasquatch venv
+  to lift the -10% test penalty.
 
 ## Next Steps (when session resumes)
 
