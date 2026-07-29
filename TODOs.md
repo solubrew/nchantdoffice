@@ -116,21 +116,19 @@
   ``config.syntax``, ``document.syntax``, ``document.file_format``,
   and ``document.meta_data["syntax"]``. Regression tests in
   `tests/test_script_open_format.py` (5 new). Commit pending.
-- **Status (T-NEW-023 followup, setPlainText reload):** the
-  user clarified that reload must "open the file on disk
-  again" — the editor mirrors the raw file bytes via
-  ``setPlainText`` so tabs and newlines are preserved verbatim.
-  The reload branch of ``populate_document`` now short-circuits
-  after ``_load_external_file()`` without invoking
-  ``_apply_syntax_highlighting``. Markdown / pygments / html
-  conversion drop the leading whitespace (verified: a
-  `setMarkdown('# Hello\n\n    - indented bullet\n')` followed
-  by ``toPlainText()`` returns ``'Hello\n- indented bullet'``,
-  so the dispatcher was the cause of the visible indentation
-  loss). The initial file-open path still applies
-  highlighting when the user uses the syntax dropdown or
-  ``cmd_open_local_file``. Tests in
-  ``tests/test_script_open_format.py`` (5 new). Commit pending.
+- **Status (T-NEW-023 distinction: initial open vs reload):**
+  the user clarified both contracts in sequence — initial file
+  open must run the syntax dispatcher (markdown rendering etc.),
+  but reload from a different tabset must preserve tabs and
+  newlines verbatim. The two flows are now distinguished by a
+  ``_initial_load`` flag that ``open_file()`` flips on before
+  calling ``populate_document`` and off after. The
+  reload path (called from ``initView`` on tab-return) sees
+  ``_initial_load = False`` and short-circuits without
+  dispatching (raw bytes preserved). The initial-open path
+  sees ``_initial_load = True`` and runs the dispatcher. Tests
+  in ``tests/test_script_open_format.py`` (5 new) verify
+  both contracts. Commit pending.
 
 ### NchantdNotebook — not storing the .ipynb location
 - **Status:** fixed in `06b76fb` (file_path resolution), extended in `0b7156a` (T-NEW-009 bytes-not-JSON save crash) and `654eeea` (T-NEW-011 reopen-from-disk).

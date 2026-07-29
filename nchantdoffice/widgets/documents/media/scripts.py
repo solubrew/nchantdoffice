@@ -1159,6 +1159,13 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         ``populate_document`` so the reopen dispatch selects the
         right editor API.
 
+        T-NEW-023 (user-stated followup): on subsequent reloads
+        (``initView`` triggered when returning to the tab from a
+        different tabset), preserve tabs and newlines verbatim
+        rather than re-running pygments / markdown. The
+        ``_initial_load`` flag tells ``populate_document`` which
+        contract to honour.
+
         Extension-to-syntax map (mirrors PyfficeDocument's
         ``file_formats`` table):
           .py, .pyi -> python
@@ -1185,7 +1192,14 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             logma.warning(e)
             logma.debug(f"[scripts] open_file traceback: {e}", exc_info=True)
         self.document.set_location("external")
+        # T-NEW-023 marker: this open_file() call is the *initial*
+        # file-open path (cmd_open_local_file) and must run the
+        # syntax dispatcher; populate_document() reloads (called
+        # from initView on tab-return) honour the raw-bytes
+        # contract instead.
+        self._initial_load = True
         self.populate_document()
+        self._initial_load = False
         return self
 
     def _apply_extension_syntax(self, path):
@@ -1346,16 +1360,40 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self.document_editor.setStyleSheet(style)
 
         # T-NEW-023 (user-stated contract): the on-disk file is the
-        # source-of-truth. Reload its raw text into the editor via
-        # setPlainText so tabs and newlines are preserved verbatim.
-        # The syntax dispatcher is intentionally NOT invoked on
-        # the reload path — running pygments / markdown / html
-        # conversion drops the leading whitespace and re-wraps
-        # every line. The first file-open path (cmd_open_local_file)
-        # still applies highlighting if desired; reload mirrors the
-        # bytes as-is per the user's clarification that "reload
-        # should be opening the file on disk again".
+        # source-of-truth. On an *initial* file-open
+        # (cmd_open_local_file -> open_file), apply the syntax
+        # dispatcher so markdown / python / pygments / html render
+        # with their proper editor APIs. On a *reload* (returning to
+        # the tab from a different tabset), mirror the raw bytes via
+        # the setPlainText call already made by
+        # ``_load_external_file`` — running pygments / markdown
+        # / html conversion drops the leading whitespace (verified:
+        # ``setMarkdown('# Hello\n\n    - indented bullet\n')``
+        # followed by ``toPlainText()`` returns
+        # ``'Hello\n- indented bullet'``).
         if loaded_from_disk:
+            if getattr(self, "_initial_load", False):
+                try:
+                    import os
+
+                    path = (
+                        getattr(self, "file_path", None)
+                        or getattr(self, "current_notebook_path", None)
+                    )
+                    if path:
+                        path = os.path.abspath(path)
+                        with open(path, "r", encoding="utf-8", errors="replace") as f:
+                            text = f.read()
+                        # Apply the dispatcher for the initial
+                        # file-open so syntax highlighting works.
+                        self._apply_syntax_highlighting(text)
+                except Exception as e:
+                    logma.error(
+                        f"[scripts] populate_document: on-disk dispatch failed: {e}",
+                        exc_info=True,
+                    )
+                return self
+            # Reload from a different tabset: preserve raw bytes.
             return self
 
         text = self._resolve_document_text()

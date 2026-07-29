@@ -243,37 +243,66 @@ def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
 
     widget.document_editor = _FakeEditor()
 
-    # Drive the production reload body via the public helper.
+    # Simulate the production reload body: the widget is returning
+    # to the tab from another tabset, so _initial_load = False.
+    widget._initial_load = False
     widget._load_external_file()
 
-    # The reload must call setPlainText with the raw file content
-    # so tabs and newlines are preserved verbatim — NOT the
-    # syntax dispatcher (which drops the leading whitespace).
+    # Reload must call setPlainText with the raw file content so
+    # tabs and newlines are preserved verbatim — NOT the syntax
+    # dispatcher (which drops the leading whitespace).
     plain_calls = [c for c in captured if c[0] == "plain"]
     assert plain_calls, (
         f"Reload did not call setPlainText with file content. "
         f"Got: {captured}"
     )
-    # Whitespace preserved verbatim.
     assert any(
         "    - indented bullet" in c[1] for c in plain_calls
     ), (
         f"Reload setPlainText lost the indentation. "
         f"Captured: {plain_calls}"
     )
-    # No dispatcher output (markdown/html/pygments).
+    # No dispatcher output on reload.
     bad = [c for c in captured if c[0] in ("md", "html", "xml", "latex")]
     assert not bad, (
         f"Reload fired the syntax dispatcher on disk content — "
         f"whitespace was re-rendered. Got: {bad}"
     )
 
+    # Now simulate the initial file-open path: open_file() flips
+    # _initial_load = True before calling populate_document().
+    captured.__init__()
+    widget._initial_load = True
+    import os
+    path = os.path.abspath(str(md))
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        text = f.read()
+    widget._apply_syntax_highlighting(text)
+    widget._initial_load = False
+
+    # The dispatcher must use setMarkdown for .md so the
+    # initial-open rendering is correct.
+    md_calls = [c for c in captured if c[0] == "md"]
+    assert md_calls, (
+        f"Initial open did not call setMarkdown for the .md file - "
+        f"format was not dispatched. Got: {captured}"
+    )
+    # Markdown content preserved verbatim on initial open too.
+    assert any(
+        "# Hello" in c[1] and "    - indented bullet" in c[1]
+        for c in md_calls
+    ), (
+        f"setMarkdown lost content. Captured md: "
+        f"{[c[1] for c in md_calls]}"
+    )
+
     # Production source asserts: the reload branch short-circuits
-    # without _apply_syntax_highlighting.
+    # without _apply_syntax_highlighting, but the initial-open
+    # branch dispatches via the _initial_load flag.
     import inspect
     from nchantdoffice.widgets.documents.media.scripts import (
         NchantdOfficeScript as _Cls,
     )
     src = inspect.getsource(_Cls.populate_document)
-    assert "if loaded_from_disk:\n            return self" in src
+    assert "if getattr(self, \"_initial_load\", False):" in src
     assert "_resolve_document_text" in src  # DB fallback only
