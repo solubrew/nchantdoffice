@@ -1193,8 +1193,24 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             if file is not None:
                 # T-NEW-024: derive the syntax from the file extension
                 # so the reopen dispatch picks the right editor API.
-                self._apply_extension_syntax(file)
+                detected_syntax = self._apply_extension_syntax(file)
                 self.document.open_file(file)
+                # T-NEW-024 followup: the in-memory document.syntax
+                # is correct, but the doc_media row in the DB
+                # still carries the "html" default written at
+                # tab-creation time. On the next reopen, the
+                # loaded tab reads syntax="html" from the DB
+                # and the dispatch falls through to setPlainText.
+                # Push the detected syntax to the doc_media row
+                # so the next reopen reads the correct value.
+                doc = getattr(self, "document", None)
+                doc_id = getattr(doc, "did", None) if doc is not None else None
+                if detected_syntax and doc_id:
+                    model = (
+                        getattr(self, "app", None) and getattr(self.app, "model", None)
+                    )
+                    if model is not None and hasattr(model, "update_doc_media_syntax"):
+                        model.update_doc_media_syntax(doc_id, detected_syntax)
         except Exception as e:
             logma.warning(e)
             logma.debug(f"[scripts] open_file traceback: {e}", exc_info=True)

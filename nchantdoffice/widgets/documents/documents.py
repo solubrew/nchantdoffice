@@ -545,6 +545,24 @@ class NchantdOfficeDocumentMixin:
         # file is unavailable.
         self.document.save(self.file_path)  # increments versions and (internal encryption..future)
         self.app.model.store_document(self.document)
+        # T-NEW-024 followup: keep the doc_media row in sync with
+        # the in-memory document.syntax. The base add_document
+        # writes syntax="html" for new script tabs; the in-memory
+        # document.syntax gets updated by _apply_extension_syntax
+        # on file-open, but the doc_media row is never touched.
+        # On reopen, the loaded tab reads syntax="html" from the
+        # DB and the dispatch falls through to setPlainText, dropping
+        # the rich formatting. Push the in-memory syntax to the
+        # doc_media row on every save.
+        doc_syntax = getattr(self.document, "syntax", None) if self.document is not None else None
+        doc_id = getattr(self.document, "did", None) if self.document is not None else None
+        if doc_syntax and doc_id and hasattr(self.app.model, "update_doc_media_syntax"):
+            try:
+                self.app.model.update_doc_media_syntax(doc_id, doc_syntax)
+            except Exception as e:
+                logma.warning(
+                    f"[documents] save: update_doc_media_syntax failed: {e}"
+                )
         return self
 
     def set_save_mode(self, mode):

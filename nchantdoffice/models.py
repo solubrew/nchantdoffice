@@ -2806,6 +2806,56 @@ class NchantdOfficeStore(NchantdStore):
         """
         return self.store_app_media(document, db, how, table="doc_media")
 
+    def update_doc_media_syntax(self, did, syntax, db="db"):
+        """T-NEW-024 reload: UPDATE the doc_media row's ``syntax``
+        column for a specific ``did``. The base ``add_document``
+        helper writes ``syntax="html"`` for new script tabs; when
+        a file is opened via ``cmd_open_local_file`` -> ``open_file``
+        -> ``_apply_extension_syntax``, the in-memory
+        ``self.document.syntax`` is updated to the file-extension
+        syntax, but the doc_media row still carries the original
+        ``"html"`` value. On reopen, the loaded tab reads
+        ``syntax="html"`` from the DB and the dispatch falls
+        through to ``setPlainText``, dropping the rich formatting.
+
+        This helper runs ``UPDATE doc_media SET syntax = ? WHERE
+        did = ?`` via the existing store.update_records() path
+        so the doc_media row stays in sync with the in-memory
+        document. Widgets call this on file-open and on save
+        so the next reopen reads the correct syntax.
+
+        Returns ``True`` when the update succeeded, ``False``
+        when the store lacks the update_records() helper (so
+        older installs no-op gracefully).
+        """
+        try:
+            data = {
+                "table": {
+                    "doc_media": {
+                        "data": {"syntax": syntax},
+                    }
+                }
+            }
+            cfg = {"WHERE": {"EQUAL": {"did": did}}}
+            store = getattr(self, "store", None)
+            if store is None or not hasattr(store, "update_records"):
+                logma.warning(
+                    f"[models] update_doc_media_syntax: store lacks "
+                    f"update_records helper — skipping UPDATE for did={did!r}."
+                )
+                return False
+            store.update_records(data, cfg, db)
+            logma.info(
+                f"[models] update_doc_media_syntax: did={did!r} syntax={syntax!r}"
+            )
+            return True
+        except Exception as e:
+            logma.error(
+                f"[models] update_doc_media_syntax failed: {e}",
+                exc_info=True,
+            )
+            return False
+
     _DOC_MEDIA_COLUMNS = [
         {"name": "did", "type": "text"},
         {"name": "compatibility_txt", "type": "text"},
