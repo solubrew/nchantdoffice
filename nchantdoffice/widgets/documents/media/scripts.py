@@ -1346,34 +1346,16 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self.document_editor.setStyleSheet(style)
 
         # T-NEW-023 (user-stated contract): the on-disk file is the
-        # source-of-truth when it exists. Run the syntax
-        # dispatcher against the freshly-read file content so
-        # markdown / python / js etc. render with their proper
-        # editor APIs (per the user's clarification: "initial file
-        # open loads the correct syntax formatting"). Whitespace
-        # preservation is verified by a separate test rather
-        # than bypassing the dispatcher here.
+        # source-of-truth. Reload its raw text into the editor via
+        # setPlainText so tabs and newlines are preserved verbatim.
+        # The syntax dispatcher is intentionally NOT invoked on
+        # the reload path — running pygments / markdown / html
+        # conversion drops the leading whitespace and re-wraps
+        # every line. The first file-open path (cmd_open_local_file)
+        # still applies highlighting if desired; reload mirrors the
+        # bytes as-is per the user's clarification that "reload
+        # should be opening the file on disk again".
         if loaded_from_disk:
-            try:
-                import os
-
-                path = (
-                    getattr(self, "file_path", None)
-                    or getattr(self, "current_notebook_path", None)
-                )
-                if path:
-                    path = os.path.abspath(path)
-                    with open(path, "r", encoding="utf-8", errors="replace") as f:
-                        text = f.read()
-                    # Drive the dispatch on the freshly-read text so
-                    # initial-open formatting matches reload
-                    # formatting (markdown, pygments, etc.).
-                    self._apply_syntax_highlighting(text)
-            except Exception as e:
-                logma.error(
-                    f"[scripts] populate_document: on-disk dispatch failed: {e}",
-                    exc_info=True,
-                )
             return self
 
         text = self._resolve_document_text()
