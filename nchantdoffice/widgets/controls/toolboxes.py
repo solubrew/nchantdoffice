@@ -382,10 +382,11 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         return self
 
     def cmd_open_instance(self, event=None, *args, **kwargs):
-        """Open a local ``.pyof`` (Nchantd Office Pickled Object File) instance.
+        """Open a local ``.pyof`` (Nchantd Office DB file) instance.
 
         T-077: previously raised ``"File Type not yet implemented"``.
-        Now:
+        T-NEW-007: the ``.pyof`` extension is the SQLite DB
+        format. Now:
 
           1. Opens the file dialog via NchantdFileOpenSigil
           2. If the selected file is a ``.pyof`` file, opens it
@@ -411,18 +412,24 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         return self
 
     def _open_pyof_instance(self, path):
-        """Open a .pyof Nchantd Office instance (T-077).
+        """Open a .pyof Nchantd Office instance (T-077, T-NEW-007).
 
-        The .pyof format is a pickled instance dump created by
-        ``NchantdOfficeStore``. Restoration goes through:
+        The .pyof format is the SQLite DB file produced by
+        NchantdOfficeStore. Restoration routes through the
+        model-level helper:
 
-          1. ``model.import_nchantdoffice(path)`` when the
+          1. ``model.import_nchantdoffice(path)`` if the
              import handler exists - the model-level helper
-             unpacks the pickled instance and reattaches it.
-          2. ``pickle.load`` fallback when the import handler
-             isn't reachable.
-          3. Log + return ``self`` on any failure so the
+             now records the requested path and the store
+             layer opens the SQLite DB.
+          2. Log + return ``self`` on any failure so the
              caller doesn't have to special-case.
+
+        The previous fallback used ``pickle.load`` on a
+        ``.pyof`` file picked from disk. That was unsafe: an
+        attacker could craft a ``.pyof`` whose ``__reduce__``
+        ran arbitrary code on import. The pickle path has
+        been removed (T-NEW-007).
         """
         try:
             model = getattr(self.app, "model", None) if hasattr(self, "app") else None
@@ -430,15 +437,15 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 model.import_nchantdoffice(path)
                 logma.info(f"[toolboxes] _open_pyof_instance: {path} via model.import_nchantdoffice")
                 return self
-            try:
-                import pickle
-                with open(path, "rb") as f:
-                    payload = pickle.load(f)
-                if hasattr(self.app, "loaded_instance"):
-                    self.app.loaded_instance = payload
-                logma.info(f"[toolboxes] _open_pyof_instance: {path} loaded via pickle (no model helper)")
-            except Exception as e:
-                logma.error(f"[toolboxes] _open_pyof_instance pickle failed: {e}", exc_info=True)
+            # T-NEW-007: the previous pickle.load fallback was
+            # removed. ``.pyof`` is a SQLite DB file; the
+            # canonical restoration path is through
+            # ``model.import_nchantdoffice``. If the model
+            # helper is missing, log and continue rather than
+            # fall back to the unsafe pickle path.
+            logma.warning(
+                f"[toolboxes] _open_pyof_instance: no model.import_nchantdoffice helper for {path!r}"
+            )
         except Exception as e:
             logma.error(f"[toolboxes] _open_pyof_instance failed: {e}", exc_info=True)
         return self

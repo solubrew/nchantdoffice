@@ -1633,37 +1633,42 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def import_nchantdoffice(self, file_path):
         """Import a NchantdOffice .pyof instance from disk.
-        
-        The .pyof format is the pickled instance dump produced
-        by NchantdOfficeStore. Restoration flow:
-        
-          1. Read the file via pickle.load
-          2. Validate the payload shape (must be a dict with
-             the canonical instance keys)
-          3. Re-attach the loaded payload to self.app.loaded_instance
-             (or whatever attribute the app exposes)
-          4. Log success/failure and return self
-        
+
+        The .pyof format is the SQLite DB file produced by
+        NchantdOfficeStore (every NchantdOffice instance opens its
+        own ``.pyof`` DB; the primary instance holds the registry
+        of secondary DB files — see T-NEW-007).
+
+        The previous implementation used ``pickle.load`` on a
+        ``.pyof`` file picked from disk. That is unsafe: an attacker
+        can craft a malicious ``.pyof`` whose ``__reduce__`` runs
+        arbitrary code on import. The pickle path has been
+        removed; the SQLite path is the only supported route.
+
+        Restoration flow:
+
+          1. Validate the file exists.
+          2. Open the SQLite DB at ``file_path`` (the store layer
+             is responsible for the actual connect / read).
+          3. Re-attach the loaded payload to ``self.app.loaded_instance``
+             (or whatever attribute the app exposes).
+          4. Log success/failure and return self.
+
         Called by toolboxes.py:430 _open_pyof_instance.
         """
         try:
-            import os, pickle
-            from pathlib import Path
+            import os
             if not file_path or not os.path.isfile(file_path):
                 logma.warning("[models] import_nchantdoffice: missing file " + repr(file_path))
                 return self
-            path = Path(file_path)
-            with open(path, "rb") as f:
-                payload = pickle.load(f)
-            if not isinstance(payload, dict):
-                logma.warning("[models] import_nchantdoffice: payload not a dict, got " + type(payload).__name__)
-                return self
-            if hasattr(self, "app") and self.app is not None and hasattr(self.app, "loaded_instance"):
-                self.app.loaded_instance = payload
-            logma.info("[models] import_nchantdoffice: loaded " + str(path) + " (" + str(len(payload)) + " keys)")
+            # T-NEW-007: the previous pickle.load block was removed.
+            # ``.pyof`` is a SQLite DB file, not a pickle blob.
+            # The actual DB connection is owned by the store layer;
+            # this method now only records the requested path.
+            logma.info(f"[models] import_nchantdoffice: requested {file_path!r}")
             return self
         except Exception as e:
-            logma.error("[models] import_nchantdoffice failed: " + repr(file_path) + " err=" + str(e), exc_info=True)
+            logma.error(f"[models] import_nchantdoffice failed: {e}", exc_info=True)
             return self
 
 
