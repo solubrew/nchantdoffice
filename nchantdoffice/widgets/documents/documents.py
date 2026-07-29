@@ -343,7 +343,10 @@ class NchantdOfficeDocumentMixin:
             0: {"action": "show_pane_left", "handler": self.cmd_show_pane_left},
             # DEBUG the open file dialog is not respecting close/cancel commands
             100: {"action": "open_local", "handler": self.cmd_open_local_file},
-            101: {"action": "save", "handler": self.cmd_save_tab},
+            101: {
+                "action": "save",
+                "handler": self.cmd_save_tab,
+            },  # TODO toggle to use the database-save.svg icon for internally stored documents
             150: {"action": "redo", "handler": self.cmd_redo},
             200: {"action": "undo", "handler": self.cmd_undo},
             400: {"action": "cancel", "handler": self.cmd_delete_tab},
@@ -629,9 +632,7 @@ class NchantdOfficeDocumentMixin:
         """
         try:
             target = (
-                getattr(self, "document_editor", None)
-                or getattr(self, "browser", None)
-                or getattr(self, "image", None)
+                getattr(self, "document_editor", None) or getattr(self, "browser", None) or getattr(self, "image", None)
             )
             if target is None or not hasattr(target, "grab"):
                 logma.warning("[documents] take_snapshot: no grabbable widget")
@@ -645,6 +646,7 @@ class NchantdOfficeDocumentMixin:
             )
             if not path:
                 import os, tempfile
+
                 path = os.path.join(tempfile.gettempdir(), "nchantdoffice_snapshot.png")
             if pixmap.save(path, "PNG"):
                 self.snapshot_path = path
