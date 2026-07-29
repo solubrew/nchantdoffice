@@ -34,9 +34,36 @@
      path and asserts no `pickle` module is loaded.
 
 - NchantdImage is blurry on inintial render from the db load but when returning to it will be properly displayed
+  - Status: fixed. `nchantrs/widgets/media/images.py:178` `resizeEvent`
+    now rescales from `self.original_pixmap` (preserved on
+    `load_image`/`load_image_from_data`) instead of from the
+    already-scaled label pixmap. Regression test
+    `tests/test_image_blur.py`. The production fix lives in the
+    sibling nchantrs repo (commit pending there).
 - NchantdScript is still loading with no formatting when returned to tab but loads properly when opened from a file directly.
+  - Status: fixed. `widgets/documents/media/scripts.py:1402` now calls
+    `setHtml(preserved_html)` when the full HTML envelope is preserved
+    in the saved PyfficeText unit. Regression test
+    `tests/test_script_reopen.py`. Commit `06b76fb`.
 - NchantdNotebook is not storing the location when a specific .ipynb file is opened and always returns to the cwd file manager view
+  - Status: fixed. `widgets/documents/workbooks/notebooks.py:107`
+    `initModel` now derives `file_path` in this order: nested
+    `document.content["content"]["file_path"]` → `document.content["file_path"]`
+    → `config.dikt["file_path"]` → `document.file_path`. Regression
+    test `tests/test_notebook_reopen.py`. Commit `06b76fb`.
+- NchantdBrowser is not saving and retrieving url
+  - Status: fixed. `widgets/documents/atnrg/browsers.py:1126`
+    `get_content()` returns `{"content": active_page.to_dict()}` so
+    the DB round-trip persists the full browser profile (was
+    previously only saving `{}`). Regression test
+    `tests/test_browser_db_roundtrip.py` decodes the actual stored
+    blob. Commit `ebb6e84`.
 - NchantdFileSystem needs to store when a root change is made and return to that root and to store which directories are expanded and return them.
+  - Status: BLOCKED. The qpandas metaclass conflict in
+    `nchantrs.widgets.tables.tables` blocks importing
+    `NchantdOfficeFileSystem` in the test env. Regression test in
+    place (`tests/test_filesystem_persistence.py`) and skips cleanly
+    with a documented reason.
 
 - add config for user to select whether or not creating a new node pops up a name entry dialog or generates a random name
 - add config for user to select whether or not creating a new tab pops up a name entry dialog or generates a random name
@@ -406,6 +433,33 @@ Full distribution:
 
 - `nchantrs.f7796db` — `fix(libraries): resilient pyside6pandas import shim` (upstream `pyside6pandas==0.0.0` placeholder was blocking the entire `nchantrs` import chain).
 - `falcon.8d24155` — `fix(cli): define __version__ + guard pytest_jsonreport` (was blocking Falcon CLI entirely).
+
+### Sprint 1 + Sprint 2 (2026-07-28) — persistence + safety pass
+
+| Commit | Scope |
+|---|---|
+| `4f9ea99` | fix(documents): preserve paths and autosave document objects |
+| `ebb6e84` | fix(documents): persist browser notebook and script content |
+| `06b76fb` | fix(documents): reopen browser/notebook/script with full payload |
+| `6eab336` | test(media): cover image resize source stays original |
+| `5dac352` | test(filesystems): cover filesystem root + expanded path persistence |
+| `fc86114` | docs(todos): add T-NEW-007 drop .pyof single-instance pickle format |
+| `5343e34` | fix: zip slip, py3.11 f-strings, payload builders, settings + parse_document, atomic cli, content-only logging |
+
+Test surface after Sprint 1 + Sprint 2 (sasquatch venv):
+
+```
+26 passed, 2 skipped (3 warnings)
+```
+
+The 2 skips are documented upstream blockers:
+
+- `tests/test_filesystem_persistence.py` — blocked by qpandas metaclass
+  conflict in `nchantrs.widgets.tables.tables`.
+- integration test for `tests/test_help_zip_slip.py` against the real
+  `NchantdHelp.update_help_docs` is blocked by missing
+  `pycurity.pyhash.get_file_hash`; the protection logic itself is
+  tested standalone.
 
 ### Prior activity (H51-H52 sprint + NOTE pattern split)
 
