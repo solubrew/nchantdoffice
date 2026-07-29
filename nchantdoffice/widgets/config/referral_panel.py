@@ -67,10 +67,18 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
     referral code, share targets, and earnings.
     """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None, user=None):
+        """T-NEW-019 (live crash): ``_load_or_generate_code``
+        read ``self.user.id`` which raised ``AttributeError`` on
+        the Referral tab init chain. The init signature now
+        accepts an optional ``user`` (None when the host
+        doesn't inject one), and ``_load_or_generate_code``
+        falls back to ``"anonymous"`` in that case.
+        """
         super().__init__(parent, cfg)
         self.name = "NchantdOffice Referral Panel"
         self.api_client = ReferralAPIClient(base_url=DEFAULT_API_BASE)
+        self.user = user
         self.referral_code: ReferralCode = None
         self.share_urls: dict = {}
         self.earnings_data: dict = {}
@@ -306,12 +314,16 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
                 logma.warning(f"[referral_panel] stored code {existing!r} invalid; regenerating")
 
         # First-launch or invalid: generate deterministic from user id
+        # T-NEW-019 (live crash): guard the self.user access so the
+        # Referral tab doesn't AttributeError when the panel is
+        # opened without a User instance injected by the host.
+        user_obj = getattr(self, "user", None)
         user_id = (
-            getattr(self.user, "id", None)
-            or getattr(self.user, "user_name", None)
-            or getattr(self.user, "email", None)
+            getattr(user_obj, "id", None)
+            or getattr(user_obj, "user_name", None)
+            or getattr(user_obj, "email", None)
             or "anonymous"
-        )
+        ) if user_obj is not None else "anonymous"
         user_id = str(user_id)
         self.referral_code = ReferralCode.generate(user_id)
         try:
