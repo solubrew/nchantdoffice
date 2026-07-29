@@ -45,12 +45,30 @@
     `setHtml(preserved_html)` when the full HTML envelope is preserved
     in the saved PyfficeText unit. Regression test
     `tests/test_script_reopen.py`. Commit `06b76fb`.
+  - Status (newlines/indentation): fixed. Removed the
+    `text.lstrip()` call in `_resolve_document_text()` (line 1303)
+    that was destroying leading indentation on reopen. Python / YAML
+    / indented-markdown documents now round-trip with their
+    indentation intact. Regression test
+    `tests/test_script_newline_roundtrip.py`. Commit `22b96c5`.
 - NchantdNotebook is not storing the location when a specific .ipynb file is opened and always returns to the cwd file manager view
   - Status: fixed. `widgets/documents/workbooks/notebooks.py:107`
     `initModel` now derives `file_path` in this order: nested
     `document.content["content"]["file_path"]` → `document.content["file_path"]`
     → `config.dikt["file_path"]` → `document.file_path`. Regression
     test `tests/test_notebook_reopen.py`. Commit `06b76fb`.
+  - Status (save → reopen crash, T-NEW-009 followup): fixed.
+    Notebook default storage is the external ``.ipynb`` file path;
+    the serialised bytes are only embedded in the DB payload when
+    the user opts in via ``save_mode == "to_dict"`` (or
+    ``"both"``). This eliminates the
+    ``TypeError: Object of type bytes is not JSON serializable``
+    crash that previously broke saves from the toolbar. The
+    ``store_document`` path also gained a ``_json_safe`` guard so
+    a non-serialisable payload can never abort a save. Regression
+    tests `tests/test_notebook_save_bytes.py` (6 new) plus an
+    update to `tests/test_document_persistence.py`. Commit
+    `0b7156a`.
 - NchantdBrowser is not saving and retrieving url
   - Status: fixed. `widgets/documents/atnrg/browsers.py:1126`
     `get_content()` returns `{"content": active_page.to_dict()}` so
