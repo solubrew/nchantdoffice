@@ -1088,8 +1088,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 self.document.open_file(file)
         except Exception as e:
             logma.warning(e)
-            if debug:
-                raise e
+            logma.debug(f"[notebooks] open_file traceback: {e}", exc_info=True)
         self.document.set_location("external")
         self.populate_document()
         return self

@@ -630,7 +630,7 @@ class NchantdRenamePane(NchantdPane):
 
     def _rename_date_prefix(name, ext, filename, index):
         """Add ``YYYYMMDD_`` to the start of the filename."""
-        return f"{datetime.datetime.now().strftime('%Y%m%d')}_{filename}"
+        return f"{dt.datetime.now().strftime('%Y%m%d')}_{filename}"
 
     def _rename_lowercase(name, ext, filename, index):
         """Lowercase the entire filename."""

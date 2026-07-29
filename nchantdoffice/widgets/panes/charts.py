@@ -24,7 +24,11 @@ from seaborn import palettes
 
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
 from nchantrs.libraries import pyqt
-from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox, NchantdLabeledDoubleSpinBox
+from nchantrs.widgets.controls.advanced_buttons import (
+    NchantdLabeledSpinBox,
+    NchantdLabeledDoubleSpinBox,
+    NchantdSpinBox,
+)
 from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons, NchantdBorderConfigBar
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.annotations import NchantdLabel

@@ -2368,40 +2368,6 @@ class NchantdOfficeStore(NchantdStore):
         except Exception as e:
             logma.error(f"[store] drop_vectorized_data_table failed: {e}", exc_info=True)
             return False
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeStore"))
-        self.parent = parent
-        self.app = self.parent.app
-        if parent is not None:
-            self.config.override(parent.config)
-        self.config.override(cfg)
-        # T-089: agent_manager is fetched through ``self.app.agent_manager``
-        # only when it's been configured (assignment is non-optional in
-        # the multi-tenant build but optional in the single-user build).
-        # The task dict is constructed once and assigned to the agent
-        # when the manager is reachable. The pre-T-089 implementation
-        # always tried to instantiate the agent; that path is gone.
-        agent_manager = getattr(self.app, "agent_manager", None)
-        if agent_manager is None:
-            logma.info("[models] rss_loader: no agent_manager available, skipping scheduled task")
-            return
-        try:
-            agent = agent_manager.assign_agent(getattr(self, "mole", None))
-            cfg = {"process-in": "series"}
-            agent.define_processing(cfg)
-            task = {
-                "0": {"method": "set_storage", "inputs": [self.store_rss_entries]},
-                "1": {"method": "load_feeds_list", "inputs": ["rss"]},
-                "2": {"method": "update_feeds", "inputs": ["rss", {"file": ""}]},
-                "3": {"method": "collect", "inputs": ["rss", "ds_recent_rss_entries"]},
-            }
-            try:
-                agent.assign_task(task)
-                logma.info("[models] rss_loader: task dispatched to agent_manager")
-            except Exception as e:
-                logma.error(f"[models] agent_manager.assign_task failed: {e}", exc_info=True)
-        except Exception as e:
-            logma.error(f"[models] rss_loader: agent manager dispatch failed: {e}", exc_info=True)
-        return
 
     def convert_database(self, version_from, version_to):
         """"""

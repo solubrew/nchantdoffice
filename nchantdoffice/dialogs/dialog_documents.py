@@ -21,6 +21,8 @@ import json as j
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
+from kahndor.logma import Logma
+from pyffice.document import PyfficeDocument
 from nchantrs.libraries import pyqt
 from nchantrs.utilities.utils import lookup
 from nchantrs.dialogs.dialogs import NchantdSigil
@@ -214,7 +216,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
 
     def load_document(self):
         """"""
-        self.document_obj = Document.open(self.file_path)
+        self.document_obj = PyfficeDocument.open(self.file_path)
 
     def open_google_drive_viewer(self, name=None, app=None, cfg=None):
         """"""

@@ -215,7 +215,7 @@ class InMemoryReferralStore:
     """
 
     def __init__(self):
-        logma.info(f"InMemoryReferralStore init: parent={type(parent).__name__}")
+        logma.info("InMemoryReferralStore init")
         self.codes: Dict[str, ReferralCode] = {}
         self.code_index: Dict[str, str] = {}  # normalised -> user_id
         self.attributions: List[ReferralAttribution] = []
