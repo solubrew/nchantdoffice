@@ -97,12 +97,15 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         cfg = {"default_toolbar": False}
         super().initView(cfg)
         self.top_layout = pyqt.QHBoxLayout()
-        cfg = {
-            "layout": "horizontal",
-            "label": f"Date: {dt.datetime.now().strftime('%m/%d/%Y')}",
-            "options": ["Contextually", "Chronologically"],
-        }
-        self.settings = NchantdDropDown(self, cfg).initWidget()
+        # PUSH to 0.0.3
+        # cfg = {
+        #     "layout": "horizontal",
+        #     "label": f"Date: {dt.datetime.now().strftime('%m/%d/%Y')}",
+        #     "options": ["Contextually", "Chronologically"],
+        # }
+        # self.settings = NchantdDropDown(self, cfg).initWidget()
+        cfg = {"text": "Journal Entries"}
+        self.settings = NchantdLabel(self, cfg).initWidget()
         self.top_layout.addWidget(self.settings)
         self.layout.addLayout(self.top_layout)
         cfg = {"default_text": self.full_text}
@@ -168,11 +171,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
-        self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdJournalAppendEditor"))
-        if self.parent:
-            self.config.override(parent.config)
-        self.config.override(cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdJournalAppendEditor").override(cfg))
         self.last_timestamp_position = None
         self.keywords = None
         self.new_entry = False

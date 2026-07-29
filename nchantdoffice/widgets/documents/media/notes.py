@@ -26,6 +26,7 @@ from kahndor.logma import Logma
 from nchantrs.dialogs.dialogs import NchantdSigil
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.media.editors.editors import NchantdDocEditor
+from nchantrs.widgets.annotations import NchantdLabel
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -166,7 +167,7 @@ class NchantdOfficeNoteDocument(NchantdOfficeDocument):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(parent, cfg)
+        super().__init__("Note", parent, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNoteDocument").override(cfg))
 
@@ -244,8 +245,7 @@ class NchantdOfficeScratchEditor(NchantdOfficeDocument):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        super().__init__(parent, cfg)
-        self.parent = parent
+        super().__init__("Scratch", parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeScratchEditor").override(cfg))
         self.context_notes = []
         self.rotate_time = None
@@ -269,15 +269,26 @@ class NchantdOfficeScratchEditor(NchantdOfficeDocument):
     def initModel(self, cfg=None):
         """"""
         super().initModel(cfg)
+        logma.info(f"initModel")
+        scope = self.config.dikt.get("scope", "TODAY")
+        datetime = dt.datetime.now()
+        self.full_text = ""
+        logma.info(f"Full Text {self.full_text}")
         return self
 
     def initView(self):
         """ """
         cfg = {"default_toolbar": False}
         super().initView(cfg)
+        self.top_layout = pyqt.QHBoxLayout()
+        cfg = {"text": "Scratch Entries"}
+        self.settings = NchantdLabel(self, cfg).initWidget()
+        self.top_layout.addWidget(self.settings)
+        self.layout.addLayout(self.top_layout)
         cfg = {"default_text": self.full_text}
         self.editor = NchantdDocEditor(self, cfg).initWidget()
         self.editor.set_background(hex="#4F5665")
+        self.editor.setPlaceholderText("Enter text here...it will not be saved")
         self.layout.addWidget(self.editor)
         return self
 
