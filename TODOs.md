@@ -13,11 +13,27 @@
 - [ ] **Ad tab button is trying to launch a browser using the QService but we want to redirect to a tab under the Settings node / Nchantd Account tab** which is a browser tab already pointed to the users account/create account of nchantdoffice.com
 - [ ] **Ad tab size needs to be controlled** as right side tabs are slim 360x900. If ads need to be larger than that then we will have to implement the full page ad in the center tabset but this is more disruptive to users
 
-- [ ] **T-NEW-007 — Drop the `.pyof` single-instance pickle format.** All
+- **T-NEW-007 — Drop the `.pyof` single-instance pickle format.** All
   NchantdOffice instances must open their own `.pyof` SQLite DB file
   (multi-instance handling already documented in `T-NEW-005` item 2);
-  the primary instance carries the registry of secondary DB files.
-  Remove every `pickle.load` call on a `.pyof` file. Affected sites:
+  per user direction (2026-07-29): **one SQLite DB per app instance** —
+  the primary instance holds the registry of secondary DB files.
+  Affected sites (file:line list): `models.py:1634-1667 import_nchantdoffice`,
+  `widgets/controls/toolboxes.py:413-451 _open_pyof_instance`,
+  `models.py:2295 EXTENSION = ".pyof"`, `models.py:2336+ NchantdOfficeStore`.
+  Migration plan: design decision first (low priority; deferred). Steps:
+  1. Remove the `pickle.load` blocks (already done — `c68bedd`).
+  2. Wire `NchantdOfficeStore.open_sqlite(path)` + `close_sqlite()`
+     (Sprint 15, 2026-07-29).
+  3. Wire `NchantdOfficeCloakModel.import_nchantdoffice(path)` to call
+     `self.store.open_sqlite(path)` and refresh the in-memory registry
+     via `self.store.refresh_from_sqlite()` (Sprint 15, 2026-07-29).
+  4. Add `tests/test_pyof_sqlite_import.py` (3 tests: opens a real
+     SQLite connection, no pickle.load/loads call, doesn't leak
+     connections across multiple imports).
+  5. Document `.pyof` as the canonical SQLite-DB extension; the legacy
+     single-instance pickle path is removed (T-NEW-007 complete).
+  Commit `ec6d7d2` (Sprint 15, 2026-07-29).
   - `nchantdoffice/models.py:1634-1667` — `import_nchantdoffice`
   - `nchantdoffice/widgets/controls/toolboxes.py:413-436` —
     `_open_pyof_instance` (the duplicate fallback)

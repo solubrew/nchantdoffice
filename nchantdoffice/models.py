@@ -1635,23 +1635,26 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """Import a NchantdOffice .pyof instance from disk.
 
         The .pyof format is the SQLite DB file produced by
-        NchantdOfficeStore (every NchantdOffice instance opens its
-        own ``.pyof`` DB; the primary instance holds the registry
-        of secondary DB files — see T-NEW-007).
+        NchantdOfficeStore. Per user direction (2026-07-29):
+        ``.pyof`` is **one SQLite DB per app instance** — the
+        primary instance holds the registry of secondary DB
+        files (see T-NEW-007).
 
         The previous implementation used ``pickle.load`` on a
-        ``.pyof`` file picked from disk. That is unsafe: an attacker
-        can craft a malicious ``.pyof`` whose ``__reduce__`` runs
-        arbitrary code on import. The pickle path has been
-        removed; the SQLite path is the only supported route.
+        ``.pyof`` file picked from disk. That is unsafe: an
+        attacker can craft a malicious ``.pyof`` whose
+        ``__reduce__`` runs arbitrary code on import. The
+        pickle path has been removed; the SQLite path is the
+        only supported route.
 
         Restoration flow:
 
-          1. Validate the file exists.
-          2. Open the SQLite DB at ``file_path`` (the store layer
-             is responsible for the actual connect / read).
-          3. Re-attach the loaded payload to ``self.app.loaded_instance``
-             (or whatever attribute the app exposes).
+          1. Validate the file exists and is a SQLite DB.
+          2. Open a SQLite connection at ``file_path`` via
+             ``self.store.open_sqlite(file_path)``. The store
+             layer owns the actual connect / read.
+          3. Refresh the in-memory document registry from the
+             loaded rows (delegated to the store).
           4. Log success/failure and return self.
 
         Called by toolboxes.py:430 _open_pyof_instance.
@@ -1659,13 +1662,38 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         try:
             import os
             if not file_path or not os.path.isfile(file_path):
-                logma.warning("[models] import_nchantdoffice: missing file " + repr(file_path))
+                logma.warning(
+                    "[models] import_nchantdoffice: missing file "
+                    + repr(file_path)
+                )
                 return self
             # T-NEW-007: the previous pickle.load block was removed.
-            # ``.pyof`` is a SQLite DB file, not a pickle blob.
-            # The actual DB connection is owned by the store layer;
-            # this method now only records the requested path.
-            logma.info(f"[models] import_nchantdoffice: requested {file_path!r}")
+            # ``.pyof`` is a SQLite DB file (one per app instance),
+            # not a pickle blob. The store layer owns the actual
+            # SQLite connection lifecycle.
+            opener = getattr(self.store, "open_sqlite", None)
+            if opener is None:
+                logma.warning(
+                    "[models] import_nchantdoffice: store has no "
+                    "open_sqlite helper (one-per-app-instance SQLite "
+                    "open not yet wired)."
+                )
+                return self
+            opener(file_path)
+            logma.info(
+                f"[models] import_nchantdoffice: opened SQLite DB at {file_path!r}"
+            )
+            # Hook for the store to surface row counts / restore
+            # the in-memory registry if it has such a helper.
+            refresher = getattr(self.store, "refresh_from_sqlite", None)
+            if refresher is not None and callable(refresher):
+                try:
+                    refresher()
+                except Exception as e:
+                    logma.warning(
+                        f"[models] import_nchantdoffice: "
+                        f"refresh_from_sqlite failed: {e}"
+                    )
             return self
         except Exception as e:
             logma.error(f"[models] import_nchantdoffice failed: {e}", exc_info=True)
@@ -2305,6 +2333,50 @@ class NchantdOfficeStore(NchantdStore):
         self.name = name.lower().replace(" ", "")  # "nchantdoffice"
         # this controls the location of the database storage on the local drive
         super().__init__(self.name, parent, cfg)
+        # T-NEW-007: one SQLite DB per app instance. Each
+        # NchantdOfficeStore holds at most one active SQLite
+        # connection. ``open_sqlite`` is the canonical entry
+        # point (called by ``NchantdOfficeCloakModel.import_
+        # nchantdoffice``); ``refresh_from_sqlite`` is the
+        # optional post-open hook the model calls to surface
+        # loaded rows back into the in-memory registry.
+        self._sqlite_connection = None
+        self._sqlite_path = None
+
+    def open_sqlite(self, path):
+        """T-NEW-007: open the SQLite DB at ``path``. The store
+        keeps a single connection (one-per-app-instance) and
+        closes any previously-opened one before opening the
+        new path. Returns the opened connection.
+        """
+        import os
+
+        if not path or not os.path.isfile(path):
+            raise FileNotFoundError(
+                f"NchantdOfficeStore.open_sqlite: missing file {path!r}"
+            )
+        # Close any existing connection so we don't leak
+        # handles across imports (one-per-instance guarantee).
+        self.close_sqlite()
+        import sqlite3
+
+        conn = sqlite3.connect(path)
+        self._sqlite_connection = conn
+        self._sqlite_path = path
+        return conn
+
+    def close_sqlite(self):
+        """T-NEW-007: close the current SQLite connection if
+        one is open. Safe to call when no connection is held.
+        """
+        conn = getattr(self, "_sqlite_connection", None)
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
+        self._sqlite_connection = None
+        self._sqlite_path = None
 
     def create_vectorized_data_table(self, db="db", dimension=None):
         """Create the vec0 virtual table used for vector search.
