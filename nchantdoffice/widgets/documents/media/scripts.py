@@ -1305,6 +1305,50 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         logma.info(f"Type: {type(text)}")
         return text
 
+    def _preserved_unit_html(self):
+        """Return the saved PyfficeText unit HTML if non-empty, else None.
+
+        The PyfficeScript unit stores rich text under
+        ``self.document.text.html``; ``self.document.data["pages"]``
+        carries the same payload under pages[0]["entries"][...]
+        when reconstructed from the saved content_enc64_txt blob.
+        Returns the first non-empty HTML found in either shape.
+        """
+        if self.document is None:
+            return None
+        text_attr = getattr(self.document, "text", None)
+        if text_attr is not None:
+            html = getattr(text_attr, "html", None)
+            if html:
+                return html
+        data = getattr(self.document, "data", None) or {}
+        if not isinstance(data, dict):
+            return None
+        pages = data.get("pages") or {}
+        if not isinstance(pages, dict):
+            return None
+        for page_key in sorted(pages.keys(), key=lambda k: int(k) if str(k).isdigit() else 0):
+            page = pages[page_key]
+            if not isinstance(page, dict):
+                continue
+            entries = page.get("entries") or {}
+            if not isinstance(entries, dict):
+                continue
+            for entry_key in sorted(entries.keys(), key=lambda k: int(k) if str(k).isdigit() else 0):
+                entry = entries[entry_key]
+                if not isinstance(entry, dict):
+                    continue
+                meta = entry.get("meta_data") or {}
+                if not isinstance(meta, dict):
+                    continue
+                unit = meta.get("unit") or {}
+                if not isinstance(unit, dict):
+                    continue
+                html = unit.get("html")
+                if html:
+                    return html
+        return None
+
     def _apply_syntax_highlighting(self, text):
         """Dispatch to the right editor API based on the script syntax.
 
@@ -1338,7 +1382,16 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             return
         if self.document.syntax in ("plain-text", "plaintext"):
             logma.info("PlainText")
-            self.document_editor.setPlainText(text)
+            # If the saved PyfficeText unit has preserved HTML (e.g.
+            # from a paste / import / copy-edit before the
+            # syntax was downgraded to plain-text), prefer setHtml so
+            # the formatting survives the reopen. Falls back to
+            # setPlainText when no rich-text payload is available.
+            preserved_html = self._preserved_unit_html()
+            if preserved_html:
+                self.document_editor.setHtml(preserved_html)
+            else:
+                self.document_editor.setPlainText(text)
             return
         if self.document.syntax == "xml":
             self.document_editor.setXml(text)
