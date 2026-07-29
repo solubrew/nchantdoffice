@@ -16,7 +16,19 @@
 - NchantdScript is still loading with no formatting when returned to tab but loads properly when opened from a file directly.
 - NchantdNotebook is not storing the location when a specific .ipynb file is opened and always returns to the cwd file manager view
 - NchantdFileSystem needs to store when a root change is made and return to that root and to store which directories are expanded and return them.
-- 
+
+- add config for user to select whether or not creating a new node pops up a name entry dialog or generates a random name
+- add config for user to select whether or not creating a new tab pops up a name entry dialog or generates a random name
+- create new node name edit dialog
+- create new tab name edit dialog
+- add icon of database disk stack with a save button on top then use that to toggle in on the NchantdDocumentToolBar 
+   when a specific document is stored internally to the database as well as showing internal/external in the Tab Edit Pane. 
+- NchantdSketch has no external standard compatible file so it will default to internal and then export as an image
+- NchantdCalendar has no external standard compatible file so it will default to internal ...later versions will allow connection to google calendar, etc
+- add icon of cloud with a save button on top then use that to toggle in the on the NchantdDocumentToolBar when a 
+   specific document is stored to a cloud service
+- Tab Edit Pane changes the name of the tab but doesn't save it to the database - this is a regression
+- Node Edit Pane changes the name of the node but doesn't save it to the database - this is a regression
 
 
 
