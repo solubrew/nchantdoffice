@@ -2,6 +2,13 @@
 
 ## NEW TODOs (open items not yet in a sprint)
 
+Open file dialog doesn't respect cancel button or x close window
+
+
+
+
+
+
 > Live bugs that have NOT yet been closed (with the live
 > `file:line` and a one-line description). Marked `[ ]` (pending)
 > or `[x]` (done). When something here is fixed, do NOT delete

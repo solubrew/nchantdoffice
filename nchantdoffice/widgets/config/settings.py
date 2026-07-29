@@ -36,6 +36,7 @@ from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.groups import NchantdVScrollGroupBox, NchantdHGroupBox
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
+from nchantdoffice.widgets.panes.document_settings import NchantdOfficeDocumentConfigPane
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -136,12 +137,309 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # release-marker content, not a long method to split.
         """ """
         super().initView(cfg)
-
         self.primary_settings_group = pyqt.QGroupBox()
         self.primary_settings_group.setTitle("Interface Settings")
         primary_layout = pyqt.QHBoxLayout()
         self.primary_settings_group.setLayout(primary_layout)
+        self._initialize_left_side(primary_layout)
+        self._initialize_center(primary_layout)
+        self._initialize_right_side(primary_layout)
+        self.layout.addWidget(self.primary_settings_group)
+        return self
 
+    def initWidget(self):
+        """"""
+        self.initModel()
+        self.initView()
+        return self
+
+    def cmd_on_change_journal_focus(self):
+        """"""
+        # TODO implement method logic
+        return self
+
+    def cmd_on_change_settings_focus(self):
+        """"""
+        # TODO implement method logic
+        return self
+
+    def cmd_on_change_automation(self):
+        """"""
+        # TODO implement method logic
+        return self
+
+    def cmd_on_change_data_source(self):
+        """"""
+        # TODO implement method logic
+        return self
+
+    def cmd_on_change_show_left_side_pane(self):
+        """"""
+        # TODO implement method logic
+        return self
+
+    def cmd_on_change_show_right_side_pane(self):
+        """"""
+        # TODO implement method logic
+        return self
+
+    def cmd_on_change_quicklaunch(self):
+        """"""
+        # TODO implement method logic
+        return self
+
+    def cmd_on_change_document_catalog(self, event=None, *args, **kwargs):
+        """Toggle the show-document-launch-catalog flag.
+
+        Reads the current checkbox state and stores it on the config
+        as ``show_document_catalog``. Returns ``self`` for chainable
+        call sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = getattr(self, "show_document_catalog", False)
+            self.show_document_catalog = bool(value)
+            self.config.dikt["show_document_catalog"] = bool(value)
+        except Exception as e:
+            logma.error(f"[settings] cmd_on_change_document_catalog failed: {e}", exc_info=True)
+        return self
+
+    def cmd_on_change_default_tab_bit(self, event=None, *args, **kwargs):
+        """Toggle the create-default-tab-on-startup flag.
+
+        Reads the current checkbox state and stores it on the config
+        as ``create_default_tab``. Returns ``self`` for chainable
+        call sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = getattr(self, "create_default_tab", False)
+            self.create_default_tab = bool(value)
+            self.config.dikt["create_default_tab"] = bool(value)
+        except Exception as e:
+            logma.error(f"[settings] cmd_on_change_default_tab_bit failed: {e}", exc_info=True)
+        return self
+
+    def cmd_on_change_default_tab_select(self, event=None, *args, **kwargs):
+        """Record the user's chosen default tab on startup.
+
+        Reads the current selection from ``default_tab_switch``
+        and stores it on the config as ``default_tab``.
+        """
+        try:
+            value = None
+            widget = getattr(self, "default_tab_switch", None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                if callable(getter):
+                    value = getter()
+            if value is not None:
+                self.config.dikt["default_tab"] = value
+        except Exception as e:
+            logma.error(f"[settings] cmd_on_change_default_tab_select failed: {e}", exc_info=True)
+        return self
+
+    def cmd_set_pro_edition(self, event=None, *args, **kwargs):
+        """Toggle the pro-edition flag, gated by the actual user capability.
+
+        Reads the checkbox state (or kwargs value) and stores the
+        requested setting on the config. Refuses to enable pro
+        features when the current user does not have the underlying
+        ``has_pro`` capability (i.e. the user is on the free tier).
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            requested = None
+            if event is not None and hasattr(event, "isChecked"):
+                requested = bool(event.isChecked())
+            if requested is None and "value" in (kwargs or {}):
+                requested = bool(kwargs["value"])
+            if requested is None:
+                requested = False
+
+            user = getattr(self, "user", None) or getattr(self.app.model, "user", None)
+            has_pro_capability = bool(getattr(user, "has_pro", False)) if user else False
+
+            if requested and not has_pro_capability:
+                logma.warning("[settings] cmd_set_pro_edition: user lacks has_pro capability - ignoring")
+                requested = False
+            self.pro_edition = bool(requested)
+            self.config.dikt["pro_edition"] = bool(requested)
+        except Exception as e:
+            logma.error(f"[settings] cmd_set_pro_edition failed: {e}", exc_info=True)
+        return self
+
+    def cmd_on_change_right_side_focus(self, event=None, *args, **kwargs):
+        """Toggle the refocus-right-side-tabs-on-document-change flag.
+
+        Reads the current checkbox state (or falls back to the
+        stored ``refocus_right_side_tab`` attribute) and writes the
+        updated value to the config so downstream behaviour follows
+        the user's preference.
+        """
+        try:
+            value = None
+            checkbox = getattr(self, "refocus_setting", None)
+            if checkbox is not None and hasattr(checkbox, "isChecked"):
+                value = bool(checkbox.isChecked())
+            if value is None:
+                value = getattr(self, "refocus_right_side_tab", False)
+            self.refocus_right_side_tab = bool(value)
+            self.config.dikt["refocus_right_side_tab"] = bool(value)
+        except Exception as e:
+            logma.error(f"[settings] cmd_on_change_right_side_focus failed: {e}", exc_info=True)
+        return self
+
+    def cmd_on_change_right_side_tab_select(self, event=None, *args, **kwargs):
+        """Record the user's chosen right-side default tab.
+
+        Reads the current value from ``self.default_tab_switch``
+        (or ``self.default_right_side_tab_select`` as a fallback)
+        and persists it on the config so the next session opens the
+        selected right-pane tab.
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            value = None
+            widget = getattr(self, "default_tab_switch", None) or getattr(self, "default_right_side_tab_select", None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+                if callable(getter):
+                    value = getter()
+            if value is None:
+                value = getattr(self, "default_right_side_tab", None)
+            if value is not None:
+                self.default_right_side_tab = value
+                self.config.dikt["default_right_side_tab"] = value
+        except Exception as e:
+            logma.error(f"[settings] cmd_on_change_right_side_tab_select failed: {e}", exc_info=True)
+        return self
+
+    def get_right_pane_tab_options(self):
+        """Enumerate the available right-pane tabs as dropdown options.
+
+        Reads the application's right-pane tab registry when present;
+        falls back to the canonical 4-tab default list when the
+        registry is not yet wired up. Each entry is ``"<index> - <name>"``
+        so the user can identify the tab both by ordinal and label.
+
+        Returns:
+            A list of strings suitable for ``combobox.options``.
+        """
+        try:
+            tabs = []
+            view = getattr(self.app, "view", None)
+            if view is not None and hasattr(view, "panes"):
+                pane = view.panes.get("right") if isinstance(view.panes, dict) else None
+                if pane is not None:
+                    for idx, child in enumerate(getattr(pane, "widgets", lambda: [])()):
+                        name = type(child).__name__
+                        tabs.append(f"{idx} - {name}")
+            if not tabs:
+                tabs = ["0 - Journal", "1 - ToolBox", "2 - Calendar", "3 - Calculator"]
+            return tabs
+        except Exception as e:
+            logma.error(f"[settings] get_right_pane_tab_options failed: {e}", exc_info=True)
+            return ["0 - Journal", "1 - ToolBox", "2 - Calendar", "3 - Calculator"]
+
+    def get_settings(self):
+        """"""
+        return super().get_settings("interface")
+
+    def on_data_changed(self):
+        """Mark the settings document as dirty when the user edits a field.
+
+        Sets ``self.has_changed = True`` and stores the change
+        timestamp so ``save()`` knows to persist the new values.
+        Real "old vs new diff" tracking is intentionally minimal
+        here - the full UI-driven save flow already handles per-key
+        updates in the cmd_* handlers. Returns ``self``.
+        """
+        try:
+            from datetime import datetime
+
+            self.has_changed = True
+            self._last_change_at = datetime.utcnow().isoformat()
+            logma.debug(f"[config/settings] on_data_changed: dirty at {self._last_change_at}")
+            return self
+        except Exception as e:
+            logma.error(f"[config/settings] on_data_changed failed: {e}", exc_info=True)
+            return self
+
+    def save(self):
+        """"""
+        super().save()
+        data = []
+        # if self.enable_journal_focus_bit.changed:
+        #     data.append([self.journal_node.isChecked()])
+        # if self.enable_settings_focus_bit.changed:
+        #     data.append([self.settings_node.isChecked()])
+        # if self.enable_automation_bit.changed:
+        #     data.append([self.automation_enable.isChecked()])
+        # if self.enable_data_sources_bit.changed:
+        #     data.append([self.data_source_enable.isChecked()])
+        # if self.enable_journal_focus_bit.changed:
+        #     data.append([self.left_side_pane.isChecked()])
+        # if self.enabel_quick_launch_toolbar_bit.changed:
+        #     data.append([self.quick_launch_toolbar.isChecked()])
+        #
+        #     for document in self.document_types.iterrows():
+        #         data.append([document["name_txt"], self.quick_launch_document_types[document["name_txt"]].isChecked()])
+        # if self.enable_journal_focus_bit.changed:
+        #     data.append([self.document_launch_tab.isChecked()])
+        # if self.enable_journal_focus_bit.changed:
+        #     data.append([self.default_tab_switch.currentText()])
+        return self
+
+    def _initialize_center(self, primary_layout):
+        """"""
+        # Center Settings Group
+        center_settings_group = NchantdGridScrollGroupBox()
+        center_settings_group.scroll.setHorizontalScrollBarPolicy(pyqt.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        center_settings_group.setTitle("Center Pane Settings")
+
+        # Per-document-type configuration pane: each registered
+        # document type gets its own row in the center settings grid.
+        # Each row has a label + a launch-catalog checkbox wired to
+        # ``cmd_on_change_document_catalog``.
+        row = 0
+        for _, document in self.document_types_df.iterrows():
+            label_text = f"{document.get('name_txt', 'Document')}: Show Launch Catalog"
+            cfg = {
+                "text": label_text,
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "handler": self.cmd_on_change_document_catalog,
+                "value": getattr(self, "show_document_catalog", False),
+            }
+            config_pane = NchantdOfficeDocumentConfigPane(self, cfg).initWidget()
+            center_settings_group.addWidget(config_pane, row, 0)
+            row += 1
+
+        # Toolbar name-log popup toggle (T-016 surface)
+        cfg = {
+            "text": "Show Tab/Node Name Log Dialog",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_on_change_default_tab_bit,
+            "value": getattr(self, "create_default_tab", False),
+        }
+        self.default_tab = NchantdCheckbox(self, cfg).initWidget()
+        center_settings_group.addWidget(self.default_tab, row, 0)
+        row += 1
+
+        primary_layout.addLayout(center_settings_group.layout)
+
+    def _initialize_left_side(self, primary_layout):
+        """"""
         # Left Side Settings Group
         left_side_settings_group = NchantdGridScrollGroupBox()
         left_side_settings_group.scroll.setHorizontalScrollBarPolicy(pyqt.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -149,6 +447,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         left_side_settings_group.setTitle("Left Pane Settings")
         primary_layout.addLayout(left_side_settings_group.layout)
         cnt = 0
+        # PUSH 0.0.3:
         # cfg = {
         #     "text": "Show Journal Node",
         #     "layout": "horizontal",
@@ -215,7 +514,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         document_group = pyqt.QGroupBox()
         document_group.setTitle("Quick launch Documents")
         document_group_layout = pyqt.QVBoxLayout()
-        document_group_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignRight)
+        document_group_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
         document_group.setLayout(document_group_layout)
         self.quick_launch_document_types = {}
         for i, document in self.document_types_df.iterrows():
@@ -228,48 +527,8 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             document_group_layout.addWidget(self.quick_launch_document_types[document["name_txt"]])
         left_side_settings_group.addWidget(document_group, cnt, 0)
 
-        # Center Settings Group
-        center_settings_group = NchantdGridScrollGroupBox()
-        center_settings_group.scroll.setHorizontalScrollBarPolicy(pyqt.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        center_settings_group.setTitle("Center Pane Settings")
-
-        # Per-document-type configuration pane: each registered
-        # document type gets its own row in the center settings grid.
-        # Each row has a label + a launch-catalog checkbox wired to
-        # ``cmd_on_change_document_catalog``.
-        row = 0
-        for _, document in self.document_types_df.iterrows():
-            label_text = f"{document.get('name_txt', 'Document')}: Show Launch Catalog"
-            cfg = {
-                "text": label_text,
-                "layout": "horizontal",
-                "size": ["auto", "auto"],
-                "handler": self.cmd_on_change_document_catalog,
-                "value": getattr(self, "show_document_catalog", False),
-            }
-            checkbox = NchantdCheckbox(self, cfg).initWidget()
-            center_settings_group.addWidget(checkbox, row, 0)
-            row += 1
-
-        # Toolbar name-log popup toggle (T-016 surface)
-        cfg = {
-            "text": "Show Tab/Node Name Log Dialog",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "handler": self.cmd_on_change_default_tab_bit,
-            "value": getattr(self, "create_default_tab", False),
-        }
-        self.default_tab = NchantdCheckbox(self, cfg).initWidget()
-        center_settings_group.addWidget(self.default_tab, row, 0)
-        row += 1
-
-        primary_layout.addLayout(center_settings_group.layout)
-        # T-removed: a commented-out block for document-launch / default-tab
-        # UI lived here. It referenced attributes (self.show_document_catalog,
-        # self.create_default_tab, self.default_tab_select_value) that
-        # weren't initialised anywhere. Removed 3 TODO markers.
-        center_settings_group.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-
+    def _initialize_right_side(self, primary_layout):
+        """"""
         # Right Side Settings Group
         right_side_settings_group = NchantdGridScrollGroupBox()
         right_side_settings_group.scroll.setHorizontalScrollBarPolicy(pyqt.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -324,268 +583,27 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # self.new_tab_accept_buttons = NchantdAcceptButtons(self, cfg).initWidget()
         # layout.addWidget(self.new_tab_accept_buttons)
         # right_side_settings_group.addWidget(group, 3, 0)
-
+        cnt = 0
+        if self.config.dikt.get("has_quick_launch_toolbar", False) is True:
+            self.quick_launch_toolbar.setChecked(True)
+        # left_side_settings_group.addWidget(self.quick_launch_toolbar, cnt, 0)
+        # cnt += 1
+        document_group = pyqt.QGroupBox()
+        document_group.setTitle("Quick launch Documents")
+        document_group_layout = pyqt.QVBoxLayout()
+        document_group_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
+        document_group.setLayout(document_group_layout)
+        self.quick_launch_document_types = {}
+        for i, document in self.document_types_df.iterrows():
+            cfg = {"text": document["name_txt"], "layout": "horizontal", "size": ["auto", "auto"]}
+            self.quick_launch_document_types[document["name_txt"]] = NchantdCheckbox(self, cfg).initWidget()
+            # if not self.quick_launch_toolbar.isChecked():
+            #     self.quick_launch_document_types[document["name_txt"]].setDisabled(True)
+            if document["quick_launch_bit"] == 1:
+                self.quick_launch_document_types[document["name_txt"]].setChecked(True)
+            document_group_layout.addWidget(self.quick_launch_document_types[document["name_txt"]])
+        right_side_settings_group.addWidget(document_group, cnt, 0)
         right_side_settings_group.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
-        self.layout.addWidget(self.primary_settings_group)
-        # self.layout.addLayout(self.primary_settings_group.layout)
-        return self
-
-
-    def get_right_pane_tab_options(self):
-        """Enumerate the available right-pane tabs as dropdown options.
-
-        Reads the application's right-pane tab registry when present;
-        falls back to the canonical 4-tab default list when the
-        registry is not yet wired up. Each entry is ``"<index> - <name>"``
-        so the user can identify the tab both by ordinal and label.
-
-        Returns:
-            A list of strings suitable for ``combobox.options``.
-        """
-        try:
-            tabs = []
-            view = getattr(self.app, "view", None)
-            if view is not None and hasattr(view, "panes"):
-                pane = view.panes.get("right") if isinstance(view.panes, dict) else None
-                if pane is not None:
-                    for idx, child in enumerate(getattr(pane, "widgets", lambda: [])()):
-                        name = type(child).__name__
-                        tabs.append(f"{idx} - {name}")
-            if not tabs:
-                tabs = ["0 - Journal", "1 - ToolBox", "2 - Calendar", "3 - Calculator"]
-            return tabs
-        except Exception as e:
-            logma.error(f"[settings] get_right_pane_tab_options failed: {e}", exc_info=True)
-            return ["0 - Journal", "1 - ToolBox", "2 - Calendar", "3 - Calculator"]
-
-    def initWidget(self):
-        """"""
-        self.initModel()
-        self.initView()
-        return self
-
-    def cmd_on_change_journal_focus(self):
-        """"""
-        return self
-
-    def cmd_on_change_settings_focus(self):
-        """"""
-        return self
-
-    def cmd_on_change_automation(self):
-        """"""
-        return self
-
-    def cmd_on_change_data_source(self):
-        """"""
-        return self
-
-    def cmd_on_change_show_left_side_pane(self):
-        """"""
-        return self
-
-    def cmd_on_change_show_right_side_pane(self):
-        """"""
-        return self
-
-    def cmd_on_change_quicklaunch(self):
-        """"""
-        return self
-
-    def cmd_on_change_document_catalog(self, event=None, *args, **kwargs):
-        """Toggle the show-document-launch-catalog flag.
-
-        Reads the current checkbox state and stores it on the config
-        as ``show_document_catalog``. Returns ``self`` for chainable
-        call sites.
-        """
-        try:
-            value = None
-            if event is not None and hasattr(event, "isChecked"):
-                value = bool(event.isChecked())
-            if value is None:
-                value = getattr(self, "show_document_catalog", False)
-            self.show_document_catalog = bool(value)
-            self.config.dikt["show_document_catalog"] = bool(value)
-        except Exception as e:
-            logma.error(f"[settings] cmd_on_change_document_catalog failed: {e}", exc_info=True)
-        return self
-
-    def cmd_on_change_default_tab_bit(self, event=None, *args, **kwargs):
-        """Toggle the create-default-tab-on-startup flag.
-
-        Reads the current checkbox state and stores it on the config
-        as ``create_default_tab``. Returns ``self`` for chainable
-        call sites.
-        """
-        try:
-            value = None
-            if event is not None and hasattr(event, "isChecked"):
-                value = bool(event.isChecked())
-            if value is None:
-                value = getattr(self, "create_default_tab", False)
-            self.create_default_tab = bool(value)
-            self.config.dikt["create_default_tab"] = bool(value)
-        except Exception as e:
-            logma.error(f"[settings] cmd_on_change_default_tab_bit failed: {e}", exc_info=True)
-        return self
-
-    def cmd_on_change_default_tab_select(self, event=None, *args, **kwargs):
-        """Record the user's chosen default tab on startup.
-
-        Reads the current selection from ``default_tab_switch``
-        and stores it on the config as ``default_tab``.
-        """
-        try:
-            value = None
-            widget = getattr(self, "default_tab_switch", None)
-            if widget is not None:
-                getter = (
-                    getattr(widget, "currentText", None)
-                    or getattr(widget, "get_value", None)
-                )
-                if callable(getter):
-                    value = getter()
-            if value is not None:
-                self.config.dikt["default_tab"] = value
-        except Exception as e:
-            logma.error(f"[settings] cmd_on_change_default_tab_select failed: {e}", exc_info=True)
-        return self
-
-
-    def cmd_set_pro_edition(self, event=None, *args, **kwargs):
-        """Toggle the pro-edition flag, gated by the actual user capability.
-
-        Reads the checkbox state (or kwargs value) and stores the
-        requested setting on the config. Refuses to enable pro
-        features when the current user does not have the underlying
-        ``has_pro`` capability (i.e. the user is on the free tier).
-
-        Returns ``self`` for chainable call sites.
-        """
-        try:
-            requested = None
-            if event is not None and hasattr(event, "isChecked"):
-                requested = bool(event.isChecked())
-            if requested is None and "value" in (kwargs or {}):
-                requested = bool(kwargs["value"])
-            if requested is None:
-                requested = False
-
-            user = getattr(self, "user", None) or getattr(self.app.model, "user", None)
-            has_pro_capability = bool(getattr(user, "has_pro", False)) if user else False
-
-            if requested and not has_pro_capability:
-                logma.warning(
-                    "[settings] cmd_set_pro_edition: user lacks has_pro capability - ignoring"
-                )
-                requested = False
-            self.pro_edition = bool(requested)
-            self.config.dikt["pro_edition"] = bool(requested)
-        except Exception as e:
-            logma.error(f"[settings] cmd_set_pro_edition failed: {e}", exc_info=True)
-        return self
-
-    def cmd_on_change_right_side_focus(self, event=None, *args, **kwargs):
-        """Toggle the refocus-right-side-tabs-on-document-change flag.
-
-        Reads the current checkbox state (or falls back to the
-        stored ``refocus_right_side_tab`` attribute) and writes the
-        updated value to the config so downstream behaviour follows
-        the user's preference.
-        """
-        try:
-            value = None
-            checkbox = getattr(self, "refocus_setting", None)
-            if checkbox is not None and hasattr(checkbox, "isChecked"):
-                value = bool(checkbox.isChecked())
-            if value is None:
-                value = getattr(self, "refocus_right_side_tab", False)
-            self.refocus_right_side_tab = bool(value)
-            self.config.dikt["refocus_right_side_tab"] = bool(value)
-        except Exception as e:
-            logma.error(f"[settings] cmd_on_change_right_side_focus failed: {e}", exc_info=True)
-        return self
-
-    def cmd_on_change_right_side_tab_select(self, event=None, *args, **kwargs):
-        """Record the user's chosen right-side default tab.
-
-        Reads the current value from ``self.default_tab_switch``
-        (or ``self.default_right_side_tab_select`` as a fallback)
-        and persists it on the config so the next session opens the
-        selected right-pane tab.
-
-        Returns ``self`` for chainable call sites.
-        """
-        try:
-            value = None
-            widget = (
-                getattr(self, "default_tab_switch", None)
-                or getattr(self, "default_right_side_tab_select", None)
-            )
-            if widget is not None:
-                getter = (
-                    getattr(widget, "currentText", None)
-                    or getattr(widget, "get_value", None)
-                )
-                if callable(getter):
-                    value = getter()
-            if value is None:
-                value = getattr(self, "default_right_side_tab", None)
-            if value is not None:
-                self.default_right_side_tab = value
-                self.config.dikt["default_right_side_tab"] = value
-        except Exception as e:
-            logma.error(f"[settings] cmd_on_change_right_side_tab_select failed: {e}", exc_info=True)
-        return self
-
-    def get_settings(self):
-        """"""
-        return super().get_settings("interface")
-
-    def on_data_changed(self):
-        """Mark the settings document as dirty when the user edits a field.
-
-        Sets ``self.has_changed = True`` and stores the change
-        timestamp so ``save()`` knows to persist the new values.
-        Real "old vs new diff" tracking is intentionally minimal
-        here - the full UI-driven save flow already handles per-key
-        updates in the cmd_* handlers. Returns ``self``.
-        """
-        try:
-            from datetime import datetime
-            self.has_changed = True
-            self._last_change_at = datetime.utcnow().isoformat()
-            logma.debug(f"[config/settings] on_data_changed: dirty at {self._last_change_at}")
-            return self
-        except Exception as e:
-            logma.error(f"[config/settings] on_data_changed failed: {e}", exc_info=True)
-            return self
-
-    def save(self):
-        """"""
-        super().save()
-        data = []
-        # if self.enable_journal_focus_bit.changed:
-        #     data.append([self.journal_node.isChecked()])
-        # if self.enable_settings_focus_bit.changed:
-        #     data.append([self.settings_node.isChecked()])
-        # if self.enable_automation_bit.changed:
-        #     data.append([self.automation_enable.isChecked()])
-        # if self.enable_data_sources_bit.changed:
-        #     data.append([self.data_source_enable.isChecked()])
-        # if self.enable_journal_focus_bit.changed:
-        #     data.append([self.left_side_pane.isChecked()])
-        # if self.enabel_quick_launch_toolbar_bit.changed:
-        #     data.append([self.quick_launch_toolbar.isChecked()])
-        #
-        #     for document in self.document_types.iterrows():
-        #         data.append([document["name_txt"], self.quick_launch_document_types[document["name_txt"]].isChecked()])
-        # if self.enable_journal_focus_bit.changed:
-        #     data.append([self.document_launch_tab.isChecked()])
-        # if self.enable_journal_focus_bit.changed:
-        #     data.append([self.default_tab_switch.currentText()])
-        return self
 
 
 class NchantdOfficeThemeSettings(NchantdThemeSettings):
@@ -621,8 +639,10 @@ class NchantdOfficeThemeSettings(NchantdThemeSettings):
 # keeps working without changes.
 try:
     from nchantdoffice.widgets.config.referral_panel import NchantdOfficeReferralPanel
+
     NchantdOfficeAffiliateManager = NchantdOfficeReferralPanel
 except ImportError:
+
     class NchantdOfficeAffiliateManager(NchantdOfficeDocumentManager):  # noqa: F811
         """Fallback shim if referral_panel.py cannot be imported.
 
@@ -630,6 +650,7 @@ except ImportError:
         marketing page so the app doesn't crash if the new panel
         module has an import error.
         """
+
         def __init__(self, parent=None, cfg=None):
             super().__init__(parent, cfg)
             self.name = "NchantdOffice Affiliate Manager (fallback)"
@@ -658,6 +679,7 @@ except ImportError:
             self.initModel()
             self.initView()
             return self
+
 
 # ====================================================================================================================||
 
