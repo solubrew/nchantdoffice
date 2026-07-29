@@ -240,10 +240,6 @@ class NchantdOfficeChart(NchantdOfficeDocument):
                 logma.error(f"Error applying chart config: {e}")
         return self
 
-    def _build_chart_data_cfg(self):
-        """"""
-        # TODO implement method
-
     def cmd_add_data_view(self):
         """Add a new data view to the chart.
 
@@ -294,34 +290,6 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"cmd_change_data_view failed: {exc}")
         return self
 
-    def get_configuration_show_config_pane(self):
-        """Get the current visibility state of the config pane.
-
-        Returns:
-            bool: True if config pane is shown, False otherwise.
-        """
-        return self.config.dikt.get("show_config_pane", True)
-
-    def get_configuration_show_data_pane(self):
-        """Get the current visibility state of the data pane.
-
-        Returns:
-            bool: True if data pane is shown, False otherwise.
-        """
-        return self.config.dikt.get("show_data_pane", True)
-
-    def get_configuration_show_full_chart_pane(self):
-        """Get the current visibility state of the full chart pane.
-
-        Returns:
-            bool: True if full chart pane is shown, False otherwise.
-        """
-        return self.config.dikt.get("show_full_chart_pane", False)
-
-    def get_content(self):
-        """"""
-        return self.config.dikt.get("content", {}) or self.config.dikt.get("data", {})
-
     def cmd_insert_object(self, event, *args, **kwargs):
         """Insert a new object into the chart.
 
@@ -367,6 +335,33 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.info(f"[analytics_charts] cmd_search_data_sources: {len(self.filtered_sources)} matches")
         except Exception as e:
             logma.error(f"[analytics_charts] cmd_search_data_sources failed: {e}", exc_info=True)
+        return self
+
+    def cmd_source_edit_changes(self, event=None, *args, **kwargs):
+        """Record a source-edit change on the current data source.
+
+        Reads the current value from the chart-source-edit pane and
+        stores it on the config so the next reload can apply the new
+        source / query.
+        """
+        edit_value = None
+        if hasattr(self, "chart_data_sources_edit_pane") and self.chart_data_sources_edit_pane is not None:
+            getter = getattr(self.chart_data_sources_edit_pane, "get_value", None) or getattr(
+                self.chart_data_sources_edit_pane, "currentText", None
+            )
+            if callable(getter):
+                edit_value = getter()
+        self.config.dikt["source_edit_changes"] = edit_value
+        # Refresh the sample-data table if the edit changed the source
+        if hasattr(self, "chart_sample_data") and self.chart_sample_data is not None:
+            try:
+                current = self.config.dikt.get("current_data_source")
+                if current is not None:
+                    sample = self.get_sample_data(current)
+                    if sample is not None:
+                        self.chart_sample_data.set_data(sample)
+            except Exception as e:
+                logma.error(f"[analytics_charts] source-edit refresh failed: {e}", exc_info=True)
         return self
 
     def cmd_toggle_config_pane(self, event, *args, **kwargs):
@@ -498,33 +493,6 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         types = self.config.dikt.get("new_object_types", [])
         return list(types) if types else []
 
-    def cmd_source_edit_changes(self, event=None, *args, **kwargs):
-        """Record a source-edit change on the current data source.
-
-        Reads the current value from the chart-source-edit pane and
-        stores it on the config so the next reload can apply the new
-        source / query.
-        """
-        edit_value = None
-        if hasattr(self, "chart_data_sources_edit_pane") and self.chart_data_sources_edit_pane is not None:
-            getter = getattr(self.chart_data_sources_edit_pane, "get_value", None) or getattr(
-                self.chart_data_sources_edit_pane, "currentText", None
-            )
-            if callable(getter):
-                edit_value = getter()
-        self.config.dikt["source_edit_changes"] = edit_value
-        # Refresh the sample-data table if the edit changed the source
-        if hasattr(self, "chart_sample_data") and self.chart_sample_data is not None:
-            try:
-                current = self.config.dikt.get("current_data_source")
-                if current is not None:
-                    sample = self.get_sample_data(current)
-                    if sample is not None:
-                        self.chart_sample_data.set_data(sample)
-            except Exception as e:
-                logma.error(f"[analytics_charts] source-edit refresh failed: {e}", exc_info=True)
-        return self
-
     def get_source_edit(self):
         """Return the current source-edit value from the config.
 
@@ -594,6 +562,34 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             self.load_types()
         self.chart_types = self.chart_types_df["value_txt"].tolist()
         return self.chart_types
+
+    def get_configuration_show_config_pane(self):
+        """Get the current visibility state of the config pane.
+
+        Returns:
+            bool: True if config pane is shown, False otherwise.
+        """
+        return self.config.dikt.get("show_config_pane", True)
+
+    def get_configuration_show_data_pane(self):
+        """Get the current visibility state of the data pane.
+
+        Returns:
+            bool: True if data pane is shown, False otherwise.
+        """
+        return self.config.dikt.get("show_data_pane", True)
+
+    def get_configuration_show_full_chart_pane(self):
+        """Get the current visibility state of the full chart pane.
+
+        Returns:
+            bool: True if full chart pane is shown, False otherwise.
+        """
+        return self.config.dikt.get("show_full_chart_pane", False)
+
+    def get_content(self):
+        """"""
+        return self.config.dikt.get("content", {}) or self.config.dikt.get("data", {})
 
     def init_drawer_chart_config(self):
         """"""
@@ -762,6 +758,12 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         self.chart_types_df = self.app.model.store.get_table(table, cfg)
         return self
 
+    def refresh_chart(self):
+        """Refresh the chart display"""
+        if self.chart:
+            self.chart.update_chart()
+        return self
+
     def set_type(self, chart_type=None):
         """Switch between different chart types based on the selected option."""
         # # Remove the current chart
@@ -816,12 +818,6 @@ class NchantdOfficeChart(NchantdOfficeDocument):
                 logma.error(f"Error setting chart data: {e}")
         return self
 
-    def refresh_chart(self):
-        """Refresh the chart display"""
-        if self.chart:
-            self.chart.update_chart()
-        return self
-
     # ========== Export and Save Methods ==========
 
     def save_chart_image(self, file_path, format="png", dpi=300):
@@ -861,7 +857,12 @@ class NchantdOfficeChart(NchantdOfficeDocument):
                 logma.error(f"Error updating chart from table: {e}")
         return self
 
-    # ====================================================================================================================||
+    def _build_chart_data_cfg(self):
+        """"""
+        # TODO implement method
+
+
+# ====================================================================================================================||
 
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
