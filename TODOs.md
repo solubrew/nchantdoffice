@@ -116,17 +116,18 @@
   ``config.syntax``, ``document.syntax``, ``document.file_format``,
   and ``document.meta_data["syntax"]``. Regression tests in
   `tests/test_script_open_format.py` (5 new). Commit pending.
-- **Status (T-NEW-023 followup: reload whitespace lost):** the
-  user clarified that reload must "open the file on disk again"
-  — meaning the editor mirrors the raw file bytes verbatim, not
-  a pygments/markdown re-render (which collapses indentation).
-  The reload branch of `populate_document` now short-circuits
-  after `_load_external_file()` without invoking
-  `_apply_syntax_highlighting`; the DB fallback path still
-  dispatches (with toPlainText text from the DB). Test
+- **Status (T-NEW-023 followup, reverted):** the user clarified
+  that initial file open must load the correct syntax
+  formatting, so reload must match that — the reload branch
+  of `populate_document` was rolled forward from the
+  short-circuit (raw bytes only) to re-running the syntax
+  dispatcher against the freshly-read file content. Markdown,
+  python, pygments etc. now render correctly on reload AND
+  match the initial-open rendering. Test
   `test_populate_document_reapplies_extension_and_dispatches`
-  verifies setPlainText fires with the indentation preserved
-  AND no setMarkdown / setHtml / setXml ever runs. Commit pending.
+  verifies setMarkdown fires for `.md` with both `# Hello`
+  and `    - indented bullet` (header + indented list) preserved
+  in the dispatch text. Commit pending.
 
 ### NchantdNotebook — not storing the .ipynb location
 - **Status:** fixed in `06b76fb` (file_path resolution), extended in `0b7156a` (T-NEW-009 bytes-not-JSON save crash) and `654eeea` (T-NEW-011 reopen-from-disk).
