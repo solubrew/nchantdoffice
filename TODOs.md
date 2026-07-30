@@ -82,18 +82,26 @@ These are the items still requiring work, in priority order.
   currently launches a browser via QService; the user wants it
   to route into an existing tab under the Settings node pointing
   at nchantdoffice.com. UX change, no crash.
-  **Closed in Sprint 25** (commit TBD): the right-side
-  ``NchantdOfficeAdTab._on_remove_ads_clicked`` now uses
-  ``tree.findItems("Settings"|"Nchantd Account", ...)`` on the
-  left-pane tree to select the Settings node then the existing
-  "Nchantd Account" tab (the embedded browser for the
-  nchantdoffice_com account chain). The Sprint 24 implementation
-  called ``switch_to_account_tab`` which silently no-op'd because
-  the user's account_tab / settings_tab attributes are not bound
-  in the live app. The Sprint 25 follow-up selects the existing
-  in-app tab via the tree, which is the canonical flow used
-  elsewhere in the app (see ``nchantdoffice.py`` and
-  ``wizards._select_node_by_nid``).
+  **Closed in Sprint 26** (commits 9dd19c3 + TBD): the right-side
+  ``NchantdOfficeAdTab._on_remove_ads_clicked`` navigates the
+  left-pane treeview via
+  ``tree_wrapper.set_current_node(...)`` (the nchantrs treeview
+  wrapper method, ``nchantrs/views/treeviews.py`` line 266),
+  which is the canonical call that propagates selection to
+  ``model.current_node`` and calls ``updateTabs('center')``. The
+  Sprint 24 implementation called
+  ``switch_to_account_tab`` which silently no-op'd because the
+  user's account_tab / settings_tab attributes are not bound in
+  the live app. The Sprint 25 follow-up called
+  ``tree.setCurrentItem`` + ``itemSelectionChanged.emit()`` which
+  only updated the QTreeWidget's selection state but did NOT
+  drive navigation (the user reported "selects the Settings node
+  but doesn't navigate there"). The Sprint 26 follow-up calls
+  ``tree.set_current_node(node)`` — the wrapper method that
+  actually fires ``updateTabs('center')`` and routes the
+  center tabset to the existing "Nchantd Account" tab
+  (the embedded browser for the nchantdoffice_com account
+  chain) under the Settings node.
 - [ ] **Ad tab size control** — right-side tabs are slim 360×900
   and would need to go into the center tabset if a larger ad is
   required. UX change, no crash.

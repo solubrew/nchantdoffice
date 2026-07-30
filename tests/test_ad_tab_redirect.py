@@ -1,22 +1,27 @@
-"""Sprint 25 — Ad tab 'Remove ads' button redirect regression.
+"""Sprint 26 — Ad tab 'Remove ads' button redirect regression.
 
 The right-side Ad tab has a "Remove ads - Go Pro" button
-(NchantdOfficeAdTab._on_remove_ads_clicked). Per user
-direction (2026-07-30), the canonical UX is to navigate to an
-existing "Nchantd Account" tab under the Settings node in the
-left-pane tree (the embedded browser for the nchantdoffice_com
-account chain). The handler must NOT launch an external
-browser.
+(NchantdOfficeAdTab._on_remove_ads_clicked). Per user direction
+(2026-07-30), the canonical UX is to navigate to the existing
+"Nchantd Account" tab under the Settings node in the left-pane
+tree (the embedded browser for the nchantdoffice_com account
+chain).
+
+The Sprint 25 implementation called tree.setCurrentItem +
+itemSelectionChanged.emit(), which only updated the QTreeWidget's
+selection state but did NOT drive navigation. The actual
+navigation lives in NchantdTreeView.set_current_node(node),
+the nchantrs treeview wrapper method that sets
+``model.current_node`` and calls ``updateTabs('center')``.
 
 This test pins the contract that:
   1. The button click does NOT call ``QDesktopServices.openUrl``.
-  2. The handler uses ``tree.findItems`` to look up the
-     "Settings" and "Nchantd Account" nodes in the left tree.
-  3. The handler uses ``tree.setCurrentItem`` to switch the
-     tree selection (and ``scrollToItem`` + ``itemSelectionChanged``
-     to make the switch visible).
-  4. When the tree or model is missing, the handler falls back
-     gracefully (no exception bubbles).
+  2. The handler calls ``tree.set_current_node`` (the nchantrs
+     treeview wrapper method) to drive navigation.
+  3. The handler uses ``tree.findItems`` with "Nchantd Account"
+     (with "Settings" as fallback) to locate the target node.
+  4. When the tree wrapper or model is missing, the handler
+     falls back gracefully (no exception bubbles).
 """
 
 import ast
@@ -67,44 +72,47 @@ def test_ad_tab_remove_ads_does_not_open_browser():
     )
 
 
-# --- Contract 2: use tree.findItems to look up the Settings node ---
+# --- Contract 2: call the treeview's set_current_node (drives navigation) ---
 
 
-def test_ad_tab_remove_ads_uses_tree_find_items_for_settings():
-    """Sprint 25: the handler must look up the Settings node
-    via ``tree.findItems("Settings", ...)`` so the in-app
-    Settings node is selected.
+def test_ad_tab_remove_ads_calls_tree_set_current_node():
+    """Sprint 26: the handler must call
+    ``tree.set_current_node(...)`` (the nchantrs treeview
+    wrapper method that propagates selection to
+    ``updateTabs('center')`` and ``model.current_node``).
+    Calling bare ``tree.setCurrentItem`` only updates the
+    QTreeWidget's selection state but does NOT drive
+    navigation — the user reports clicks "select the Settings
+    node but doesn't navigate there".
+    """
+    src = _read(AD_TAB)
+    body = _function_source_segment(src, "_on_remove_ads_clicked")
+    assert "set_current_node" in body, (
+        "Ad tab 'Remove ads' handler does not call "
+        "tree.set_current_node — without that the treeview "
+        "will not propagate the selection to model.current_node "
+        "or call updateTabs('center')."
+    )
+
+
+# --- Contract 3: look up the Nchantd Account node by name ---
+
+
+def test_ad_tab_remove_ads_uses_tree_find_items_for_account():
+    """Sprint 26: the handler must look up the "Nchantd Account"
+    node (the embedded browser for the nchantdoffice_com
+    account chain) via ``tree.findItems(...)``.
     """
     src = _read(AD_TAB)
     body = _function_source_segment(src, "_on_remove_ads_clicked")
     assert "findItems" in body, (
         "Ad tab 'Remove ads' handler does not use tree.findItems "
-        "to look up the Settings node."
+        "to look up the target node."
     )
-    assert '"Settings"' in body or "'Settings'" in body, (
+    assert '"Nchantd Account"' in body or "'Nchantd Account'" in body, (
         "Ad tab 'Remove ads' handler must look up the "
-        "'Settings' node by name."
-    )
-
-
-# --- Contract 3: switch to the Nchantd Account tab ---
-
-
-def test_ad_tab_remove_ads_switches_to_nchantd_account_tab():
-    """Sprint 25: the handler must switch to the existing
-    "Nchantd Account" tab (the embedded browser for the
-    nchantdoffice_com account chain) under the Settings node.
-    """
-    src = _read(AD_TAB)
-    body = _function_source_segment(src, "_on_remove_ads_clicked")
-    assert "Nchantd Account" in body, (
-        "Ad tab 'Remove ads' handler must look up the "
-        "'Nchantd Account' node (the embedded browser for the "
-        "nchantdoffice_com account chain)."
-    )
-    assert "setCurrentItem" in body, (
-        "Ad tab 'Remove ads' handler must call tree.setCurrentItem "
-        "to switch the tree selection."
+        "'Nchantd Account' node by name (the embedded browser "
+        "for the nchantdoffice_com account chain)."
     )
 
 
@@ -112,9 +120,9 @@ def test_ad_tab_remove_ads_switches_to_nchantd_account_tab():
 
 
 def test_ad_tab_remove_ads_handles_missing_view_gracefully():
-    """Sprint 25: when ``self.app.view`` or the left tree is
-    missing, the handler must not raise (it should log +
-    return gracefully).
+    """Sprint 26: when ``self.app.view`` or the left tree
+    wrapper is missing, the handler must not raise (it should
+    log + return gracefully).
     """
     src = _read(AD_TAB)
     body = _function_source_segment(src, "_on_remove_ads_clicked")

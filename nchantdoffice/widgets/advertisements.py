@@ -214,33 +214,25 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     def _on_remove_ads_clicked(self):
         """Redirect the user to the Get Pro page in an in-app tab.
 
-        Sprint 25 (P1 ad tab button redirect — follow-up): the
-        previous Sprint 24 implementation called
-        ``self.app.view.switch_to_account_tab`` which silently
-        no-op'd because the user's account_tab / settings_tab
-        attributes are not bound in the live app, leading to a
-        silent failure (the user only saw click logs).
+        Sprint 26 (P1 ad tab button redirect — second follow-up):
+        the Sprint 25 implementation called
+        ``tree.setCurrentItem`` + ``tree.itemSelectionChanged.emit()``
+        which only updates the tree's selection state but does
+        NOT drive navigation — the treeview wrapper's
+        ``handle_selection_change`` only stores a previous-index
+        reference. The actual navigation flow lives in
+        ``NchantdTreeView.set_current_node(node)`` (the nchantrs
+        treeview wrapper, ``nchantrs/views/treeviews.py``), which
+        sets ``model.current_node``, calls
+        ``updateTabs('center')``, scrolls, and focuses.
 
         Per user direction (2026-07-30), the canonical UX is:
 
-          1. Select the Settings node in the left-side tree
-             (so the user lands on the existing "Nchantd
-             Account" tab under it, which is an embedded browser
-             dedicated to the nchantdoffice_com account chain).
-          2. Pick the "Nchantd Account" tab (the existing
-             in-app embedded browser for the account flow) and
-             switch the center tabset to it.
-
-        The handler:
-          - Locates the left-pane tree via ``self.app.view.panes["left"]``.
-          - Selects the "Settings" node via ``tree.findItems``
-            (the canonical QTreeWidget lookup).
-          - Selects the "Nchantd Account" node via
-            ``tree.findItems`` (the existing child tab).
-          - Triggers the tabset update via
-            ``updateTabs("center")`` + ``scrollToItem``.
-          - Switches the center tabset to the "Nchantd
-            Account" tab via ``setCurrentItem``.
+          1. Call the treeview's ``set_current_node`` to select
+             the "Nchantd Account" node (the embedded browser for
+             the nchantdoffice_com account chain). This drives
+             the tabset update and brings the existing account
+             tab into view.
 
         When the tree or model is missing, the handler logs and
         returns without raising.
@@ -258,53 +250,56 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                 )
                 return
 
-            tree = getattr(getattr(view, "panes", {}).get("left"), "tree", None)
-            if tree is None:
+            tree_wrapper = getattr(
+                getattr(view, "panes", {}).get("left"), "tree", None
+            )
+            if tree_wrapper is None:
                 logma.info(
-                    "[ad_tab] no left tree available; "
+                    "[ad_tab] no left tree wrapper available; "
                     "skipping redirect to %s",
                     target_url,
                 )
                 return
 
-            # 1. Select the Settings node in the left tree.
-            settings_items = tree.findItems(
-                "Settings",
-                pyqt.Qt.MatchExactly | pyqt.Qt.MatchRecursive,
-                0,
-            )
-            if settings_items:
-                tree.setCurrentItem(settings_items[0])
-                tree.scrollToItem(settings_items[0])
-                if hasattr(tree, "itemSelectionChanged"):
-                    tree.itemSelectionChanged.emit()
-                logma.info("[ad_tab] selected Settings node in tree")
-
-            # 2. Select the "Nchantd Account" tab (the embedded
+            # Find the "Nchantd Account" node (the embedded
             # browser for the nchantdoffice_com account chain).
-            account_items = tree.findItems(
+            # The user wanted the click to land on the existing
+            # account tab, so we skip the intermediate Settings
+            # node and go straight to Nchantd Account.
+            account_items = tree_wrapper.findItems(
                 "Nchantd Account",
                 pyqt.Qt.MatchExactly | pyqt.Qt.MatchRecursive,
                 0,
             )
+            if not account_items:
+                # Fallback: try the Settings node (so the user
+                # lands on the Settings group even if the
+                # account tab is missing for some reason).
+                account_items = tree_wrapper.findItems(
+                    "Settings",
+                    pyqt.Qt.MatchExactly | pyqt.Qt.MatchRecursive,
+                    0,
+                )
             if account_items:
-                tree.setCurrentItem(account_items[0])
-                tree.scrollToItem(account_items[0])
-                if hasattr(tree, "itemSelectionChanged"):
-                    tree.itemSelectionChanged.emit()
-                # Trigger the downstream tabset update so the
-                # center tabset refreshes against the new node.
-                account_node = account_items[0]
-                if hasattr(account_node, "updateTabs"):
-                    account_node.updateTabs("center")
+                # Use the treeview wrapper's set_current_node —
+                # that's the canonical call that propagates the
+                # selection through ``updateTabs('center')``
+                # and ``model.current_node`` so the center
+                # tabset actually refreshes.
+                if hasattr(tree_wrapper, "set_current_node"):
+                    tree_wrapper.set_current_node(account_items[0])
+                else:
+                    # Older treeview fallback: just set the item.
+                    tree_wrapper.setCurrentItem(account_items[0])
+                    tree_wrapper.scrollToItem(account_items[0])
                 logma.info(
-                    "[ad_tab] selected Nchantd Account tab "
-                    "(embeds nchantdoffice_com account chain)"
+                    "[ad_tab] routed to %s via tree.set_current_node",
+                    account_items[0].text(0),
                 )
             else:
                 logma.info(
-                    "[ad_tab] no Nchantd Account tab found in tree; "
-                    "user can navigate to Settings manually to "
+                    "[ad_tab] no Nchantd Account or Settings node "
+                    "found in tree; user can navigate manually to "
                     "reach %s",
                     target_url,
                 )
