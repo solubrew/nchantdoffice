@@ -22,7 +22,7 @@
 - fix and finish Affiliate Manager tab
 - add a settings pane for each document type in the Center Pane Settings of the Interface Tab
 - fix Right Pane tabs to select which ones can be adjusted in the right side tabset in the Interface Tab
-- 
+- Tab drag and drop needs to only initiate when the mouse is clicked on to the tab name area not the main widget area
 
 
 
