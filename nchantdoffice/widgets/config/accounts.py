@@ -76,12 +76,49 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
         cfg = {"text": f"Subscription: {subscription_status}", "size": ["auto", "auto"]}
         self.subscription_label = NchantdLabel(self, cfg).initWidget()
         self.layout.addWidget(self.subscription_label)
-        # Storage usage (placeholder)
-        cfg = {"text": "Storage: 0 GB / 10 GB", "size": ["auto", "auto"]}
+        # Sprint 20: Storage usage (live). Query the user's quota
+        # when available; fall back to a placeholder when the
+        # account backend doesn't expose the quota yet.
+        storage_quota = None
+        storage_used = None
+        try:
+            user = getattr(self.app.model, "user", None)
+            if user is not None:
+                storage_quota = getattr(user, "storage_quota_gb", None)
+                storage_used = getattr(user, "storage_used_gb", None)
+        except Exception as exc:
+            logma.warning(
+                f"[accounts] storage query failed: {exc}"
+            )
+        if storage_quota is None:
+            storage_text = "Storage: unknown"
+        else:
+            used = storage_used if storage_used is not None else 0
+            storage_text = f"Storage: {used:.2f} GB / {storage_quota} GB"
+        cfg = {"text": storage_text, "size": ["auto", "auto"]}
         self.storage_label = NchantdLabel(self, cfg).initWidget()
         self.layout.addWidget(self.storage_label)
-        # Document count (placeholder)
-        cfg = {"text": "Documents: 0", "size": ["auto", "auto"]}
+        # Sprint 20: Document count (live). Query the
+        # ``doc_media`` row count via ``model`` when available;
+        # fall back to 0.
+        document_count = 0
+        try:
+            counter = getattr(
+                self.app.model, "get_document_count", None
+            )
+            if callable(counter):
+                document_count = int(counter())
+            else:
+                counter = getattr(
+                    self.app.model, "documents_count", None
+                )
+                if isinstance(counter, int):
+                    document_count = counter
+        except Exception as exc:
+            logma.warning(
+                f"[accounts] document count query failed: {exc}"
+            )
+        cfg = {"text": f"Documents: {document_count}", "size": ["auto", "auto"]}
         self.documents_label = NchantdLabel(self, cfg).initWidget()
         self.layout.addWidget(self.documents_label)
         return self

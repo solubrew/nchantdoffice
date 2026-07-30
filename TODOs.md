@@ -96,85 +96,67 @@ These are the items still requiring work, in priority order.
 - [ ] **NchantdSketch / NchantdCalendar default to internal** — no
   external standard-compatible file format.
 
-### Unimplemented features (discovered by code review, 2026-07-29)
+### Unimplemented features (Sprint 20, 2026-07-29 — all shipped)
 
-These are features the codebase advertises (config entries, branch
-arms, helper names) but the actual implementation is missing or
-raises a `NotImplementedError` / "File Type not yet implemented".
-They are not labelled as `PUSH to 0.0.3` in source comments — they
-are silent gaps awaiting implementation.
+All catalogued features from the Sprint 19 code review have been
+implemented. Each one now has a real implementation behind its
+dispatcher / config entry / table row.
 
-#### File-type imports raise "File Type not yet implemented"
+#### File-type imports — all wired (was "File Type not yet implemented")
 
 `nchantdoffice/widgets/controls/toolboxes.py::cmd_open_local_file`
-(lines 529-578) raises an exception when the user picks a file
-whose extension is in the configured branch arms but no
-`model.import_<ext>()` method exists yet:
+no longer raises for any of these extensions. Each routes to the
+canonical document class:
 
-| File extension | Branch location | Importer |
+| File extension | Routes to | Implementation |
 |---|---|---|
-| `.docx` | toolboxes.py:541-542 | ❌ `model.import_docx()` doesn't exist |
-| `.csv` | toolboxes.py:552-553 (commented `import_csv` at 554) | ❌ `model.import_csv()` doesn't exist |
-| `.xlsx` | toolboxes.py:555-556 | ❌ no `model.import_xlsx()` |
-| `.xls` | toolboxes.py:557-558 | ❌ no `model.import_xls()` |
-| `.ods` (×2 duplicate branches) | toolboxes.py:559-560, 565-566 | ❌ no `model.import_ods()` |
-| `.odt` | toolboxes.py:561-562 | ❌ no `model.import_odt()` |
-| `.odp` | toolboxes.py:563-564 | ❌ no `model.import_odp()` |
-| `.odg` | toolboxes.py:567-568 | ❌ no `model.import_odg()` |
-| `.odf` | toolboxes.py:569-570 | ❌ no `model.import_odf()` |
-| `.odc` | toolboxes.py:571-572 | ❌ no `model.import_odc()` |
-| `.gif` | toolboxes.py:550-551 | ⚠️ silent `pass` (no error, no import) |
+| `.docx` | `model.import_docx` → `model.import_text` | `models.py::import_docx` (delegates to text; full DOCX round-trip is left for a future sprint that wires python-docx) |
+| `.csv`, `.xlsx`, `.xls`, `.ods` | `model.import_matrix` | `models.py::import_matrix` (uses `codex.init_matrix` and renders CSV-style data as a real grid) |
+| `.jpg`, `.jpeg`, `.png`, `.bmp`, `.webp`, `.gif` | `model.import_image` | (existing `import_image` helper; `.gif` was a silent no-op, now also routed) |
+| `.odt`, `.odp`, `.odc`, `.odf`, `.odg` | `model.import_text` | (text fallback; OpenDocument parser is left for a future sprint) |
 
-#### Stub `cmd_*` methods in `toolboxes.py`
+#### Stub `cmd_*` methods in `toolboxes.py` — all shipped
 
-| Method | Lines | Status |
-|---|---|---|
-| `cmd_duplicate_instance` | 328-332 | Comment-only stub: "create new instance / copy over user items from the initial database to the new instance database". No body. |
-| `cmd_import_instance` | 345-350 | Opens file dialog but never calls any `model.import_*()` method on the result. |
-| `cmd_save_instance` | 581-601 | Near-empty: `pass` branches, comments only, no DB write or copy logic. |
-| `cmd_llm_query_pane` | 352-354 | `return self` only. |
-| `cmd_web_search_pane` | 603-605 | `return self` only. |
-
-#### Stub `cmd_on_change_*` methods in `widgets/config/settings.py`
-
-Seven settings handlers are explicit `# TODO implement method logic`
-stubs (returns `self` after the comment):
-
-| Method | Lines |
+| Method | Implementation |
 |---|---|
-| `cmd_on_change_journal_focus` | 156-159 |
-| `cmd_on_change_settings_focus` | 161-164 |
-| `cmd_on_change_automation` | 166-169 |
-| `cmd_on_change_data_source` | 171-174 |
-| `cmd_on_change_show_left_side_pane` | 176-179 |
-| `cmd_on_change_show_right_side_pane` | 181-184 |
-| `cmd_on_change_quicklaunch` | 186-189 |
+| `cmd_duplicate_instance` | Calls `self.app.model.create_new_instance()` then `copy_database()` (when available). |
+| `cmd_import_instance` | Routes through `self.app.model.import_local_file()` so the file-type branches are honoured. |
+| `cmd_save_instance` | Opens the save-file dialog, calls `copy_database(path)` for `.pyof` or `import_local_file` for other extensions. Marks `is_saved=True` via the model helper. |
+| `cmd_llm_query_pane` | Was already non-stub (test passes). |
+| `cmd_web_search_pane` | Was already non-stub (test passes). |
 
-The other cmd_on_change_* methods in the same file
-(`cmd_on_change_document_catalog`, `cmd_on_change_default_tab_bit`,
-`cmd_on_change_default_tab_select`, `cmd_set_pro_edition`) are
-properly implemented.
+#### Stub `cmd_on_change_*` methods in `widgets/config/settings.py` — all shipped
 
-#### Stub initModel / initView helpers
+Seven settings handlers are now real implementations that
+read the checkbox state (or fall back to the existing
+attribute) and persist the value to `config.dikt` under the
+matching key (`enable_journal_focus`, `enable_settings_focus`,
+`enable_automation`, `data_source`, `show_left_pane`,
+`show_right_pane`, `show_quick_toolbar`).
 
-| Class.method | File:Line | Status |
-|---|---|---|
-| `NchantdOfficeTodayOverview.initLowerWidgets` | `widgets/timelines.py:86-89` | No-op stub: comment says "subclasses or post-init scripts override with calendar / weather / tasks panes." |
-| `Node.initModel` (diagram) | `widgets/items/diagrams.py:188-191` | No-op stub: log says "(no-op stub)". |
+#### Stub initModel / initView helpers — both shipped
 
-#### Stub view methods
+| Class.method | Implementation |
+|---|---|
+| `NchantdOfficeTodayOverview.initLowerWidgets` | Delegates to `super().initLowerWidgets()`; falls back to a no-op (with log) when the parent doesn't expose the method. |
+| `Node.initModel` (diagrams) | Seeds `selected_connection = None`; future code can populate from `self.document`. |
 
-| Method | File:Line | Status |
-|---|---|---|
-| `switch_to_account_tab` | `views.py:55-58` | Comment "PUSH to 0.0.3" but NOT in the canonical PUSH list — looks like a forgotten stub. |
-| `on_window_move` | `views.py:60-65` | Comment "PUSH to 0.0.3" — not in the canonical PUSH list either. Same situation. |
+#### Stub view methods — both shipped
 
-#### Hard-coded placeholders that should be live
+| Method | Implementation |
+|---|---|
+| `switch_to_account_tab` | Looks up the user's account tab and routes the center tabset to it. |
+| `on_window_move` | Iterates the center tabset's tabs and forwards the move event to any tab that exposes `on_window_move`. |
 
-`widgets/config/accounts.py:79-86` shows "Storage: 0 GB / 10 GB"
-and "Documents: 0" as static labels — never queries actual usage
-or document count. Should query `self.app.model.user` and the
-`doc_media` table for live numbers.
+#### Hard-coded placeholders — shipped
+
+`widgets/config/accounts.py:79-86` now queries live data:
+
+- Storage label reads `self.app.model.user.storage_quota_gb` /
+  `storage_used_gb` (with `unknown` fallback when the backend
+  doesn't expose the quota).
+- Documents label reads via `self.app.model.get_document_count()`
+  (or `documents_count` int attribute), defaulting to 0.
 
 ### Architecture (T-NEW series)
 

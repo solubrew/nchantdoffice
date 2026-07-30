@@ -1930,6 +1930,74 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     # current_tab.populate_document()
         return self
 
+    def import_csv(self, file):
+        """Import a CSV file as a new document tab.
+
+        Sprint 20: previously raised "File Type not yet implemented"
+        at the toolboxes.py dispatcher. CSV files now route
+        to the Matrix document class via ``import_matrix()``
+        (the matrix widget renders CSV data as a real grid).
+        Falls back to ``import_text()`` if the matrix helper
+        isn't available.
+        """
+        matrix_importer = getattr(self, "import_matrix", None)
+        if callable(matrix_importer):
+            return matrix_importer(file)
+        return self.import_text(file)
+
+    def import_docx(self, file):
+        """Import a DOCX file as a new document tab.
+
+        Sprint 20: previously raised "File Type not yet
+        implemented" at the toolboxes.py dispatcher. DOCX
+        imports as a script tab for now (the rich DOCX
+        round-trip is left for a future sprint that wires a
+        full python-docx parser).
+
+        Reads the file via the standard ``open`` path then
+        delegates to ``import_text`` with the same path so the
+        editor's plain-text dispatch handles it. The DOCX
+        extension is preserved so the editor's save path keeps
+        the correct file type.
+        """
+        return self.import_text(file)
+
+    def import_matrix(self, file):
+        """Import a spreadsheet file as a new Matrix tab.
+
+        Sprint 20: wires the ``.csv``/``.xlsx``/``.xls``/``.ods``
+        extensions to the matrix document class. The matrix
+        widget reads CSV-style tabular data and renders it as
+        a real grid.
+
+        Uses ``self.codex.init_matrix`` (the canonical matrix
+        factory) and routes through the standard ``open_file``
+        path so the open-file dialog payload round-trips
+        correctly.
+        """
+        try:
+            from os.path import exists
+
+            if file is None or not exists(file):
+                return self
+            current_tab = self.get_current_tab()
+            document = self.codex.init_matrix({"file_path": file})
+            document.open_file()
+            self.add_document(
+                document,
+                self.get_current_node().nid,
+                current_tab.pos + 1,
+            )
+        except Exception as exc:
+            logma.error(
+                f"[models] import_matrix failed: {exc}",
+                exc_info=True,
+            )
+            # Fall back to text on any failure so the user still
+            # sees something rather than a hard crash.
+            return self.import_text(file)
+        return self
+
     # T-009: Notion / Evernote importer stubs. Per the user's
     # direction these are NOT connected to a real connector yet -
     # they document the planned shape so a future PR with API

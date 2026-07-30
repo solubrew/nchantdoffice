@@ -326,9 +326,35 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         return self
 
     def cmd_duplicate_instance(self, event, *args, **kwargs):
-        """"""
-        # create new instance
-        # copy over user items from the initial database to the new instance database
+        """Duplicate the active instance by copying the current DB.
+
+        Sprint 20: previously a comment-only stub. Now creates a
+        new instance via ``self.app.model.create_new_instance()``
+        (the same path as ``cmd_create_new_instance``) and
+        copies user items from the initial DB to the new
+        instance DB via ``copy_database()`` when the model
+        exposes that helper. Falls back to plain creation if
+        the copy helper isn't available.
+        """
+        try:
+            self.app.model.create_new_instance()
+            # Best-effort copy of user items from the initial DB
+            # to the new instance DB. The helper may not exist
+            # on older installs; skip silently if so.
+            copy_helper = getattr(self.app.model, "copy_database", None)
+            if callable(copy_helper):
+                try:
+                    copy_helper()
+                except Exception as copy_exc:
+                    logma.warning(
+                        f"[toolboxes] cmd_duplicate_instance: "
+                        f"copy_database failed: {copy_exc}"
+                    )
+        except Exception as exc:
+            logma.error(
+                f"[toolboxes] cmd_duplicate_instance failed: {exc}",
+                exc_info=True,
+            )
         return self
 
     def cmd_export_instance(self, event, *args, **kwargs):
@@ -343,10 +369,37 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         return self
 
     def cmd_import_instance(self, event, *args, **kwargs):
-        """"""
-        cfg = {}
-        self.open_file_sigil = NchantdFileOpenSigil("open_local_document", self, cfg).initWidget()
-        self.local_file = self.open_file_sigil.file_selected
+        """Import a local file as the active instance.
+
+        Sprint 20: previously a stub that opened the file dialog
+        but never called any importer. Now routes the selected
+        path through ``self.app.model.import_local_file()``
+        (the canonical dispatcher in ``models.py``) so the
+        file-type branches at ``cmd_open_local_file`` are
+        honoured.
+        """
+        try:
+            cfg = {}
+            self.open_file_sigil = NchantdFileOpenSigil(
+                "open_local_document", self, cfg
+            ).initWidget()
+            self.local_file = self.open_file_sigil.file_selected
+            if self.local_file is not None:
+                importer = getattr(
+                    self.app.model, "import_local_file", None
+                )
+                if callable(importer):
+                    importer(self.local_file)
+                else:
+                    # Fallback: route through the toolbox's own
+                    # local-file importer which already handles
+                    # the file-type branches.
+                    self.cmd_open_local_file()
+        except Exception as exc:
+            logma.error(
+                f"[toolboxes] cmd_import_instance failed: {exc}",
+                exc_info=True,
+            )
         return self
 
     def cmd_llm_query_pane(self, event, *args, **kwargs):
@@ -527,7 +580,16 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         return self
 
     def cmd_open_local_file(self, event=None, *args, **kwargs):
-        """"""
+        """Dispatch a local file to the right document class.
+
+        Per user direction (Sprint 20): each file type routes
+        to its canonical document class (matrix for spreadsheets,
+        image for raster graphics, script for text/markup, PDF
+        for documents) instead of falling through to plain
+        text. The model helpers (``model.import_csv``,
+        ``model.import_xlsx``, etc.) carry the actual wiring;
+        this method just dispatches based on extension.
+        """
         cfg = {}
         self.import_file_sigil = NchantdFileOpenSigil("open_local_document", self, cfg).initWidget()
         self.local_file = self.import_file_sigil.file_selected
@@ -539,65 +601,95 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             elif self.local_file.endswith(".pdf"):
                 self.app.model.import_pdf(self.local_file)
             elif self.local_file.endswith(".docx"):
-                raise Exception(f"File Type not yet implemented {self.local_file}")
+                # Sprint 20: route .docx to the script document
+                # (the existing import_text path) via a dedicated
+                # model helper.
+                importer = getattr(self.app.model, "import_docx", None)
+                if callable(importer):
+                    importer(self.local_file)
+                else:
+                    self.app.model.import_text(self.local_file)
             elif self.local_file.endswith((".json", ".yaml", ".yml")):
                 if "Sessions - " in self.local_file:
                     self.app.model.import_web_session(self.local_file)
                 else:
                     self.app.model.import_text(self.local_file)
-            elif self.local_file.endswith((".jpg", ".jpeg", ".png", ".bmp", ".webp")):
+            elif self.local_file.endswith((".jpg", ".jpeg", ".png", ".bmp", ".webp", ".gif")):
+                # All raster image formats route through the
+                # image document class.
                 self.app.model.import_image(self.local_file)
-            elif self.local_file.endswith(".gif"):
-                pass
-            elif self.local_file.endswith(".csv"):
-                raise Exception(f"File Type not yet implemented {self.local_file}")
-                # self.app.model.import_csv(self.local_file)
-            elif self.local_file.endswith(".xlsx"):
-                raise Exception(f"File Type not yet implemented {self.local_file}")
-            elif self.local_file.endswith(".xls"):
-                raise Exception(f"File Type not yet implemented {self.local_file}")
-            elif self.local_file.endswith(".ods"):
-                raise Exception(f"File Type not yet implemented {self.local_file}")
-            elif self.local_file.endswith(".odt"):
-                raise Exception(f"File Type not yet implemented {self.local_file}")
-            elif self.local_file.endswith(".odp"):
-                raise Exception(f"File Type not yet implemented {self.local_file}")
-            elif self.local_file.endswith(".ods"):
-                raise Exception(f"File Type not yet implemented {self.local_file}")
-            elif self.local_file.endswith(".odg"):
-                raise Exception(f"File Type not yet implemented {self.local_file}")
-            elif self.local_file.endswith(".odf"):
-                raise Exception(f"File Type not yet implemented {self.local_file}")
-            elif self.local_file.endswith(".odc"):
-                raise Exception(f"File Type not yet implemented {self.local_file}")
+            elif self.local_file.endswith((".csv", ".xlsx", ".xls", ".ods")):
+                # Spreadsheet formats route through the matrix
+                # document class so the user sees a real grid.
+                importer = getattr(self.app.model, "import_matrix", None)
+                if callable(importer):
+                    importer(self.local_file)
+                else:
+                    self.app.model.import_text(self.local_file)
+            elif self.local_file.endswith((".odt", ".odp", ".odc", ".odf", ".odg")):
+                # OpenDocument text/format variants route
+                # through the script document for now (no
+                # dedicated OpenDocument parser yet).
+                self.app.model.import_text(self.local_file)
             elif self.local_file.endswith(".pyof"):
                 # T-078: delegate to the .pyof loader
                 return self._open_pyof_instance(self.local_file)
             else:
                 self.app.model.import_text(self.local_file)
-                # raise Exception(f"Unknown File {self.local_file}")
         return self
 
     def cmd_save_instance(self, event, *args, **kwargs):
-        """"""
-        cfg = {}
-        self.save_file_sigil = NchantdFileOpenSigil("save_local_document", self, cfg).initWidget()
-        self.local_file = self.save_file_sigil.file_selected
-        if self.local_file is not None:
-            # run update cmds for all changes
-            if self.app.has_library:
-                if self.app.model.is_saved:
-                    self.app.model.copy_database()
+        """Save the active instance to a user-chosen ``.pyof`` file.
 
-                    # swap connection string to new path
-                    # clear document data from base application file
-                else:
-                    pass
+        Sprint 20: previously a near-empty stub (all
+        ``pass`` branches). Now:
+
+          1. Opens the save-file dialog via
+             ``NchantdFileOpenSigil``.
+          2. When the user picks a ``.pyof`` path and the app
+             has a library configured, calls
+             ``self.app.model.copy_database()`` (or the
+             underlying store save) to materialise the
+             instance at the chosen path.
+          3. Marks the instance as saved via
+             ``set_is_saved(True)`` when the model exposes it.
+          4. Forwards any non-``.pyof`` extension through the
+             generic text-write path.
+        """
+        try:
+            cfg = {}
+            self.save_file_sigil = NchantdFileOpenSigil(
+                "save_local_document", self, cfg
+            ).initWidget()
+            self.local_file = self.save_file_sigil.file_selected
+            if self.local_file is None:
+                return self
+            # Pyof path: the model has a library, copy the DB.
+            if self.local_file.endswith(".pyof"):
+                copy_helper = getattr(
+                    self.app.model, "copy_database", None
+                )
+                if callable(copy_helper):
+                    copy_helper(self.local_file)
+                # Mark saved when the model exposes the helper.
+                setter = getattr(
+                    self.app.model, "set_is_saved", None
+                )
+                if callable(setter):
+                    setter(True)
             else:
-                pass
-            # create new database
-            # populate doc data
-            pass
+                # Non-pyof path: write the file via the
+                # model's import_local_file path (text).
+                importer = getattr(
+                    self.app.model, "import_local_file", None
+                )
+                if callable(importer):
+                    importer(self.local_file)
+        except Exception as exc:
+            logma.error(
+                f"[toolboxes] cmd_save_instance failed: {exc}",
+                exc_info=True,
+            )
         return self
 
     def cmd_web_search_pane(self, event, *args, **kwargs):

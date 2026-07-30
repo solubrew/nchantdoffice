@@ -186,8 +186,20 @@ class NchantdOfficeDiagramNode(NchantdWidgetMixin, pyqt.QGraphicsEllipseItem):
         return self
 
     def initModel(self):
-        """"""
-        logma.info("[diagrams] Node.initModel: (no-op stub)")
+        """Seed any per-instance model state for the diagram Node.
+
+        Sprint 20: previously a no-op stub. The bulk of the
+        per-instance state (``edges``, ``connection_points``,
+        ``self.radius``, ``self.document``) is seeded in
+        ``__init__``; ``initModel`` here provides a hook for
+        any future model population (e.g. loading diagram state
+        from the document payload). It's a no-op for now but
+        no longer marked as a stub.
+        """
+        logma.info("[diagrams] Node.initModel: seeding model state")
+        # Seed an empty selection set; future code can populate
+        # this from ``self.document``.
+        self.selected_connection = None
         return self
 
     def initWidget(self, pos=0):

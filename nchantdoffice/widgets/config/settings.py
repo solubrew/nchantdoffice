@@ -153,39 +153,163 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         self.initView()
         return self
 
-    def cmd_on_change_journal_focus(self):
-        """"""
-        # TODO implement method logic
+    def cmd_on_change_journal_focus(self, event=None, *args, **kwargs):
+        """Toggle the enable_journal_focus flag.
+
+        Reads the checkbox state (or falls back to the existing
+        attribute) and persists ``enable_journal_focus`` on
+        ``config.dikt``. Returns ``self`` for chainable call
+        sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = bool(getattr(self, "enable_journal_focus_bit", False))
+            self.enable_journal_focus_bit = value
+            self.config.dikt["enable_journal_focus"] = value
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_journal_focus failed: {e}",
+                exc_info=True,
+            )
         return self
 
-    def cmd_on_change_settings_focus(self):
-        """"""
-        # TODO implement method logic
+    def cmd_on_change_settings_focus(self, event=None, *args, **kwargs):
+        """Toggle the enable_settings_focus flag.
+
+        Reads the checkbox state (or falls back to the existing
+        attribute) and persists ``enable_settings_focus`` on
+        ``config.dikt``. Returns ``self`` for chainable call
+        sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = bool(getattr(self, "enable_settings_focus_bit", False))
+            self.enable_settings_focus_bit = value
+            self.config.dikt["enable_settings_focus"] = value
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_settings_focus failed: {e}",
+                exc_info=True,
+            )
         return self
 
-    def cmd_on_change_automation(self):
-        """"""
-        # TODO implement method logic
+    def cmd_on_change_automation(self, event=None, *args, **kwargs):
+        """Toggle the enable_automation flag.
+
+        Reads the checkbox state and persists ``enable_automation``
+        on ``config.dikt``. Returns ``self`` for chainable call
+        sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = bool(getattr(self, "enable_automation_bit", False))
+            self.enable_automation_bit = value
+            self.config.dikt["enable_automation"] = value
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_automation failed: {e}",
+                exc_info=True,
+            )
         return self
 
-    def cmd_on_change_data_source(self):
-        """"""
-        # TODO implement method logic
+    def cmd_on_change_data_source(self, event=None, *args, **kwargs):
+        """Record the active data source on config.
+
+        Reads the current selection from ``data_source_select`` (when
+        present) and persists ``data_source`` on ``config.dikt``.
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            value = None
+            widget = getattr(self, "data_source_select", None)
+            if widget is not None:
+                getter = getattr(widget, "currentText", None) or getattr(
+                    widget, "get_value", None
+                )
+                if callable(getter):
+                    value = getter()
+            if value is not None:
+                self.config.dikt["data_source"] = value
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_data_source failed: {e}",
+                exc_info=True,
+            )
         return self
 
-    def cmd_on_change_show_left_side_pane(self):
-        """"""
-        # TODO implement method logic
+    def cmd_on_change_show_left_side_pane(self, event=None, *args, **kwargs):
+        """Toggle the show_left_pane flag.
+
+        Reads the checkbox state and persists ``show_left_pane`` on
+        ``config.dikt``. Returns ``self`` for chainable call
+        sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = bool(getattr(self, "show_left_pane", False))
+            self.show_left_pane = value
+            self.config.dikt["show_left_pane"] = value
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_show_left_side_pane failed: {e}",
+                exc_info=True,
+            )
         return self
 
-    def cmd_on_change_show_right_side_pane(self):
-        """"""
-        # TODO implement method logic
+    def cmd_on_change_show_right_side_pane(self, event=None, *args, **kwargs):
+        """Toggle the show_right_pane flag.
+
+        Reads the checkbox state and persists ``show_right_pane`` on
+        ``config.dikt``. Returns ``self`` for chainable call
+        sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = bool(getattr(self, "show_right_pane", False))
+            self.show_right_pane = value
+            self.config.dikt["show_right_pane"] = value
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_show_right_side_pane failed: {e}",
+                exc_info=True,
+            )
         return self
 
-    def cmd_on_change_quicklaunch(self):
-        """"""
-        # TODO implement method logic
+    def cmd_on_change_quicklaunch(self, event=None, *args, **kwargs):
+        """Toggle the show_quick_toolbar flag.
+
+        Reads the checkbox state and persists ``show_quick_toolbar``
+        on ``config.dikt``. Returns ``self`` for chainable call
+        sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = bool(getattr(self, "show_quick_toolbar", False))
+            self.show_quick_toolbar = value
+            self.config.dikt["show_quick_toolbar"] = value
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_quicklaunch failed: {e}",
+                exc_info=True,
+            )
         return self
 
     def cmd_on_change_document_catalog(self, event=None, *args, **kwargs):

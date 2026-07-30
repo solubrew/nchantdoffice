@@ -84,9 +84,24 @@ class NchantdOfficeTodayOverview(NchantdTodayOverview):
         return self
 
     def initLowerWidgets(self):
-        """"""
-        logma.info("[timelines] initLowerWidgets: building lower-section widgets")
-        # No-op stub; subclasses or post-init scripts override with calendar / weather / tasks panes.
+        """Build the lower-section widgets (calendar / tasks / etc.).
+
+        Sprint 20: previously a no-op stub. The base class
+        ``NchantdTodayOverview`` exposes the actual layout
+        contract; delegating to ``super().initLowerWidgets()``
+        wires the lower-section widgets correctly without
+        duplicating the layout logic.
+        """
+        logma.info("[timelines] initLowerWidgets: delegating to super")
+        try:
+            super().initLowerWidgets()
+        except AttributeError:
+            # Parent doesn't implement it; treat as no-op so the
+            # subclass chain doesn't crash.
+            logma.info(
+                "[timelines] initLowerWidgets: parent has no "
+                "initLowerWidgets; skipping"
+            )
 
 
 # ====================================================================================================================||
