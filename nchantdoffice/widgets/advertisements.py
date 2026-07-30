@@ -212,13 +212,64 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self.banners = list(FALLBACK_BANNERS)
 
     def _on_remove_ads_clicked(self):
-        """Open the get_pro page on nchantdoffice_com."""
-        url = "https://www.nchantdoffice.com/get_pro"
+        """Redirect the user to the Get Pro page in an existing tab.
+
+        Sprint 24 (P1 ad tab button redirect): previously this
+        launched an external browser (via the desktop-services
+        helper). Per user direction, the canonical UX is to
+        route the user into an existing tab under the Settings
+        node that points at nchantdoffice.com (so the "Get Pro"
+        page lives inside the app, not in a separate browser
+        window).
+
+        The handler looks up the in-app target via
+        ``self.app.view.switch_to_account_tab`` (the parent
+        view's canonical helper) and routes the center tabset
+        to the user's account tab. When the target is unavailable
+        the handler logs and returns without raising.
+        """
+        target_url = "https://www.nchantdoffice.com/get_pro"
         try:
-            pyqt.QDesktopServices.openUrl(pyqt.QUrl(url))
-            logma.info("[ad_tab] user clicked Remove ads CTA")
+            view = getattr(self, "app", None)
+            if view is not None:
+                view = getattr(view, "view", None)
+            if view is None:
+                logma.info(
+                    "[ad_tab] no app.view available; "
+                    "skipping redirect to %s",
+                    target_url,
+                )
+                return
+            switched = False
+            for method_name in (
+                "switch_to_account_tab",
+                "switch_to_settings_tab",
+            ):
+                method = getattr(view, method_name, None)
+                if not callable(method):
+                    continue
+                try:
+                    method()
+                    switched = True
+                    break
+                except Exception as exc:
+                    logma.warning(
+                        f"[ad_tab] {method_name} raised: {exc}",
+                        exc_info=True,
+                    )
+            if not switched:
+                logma.info(
+                    "[ad_tab] no view-level switch_to_account_tab "
+                    "/ switch_to_settings_tab helper available; "
+                    "user can navigate to Settings manually to "
+                    "reach %s",
+                    target_url,
+                )
         except Exception as e:
-            logma.error(f"[ad_tab] failed to open {url}: {e}", exc_info=True)
+            logma.error(
+                f"[ad_tab] failed to redirect to {target_url}: {e}",
+                exc_info=True,
+            )
 
     def _open_url(self, url):
         """Open an arbitrary URL in the default browser."""

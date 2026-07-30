@@ -78,10 +78,16 @@ These are the items still requiring work, in priority order.
 
 ### Deferred / non-blocking
 
-- [ ] **Ad tab button redirect to Settings / Account tab** —
+- [x] **Ad tab button redirect to Settings / Account tab** —
   currently launches a browser via QService; the user wants it
   to route into an existing tab under the Settings node pointing
   at nchantdoffice.com. UX change, no crash.
+  **Closed in Sprint 24** (commit TBD): the right-side
+  ``NchantdOfficeAdTab._on_remove_ads_clicked`` now calls
+  ``self.app.view.switch_to_account_tab`` (with a
+  ``switch_to_settings_tab`` fallback) to navigate to the user's
+  in-app account tab. No browser launch. When the target is
+  unavailable the handler logs and returns without raising.
 - [ ] **Ad tab size control** — right-side tabs are slim 360×900
   and would need to go into the center tabset if a larger ad is
   required. UX change, no crash.
