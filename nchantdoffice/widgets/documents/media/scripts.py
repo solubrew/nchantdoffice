@@ -685,7 +685,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         if self.document.file_formats is None:
             self.document.set_file_format_options()
         return list(set(self.document.file_formats.values()))
-    
+
     def get_font_color_selected(self):
         """"""
         color = "Black"
@@ -1209,9 +1209,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 doc = getattr(self, "document", None)
                 doc_id = getattr(doc, "did", None) if doc is not None else None
                 if detected_syntax and doc_id:
-                    model = (
-                        getattr(self, "app", None) and getattr(self.app, "model", None)
-                    )
+                    model = getattr(self, "app", None) and getattr(self.app, "model", None)
                     if model is not None and hasattr(model, "update_doc_media_syntax"):
                         model.update_doc_media_syntax(doc_id, detected_syntax)
         except Exception as e:
@@ -1554,6 +1552,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             self.document.syntax = "plain-text"
         logma.info(f"Document Format: {self.document.file_format}")
         logma.info(f"Syntax {self.document.syntax}")
+        # TOOD Refactor file format syntax seperation and tracking
+        if self.document.file_format == "markdown":
+            self.document.syntax = "markdown"
+
         # 1:1 setters — no transformation
         if self.document.syntax == "markdown":
             self.document_editor.setMarkdown(text)

@@ -660,6 +660,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # never breaks the app.
         try:
             from nchantdoffice.utilities.upgrades import maybe_prompt_for_upgrade
+
             user = getattr(self, "user", None)
             maybe_prompt_for_upgrade(user, on_tab_created=True)
         except Exception as e:
@@ -768,7 +769,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def convert_db_to_tab_doc(self):
         """Convert a raw DB row dict to the tab-document shape.
-        
+
         Returns the canonical tab-document keys (did, name,
         document_type, syntax, content, etc.) lifted from the
         row. Returns ``None`` when the input is not a dict.
@@ -790,7 +791,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             "hash": self.get("hash_txt", ""),
             "meta_data": self.get("metadata_ltxt", {}),
         }
-
 
     def convert_encoding(self, entry):
         """"""
@@ -915,10 +915,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # lookups.
         try:
             self._register_widget_in_app_type_registry(
-                "nchantrs.widgets.calendars.years.NchantdYearCalendar", "year",
+                "nchantrs.widgets.calendars.years.NchantdYearCalendar",
+                "year",
             )
             self._register_widget_in_app_type_registry(
-                "nchantrs.widgets.calendars.years.NchantdYearlyJournal", "year",
+                "nchantrs.widgets.calendars.years.NchantdYearlyJournal",
+                "year",
             )
         except Exception as e:
             logma.error(f"[models] create_tabset_year registry failed: {e}", exc_info=True)
@@ -931,8 +933,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.add_tab("Journal", pid, 1, widget, widgdata, uuid(), "year", "center", in_doc=False)
         self.has_changed = True
         return self
-
-
 
     def _register_widget_in_app_type_registry(self, widget, doc_type=None, db="db"):
         """Register a widget class in the app_document_type registry.
@@ -1011,7 +1011,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     def duplicate_node(self):
         """Duplicate a tree node and return the new node dict.
-        
+
         Creates a copy of source_node (defaulting to the current
         node) with a fresh did UUID and Copy of <name> name.
         Returns the new node dict, or ``None`` if no source was
@@ -1023,6 +1023,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 logma.warning("[models] duplicate_node: no source node available")
                 return None
             from subtrix.utilities import uuid
+
             new_did = str(uuid())
             name = source_node.get("name_txt") or source_node.get("name", "")
             duplicate = dict(source_node)
@@ -1035,10 +1036,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error("[models] duplicate_node failed: " + str(e), exc_info=True)
             return None
 
-
     def duplicate_tab(self):
         """Duplicate a tab and return the new tab dict.
-        
+
         Creates a copy of source_tab (defaulting to the current
         tab) with a fresh UUID. Returns the new tab dict, or
         ``None`` on failure. The full clone-with-content path is
@@ -1051,6 +1051,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 logma.warning("[models] duplicate_tab: no source tab available")
                 return None
             from subtrix.utilities import uuid
+
             new_uuid = str(uuid())
             duplicate = dict(source_tab)
             duplicate["UUID"] = new_uuid
@@ -1062,7 +1063,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         except Exception as e:
             logma.error("[models] duplicate_tab failed: " + str(e), exc_info=True)
             return None
-
 
     def get_available_services(self):
         """"""
@@ -1103,10 +1103,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 cols = [d[0] for d in cur.description] if cur.description else []
                 return [dict(zip(cols, row)) for row in cur.fetchall()]
             except Exception as e:
-                logma.warning(
-                    f"[models] get_app_instances: SQLite "
-                    f"query failed: {e}"
-                )
+                logma.warning(f"[models] get_app_instances: SQLite " f"query failed: {e}")
                 # Fall through to the store layer.
 
         # Path B: fall back to ``self.get_table`` (pandas /
@@ -1114,9 +1111,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         try:
             rows = self.get_table("app_instance", {}, db)
         except Exception as e:
-            logma.warning(
-                f"[models] get_app_instances failed: {e}"
-            )
+            logma.warning(f"[models] get_app_instances failed: {e}")
             return []
         if rows is None:
             return []
@@ -1149,7 +1144,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         if df is None or getattr(df, "empty", True):
             # T-004: try the loader-backed recovery path
             recovered = self._handle_document_not_found(
-                doc_action=doc_action, did=did, db=db,
+                doc_action=doc_action,
+                did=did,
+                db=db,
             )
             if recovered is not None:
                 return recovered
@@ -1173,6 +1170,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             # Try the action-keyed loader first
             if doc_action is not None and hasattr(self.codex, f"init_{doc_action}"):
                 from pandas import DataFrame
+
                 doc = getattr(self.codex, f"init_{doc_action}")({"did": did or uuid()})
                 if doc is not None:
                     logma.info(f"[models] _handle_document_not_found: recovered {doc_action} via codex loader")
@@ -1183,19 +1181,24 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             # row in doc_media so the next call finds it
             if hasattr(self, "store") and self.store is not None and did is not None:
                 try:
-                    self.store._store("doc_media", [{
-                        "did": did,
-                        "document_type": doc_action or "unknown",
-                        "name": f"Recovered {doc_action or did}",
-                        "compatibility": "pyffice",
-                        "type": doc_action or "unknown",
-                        "syntax": "plain-text",
-                        "description": "auto-recovered",
-                        "store_location": "internal",
-                        "encoding": "utf-8",
-                        "meta_data": {},
-                        "widget": "RecoveredPane",
-                    }])
+                    self.store._store(
+                        "doc_media",
+                        [
+                            {
+                                "did": did,
+                                "document_type": doc_action or "unknown",
+                                "name": f"Recovered {doc_action or did}",
+                                "compatibility": "pyffice",
+                                "type": doc_action or "unknown",
+                                "syntax": "plain-text",
+                                "description": "auto-recovered",
+                                "store_location": "internal",
+                                "encoding": "utf-8",
+                                "meta_data": {},
+                                "widget": "RecoveredPane",
+                            }
+                        ],
+                    )
                     logma.info(f"[models] _handle_document_not_found: created placeholder for did={did}")
                 except Exception as e:
                     logma.error(f"[models] _handle_document_not_found placeholder insert failed: {e}", exc_info=True)
@@ -1309,6 +1312,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         try:
             import json
             from pathlib import Path
+
             cfg = getattr(self, "config", None)
             recent_path = None
             if cfg is not None and hasattr(cfg, "dikt"):
@@ -1359,11 +1363,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         try:
             import datetime as _dt
             import pandas as _pd
+
             if "published_dttm" not in df.columns:
                 return df
-            cutoff = _dt.datetime.now() - _dt.timedelta(
-                days=days_back if days_back is not None else 3
-            )
+            cutoff = _dt.datetime.now() - _dt.timedelta(days=days_back if days_back is not None else 3)
             # Parse to datetime; coerce errors to NaT
             parsed = _pd.to_datetime(df["published_dttm"], errors="coerce")
             mask = parsed.notna() & (parsed >= cutoff)
@@ -1489,8 +1492,16 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.info(f"[models] get_view_journal: creating new journal did={did}")
             try:
                 self.add_document_app(
-                    document_dict, did, "0", 0,
-                    "journal", {}, "journal", "center", "db", False,
+                    document_dict,
+                    did,
+                    "0",
+                    0,
+                    "journal",
+                    {},
+                    "journal",
+                    "center",
+                    "db",
+                    False,
                 )
                 rows = self.store.get_view_journal(cfg).to_dict(orient="records")
             except Exception as e:
@@ -1573,9 +1584,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     logma.debug(f"[models] existing referral code ok: {existing}")
                     self._ensure_device_id()
                     return
-                logma.warning(
-                    f"[models] stored referral code {existing!r} invalid; regenerating"
-                )
+                logma.warning(f"[models] stored referral code {existing!r} invalid; regenerating")
 
             user_id = (
                 getattr(user, "id", None)
@@ -1608,6 +1617,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """
         try:
             from nchantdoffice.utilities.device_id import get_device_id
+
             device_id = get_device_id()
             user = getattr(self, "user", None)
             user_cfg = getattr(user, "config", None)
@@ -1667,17 +1677,15 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             # resolved via the registry helper added in T-063,
             # with the legacy get_document_type fallback kept
             # for backward compatibility.
-            tab["content"] = tab["rich_text"].get(
-                "data", tab["rich_text"].get("unit", {})
-            )
+            tab["content"] = tab["rich_text"].get("data", tab["rich_text"].get("unit", {}))
             logma.info(f"Content {tab['content']}")
             tab["uuid"] = tab["unique_id"]
             logma.info(f"Tab Type {tab['type']}")
-            widget_resolver = (
-                getattr(self.app.model, "_resolve_widget_from_registry", None)
-            )
+            widget_resolver = getattr(self.app.model, "_resolve_widget_from_registry", None)
             if callable(widget_resolver):
-                tab["widget"] = widget_resolver(tab["type"], fallback=None) or self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
+                tab["widget"] = widget_resolver(tab["type"], fallback=None) or self.app.model.get_document_type(
+                    tab["type"]
+                ).get("widget_txt", None)
             else:
                 tab["widget"] = self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
             tab["did"] = uuid()
@@ -1714,11 +1722,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """
         try:
             import os
+
             if not file_path or not os.path.isfile(file_path):
-                logma.warning(
-                    "[models] import_nchantdoffice: missing file "
-                    + repr(file_path)
-                )
+                logma.warning("[models] import_nchantdoffice: missing file " + repr(file_path))
                 return self
             # T-NEW-007: the previous pickle.load block was removed.
             # ``.pyof`` is a SQLite DB file (one per app instance),
@@ -1733,9 +1739,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 )
                 return self
             opener(file_path)
-            logma.info(
-                f"[models] import_nchantdoffice: opened SQLite DB at {file_path!r}"
-            )
+            logma.info(f"[models] import_nchantdoffice: opened SQLite DB at {file_path!r}")
             # Hook for the store to surface row counts / restore
             # the in-memory registry if it has such a helper.
             refresher = getattr(self.store, "refresh_from_sqlite", None)
@@ -1743,15 +1747,11 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 try:
                     refresher()
                 except Exception as e:
-                    logma.warning(
-                        f"[models] import_nchantdoffice: "
-                        f"refresh_from_sqlite failed: {e}"
-                    )
+                    logma.warning(f"[models] import_nchantdoffice: " f"refresh_from_sqlite failed: {e}")
             return self
         except Exception as e:
             logma.error(f"[models] import_nchantdoffice failed: {e}", exc_info=True)
             return self
-
 
     def import_filetree(self, file):
         """"""
@@ -1832,11 +1832,13 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             if file is None or not exists(file):
                 return None
             import os.path
+
             ext = os.path.splitext(file)[1].lower()
             with open(file, "rb") as f:
                 raw = f.read()
             if ext == ".json":
                 import json
+
                 try:
                     data = json.loads(raw.decode("utf-8"))
                 except (ValueError, UnicodeDecodeError) as e:
@@ -1876,11 +1878,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                         if not isinstance(tab, dict):
                             continue
                         domain = tab.get("domain") or "unknown"
-                        date = (
-                            tab.get("last_visit")
-                            or tab.get("created_at")
-                            or session.get("created_at")
-                        )
+                        date = tab.get("last_visit") or tab.get("created_at") or session.get("created_at")
                         if not date:
                             continue
                         # Keep just the date portion for the bucket
@@ -2026,6 +2024,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """
         logma.info("[models] import_evernote: stub - not yet wired")
         return None
+
     def register_document(self, document_type, actions):
         """"""
         # Store action using proper store method
@@ -2114,12 +2113,16 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 if store is not None and hasattr(store, "update_record"):
                     try:
                         store.update_record(
-                            {"table": {"ds_config_document": {
-                                "color_hex": dikt.get("tab_color", "#1f4e79"),
-                                "icon_path": dikt.get("tab_icon", ""),
-                                "custom_name": dikt.get("tab_custom_name", ""),
-                                "active": 1,
-                            }}},
+                            {
+                                "table": {
+                                    "ds_config_document": {
+                                        "color_hex": dikt.get("tab_color", "#1f4e79"),
+                                        "icon_path": dikt.get("tab_icon", ""),
+                                        "custom_name": dikt.get("tab_custom_name", ""),
+                                        "active": 1,
+                                    }
+                                }
+                            },
                             "did",
                             str(doc_id or "active"),
                         )
@@ -2155,6 +2158,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             api_key = None
             try:
                 import pykey
+
                 api_key = pykey.PYKEYSTORE.get("notify_api_key")
             except Exception:
                 pass
@@ -2167,6 +2171,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             }
             try:
                 import requests  # type: ignore
+
                 headers = {"Content-Type": "application/json"}
                 if api_key:
                     headers["Authorization"] = f"Bearer {api_key}"
@@ -2256,6 +2261,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.json(_json_safe(doc_payload))
         except Exception as _json_log_exc:
             logma.error(f"[store_document] logma.json failed: {_json_log_exc}")
+        #self.store.store_doc_media(doc_payload)
         self.add_document_content(doc_payload, version=pydoc.version)
         return pydoc
 
@@ -2336,7 +2342,11 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     if hasattr(store, "store_app_tree_node"):
                         store.store_app_tree_node(node)
                     else:
-                        payload = node.to_dict() if hasattr(node, "to_dict") else (dict(node) if isinstance(node, dict) else {"value": node})
+                        payload = (
+                            node.to_dict()
+                            if hasattr(node, "to_dict")
+                            else (dict(node) if isinstance(node, dict) else {"value": node})
+                        )
                         store._store("app_tree_node", [payload])
                     persisted += 1
                 except Exception as e:
@@ -2402,7 +2412,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         try:
             tab = getattr(self, "active_tab", None) or getattr(self, "current_tab", None)
             if tab is None and hasattr(self, "tabsdata") and self.tabsdata:
-                tab = (self.tabsdata[0] if isinstance(self.tabsdata, list) else None)
+                tab = self.tabsdata[0] if isinstance(self.tabsdata, list) else None
             if tab is None:
                 logma.info("[models] store_tab: no active tab - skipping")
                 return self
@@ -2482,9 +2492,7 @@ class NchantdOfficeStore(NchantdStore):
         import os
 
         if not path or not os.path.isfile(path):
-            raise FileNotFoundError(
-                f"NchantdOfficeStore.open_sqlite: missing file {path!r}"
-            )
+            raise FileNotFoundError(f"NchantdOfficeStore.open_sqlite: missing file {path!r}")
         # Close any previously-opened instance DB so we don't
         # leak handles across imports (one-per-app-instance
         # guarantee). The micromole store routes through the
@@ -2608,8 +2616,7 @@ class NchantdOfficeStore(NchantdStore):
                 return True
             dim = dimension if dimension is not None else self.VECTOR_DIMENSION
             store_db.execute("DROP TABLE IF EXISTS vectorized_data")
-            store_db.execute(
-                f"""
+            store_db.execute(f"""
                 CREATE VIRTUAL TABLE vectorized_data USING vec0(
                     id INTEGER PRIMARY KEY,
                     version_txt TEXT,
@@ -2624,8 +2631,7 @@ class NchantdOfficeStore(NchantdStore):
                     ARCHIVE_BIT,
                     ACTIVE_BIT
                 );
-                """
-            )
+                """)
             store_db.commit()
             logma.info(f"[store] create_vectorized_data_table: created with dim={dim}")
             return True
@@ -2901,8 +2907,6 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_tab_document_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-
-
     def _delete(self, table, cfg, db="db"):
         """Delete rows matching ``cfg`` from ``table``.
 
@@ -2998,9 +3002,7 @@ class NchantdOfficeStore(NchantdStore):
                 )
                 return False
             store.update_records(data, cfg, db)
-            logma.info(
-                f"[models] update_doc_media_syntax: did={did!r} syntax={syntax!r}"
-            )
+            logma.info(f"[models] update_doc_media_syntax: did={did!r} syntax={syntax!r}")
             return True
         except Exception as e:
             logma.error(
@@ -3270,6 +3272,7 @@ def _coerce_doc_version(raw) -> int:  # noqa: ANN201
         # Fall back to a stable numeric hash of the string so the
         # version stays comparable across saves.
         import hashlib
+
         digest = hashlib.md5(str(raw).encode("utf-8")).hexdigest()
         return int(digest[:8], 16) & 0x7FFFFFFF  # keep it positive int32
 
@@ -3284,6 +3287,7 @@ def _json_safe(value):
     helper only ensures the log call never aborts a save.
     """
     import base64
+
     if isinstance(value, dict):
         return {k: _json_safe(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
@@ -3786,8 +3790,10 @@ class NchantdOfficeSettingsModel(NchantdModel):
                 settings_payload = {}
         else:
             settings_payload = {}
+
         def _section(key):
             return settings_payload.get(key) or settings_cfg.get(key) or {}
+
         self.set_interface_settings(_section("interface_settings"))
         self.set_account_settings(_section("account_settings"))
         if hasattr(self, "set_browser_settings"):
@@ -3800,12 +3806,12 @@ class NchantdOfficeSettingsModel(NchantdModel):
 
     def change_user_password(self):
         """Change the user password (stub for the password-change UI).
-        
+
         Validates the old password against the stored hash, the new
         password against the strength policy, and that the two new
         entries match. Real hashing uses PyKeyStore (no plaintext
         storage, no env-var secrets).
-        
+
         Returns ``True`` on success, ``False`` on any validation
         failure. Currently a no-op stub returning ``False`` when
         no stored credentials are reachable.
@@ -3822,10 +3828,9 @@ class NchantdOfficeSettingsModel(NchantdModel):
             logma.error("[models] change_user_password failed: " + str(e), exc_info=True)
             return False
 
-
     def get_journal_focus_enable(self):
         """Return whether the journal-focus feature is enabled for this user.
-        
+
         Reads from config.dikt["features"]["journal_focus"] when
         available, defaults to ``False``. Used by the toolbar logic
         that decides whether to expose the journal-toggle button.
@@ -3839,10 +3844,9 @@ class NchantdOfficeSettingsModel(NchantdModel):
             logma.warning("[models] get_journal_focus_enable: " + str(e))
             return False
 
-
     def get_show_settings_focus_enable(self):
         """Return whether the settings-focus feature is enabled.
-        
+
         Reads from config.dikt["features"]["settings_focus"],
         defaults to ``False``. Controls the settings-toggle button.
         """
@@ -3855,10 +3859,9 @@ class NchantdOfficeSettingsModel(NchantdModel):
             logma.warning("[models] get_show_settings_focus_enable: " + str(e))
             return False
 
-
     def get_automation_enable(self):
         """Return whether the automation feature is enabled.
-        
+
         Reads from config.dikt["features"]["automation"],
         defaults to ``False``. Controls the automation-toggle button.
         """
@@ -3871,10 +3874,9 @@ class NchantdOfficeSettingsModel(NchantdModel):
             logma.warning("[models] get_automation_enable: " + str(e))
             return False
 
-
     def get_data_sources_enable(self):
         """Return whether the data-sources feature is enabled.
-        
+
         Reads from config.dikt["features"]["data_sources"],
         defaults to ``False``. Controls the data-sources toggle.
         """
@@ -3887,10 +3889,9 @@ class NchantdOfficeSettingsModel(NchantdModel):
             logma.warning("[models] get_data_sources_enable: " + str(e))
             return False
 
-
     def get_show_left_side_pane(self):
         """Return whether the left-side pane is shown.
-        
+
         Reads from config.dikt["layout"]["left_pane_visible"],
         defaults to ``True``. Used by the layout switcher.
         """
@@ -3902,7 +3903,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         except Exception as e:
             logma.warning("[models] get_show_left_side_pane: " + str(e))
             return True
-
 
     def get_show_quick_launch_toolbar(self):
         """Read the show_quick_launch_toolbar setting from ``self._settings``.
@@ -3940,7 +3940,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
 
         Falls back to ``''`` if the setting has not been initialised.
         """
-        return self._settings.get("default_tab_select", '')
+        return self._settings.get("default_tab_select", "")
 
     def get_always_refocus_right_side_enable(self):
         """Read the always_refocus_right_side_enable setting from ``self._settings``.
@@ -3955,28 +3955,28 @@ class NchantdOfficeSettingsModel(NchantdModel):
 
         Falls back to ``''`` if the setting has not been initialised.
         """
-        return self._settings.get("refocus_right_side_select", '')
+        return self._settings.get("refocus_right_side_select", "")
 
     def get_document_storage_default(self):
         """Read the document_storage_default setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been initialised.
         """
-        return self._settings.get("document_storage_default", '')
+        return self._settings.get("document_storage_default", "")
 
     def get_document_delete_policy(self):
         """Read the document_delete_policy setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been initialised.
         """
-        return self._settings.get("document_delete_policy", '')
+        return self._settings.get("document_delete_policy", "")
 
     def get_document_name_convention_default(self):
         """Read the document_name_convention_default setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been initialised.
         """
-        return self._settings.get("document_name_convention_default", '')
+        return self._settings.get("document_name_convention_default", "")
 
     def get_lock_screen_enable(self):
         """Read the lock_screen_enable setting from ``self._settings``.
@@ -4027,14 +4027,14 @@ class NchantdOfficeSettingsModel(NchantdModel):
 
         Falls back to ``''`` if the setting has not been initialised.
         """
-        return self._settings.get("package_theme", '')
+        return self._settings.get("package_theme", "")
 
     def get_theme(self):
         """Read the theme setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been initialised.
         """
-        return self._settings.get("theme", '')
+        return self._settings.get("theme", "")
 
     def get_pro_edition(self):
         """Return whether the user has the Pro edition enabled.
@@ -4053,7 +4053,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         Falls back to ``''`` if the setting has not been
         initialised.
         """
-        return self._settings.get("password_new_entry", '')
+        return self._settings.get("password_new_entry", "")
 
     def get_password_new_confirm_entry(self):
         """Read the password_new_confirm_entry setting from ``self._settings``.
@@ -4061,7 +4061,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         Falls back to ``''`` if the setting has not been
         initialised.
         """
-        return self._settings.get("password_new_confirm_entry", '')
+        return self._settings.get("password_new_confirm_entry", "")
 
     def get_password_old_entry(self):
         """Read the password_old_entry setting from ``self._settings``.
@@ -4069,7 +4069,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         Falls back to ``''`` if the setting has not been
         initialised.
         """
-        return self._settings.get("password_old_entry", '')
+        return self._settings.get("password_old_entry", "")
 
     def get_lock_screen_enable(self):
         """Read the lock_screen_enable setting from ``self._settings``.
@@ -4144,8 +4144,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_journal_focus_enable: set to {self._settings['journal_focus_enable']!r}")
         return self
 
-
-
     def set_show_settings_focus_enable(self):
         """Set the show_settings_focus_enable setting.
 
@@ -4156,8 +4154,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         self._settings["show_settings_focus_enable"] = False  # T-set-show_settings_focus_enable: replaced at runtime
         logma.debug(f"[models] set_show_settings_focus_enable: set to {self._settings['show_settings_focus_enable']!r}")
         return self
-
-
 
     def set_automation_enable(self):
         """Set the automation_enable setting.
@@ -4170,8 +4166,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_automation_enable: set to {self._settings['automation_enable']!r}")
         return self
 
-
-
     def set_data_sources_enable(self):
         """Set the data_sources_enable setting.
 
@@ -4182,8 +4176,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         self._settings["data_sources_enable"] = False  # T-set-data_sources_enable: replaced at runtime
         logma.debug(f"[models] set_data_sources_enable: set to {self._settings['data_sources_enable']!r}")
         return self
-
-
 
     def set_show_left_side_pane(self):
         """Set the show_left_side_pane setting.
@@ -4196,8 +4188,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_show_left_side_pane: set to {self._settings['show_left_side_pane']!r}")
         return self
 
-
-
     def set_show_quick_launch_toolbar(self):
         """Set the show_quick_launch_toolbar setting.
 
@@ -4208,8 +4198,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         self._settings["show_quick_launch_toolbar"] = False  # T-set-show_quick_launch_toolbar: replaced at runtime
         logma.debug(f"[models] set_show_quick_launch_toolbar: set to {self._settings['show_quick_launch_toolbar']!r}")
         return self
-
-
 
     def set_quick_launch_documents(self):
         """Set the quick_launch_documents setting.
@@ -4222,8 +4210,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_quick_launch_documents: set to {self._settings['quick_launch_documents']!r}")
         return self
 
-
-
     def set_show_document_launch_catalog(self):
         """Set the show_document_launch_catalog setting.
 
@@ -4231,11 +4217,13 @@ class NchantdOfficeSettingsModel(NchantdModel):
         Default value when not set: ``False`` (bool).
         Returns ``self`` for chainable UI calls.
         """
-        self._settings["show_document_launch_catalog"] = False  # T-set-show_document_launch_catalog: replaced at runtime
-        logma.debug(f"[models] set_show_document_launch_catalog: set to {self._settings['show_document_launch_catalog']!r}")
+        self._settings["show_document_launch_catalog"] = (
+            False  # T-set-show_document_launch_catalog: replaced at runtime
+        )
+        logma.debug(
+            f"[models] set_show_document_launch_catalog: set to {self._settings['show_document_launch_catalog']!r}"
+        )
         return self
-
-
 
     def set_default_tab_enable(self):
         """Set the default_tab_enable setting.
@@ -4248,8 +4236,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_default_tab_enable: set to {self._settings['default_tab_enable']!r}")
         return self
 
-
-
     def set_default_tab_select(self):
         """Set the default_tab_select setting.
 
@@ -4257,11 +4243,9 @@ class NchantdOfficeSettingsModel(NchantdModel):
         Default value when not set: ``''`` (str).
         Returns ``self`` for chainable UI calls.
         """
-        self._settings["default_tab_select"] = ''  # T-set-default_tab_select: replaced at runtime
+        self._settings["default_tab_select"] = ""  # T-set-default_tab_select: replaced at runtime
         logma.debug(f"[models] set_default_tab_select: set to {self._settings['default_tab_select']!r}")
         return self
-
-
 
     def set_always_refocus_right_side_enable(self):
         """Set the always_refocus_right_side_enable setting.
@@ -4270,11 +4254,13 @@ class NchantdOfficeSettingsModel(NchantdModel):
         Default value when not set: ``False`` (bool).
         Returns ``self`` for chainable UI calls.
         """
-        self._settings["always_refocus_right_side_enable"] = False  # T-set-always_refocus_right_side_enable: replaced at runtime
-        logma.debug(f"[models] set_always_refocus_right_side_enable: set to {self._settings['always_refocus_right_side_enable']!r}")
+        self._settings["always_refocus_right_side_enable"] = (
+            False  # T-set-always_refocus_right_side_enable: replaced at runtime
+        )
+        logma.debug(
+            f"[models] set_always_refocus_right_side_enable: set to {self._settings['always_refocus_right_side_enable']!r}"
+        )
         return self
-
-
 
     def set_refocus_right_side_select(self):
         """Set the refocus_right_side_select setting.
@@ -4283,11 +4269,9 @@ class NchantdOfficeSettingsModel(NchantdModel):
         Default value when not set: ``''`` (str).
         Returns ``self`` for chainable UI calls.
         """
-        self._settings["refocus_right_side_select"] = ''  # T-set-refocus_right_side_select: replaced at runtime
+        self._settings["refocus_right_side_select"] = ""  # T-set-refocus_right_side_select: replaced at runtime
         logma.debug(f"[models] set_refocus_right_side_select: set to {self._settings['refocus_right_side_select']!r}")
         return self
-
-
 
     def set_document_storage_default(self):
         """Set the document_storage_default setting.
@@ -4296,11 +4280,9 @@ class NchantdOfficeSettingsModel(NchantdModel):
         Default value when not set: ``''`` (str).
         Returns ``self`` for chainable UI calls.
         """
-        self._settings["document_storage_default"] = ''  # T-set-document_storage_default: replaced at runtime
+        self._settings["document_storage_default"] = ""  # T-set-document_storage_default: replaced at runtime
         logma.debug(f"[models] set_document_storage_default: set to {self._settings['document_storage_default']!r}")
         return self
-
-
 
     def set_document_delete_policy(self):
         """Set the document_delete_policy setting.
@@ -4309,11 +4291,9 @@ class NchantdOfficeSettingsModel(NchantdModel):
         Default value when not set: ``''`` (str).
         Returns ``self`` for chainable UI calls.
         """
-        self._settings["document_delete_policy"] = ''  # T-set-document_delete_policy: replaced at runtime
+        self._settings["document_delete_policy"] = ""  # T-set-document_delete_policy: replaced at runtime
         logma.debug(f"[models] set_document_delete_policy: set to {self._settings['document_delete_policy']!r}")
         return self
-
-
 
     def set_document_name_convention_default(self):
         """Set the document_name_convention_default setting.
@@ -4322,11 +4302,13 @@ class NchantdOfficeSettingsModel(NchantdModel):
         Default value when not set: ``''`` (str).
         Returns ``self`` for chainable UI calls.
         """
-        self._settings["document_name_convention_default"] = ''  # T-set-document_name_convention_default: replaced at runtime
-        logma.debug(f"[models] set_document_name_convention_default: set to {self._settings['document_name_convention_default']!r}")
+        self._settings["document_name_convention_default"] = (
+            ""  # T-set-document_name_convention_default: replaced at runtime
+        )
+        logma.debug(
+            f"[models] set_document_name_convention_default: set to {self._settings['document_name_convention_default']!r}"
+        )
         return self
-
-
 
     def set_lock_screen_enable(self):
         """Set the lock_screen_enable setting.
@@ -4338,8 +4320,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         self._settings["lock_screen_enable"] = False  # T-set-lock_screen_enable: replaced at runtime
         logma.debug(f"[models] set_lock_screen_enable: set to {self._settings['lock_screen_enable']!r}")
         return self
-
-
 
     def set_lock_screen_timeout(self, value=0):
         """Set the lock-screen timeout (in seconds).
@@ -4366,8 +4346,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_lock_screen_pin_enable: set to {self._settings['lock_screen_pin_enable']!r}")
         return self
 
-
-
     def set_package_enable(self):
         """Set the package_enable setting.
 
@@ -4378,8 +4356,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         self._settings["package_enable"] = True  # T-set-package_enable: replaced at runtime
         logma.debug(f"[models] set_package_enable: set to {self._settings['package_enable']!r}")
         return self
-
-
 
     def set_package_focus_enable(self):
         """Set the package_focus_enable setting.
@@ -4392,8 +4368,6 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_package_focus_enable: set to {self._settings['package_focus_enable']!r}")
         return self
 
-
-
     def set_package_theme(self):
         """Set the package_theme setting.
 
@@ -4401,11 +4375,9 @@ class NchantdOfficeSettingsModel(NchantdModel):
         Default value when not set: ``''`` (str).
         Returns ``self`` for chainable UI calls.
         """
-        self._settings["package_theme"] = ''  # T-set-package_theme: replaced at runtime
+        self._settings["package_theme"] = ""  # T-set-package_theme: replaced at runtime
         logma.debug(f"[models] set_package_theme: set to {self._settings['package_theme']!r}")
         return self
-
-
 
     def set_theme(self):
         """Set the theme setting.
@@ -4414,11 +4386,9 @@ class NchantdOfficeSettingsModel(NchantdModel):
         Default value when not set: ``''`` (str).
         Returns ``self`` for chainable UI calls.
         """
-        self._settings["theme"] = ''  # T-set-theme: replaced at runtime
+        self._settings["theme"] = ""  # T-set-theme: replaced at runtime
         logma.debug(f"[models] set_theme: set to {self._settings['theme']!r}")
         return self
-
-
 
     def set_interface_settings(self, settings):
         """"""

@@ -436,9 +436,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         # undefined symbol). The actual crypto helper lives in
         # pycurity.pycrypt. No-op for now so save/reload
         # round-trips through base64.
-        logma.warning(
-            "[documents] decrypt: pycurity cipher not yet wired (PUSH 0.0.3)"
-        )
+        logma.warning("[documents] decrypt: pycurity cipher not yet wired (PUSH 0.0.3)")
         return self
 
     def encode64(self):
@@ -454,9 +452,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         # PUSH 0.0.3 - T-NEW-013: see decrypt() - actual cipher
         # integration deferred. Base64 round-trip is the format the
         # panel currently persists.
-        logma.warning(
-            "[documents] encrypt: pycurity cipher not yet wired (PUSH 0.0.3)"
-        )
+        logma.warning("[documents] encrypt: pycurity cipher not yet wired (PUSH 0.0.3)")
         return self
 
     def get_finger_print(self):
@@ -667,10 +663,9 @@ class NchantdOfficeTabEditPane(NchantdPane):
         # persists across ``cmd_open_local_file``.
         cfg = {
             "label": "Save Mode: ",
-            "options": ["file_path", "to_dict", "both"],
-            "value": (
-                getattr(tab, "save_mode", None) or "file_path"
-            ),
+            "options": self.get_save_options(),
+            "layout": "horizontal",
+            "value": self.get_save_value(),  # getattr(tab, "save_mode", None) or
         }
         self.save_mode_select = NchantdDropDown(self, cfg).initWidget()
         layout.addWidget(self.save_mode_select)
@@ -844,6 +839,18 @@ class NchantdOfficeTabEditPane(NchantdPane):
         # notes = self.app.model.get_notes()
         notes = ["note1", "note2", "note3"]
         return notes
+
+    def get_save_options(self):
+        """"""
+        # PUSH to 0.0.3 - createion options in database app_options - in-sync maintains copies in all places and syncronizes them
+        return [
+            "Local File System"
+        ]  # , "NchantdOffice Primary", "NchantdOffice Instance", "Cloud File System", "In-Sync"]
+
+    def get_save_value(self):
+        """"""
+        # PUSHT to 0.0.3 need to pull current config for the document/tab from the database
+        return "Local File System"
 
     def get_tab(self):
         """"""

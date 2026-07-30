@@ -30,6 +30,7 @@ from nchantrs.dialogs.files import NchantdFileOpenSigil
 from nchantdoffice.widgets.panes.documents import NchantdOfficeTabEditPane, NchantdOfficeNoteEditPane
 from nchantdoffice.widgets.panes.documents import NchantdOfficeNodeEditPane
 from nchantdoffice.widgets.tabs import NchantdOfficeTab
+
 # T-NEW-XXX: NchantdOfficeNote is imported inside ``set_notes``
 # (below) to avoid a circular import with
 # ``nchantdoffice.widgets.documents.media.notes``.
@@ -529,9 +530,7 @@ class NchantdOfficeDocumentMixin:
             try:
                 self.document.set_content(widget_content)
             except Exception as e:
-                logma.error(
-                    f"[documents] save: set_content failed: {e}", exc_info=True
-                )
+                logma.error(f"[documents] save: set_content failed: {e}", exc_info=True)
         # T-NEW-003 (35c050e4 working form): always write the
         # external file (when file_path is set) AND always write
         # the DB row. The two writes serve different purposes —
@@ -557,12 +556,11 @@ class NchantdOfficeDocumentMixin:
         doc_syntax = getattr(self.document, "syntax", None) if self.document is not None else None
         doc_id = getattr(self.document, "did", None) if self.document is not None else None
         if doc_syntax and doc_id and hasattr(self.app.model, "update_doc_media_syntax"):
+            # TODO this has to be moved to NchantdOfficeCloakModel this is a hack
             try:
                 self.app.model.update_doc_media_syntax(doc_id, doc_syntax)
             except Exception as e:
-                logma.warning(
-                    f"[documents] save: update_doc_media_syntax failed: {e}"
-                )
+                logma.warning(f"[documents] save: update_doc_media_syntax failed: {e}")
         return self
 
     def set_save_mode(self, mode):
