@@ -783,17 +783,16 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
     def cmd_convert_format(self, event=None, *args, **kwargs):
         """Convert the current image to the target format."""
-        target = None
-        for attr in ("target_format_select", "convert_format_select", "format_target_select"):
-            widget = getattr(self, attr, None)
-            if widget is not None:
-                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
-                if callable(getter):
-                    target = getter()
-                    break
-        if target is not None and hasattr(self, "convert_image_format") and callable(self.convert_image_format):
-            self.convert_image_format(target)
-            self.config.dikt["converted_format"] = target
+        # target = None
+        # for attr in ("target_format_select", "convert_format_select", "format_target_select"):
+        #     widget = getattr(self, attr, None)
+        #     if widget is not None:
+        #         getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
+        #         if callable(getter):
+        #             target = getter()
+        #             break
+        # if target is not None and hasattr(self, "convert_image_format") and callable(self.convert_image_format):
+        self.convert_image_format()
         return self
 
     def cmd_convert_size(self, event=None, *args, **kwargs):
@@ -882,6 +881,10 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             self.config.dikt["image_width"] = width
         return self
 
+    def convert_image_format(self, output_format):
+        """"""
+        self.document.convert_to(output_format)
+
     def get_binary(self):
         """Return the stored value of get_binary."""
         return self.config.dikt.get("file_binary", b"") or b""
@@ -943,7 +946,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
-
+        # TODO implement logic so that when a tool like NchantdConvertSize button is clicked on the document toolbar that the drawer is opened and redrawn to show only the config for that tool
         # Format conversion
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.image_format_conversion_pane = NchantdConvertFormatPane(

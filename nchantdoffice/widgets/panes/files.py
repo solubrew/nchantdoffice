@@ -74,7 +74,7 @@ class NchantdFileDetailsPane(NchantdPane):
             ("modon_entry", "Date Modified: ", self.get_modified_date()),
             ("hash_entry", "File Hash: ", self.get_hash(self.file_path)),
         ]:
-            cfg = {"label": label, "layout": "horizontal", "read_only": True}
+            cfg = {"label": label, "layout": "vertical", "read_only": True, "value": value, "wrap": True}
             widget = NchantdLabeledEntry(self, cfg).initWidget()
             setattr(self, entry_name, widget)
             self.layout.addWidget(widget)
@@ -104,9 +104,9 @@ class NchantdFileDetailsPane(NchantdPane):
                 logma.error(f"[files] get_access_date failed: {path!r} err={e}", exc_info=True)
                 date = "0"
         if self.accon_entry is None:
-            return self
+            return date
         self.accon_entry.setText(str(date))
-        return self
+        return date
 
     def get_created_date(self, path=None):
         """"""
@@ -124,13 +124,13 @@ class NchantdFileDetailsPane(NchantdPane):
                 logma.error(f"[files] get_created_date failed: {path!r} err={e}", exc_info=True)
                 date = "0"
         if self.creon_entry is None:
-            return self
+            return date
         self.creon_entry.setText(str(date))
-        return self
+        return date
 
     def get_file_path(self):
         """"""
-        return self.file_path
+        return self.file_path.parent
 
     def get_file_size(self, path=None):
         """"""
@@ -146,30 +146,31 @@ class NchantdFileDetailsPane(NchantdPane):
                 logma.error(f"[files] get_file_size failed: {path!r} err={e}", exc_info=True)
                 size = "0"
         if self.file_size_entry is None:
-            return self
+            return size
         self.file_size_entry.setText(str(size))
-        return self
+        return size
 
     def get_hash(self, path=None):
         """"""
+        hash_ = ""
         path = path or self.file_path
         logma.debug(f"[files] get_hash: path={path!r}")
         if path is None:
-            return self
+            return hash_
         if not isfile(path):
-            return self
+            return hash_
         try:
             hash_ = get_file_hash(path)
             logma.debug(f"[files] get_hash: hash_len={len(hash_) if hash_ else 0}")
             if self.hash_entry is None:
-                return self
+                return hash_
             self.hash_entry.setText(hash_)
         except Exception as e:
             logma.error(f"[files] get_hash failed: {path!r} err={e}", exc_info=True)
             if self.hash_entry is None:
-                return self
-            self.hash_entry.setText("")
-        return self
+                return hash_
+            self.hash_entry.setText(hash_)
+        return hash_
 
     def get_modified_date(self, path=None):
         """"""
@@ -186,9 +187,9 @@ class NchantdFileDetailsPane(NchantdPane):
                 logma.error(f"[files] get_modified_date failed: {path!r} err={e}", exc_info=True)
                 date = "0"
         if self.modon_entry is None:
-            return self
+            return date
         self.modon_entry.setText(str(date))
-        return self
+        return date
 
     def get_name(self, path=None):
         """"""
@@ -210,7 +211,7 @@ class NchantdFileDetailsPane(NchantdPane):
         self.file_path = Path(path)
         if self.file_path_entry is None:
             return self
-        self.file_path_entry.setText(path)
+        self.file_path_entry.setText(self.file_path)
         return self
 
 
