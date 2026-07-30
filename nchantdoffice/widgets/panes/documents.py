@@ -212,7 +212,8 @@ class NchantdOfficeNodeEditPane(NchantdPane):
                     self.app.model.has_changed = True
         except Exception as exc:
             logma.error(
-                f"[panes/documents] cmd_set_node_name: DB " f"persist failed: {exc}",
+                f"[panes/documents] cmd_set_tab_name: DB "
+                f"persist failed: {exc}",
                 exc_info=True,
             )
         return self
@@ -787,15 +788,16 @@ class NchantdOfficeTabEditPane(NchantdPane):
                         }
                     }
                 }
-                logma.info(f"\n[Update Node Name]")
+                logma.info(f"\n[Update Tab Name]")
                 logma.info(f"Data {data}")
-                logma.info(f"TID {node_id}\n")
+                logma.info(f"TID {tab_id}\n")
                 store.update_record(data, "tid_txt", tab_id, "db")
                 if hasattr(self.app.model, "has_changed"):
                     self.app.model.has_changed = True
         except Exception as exc:
             logma.error(
-                f"[panes/documents] cmd_set_node_name: DB " f"persist failed: {exc}",
+                f"[panes/documents] cmd_set_tab_name: DB "
+                f"persist failed: {exc}",
                 exc_info=True,
             )
         return self
