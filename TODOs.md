@@ -227,6 +227,16 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-013 | `decrypt`/`encrypt` cipher wiring | ⏸ Deferred to PUSH 0.0.3 — Sprints 5/12 |
 | T-NEW-014 | Trendline group init helper | ✅ Documented in Sprint 12 |
 | T-NEW-025 | Content versioning (`pydoc.increment_version`) | 🆕 Logged (2026-07-30) — design decision required |
+| T-NEW-026 | Finish Affiliate Manager tab | 🆕 Logged (2026-07-30) |
+| T-NEW-027 | Per-document-type settings pane (Interface Tab) | 🆕 Logged (2026-07-30) — design decision required |
+| T-NEW-028 | Right Pane tab visibility config | 🆕 Logged (2026-07-30) |
+| T-NEW-029 | Tab drag-init only on tab-name area | 🆕 Logged (2026-07-30) — design decision required |
+| T-NEW-030 | Drag tab to a different node — persist parent | 🆕 Logged (2026-07-30) |
+| T-NEW-031 | Drag tab to rightside tabset — reload to original | 🆕 Logged (2026-07-30) |
+| T-NEW-032 | Tab name updates to file name on file open (Interface Tab config) | 🆕 Logged (2026-07-30) |
+| T-NEW-033 | Search (global / node / tab) + finish `NchantdOfficeApplicationToolBox` | 🆕 Logged (2026-07-30) — design decision required |
+| T-NEW-034 | Data Source config card polish (apikey / tracked / size / retention / save) | 🆕 Logged (2026-07-30) |
+| T-NEW-035 | Script-tool polish (`file_format` vs `syntax`, drawer-redraw, object-config inserts, pane-spacing) | 🆕 Logged (2026-07-30) |
 
 ### T-NEW-025 — Content versioning for `NchantdOfficeCloakModel.save` (2026-07-30)
 
@@ -295,6 +305,416 @@ will need once the design is settled.
    load reads the post-save revision (or surfaces the prior
    revisions through the history UI, depending on the chosen
    model).
+
+### Extracted from `## New TODOs` (logged 2026-07-30)
+
+The eight free-form bullets added under `## New TODOs` (commits
+`429304d`, `19c4af4`, `187e1b6`, `a5fca17` on origin/gamma) have been
+extracted into the formal T-NEW series so they live alongside
+existing architecture work. The raw `## New TODOs` block is preserved
+above as the user's staging area; the canonical cards below carry
+the Affected sites and Migration plan.
+
+### T-NEW-026 — Finish Affiliate Manager tab (2026-07-30)
+
+The Affiliate Manager tab exists in spirit (a referral / affiliate
+link manager surfaces in `widgets/config/referral_panel.py`,
+`widgets/advertisements.py`, `utilities/referral.py`, and
+`utilities/links.py`) but the user-facing tab is unfinished —
+several flows are half-wired or punted to logging. Finish the tab
+end-to-end so the affiliate/referral code is discoverable from a
+single tab under the Settings node rather than scattered across
+the config panes.
+
+**Affected sites:**
+
+- `nchantdoffice/utilities/referral.py` — referral-link generation
+  (`NchantdOfficeDataPolicy` family).
+- `nchantdoffice/utilities/links.py` — `APIClient`,
+  `update_affilate_links`, `example_with_client` (note the typo in
+  `affilate` — see if the user's spelling or `affiliate` should
+  win).
+- `nchantdoffice/widgets/advertisements.py` — `NchantdAdvertisementPane`,
+  `NchantdAdvertisementSlimTab`.
+- `nchantdoffice/widgets/config/referral_panel.py` — `ReferralPanel`,
+  `_load_or_generate_code` (the H-019 fix site).
+
+**Migration plan:**
+
+No priority tier — backlog. The tab is functional but unfinished;
+finish it before declaring the Settings node done.
+
+1. Resolve the `affilate` vs `affiliate` spelling in
+   `utilities/links.py` — pick one and update every reference.
+2. Wire `ReferralPanel._load_or_generate_code` to read the
+   user's affiliate id from `pycurity.PyKeyStore` rather than
+   falling back to `"anonymous"`.
+3. Surface the affiliate link in the `NchantdAdvertisementPane`
+   header so a logged-in user sees their referral URL.
+4. Add a regression test under
+   `tests/test_affiliate_manager_tab.py` asserting the tab loads,
+   `_load_or_generate_code` returns the stored id, and the link
+   propagates to the ad pane.
+
+### T-NEW-027 — Per-document-type settings pane in Center Pane Settings of the Interface Tab (2026-07-30)
+
+The Settings → Interface tab currently exposes a single
+"prompt for new tab/node name" toggle (`prompt_for_new_node_name`,
+`prompt_for_new_tab_name` per Sprint 23 in
+`widgets/config/settings.py`). The user wants a settings pane per
+document type — i.e. the Matrix tab has its own settings pane,
+the Notebook tab has its own, etc. — instead of one shared
+Interface tab. This requires a registry of doc-type→settings
+panes and a dynamic loader that renders the right pane when a
+doc-type node is selected.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/config/settings.py` — current Interface
+  tab config flags (`prompt_for_new_node_name`,
+  `prompt_for_new_tab_name`).
+- `nchantdoffice/widgets/panes/new.py` — owns the current
+  "new" pane family; the per-type settings pane should follow
+  the same pattern.
+- `nchantdoffice/widgets/controls/toolbars.py:159` — `TODO:0 need
+  to figure out how to look up the widget from the document
+  types table` — this is the exact registry the per-type
+  settings pane needs.
+
+**Migration plan:**
+
+No priority tier — design decision first. The biggest open
+question is whether each doc type gets a fully custom settings
+pane (one widget per type, large surface) or a shared form with
+type-conditional fields (smaller surface, harder to evolve). Do
+not pick until the user weighs in.
+
+1. Decide on custom-pane-per-type vs shared-form-with-conditionals.
+2. Add a `DocumentTypeSettingsRegistry` keyed by
+   `PyfficeDocument.__class__.__name__` that maps to a settings
+   pane class. Register one entry per Pyffice subclass
+   (already enumerated in `tests/test_pyffice_semver.py`'s 58
+   subclasses).
+3. Wire the registry into the Center Pane Settings → Interface
+   tab so selecting a doc-type node surfaces its pane.
+4. Add a regression test under
+   `tests/test_per_doc_type_settings_pane.py` asserting the
+   registry resolves every Pyffice subclass and the loader
+   produces the right pane widget.
+
+### T-NEW-028 — Right Pane tab visibility selection (2026-07-30)
+
+The right-side tabset (`widgets/widgets.py` `right_pane`) shows a
+fixed list of tabs. The user wants a config knob (under Settings
+→ Interface) that lets the user pick which right-side tabs are
+visible — the same way `prompt_for_new_node_name` /
+`prompt_for_new_tab_name` work today.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/widgets.py` — `right_pane` initialisation
+  and the tabset that owns the right tabs.
+- `nchantdoffice/widgets/config/settings.py` — current Interface
+  tab config flags; add a `visible_right_tabs` list (or
+  per-tab boolean flags).
+
+**Migration plan:**
+
+No priority tier — small UX change.
+
+1. Add `visible_right_tabs` (list of tab identifiers) to
+   `config.dikt` via `cmd_on_change_visible_right_tabs` in
+   `widgets/config/settings.py` (mirroring the
+   `cmd_on_change_prompt_for_new_*` pattern).
+2. Filter `right_pane.initView` to only add tabs whose identifier
+   is in `visible_right_tabs`.
+3. Default `visible_right_tabs` to the current full list so the
+   change is opt-out rather than opt-in.
+4. Add a regression test under
+   `tests/test_right_pane_visibility.py` asserting the
+   filter applies and the default list matches the current
+   behaviour.
+
+### T-NEW-029 — Tab drag-and-drop must only initiate on the tab-name area, not the main widget area (2026-07-30)
+
+Today, tab drag-and-drop (`widgets/tabs.py`) initiates on any
+mouse-press inside the tab widget. This makes it hard to
+select text / interact with content inside the tab body without
+accidentally starting a drag. The user wants drag initiation
+gated to the tab-name area at the top of the tab.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/tabs.py` — the tab widget that owns
+  the drag-handler (referenced in the diff for commit
+  `19c4af4`).
+- `nchantdoffice/widgets/panes/charts.py:183,208` — `# TODO
+  causes segmentation fault` annotations on chart drag
+  handlers; these are likely the same root cause — chart
+  drag-init on the chart widget area rather than a discrete
+  handle. The chart crashes must be reproduced in a
+  Qt-parent subprocess harness per the existing pin (see
+  Pinned items in § 2).
+
+**Migration plan:**
+
+No priority tier — design decision first on whether the gate is
+a fixed pixel-region (top N px of the tab) or a named sub-widget
+(tab-name `QLabel`) that owns the press handler. Do not pick
+until the user weighs in.
+
+1. Pick the gating strategy (fixed region vs named sub-widget).
+2. Override `mousePressEvent` on the tab widget to swallow the
+   press unless the press lands in the tab-name area.
+3. Mirror the override on the chart widget family — if the
+   segfault is the same root cause, the chart crashes resolve
+   with the same fix.
+4. Add a regression test under
+   `tests/test_tab_drag_initiation.py` asserting a press on
+   the tab body does NOT start a drag, and a press on the
+   tab-name area DOES.
+
+### T-NEW-030 — Drag a tab to a different node — save the new parent (2026-07-30)
+
+Tab-to-node drag-and-drop is half-wired: dropping a tab onto a
+tree node changes the visual selection but does not persist the
+new parent. The fix parallels the H-024 tab/node rename
+persistence sprint (`ba268bf` / `c18a306` / `d66396e`) — write
+the new `parent_nid` (or `parent_tid`) to the DB on drop, via
+the canonical `store.update_record` shape.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/tabs.py` — drop handler.
+- `nchantdoffice/widgets/trees.py` — drop target.
+- `nchantdoffice/models.py:NchantdOfficeCloakModel` — owns
+  `cmd_set_tab_parent` (mirror of `cmd_set_tab_name`).
+
+**Migration plan:**
+
+No priority tier — small persistence fix.
+
+1. Add `cmd_set_tab_parent(tab, new_parent_node)` on
+   `NchantdOfficeCloakModel` that runs the canonical
+   `store.update_record({"table": {"doc_tab": {"records":
+   [[new_parent_nid]], "columns": ["parent_nid"]}}}, "tid_txt",
+   tab.tid, "db")` write.
+2. Wire the drop handler in `widgets/tabs.py` to call
+   `cmd_set_tab_parent` after the in-memory reparent.
+3. Mirror the same pattern for tab-to-node moves initiated from
+   the right-pane tabset (T-NEW-031).
+4. Add a regression test under
+   `tests/test_tab_to_node_drag_persistence.py` asserting
+   `parent_nid` is written to the DB on drop and a reload
+   reads the new parent.
+
+### T-NEW-031 — Drag a tab to the rightside tabset — it reloads to its original location (2026-07-30)
+
+Dropping a tab on the right-side tabset is treated as an
+implicit move; the user wants the dropped tab to spring back
+to its original tabset on reload. This is an undo-style
+behaviour: the right-side tabset is a "scratch" view, not a
+new parent.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/widgets.py` — right_pane tabset.
+- `nchantdoffice/widgets/tabs.py` — drop handler.
+- `nchantdoffice/widgets/panes/documents.py:725` —
+  `tabset.go_to_previous_tab()` (the recovery entry point).
+
+**Migration plan:**
+
+No priority tier — small UX behaviour.
+
+1. On drop into the right-side tabset, mark the tab as
+   `right_scratch=True` in the in-memory state but do NOT
+   persist the move.
+2. On next reload (or right-side reset), iterate the right-side
+   tabset and re-home each `right_scratch` tab back to its
+   original tabset via `NchantdTreeView.set_current_node`.
+3. Add a regression test under
+   `tests/test_right_side_tabset_recovery.py` asserting a drop
+   onto the right side does NOT change `parent_nid` on disk,
+   and a reload restores the original tabset placement.
+
+### T-NEW-032 — Settings/Interface config: tab name updates to file name on file open (2026-07-30)
+
+When a file is opened (via the existing `cmd_open_local_file`
+dispatch in `widgets/controls/toolboxes.py`), the tab name is
+currently set from the file path with a fixed heuristic. The
+user wants a config flag (`update_tab_name_to_file_name` or
+similar) under Settings → Interface that toggles whether the
+tab name is renamed to the opened file's basename.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/controls/toolboxes.py` —
+  `cmd_open_local_file` is the dispatcher.
+- `nchantdoffice/widgets/config/settings.py` — Interface tab
+  config flags.
+- `nchantdoffice/widgets/documents/media/scripts.py` (and the
+  other document types) — the per-type open handler that
+  currently sets the tab name.
+
+**Migration plan:**
+
+No priority tier — small UX flag.
+
+1. Add `update_tab_name_to_file_name` boolean to `config.dikt`
+   via `cmd_on_change_update_tab_name_to_file_name` in
+   `widgets/config/settings.py`.
+2. In `cmd_open_local_file`, gate the `setTabText(path.basename)`
+   call on `config.dikt["update_tab_name_to_file_name"]`.
+3. Default `True` to match current behaviour, or `False` to
+   match the user's apparent preference for stable tab names —
+   confirm with user before defaulting.
+4. Add a regression test under
+   `tests/test_tab_name_on_file_open.py` asserting the flag
+   toggles the rename.
+
+### T-NEW-033 — Search across all nodes / tabs + node-specific + tab-specific + finish `NchantdOfficeApplicationToolBox` (2026-07-30)
+
+The Right Toolbox (`NchantdOfficeApplicationToolBox` —
+instantiated in `widgets/controls/toolboxes.py`) currently has
+partial search dispatch. The user wants:
+
+- a global search (across all nodes and tabs),
+- a node-scoped search (current node's tabs and children),
+- a tab-scoped search (current tab's content),
+
+…all wired through `cmd_web_search_pane` / `cmd_llm_query_pane`
+on the toolbox, with the toolbox fully built out (no
+half-wired slots).
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/controls/toolboxes.py` —
+  `NchantdOfficeApplicationToolBox`, `cmd_web_search_pane`,
+  `cmd_llm_query_pane`.
+- `nchantdoffice/widgets/panes/searchTEST.py` (test surface for
+  the search dispatch).
+- `nchantdoffice/models.py:NchantdOfficeCloakModel` — owns
+  the search index lookup (mirror of `get_app_instances`).
+
+**Migration plan:**
+
+No priority tier — design decision first on whether the
+search index lives in SQLite (`doc_search_index` table) or
+in-memory (rebuilt on every search). Do not pick until the
+user weighs in.
+
+1. Confirm the search-index storage location.
+2. Build the global / node / tab scoped search dispatchers
+   (three methods on `NchantdOfficeApplicationToolBox`).
+3. Finish wiring the toolbox slots — every `cmd_*` slot should
+   have a real implementation (per the Sprint 20 user
+   agreement — no log+return-self stubs).
+4. Add a regression test under
+   `tests/test_application_toolbox_search.py` asserting the
+   three scopes return distinct result sets.
+
+### T-NEW-034 — Data Source config: apikey visibility, tracked-source checkbox, size/retention, save button (2026-07-30)
+
+The Data Sources config pane (`widgets/panes/sources.py:751-755`)
+has five sibling inline TODOs that all describe the same
+surface area — finishing the per-source config card. Treat as
+one migration plan since the items share UI plumbing.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/panes/sources.py:751` — "add details of
+  source like requires apikey, show api exists and if not
+  button to go the Data Sources config Tab".
+- `nchantdoffice/widgets/panes/sources.py:752` — "add details
+  for if the source is being tracked by NchantdOffice. with a
+  checkbox for selecting to track or not".
+- `nchantdoffice/widgets/panes/sources.py:753` — "add size
+  details of tracked store for this source".
+- `nchantdoffice/widgets/panes/sources.py:754` — "add a
+  spinbox to allow for size that tracked dataset can grow to
+  and then it will have a falloff using the data retention
+  policies".
+- `nchantdoffice/widgets/panes/sources.py:755` — "add save
+  button to config page".
+- `nchantdoffice/widgets/config/config_sources.py:115` —
+  `cmd_change_data_source_pane_size` (the empty method that
+  pairs with the size-spinbox above).
+- `nchantdoffice/widgets/config/config_sources.py:161` —
+  `cmd_toggle_apikey_visibility` (the empty method that pairs
+  with the apikey button above).
+
+**Migration plan:**
+
+No priority tier — backlog. The two `config_sources.py`
+stubs (`cmd_change_data_source_pane_size`,
+`cmd_toggle_apikey_visibility`) should be filled first because
+they're the simplest entry points; the larger surface-area
+items can follow once those are done.
+
+1. Fill `cmd_change_data_source_pane_size` in
+   `widgets/config/config_sources.py:115` — resize the data
+   source list pane via the splitter.
+2. Fill `cmd_toggle_apikey_visibility` in
+   `widgets/config/config_sources.py:161` — toggle the apikey
+   `QLineEdit` echo mode between `Normal` and `Password`.
+3. Add the per-source config card slots (apikey visibility,
+   tracked checkbox, size details, retention spinbox, save
+   button) to `NchantdSourceEditPane.initView` /
+   `init_drawer_quickstart`.
+4. Add a regression test under
+   `tests/test_source_config_card.py` asserting each slot
+   exists and the save button persists the values.
+
+### T-NEW-035 — Script-tool polish: untangle `file_format` vs `syntax`, drawer-redraw on tool click, object-config inserts, pane-spacing (2026-07-30)
+
+Five small UI improvements surfaced during the Sprint 28
+Script drawer refactor (`scripts.py` updates in commits
+`187e1b6` / `a5fca17`). Bundled because they share plumbing
+and form a coherent "finish the script document" sprint.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/media/scripts.py:1555` —
+  `# TODO untagle file_format and syntax` (note the typo).
+- `nchantdoffice/widgets/documents/media/images.py:949` —
+  `# TODO implement logic so that when a tool like
+  NchantdConvertSize button is clicked on the document toolbar
+  that the drawer is opened and redrawn to show only the config
+  for that tool`.
+- `nchantdoffice/widgets/documents/media/scripts.py:803` —
+  `# NOTE add tools here like spell/grammar, etc`.
+- `nchantdoffice/widgets/documents/media/scripts.py:809` —
+  `# NOTE: each of these panes need to have their spacing
+  tightened up`.
+- `nchantdoffice/widgets/documents/media/scripts.py` —
+  `init_drawer_selection_config`, `init_drawer_object_config`
+  (the new drawers added in commit `187e1b6`).
+
+**Migration plan:**
+
+No priority tier — backlog. Roughly one sprint's worth of
+work; overlaps with the existing `T-NOTE-010` "9 small UI
+improvements" entry which already catalogues this cluster.
+
+1. Rename `file_format` → `syntax` (or vice versa) across the
+   `NchantdOfficeScript` surface and update the dispatch
+   table — confirm with user which side wins.
+2. Wire the document-tool button click to open + redraw the
+   drawer to the tool's config pane (`images.py:949` and the
+   same pattern across `NchantdOfficeMatrix`,
+   `NchantdOfficePDF`, `NchantdOfficeNotebook`).
+3. Move the inserts out of `init_drawer_selection_config` into
+   the new `init_drawer_object_config` per the `# NOTE move
+   inserts to object config` marker.
+4. Add spell/grammar + analytics tool stubs (mirror
+   `cmd_run_*` patterns).
+5. Tighten pane spacing across the four drawers (selection,
+   object, page, toolbar).
+6. Add a regression test under
+   `tests/test_script_drawer_polish.py` asserting the file-
+   format/syntax dispatch resolves correctly and each tool
+   button opens its drawer.
 
 ### Live crashes — ALL CLOSED
 
