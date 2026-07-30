@@ -56,7 +56,6 @@ NchantdOfficeScript:
           2: {"action": "insert_object", "type": ""}
           3: {"action": "set_page_footer", "type": ""}
           4: {"action": "set_document_footer", "type": ""}
-#PUSH to 0.0.3
 #    400:
 #        title: Nchantd Script Quickstart
 #        items:

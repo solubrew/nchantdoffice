@@ -43,6 +43,7 @@ from kahndor.logma import Logma
 from nchantdoffice.widgets.panes.objects import NchantdNewObjectPane, NchantdHeaderPane, NchantdFooterPane
 from pycurity.pyhash import decode64
 from pycurity.pysan import Sanitized
+from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -212,6 +213,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             "options": self.get_document_syntaxs(),
             "value": self.get_document_syntax(),
             "handler": self.cmd_on_change_document_syntax,
+            "combobox": {"size": [100, "auto"]},
         }
         self.document_syntax_select = NchantdDropDown(self, dfs_cfg)
         if self.format_type == "plaintext":
@@ -754,6 +756,59 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
 
+        # PUSH to 0.0.3
+        # add text justification
+        # Add text bulleting
+        # add text spacing
+        default_action = {"action": "insert_generic_action", "type": "custom"}
+        if cnt not in items:
+            items[cnt] = default_action
+        cfg = {"label": "File Name: ", "layout": "horizontal", "file_path": self.document.file_path}
+        self.file_pane = NchantdFileDetailsPane(self, cfg)
+        items[cnt]["widget"] = self.file_pane
+        cnt += 1
+
+        return items
+
+    def init_drawer_selection_config(self):
+        """Build the script selection/inserts drawer (image / table / date / time)."""
+        items = self.toolbox_config[200].get("items", {})
+        cnt = 0
+
+        # Inserts: image + table + date + time share the same widget type (button).
+        insert_specs = (
+            ("insert_image", "Insert Image:", "cmd_add_image"),
+            ("insert_table", "Insert Table:", "cmd_add_table"),
+            ("insert_date", "Insert Date:", "cmd_add_date"),
+            ("insert_time", "Insert Time:", "cmd_add_time"),
+        )
+        for attr_name, label, handler_name in insert_specs:
+            slot = self._ensure_drawer_item(items, cnt)
+            cfg = {
+                "label": label,
+                "layout": "vertical",
+                "handler": getattr(self, handler_name),
+            }
+            # Time-insert keeps a ``value=None``; the others don't set value.
+            if attr_name == "insert_time":
+                cfg["value"] = None
+            slot["widget"] = setattr(
+                self,
+                attr_name,
+                NchantdButtonWidget(self, cfg),
+            ) or getattr(self, attr_name)
+            cnt += 1
+
+        # NOTE move inserts to object config
+        # NOTE add tools here like spell/grammar, etc
+        # NOTE add analytics tools
+        return items
+
+    def init_drawer_object_config(self):
+        """Build the object-config drawer (headers / objects list / insert / footers)."""
+        # NOTE: each of these panes need to have their spacing tightened up
+        items = self.toolbox_config[300].get("items", {})
+        cnt = 0
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.pretty_print = NchantdButtonWidget(
             self,
@@ -815,52 +870,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             },
         )
         cnt += 1
-
-        # NOTE: add text justification
-        # NOTE: Add text bulleting
-        # NOTE: add text spacing
-        return items
-
-    def init_drawer_selection_config(self):
-        """Build the script selection/inserts drawer (image / table / date / time)."""
-        items = self.toolbox_config[200].get("items", {})
-        cnt = 0
-
-        # Inserts: image + table + date + time share the same widget type (button).
-        insert_specs = (
-            ("insert_image", "Insert Image:", "cmd_add_image"),
-            ("insert_table", "Insert Table:", "cmd_add_table"),
-            ("insert_date", "Insert Date:", "cmd_add_date"),
-            ("insert_time", "Insert Time:", "cmd_add_time"),
-        )
-        for attr_name, label, handler_name in insert_specs:
-            slot = self._ensure_drawer_item(items, cnt)
-            cfg = {
-                "label": label,
-                "layout": "vertical",
-                "handler": getattr(self, handler_name),
-            }
-            # Time-insert keeps a ``value=None``; the others don't set value.
-            if attr_name == "insert_time":
-                cfg["value"] = None
-            slot["widget"] = setattr(
-                self,
-                attr_name,
-                NchantdButtonWidget(self, cfg),
-            ) or getattr(self, attr_name)
-            cnt += 1
-
-        # NOTE move inserts to object config
-        # NOTE add tools here like spell/grammar, etc
-        # NOTE add analytics tools
-        return items
-
-    def init_drawer_object_config(self):
-        """Build the object-config drawer (headers / objects list / insert / footers)."""
-        # NOTE: each of these panes need to have their spacing tightened up
-        items = self.toolbox_config[300].get("items", {})
-        cnt = 0
-
         # Object-pane definitions: each tuple is ``(widget_attr_name, pane_class, label)``.
         _object_specs = (
             ("document_header_entry", "NchantdHeaderPane", "Document Header: "),
@@ -889,8 +898,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
+        # PUSH to 0.0.3
         # self.toolbox_config[200]["items"] = self.init_drawer_selection_config()
-        self.toolbox_config[300]["items"] = self.init_drawer_object_config()
+        # self.toolbox_config[300]["items"] = self.init_drawer_object_config()
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
     def insert_chart(self):
@@ -1481,9 +1491,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # redundant AND harmful.
         logma.info(f"Text: {text}")
         logma.info(f"Type: {type(text)}")
-        logma.info(
-            f"Syntax {getattr(self.document, 'syntax', None) if self.document is not None else None}"
-        )
+        logma.info(f"Syntax {getattr(self.document, 'syntax', None) if self.document is not None else None}")
         return text
 
     def _preserved_unit_html(self):
@@ -1543,8 +1551,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         highlightable set is kept in one place so adding a new
         language is a single tuple.
         """
-        self.document.file_format = self.config.dikt.get("document", {}).get("syntax", "plain-text")
+
+        # TODO untagle file_format and syntax
+        # self.document.file_format = self.config.dikt.get("document", {}).get("syntax", "plain-text")
         if self.document.file_format is None:
+            logma.info(f"Set Default File Format")
             self.document.file_format = "plain-text"
         logma.info(f"Syntax {self.document.syntax}")
         logma.info(f"Type {type(self.document.syntax)}")

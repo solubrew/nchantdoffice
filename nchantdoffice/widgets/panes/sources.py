@@ -28,7 +28,8 @@ from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.media.editors.entries import NchantdActivateEntry
 from nchantrs.widgets.panes.panes import NchantdPane
-from nchantrs.widgets.tables.lists import NchantdList
+from nchantrs.widgets.tables.lists import NchantdList, NchantdBulletedList
+from nchantrs.widgets.tables.tables import NchantdTable
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.groups import NchantdGroup
@@ -167,13 +168,13 @@ class NchantdWhereUsedListPane(NchantdPane):
         """"""
         super().initView(cfg)
         cfg = {"text": "Where Used:"}
-        group = NchantdGroup(self, cfg)
+        # group = NchantdGroup(self, cfg)
         layout = pyqt.QVBoxLayout()
-        group.setLayout(layout)
+        # group.setLayout(layout)
         cfg = {"data": self.config.dikt.get("data", [])}
-        self.layers_list = NchantdList(self, cfg).initWidget()
+        self.layers_list = NchantdBulletedList(self, cfg).initWidget()
         layout.addWidget(self.layers_list)
-        self.layout.addWidget(group)
+        self.layout.addLayout(layout)
         return self
 
     def initWidget(self):
@@ -458,7 +459,7 @@ class NchantdViewPane(NchantdPane):
     def initView(self, cfg=None):
         """"""
         super().initView(cfg)
-        cfg = {"collapsible": True, "collapsed": False, "text": "View"}
+        cfg = {"collapsible": False, "collapsed": False, "text": "View"}
         view_group = NchantdGroup(self.parent, cfg)
         layout = pyqt.QVBoxLayout()
         view_group.setLayout(layout)
@@ -502,7 +503,7 @@ class NchantdViewEditPane(NchantdPane):
         super().initView(cfg)
 
         cfg = {
-            "collapsible": True,
+            "collapsible": False,
             "collapsed": False,
             "text": "Field Selection",
             "layout": "horizontal",
@@ -526,7 +527,7 @@ class NchantdViewEditPane(NchantdPane):
         self.layout.addWidget(self.fields_group)
 
         cfg = {
-            "collapsible": True,
+            "collapsible": False,
             "collapsed": False,
             "text": "Filter Configuration",
             "layout": "horizontal",
@@ -560,9 +561,8 @@ class NchantdViewEditPane(NchantdPane):
         layout.addLayout(accpet_layout)
         self.filter_group.set_height(layout.sizeHint().height() * 1.5)
         self.layout.addWidget(self.filter_group)
-
         cfg = {
-            "collapsible": True,
+            "collapsible": False,
             "collapsed": False,
             "text": "Summary Configuration",
             "layout": "horizontal",
@@ -726,29 +726,35 @@ class NchantdSourceDefaultPane(NchantdWidget):
     def initView(self, cfg=None):
         """"""
         super().initView(cfg)
-        cfg = {"label": "Default Source Details:"}
-        group = NchantdGroup(self, cfg)
+        cfg = {"text": "Source Details:"}
+        # group = NchantdGroup(self, cfg)
         layout = pyqt.QVBoxLayout()
-        group.setLayout(layout)
+        # group.setLayout(layout)
         cfg = {
             "label": "Set Default Source: ",
-            "layout": "horizontal",
+            "layout": "vertical",
             "combobox": {"size": ["auto", "auto"], "options": self.get_sources()},
             "value": self.get_source(),
             "handler": self.cmd_on_source_change,
         }
-        self.source_select = NchantdDropDown(self, cfg).initWidget()
-        layout.addWidget(self.source_select)
+        self.source_selected = NchantdLabel(self, cfg).initWidget()
+        layout.addWidget(self.source_selected)
         cfg = {
             "label": "Set Default Table: ",
-            "layout": "horizontal",
+            "layout": "vertical",
             "combobox": {"size": ["auto", "auto"], "options": self.get_source_tables(self.get_source())},
             "value": self.get_source_table(),
             "handler": self.cmd_on_data_table_change,
         }
-        self.table_select = NchantdDropDown(self, cfg).initWidget()
+        self.table_select = NchantdLabel(self, cfg).initWidget()
         layout.addWidget(self.table_select)
-        self.layout.addWidget(group)
+        # TODO: add details of source like requires apikey, show api exists and if not button to go the Data Sources config Tab
+        # TODO: add details for if the source is being tracked by NchantdOffice.  with a checkbox for selecting to track or not
+        # TODO: add size details of tracked store for this source
+        # TODO: add a spinbox to allow for size that tracked dataset can grow to and then it will have a falloff using the data retention policies
+        # TODO: add save button to config page
+        # self.layout.addWidget(group)
+        self.layout.addLayout(layout)
         return self
 
     def initWidget(self):

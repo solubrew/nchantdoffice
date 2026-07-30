@@ -23,11 +23,11 @@ import json
 from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from kahndor.logma import Logma
-from nchantrs.widgets.controls.buttons import NchantdButton
+from nchantrs.widgets.controls.buttons import NchantdButtonWidget, NchantdButton
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.tables.tables import NchantdTable
-from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
+from nchantrs.widgets.controls.checkboxes import NchantdCheckboxWidget
 from nchantdoffice.widgets.panes.sources import NchantdSourceEditPane
 from nchantrs.widgets.canvases.canvases import NchantdCanvas
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocumentManager
@@ -284,19 +284,21 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         self.source_table_select = NchantdDropDown(self, dsvs_cfg).initWidget()
         if cfg.get("buttons", None) is None:
             cfg["buttons"] = {}
-        cfg["buttons"][0] = {"action": "show_config_pane", "type": "custom", "handler": self.cmd_toggle_config_pane}
-        cfg["buttons"][1] = {
+        # cfg["buttons"][10] = {"action": "show_config_pane", "type": "custom", "handler": self.cmd_toggle_config_pane}
+        cfg["buttons"][11] = {
             "action": "insert_generic_action",
             "type": "custom",
             "widget": self.source_select,
         }
-        cfg["buttons"][2] = {
+        cfg["buttons"][12] = {
             "action": "insert_generic_action",
             "type": "custom",
             "widget": self.source_table_select,
         }
-        cfg["buttons"][3] = {"action": "add_source", "handler": self.cmd_add_dataset}
+        cfg["buttons"][13] = {"action": "add_source", "handler": self.cmd_add_dataset}
         cfg["buttons"][49] = "_insert_stretch"
+        cfg["buttons"][100] = "_skip"
+        cfg["buttons"][101] = "_skip"
         super().initView(cfg)
         cfg = {"size": ["auto", self.size().height() * (2 / 3) - 18]}
         self.canvas = NchantdCanvas(self, cfg).initWidget()
@@ -370,17 +372,18 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
             self.sources = self.app.model.get_sources()
         except Exception as e:
             logma.error(f"[config_sources] get_sources: model.get_sources failed: {e}", exc_info=True)
-            self.sources = None
-        if self.sources is None:
-            return self.sources if full else []
-        if full:
-            return self.sources
-        try:
-            if hasattr(self.sources, "name_txt"):
-                return list(self.sources["name_txt"].tolist())
-        except Exception as e:
-            logma.error(f"[config_sources] get_sources coercion failed: {e}", exc_info=True)
-        return []
+            return []
+        #     self.sources = None
+        # if self.sources is None:
+        #     return self.sources if full else []
+        # if full:
+        #     return self.sources
+        # try:
+        #     if hasattr(self.sources, "name_txt"):
+        #         return list(self.sources["name_txt"].tolist())
+        # except Exception as e:
+        #     logma.error(f"[config_sources] get_sources coercion failed: {e}", exc_info=True)
+        return self.sources["value_txt"].tolist()
 
     def get_source_table(self):
         """Return the source-table widget (T-092).
@@ -439,7 +442,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
             items[cnt] = default_action
         cfg = {
             "label": "Set Default Source: ",
-            "layout": "horizontal",
+            "layout": "vertical",
             "combobox": {"size": ["auto", "auto"], "options": self.get_sources()},
             "value": self.get_source(),
             "handler": self.cmd_on_source_change,
@@ -485,17 +488,17 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         self.chart_where_used_list = NchantdWhereUsedListPane(self, cfg)
         items[cnt]["widget"] = self.chart_where_used_list
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        options = ["Node: Name"]
-        cfg = {
-            "label": "Chart Where Used: ",
-            "layout": "horizontal",
-            "combobox": {"size": ["auto", "auto"], "options": options},
-        }
-        self.chart_sources_list = NchantdSourcesListPane(self, cfg)
-        items[cnt]["widget"] = self.chart_sources_list
-        cnt += 1
+        # if cnt not in items:
+        #    items[cnt] = default_action
+        # options = ["Node: Name"]
+        # cfg = {
+        #     "label": "Chart Where Used: ",
+        #     "layout": "horizontal",
+        #     "combobox": {"size": ["auto", "auto"], "options": options},
+        # }
+        # self.chart_sources_list = NchantdSourcesListPane(self, cfg)
+        # items[cnt]["widget"] = self.chart_sources_list
+        # cnt += 1
         return items
 
     def _ensure_drawer_item(self, items, cnt):
@@ -544,7 +547,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         cnt += 1
 
         slot = self._ensure_drawer_item(items, cnt)
-        slot["widget"] = self.eda_run_button = NchantdButton(
+        slot["widget"] = self.eda_run_button = NchantdButtonWidget(
             self,
             {
                 "text": "Run Exploratory Data Analysis",
@@ -555,7 +558,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         cnt += 1
 
         slot = self._ensure_drawer_item(items, cnt)
-        slot["widget"] = self.eda_placement_checkbox = NchantdCheckbox(
+        slot["widget"] = self.eda_placement_checkbox = NchantdCheckboxWidget(
             self,
             {
                 "text": "Create EDA on Node Branch",
@@ -575,10 +578,12 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_source_config()
-        self.toolbox_config[200]["items"] = self.init_drawer_sources()
+        # PUSH to 0.0.3
+        # self.toolbox_config[200]["items"] = self.init_drawer_sources()
         self.toolbox_config[300]["items"] = self.init_drawer_connections()
-        self.toolbox_config[400]["items"] = self.init_drawer_exploratory_data_analysis()
-        self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
+        # PUSH to 0.0.3
+        # self.toolbox_config[400]["items"] = self.init_drawer_exploratory_data_analysis()
+        # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
 
 # ====================================================================================================================||

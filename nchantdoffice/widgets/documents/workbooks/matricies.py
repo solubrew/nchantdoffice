@@ -22,19 +22,17 @@ import datetime as dt
 from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
-from nchantrs.widgets.controls.advanced_buttons import NchantdNumberWheelButton, NchantdLabeledSpinBox, NchantdSpinBox
+from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox, NchantdSpinBox
 from nchantrs.widgets.controls.buttons import NchantdButton, NchantdButtonWidget
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry, NchantdEntryBox
 from nchantrs.widgets.widgets import NchantdWidget
-from nchantrs.widgets.controls.checkboxes import NchantdCheckboxGroup
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown, NchantdComboBox
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
-from pyffice.workflows.formulas import PyfficeFormulasLibrary
 from kahndor.logma import Logma
 from nchantrs.widgets.controls.button_groups import NchantdFontConfigBar
-from nchantdoffice.widgets.panes.sources import NchantdSourceEditPane, NchantdSourcesListPane
 from nchantdoffice.widgets.tables import NchantdOfficeTable
+from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -257,7 +255,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             "handler": self.cmd_formula_bar_change,
         }
         self.formula_bar = NchantdLabeledEntry(self, cfg)
-        #if self.file_path is None or not exists(self.file_path):
+        # if self.file_path is None or not exists(self.file_path):
         cfg = {"buttons": {49: "_insert_stretch"}, "layout": "vertical"}
 
         # dscfg = {
@@ -526,9 +524,11 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             if not formula_text.startswith("=") and formula_text and formula_text[0].isalpha():
                 formula_text = "=" + formula_text
             selected.setText(formula_text)
-            if (hasattr(self, "autocalculate_checkbox")
-                    and self.autocalculate_checkbox is not None
-                    and self.autocalculate_checkbox.isChecked()):
+            if (
+                hasattr(self, "autocalculate_checkbox")
+                and self.autocalculate_checkbox is not None
+                and self.autocalculate_checkbox.isChecked()
+            ):
                 if hasattr(self, "evaluate_cell_formula"):
                     self.evaluate_cell_formula(selected)
         return self
@@ -795,9 +795,11 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 self.validate_formula(text)
             except Exception as e:
                 logma.error(f"[matricies] cmd_formula_entry_change validation failed: {e}", exc_info=True)
-        if (hasattr(self, "autocalculate_checkbox")
-                and self.autocalculate_checkbox is not None
-                and self.autocalculate_checkbox.isChecked()):
+        if (
+            hasattr(self, "autocalculate_checkbox")
+            and self.autocalculate_checkbox is not None
+            and self.autocalculate_checkbox.isChecked()
+        ):
             current = self.table.currentItem()
             if current is not None and hasattr(self, "evaluate_cell_formula"):
                 self.evaluate_cell_formula(current)
@@ -912,9 +914,11 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 self.document.data[row][col] = text
             except (IndexError, TypeError, KeyError):
                 pass
-        if (hasattr(self, "autocalculate_checkbox")
-                and self.autocalculate_checkbox is not None
-                and self.autocalculate_checkbox.isChecked()):
+        if (
+            hasattr(self, "autocalculate_checkbox")
+            and self.autocalculate_checkbox is not None
+            and self.autocalculate_checkbox.isChecked()
+        ):
             if hasattr(self, "evaluate_cell_formula"):
                 self.evaluate_cell_formula(current)
         return self
@@ -1432,15 +1436,16 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # Row / column count + size spinboxes share the same config shape.
         # Build a list of `(attr, label, range_or_cfg, default, handler)` tuples.
         spin_specs = (
-            ("rows_count_entry",    "Row Count",    [1, 10000000], "num_rows",    20, "cmd_row_spinbox"),
-            ("row_height_entry",    "Row Height",   [5, 200],       "row_height",  25, "cmd_row_height_spinbox"),
+            ("rows_count_entry", "Row Count", [1, 10000000], "num_rows", 20, "cmd_row_spinbox"),
+            ("row_height_entry", "Row Height", [5, 200], "row_height", 25, "cmd_row_height_spinbox"),
             ("columns_count_entry", "Column Count", [1, 10000000], "num_columns", 20, "cmd_column_spinbox"),
-            ("cell_width",          "Column Width", [20, 600],      "column_width",80, "cmd_column_width_spinbox"),
+            ("cell_width", "Column Width", [20, 600], "column_width", 80, "cmd_column_width_spinbox"),
         )
         for attr_name, label, rng, default_cfg_key, default_val, handler_name in spin_specs:
             slot = self._ensure_drawer_item(items, cnt)
             slot["widget"] = setattr(
-                self, attr_name,
+                self,
+                attr_name,
                 NchantdLabeledSpinBox(
                     self,
                     {
@@ -1453,9 +1458,14 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 ),
             ) or getattr(self, attr_name)
             cnt += 1
-
+        default_action = {"action": "insert_generic_action", "type": "custom"}
+        if cnt not in items:
+            items[cnt] = default_action
+        cfg = {"label": "File Name: ", "layout": "horizontal", "file_path": self.document.file_path}
+        self.file_pane = NchantdFileDetailsPane(self, cfg)
+        items[cnt]["widget"] = self.file_pane
+        cnt += 1
         return items
-
 
     def init_drawer_formula(self):
         """"""
@@ -1559,7 +1569,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # user can toggle text formatting without typing the
         # font commands.
         slot = self._ensure_drawer_item(items, cnt)
-        #slot["widget"] = self.font_format_buttons = self._build_font_format_buttons()
+        # slot["widget"] = self.font_format_buttons = self._build_font_format_buttons()
         cnt += 1
 
         # Font config bar (family + size only now that
@@ -1592,7 +1602,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # Border format picker
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.cell_format = NchantdOfficeCellBorderFormats(
-            self, {"label": "Border Format", "handler": self.cmd_cell_border_change},
+            self,
+            {"label": "Border Format", "handler": self.cmd_cell_border_change},
         )
         cnt += 1
 
@@ -1735,9 +1746,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         if hasattr(self, "cell_ref_label") and self.cell_ref_label is not None:
             self.cell_ref_label.setText(address)
         else:
-            logma.warning(
-                f"[matricies] on_selection_changed: cell_ref_label missing for {address}"
-            )
+            logma.warning(f"[matricies] on_selection_changed: cell_ref_label missing for {address}")
         self.formula_input.setText(value or "")
 
         # Emit signal
@@ -1790,17 +1799,18 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         """
         try:
             import os
+
             ext = os.path.splitext(file_path)[1].lower()
             ext_map = {
                 ".xlsx": "open_xlsx",
                 ".xlsm": "open_xlsx",
-                ".xls":  "open_xls",
-                ".ods":  "open_ods",
-                ".csv":  "open_csv",
-                ".tsv":  "open_csv",
+                ".xls": "open_xls",
+                ".ods": "open_ods",
+                ".csv": "open_csv",
+                ".tsv": "open_csv",
                 ".json": "open_json",
                 ".yaml": "open_yaml",
-                ".yml":  "open_yaml",
+                ".yml": "open_yaml",
             }
             return ext_map.get(ext, "document.open_file")
         except Exception:
@@ -1975,6 +1985,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             # Default sizes for columns/rows that were not specified
             try:
                 from PySide6 import QtWidgets
+
                 default_w = 120
                 default_h = 25
                 for c in range(self.table.columnCount()):
@@ -2079,7 +2090,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 for c in range(col_count):
                     try:
                         item = table.item(r, c)
-                        text = (item.text() if item is not None and hasattr(item, "text") else "")
+                        text = item.text() if item is not None and hasattr(item, "text") else ""
                     except Exception:
                         text = ""
                     row.append(text or "")
