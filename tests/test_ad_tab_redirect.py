@@ -1,20 +1,22 @@
-"""Sprint 24 — Ad tab 'Remove ads' button redirect regression.
+"""Sprint 25 — Ad tab 'Remove ads' button redirect regression.
 
 The right-side Ad tab has a "Remove ads - Go Pro" button
-(NchantdOfficeAdTab._on_remove_ads_clicked) that previously
-opened a browser via QDesktopServices.openUrl. The user wants
-it to redirect into an existing tab under the Settings node
-that points at nchantdoffice.com (the canonical "Get Pro" page).
+(NchantdOfficeAdTab._on_remove_ads_clicked). Per user
+direction (2026-07-30), the canonical UX is to navigate to an
+existing "Nchantd Account" tab under the Settings node in the
+left-pane tree (the embedded browser for the nchantdoffice_com
+account chain). The handler must NOT launch an external
+browser.
 
 This test pins the contract that:
   1. The button click does NOT call ``QDesktopServices.openUrl``.
-  2. The handler delegates to the app's view for navigation
-     (via ``self.app.view.switch_to_tab`` or a similar
-     ``switch_to_*`` method) rather than opening a browser.
-  3. The redirect target is an in-app tab pointing at
-     https://www.nchantdoffice.com (not a uuid placeholder).
-  4. When the redirect target is unavailable, the handler
-     falls back gracefully (no exception bubbles).
+  2. The handler uses ``tree.findItems`` to look up the
+     "Settings" and "Nchantd Account" nodes in the left tree.
+  3. The handler uses ``tree.setCurrentItem`` to switch the
+     tree selection (and ``scrollToItem`` + ``itemSelectionChanged``
+     to make the switch visible).
+  4. When the tree or model is missing, the handler falls back
+     gracefully (no exception bubbles).
 """
 
 import ast
@@ -51,54 +53,58 @@ def _function_source_segment(src, name):
 
 
 def test_ad_tab_remove_ads_does_not_open_browser():
-    """Sprint 24: the 'Remove ads' click handler must NOT call
-    QDesktopServices.openUrl — the redirect should go through
-    the app's view, not launch an external browser.
+    """Sprint 25: the 'Remove ads' click handler must NOT call
+    QDesktopServices.openUrl — the redirect must go through
+    the in-app tree, not launch an external browser.
     """
     src = _read(AD_TAB)
     body = _function_source_segment(src, "_on_remove_ads_clicked")
     assert "QDesktopServices.openUrl" not in body, (
         "Ad tab 'Remove ads' handler still calls "
         "QDesktopServices.openUrl — the redirect should go "
-        "through self.app.view.switch_to_tab(...) instead of "
-        "launching an external browser."
+        "through the left-pane tree instead of launching an "
+        "external browser."
     )
 
 
-# --- Contract 2: delegate to the app's view for navigation ---
+# --- Contract 2: use tree.findItems to look up the Settings node ---
 
 
-def test_ad_tab_remove_ads_calls_view_switch():
-    """Sprint 24: the handler must delegate to ``self.app.view``
-    (specifically a ``switch_to_*`` method) to navigate, not
-    raise or silently no-op.
+def test_ad_tab_remove_ads_uses_tree_find_items_for_settings():
+    """Sprint 25: the handler must look up the Settings node
+    via ``tree.findItems("Settings", ...)`` so the in-app
+    Settings node is selected.
     """
     src = _read(AD_TAB)
     body = _function_source_segment(src, "_on_remove_ads_clicked")
-    assert "self.app.view" in body, (
-        "Ad tab 'Remove ads' handler does not delegate to "
-        "self.app.view — the redirect should go through the app's "
-        "view to find the Settings tab."
+    assert "findItems" in body, (
+        "Ad tab 'Remove ads' handler does not use tree.findItems "
+        "to look up the Settings node."
     )
-    # Should call a switch_to_* method.
-    assert "switch_to" in body, (
-        "Ad tab 'Remove ads' handler must call a switch_to_* "
-        "method on self.app.view to route to the Settings tab."
+    assert '"Settings"' in body or "'Settings'" in body, (
+        "Ad tab 'Remove ads' handler must look up the "
+        "'Settings' node by name."
     )
 
 
-# --- Contract 3: target is nchantdoffice.com ---
+# --- Contract 3: switch to the Nchantd Account tab ---
 
 
-def test_ad_tab_remove_ads_target_is_nchantdoffice_com():
-    """Sprint 24: the redirect target must point at
-    https://www.nchantdoffice.com (or its ``/get_pro`` sub-path).
+def test_ad_tab_remove_ads_switches_to_nchantd_account_tab():
+    """Sprint 25: the handler must switch to the existing
+    "Nchantd Account" tab (the embedded browser for the
+    nchantdoffice_com account chain) under the Settings node.
     """
     src = _read(AD_TAB)
     body = _function_source_segment(src, "_on_remove_ads_clicked")
-    assert "nchantdoffice.com" in body, (
-        "Ad tab 'Remove ads' redirect target must point at "
-        "nchantdoffice.com."
+    assert "Nchantd Account" in body, (
+        "Ad tab 'Remove ads' handler must look up the "
+        "'Nchantd Account' node (the embedded browser for the "
+        "nchantdoffice_com account chain)."
+    )
+    assert "setCurrentItem" in body, (
+        "Ad tab 'Remove ads' handler must call tree.setCurrentItem "
+        "to switch the tree selection."
     )
 
 
@@ -106,9 +112,9 @@ def test_ad_tab_remove_ads_target_is_nchantdoffice_com():
 
 
 def test_ad_tab_remove_ads_handles_missing_view_gracefully():
-    """Sprint 24: when ``self.app.view`` is missing or the
-    Settings tab cannot be found, the handler must not raise
-    (it should log + return gracefully).
+    """Sprint 25: when ``self.app.view`` or the left tree is
+    missing, the handler must not raise (it should log +
+    return gracefully).
     """
     src = _read(AD_TAB)
     body = _function_source_segment(src, "_on_remove_ads_clicked")

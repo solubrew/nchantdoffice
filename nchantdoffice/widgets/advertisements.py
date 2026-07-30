@@ -212,21 +212,38 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self.banners = list(FALLBACK_BANNERS)
 
     def _on_remove_ads_clicked(self):
-        """Redirect the user to the Get Pro page in an existing tab.
+        """Redirect the user to the Get Pro page in an in-app tab.
 
-        Sprint 24 (P1 ad tab button redirect): previously this
-        launched an external browser (via the desktop-services
-        helper). Per user direction, the canonical UX is to
-        route the user into an existing tab under the Settings
-        node that points at nchantdoffice.com (so the "Get Pro"
-        page lives inside the app, not in a separate browser
-        window).
+        Sprint 25 (P1 ad tab button redirect — follow-up): the
+        previous Sprint 24 implementation called
+        ``self.app.view.switch_to_account_tab`` which silently
+        no-op'd because the user's account_tab / settings_tab
+        attributes are not bound in the live app, leading to a
+        silent failure (the user only saw click logs).
 
-        The handler looks up the in-app target via
-        ``self.app.view.switch_to_account_tab`` (the parent
-        view's canonical helper) and routes the center tabset
-        to the user's account tab. When the target is unavailable
-        the handler logs and returns without raising.
+        Per user direction (2026-07-30), the canonical UX is:
+
+          1. Select the Settings node in the left-side tree
+             (so the user lands on the existing "Nchantd
+             Account" tab under it, which is an embedded browser
+             dedicated to the nchantdoffice_com account chain).
+          2. Pick the "Nchantd Account" tab (the existing
+             in-app embedded browser for the account flow) and
+             switch the center tabset to it.
+
+        The handler:
+          - Locates the left-pane tree via ``self.app.view.panes["left"]``.
+          - Selects the "Settings" node via ``tree.findItems``
+            (the canonical QTreeWidget lookup).
+          - Selects the "Nchantd Account" node via
+            ``tree.findItems`` (the existing child tab).
+          - Triggers the tabset update via
+            ``updateTabs("center")`` + ``scrollToItem``.
+          - Switches the center tabset to the "Nchantd
+            Account" tab via ``setCurrentItem``.
+
+        When the tree or model is missing, the handler logs and
+        returns without raising.
         """
         target_url = "https://www.nchantdoffice.com/get_pro"
         try:
@@ -240,27 +257,53 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                     target_url,
                 )
                 return
-            switched = False
-            for method_name in (
-                "switch_to_account_tab",
-                "switch_to_settings_tab",
-            ):
-                method = getattr(view, method_name, None)
-                if not callable(method):
-                    continue
-                try:
-                    method()
-                    switched = True
-                    break
-                except Exception as exc:
-                    logma.warning(
-                        f"[ad_tab] {method_name} raised: {exc}",
-                        exc_info=True,
-                    )
-            if not switched:
+
+            tree = getattr(getattr(view, "panes", {}).get("left"), "tree", None)
+            if tree is None:
                 logma.info(
-                    "[ad_tab] no view-level switch_to_account_tab "
-                    "/ switch_to_settings_tab helper available; "
+                    "[ad_tab] no left tree available; "
+                    "skipping redirect to %s",
+                    target_url,
+                )
+                return
+
+            # 1. Select the Settings node in the left tree.
+            settings_items = tree.findItems(
+                "Settings",
+                pyqt.Qt.MatchExactly | pyqt.Qt.MatchRecursive,
+                0,
+            )
+            if settings_items:
+                tree.setCurrentItem(settings_items[0])
+                tree.scrollToItem(settings_items[0])
+                if hasattr(tree, "itemSelectionChanged"):
+                    tree.itemSelectionChanged.emit()
+                logma.info("[ad_tab] selected Settings node in tree")
+
+            # 2. Select the "Nchantd Account" tab (the embedded
+            # browser for the nchantdoffice_com account chain).
+            account_items = tree.findItems(
+                "Nchantd Account",
+                pyqt.Qt.MatchExactly | pyqt.Qt.MatchRecursive,
+                0,
+            )
+            if account_items:
+                tree.setCurrentItem(account_items[0])
+                tree.scrollToItem(account_items[0])
+                if hasattr(tree, "itemSelectionChanged"):
+                    tree.itemSelectionChanged.emit()
+                # Trigger the downstream tabset update so the
+                # center tabset refreshes against the new node.
+                account_node = account_items[0]
+                if hasattr(account_node, "updateTabs"):
+                    account_node.updateTabs("center")
+                logma.info(
+                    "[ad_tab] selected Nchantd Account tab "
+                    "(embeds nchantdoffice_com account chain)"
+                )
+            else:
+                logma.info(
+                    "[ad_tab] no Nchantd Account tab found in tree; "
                     "user can navigate to Settings manually to "
                     "reach %s",
                     target_url,

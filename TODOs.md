@@ -82,12 +82,18 @@ These are the items still requiring work, in priority order.
   currently launches a browser via QService; the user wants it
   to route into an existing tab under the Settings node pointing
   at nchantdoffice.com. UX change, no crash.
-  **Closed in Sprint 24** (commit TBD): the right-side
-  ``NchantdOfficeAdTab._on_remove_ads_clicked`` now calls
-  ``self.app.view.switch_to_account_tab`` (with a
-  ``switch_to_settings_tab`` fallback) to navigate to the user's
-  in-app account tab. No browser launch. When the target is
-  unavailable the handler logs and returns without raising.
+  **Closed in Sprint 25** (commit TBD): the right-side
+  ``NchantdOfficeAdTab._on_remove_ads_clicked`` now uses
+  ``tree.findItems("Settings"|"Nchantd Account", ...)`` on the
+  left-pane tree to select the Settings node then the existing
+  "Nchantd Account" tab (the embedded browser for the
+  nchantdoffice_com account chain). The Sprint 24 implementation
+  called ``switch_to_account_tab`` which silently no-op'd because
+  the user's account_tab / settings_tab attributes are not bound
+  in the live app. The Sprint 25 follow-up selects the existing
+  in-app tab via the tree, which is the canonical flow used
+  elsewhere in the app (see ``nchantdoffice.py`` and
+  ``wizards._select_node_by_nid``).
 - [ ] **Ad tab size control** — right-side tabs are slim 360×900
   and would need to go into the center tabset if a larger ad is
   required. UX change, no crash.
