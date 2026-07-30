@@ -26,7 +26,7 @@
 - implement the ability to drag a tab to a different node - and it saves the new parent
 - implement the ability to drag a tab to the rightside tabset and it reloads to its original location
 - add to Settings/Interface tab config to allow a user to select that tab name updates to the file name when a file is opened 
-
+- implement search across all nodes and tabs as well as node specific and tab specific search as well finish code in the NchantdOfficeApplicationToolBox 
 
 ---
 
