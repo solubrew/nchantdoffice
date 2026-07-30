@@ -96,6 +96,86 @@ These are the items still requiring work, in priority order.
 - [ ] **NchantdSketch / NchantdCalendar default to internal** — no
   external standard-compatible file format.
 
+### Unimplemented features (discovered by code review, 2026-07-29)
+
+These are features the codebase advertises (config entries, branch
+arms, helper names) but the actual implementation is missing or
+raises a `NotImplementedError` / "File Type not yet implemented".
+They are not labelled as `PUSH to 0.0.3` in source comments — they
+are silent gaps awaiting implementation.
+
+#### File-type imports raise "File Type not yet implemented"
+
+`nchantdoffice/widgets/controls/toolboxes.py::cmd_open_local_file`
+(lines 529-578) raises an exception when the user picks a file
+whose extension is in the configured branch arms but no
+`model.import_<ext>()` method exists yet:
+
+| File extension | Branch location | Importer |
+|---|---|---|
+| `.docx` | toolboxes.py:541-542 | ❌ `model.import_docx()` doesn't exist |
+| `.csv` | toolboxes.py:552-553 (commented `import_csv` at 554) | ❌ `model.import_csv()` doesn't exist |
+| `.xlsx` | toolboxes.py:555-556 | ❌ no `model.import_xlsx()` |
+| `.xls` | toolboxes.py:557-558 | ❌ no `model.import_xls()` |
+| `.ods` (×2 duplicate branches) | toolboxes.py:559-560, 565-566 | ❌ no `model.import_ods()` |
+| `.odt` | toolboxes.py:561-562 | ❌ no `model.import_odt()` |
+| `.odp` | toolboxes.py:563-564 | ❌ no `model.import_odp()` |
+| `.odg` | toolboxes.py:567-568 | ❌ no `model.import_odg()` |
+| `.odf` | toolboxes.py:569-570 | ❌ no `model.import_odf()` |
+| `.odc` | toolboxes.py:571-572 | ❌ no `model.import_odc()` |
+| `.gif` | toolboxes.py:550-551 | ⚠️ silent `pass` (no error, no import) |
+
+#### Stub `cmd_*` methods in `toolboxes.py`
+
+| Method | Lines | Status |
+|---|---|---|
+| `cmd_duplicate_instance` | 328-332 | Comment-only stub: "create new instance / copy over user items from the initial database to the new instance database". No body. |
+| `cmd_import_instance` | 345-350 | Opens file dialog but never calls any `model.import_*()` method on the result. |
+| `cmd_save_instance` | 581-601 | Near-empty: `pass` branches, comments only, no DB write or copy logic. |
+| `cmd_llm_query_pane` | 352-354 | `return self` only. |
+| `cmd_web_search_pane` | 603-605 | `return self` only. |
+
+#### Stub `cmd_on_change_*` methods in `widgets/config/settings.py`
+
+Seven settings handlers are explicit `# TODO implement method logic`
+stubs (returns `self` after the comment):
+
+| Method | Lines |
+|---|---|
+| `cmd_on_change_journal_focus` | 156-159 |
+| `cmd_on_change_settings_focus` | 161-164 |
+| `cmd_on_change_automation` | 166-169 |
+| `cmd_on_change_data_source` | 171-174 |
+| `cmd_on_change_show_left_side_pane` | 176-179 |
+| `cmd_on_change_show_right_side_pane` | 181-184 |
+| `cmd_on_change_quicklaunch` | 186-189 |
+
+The other cmd_on_change_* methods in the same file
+(`cmd_on_change_document_catalog`, `cmd_on_change_default_tab_bit`,
+`cmd_on_change_default_tab_select`, `cmd_set_pro_edition`) are
+properly implemented.
+
+#### Stub initModel / initView helpers
+
+| Class.method | File:Line | Status |
+|---|---|---|
+| `NchantdOfficeTodayOverview.initLowerWidgets` | `widgets/timelines.py:86-89` | No-op stub: comment says "subclasses or post-init scripts override with calendar / weather / tasks panes." |
+| `Node.initModel` (diagram) | `widgets/items/diagrams.py:188-191` | No-op stub: log says "(no-op stub)". |
+
+#### Stub view methods
+
+| Method | File:Line | Status |
+|---|---|---|
+| `switch_to_account_tab` | `views.py:55-58` | Comment "PUSH to 0.0.3" but NOT in the canonical PUSH list — looks like a forgotten stub. |
+| `on_window_move` | `views.py:60-65` | Comment "PUSH to 0.0.3" — not in the canonical PUSH list either. Same situation. |
+
+#### Hard-coded placeholders that should be live
+
+`widgets/config/accounts.py:79-86` shows "Storage: 0 GB / 10 GB"
+and "Documents: 0" as static labels — never queries actual usage
+or document count. Should query `self.app.model.user` and the
+`doc_media` table for live numbers.
+
 ### Architecture (T-NEW series)
 
 | ID | Subject | Status |
