@@ -375,9 +375,27 @@ class NchantdOfficeDocumentMixin:
             self.profile_select_entry = NchantdDropDown(self, cfg).initWidget()
             buttons[1] = {"name": "get_pro", "widget": self.profile_select_entry}
         else:
+            # Sprint 28: deferred import to break the
+            # nchantdoffice.widgets.documents.documents <-> .advertisements
+            # import cycle. advertisements.advertisements already
+            # imports NchantdOfficeDocument from this module.
+            from nchantdoffice.widgets.advertisements import (
+                NchantdOfficeAdTab,
+            )
             cfg = {
                 "text": "Get Pro",
-                "handler": self.app.view.switch_to_account_tab,
+                # Wire the toolbar "Get Pro" button to the
+                # same navigation the Ad tab uses
+                # (``NchantdOfficeAdTab.redirect_to_get_pro``).
+                # The helper resolves
+                # ``app.view.panes["left"].tree.view`` (the
+                # NchantdTreeView wrapper) and calls
+                # ``set_current_node`` to actually update the
+                # center tabset.
+                "handler": (
+                    lambda *a, _self=self, **k: NchantdOfficeAdTab
+                    .redirect_to_get_pro(_self.app)
+                ),
                 "height": 24,
                 "background_color": "green",
             }

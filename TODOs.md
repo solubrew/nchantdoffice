@@ -531,3 +531,22 @@ The following files have been moved to `_data_/archive/2026-07-29/`:
 
 These are preserved as historical record. Do NOT link to them from
 production code; they are not maintained.
+
+### Ad-tab and toolbar parity (Sprint 28, 2026-07-30)
+
+The NchantdDocument toolbar ``NchantdOfficeDocumentProfilePane``
+had its "Get Pro" button (``documents.py:378``) wired to
+``self.app.view.switch_to_account_tab`` — the same Sprint 24
+helper that silently no-ops in the live app because
+``self.app.user.account_tab`` / ``settings_tab`` are not
+bound.
+
+Sprint 28 ships a shared static helper
+``NchantdOfficeAdTab.redirect_to_get_pro(app)`` that owns
+the Sprint 27 navigation (resolves ``pane.tree.view``,
+calls ``NchantdTreeView.set_current_node`` on the
+"Nchantd Account" node, with a "Settings" fallback). Both
+the Ad tab and the toolbar button now delegate to the same
+helper — keeping them in sync.
+
+Test surface: 123 passed, 0 failed (was 119; +4).

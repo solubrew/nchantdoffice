@@ -78,72 +78,77 @@ def test_ad_tab_remove_ads_does_not_open_browser():
 # --- Contract 2: call the treeview's set_current_node (drives navigation) ---
 
 
-def test_ad_tab_remove_ads_calls_tree_view_set_current_node():
-    """Sprint 27: the handler must call
-    ``tree_view.set_current_node(...)`` — the nchantrs
-    NchantdTreeView wrapper method
-    (``nchantrs/views/treeviews.py:266``) that propagates
-    selection to ``updateTabs('center')`` and
-    ``model.current_node``. Calling ``set_current_node`` on
-    the inner ``NchantdApplicationTree`` (which Sprint 26
-    did) silently no-ops because that class doesn't define
-    the method.
+def test_ad_tab_remove_ads_delegates_to_redirect_helper():
+    """Sprint 28: the handler delegates to the shared static
+    helper ``NchantdOfficeAdTab.redirect_to_get_pro`` (the
+    same one used by the toolbar 'Get Pro' button). The
+    helper owns the navigation logic — both call sites
+    delegate to it so they stay in sync.
     """
     src = _read(AD_TAB)
     body = _function_source_segment(src, "_on_remove_ads_clicked")
-    assert "set_current_node" in body, (
-        "Ad tab 'Remove ads' handler does not call "
-        "set_current_node — without that the treeview "
-        "wrapper will not propagate the selection to "
-        "model.current_node or call updateTabs('center')."
-    )
-    # The wrapper must be reached via pane.tree.view (not
-    # pane.tree directly, since pane.tree is the bare
-    # QTreeWidget which lacks the method).
-    assert 'inner_tree, "view"' in body or 'getattr(inner_tree, "view"' in body, (
-        "Ad tab 'Remove ads' handler must resolve the "
-        "NchantdTreeView wrapper via pane.tree.view — the "
-        "inner NchantdApplicationTree doesn't define "
-        "set_current_node."
+    assert "redirect_to_get_pro" in body, (
+        "Ad tab 'Remove ads' handler must delegate to "
+        "NchantdOfficeAdTab.redirect_to_get_pro so both "
+        "buttons share one navigation implementation."
     )
 
 
 # --- Contract 3: look up the Nchantd Account node by name ---
 
 
-def test_ad_tab_remove_ads_uses_tree_find_items_for_account():
-    """Sprint 26: the handler must look up the "Nchantd Account"
-    node (the embedded browser for the nchantdoffice_com
-    account chain) via ``tree.findItems(...)``.
+def test_ad_tab_remove_ads_helper_uses_tree_find_items():
+    """Sprint 28: the shared redirect helper
+    (``NchantdOfficeAdTab.redirect_to_get_pro``) must look up
+    the "Nchantd Account" node via ``findItems(...)``.
     """
+    import ast
     src = _read(AD_TAB)
-    body = _function_source_segment(src, "_on_remove_ads_clicked")
-    assert "findItems" in body, (
-        "Ad tab 'Remove ads' handler does not use tree.findItems "
-        "to look up the target node."
+    tree = ast.parse(src)
+    helper_body = None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "redirect_to_get_pro":
+            helper_body = ast.get_source_segment(src, node) or ""
+            break
+    assert helper_body, (
+        "advertisements.py must expose "
+        "NchantdOfficeAdTab.redirect_to_get_pro as a "
+        "shared static helper."
     )
-    assert '"Nchantd Account"' in body or "'Nchantd Account'" in body, (
-        "Ad tab 'Remove ads' handler must look up the "
-        "'Nchantd Account' node by name (the embedded browser "
-        "for the nchantdoffice_com account chain)."
+    assert "findItems" in helper_body, (
+        "redirect_to_get_pro must look up the target node "
+        "via tree.findItems."
+    )
+    assert '"Nchantd Account"' in helper_body or "'Nchantd Account'" in helper_body, (
+        "redirect_to_get_pro must look up the "
+        "'Nchantd Account' node by name."
     )
 
 
 # --- Contract 4: graceful fallback when target unavailable ---
 
 
-def test_ad_tab_remove_ads_handles_missing_view_gracefully():
-    """Sprint 26: when ``self.app.view`` or the left tree
-    wrapper is missing, the handler must not raise (it should
-    log + return gracefully).
+def test_ad_tab_redirect_helper_handles_missing_view_gracefully():
+    """Sprint 28: the shared redirect helper must guard with
+    try/except so missing widgets don't crash either
+    caller.
     """
+    import ast
     src = _read(AD_TAB)
-    body = _function_source_segment(src, "_on_remove_ads_clicked")
-    assert "try:" in body, (
-        "Ad tab 'Remove ads' handler must guard the navigation "
-        "call with a try/except so missing widgets do not crash."
+    tree = ast.parse(src)
+    helper_body = None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "redirect_to_get_pro":
+            helper_body = ast.get_source_segment(src, node) or ""
+            break
+    assert helper_body, (
+        "redirect_to_get_pro must exist as a shared helper."
     )
-    assert "except" in body, (
-        "Ad tab 'Remove ads' handler must catch exceptions "
-        "instead of letting them bubble up."
+    assert "try:" in helper_body, (
+        "redirect_to_get_pro must guard the navigation call "
+        "with a try/except so missing widgets don't crash."
+    )
+    assert "except" in helper_body, (
+        "redirect_to_get_pro must catch exceptions instead "
+        "of letting them bubble up to either caller."
     )
