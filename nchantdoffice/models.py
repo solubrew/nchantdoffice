@@ -1401,6 +1401,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         logma.info(f"Sources {sources}")
         if sources is None:
             return DataFrame()
+        #PUSH to 0.0.3 integrate local sources may not be needed
         # df = DataFrame(self.config.dikt.get("sources", []), columns=list(sources.columns))
         # sources = concat([sources, df])
         return sources
