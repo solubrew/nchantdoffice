@@ -187,25 +187,32 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         # T-NEW-024 followup: persist the rename to
         # doc_tree_node.
         try:
-            store = (
-                getattr(self.app.model, "store", None)
-                if hasattr(self, "app") and self.app is not None
-                else None
-            )
+            store = getattr(self.app.model, "store", None) if hasattr(self, "app") and self.app is not None else None
             node_id = getattr(node, "nid", None)
             if store is not None and hasattr(store, "update_record") and node_id:
                 data = {
                     "table": {
-                        "doc_tree_node": {"data": {"name_txt": new_name}}
+                        "doc_tree_node": {
+                            "records": [
+                                [
+                                    new_name,
+                                ],
+                            ],
+                            "columns": [
+                                "name_txt",
+                            ],
+                        }
                     }
                 }
-                store.update_record(data, "nid_txt", node_id)
+                logma.info(f"\n[Update Node Name]")
+                logma.info(f"Data {data}")
+                logma.info(f"NID {node_id}\n")
+                store.update_record(data, "nid_txt", node_id, "db")
                 if hasattr(self.app.model, "has_changed"):
                     self.app.model.has_changed = True
         except Exception as exc:
             logma.error(
-                f"[panes/documents] cmd_set_node_name: DB "
-                f"persist failed: {exc}",
+                f"[panes/documents] cmd_set_node_name: DB " f"persist failed: {exc}",
                 exc_info=True,
             )
         return self
@@ -763,18 +770,10 @@ class NchantdOfficeTabEditPane(NchantdPane):
         tab.parent.setTabText(tab.position, new_name)
         # T-NEW-024 followup: persist the rename to doc_tab.
         try:
-            store = (
-                getattr(self.app.model, "store", None)
-                if hasattr(self, "app") and self.app is not None
-                else None
-            )
+            store = getattr(self.app.model, "store", None) if hasattr(self, "app") and self.app is not None else None
             tab_id = getattr(tab, "tid", None)
             if store is not None and hasattr(store, "update_record") and tab_id:
-                data = {
-                    "table": {
-                        "doc_tab": {"data": {"name_txt": new_name}}
-                    }
-                }
+                data = {"table": {"doc_tab": {"data": {"name_txt": new_name}}}}
                 store.update_record(data, "tid_txt", tab_id)
                 # Mark the model as dirty so the parent loop
                 # flushes the change at shutdown.
@@ -782,8 +781,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
                     self.app.model.has_changed = True
         except Exception as exc:
             logma.error(
-                f"[panes/documents] cmd_set_tab_name: DB "
-                f"persist failed: {exc}",
+                f"[panes/documents] cmd_set_tab_name: DB " f"persist failed: {exc}",
                 exc_info=True,
             )
         return self
