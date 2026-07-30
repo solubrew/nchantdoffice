@@ -550,3 +550,84 @@ the Ad tab and the toolbar button now delegate to the same
 helper — keeping them in sync.
 
 Test surface: 123 passed, 0 failed (was 119; +4).
+
+
+### Session handoff — Sprint 28 (2026-07-30)
+
+Sprint 20-28 shipped. Live-bug list is now 2-3 items
+remaining. Architecture items T-NEW-001, T-NEW-004 still
+not started. Audit dimensions at 92.66% (type_annotations
+and god_class are the biggest gaps).
+
+**Recent shipping (chronological):**
+
+- Sprint 20 (6f1990a) — 28 unimplemented features wired
+  (file-type dispatch, toolbar stubs, accounts live data,
+  settings cmd_on_change_* handlers).
+- Sprint 21 (ba268bf) — Tab/Node rename persistence (initial,
+  used broken "data" dict shape).
+- Sprint 22 (db5d457 in squirl) — fix sonql: drop _fill_admin_cols
+  for UPDATE/UPSERT — "the fix that actually unblocked
+  update_record".
+- Sprint 21 / 22 final fix (c18a306 + d66396e) — switched to
+  records + columns shape + fixed node_id typo in
+  cmd_set_tab_name.
+- Sprint 23 (19fc5be) — P1 name-entry dialog for nodes / tabs /
+  notes (QInputDialog prompt gated by config flags
+  prompt_for_new_node_name / prompt_for_new_tab_name).
+- Sprint 24 (9245085) — Ad tab "Remove ads" button redirect
+  (initial, picked wrong navigation entry point).
+- Sprint 25 (9dd19c3) — follow-up using tree.findItems +
+  setCurrentItem + itemSelectionChanged.emit() (still
+  didn't drive navigation).
+- Sprint 27 (dc0cfcf) — second follow-up calling
+  pane.tree.set_current_node (still wrong — pane.tree is
+  the bare QTreeWidget, not the NchantdTreeView wrapper
+  that owns set_current_node).
+- Sprint 27 final (a8ca55c) — third follow-up that resolves
+  pane.tree.view (the nchantrs NchantdTreeView wrapper)
+  and calls set_current_node on the wrapper. **User
+  confirmed functional.**
+- Sprint 28 (66ab470) — extracted the Sprint 27 navigation
+  into a shared static helper
+  ``NchantdOfficeAdTab.redirect_to_get_pro(app)`` and wired
+  the NchantdDocument toolbar's "Get Pro" button to it.
+  Both the Ad tab and the toolbar Get Pro button now share
+  one navigation path.
+
+**Key facts to remember:**
+
+- The canonical tab/node UPDATE shape is:
+    ``data = {"table": {<table>: {"records": [[<v>]],
+      "columns": [<col>]}}}`` then
+    ``store.update_record(data, <col>, <id>, "db")``
+  The ``"data"`` dict shape silently no-ops the UPDATE
+  (sonql does NOT extend columns to match records, so
+  admin cols leak through and binding count fails).
+- The canonical tree navigation entry point is
+  ``app.view.panes["left"].tree.view.set_current_node(node)``
+  (nchantrs NchantdTreeView wrapper, NOT pane.tree which is
+  the bare QTreeWidget subclass).
+- All NchantdDialogs go in nchantrs.dialogs (Sprint 19).
+- Pyffice per-subclass SERIALIZATION_VERSION is required
+  (Sprint 16).
+- The .pyof is SQLite DB, one per app instance, opened via
+  ``MicroStash.initDocument("pyof", "sonql", path, ...)``
+  (Sprint 15 + Sprint 19 canonical chain).
+- No raw SQL allowed in production code; always use the
+  store layer.
+
+**Live-bug list remains:**
+
+- NchantdChart segfault (pinned — needs Qt-parent subprocess
+  harness).
+- T-NEW-023 NchantdScript reload whitespace (pinned — needs
+  Qt-parent subprocess harness).
+- Ad tab size control (small UX).
+- Save-mode toolbar icons (small).
+- NchantdSketch / NchantdCalendar default to internal (small).
+
+**Architecture (T-NEW series, all not started):**
+
+- T-NEW-001 Tab icon + 5-digit/auto-name.
+- T-NEW-004 Locks on App Nodes (Home / Journal / Settings).
