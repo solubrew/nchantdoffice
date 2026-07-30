@@ -2418,6 +2418,60 @@ class NchantdOfficeStore(NchantdStore):
         self._sqlite_path = path
         return conn
 
+    def refresh_from_sqlite(self, db="db"):
+        """T-NEW-007 store-layer integration: surface the rows
+        of the currently-open SQLite DB into a Python list so
+        the model layer can restore its in-memory registry from
+        the loaded file.
+
+        Per user direction (2026-07-29), the ``.pyof`` format is
+        one SQLite DB per app instance and the registry of
+        secondary instances lives in the ``app_instance`` table.
+        After ``open_sqlite`` opens the DB this helper returns
+        the ``app_instance`` rows as a list of dicts (one entry
+        per row). The model layer can then re-attach the rows
+        to ``self.instances`` or surface them to the UI via
+        ``model.get_app_instances()``.
+
+        Returns:
+            list[dict]: one entry per ``app_instance`` row.
+                Returns an empty list when the table is empty
+                or doesn't exist (e.g. an empty .pyof file).
+
+        Raises:
+            RuntimeError: when called before ``open_sqlite``
+                (no active connection). The one-per-instance
+                guarantee means there must be exactly one open
+                connection per app instance.
+        """
+        conn = getattr(self, "_sqlite_connection", None)
+        if conn is None:
+            raise RuntimeError(
+                "NchantdOfficeStore.refresh_from_sqlite: no active "
+                "SQLite connection — call open_sqlite(path) first "
+                "(one-per-app-instance guarantee)."
+            )
+        import sqlite3
+
+        rows = []
+        try:
+            cursor = conn.execute("SELECT * FROM app_instance")
+            columns = [col[0] for col in (cursor.description or [])]
+            for row in cursor.fetchall():
+                row_dict = dict(zip(columns, row))
+                rows.append(row_dict)
+            logma.info(
+                f"[store] refresh_from_sqlite: loaded "
+                f"{len(rows)} app_instance row(s)"
+            )
+        except sqlite3.OperationalError as exc:
+            # Table doesn't exist (empty DB) — return [].
+            logma.info(
+                f"[store] refresh_from_sqlite: no app_instance "
+                f"table ({exc}); returning []"
+            )
+        return rows
+
     def close_sqlite(self):
         """T-NEW-007: close the current SQLite connection if
         one is open. Safe to call when no connection is held.
