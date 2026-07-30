@@ -22,6 +22,7 @@ from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from kahndor.logma import Logma
+
 try:
     import pymupdf as fitz  # PyMuPDF ≥ 1.24
 except ImportError:  # pragma: no cover — older PyMuPDF fallback
@@ -103,6 +104,7 @@ class NchantdPageAddToolPane(NchantdPane):
         except Exception as e:
             logma.error(f"[pdfs] cmd_page_number_change failed: {e}", exc_info=True)
         return self
+
     def cmd_open_file(self, event=None, *args, **kwargs):
         """Open a PDF file selected via the file dialog.
 
@@ -125,6 +127,7 @@ class NchantdPageAddToolPane(NchantdPane):
         except Exception as e:
             logma.error(f"[pdfs] cmd_open_file failed: {e}", exc_info=True)
         return self
+
     def initWidget(self):
         """"""
         self.initModel()
@@ -215,7 +218,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         default_action = {"action": "insert_generic_action", "type": "custom"}
         if cnt not in items:
             items[cnt] = default_action
-        cfg = {"label": "File Name: ", "layout": "horizontal"}
+        cfg = {"label": "File Name: ", "layout": "horizontal", "file_path": self.document.file_path}
         self.file_pane = NchantdFileDetailsPane(self, cfg)
         items[cnt]["widget"] = self.file_pane
         cnt += 1
@@ -247,9 +250,11 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[pdfs] cmd_page_count_change failed: {e}", exc_info=True)
         return self
+
     def get_page_count(self):
         """Return the stored value of get_page_count."""
-        return getattr(self, 'page_count', 0) or self.config.dikt.get('page_count', 0)
+        return getattr(self, "page_count", 0) or self.config.dikt.get("page_count", 0)
+
     def init_drawer_document_tools(self):
         """"""
         items = self.toolbox_config[200].get("items", {})
@@ -283,6 +288,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         self.page_add_pane = NchantdPageAddToolPane(self, cfg)
         items[cnt]["widget"] = self.page_add_pane
         cnt += 1
+
         return items
 
     def init_drawer_quickstart(self):
@@ -317,12 +323,15 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         convert step uses it.
         """
         if hasattr(self, "image_format_select") and self.image_format_select is not None:
-            getter = getattr(self.image_format_select, "currentText", None) or getattr(self.image_format_select, "get_value", None)
+            getter = getattr(self.image_format_select, "currentText", None) or getattr(
+                self.image_format_select, "get_value", None
+            )
             if callable(getter):
                 value = getter()
                 if value:
                     self.config.dikt["image_format"] = value
         return self
+
     def cmd_image_convert_change(self, event=None, *args, **kwargs):
         """Convert the current page to an image using the configured format.
 
@@ -339,7 +348,9 @@ class NchantdOfficePDF(NchantdOfficeDocument):
                 return self
             output_path = self.config.dikt.get("image_convert_path")
             if not output_path:
-                output_path = self.file_path + f".page{self.current_page}.{fmt}" if getattr(self, "file_path", None) else None
+                output_path = (
+                    self.file_path + f".page{self.current_page}.{fmt}" if getattr(self, "file_path", None) else None
+                )
             if not output_path:
                 return self
             page.render_to_image(output_path, format=fmt)
@@ -347,12 +358,15 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[pdfs] cmd_image_convert_change failed: {e}", exc_info=True)
         return self
+
     def get_file_format(self):
         """Return the stored value of get_file_format."""
-        return self.config.dikt.get('file_format', '') or ''
+        return self.config.dikt.get("file_format", "") or ""
+
     def get_file_convert(self):
         """Return the stored value of get_file_convert."""
-        return self.config.dikt.get('file_convert', '') or ''
+        return self.config.dikt.get("file_convert", "") or ""
+
     def get_content(self):
         """"""
         return super().get_content()

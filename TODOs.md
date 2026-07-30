@@ -23,7 +23,9 @@
 - add a settings pane for each document type in the Center Pane Settings of the Interface Tab
 - fix Right Pane tabs to select which ones can be adjusted in the right side tabset in the Interface Tab
 - Tab drag and drop needs to only initiate when the mouse is clicked on to the tab name area not the main widget area
-
+- implement the ability to drag a tab to a different node - and it saves the new parent
+- implement the ability to drag a tab to the rightside tabset and it reloads to its original location
+- add to Settings/Interface tab config to allow a user to select that tab name updates to the file name when a file is opened 
 
 
 ---
