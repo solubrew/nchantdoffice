@@ -256,6 +256,7 @@ def test_browser_save_invokes_get_content_before_persistence():
         content=None,  # Will be set by set_content.
         location="internal",
         version=1,
+        syntax="json",  # store_document writes doc_media.syntax_txt (T-NEW-024 followup)
         save=lambda path=None: None,
         set_content=lambda content: setattr(document, "content", content),
         to_dict=lambda: {
@@ -275,6 +276,12 @@ def test_browser_save_invokes_get_content_before_persistence():
 
         def store_doc_media_content(self, payload):
             self.content_rows.append(dict(payload))
+
+        def update_record(self, *_a, **_k):
+            # T-NEW-024 followup: store_document writes doc_media.syntax_txt
+            # via update_record; this test asserts on the browser save flow
+            # (get_content before persistence), so the update is a no-op.
+            return None
 
     store = _CapturingStore()
     model = _Model.__new__(_Model)

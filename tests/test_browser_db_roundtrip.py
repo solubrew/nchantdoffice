@@ -37,6 +37,12 @@ class _CapturingStore:
     def get_table(self, *_args, **_kwargs):
         return None
 
+    def update_record(self, *_args, **_kwargs):
+        # T-NEW-024 followup: store_document writes doc_media.syntax_txt
+        # via update_record; the test asserts on the content_enc64_txt
+        # blob (not the syntax row), so the update is a no-op here.
+        return None
+
 
 def _make_browser(profile, store):
     parent = SimpleNamespace(
@@ -68,6 +74,7 @@ def _make_browser(profile, store):
         location="internal",
         content=None,
         file_path=None,
+        syntax="json",  # store_document writes doc_media.syntax_txt (T-NEW-024 followup)
         active_page=SimpleNamespace(to_dict=lambda: profile),
         version=1,
         save=lambda path=None: None,

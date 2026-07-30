@@ -105,6 +105,12 @@ def test_store_document_never_raises_on_file_path_only_payload():
         def get_table(self, *_a, **_k):
             return None
 
+        def update_record(self, *_a, **_k):
+            # T-NEW-024 followup: store_document writes doc_media.syntax_txt
+            # via update_record; this test asserts on the content_enc64_txt
+            # blob (not the syntax row), so the update is a no-op here.
+            return None
+
     model = _Model.__new__(_Model)
     model.store = _CapturingStore()
     model.has_changed = False
@@ -119,6 +125,7 @@ def test_store_document_never_raises_on_file_path_only_payload():
         did="nb-1",
         version=1,
         is_changed=True,
+        syntax="json",  # store_document writes doc_media.syntax_txt (T-NEW-024 followup)
         to_dict=lambda: {
             "did": "nb-1",
             "content": {
