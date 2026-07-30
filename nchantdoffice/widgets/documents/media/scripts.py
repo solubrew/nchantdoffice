@@ -1481,9 +1481,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # redundant AND harmful.
         logma.info(f"Text: {text}")
         logma.info(f"Type: {type(text)}")
-        logma.info(
-            f"Syntax {getattr(self.document, 'syntax', None) if self.document is not None else None}"
-        )
+        logma.info(f"Syntax {getattr(self.document, 'syntax', None) if self.document is not None else None}")
         return text
 
     def _preserved_unit_html(self):
@@ -1543,8 +1541,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         highlightable set is kept in one place so adding a new
         language is a single tuple.
         """
-        self.document.file_format = self.config.dikt.get("document", {}).get("syntax", "plain-text")
+
+        # TODO untagle file_format and syntax
+        # self.document.file_format = self.config.dikt.get("document", {}).get("syntax", "plain-text")
         if self.document.file_format is None:
+            logma.info(f"Set Default File Format")
             self.document.file_format = "plain-text"
         logma.info(f"Syntax {self.document.syntax}")
         logma.info(f"Type {type(self.document.syntax)}")

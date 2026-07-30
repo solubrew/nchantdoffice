@@ -18,6 +18,15 @@
 > - `BUGs.md` — raw stack-trace archive (historical reference)
 
 ---
+# New TODOs
+- fix and finish Affiliate Manager tab
+- add a settings pane for each document type in the Center Pane Settings of the Interface Tab
+- fix Right Pane tabs to select which ones can be adjusted in the right side tabset in the Interface Tab
+- 
+
+
+
+---
 
 ## 1. Project snapshot
 

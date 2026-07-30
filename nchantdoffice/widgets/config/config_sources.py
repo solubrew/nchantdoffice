@@ -23,11 +23,11 @@ import json
 from kahndor import kahndor
 from nchantrs.libraries import pyqt
 from kahndor.logma import Logma
-from nchantrs.widgets.controls.buttons import NchantdButton
+from nchantrs.widgets.controls.buttons import NchantdButtonWidget, NchantdButton
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.tables.tables import NchantdTable
-from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
+from nchantrs.widgets.controls.checkboxes import NchantdCheckboxWidget
 from nchantdoffice.widgets.panes.sources import NchantdSourceEditPane
 from nchantrs.widgets.canvases.canvases import NchantdCanvas
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocumentManager
@@ -544,7 +544,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         cnt += 1
 
         slot = self._ensure_drawer_item(items, cnt)
-        slot["widget"] = self.eda_run_button = NchantdButton(
+        slot["widget"] = self.eda_run_button = NchantdButtonWidget(
             self,
             {
                 "text": "Run Exploratory Data Analysis",
@@ -555,7 +555,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         cnt += 1
 
         slot = self._ensure_drawer_item(items, cnt)
-        slot["widget"] = self.eda_placement_checkbox = NchantdCheckbox(
+        slot["widget"] = self.eda_placement_checkbox = NchantdCheckboxWidget(
             self,
             {
                 "text": "Create EDA on Node Branch",
@@ -575,10 +575,12 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_source_config()
-        self.toolbox_config[200]["items"] = self.init_drawer_sources()
+        # PUSH to 0.0.3
+        # self.toolbox_config[200]["items"] = self.init_drawer_sources()
         self.toolbox_config[300]["items"] = self.init_drawer_connections()
-        self.toolbox_config[400]["items"] = self.init_drawer_exploratory_data_analysis()
-        self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
+        # PUSH to 0.0.3
+        # self.toolbox_config[400]["items"] = self.init_drawer_exploratory_data_analysis()
+        # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
 
 # ====================================================================================================================||

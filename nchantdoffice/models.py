@@ -189,8 +189,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         document["file_name"] = tab.get("file_path", None)
         document["description"] = ""
         document["path"] = tab.get("file_path", None)
-        document["location"] = tab.get("location", "internal")
-
+        document["location"] = tab.get("location", "external")
         document["encoding"] = tab.get("encoding", "utf-8")
         document["tags"] = tags
         document["context"] = context
@@ -2261,7 +2260,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.json(_json_safe(doc_payload))
         except Exception as _json_log_exc:
             logma.error(f"[store_document] logma.json failed: {_json_log_exc}")
-        #self.store.store_doc_media(doc_payload)
+        data = {"table": {"doc_media": {"records": [[pydoc.syntax]], "columns": ["syntax_txt"]}}}
+        column = "did"
+        value = pydoc.did
+        self.store.update_record(data, column, value, "db")
         self.add_document_content(doc_payload, version=pydoc.version)
         return pydoc
 
@@ -2562,18 +2564,11 @@ class NchantdOfficeStore(NchantdStore):
                 # the rows to its in-memory registry without
                 # needing pandas.
                 rows = df.to_dict(orient="records")
-            logma.info(
-                f"[store] refresh_from_sqlite: loaded "
-                f"{len(rows)} app_instance row(s) from "
-                f"db={db!r}"
-            )
+            logma.info(f"[store] refresh_from_sqlite: loaded " f"{len(rows)} app_instance row(s) from " f"db={db!r}")
         except Exception as exc:
             # The table doesn't exist (empty DB) or the sonql
             # doc hasn't been initialised yet — return [].
-            logma.info(
-                f"[store] refresh_from_sqlite: app_instance "
-                f"unavailable ({exc}); returning []"
-            )
+            logma.info(f"[store] refresh_from_sqlite: app_instance " f"unavailable ({exc}); returning []")
         return rows
 
     def close_sqlite(self):
