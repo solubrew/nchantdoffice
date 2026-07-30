@@ -2397,10 +2397,19 @@ class NchantdOfficeStore(NchantdStore):
         self._sqlite_path = None
 
     def open_sqlite(self, path):
-        """T-NEW-007: open the SQLite DB at ``path``. The store
-        keeps a single connection (one-per-app-instance) and
-        closes any previously-opened one before opening the
-        new path. Returns the opened connection.
+        """T-NEW-007: register the SQLite DB at ``path`` as a
+        SQuiRL sonql doc in the store. The store delegates to
+        ``initDocument(name, "sonql", path)`` (the canonical
+        NchantdStore -> MicroStash -> SQuiRL chain) so the DB
+        is opened by the same code path the rest of the project
+        uses; no raw sqlite3 calls leak into the application
+        layer.
+
+        One-per-app-instance is enforced by closing any
+        previously-registered ``db`` doc before opening a new
+        one. Returns the registered doc (a ``sonql.Doc``
+        instance) so callers can drive it via the standard
+        SQuiRL API when they need to.
         """
         import os
 
@@ -2408,17 +2417,27 @@ class NchantdOfficeStore(NchantdStore):
             raise FileNotFoundError(
                 f"NchantdOfficeStore.open_sqlite: missing file {path!r}"
             )
-        # Close any existing connection so we don't leak
-        # handles across imports (one-per-instance guarantee).
+        # Close any previously-opened instance DB so we don't
+        # leak handles across imports (one-per-app-instance
+        # guarantee). The micromole store routes through the
+        # same sonql/SQuiRL chain that production uses, so
+        # we're going through the same closure path that the
+        # app boot sequence uses at shutdown.
         self.close_sqlite()
-        import sqlite3
-
-        conn = sqlite3.connect(path)
-        self._sqlite_connection = conn
+        # Canonical chain: NchantdStore (this class) ->
+        # MicroStash -> SQuiRL.initDocument(name, "sonql",
+        # path). sonql is the registered handler for SQLite
+        # DBs in SQuiRL's _handler_registry (squirl.py:160).
+        self.initDocument(
+            name="pyof",
+            doc_type="sonql",
+            path=path,
+            objects=self.config.dikt,
+        )
         self._sqlite_path = path
-        return conn
+        return self.docs.get("pyof")
 
-    def refresh_from_sqlite(self, db="db"):
+    def refresh_from_sqlite(self, db="pyof"):
         """T-NEW-007 store-layer integration: surface the rows
         of the currently-open SQLite DB into a Python list so
         the model layer can restore its in-memory registry from
@@ -2427,11 +2446,11 @@ class NchantdOfficeStore(NchantdStore):
         Per user direction (2026-07-29), the ``.pyof`` format is
         one SQLite DB per app instance and the registry of
         secondary instances lives in the ``app_instance`` table.
-        After ``open_sqlite`` opens the DB this helper returns
-        the ``app_instance`` rows as a list of dicts (one entry
-        per row). The model layer can then re-attach the rows
-        to ``self.instances`` or surface them to the UI via
-        ``model.get_app_instances()``.
+        After ``open_sqlite`` registers the DB this helper reads
+        the ``app_instance`` rows via the canonical
+        ``self.get_table()`` path (NchantdStore -> MicroStash ->
+        SQuiRL -> sonql). Returns a list of dicts (one entry per
+        row).
 
         Returns:
             list[dict]: one entry per ``app_instance`` row.
@@ -2440,46 +2459,58 @@ class NchantdOfficeStore(NchantdStore):
 
         Raises:
             RuntimeError: when called before ``open_sqlite``
-                (no active connection). The one-per-instance
+                (no active sonql doc). The one-per-instance
                 guarantee means there must be exactly one open
                 connection per app instance.
         """
-        conn = getattr(self, "_sqlite_connection", None)
-        if conn is None:
+        if db not in self.docs:
             raise RuntimeError(
-                "NchantdOfficeStore.refresh_from_sqlite: no active "
-                "SQLite connection — call open_sqlite(path) first "
-                "(one-per-app-instance guarantee)."
+                f"NchantdOfficeStore.refresh_from_sqlite: no "
+                f"active SQLite connection on db={db!r} — call "
+                f"open_sqlite(path) first (one-per-app-instance "
+                f"guarantee)."
             )
-        import sqlite3
-
-        rows = []
+        rows: list[dict] = []
         try:
-            cursor = conn.execute("SELECT * FROM app_instance")
-            columns = [col[0] for col in (cursor.description or [])]
-            for row in cursor.fetchall():
-                row_dict = dict(zip(columns, row))
-                rows.append(row_dict)
+            # Canonical chain: get_table routes through
+            # MicroStash._get_view -> SQuiRL.docs[db].read
+            # -> sonql.read -> SELECT. No raw sqlite3 here.
+            df = self.get_table(
+                "app_instance",
+                parameters={"get_all_columns": True},
+                db=db,
+            )
+            if df is not None and not df.empty:
+                # ``df`` is a pandas DataFrame; convert to
+                # list-of-dicts so the model layer can attach
+                # the rows to its in-memory registry without
+                # needing pandas.
+                rows = df.to_dict(orient="records")
             logma.info(
                 f"[store] refresh_from_sqlite: loaded "
-                f"{len(rows)} app_instance row(s)"
+                f"{len(rows)} app_instance row(s) from "
+                f"db={db!r}"
             )
-        except sqlite3.OperationalError as exc:
-            # Table doesn't exist (empty DB) — return [].
+        except Exception as exc:
+            # The table doesn't exist (empty DB) or the sonql
+            # doc hasn't been initialised yet — return [].
             logma.info(
-                f"[store] refresh_from_sqlite: no app_instance "
-                f"table ({exc}); returning []"
+                f"[store] refresh_from_sqlite: app_instance "
+                f"unavailable ({exc}); returning []"
             )
         return rows
 
     def close_sqlite(self):
-        """T-NEW-007: close the current SQLite connection if
-        one is open. Safe to call when no connection is held.
+        """T-NEW-007: detach the ``pyof`` SQuiRL doc if one is
+        registered. The sonql doc owns its SQLite connection
+        via SQuiRL's standard teardown path so we just pop the
+        entry from ``self.docs``.
         """
-        conn = getattr(self, "_sqlite_connection", None)
-        if conn is not None:
+        if "pyof" in self.docs:
             try:
-                conn.close()
+                doc = self.docs.pop("pyof", None)
+                if doc is not None and hasattr(doc, "close"):
+                    doc.close()
             except Exception:
                 pass
         self._sqlite_connection = None
