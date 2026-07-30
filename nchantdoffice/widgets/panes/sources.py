@@ -28,7 +28,8 @@ from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.media.editors.entries import NchantdActivateEntry
 from nchantrs.widgets.panes.panes import NchantdPane
-from nchantrs.widgets.tables.lists import NchantdList
+from nchantrs.widgets.tables.lists import NchantdList, NchantdBulletedList
+from nchantrs.widgets.tables.tables import NchantdTable
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.groups import NchantdGroup
@@ -167,13 +168,13 @@ class NchantdWhereUsedListPane(NchantdPane):
         """"""
         super().initView(cfg)
         cfg = {"text": "Where Used:"}
-        group = NchantdGroup(self, cfg)
+        # group = NchantdGroup(self, cfg)
         layout = pyqt.QVBoxLayout()
-        group.setLayout(layout)
+        # group.setLayout(layout)
         cfg = {"data": self.config.dikt.get("data", [])}
-        self.layers_list = NchantdList(self, cfg).initWidget()
+        self.layers_list = NchantdBulletedList(self, cfg).initWidget()
         layout.addWidget(self.layers_list)
-        self.layout.addWidget(group)
+        self.layout.addLayout(layout)
         return self
 
     def initWidget(self):
