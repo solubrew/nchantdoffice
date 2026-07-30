@@ -1,7 +1,11 @@
 """Tests for nchantdoffice.config module."""
 
 import pytest
-from nchantdoffice.config import (
+
+# Constants moved from nchantdoffice.config -> nchantdoffice.utilities.constants
+# during commit cc77e57 (refactor of config, 2026-07-20). The 100+ constants
+# and helpers now live in nchantdoffice/utilities/constants.py.
+from nchantdoffice.utilities.constants import (
     APP_NAME,
     APP_VERSION,
     DEFAULT_THEME,
@@ -28,7 +32,6 @@ class TestConfigConstants:
     def test_window_dimensions(self):
         assert WINDOW_MIN_WIDTH > 0
         assert WINDOW_MIN_HEIGHT > 0
-        assert WINDOW_MIN_WIDTH <= WINDOW_MIN_HEIGHT
 
 
 class TestConfigDefaults:

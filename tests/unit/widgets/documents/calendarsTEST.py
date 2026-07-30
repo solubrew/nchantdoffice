@@ -22,6 +22,9 @@
 # 2025-11-06 09:46:29
 
 # ====================================================================================================================||
+from os.path import join, dirname  # added by tests/unit fixup
+from kahndor.logma import Logma  # added by tests/unit fixup
+import kahndor  # added by tests/unit fixup
 HERE = join(dirname(__file__))  # 2025-11-06 09:46:29
 LOGMA = Logma(__name__)  # 2025-11-06 09:46:29
 PXCFG = join(HERE, "_data_", "calendarsTEST.yaml")  # 2025-11-06 09:46:29
