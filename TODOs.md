@@ -82,7 +82,7 @@ These are the items still requiring work, in priority order.
   currently launches a browser via QService; the user wants it
   to route into an existing tab under the Settings node pointing
   at nchantdoffice.com. UX change, no crash.
-  **Closed in Sprint 26** (commits 9dd19c3 + TBD): the right-side
+  **Closed in Sprint 27** (commits 9dd19c3 + dc0cfcf + TBD): the right-side
   ``NchantdOfficeAdTab._on_remove_ads_clicked`` navigates the
   left-pane treeview via
   ``tree_wrapper.set_current_node(...)`` (the nchantrs treeview
@@ -96,8 +96,9 @@ These are the items still requiring work, in priority order.
   ``tree.setCurrentItem`` + ``itemSelectionChanged.emit()`` which
   only updated the QTreeWidget's selection state but did NOT
   drive navigation (the user reported "selects the Settings node
-  but doesn't navigate there"). The Sprint 26 follow-up calls
-  ``tree.set_current_node(node)`` — the wrapper method that
+  but doesn't navigate there"). The Sprint 26 follow-up resolves the actual NchantdTreeView wrapper via
+  ``pane.tree.view`` (the nchantrs views/treeviews.py wrapper,
+  not the bare QTreeWidget that pane.tree returns) and calls
   actually fires ``updateTabs('center')`` and routes the
   center tabset to the existing "Nchantd Account" tab
   (the embedded browser for the nchantdoffice_com account

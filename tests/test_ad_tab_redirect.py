@@ -1,4 +1,4 @@
-"""Sprint 26 — Ad tab 'Remove ads' button redirect regression.
+"""Sprint 27 — Ad tab 'Remove ads' button redirect regression.
 
 The right-side Ad tab has a "Remove ads - Go Pro" button
 (NchantdOfficeAdTab._on_remove_ads_clicked). Per user direction
@@ -7,21 +7,24 @@ The right-side Ad tab has a "Remove ads - Go Pro" button
 tree (the embedded browser for the nchantdoffice_com account
 chain).
 
-The Sprint 25 implementation called tree.setCurrentItem +
-itemSelectionChanged.emit(), which only updated the QTreeWidget's
-selection state but did NOT drive navigation. The actual
-navigation lives in NchantdTreeView.set_current_node(node),
-the nchantrs treeview wrapper method that sets
-``model.current_node`` and calls ``updateTabs('center')``.
+Sprint 25 called tree.setCurrentItem (no navigation). Sprint 26
+called pane.tree.set_current_node, but pane.tree is the inner
+NchantdApplicationTree (QTreeWidget subclass) — that class
+doesn't have set_current_node. The actual navigation entry point
+is the nchantrs NchantdTreeView wrapper, exposed as
+``pane.tree.view`` (``nchantrs/views/treeviews.py:38``), whose
+``set_current_node`` (line 266) calls ``model.current_node =``
+and ``node.updateTabs('center')``.
 
 This test pins the contract that:
   1. The button click does NOT call ``QDesktopServices.openUrl``.
-  2. The handler calls ``tree.set_current_node`` (the nchantrs
-     treeview wrapper method) to drive navigation.
-  3. The handler uses ``tree.findItems`` with "Nchantd Account"
-     (with "Settings" as fallback) to locate the target node.
-  4. When the tree wrapper or model is missing, the handler
-     falls back gracefully (no exception bubbles).
+  2. The handler resolves ``pane.tree.view`` (the NchantdTreeView
+     wrapper) and calls ``set_current_node`` on it.
+  3. The handler uses ``inner_tree.findItems`` with "Nchantd
+     Account" (with "Settings" as fallback) to locate the
+     target node.
+  4. When the wrapper or model is missing, the handler falls
+     back gracefully (no exception bubbles).
 """
 
 import ast
@@ -75,23 +78,33 @@ def test_ad_tab_remove_ads_does_not_open_browser():
 # --- Contract 2: call the treeview's set_current_node (drives navigation) ---
 
 
-def test_ad_tab_remove_ads_calls_tree_set_current_node():
-    """Sprint 26: the handler must call
-    ``tree.set_current_node(...)`` (the nchantrs treeview
-    wrapper method that propagates selection to
-    ``updateTabs('center')`` and ``model.current_node``).
-    Calling bare ``tree.setCurrentItem`` only updates the
-    QTreeWidget's selection state but does NOT drive
-    navigation — the user reports clicks "select the Settings
-    node but doesn't navigate there".
+def test_ad_tab_remove_ads_calls_tree_view_set_current_node():
+    """Sprint 27: the handler must call
+    ``tree_view.set_current_node(...)`` — the nchantrs
+    NchantdTreeView wrapper method
+    (``nchantrs/views/treeviews.py:266``) that propagates
+    selection to ``updateTabs('center')`` and
+    ``model.current_node``. Calling ``set_current_node`` on
+    the inner ``NchantdApplicationTree`` (which Sprint 26
+    did) silently no-ops because that class doesn't define
+    the method.
     """
     src = _read(AD_TAB)
     body = _function_source_segment(src, "_on_remove_ads_clicked")
     assert "set_current_node" in body, (
         "Ad tab 'Remove ads' handler does not call "
-        "tree.set_current_node — without that the treeview "
-        "will not propagate the selection to model.current_node "
-        "or call updateTabs('center')."
+        "set_current_node — without that the treeview "
+        "wrapper will not propagate the selection to "
+        "model.current_node or call updateTabs('center')."
+    )
+    # The wrapper must be reached via pane.tree.view (not
+    # pane.tree directly, since pane.tree is the bare
+    # QTreeWidget which lacks the method).
+    assert 'inner_tree, "view"' in body or 'getattr(inner_tree, "view"' in body, (
+        "Ad tab 'Remove ads' handler must resolve the "
+        "NchantdTreeView wrapper via pane.tree.view — the "
+        "inner NchantdApplicationTree doesn't define "
+        "set_current_node."
     )
 
 

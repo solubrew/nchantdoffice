@@ -214,34 +214,45 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     def _on_remove_ads_clicked(self):
         """Redirect the user to the Get Pro page in an in-app tab.
 
-        Sprint 26 (P1 ad tab button redirect — second follow-up):
-        the Sprint 25 implementation called
-        ``tree.setCurrentItem`` + ``tree.itemSelectionChanged.emit()``
-        which only updates the tree's selection state but does
-        NOT drive navigation — the treeview wrapper's
-        ``handle_selection_change`` only stores a previous-index
-        reference. The actual navigation flow lives in
-        ``NchantdTreeView.set_current_node(node)`` (the nchantrs
-        treeview wrapper, ``nchantrs/views/treeviews.py``), which
-        sets ``model.current_node``, calls
-        ``updateTabs('center')``, scrolls, and focuses.
+        Sprint 27 (P1 ad tab button redirect — third follow-up):
+        the Sprint 26 implementation called
+        ``tree.set_current_node(node)`` on
+        ``view.panes["left"].tree``, but the nchantrs tree
+        structure is two-layered:
+
+        - ``pane.tree`` is the inner ``NchantdApplicationTree``
+          (extends QTreeWidget directly, no set_current_node).
+        - ``pane.tree.view`` is the nchantrs
+          ``NchantdTreeView`` wrapper at
+          ``nchantrs/views/treeviews.py:38`` — that's the class
+          that owns ``set_current_node`` (line 266). Sprint 26
+          was calling ``NchantdApplicationTree.set_current_node``
+          which doesn't exist; the previous logs show the click
+          reached the tree selection handler but didn't drive
+          navigation.
+
+        The actual navigation flow:
+          ``itemPressed`` (line 95) -> ``onLeftClick`` (line 181)
+          -> ``self.set_current_node(signal)`` (line 195) ->
+          ``updateTabs('center')`` (line 275).
 
         Per user direction (2026-07-30), the canonical UX is:
 
-          1. Call the treeview's ``set_current_node`` to select
-             the "Nchantd Account" node (the embedded browser for
-             the nchantdoffice_com account chain). This drives
-             the tabset update and brings the existing account
-             tab into view.
+          1. Resolve the inner ``NchantdApplicationTree``
+             (``pane.tree``) and its wrapper ``view.view``.
+          2. ``tree.findItems("Nchantd Account", ...)`` to
+             locate the existing account tab.
+          3. ``view.set_current_node(node)`` — the wrapper
+             method that actually propagates selection through
+             ``updateTabs('center')`` and ``model.current_node``.
 
-        When the tree or model is missing, the handler logs and
-        returns without raising.
+        When the wrapper or model is missing, the handler logs
+        and returns without raising.
         """
         target_url = "https://www.nchantdoffice.com/get_pro"
         try:
-            view = getattr(self, "app", None)
-            if view is not None:
-                view = getattr(view, "view", None)
+            app = getattr(self, "app", None)
+            view = getattr(app, "view", None) if app is not None else None
             if view is None:
                 logma.info(
                     "[ad_tab] no app.view available; "
@@ -250,57 +261,91 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                 )
                 return
 
-            tree_wrapper = getattr(
-                getattr(view, "panes", {}).get("left"), "tree", None
-            )
-            if tree_wrapper is None:
+            pane = getattr(view, "panes", {}).get("left")
+            if pane is None:
                 logma.info(
-                    "[ad_tab] no left tree wrapper available; "
+                    "[ad_tab] no left pane available; "
                     "skipping redirect to %s",
                     target_url,
                 )
                 return
 
-            # Find the "Nchantd Account" node (the embedded
-            # browser for the nchantdoffice_com account chain).
-            # The user wanted the click to land on the existing
-            # account tab, so we skip the intermediate Settings
-            # node and go straight to Nchantd Account.
-            account_items = tree_wrapper.findItems(
+            inner_tree = getattr(pane, "tree", None)
+            if inner_tree is None:
+                logma.info(
+                    "[ad_tab] no inner tree on left pane; "
+                    "skipping redirect to %s",
+                    target_url,
+                )
+                return
+
+            # The nchantrs treeview WRAPPER (not the bare
+            # QTreeWidget) owns set_current_node. The wrapper
+            # is exposed as ``pane.tree.view``.
+            tree_view = (
+                getattr(inner_tree, "view", None)
+                or inner_tree  # fallback if the wrapper isn't
+                               # a separate object
+            )
+
+            # Locate the "Nchantd Account" node (the embedded
+            # browser for the nchantdoffice_com account
+            # chain). When missing, fall back to the Settings
+            # node so the user at least lands on the group.
+            account_items = inner_tree.findItems(
                 "Nchantd Account",
                 pyqt.Qt.MatchExactly | pyqt.Qt.MatchRecursive,
                 0,
             )
             if not account_items:
-                # Fallback: try the Settings node (so the user
-                # lands on the Settings group even if the
-                # account tab is missing for some reason).
-                account_items = tree_wrapper.findItems(
+                account_items = inner_tree.findItems(
                     "Settings",
                     pyqt.Qt.MatchExactly | pyqt.Qt.MatchRecursive,
                     0,
                 )
-            if account_items:
-                # Use the treeview wrapper's set_current_node —
-                # that's the canonical call that propagates the
-                # selection through ``updateTabs('center')``
-                # and ``model.current_node`` so the center
-                # tabset actually refreshes.
-                if hasattr(tree_wrapper, "set_current_node"):
-                    tree_wrapper.set_current_node(account_items[0])
-                else:
-                    # Older treeview fallback: just set the item.
-                    tree_wrapper.setCurrentItem(account_items[0])
-                    tree_wrapper.scrollToItem(account_items[0])
-                logma.info(
-                    "[ad_tab] routed to %s via tree.set_current_node",
-                    account_items[0].text(0),
-                )
-            else:
+            if not account_items:
                 logma.info(
                     "[ad_tab] no Nchantd Account or Settings node "
                     "found in tree; user can navigate manually to "
                     "reach %s",
+                    target_url,
+                )
+                return
+
+            target_item = account_items[0]
+
+            # Navigate via the treeview wrapper when available
+            # (this is the canonical flow that calls
+            # ``updateTabs('center')`` and
+            # ``model.current_node``). When the wrapper isn't
+            # available, fall back to ``itemPressed.emit`` (the
+            # bare signal connected to the wrapper's
+            # ``onLeftClick``) so the wrapper's normal click
+            # pipeline runs as if the user had clicked the
+            # node.
+            if hasattr(tree_view, "set_current_node"):
+                tree_view.set_current_node(target_item)
+                logma.info(
+                    "[ad_tab] routed to %s via tree_view.set_current_node",
+                    target_item.text(0),
+                )
+            elif hasattr(inner_tree, "itemPressed"):
+                from PySide6 import QtCore
+                inner_tree.scrollToItem(target_item)
+                QtCore.QCoreApplication.postEvent(
+                    inner_tree.viewport(),
+                    QtCore.QEvent(
+                        QtCore.QEvent.Type.MouseButtonPress,
+                    ),
+                )
+                logma.info(
+                    "[ad_tab] routed to %s via itemPressed event",
+                    target_item.text(0),
+                )
+            else:
+                logma.info(
+                    "[ad_tab] no navigation path available; "
+                    "user can navigate manually to reach %s",
                     target_url,
                 )
         except Exception as e:
