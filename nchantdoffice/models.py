@@ -2247,7 +2247,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # check version of current document
         # increment version based on overall version count...needs a check out process eventually
         # initial is just used as long term undo
-        # TODO: increment version
+        # See TODOs.md T-NEW-025 — content versioning needs a checkout/lock process
         # pydoc.increment_version()
         # how to address content versioning
         # T-NEW-009 followup: guard against non-JSON-serialisable

@@ -215,6 +215,75 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-007 | Drop `.pyof` single-instance pickle format | ✅ Done — Sprint 15 |
 | T-NEW-013 | `decrypt`/`encrypt` cipher wiring | ⏸ Deferred to PUSH 0.0.3 — Sprints 5/12 |
 | T-NEW-014 | Trendline group init helper | ✅ Documented in Sprint 12 |
+| T-NEW-025 | Content versioning (`pydoc.increment_version`) | 🆕 Logged (2026-07-30) — design decision required |
+
+### T-NEW-025 — Content versioning for `NchantdOfficeCloakModel.save` (2026-07-30)
+
+The inline `# TODO: increment version` annotation at
+`nchantdoffice/models.py:2250` has been promoted to a tracked
+architecture item. It sat for years as a comment because the real
+work is not a one-line increment — it requires deciding whether
+NchantdOffice versioned documents follow a checkout/lock model
+(Git-style, single writer at a time) or a copy-on-write model
+(every save produces a new immutable revision row, all writers
+keep going). Both options have implications for the `doc` /
+`doc_media_content` schema and for `NchantdOfficeStore` /
+`NchantdOfficeCloakModel.save` (the call site the comment lives in).
+
+**Affected sites:**
+
+- `nchantdoffice/models.py:2250` — the `# TODO: increment version` is
+  inside `NchantdOfficeCloakModel.save` immediately after the
+  Pyffice-payload-write block, gated by the surrounding `# check
+  version of current document / # increment version based on overall
+  version count...` comment block.
+- `nchantdoffice/models.py:NchantdOfficeCloakModel` — owns
+  `save` / `save_to_file` / `load_document`; the version increment
+  must be coordinated with `doc.doc_version` on the `doc` row
+  and with `pyffice` `PyfficeDocument.__version__` /
+  `SERIALIZATION_VERSION` (already in place per T-NEW-005 #2).
+- `nchantdoffice/widgets/panes/documents.py:NchantdOfficeNoteEditPane.parse_document`
+  — produces the in-memory `doc` object that flows into `save`; a
+  revision id must ride on that object so the increment can target
+  the right row.
+- `nchantdoffice/widgets/documents/documents.py:578` — the
+  sibling `set_save_mode` / `save` setter that already touches
+  `config.dikt["save_mode"]` and the dual-write path; any new
+  revision column needs the same dual-write treatment.
+
+**Migration plan:**
+
+This is a **design decision first, implementation second** item —
+do not pick a schema until the checkout/lock vs copy-on-write
+trade-off is resolved with the user. Once the design lands, the
+incremental work is mechanical and small (one new column on `doc`,
+one helper on `NchantdOfficeCloakModel`, one call site). No
+priority tier is assigned; treat as backlog until the design
+discussion happens. No source patch is included in this docs
+commit — see `tests/` for the regression test the implementation
+will need once the design is settled.
+
+1. Confirm with the user whether the model is checkout/lock
+   (one writer, others see read-only until release) or
+   copy-on-write (every save creates a new `doc_revision`
+   row, history UI surfaces previous revisions).
+2. Add `revision_no` (or `revision_id` UUID) column to the `doc`
+   table via `MicroStash.initDocument("pyof", "sonql", path, …)`
+   so the schema migration runs through the canonical chain
+   (per Sprint 15 + Sprint 19 contract).
+3. Add `NchantdOfficeCloakModel.increment_version(doc_id, revision_no=None)`
+   that reads the current `doc.doc_version`, increments it, and
+   writes it back via the canonical
+   `store.update_record(data, <col>, <id>, "db")` shape (records
+   + columns, not the silent-no-op `"data"` dict).
+4. Wire `increment_version` into `NchantdOfficeCloakModel.save`
+   after the payload write, gated on the chosen
+   checkout/lock vs copy-on-write contract.
+5. Add a regression test under `tests/test_content_versioning.py`
+   asserting a save increases `revision_no` and a subsequent
+   load reads the post-save revision (or surfaces the prior
+   revisions through the history UI, depending on the chosen
+   model).
 
 ### Live crashes — ALL CLOSED
 
