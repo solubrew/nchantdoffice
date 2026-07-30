@@ -159,20 +159,55 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         return self
 
     def cmd_set_node_name(self, event, *args, **kwargs):
-        """"""
+        """Update the node's display name AND persist it to the DB.
+
+        Sprint 21 (T-NEW-024 followup): previously the method
+        only called ``node.setText(...)`` which updates the
+        visible tree label in memory but never writes back to
+        ``doc_tree_node.name_txt`` — on next reload the rename
+        was lost. Now also runs
+        ``store.update_record({"table": {"doc_tree_node":
+        {"data": {"name_txt": <new_name>}}}}, "nid_txt",
+        node.nid)`` so the rename persists.
+        """
         logma.info(f"Name Entry {self.name_entry}")
         logma.info(f"Set Node Name {self.name_entry.textbox.entry_data}")
         node = self.get_node()
         if node.node_type in ("displaynode", "sysorgnode", "yearnode", "monthnode", "daynode"):
             self.name_entry.textbox.entry_data = node.name
             return self
-        logma.info(f"Set Node Name {self.name_entry.textbox.text()}")
+        new_name = self.name_entry.textbox.text()
+        logma.info(f"Set Node Name {new_name}")
         try:
-            node.setText(0, self.name_entry.textbox.entry_data)
+            node.setText(0, new_name)
         except Exception as e:
             logma.warning(f"[panes/documents] set_node_name: first setText failed ({e}) - re-fetching node")
             node = self.app.model.get_current_node()
-            node.setText(0, self.name_entry.textbox.entry_data)
+            node.setText(0, new_name)
+        # T-NEW-024 followup: persist the rename to
+        # doc_tree_node.
+        try:
+            store = (
+                getattr(self.app.model, "store", None)
+                if hasattr(self, "app") and self.app is not None
+                else None
+            )
+            node_id = getattr(node, "nid", None)
+            if store is not None and hasattr(store, "update_record") and node_id:
+                data = {
+                    "table": {
+                        "doc_tree_node": {"data": {"name_txt": new_name}}
+                    }
+                }
+                store.update_record(data, "nid_txt", node_id)
+                if hasattr(self.app.model, "has_changed"):
+                    self.app.model.has_changed = True
+        except Exception as exc:
+            logma.error(
+                f"[panes/documents] cmd_set_node_name: DB "
+                f"persist failed: {exc}",
+                exc_info=True,
+            )
         return self
 
     def cmd_set_text_bold(self):
@@ -712,14 +747,50 @@ class NchantdOfficeTabEditPane(NchantdPane):
         return self
 
     def cmd_set_tab_name(self, event, *args, **kwargs):
-        """"""
+        """Update the tab's display name AND persist it to the DB.
+
+        Sprint 21 (T-NEW-024 followup): previously the method
+        only called ``tab.parent.setTabText(...)`` which updates
+        the visible tab label in memory but never writes back to
+        ``doc_tab.name_txt`` — on next reload the rename was lost.
+        Now also runs
+        ``store.update_record({"table": {"doc_tab": {"data":
+        {"name_txt": <new_name>}}}}, "tid_txt", tab.tid)`` so the
+        rename persists.
+        """
         logma.info(f"Name Entry {self.name_entry}")
         logma.info(f"Set Tab Name {self.name_entry.textbox.entry_data}")
         tab = self.get_tab()
         if tab.app_data_type == "app":
             return self
-        logma.info(f"Set Tab Name {self.name_entry.textbox.text()}")
-        tab.parent.setTabText(tab.position, self.name_entry.textbox.entry_data)
+        new_name = self.name_entry.textbox.text()
+        logma.info(f"Set Tab Name {new_name}")
+        tab.parent.setTabText(tab.position, new_name)
+        # T-NEW-024 followup: persist the rename to doc_tab.
+        try:
+            store = (
+                getattr(self.app.model, "store", None)
+                if hasattr(self, "app") and self.app is not None
+                else None
+            )
+            tab_id = getattr(tab, "tid", None)
+            if store is not None and hasattr(store, "update_record") and tab_id:
+                data = {
+                    "table": {
+                        "doc_tab": {"data": {"name_txt": new_name}}
+                    }
+                }
+                store.update_record(data, "tid_txt", tab_id)
+                # Mark the model as dirty so the parent loop
+                # flushes the change at shutdown.
+                if hasattr(self.app.model, "has_changed"):
+                    self.app.model.has_changed = True
+        except Exception as exc:
+            logma.error(
+                f"[panes/documents] cmd_set_tab_name: DB "
+                f"persist failed: {exc}",
+                exc_info=True,
+            )
         return self
 
     def cmd_set_text_bold(self):

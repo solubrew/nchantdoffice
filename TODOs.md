@@ -85,9 +85,19 @@ These are the items still requiring work, in priority order.
 - [ ] **Ad tab size control** — right-side tabs are slim 360×900
   and would need to go into the center tabset if a larger ad is
   required. UX change, no crash.
-- [ ] **Tab Edit Pane doesn't persist the new name** — `cmd_set_tab_name`
+- [x] **Tab Edit Pane doesn't persist the new name** — `cmd_set_tab_name`
   updates the label but doesn't write back to the DB. Regression.
-- [ ] **Node Edit Pane doesn't persist the new name** — same regression.
+  **Fixed in Sprint 21** (commit TBD): now also runs
+  `store.update_record({"table": {"doc_tab": {"data": {"name_txt":
+  <new_name>}}}}, "tid_txt", tab.tid)` so the rename persists across
+  reloads. Regression test:
+  `tests/test_tab_node_name_persistence.py::test_cmd_set_tab_name_writes_to_db`.
+- [x] **Node Edit Pane doesn't persist the new name** — same regression.
+  **Fixed in Sprint 21** (same commit): now also runs
+  `store.update_record({"table": {"doc_tree_node": {"data":
+  {"name_txt": <new_name>}}}}, "nid_txt", node.nid)` so the rename
+  persists. Regression test:
+  `tests/test_tab_node_name_persistence.py::test_cmd_set_node_name_writes_to_db`.
 - [ ] **Name-entry dialog for new nodes / tabs** — config flag for
   "prompt vs auto-generate", with dialog widget (3 separate TODOs).
 - [ ] **Save-mode toolbar icons** — disk-stack icon toggles internal
