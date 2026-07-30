@@ -199,9 +199,38 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         return self
 
     def add_node(self, signal=None, *args, **kwargs):
-        """Add a new node."""
+        """Add a new node.
+
+        Sprint 23 (P1 name-entry dialog): when the
+        ``prompt_for_new_node_name`` config flag is True, run
+        ``QtWidgets.QInputDialog.getText`` to capture a
+        user-supplied name before creating the node. When the
+        flag is False (default), use the existing
+        ``uuid()[-5:]`` auto-generation. Cancellation aborts
+        the create.
+        """
+        from nchantrs.libraries import pyqt
+        from pyqt import QtWidgets
         cfg = args[0]["action"].action
-        name = uuid()[-5:]
+        # P1 name-entry dialog: respect the config flag.
+        prompt = bool(
+            (self.config.dikt or {}).get("prompt_for_new_node_name", False)
+        )
+        name = None
+        if prompt:
+            _inherited_name = uuid()[-5:]  # fallback if user clears the field
+            _name, ok = QtWidgets.QInputDialog.getText(
+                self,
+                "Name New Node",
+                "Node name:",
+                text=_inherited_name,
+            )
+            if not ok:
+                # User cancelled — abort.
+                return self
+            name = (_name or "").strip() or _inherited_name
+        if name is None:
+            name = uuid()[-5:]
         tree = "left"
         logma.info(f"Lookup Code {cfg['lookup_code_txt']}")
         logma.info(f"PID {self.app.view.panes[tree].tree.model.current_node.pid}")
@@ -233,13 +262,40 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         return self
 
     def add_note(self, signal=None, *args, **kwargs):
-        """Add a new note."""
+        """Add a new note.
+
+        Sprint 23 (P1 name-entry dialog): when
+        ``prompt_for_new_node_name`` is set, prompt the user
+        via ``QtWidgets.QInputDialog.getText`` before creating
+        the note. Otherwise use the timestamp-based default
+        name.
+        """
+        from nchantrs.libraries import pyqt
+        from pyqt import QtWidgets
         logma.info(f"Launch Note {signal}")
         cfg = args[0]["action"].action
         pid = self.app.view.panes["left"].tree.model.current_node.nid
         pos = {"x": 1287, "y": 125}
         # TODO: if there are multiple notes then the position will need to increment
-        name = "{" + str(dt.datetime.now()) + "}"
+        # P1 name-entry dialog: respect the config flag.
+        prompt = bool(
+            (self.config.dikt or {}).get("prompt_for_new_node_name", False)
+        )
+        default_name = "{" + str(dt.datetime.now()) + "}"
+        name = None
+        if prompt:
+            _name, ok = QtWidgets.QInputDialog.getText(
+                self,
+                "Name New Note",
+                "Note name:",
+                text=default_name,
+            )
+            if not ok:
+                # User cancelled — abort.
+                return self
+            name = (_name or "").strip() or default_name
+        if name is None:
+            name = default_name
         document = {"name": name, "widget": "NchantdOfficeNote"}
         self.app.model.add_note(document, pid, pos, cfg)
         self.app.view.panes["center"].launch_note(cfg)

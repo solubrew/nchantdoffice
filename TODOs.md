@@ -98,8 +98,19 @@ These are the items still requiring work, in priority order.
   {"name_txt": <new_name>}}}}, "nid_txt", node.nid)` so the rename
   persists. Regression test:
   `tests/test_tab_node_name_persistence.py::test_cmd_set_node_name_writes_to_db`.
-- [ ] **Name-entry dialog for new nodes / tabs** — config flag for
+- [x] **Name-entry dialog for new nodes / tabs** — config flag for
   "prompt vs auto-generate", with dialog widget (3 separate TODOs).
+  **Implemented in Sprint 23** (commit TBD): two new settings
+  flags ``prompt_for_new_node_name`` and
+  ``prompt_for_new_tab_name`` in
+  `cmd_on_change_prompt_for_new_node_name` and
+  `cmd_on_change_prompt_for_new_tab_name` (settings.py). When
+  enabled, the toolbars' `add_node` and `add_note` paths and the
+  panes/new `add_tab` path run
+  ``QtWidgets.QInputDialog.getText`` to capture a user-supplied
+  name. When False (default), the existing auto-generation
+  ``uuid()[-5:]`` / timestamp / active_item.name is used.
+  Cancellation aborts the create.
 - [ ] **Save-mode toolbar icons** — disk-stack icon toggles internal
   storage, cloud icon toggles cloud storage, both in
   `NchantdDocumentToolBar`.

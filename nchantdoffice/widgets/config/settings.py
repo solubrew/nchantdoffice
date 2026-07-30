@@ -447,6 +447,67 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             logma.error(f"[settings] cmd_on_change_right_side_tab_select failed: {e}", exc_info=True)
         return self
 
+    def cmd_on_change_prompt_for_new_node_name(self, event=None, *args, **kwargs):
+        """Toggle the prompt_for_new_node_name flag.
+
+        Reads the checkbox state and persists
+        ``prompt_for_new_node_name`` on ``config.dikt``. When
+        True, the toolbars' add_node / add_note paths run
+        ``QtWidgets.QInputDialog.getText`` to capture a
+        user-supplied name before creating the node. When
+        False (default), the existing auto-generation
+        ``uuid()[-5:]`` is used.
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = bool(
+                    getattr(self, "prompt_for_new_node_name", False)
+                )
+            self.prompt_for_new_node_name = value
+            self.config.dikt["prompt_for_new_node_name"] = value
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_prompt_for_new_node_name "
+                f"failed: {e}",
+                exc_info=True,
+            )
+        return self
+
+    def cmd_on_change_prompt_for_new_tab_name(self, event=None, *args, **kwargs):
+        """Toggle the prompt_for_new_tab_name flag.
+
+        Reads the checkbox state and persists
+        ``prompt_for_new_tab_name`` on ``config.dikt``. When
+        True, the panes/new.add_tab path runs
+        ``QtWidgets.QInputDialog.getText`` to capture a
+        user-supplied name before creating the tab. When False
+        (default), the existing ``active_item.name`` is used.
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = bool(
+                    getattr(self, "prompt_for_new_tab_name", False)
+                )
+            self.prompt_for_new_tab_name = value
+            self.config.dikt["prompt_for_new_tab_name"] = value
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_prompt_for_new_tab_name "
+                f"failed: {e}",
+                exc_info=True,
+            )
+        return self
+
     def get_right_pane_tab_options(self):
         """Enumerate the available right-pane tabs as dropdown options.
 

@@ -173,10 +173,40 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         return self
 
     def add_tab(self, tabset, widgdata=None):
-        """"""
+        """Add a new tab.
+
+        Sprint 23 (P1 name-entry dialog): when the
+        ``prompt_for_new_tab_name`` config flag is True, run
+        ``QtWidgets.QInputDialog.getText`` to capture a
+        user-supplied name before creating the tab. When the
+        flag is False (default), use the active_item's name
+        unchanged. Cancellation aborts the create.
+        """
+        from nchantrs.libraries import pyqt
+        from pyqt import QtWidgets
         if widgdata is None:
             widgdata = {}
         # widgdata["doc_type"] = self.active_item.document_nm
+        # P1 name-entry dialog: respect the config flag.
+        prompt = bool(
+            (self.config.dikt or {}).get("prompt_for_new_tab_name", False)
+        )
+        if prompt and self.active_item is not None:
+            default_name = getattr(self.active_item, "name", "") or ""
+            _name, ok = QtWidgets.QInputDialog.getText(
+                self,
+                "Name New Tab",
+                "Tab name:",
+                text=default_name,
+            )
+            if not ok:
+                # User cancelled — abort.
+                return self
+            new_name = (_name or "").strip() or default_name
+            if hasattr(self.active_item, "name"):
+                self.active_item.name = new_name
+            if hasattr(self.active_item, "document_nm"):
+                self.active_item.document_nm = new_name
         if self.active_item.document_txt in ("http", "api"):
             for key, item in self.active_item.params.items():
                 logma.info(f"Key {key} Item {item}")
