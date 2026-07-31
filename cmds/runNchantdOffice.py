@@ -73,7 +73,7 @@ log = True
 pxcfg = join(here, "_data_", "runMain.yaml")
 
 
-def restart():
+def restart() -> None:
     """"""
     try:
         shutil.rmtree(Path.home() / ".local" / "share" / "nchantdoffice")
@@ -90,7 +90,7 @@ def run(args):
     python runNchantdOffice.py - use the wizard to setup
     """
     # if len(args) > 2:
-    restart()
+    # restart()
     app = NchantdOfficeCloak
     wizard = NchantdOfficeApplicationStartupWizard
     nchantment("NchantdOffice", args, app, None, wizard)

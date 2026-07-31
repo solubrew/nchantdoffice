@@ -19,6 +19,10 @@
 
 ---
 # New TODOs
+- Image Document tab is push the widgth instead of resizing the image, image should fit to width and size the height maintianing the aspect ratio
+- NchantdOfficeBrowser is not keeping track of url navigation or reloading to the last visited site
+ 
+ 
 - fix and finish Affiliate Manager tab
 - add a settings pane for each document type in the Center Pane Settings of the Interface Tab
 - fix Right Pane tabs to select which ones can be adjusted in the right side tabset in the Interface Tab
@@ -28,6 +32,9 @@
 - add to Settings/Interface tab config to allow a user to select that tab name updates to the file name when a file is opened 
 - implement search across all nodes and tabs as well as node specific and tab specific search as well finish code in the NchantdOfficeApplicationToolBox 
 - NchantdOfficeJournalEditor needs to have the always save functionality fixed as it has regressed during development
+
+
+
 
 ---
 
