@@ -23,22 +23,12 @@ from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.config.settings import NchantdInterfaceSettings, NchantdSettingsWidget, NchantdThemeSettings
-from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.groups import NchantdGridScrollGroupBox
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocumentManager
-from nchantrs.widgets.canvases.canvases import NchantdCanvas
-from nchantdoffice.widgets.panes.sources import NchantdDataSetPane, NchantdSourceDefaultPane, NchantdDataSetConfigPane
-from nchantdoffice.widgets.panes.sources import NchantdWhereUsedListPane, NchantdViewPane, NchantdViewEditPane
-from nchantdoffice.widgets.panes.sources import NchantdOfficeEDA, NchantdSourcesListPane
-from nchantrs.widgets.widgets import NchantdWidget
-from nchantrs.widgets.groups import NchantdVScrollGroupBox, NchantdHGroupBox
-from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
-from nchantdoffice.widgets.panes.document_settings import (
-    get_settings_pane_for_doc_type,
-)
+from nchantdoffice.widgets.panes.document_settings import get_settings_pane_for_doc_type
 
 # T-NEW-028 — Right-side tab visibility. The fallback list is the
 # legacy hardcoded 4-tab default returned when ``vw_tab`` is empty

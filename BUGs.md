@@ -1,6 +1,45 @@
 
 
 
+n': None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon': None, 'modon': None}}, 'apps': ['nchantrs', 'nchantdoffice'], 'app': 'nchantdoffice', 'pos': 'center'}
+2026-07-31 00:58:08,458 - nchantrs.widgets.widgets                 1044: INFO     - nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager
+2026-07-31 00:58:08,468 - nchantdoffice.utilities.referral          105: INFO     - ReferralCode created: value='NB-Z5C-1WFD'
+2026-07-31 00:58:13,579 - nchantdoffice.utilities.referral          312: WARNING  - [referral_api] GET https://nchantdoffice.com/api/affiliate/earnings failed: HTTPSConnectionPool(host='nchantdoffice.com', port=443): Max retries exceeded with url: /api/affiliate/earnings (Caused by ConnectTimeoutError(<HTTPSConnection(host='nchantdoffice.com', port=443) at 0x7e0d5b6cdb50>, 'Connection to nchantdoffice.com timed out. (connect timeout=5.0)'))
+2026-07-31 00:58:13,580 - nchantdoffice.widgets.config.referral_panel  355: INFO     - [referral_panel] using local fallback dashboard
+2026-07-31 00:58:13,604 - squirl.orgnql.conql                       143: INFO     - Cache cleanup completed
+2026-07-31 00:58:13,609 - squirl.orgnql.sonql                      2845: WARNING  - SQLT Read Failed due to no such column: position_int using this cmd SELECT [app_action_PK], [code_group_txt], [lookup_code_txt], [name_txt], [description_ltxt], [UUID], [icon_txt], [short_cut_txt], [tip_txt], [advanced_tip_txt], [widget_txt], [parameters_dict] FROM "app_action"  WHERE app_action.code_group_txt = 'base' ORDER BY position_int
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/widgets.py", line 149, in on_tab_focus
+    self.model.load_tab(self.model.tabsdata[tabn], tabn, self.pane_position)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3867, in load_tab
+    super().load_tab(tab, tabn, tabset, active_tab_position)
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 244, in load_tab
+    self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab), tabset, tab))
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3903, in load_widget
+    tabW.initWidget()
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/documents.py", line 147, in initWidget
+    self.initView()
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/config/referral_panel.py", line 95, in initView
+    cfg = super().initView()
+          ^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/documents.py", line 975, in initView
+    super().initView(cfg)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/documents.py", line 140, in initView
+    self.init_toolbar(cfg)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/documents.py", line 406, in init_toolbar
+    self.document_toolbar = NchantdButtonBar(self, cfg).initWidget(buttons)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/controls/toolbars.py", line 124, in initWidget
+    self.initView()
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/controls/toolbars.py", line 90, in initView
+    action_cfg = kahndor.Instruct(lookup(self.app, action)).override(self.config)
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/utilities/utils.py", line 115, in lookup
+    raise Exception(f"Action Lookup Config is Empty {cfg}")
+Exception: Action Lookup Config is Empty {}
+
+
 2026-07-31 00:35:28,896 - nchantdoffice.widgets.config.settings     211: INFO     - [settings] _initialize_doc_type_selector failed: 'NchantdDropDown' object has no attribute 'currentText'
 Traceback (most recent call last):
   File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/config/settings.py", line 207, in _initialize_doc_type_selector
