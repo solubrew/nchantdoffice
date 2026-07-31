@@ -179,7 +179,17 @@ class NchantdOfficeTabs(NchantdTabSet):
         super().dragMoveEvent(event)
 
     def dropEvent(self, event):
-        """Handle tab/tree drops"""
+        """Handle tab/tree drops
+
+        T-NEW-031: when a tab is dropped onto the right-pane tabset
+        (``self.tabset == "right"``), the drop is treated as a
+        "scratch view" open. The tab is added to the right pane's
+        in-memory tabsdata via ``cmd_open_tab_in_right_scratch`` --
+        NO DB write. The right-pane SQL filter
+        (``tabset_type_txt = "right"``) naturally excludes the
+        dropped tab on the next reload, so the tab "springs back"
+        to its original tabset.
+        """
         mime_data = event.mimeData()
 
         if mime_data.hasFormat("application/x-nchantd-tab"):
@@ -189,10 +199,20 @@ class NchantdOfficeTabs(NchantdTabSet):
             target_index = self.tabBar().tabAt(event.pos()) if hasattr(self.tabBar(), "tabAt") else -1
 
             logma.info(f"[tabs] dropEvent (tab): source={tab_index} target={target_index}")
-            if tab_index != target_index and target_index >= 0:
-                self.tab_moved.emit(tab_index, target_index)
 
-            event.acceptProposedAction()
+            # T-NEW-031: detect right-pane drops. The
+            # ``self.tabset`` attribute is set by buildTabSet --
+            # "center" for the center pane, "right" for the
+            # right pane. On a right-pane drop, the user
+            # intent is "open this tab in the right pane as a
+            # scratch view" -- the tab is added to the right
+            # pane's in-memory tabsdata, NOT persisted.
+            if getattr(self, "tabset", None) == "right":
+                self._handle_tab_dropped_in_right_scratch(tab_index)
+                event.acceptProposedAction()
+            elif tab_index != target_index and target_index >= 0:
+                self.tab_moved.emit(tab_index, target_index)
+                event.acceptProposedAction()
 
         elif mime_data.hasFormat("application/x-nchantd-tree-item"):
             # Tree item dropped on tabs - open document
@@ -204,6 +224,65 @@ class NchantdOfficeTabs(NchantdTabSet):
             event.acceptProposedAction()
 
         super().dropEvent(event)
+
+    def _handle_tab_dropped_in_right_scratch(self, source_tab_pos):
+        """T-NEW-031: open a tab in the right pane as a scratch
+        view. Resolves the source tab's dict from the source
+        position via the tab model, then calls
+        ``cmd_open_tab_in_right_scratch`` on the application
+        model. NO DB write -- the right pane is a scratch view.
+
+        Args:
+            source_tab_pos: int -- the source tab's position in
+                the tab model (from the mime payload). -1 if
+                unparseable.
+        """
+        if source_tab_pos < 0:
+            logma.debug(
+                f"[tabs] _handle_tab_dropped_in_right_scratch: "
+                f"skipping (source_tab_pos={source_tab_pos})"
+            )
+            return
+        # Resolve the source tab dict from the tab model. The
+        # source could be the center pane (cross-pane drop) or
+        # the right pane itself (re-drop on right). Either way,
+        # we look up the tab dict by position. Tabs are stored
+        # in ``self.model.tabsdata`` as a list of dicts.
+        source_tab = None
+        try:
+            model = getattr(self, "model", None)
+            tabsdata = getattr(model, "tabsdata", None) if model is not None else None
+            if isinstance(tabsdata, list) and 0 <= source_tab_pos < len(tabsdata):
+                source_tab = tabsdata[source_tab_pos]
+        except Exception as e:
+            logma.warning(
+                f"[tabs] _handle_tab_dropped_in_right_scratch: "
+                f"source-tab lookup failed ({type(e).__name__}: {e})"
+            )
+        if source_tab is None:
+            logma.debug(
+                f"[tabs] _handle_tab_dropped_in_right_scratch: "
+                f"could not resolve source tab (pos={source_tab_pos})"
+            )
+            return
+        # Call the canonical model method. The handler records
+        # the original parent and adds the tab to the right
+        # pane's tabsdata -- no DB write.
+        try:
+            app = getattr(self, "app", None)
+            model = getattr(app, "model", None) if app is not None else None
+            if model is not None and hasattr(model, "cmd_open_tab_in_right_scratch"):
+                model.cmd_open_tab_in_right_scratch(source_tab)
+                logma.debug(
+                    f"[tabs] _handle_tab_dropped_in_right_scratch: "
+                    f"opened tid={source_tab.get('tid_txt')!r} in right pane (scratch)"
+                )
+        except Exception as e:
+            logma.error(
+                f"[tabs] _handle_tab_dropped_in_right_scratch: "
+                f"persist failed ({type(e).__name__}: {e})",
+                exc_info=True,
+            )
 
     def setCurrentWidget(self, widget):
         """Override to emit signal when current document changes"""

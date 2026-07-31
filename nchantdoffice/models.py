@@ -124,6 +124,15 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.show_quick_launch_toolbar = None
         self.today = self.store.time.get_current_datetime_str()
         self.toolbox_config = self.config.dikt.get("toolbox", {})
+        # T-NEW-031: in-memory registry of tabs that have been
+        # dropped into the right pane as a "scratch view". Keyed
+        # by ``tid_txt``; value is the original ``pid_txt`` (the
+        # source node) so a future explicit-undo gesture can
+        # re-home the tab. The right-pane SQL filter
+        # (``tabset_type_txt = "right"``) naturally excludes these
+        # on the next reload, so the tab "springs back" to its
+        # original tabset without any DB write.
+        self._right_scratch_tabs = {}
 
     def initModel(self, reset=None):
         """"""
@@ -822,6 +831,93 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         except Exception as e:
             logma.error(
                 f"[model] cmd_set_tab_parent failed: {e}",
+                exc_info=True,
+            )
+        return self
+
+    def cmd_open_tab_in_right_scratch(self, tab):
+        """Open a tab in the right pane as a "scratch view" (T-NEW-031).
+
+        Adds the tab to the right pane's in-memory ``tabsdata``
+        so the user sees the tab immediately. Records the
+        tab's original parent (``tab.pid_txt``) in
+        ``self._right_scratch_tabs[tid_txt]`` so a future
+        explicit-undo gesture can re-home the tab.
+
+        Crucially, this method does NOT write to the DB. The
+        right-pane SQL filter (``tabset_type_txt = "right"``)
+        naturally excludes the dropped tab on the next reload
+        (``buildTabSet``), so the tab "springs back" to its
+        original tabset (center, by default) without any
+        persistence. The right pane is treated as a "scratch
+        view" -- not a new parent.
+
+        Defensive: rejects a tab dict with no ``tid_txt`` --
+        the in-memory registry needs a key to look up the
+        original parent.
+
+        Returns ``self`` for chainable call sites (mirrors the
+        Sprint 23 / T-NEW-030 return-self pattern).
+
+        Args:
+            tab: A dict carrying ``tid_txt`` (the tab's primary
+                key). May also carry ``pid_txt`` (the original
+                parent node's primary key), ``name_txt``, etc.
+                -- the ``pid_txt`` is recorded for explicit-undo
+                use; other fields are passed through to the
+                right pane's tabsdata.
+        """
+        tid = (tab or {}).get("tid_txt")
+        if not tid:
+            logma.error(
+                f"[model] cmd_open_tab_in_right_scratch: tab dict "
+                f"missing tid_txt; refusing to open ({tab!r})"
+            )
+            return self
+        try:
+            # Record the original parent for explicit-undo. The
+            # value is ``pid_txt`` (the source node). When
+            # absent, store None -- the marker is still useful
+            # as a "this tab was right-scratched" flag.
+            # ``setdefault`` is defensive: the __init__ init
+            # covers the real-path case, but ``__new__``-built
+            # test mocks may skip __init__.
+            original_pid = tab.get("pid_txt")
+            scratch = getattr(self, "_right_scratch_tabs", None)
+            if scratch is None:
+                self._right_scratch_tabs = {}
+                scratch = self._right_scratch_tabs
+            scratch[tid] = original_pid
+            # Add the tab to the right pane's in-memory tabsdata.
+            # The right pane is identified via the app view's
+            # panes dict -- the same path the T-NEW-030
+            # trees.py:_handle_tab_dropped_on_node uses.
+            app = getattr(self, "app", None)
+            view = getattr(app, "view", None) if app is not None else None
+            panes = getattr(view, "panes", None) if view is not None else None
+            right_pane = panes.get("right") if isinstance(panes, dict) else None
+            right_model = getattr(right_pane, "model", None) if right_pane is not None else None
+            right_tabsdata = getattr(right_model, "tabsdata", None) if right_model is not None else None
+            if right_tabsdata is not None:
+                # APPEND -- don't replace. The right pane may
+                # already have its seed tabs (Journal, ToolBox,
+                # etc.) and we want to add to them, not clobber.
+                if tab not in right_tabsdata:
+                    right_tabsdata.append(tab)
+                logma.debug(
+                    f"[model] cmd_open_tab_in_right_scratch: "
+                    f"appended tid={tid!r} (original_pid={original_pid!r}); "
+                    f"right pane now has {len(right_tabsdata)} tabs"
+                )
+            else:
+                logma.warning(
+                    f"[model] cmd_open_tab_in_right_scratch: right "
+                    f"pane not available; tid={tid!r} not added "
+                    f"in-memory (will need explicit UI wiring)"
+                )
+        except Exception as e:
+            logma.error(
+                f"[model] cmd_open_tab_in_right_scratch failed: {e}",
                 exc_info=True,
             )
         return self
