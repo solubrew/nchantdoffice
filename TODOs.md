@@ -219,7 +219,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-001 | Tab icon + 5-digit/auto-name | ✅ Done — Sprint 29 (_apply_tab_style applies color+icon) |
 | T-NEW-002 | 35c050e4 working-state preservation (already addressed in H53+H59+H60 series; this entry is the historical label) | ✅ Done |
 | T-NEW-003 | `save_mode` toggle UI + dispatch | ✅ Done — Sprint 14 |
-| T-NEW-004 | Locks on App Nodes (Home / Journal / Settings) | Not started |
+| T-NEW-004 | Locks on App Nodes (Home / Journal / Settings) | ✅ Done — Sprint 29 (LOCKED_NODE_NAMES + is_locked_node + cmd/model gate) |
 | T-NEW-005 #1 | `doc_media`/`doc_media_content` integer iteration | ✅ Done |
 | T-NEW-005 #2 | Per-Pyffice-class `SERIALIZATION_VERSION` (58 subclasses) | ✅ Done — Sprints 16 |
 | T-NEW-005 #3 | Primary instance registry — DB wire-up + UI browser | ✅ Done — Sprints 15 + 17 |

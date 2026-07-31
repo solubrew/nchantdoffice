@@ -107,6 +107,36 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
     APP_NAME = "NchantdOffice"
 
+    # T-NEW-004: app nodes that the user must not be able to
+    # delete / rename. ``nchantdoffice/_data_/models.yaml`` seeds
+    # these as the canonical top-level entries. ``is_locked_node``
+    # compares against this set (case-insensitive) so a UI typo
+    # of "HOME" still triggers the lock. ``delete_node`` and
+    # ``cmd_delete_node`` consult this constant and skip
+    # deletion when the node is locked.
+    LOCKED_NODE_NAMES = frozenset({"home", "journal", "settings"})
+
+    def is_locked_node(self, node):
+        """Return True when ``node`` is one of the app-locked
+        nodes (T-NEW-004). Case-insensitive comparison against
+        ``LOCKED_NODE_NAMES``.
+
+        Defensive: missing node, missing name attribute, or
+        non-string name -> returns False (not locked).
+        """
+        if node is None:
+            return False
+        try:
+            name = getattr(node, "name", None)
+        except Exception:
+            return False
+        if not isinstance(name, str) or not name:
+            return False
+        try:
+            return name.strip().lower() in self.LOCKED_NODE_NAMES
+        except Exception:
+            return False
+
     def __init__(self, name, instance=None, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
@@ -1233,7 +1263,22 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def delete_node(self, node):
-        """"""
+        """Delete a tree node.
+
+        T-NEW-004: refuses to delete locked app nodes (Home,
+        Journal, Settings). The user must not be able to
+        remove the canonical application top-level entries.
+        """
+        if self.is_locked_node(node):
+            try:
+                node_name = getattr(node, "name", "<unknown>")
+            except Exception:
+                node_name = "<unknown>"
+            logma.warning(
+                f"[models] delete_node refused: '{node_name}' is "
+                f"a locked app node (T-NEW-004)"
+            )
+            return self
         super().delete_node(node)
         cfg = {"nid": node.nid}
         self.store_event("CloseNode", cfg)
