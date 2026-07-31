@@ -42,8 +42,7 @@ from nchantrs.widgets.controls.checkboxes import NchantdCheckboxWidget
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.libraries.pyqt import QTimer
 from nchantrs.libraries import pyqt
-from pycurity.pysan import Sanitized
-from nchantdoffice.widgets.panes.sources import NchantdSourceEditPane, NchantdSourcesListPane
+from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -137,6 +136,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         if resolved_path and self._looks_like_ipynb_path(resolved_path):
             try:
                 import os
+
                 if os.path.isfile(resolved_path):
                     self.open_notebook(resolved_path)
             except Exception as e:
@@ -224,8 +224,10 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         named factory; satisfies the lambda-antipattern auditor and
         makes the slot testable in isolation.
         """
+
         def _handler(_p=last_path):
             self.open_notebook(_p)
+
         return _handler
 
     def initWidget(self):
@@ -251,8 +253,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 seen.add(url)
         return history
 
-
-
     def _looks_like_ipynb_path(self, path):
         """Return True if ``path`` is a string ending in ``.ipynb``."""
         return bool(path) and isinstance(path, str) and path.lower().endswith(".ipynb")
@@ -268,18 +268,21 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.warning(f"[notebook] open_notebook: not a .ipynb path: {path}")
             return self
         import os
+
         path = os.path.abspath(path)
         if not os.path.isfile(path):
             logma.warning(f"[notebook] open_notebook: file missing: {path}")
             return self
         try:
             import urllib.parse
+
             self.current_notebook_path = path
             if hasattr(self, "config"):
                 self.config.dikt["last_notebook_path"] = path
             target = f"{self.server_url}/notebooks/{urllib.parse.quote(os.path.basename(path))}"
             if hasattr(self, "browser") and self.browser is not None and hasattr(self.browser, "setUrl"):
                 from PySide6 import QtCore
+
                 self.browser.setUrl(QtCore.QUrl(target))
             logma.info(f"[notebook] open_notebook: navigated to {target}")
         except Exception as e:
@@ -711,10 +714,12 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def get_kernel(self):
         """Return the stored value of get_kernel."""
-        return getattr(self, 'kernel_name', 'python3') or 'python3'
+        return getattr(self, "kernel_name", "python3") or "python3"
+
     def get_server_port(self):
         """Return the stored value of get_server_port."""
-        return getattr(self, 'server_port', 8888) or 8888
+        return getattr(self, "server_port", 8888) or 8888
+
     def get_config_autostart_server(self):
         """Return the auto-start-server flag from the config.
 
@@ -722,6 +727,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         boolean. Defaults to ``False`` when not set.
         """
         return bool(self.config.dikt.get("autostart_server", False))
+
     def cmd_cell_type_change(self, event=None, *args, **kwargs):
         """Update the active cell's cell_type based on the dropdown.
 
@@ -732,7 +738,9 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         if not hasattr(self, "cell_type_select") or self.cell_type_select is None:
             return self
         new_type = None
-        getter = getattr(self.cell_type_select, "currentText", None) or getattr(self.cell_type_select, "get_value", None)
+        getter = getattr(self.cell_type_select, "currentText", None) or getattr(
+            self.cell_type_select, "get_value", None
+        )
         if callable(getter):
             new_type = getter()
         if not new_type:
@@ -753,6 +761,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 pass
         self.config.dikt["cell_type"] = new_type
         return self
+
     def get_cell_type(self):
         """Return the cell type of the currently active cell.
 
@@ -771,6 +780,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 except Exception:
                     pass
         return self.config.dikt.get("cell_type", "code")
+
     def get_completions(self, code, cursor_pos):
         """Get code completions at cursor position
 
@@ -817,11 +827,11 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         """
         try:
             import json
+
             nb = {
                 "cells": self.cells or [],
                 "metadata": {
-                    "kernelspec": {"name": getattr(self, "kernel_name", "python3"),
-                                   "display_name": "Python 3"},
+                    "kernelspec": {"name": getattr(self, "kernel_name", "python3"), "display_name": "Python 3"},
                 },
                 "nbformat": 4,
                 "nbformat_minor": 5,
@@ -927,6 +937,13 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         }
         self.autostart_checkbox = NchantdCheckboxWidget(self, cfg)
         items[cnt]["widget"] = self.autostart_checkbox
+        cnt += 1
+        default_action = {"action": "insert_generic_action", "type": "custom"}
+        if cnt not in items:
+            items[cnt] = default_action
+        cfg = {"label": "File Name: ", "layout": "horizontal", "file_path": self.document.file_path}
+        self.file_pane = NchantdFileDetailsPane(self, cfg)
+        items[cnt]["widget"] = self.file_pane
         cnt += 1
         return items
 
@@ -1160,13 +1177,22 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                             did = getattr(self.document, "did", None) if hasattr(self, "document") else None
                             if did is not None:
                                 import json as _json
+
                                 store.execute(
                                     "INSERT OR REPLACE INTO ds_document_internal_state (did, payload, updated_at) VALUES (?, ?, ?)",
-                                    (did, _json.dumps({
-                                        "notebook_bytes": serialized.decode("utf-8", errors="replace")
-                                        if isinstance(serialized, (bytes, bytearray))
-                                        else str(serialized),
-                                    }), __import__("datetime").datetime.utcnow().isoformat()),
+                                    (
+                                        did,
+                                        _json.dumps(
+                                            {
+                                                "notebook_bytes": (
+                                                    serialized.decode("utf-8", errors="replace")
+                                                    if isinstance(serialized, (bytes, bytearray))
+                                                    else str(serialized)
+                                                ),
+                                            }
+                                        ),
+                                        __import__("datetime").datetime.utcnow().isoformat(),
+                                    ),
                                 )
                         except Exception:
                             # Table may not exist yet - silently ignore.
@@ -1196,7 +1222,8 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 return False
             try:
                 cursor = store.execute(
-                    "SELECT payload FROM ds_document_internal_state WHERE did = ?", (did,),
+                    "SELECT payload FROM ds_document_internal_state WHERE did = ?",
+                    (did,),
                 )
             except Exception:
                 return False
@@ -1211,14 +1238,12 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             if not payload_text:
                 return False
             import json as _json
+
             payload = _json.loads(payload_text)
             notebook_bytes = payload.get("notebook_bytes")
             if not notebook_bytes:
                 return False
-            editor = (
-                getattr(self, "document_editor", None)
-                or getattr(self, "editor", None)
-            )
+            editor = getattr(self, "document_editor", None) or getattr(self, "editor", None)
             if editor is None:
                 return False
             if hasattr(editor, "setPlainText"):
