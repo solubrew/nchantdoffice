@@ -231,7 +231,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-026 | Finish Affiliate Manager tab | ✅ Done — Sprint 29 (typo fixed; PyKeyStore wire; ad-pane surface) |
 | T-NEW-027 | Per-document-type settings pane (Interface Tab) | ✅ Done — Sprint 29 (hybrid / Option C: shared base + 4 subclasses) |
 | T-NEW-028 | Right Pane tab visibility config | ✅ Done — Sprint 29 (queries vw_tab for tabset_type_txt="right") |
-| T-NEW-029 | Tab drag-init only on tab-name area | 🆕 Logged (2026-07-30) — design decision required |
+| T-NEW-029 | Tab drag-init only on tab-name area | ✅ Done — Sprint 29 (_is_in_tab_name_area; named sub-widget approach) |
 | T-NEW-030 | Drag tab to a different node — persist parent | ✅ Done — Sprint 29 (cmd_set_tab_parent via records+columns shape) |
 | T-NEW-031 | Drag tab to rightside tabset — reload to original | ✅ Done — Sprint 29 (in-memory scratch view, no DB write) |
 | T-NEW-032 | Tab name updates to file name on file open (Interface Tab config) | ✅ Done — Sprint 29 (cfg-dikt flag + model _file_open_cfg helper) |

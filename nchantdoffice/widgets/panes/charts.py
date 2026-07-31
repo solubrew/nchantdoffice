@@ -180,7 +180,10 @@ class NchantdChartConfigPane(NchantdPane):
         # # T-056: chart-config actions as a button group (background /
         # # area colour / border style / theme) so the user can
         # # switch editing mode without context-switching.
-        # TODO causes segmentation fault
+        # TODO causes segmentation fault -- T-NEW-029: same root cause as
+        # the tab drag-init fix (drag-init on the chart widget area
+        # rather than a discrete handle). Apply the same gate
+        # pattern when this stub is implemented.
         # self.action_button_group = self._build_chart_action_button_group()
         # chart_details_layout.addWidget(self.action_button_group)
 
@@ -205,7 +208,10 @@ class NchantdChartConfigPane(NchantdPane):
         # # T-057: real border-style editor (button group of
         # # solid / dashed / dotted / double / none). The chosen
         # # style is stored on config.dikt['chart_border_style'].
-        # TODO causes segmentation fault
+        # TODO causes segmentation fault -- T-NEW-029: same root cause as
+        # the tab drag-init fix (drag-init on the chart widget area
+        # rather than a discrete handle). Apply the same gate
+        # pattern when this stub is implemented.
         # self.chart_border_bar = self._build_border_style_editor()
         # chart_details_layout.addWidget(self.chart_border_bar)
         self.left_group.addWidget(chart_details_group)

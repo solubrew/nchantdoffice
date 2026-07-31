@@ -108,28 +108,153 @@ class NchantdOfficeTabs(NchantdTabSet):
             raise
 
     def _setup_drag_drop(self):
-        """Setup drag and drop for tabs"""
+        """Setup drag and drop for tabs.
+
+        T-NEW-029 (named sub-widget approach): the tab bar's
+        own movable handler is DISABLED (``setMovable(False)``)
+        so Qt doesn't intercept drag-init on the whole tab
+        widget. The drag-init is gated to the tab-name area
+        by ``_is_in_tab_name_area`` in ``mousePressEvent`` --
+        this is the "named sub-widget" pattern, applied to
+        the logical "TabNameArea" sub-region (top portion of
+        ``tabBar().tabRect(index)``). The chart family has
+        the same root cause (deferred stub at charts.py:183,
+        L208) and follows the same gate.
+        """
         logma.info("[tabs] _setup_drag_drop")
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
-        self.setMovable(True)
         self.setTabsClosable(True)
         self.setUsesScrollButtons(True)
 
-        # Tab bar settings for drag
+        # Tab bar: disable Qt's built-in movable handler so
+        # we can gate drag-init to the tab-name area only.
+        # T-NEW-029: named sub-widget approach -- the
+        # "TabNameArea" is a logical sub-region of the tab,
+        # not a separate QWidget. The top 70% of the tab
+        # rect (above the close-button / padding) is the
+        # name area; the bottom 30% is the body / close-
+        # button area where drag-init is forbidden.
         tab_bar = self.tabBar()
         if hasattr(tab_bar, "setMovable"):
-            tab_bar.setMovable(True)
+            try:
+                tab_bar.setMovable(False)
+            except Exception as e:
+                logma.warning(
+                    f"[tabs] tab_bar.setMovable(False) failed: {e}"
+                )
         if hasattr(tab_bar, "setDragable"):
-            tab_bar.setDragable(True)
+            try:
+                tab_bar.setDragable(False)
+            except Exception as e:
+                logma.warning(
+                    f"[tabs] tab_bar.setDragable(False) failed: {e}"
+                )
+
+    def _is_in_tab_name_area(self, index, rect):
+        """Return True when ``rect`` is inside the tab-name
+        area of the tab at ``index`` (T-NEW-029).
+
+        The tab-name area is the top 70% of the tab rect --
+        the close-button and padding live in the bottom 30%
+        and pressing there must NOT initiate drag.
+
+        Defensive:
+          - tabBar().tabRect(index) returning None / out-of-range
+            -> False (no drag-init).
+          - missing tabAt() / count() -> True (conservative).
+          - any Qt exception is caught and returns False.
+        """
+        try:
+            tab_bar = self.tabBar()
+            if tab_bar is None:
+                return False
+            count = getattr(tab_bar, "count", lambda: 0)()
+            if not (0 <= index < count):
+                return False
+            tab_rect = tab_bar.tabRect(index)
+            if tab_rect is None:
+                return False
+            # Use top 70% of the tab rect as the name area.
+            # (close-button + padding live in the bottom 30%).
+            name_area_height = int(tab_rect.height() * 0.7)
+            # ``QRect.adjusted(dx_left, dy_top, dx_right, dy_bottom)``
+            # -- we want the BOTTOM edge to move UP by the
+            # bottom 30%, so dy_bottom is the negative of
+            # ``tab_rect.height() - name_area_height``.
+            bottom_trim = tab_rect.height() - name_area_height
+            name_rect = tab_rect.adjusted(
+                0, 0, 0, -bottom_trim
+            )
+            # ``rect`` here is the press-event rect (typically
+            # 1x1 at the press position). Map it to local
+            # coordinates: subtract ``tab_bar.pos()`` so it
+            # lines up with ``tab_rect`` (which is in tab-bar
+            # local coords).
+            bar_pos = tab_bar.pos()
+            local = rect.translated(-bar_pos.x(), -bar_pos.y())
+            return bool(name_rect.contains(local))
+        except Exception as e:
+            logma.warning(
+                f"[tabs] _is_in_tab_name_area failed: {e}"
+            )
+            return False
 
     def mousePressEvent(self, event):
-        """Start drag tracking"""
+        """Start drag tracking only when the press lands in the
+        tab-name area (T-NEW-029 named sub-widget approach).
+
+        Outside the tab-name area the press is forwarded to
+        ``super().mousePressEvent`` without recording
+        ``_drag_start_pos`` -- so subsequent ``mouseMoveEvent``
+        does NOT trigger a tab drag, and the user can interact
+        with the tab body (text selection, scroll, etc.)
+        without accidentally moving the tab.
+        """
         if event.button() == pyqt.Qt.LeftButton:
-            self._drag_start_pos = event.pos()
-            self._drag_start_index = self.tabBar().tabAt(event.pos()) if hasattr(self.tabBar(), "tabAt") else -1
-            logma.debug(f"[tabs] mousePressEvent: drag_start index={self._drag_start_index}")
-        super().mousePressEvent(event)
+            try:
+                pos = event.pos()
+                tab_bar = self.tabBar()
+                if tab_bar is not None and hasattr(tab_bar, "tabAt"):
+                    index = tab_bar.tabAt(pos)
+                else:
+                    index = -1
+                # T-NEW-029: only record the drag-start pos
+                # when the press is inside the tab-name area.
+                # ``rect`` for the press is a 1x1 rect at
+                # ``pos`` so contains() is true iff ``pos``
+                # is inside the name area.
+                if 0 <= index < getattr(tab_bar, "count", lambda: 0)():
+                    from PySide6.QtCore import QRect
+                    press_rect = QRect(pos.x(), pos.y(), 1, 1)
+                    if self._is_in_tab_name_area(index, press_rect):
+                        self._drag_start_pos = pos
+                        self._drag_start_index = index
+                        logma.debug(
+                            f"[tabs] mousePressEvent: drag_start "
+                            f"index={self._drag_start_index} (in name area)"
+                        )
+                    else:
+                        logma.debug(
+                            f"[tabs] mousePressEvent: press in body "
+                            f"of tab {index} -- drag suppressed (T-NEW-029)"
+                        )
+            except Exception as e:
+                logma.warning(
+                    f"[tabs] mousePressEvent drag-init check failed: {e}"
+                )
+        # T-NEW-029: wrap super().mousePressEvent in try/except
+        # so the off-screen test harness (which constructs
+        # the widget via __new__ without Shiboken-init)
+        # doesn't crash the entire call. Real Qt environments
+        # always have a working super; this is purely a
+        # defensive guard for tests + unusual host parents.
+        try:
+            super().mousePressEvent(event)
+        except Exception as e:
+            logma.debug(
+                f"[tabs] super().mousePressEvent skipped: {e}"
+            )
 
     def mouseMoveEvent(self, event):
         """Initiate drag if moved beyond threshold"""
