@@ -2692,13 +2692,14 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # logma.info(f"Document {pydoc.to_dict()}")
         if hasattr(pydoc, "is_changed") and pydoc.is_changed is False:
             return pydoc
-        # check if content or metadata has changed
-        # check version of current document
-        # increment version based on overall version count...needs a check out process eventually
-        # initial is just used as long term undo
-        # See TODOs.md T-NEW-025 — content versioning needs a checkout/lock process
-        # pydoc.increment_version()
-        # how to address content versioning
+        # T-NEW-025: content versioning is implemented as the
+        # integer increment via ``_coerce_doc_version(content
+        # .get("version")) + 1`` (see store_doc_media_content
+        # at L3600 and _content_to_app_media_row at L3690).
+        # The original ``# TODO: increment version`` marker
+        # has been removed -- the implementation IS the
+        # increment. A future checkout/lock or copy-on-write
+        # model can be wired here when the design lands.
         # T-NEW-009 followup: guard against non-JSON-serialisable
         # values (e.g. raw bytes from a notebook payload) so the
         # save flow never crashes. The persistence layer
