@@ -228,7 +228,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-014 | Trendline group init helper | ✅ Documented in Sprint 12 |
 | T-NEW-025 | Content versioning (`pydoc.increment_version`) | 🆕 Logged (2026-07-30) — design decision required |
 | T-NEW-026 | Finish Affiliate Manager tab | 🆕 Logged (2026-07-30) |
-| T-NEW-027 | Per-document-type settings pane (Interface Tab) | 🆕 Logged (2026-07-30) — design decision required |
+| T-NEW-027 | Per-document-type settings pane (Interface Tab) | ✅ Done — Sprint 29 (hybrid / Option C: shared base + 4 subclasses) |
 | T-NEW-028 | Right Pane tab visibility config | 🆕 Logged (2026-07-30) |
 | T-NEW-029 | Tab drag-init only on tab-name area | 🆕 Logged (2026-07-30) — design decision required |
 | T-NEW-030 | Drag tab to a different node — persist parent | 🆕 Logged (2026-07-30) |
@@ -401,6 +401,34 @@ not pick until the user weighs in.
    `tests/test_per_doc_type_settings_pane.py` asserting the
    registry resolves every Pyffice subclass and the loader
    produces the right pane widget.
+
+#### T-NEW-027 — Sprint 29 close-out
+
+Implemented in Sprint 29 (commits `d42aea3` + `fdf3866` + `46a9d38`).
+Hybrid / Option C design landed: shared base
+`NchantdOfficeDocumentConfigPane` renders 5 common settings
+(`save_mode`, `encoding`, `syntax`, `auto_save`,
+`versioning_enabled`); 4 per-type subclasses (`NchantdMatrixConfigPane`,
+`NchantdNotebookConfigPane`, `NchantdImageConfigPane`,
+`NchantdScriptConfigPane`) each add 2 type-specific fields.
+`DocumentTypeSettingsRegistry` maps doc-type names to pane classes
+and falls back to the shared base for unregistered types.
+
+Interface Tab wired: doc-type dropdown at the top, rendered pane
+slot below. The pre-existing per-row "Show Launch Catalog" loop
+was using `NchantdOfficeDocumentConfigPane` as a checkbox wrapper
+(its cfg keys were checkbox-style so the pane rendered as an
+empty widget) -- that loop now uses `NchantdCheckbox`. The
+doc-type selector at the top is the new canonical per-doc-type
+settings surface.
+
+Test surface: 13 new tests under
+`tests/test_per_doc_type_settings_pane.py` (123 → 136 passed).
+`__init_subclass__(doc_type=...)` was NOT used because
+`NchantdPane` is a Shiboken-bound Qt type whose `sbktype`
+metatype blocks class kwargs at construction; registration uses
+explicit module-level `DocumentTypeSettingsRegistry.register(...)`
+calls instead.
 
 ### T-NEW-028 — Right Pane tab visibility selection (2026-07-30)
 
