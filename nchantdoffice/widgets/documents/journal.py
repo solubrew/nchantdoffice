@@ -71,6 +71,136 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
     def initModel(self):
         """ """
         super().initModel()
+
+        # TODO need to fix the restore functionality so that Journal restores properly on each tab change
+        #  current storage schema for journal document
+        # {
+        #     "content": "--|2026-07-30 23:09:00|--\nis data sotored?",
+        #     "document_type": "script",
+        #     "pages": {
+        #         "0": {
+        #             "entries": {
+        #                 "0": {
+        #                     "did": "06a6c11d-5e43-725b-8000-b5aa78470430",
+        #                     "name": "06a6c11d-5e43-725b-8000-b5aa78470430",
+        #                     "description": "",
+        #                     "meta_data": {
+        #                         "author": "",
+        #                         "context": "",
+        #                         "editors": [],
+        #                         "encoding": "utf-8",
+        #                         "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        #                         "location": "internal",
+        #                         "path": "",
+        #                         "syntax": "plain-text",
+        #                         "semver": "0.1.0",
+        #                         "schema_version": [1, 0, 0],
+        #                         "creon_dttm": "2026-07-31 03:09:09",
+        #                         "mod_dttm": "2026-07-31 03:09:09",
+        #                         "tags": [],
+        #                     },
+        #                     "unit": {
+        #                         "data_format": {},
+        #                         "font": {
+        #                             "size": null,
+        #                             "color": {
+        #                                 "did": "06a6c11d-5e46-7e0b-8000-08d9611cbf84",
+        #                                 "name": "06a6c11d-5e46-7e0b-8000-08d9611cbf84",
+        #                                 "description": "",
+        #                                 "meta_data": {
+        #                                     "author": "",
+        #                                     "context": "",
+        #                                     "editors": [],
+        #                                     "encoding": "utf-8",
+        #                                     "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        #                                     "location": "internal",
+        #                                     "path": "",
+        #                                     "syntax": "plain-text",
+        #                                     "semver": "0.1.0",
+        #                                     "schema_version": [1, 0, 0],
+        #                                     "creon_dttm": "2026-07-31 03:09:09",
+        #                                     "mod_dttm": "2026-07-31 03:09:09",
+        #                                     "tags": [],
+        #                                 },
+        #                                 "unit": {
+        #                                     "color_name": "black",
+        #                                     "hex": "#000000",
+        #                                     "rgb": [0, 0, 0],
+        #                                     "rgba": null,
+        #                                     "xyz": null,
+        #                                 },
+        #                             },
+        #                             "background": {
+        #                                 "did": "06a6c11d-5e4a-77b0-8000-e9c3d92109a0",
+        #                                 "name": "06a6c11d-5e4a-77b0-8000-e9c3d92109a0",
+        #                                 "description": "",
+        #                                 "meta_data": {
+        #                                     "author": "",
+        #                                     "context": "",
+        #                                     "editors": [],
+        #                                     "encoding": "utf-8",
+        #                                     "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        #                                     "location": "internal",
+        #                                     "path": "",
+        #                                     "syntax": "plain-text",
+        #                                     "semver": "0.1.0",
+        #                                     "schema_version": [1, 0, 0],
+        #                                     "creon_dttm": "2026-07-31 03:09:09",
+        #                                     "mod_dttm": "2026-07-31 03:09:09",
+        #                                     "tags": [],
+        #                                 },
+        #                                 "unit": {
+        #                                     "color_name": "black",
+        #                                     "hex": "#000000",
+        #                                     "rgb": [0, 0, 0],
+        #                                     "rgba": null,
+        #                                     "xyz": null,
+        #                                 },
+        #                             },
+        #                             "highlight": {
+        #                                 "did": "06a6c11d-5e4e-70d7-8000-b218de77aa7a",
+        #                                 "name": "06a6c11d-5e4e-70d7-8000-b218de77aa7a",
+        #                                 "description": "",
+        #                                 "meta_data": {
+        #                                     "author": "",
+        #                                     "context": "",
+        #                                     "editors": [],
+        #                                     "encoding": "utf-8",
+        #                                     "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        #                                     "location": "internal",
+        #                                     "path": "",
+        #                                     "syntax": "plain-text",
+        #                                     "semver": "0.1.0",
+        #                                     "schema_version": [1, 0, 0],
+        #                                     "creon_dttm": "2026-07-31 03:09:09",
+        #                                     "mod_dttm": "2026-07-31 03:09:09",
+        #                                     "tags": [],
+        #                                 },
+        #                                 "unit": {
+        #                                     "color_name": "black",
+        #                                     "hex": "#000000",
+        #                                     "rgb": [0, 0, 0],
+        #                                     "rgba": null,
+        #                                     "xyz": null,
+        #                                 },
+        #                             },
+        #                             "style": null,
+        #                             "bold": null,
+        #                             "italic": null,
+        #                             "underline": null,
+        #                             "subscript": null,
+        #                             "superscript": null,
+        #                         },
+        #                         "html": "",
+        #                         "value": "--|2026-07-30 23:09:00|--\nis data sotored?",
+        #                         "alignment": {"horizontal": {}, "vertical": null},
+        #                     },
+        #                 }
+        #             }
+        #         }
+        #     },
+        # }
+
         logma.info(f"initModel")
         scope = self.config.dikt.get("scope", "TODAY")
         datetime = dt.datetime.now()
@@ -137,6 +267,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         logma.info(f"Data {self.document.pages}")
         logma.info(f"Document {self.document.to_dict()}")
         self.document.parse_content(content)
+
         # FIX (was double-save bug): Removed redundant super().save() call.
         # super().save() was nested inside `if content != self.document.content`
         # which created an inconsistent save path. self.document.save() handles
@@ -144,7 +275,6 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         if content != self.document.content:
             self.document.set_content(content)
         logma.info(f"Save Content {self.document.content}")
-        # self.document.save() increments versions and (internal encryption..future)
         self.document.save()
         logma.info(f"Save Path {path}")
         if path:
