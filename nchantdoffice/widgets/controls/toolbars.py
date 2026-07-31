@@ -226,7 +226,6 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         the create.
         """
         from nchantrs.libraries import pyqt
-        from pyqt import QtWidgets
         cfg = args[0]["action"].action
         # P1 name-entry dialog: respect the config flag.
         prompt = bool(
@@ -235,7 +234,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         name = None
         if prompt:
             _inherited_name = uuid()[-5:]  # fallback if user clears the field
-            _name, ok = QtWidgets.QInputDialog.getText(
+            _name, ok = pyqt.QWidgets.QInputDialog.getText(
                 self,
                 "Name New Node",
                 "Node name:",
@@ -401,7 +400,6 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         name.
         """
         from nchantrs.libraries import pyqt
-        from pyqt import QtWidgets
         logma.info(f"Launch Note {signal}")
         cfg = args[0]["action"].action
         pid = self.app.view.panes["left"].tree.model.current_node.nid
@@ -419,7 +417,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         default_name = "{" + str(dt.datetime.now()) + "}"
         name = None
         if prompt:
-            _name, ok = QtWidgets.QInputDialog.getText(
+            _name, ok = pyqt.QWidgets.QInputDialog.getText(
                 self,
                 "Name New Note",
                 "Note name:",
