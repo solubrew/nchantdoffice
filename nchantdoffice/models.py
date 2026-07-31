@@ -741,10 +741,91 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def change_tab_parent(self, pid):
-        """"""
-        data = {"table": {"doc_tab": {"data": {"pid_txt": pid}}}}
-        self.store.update_record(data, "nid_txt", self.get_current_node().nid)
+        """Legacy tab-parent setter (T-NEW-030). Kept as a thin
+        wrapper around the canonical ``cmd_set_tab_parent`` for
+        backward compatibility -- zero callers as of Sprint 29
+        per the survey, but the name still appears in the test
+        stubs (tests/unit/modelsTEST.py:217) so we don't break
+        the contract.
+
+        Bug history: the original implementation used the
+        silent-no-op ``"data"`` dict shape (Sprint 22 fix
+        territory) AND scoped by ``nid_txt`` (the source node)
+        instead of ``tid_txt`` (the target tab's primary key).
+        Both bugs would silently lose the parent update.
+        """
+        current_tab = self.get_current_tab()
+        current_node = self.get_current_node()
+        return self.cmd_set_tab_parent(
+            {"tid_txt": getattr(current_tab, "tid", None)},
+            {"nid_txt": pid or getattr(current_node, "nid", None)},
+        )
+
+    def cmd_set_tab_parent(self, tab, new_parent_node):
+        """Persist the new parent for a tab (T-NEW-030).
+
+        Writes ``pid_txt = new_parent_node.nid_txt`` on the
+        ``doc_tab`` row whose primary key is ``tab.tid_txt``.
+        Uses the canonical records + columns dict shape (NOT the
+        silent-no-op ``"data"`` shape -- see Sprint 22 fix).
+
+        Defensive: rejects input with missing ``tid_txt`` or
+        ``nid_txt`` -- a silent write with an empty scope or
+        empty value would orphan the tab.
+
+        Returns ``self`` for chainable call sites (mirrors the
+        Sprint 23 ``cmd_on_change_*`` return-self pattern).
+
+        Args:
+            tab: A dict carrying ``tid_txt`` (the source tab's
+                primary key). May also carry ``name_txt`` etc. --
+                ignored by the handler.
+            new_parent_node: A dict carrying ``nid_txt`` (the new
+                parent tree node's primary key).
+
+        Example:
+            >>> model.cmd_set_tab_parent(
+            ...     {"tid_txt": "tab-1234"},
+            ...     {"nid_txt": "node-5678"},
+            ... )
+        """
+        tid = (tab or {}).get("tid_txt")
+        nid = (new_parent_node or {}).get("nid_txt")
+        if not tid:
+            logma.error(
+                f"[model] cmd_set_tab_parent: tab dict missing "
+                f"tid_txt; refusing to write ({tab!r})"
+            )
+            return self
+        if not nid:
+            logma.error(
+                f"[model] cmd_set_tab_parent: new_parent_node dict "
+                f"missing nid_txt; refusing to write ({new_parent_node!r})"
+            )
+            return self
+        try:
+            # Canonical records + columns shape -- NOT the
+            # silent-no-op "data" dict shape (Sprint 22 fix).
+            data = {
+                "table": {
+                    "doc_tab": {
+                        "records": [[nid]],
+                        "columns": ["pid_txt"],
+                    },
+                },
+            }
+            self.store.update_record(data, "tid_txt", tid, "db")
+            self.has_changed = True
+            logma.debug(
+                f"[model] cmd_set_tab_parent: tab={tid!r} new_pid={nid!r}"
+            )
+        except Exception as e:
+            logma.error(
+                f"[model] cmd_set_tab_parent failed: {e}",
+                exc_info=True,
+            )
         return self
+
 
     def change_tab_position(self, position):
         """"""
