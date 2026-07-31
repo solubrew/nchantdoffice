@@ -234,7 +234,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-029 | Tab drag-init only on tab-name area | 🆕 Logged (2026-07-30) — design decision required |
 | T-NEW-030 | Drag tab to a different node — persist parent | ✅ Done — Sprint 29 (cmd_set_tab_parent via records+columns shape) |
 | T-NEW-031 | Drag tab to rightside tabset — reload to original | ✅ Done — Sprint 29 (in-memory scratch view, no DB write) |
-| T-NEW-032 | Tab name updates to file name on file open (Interface Tab config) | 🆕 Logged (2026-07-30) |
+| T-NEW-032 | Tab name updates to file name on file open (Interface Tab config) | ✅ Done — Sprint 29 (cfg-dikt flag + model _file_open_cfg helper) |
 | T-NEW-033 | Search (global / node / tab) + finish `NchantdOfficeApplicationToolBox` | 🆕 Logged (2026-07-30) — design decision required |
 | T-NEW-034 | Data Source config card polish (apikey / tracked / size / retention / save) | 🆕 Logged (2026-07-30) |
 | T-NEW-035 | Script-tool polish (`file_format` vs `syntax`, drawer-redraw, object-config inserts, pane-spacing) | 🆕 Logged (2026-07-30) |
@@ -772,6 +772,92 @@ No priority tier — small UX flag.
 4. Add a regression test under
    `tests/test_tab_name_on_file_open.py` asserting the flag
    toggles the rename.
+
+#### T-NEW-032 — Sprint 29 close-out
+
+Implemented in Sprint 29 (commit `d4f1a8b` + tracker).
+
+Three findings from the survey shaped the implementation:
+
+  1. The card assumed ``cmd_open_local_file`` calls
+     ``setTabText(path.basename)``. Survey: it doesn't.
+     ``cmd_open_local_file`` is a thin dispatcher that routes
+     to ``self.app.model.import_text`` /
+     ``import_image`` / ``import_matrix``; those call
+     ``self.codex.init_*(...)`` with just ``{"file_path": file}``
+     and the resulting tab keeps whatever name it had at
+     add-tab time. The rename the user described as a
+     "fixed heuristic" was not actually happening.
+
+  2. The rename (if it were happening) would be on the doc
+     level (set ``doc.name`` BEFORE ``add_document`` runs,
+     since ``add_document`` reads ``tab["name"]`` from the
+     codex doc). The cfg dict passed to ``codex.init_*`` is
+     the right place to set the name.
+
+  3. The card's suggested default "True" / "False" was a
+     choice that turned out to be moot -- since the rename
+     wasn't happening, "False" matches the current
+     behaviour. Defaulting to False gives the user a
+     positive opt-in (toggle on for the rename).
+
+Implementation:
+
+  - ``NchantdOfficeInterfaceSettings.cmd_on_change_update_tab_name_to_file_name``:
+    Sprint 23 pattern. Reads ``event.isChecked()``, falls
+    back to existing attribute, persists to
+    ``config.dikt["update_tab_name_to_file_name"]``, log +
+    swallow on error, returns ``self``.
+  - ``_initialize_center`` (Interface Tab) renders a new
+    ``NchantdCheckbox`` ("Rename tab to file name on file
+    open") wired to the handler. Default False (matches
+    current behaviour).
+  - ``NchantdOfficeCloakModel._file_open_cfg(file)``:
+    builds the cfg dict for ``codex.init_*`` -- always
+    passes ``file_path``; passes ``name = os.path.basename(file)``
+    only when the flag is True. Defensive: missing
+    ``self.config`` / ``config.dikt`` is treated as
+    flag-False (no rename) rather than raising, so the
+    helper works in off-screen test mocks that skip
+    ``__init__``.
+  - ``import_text`` and ``import_image`` call
+    ``codex.init_*`` via the new ``self._file_open_cfg(file)``
+    helper. (import_matrix was already importing via
+    ``import_text`` and didn't need its own change.)
+
+Test surface: 11 new tests under
+``tests/test_update_tab_name_on_file_open.py`` (163 -> 174
+passed; +11). The 11 tests cover:
+
+  - the handler persists True on event.isChecked() == True
+  - the handler persists False on event.isChecked() == False
+  - the handler returns self (chainable)
+  - the handler reads from existing attribute when no event
+  - the handler swallows exception (defensive)
+  - the Interface Tab wires a checkbox with handler=...
+  - the cmd_open_local_file dispatcher references the flag
+    (either in toolboxes.py or via the model helpers)
+  - the model helpers check the flag before basename overwrite
+  - ``_file_open_cfg`` returns only ``file_path`` when flag
+    is False (default behaviour)
+  - ``_file_open_cfg`` returns ``file_path`` + ``name=basename``
+    when flag is True (opt-in behaviour)
+  - ``_file_open_cfg`` handles missing ``self.config``
+    gracefully (defensive)
+
+Affected sites (per the card):
+
+  - toolboxes.py: cmd_open_local_file is unchanged (it was
+    a thin dispatcher). The flag check lives in the model
+    helpers it routes to, via ``_file_open_cfg``.
+  - settings.py: Interface Tab config flags -- new handler
+    + checkbox (Step 1 + Step 3 of the card).
+  - scripts.py / images.py: per-type open handler -- NOT
+    touched. The basename is set on the cfg dict passed to
+    ``codex.init_*``, which is the canonical place to set
+    doc-level attributes.
+
+Audit: 91.91% (unchanged from T-NEW-031). Testing: 100% pass.
 
 ### T-NEW-033 — Search across all nodes / tabs + node-specific + tab-specific + finish `NchantdOfficeApplicationToolBox` (2026-07-30)
 
