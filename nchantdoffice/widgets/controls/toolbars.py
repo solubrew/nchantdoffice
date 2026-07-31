@@ -122,7 +122,14 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
 
     def initModel(self):
         """Initialize the model."""
-        self.init_variables()#TODO this is redundant but for now we need the app attribute to be set before the super call
+        # T-NEW-040: removed the stale "this is redundant but
+        # for now we need the app attribute to be set before
+        # the super call" comment. init_variables() IS
+        # necessary here -- the parent NchantdButtonBar.__init__
+        # does NOT call it, so without this call ``self.app``
+        # stays None and the downstream get_document_types
+        # call (L126) would fail.
+        self.init_variables()
         self.document_types = self.app.model.get_document_types()
         logma.info(f"Document Types {self.document_types}")
         # self.document_types.drop_duplicates(subset=["name_txt", "widget_txt", "parameters_dict"], inplace=True)
@@ -164,8 +171,13 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         if widget is None or widget == "":
             widget = self.app.model.get_document_type(cfg["lookup_code_txt"]).get("widget_txt", None)
         logma.info(f"Widget {widget}")
-        # db = self.app.model.instance.db  # TODO: Switch to MultiInstance
-        db = "db"
+        # T-NEW-040: replaced the hardcoded ``db = "db"`` with
+        # a call to ``_resolve_db_alias()`` so MultiInstance
+        # support is a one-line plumbing change when
+        # ``self.app.model.instance`` is plumbed through.
+        # Single-instance mode (the current default) still
+        # returns ``"db"``.
+        db = self._resolve_db_alias()
         context = ""
         content = {}
         if cfg["lookup_code_txt"] == "add_script_document_nchantdscript":
@@ -264,6 +276,47 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         }
         self.app.model.add_node(name, ntype, pid, pos, parameters, None, True)
         return self
+
+    def _resolve_db_alias(self):
+        """Resolve the DB alias for store calls (T-NEW-040).
+
+        Single-instance mode (the current default): returns
+        ``"db"`` when ``self.app.model`` has no ``instance``
+        attribute. Multi-instance mode (future): returns
+        ``self.app.model.instance.db`` when the instance is
+        plumbed through. The MultiInstance plumbing isn't
+        complete in nchantdoffice yet -- the TODO at L167
+        "Switch to MultiInstance" was tracked separately --
+        but the helper centralizes the resolution so the
+        call sites don't need to know.
+
+        Defensive: missing ``self.app``, missing
+        ``self.app.model``, missing ``self.app.model.instance``,
+        or missing ``self.app.model.instance.db`` all fall
+        back to ``"db"`` (single-instance default).
+
+        Returns:
+            The DB alias string (``"db"`` by default).
+        """
+        try:
+            app = getattr(self, "app", None)
+            if app is None:
+                return "db"
+            model = getattr(app, "model", None)
+            if model is None:
+                return "db"
+            instance = getattr(model, "instance", None)
+            if instance is None:
+                return "db"
+            db = getattr(instance, "db", None)
+            if not isinstance(db, str) or not db:
+                return "db"
+            return db
+        except Exception as e:
+            logma.warning(
+                f"[toolbars] _resolve_db_alias failed: {e}"
+            )
+            return "db"
 
     def _compute_note_position(self, existing_count, base_x, base_y, step):
         """Compute the screen position for a new note, offset by
