@@ -237,7 +237,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-032 | Tab name updates to file name on file open (Interface Tab config) | ✅ Done — Sprint 29 (cfg-dikt flag + model _file_open_cfg helper) |
 | T-NEW-033 | Search (global / node / tab) + finish `NchantdOfficeApplicationToolBox` | 🆕 Logged (2026-07-30) — design decision required |
 | T-NEW-034 | Data Source config card polish (apikey / tracked / size / retention / save) | 🔨 Partial — Sprint 29 (2 stubs filled: pane_size + apikey_visibility; 3 items open) |
-| T-NEW-035 | Script-tool polish (`file_format` vs `syntax`, drawer-redraw, object-config inserts, pane-spacing) | 🆕 Logged (2026-07-30) |
+| T-NEW-035 | Script-tool polish (`file_format` vs `syntax`, drawer-redraw, object-config inserts, pane-spacing) | 🔨 Partial — Sprint 29 (4/5 items done; file_format-vs-syntax deferred to user) |
 | T-NEW-036 | Journal restore on tab change | ✅ Done — Sprint 29 (refresh_content on tab focus) |
 | T-NEW-037 | Empty method stubs (analytics_charts, charts, toolbars) | ✅ Done — Sprint 29 (2 filled, 1 deferred to T-NEW-029) |
 | T-NEW-038 | Database-save icon for internally stored documents | ✅ Done — Sprint 29 (_save_action picks save_database for internal docs) |
