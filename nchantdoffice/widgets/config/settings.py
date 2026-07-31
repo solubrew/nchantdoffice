@@ -1225,9 +1225,15 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
 # ``cmd_on_change_visible_right_tab``) so there's one source of
 # truth -- no duplication of the query / dispatch logic.
 get_right_pane_tab_options = NchantdOfficeInterfaceSettings.get_right_pane_tab_options
-# ``cmd_on_change_visible_right_tab`` is already module-level (it
-# takes a settings arg explicitly so callers without a live Qt
-# parent can drive it). No alias needed.
+# ``cmd_on_change_visible_right_tab`` lives inside the class body
+# (at 4-space indent). Expose it at module level too so off-screen
+# tests + non-method callers can import it directly.
+cmd_on_change_visible_right_tab = NchantdOfficeInterfaceSettings.cmd_on_change_visible_right_tab
+# ``_get_right_pane_settings_arg`` is referenced by
+# ``get_right_pane_tab_options`` as a fallback when no settings
+# instance is available. Expose it at module level to satisfy the
+# F821 (undefined name) ruff check.
+_get_right_pane_settings_arg = NchantdOfficeInterfaceSettings._get_right_pane_settings_arg
 
 
 class NchantdOfficeThemeSettings(NchantdThemeSettings):
