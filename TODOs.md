@@ -235,7 +235,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-030 | Drag tab to a different node — persist parent | ✅ Done — Sprint 29 (cmd_set_tab_parent via records+columns shape) |
 | T-NEW-031 | Drag tab to rightside tabset — reload to original | ✅ Done — Sprint 29 (in-memory scratch view, no DB write) |
 | T-NEW-032 | Tab name updates to file name on file open (Interface Tab config) | ✅ Done — Sprint 29 (cfg-dikt flag + model _file_open_cfg helper) |
-| T-NEW-033 | Search (global / node / tab) + finish `NchantdOfficeApplicationToolBox` | 🆕 Logged (2026-07-30) — design decision required |
+| T-NEW-033 | Search (global / node / tab) + finish `NchantdOfficeApplicationToolBox` | ✅ Done — Sprint 29 (SQLite index + 3 cmd_search_* handlers) |
 | T-NEW-034 | Data Source config card polish (apikey / tracked / size / retention / save) | 🔨 Partial — Sprint 29 (2 stubs filled: pane_size + apikey_visibility; 3 items open) |
 | T-NEW-035 | Script-tool polish (`file_format` vs `syntax`, drawer-redraw, object-config inserts, pane-spacing) | 🔨 Partial — Sprint 29 (4/5 items done; file_format-vs-syntax deferred to user) |
 | T-NEW-036 | Journal restore on tab change | ✅ Done — Sprint 29 (refresh_content on tab focus) |

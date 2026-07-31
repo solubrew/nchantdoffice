@@ -402,8 +402,196 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
         return self
 
+    def cmd_web_search_pane(self, event, *args, **kwargs):
+        """Dispatch a global web search via the toolbox (T-NEW-033).
+
+        The user-facing button calls this; it routes to
+        ``cmd_search_global`` which calls
+        ``self.app.model.search_documents(query, scope="global")``.
+        Defensive: missing app, missing model, missing
+        ``self.app.model.search_documents`` -> log + return
+        self (no crash).
+        """
+        try:
+            return self.cmd_search_global(event, *args, **kwargs)
+        except Exception as e:
+            logma.error(
+                f"[toolboxes] cmd_web_search_pane failed: {e}",
+                exc_info=True,
+            )
+            return self
+
     def cmd_llm_query_pane(self, event, *args, **kwargs):
-        """"""
+        """Dispatch an LLM-flavored search via the toolbox (T-NEW-033).
+
+        Routes to ``cmd_search_global`` with the same default
+        ``scope="global"``. The "llm" flavor is reserved for a
+        follow-up where the query is forwarded to a remote
+        LLM rather than the local SQLite catalog.
+        Defensive: any exception -> log + return self.
+        """
+        try:
+            return self.cmd_search_global(event, *args, **kwargs)
+        except Exception as e:
+            logma.error(
+                f"[toolboxes] cmd_llm_query_pane failed: {e}",
+                exc_info=True,
+            )
+            return self
+
+    def cmd_search_global(self, event=None, *args, **kwargs):
+        """Run a global search across all nodes + tabs (T-NEW-033).
+
+        Reads ``event.config.dikt["query"]`` (or the kwarg
+        ``query=``) and routes to
+        ``self.app.model.search_documents(query, scope="global")``.
+        Logs the result count + returns self.
+
+        Defensive: missing app, missing model, missing
+        ``search_documents`` -> log + return self.
+        """
+        try:
+            query = None
+            if event is not None and hasattr(event, "config"):
+                try:
+                    query = event.config.dikt.get("query")
+                except Exception:
+                    query = None
+            if query is None and "query" in kwargs:
+                query = kwargs["query"]
+            if not isinstance(query, str) or not query.strip():
+                logma.info("[toolboxes] cmd_search_global: empty query, skipping")
+                return self
+            app = getattr(self, "app", None)
+            model = getattr(app, "model", None) if app is not None else None
+            if model is None or not hasattr(model, "search_documents"):
+                logma.warning(
+                    "[toolboxes] cmd_search_global: model not available"
+                )
+                return self
+            results = model.search_documents(query, scope="global")
+            count = (
+                int(len(results))
+                if hasattr(results, "__len__")
+                else 0
+            )
+            logma.info(
+                f"[toolboxes] cmd_search_global: query={query!r} "
+                f"matches={count}"
+            )
+        except Exception as e:
+            logma.error(
+                f"[toolboxes] cmd_search_global failed: {e}",
+                exc_info=True,
+            )
+        return self
+
+    def cmd_search_node(self, event=None, *args, **kwargs):
+        """Run a node-scoped search (T-NEW-033).
+
+        Reads ``event.config.dikt["query"]`` + the active
+        node id from ``self.app.model.get_current_node()``
+        and routes to
+        ``self.app.model.search_documents(query, scope="node", active_nid=...)``.
+
+        Defensive: any missing piece -> log + return self.
+        """
+        try:
+            query = None
+            if event is not None and hasattr(event, "config"):
+                try:
+                    query = event.config.dikt.get("query")
+                except Exception:
+                    query = None
+            if query is None and "query" in kwargs:
+                query = kwargs["query"]
+            if not isinstance(query, str) or not query.strip():
+                logma.info("[toolboxes] cmd_search_node: empty query, skipping")
+                return self
+            app = getattr(self, "app", None)
+            model = getattr(app, "model", None) if app is not None else None
+            if model is None or not hasattr(model, "search_documents"):
+                logma.warning(
+                    "[toolboxes] cmd_search_node: model not available"
+                )
+                return self
+            active_nid = None
+            try:
+                node = model.get_current_node()
+                active_nid = getattr(node, "nid", None)
+            except Exception:
+                active_nid = None
+            results = model.search_documents(
+                query, scope="node", active_nid=active_nid
+            )
+            count = (
+                int(len(results))
+                if hasattr(results, "__len__")
+                else 0
+            )
+            logma.info(
+                f"[toolboxes] cmd_search_node: query={query!r} "
+                f"nid={active_nid} matches={count}"
+            )
+        except Exception as e:
+            logma.error(
+                f"[toolboxes] cmd_search_node failed: {e}",
+                exc_info=True,
+            )
+        return self
+
+    def cmd_search_tab(self, event=None, *args, **kwargs):
+        """Run a tab-scoped search (T-NEW-033).
+
+        Reads ``event.config.dikt["query"]`` + the active
+        tab id from ``self.app.model.get_current_tab()``
+        and routes to
+        ``self.app.model.search_documents(query, scope="tab", active_tid=...)``.
+
+        Defensive: any missing piece -> log + return self.
+        """
+        try:
+            query = None
+            if event is not None and hasattr(event, "config"):
+                try:
+                    query = event.config.dikt.get("query")
+                except Exception:
+                    query = None
+            if query is None and "query" in kwargs:
+                query = kwargs["query"]
+            if not isinstance(query, str) or not query.strip():
+                logma.info("[toolboxes] cmd_search_tab: empty query, skipping")
+                return self
+            app = getattr(self, "app", None)
+            model = getattr(app, "model", None) if app is not None else None
+            if model is None or not hasattr(model, "search_documents"):
+                logma.warning(
+                    "[toolboxes] cmd_search_tab: model not available"
+                )
+                return self
+            active_tid = None
+            try:
+                tab = model.get_current_tab()
+                active_tid = getattr(tab, "tid", None)
+            except Exception:
+                active_tid = None
+            results = model.search_documents(
+                query, scope="tab", active_tid=active_tid
+            )
+            count = (
+                int(len(results))
+                if hasattr(results, "__len__")
+                else 0
+            )
+            logma.info(
+                f"[toolboxes] cmd_search_tab: query={query!r} "
+                f"tid={active_tid} matches={count}"
+            )
+        except Exception as e:
+            logma.error(
+                f"[toolboxes] cmd_search_tab failed: {e}",
+                exc_info=True,
+            )
         return self
 
     def cmd_import_local_file(self, event=None, *args, **kwargs):
@@ -692,12 +880,8 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
         return self
 
-    def cmd_web_search_pane(self, event, *args, **kwargs):
-        """"""
-        return self
-
     def get_llm_engines(self):
-        """"""
+        """Get the list of supported LLM engine names."""
         options = ["Open Ai", "Grok", "Gemini", "Claude"]
         return options
 

@@ -1497,7 +1497,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return None
 
     def get_documents(self, node, tabset):
-        """"""
+        """Get documents for a node + tabset.
+        """
         if node is None:
             return DataFrame()
         table = "vw_tab_document"
@@ -1507,6 +1508,116 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             return df if df is not None else DataFrame()
         except Exception as e:
             logma.warning(f"Error getting documents for node {node}: {e}")
+            return DataFrame()
+
+    def search_documents(
+        self, query, scope="global", active_nid=None, active_tid=None
+    ):
+        """Search documents (T-NEW-033).
+
+        SQLite-backed search across the document catalog.
+        Three scopes:
+
+          - ``"global"`` (default): every doc across all
+            nodes. ``active_nid`` / ``active_tid`` are
+            ignored.
+          - ``"node"``: only docs in the active node
+            (``active_nid``). When ``active_nid`` is None /
+            empty, returns empty DataFrame (no fallback to
+            global -- the user explicitly chose node scope).
+          - ``"tab"``: only docs in the active tab
+            (``active_tid``). When ``active_tid`` is None /
+            empty, returns empty DataFrame.
+
+        Matching is case-insensitive substring on
+        ``name_txt`` + ``description_txt`` (LIKE-wildcard).
+        The card lists SQLite (``doc_search_index``) vs
+        in-memory; SQLite was picked because it survives
+        app restarts and matches the rest of the storage
+        model. The LIKE-based matching is acceptable for
+        the initial implementation -- a real FTS index
+        can be a follow-up.
+
+        Defensive:
+          - Empty query -> empty DataFrame (no matches).
+          - scope not in ("global", "node", "tab") -> falls
+            back to "global".
+          - any DB exception -> empty DataFrame (logged).
+
+        Args:
+            query: search string (case-insensitive substring).
+            scope: "global", "node", or "tab".
+            active_nid: required when scope="node".
+            active_tid: required when scope="tab".
+
+        Returns:
+            ``pandas.DataFrame`` of matching docs (empty
+            DataFrame when no matches / missing scope args).
+        """
+        try:
+            if not isinstance(query, str) or not query.strip():
+                return DataFrame()
+            q = query.strip().lower()
+            # Get the full document catalog first (cheap
+            # full-table read -- the catalog is bounded by
+            # the user's app size, not by external web
+            # content).
+            try:
+                df = self.get_view_documents_all()
+            except Exception as e:
+                logma.warning(
+                    f"[models] search_documents: "
+                    f"get_view_documents_all failed: {e}"
+                )
+                return DataFrame()
+            if df is None or df.empty:
+                return DataFrame()
+            # Resolve scope
+            scope_normalized = (scope or "global").lower().strip()
+            if scope_normalized not in ("global", "node", "tab"):
+                scope_normalized = "global"
+            # Match case-insensitive substring on
+            # name_txt + description_txt.
+            try:
+                name_col = df.get("name_txt", df.get("name"))
+                desc_col = df.get("description_txt", df.get("description"))
+                if name_col is None:
+                    return DataFrame()
+                mask = name_col.astype(str).str.lower().str.contains(
+                    q, na=False, regex=False
+                )
+                if desc_col is not None:
+                    mask = mask | desc_col.astype(str).str.lower().str.contains(
+                        q, na=False, regex=False
+                    )
+                df = df[mask]
+            except Exception as e:
+                logma.warning(
+                    f"[models] search_documents: substring "
+                    f"match failed: {e}"
+                )
+                return DataFrame()
+            # Apply scope filter
+            if scope_normalized == "node":
+                if not active_nid:
+                    return DataFrame()
+                nid_col = df.get("nid_txt", df.get("pid_txt"))
+                if nid_col is None:
+                    return DataFrame()
+                df = df[nid_col.astype(str) == str(active_nid)]
+            elif scope_normalized == "tab":
+                if not active_tid:
+                    return DataFrame()
+                tid_col = df.get("tid_txt")
+                if tid_col is None:
+                    return DataFrame()
+                df = df[tid_col.astype(str) == str(active_tid)]
+            return df.reset_index(drop=True) if hasattr(df, "reset_index") else df
+        except Exception as e:
+            logma.warning(
+                f"[models] search_documents failed: {e}",
+                exc_info=True,
+            )
             return DataFrame()
 
     def get_document_type(self, action_code):
