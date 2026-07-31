@@ -229,7 +229,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-025 | Content versioning (`pydoc.increment_version`) | 🆕 Logged (2026-07-30) — design decision required |
 | T-NEW-026 | Finish Affiliate Manager tab | 🆕 Logged (2026-07-30) |
 | T-NEW-027 | Per-document-type settings pane (Interface Tab) | ✅ Done — Sprint 29 (hybrid / Option C: shared base + 4 subclasses) |
-| T-NEW-028 | Right Pane tab visibility config | 🆕 Logged (2026-07-30) |
+| T-NEW-028 | Right Pane tab visibility config | ✅ Done — Sprint 29 (queries vw_tab for tabset_type_txt="right") |
 | T-NEW-029 | Tab drag-init only on tab-name area | 🆕 Logged (2026-07-30) — design decision required |
 | T-NEW-030 | Drag tab to a different node — persist parent | 🆕 Logged (2026-07-30) |
 | T-NEW-031 | Drag tab to rightside tabset — reload to original | 🆕 Logged (2026-07-30) |
@@ -462,6 +462,52 @@ No priority tier — small UX change.
    `tests/test_right_pane_visibility.py` asserting the
    filter applies and the default list matches the current
    behaviour.
+
+#### T-NEW-028 — Sprint 29 close-out
+
+Implemented in Sprint 29 (commit `f1f9c2d` + tracker).
+
+The Migration plan above described a `visible_right_tabs` list
+config knob; the user redirected the scope mid-sprint to "query
+the app_tab and doc_tab tables for tabset_type_txt = right and use
+the results to output the config list". The final design is the
+DB-driven checklist:
+
+  - `get_right_pane_tab_options` (instance method + module-level
+    alias) reads `vw_tab` filtered by
+    `tabset_type_txt = "right"` AND `visible_bit = 1`, ordered by
+    `position_int`. Returns `"<pos> - <name>"` strings.
+  - Empty DB result falls back to `RIGHT_PANE_TAB_FALLBACK` (the
+    legacy hardcoded 4-list -- "0 - Journal", "1 - ToolBox",
+    "2 - Calendar", "3 - Calculator") so users on a fresh DB
+    still see a non-empty dropdown.
+  - `cmd_on_change_visible_right_tab(settings, tid, app_data_type,
+    visible)` flips `visible_bit` on the underlying row. The
+    `app_data_type` arg discriminates between `app_tab` (canonical
+    right-side tabs seeded by the right-side TabSet) and `doc_tab`
+    (right-side docs -- none seeded currently). Uses the canonical
+    records + columns dict shape (NOT the silent-no-op "data"
+    shape -- Sprint 22 fix).
+  - Per the user's note: "visibility is either 0 or 1" -- the
+    handler rejects any other value with no `update_record` call.
+  - New state is mirrored to `config.dikt["visible_right_tabs"]`
+    so the current session sees the change immediately.
+  - `_build_right_pane_visibility_checks` renders one
+    `NchantdCheckbox` per right-side tab in the Interface Tab
+    right-side config pane. Toggling a checkbox calls
+    `cmd_on_change_visible_right_tab`. Wired in
+    `_initialize_right_side` at row 2 of the right-side
+    settings group.
+
+Test surface: 11 new tests under `tests/test_right_pane_visibility.py`
+(136 -> 147 passed; +11). Source-level tests guard the wiring
+between `_initialize_right_side` and
+`_build_right_pane_visibility_checks` so the wiring can't regress.
+
+Seed row data is unchanged -- the 5 active right-side rows in
+`nchantdoffice/_data_/models.yaml` (`#Right Side TabSet` block)
+stay at 8 fields; the SQL NOT NULL enforcement is not added at
+this time per the user's direction.
 
 ### T-NEW-029 — Tab drag-and-drop must only initiate on the tab-name area, not the main widget area (2026-07-30)
 
