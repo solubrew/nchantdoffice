@@ -619,6 +619,52 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         return self
 
     # ------------------------------------------------------------------
+    # T-NEW-032 — Tab name updates to file name on file open
+    # ------------------------------------------------------------------
+
+    def cmd_on_change_update_tab_name_to_file_name(self, event=None, *args, **kwargs):
+        """Toggle the ``update_tab_name_to_file_name`` flag (T-NEW-032).
+
+        When True, opening a local file via
+        ``NchantdOfficeApplicationToolBox.cmd_open_local_file``
+        renames the resulting tab to the opened file's basename
+        (``os.path.basename(file)``). When False (default -- the
+        current behaviour), the tab keeps whatever name it had
+        at add-tab time. The flag is read by
+        ``NchantdOfficeCloakModel.import_text`` /
+        ``import_image`` / ``import_matrix`` (the helpers
+        ``cmd_open_local_file`` dispatches to).
+
+        Reads the checkbox state and persists
+        ``update_tab_name_to_file_name`` on ``config.dikt``.
+        Mirrors the Sprint 23 ``cmd_on_change_prompt_for_*``
+        config-flag pattern.
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "isChecked"):
+                value = bool(event.isChecked())
+            if value is None:
+                value = bool(
+                    getattr(self, "update_tab_name_to_file_name", False)
+                )
+            self.update_tab_name_to_file_name = value
+            self.config.dikt["update_tab_name_to_file_name"] = value
+            logma.debug(
+                f"[settings] cmd_on_change_update_tab_name_to_file_name: "
+                f"value={value}"
+            )
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_update_tab_name_to_file_name "
+                f"failed: {e}",
+                exc_info=True,
+            )
+        return self
+
+    # ------------------------------------------------------------------
     # T-NEW-027 — Doc-type selector (per-document-type settings pane)
     # ------------------------------------------------------------------
 
@@ -917,6 +963,21 @@ def cmd_on_change_visible_right_tab(settings, tid, app_data_type, visible):
         }
         self.default_tab = NchantdCheckbox(self, cfg).initWidget()
         center_settings_group.addWidget(self.default_tab, row, 0)
+        row += 1
+
+        # T-NEW-032: rename a tab to the opened file's basename
+        # when a local file is opened via cmd_open_local_file.
+        # Default False -- matches the current behaviour where
+        # the tab keeps whatever name it had at add-tab time.
+        cfg = {
+            "text": "Rename tab to file name on file open",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_on_change_update_tab_name_to_file_name,
+            "value": getattr(self, "update_tab_name_to_file_name", False),
+        }
+        self.update_tab_name_to_file_name_entry = NchantdCheckbox(self, cfg).initWidget()
+        center_settings_group.addWidget(self.update_tab_name_to_file_name_entry, row, 0)
         row += 1
 
         primary_layout.addLayout(center_settings_group.layout)

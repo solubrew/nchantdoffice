@@ -2092,7 +2092,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     logma.info(f"File Type {current_tab.document.file_type}")
                     logma.info(f"File Type {current_tab.document.doc_type}")
                     logma.info(f"Create New Tab for Document{file}")
-                    document = self.codex.init_script({"file_path": file})
+                    document = self.codex.init_script(
+                        self._file_open_cfg(file)
+                    )
                     current_tab.open_file()
                     # document.load_document()
                     self.add_document(document, self.get_current_node().nid, current_tab.pos + 1)
@@ -2136,6 +2138,51 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         the correct file type.
         """
         return self.import_text(file)
+
+    def import_image(self, file):
+        """"""
+        if file is not None:
+            if exists(file):
+                current_tab = self.get_current_tab()
+                if current_tab.document.doc_type != "image":
+                    logma.info(f"File Type {current_tab.document.file_type}")
+                    logma.info(f"File Type {current_tab.document.doc_type}")
+                    logma.info(f"Create New Tab for Document{file}")
+                    document = self.codex.init_image(
+                        self._file_open_cfg(file)
+                    )
+                    document.open_file()
+                    self.add_document(document, self.get_current_node().nid, current_tab.pos + 1)
+                else:
+                    current_tab.open_file(file)
+                    current_tab.save()
+        return self
+
+    def _file_open_cfg(self, file):
+        """Build the cfg dict for ``codex.init_*`` from a local file path
+        (T-NEW-032). Always passes ``file_path``; passes ``name`` from
+        ``os.path.basename(file)`` only when the
+        ``update_tab_name_to_file_name`` config flag is True.
+
+        Default behaviour (flag False): the tab keeps whatever name it
+        had at add-tab time. When the flag is True, the new tab is
+        named after the opened file's basename.
+
+        Defensive: missing ``self.config`` / ``config.dikt`` is treated
+        as flag-False (no rename) rather than raising -- so this
+        helper works in off-screen test mocks that skip ``__init__``.
+        """
+        cfg = {"file_path": file}
+        try:
+            flag = bool(
+                self.config.dikt.get("update_tab_name_to_file_name", False)
+            )
+        except Exception:
+            flag = False
+        if flag:
+            import os
+            cfg["name"] = os.path.basename(file)
+        return cfg
 
     def import_matrix(self, file):
         """Import a spreadsheet file as a new Matrix tab.
