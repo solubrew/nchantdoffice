@@ -35,12 +35,14 @@ from nchantdoffice.widgets.panes.objects import NchantdNewObjectPane
 from nchantrs.widgets.tables.tables import NchantdTableWidget, NchantdTable
 from nchantdoffice.widgets.panes.sources import NchantdSourceEditPane, NchantdSourcesListPane
 from nchantrs.widgets.groups import NchantdGroup
+from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
-logma.off()
+if not log:
+    logma.off()
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "charts.yaml")
@@ -651,6 +653,12 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         # self.chart_insert_object_pane = NchantdNewObjectPane(self, cfg)
         # items[cnt]["widget"] = self.chart_insert_object_pane
         # cnt += 1
+        if cnt not in items:
+            items[cnt] = default_action
+        cfg = {"label": "File Name: ", "layout": "horizontal", "file_path": self.document.file_path}
+        self.file_pane = NchantdFileDetailsPane(self, cfg)
+        items[cnt]["widget"] = self.file_pane
+        cnt += 1
         return items
 
     def init_drawer_data_sources(self):

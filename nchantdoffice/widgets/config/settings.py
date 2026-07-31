@@ -40,7 +40,6 @@ from nchantdoffice.widgets.panes.document_settings import (
     get_settings_pane_for_doc_type,
 )
 
-
 # T-NEW-028 — Right-side tab visibility. The fallback list is the
 # legacy hardcoded 4-tab default returned when ``vw_tab`` is empty
 # (fresh DB, no seed rows). Used by ``get_right_pane_tab_options``
@@ -185,6 +184,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
                 DocumentTypeSettingsRegistry,
                 get_settings_pane_for_doc_type,
             )
+
             options = DocumentTypeSettingsRegistry.known_types()
             if not options:
                 options = ["Matrix", "Notebook", "Image", "Script"]
@@ -204,15 +204,9 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             self.doc_type_pane_layout = pyqt.QVBoxLayout()
             self.doc_type_pane_slot.setLayout(self.doc_type_pane_layout)
             parent_layout.addWidget(self.doc_type_pane_slot)
-            initial = (
-                self.doc_type_selector.currentText()
-                if hasattr(self, "doc_type_selector")
-                else options[0]
-            )
+            initial = self.doc_type_selector.currentText() if hasattr(self, "doc_type_selector") else options[0]
             self._render_doc_type_pane(initial)
-            logma.debug(
-                f"[settings] doc-type selector wired with options={options}"
-            )
+            logma.debug(f"[settings] doc-type selector wired with options={options}")
         except Exception as e:
             logma.error(
                 f"[settings] _initialize_doc_type_selector failed: {e}",
@@ -229,6 +223,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             from nchantdoffice.widgets.panes.document_settings import (
                 get_settings_pane_for_doc_type,
             )
+
             pane_class = get_settings_pane_for_doc_type(doc_type)
             # Tear down any previously rendered widgets so we don't
             # leak. ``takeAt(0)`` walks the layout's children and
@@ -248,8 +243,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             # ``NchantdDropDown`` widgets.
             self.doc_type_pane_layout.addWidget(pane)
             logma.debug(
-                f"[settings] rendered {pane_class.__name__} for "
-                f"doc_type={doc_type!r} ({len(pane._fields)} fields)"
+                f"[settings] rendered {pane_class.__name__} for " f"doc_type={doc_type!r} ({len(pane._fields)} fields)"
             )
         except Exception as e:
             logma.error(
@@ -342,9 +336,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             value = None
             widget = getattr(self, "data_source_select", None)
             if widget is not None:
-                getter = getattr(widget, "currentText", None) or getattr(
-                    widget, "get_value", None
-                )
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
                 if callable(getter):
                     value = getter()
             if value is not None:
@@ -575,15 +567,12 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             if event is not None and hasattr(event, "isChecked"):
                 value = bool(event.isChecked())
             if value is None:
-                value = bool(
-                    getattr(self, "prompt_for_new_node_name", False)
-                )
+                value = bool(getattr(self, "prompt_for_new_node_name", False))
             self.prompt_for_new_node_name = value
             self.config.dikt["prompt_for_new_node_name"] = value
         except Exception as e:
             logma.error(
-                f"[settings] cmd_on_change_prompt_for_new_node_name "
-                f"failed: {e}",
+                f"[settings] cmd_on_change_prompt_for_new_node_name " f"failed: {e}",
                 exc_info=True,
             )
         return self
@@ -605,15 +594,12 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             if event is not None and hasattr(event, "isChecked"):
                 value = bool(event.isChecked())
             if value is None:
-                value = bool(
-                    getattr(self, "prompt_for_new_tab_name", False)
-                )
+                value = bool(getattr(self, "prompt_for_new_tab_name", False))
             self.prompt_for_new_tab_name = value
             self.config.dikt["prompt_for_new_tab_name"] = value
         except Exception as e:
             logma.error(
-                f"[settings] cmd_on_change_prompt_for_new_tab_name "
-                f"failed: {e}",
+                f"[settings] cmd_on_change_prompt_for_new_tab_name " f"failed: {e}",
                 exc_info=True,
             )
         return self
@@ -647,19 +633,13 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             if event is not None and hasattr(event, "isChecked"):
                 value = bool(event.isChecked())
             if value is None:
-                value = bool(
-                    getattr(self, "update_tab_name_to_file_name", False)
-                )
+                value = bool(getattr(self, "update_tab_name_to_file_name", False))
             self.update_tab_name_to_file_name = value
             self.config.dikt["update_tab_name_to_file_name"] = value
-            logma.debug(
-                f"[settings] cmd_on_change_update_tab_name_to_file_name: "
-                f"value={value}"
-            )
+            logma.debug(f"[settings] cmd_on_change_update_tab_name_to_file_name: " f"value={value}")
         except Exception as e:
             logma.error(
-                f"[settings] cmd_on_change_update_tab_name_to_file_name "
-                f"failed: {e}",
+                f"[settings] cmd_on_change_update_tab_name_to_file_name " f"failed: {e}",
                 exc_info=True,
             )
         return self
@@ -691,10 +671,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
                 value = getattr(self, "selected_doc_type", "")
             self.selected_doc_type = value
             self.config.dikt["selected_doc_type"] = value
-            logma.debug(
-                f"[settings] cmd_on_change_doc_type_select: "
-                f"selected_doc_type={value!r}"
-            )
+            logma.debug(f"[settings] cmd_on_change_doc_type_select: " f"selected_doc_type={value!r}")
         except Exception as e:
             logma.error(
                 f"[settings] cmd_on_change_doc_type_select failed: {e}",
@@ -747,8 +724,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
                         store = getattr(model, "store", None)
             if store is None:
                 logma.warning(
-                    "[settings] get_right_pane_tab_options: no store available, "
-                    "returning RIGHT_PANE_TAB_FALLBACK"
+                    "[settings] get_right_pane_tab_options: no store available, " "returning RIGHT_PANE_TAB_FALLBACK"
                 )
                 return list(RIGHT_PANE_TAB_FALLBACK)
             cfg = {
@@ -766,6 +742,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
                 # rows is a pandas DataFrame; iterate via to_dict
                 # so we can pick name_txt + position_int safely.
                 import pandas as pd  # local import -- pandas is core
+
                 if isinstance(rows, pd.DataFrame) and len(rows) > 0:
                     records = rows.to_dict(orient="records")
                     for rec in records:
@@ -788,89 +765,79 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
             return list(RIGHT_PANE_TAB_FALLBACK)
 
-
-def _get_right_pane_settings_arg():
-    """Module-level shim for ``get_right_pane_tab_options`` callers that
-    pass the settings instance directly (rather than calling the
-    instance method). Returns ``None`` -- callers must supply the
-    settings argument explicitly when using the module-level entry.
-    """
-    return None
-
-
-def cmd_on_change_visible_right_tab(settings, tid, app_data_type, visible):
-    """Toggle ``visible_bit`` for a right-side tab row.
-
-    T-NEW-028 handler wired into the Interface Tab right-side
-    config pane checklist. The right-side tab may live in either
-    ``app_tab`` (canonical tabs seeded by the right-side TabSet)
-    or ``doc_tab`` (right-side docs -- currently none seeded).
-    ``app_data_type`` discriminates: ``"app"`` -> ``app_tab``,
-    ``"doc"`` -> ``doc_tab``.
-
-    Per the user's note: "visibility is either 0 or 1". A value
-    outside that range is rejected (no ``update_record`` call).
-
-    Persists the new state to ``config.dikt["visible_right_tabs"]``
-    (keyed by ``tid``) so the current session sees the change
-    immediately -- mirrors the Sprint 23
-    ``cmd_on_change_prompt_for_*`` config flag pattern.
-
-    Args:
-        settings: The ``NchantdOfficeInterfaceSettings`` instance
-            (carries ``self.app.model.store`` + ``self.config``).
-        tid: The ``tid_txt`` of the row to flip.
-        app_data_type: ``"app"`` (route to ``app_tab``) or
-            ``"doc"`` (route to ``doc_tab``).
-        visible: The new ``visible_bit`` value -- must be 0 or 1.
-
-    Returns:
-        ``settings`` for chainable call sites, or ``None`` on
-        invalid input.
-    """
-    if visible not in (0, 1):
-        logma.error(
-            f"[settings] cmd_on_change_visible_right_tab: visible={visible!r} "
-            f"is not 0 or 1; rejecting"
-        )
+    def _get_right_pane_settings_arg():
+        """Module-level shim for ``get_right_pane_tab_options`` callers that
+        pass the settings instance directly (rather than calling the
+        instance method). Returns ``None`` -- callers must supply the
+        settings argument explicitly when using the module-level entry.
+        """
         return None
-    if app_data_type not in ("app", "doc"):
-        logma.error(
-            f"[settings] cmd_on_change_visible_right_tab: app_data_type="
-            f"{app_data_type!r} is not 'app' or 'doc'; rejecting"
-        )
-        return None
-    table = "app_tab" if app_data_type == "app" else "doc_tab"
-    try:
-        store = settings.app.model.store
-        data = {
-            "table": {
-                table: {
-                    "records": [[visible]],
-                    "columns": ["visible_bit"],
+
+    def cmd_on_change_visible_right_tab(settings, tid, app_data_type, visible):
+        """Toggle ``visible_bit`` for a right-side tab row.
+
+        T-NEW-028 handler wired into the Interface Tab right-side
+        config pane checklist. The right-side tab may live in either
+        ``app_tab`` (canonical tabs seeded by the right-side TabSet)
+        or ``doc_tab`` (right-side docs -- currently none seeded).
+        ``app_data_type`` discriminates: ``"app"`` -> ``app_tab``,
+        ``"doc"`` -> ``doc_tab``.
+
+        Per the user's note: "visibility is either 0 or 1". A value
+        outside that range is rejected (no ``update_record`` call).
+
+        Persists the new state to ``config.dikt["visible_right_tabs"]``
+        (keyed by ``tid``) so the current session sees the change
+        immediately -- mirrors the Sprint 23
+        ``cmd_on_change_prompt_for_*`` config flag pattern.
+
+        Args:
+            settings: The ``NchantdOfficeInterfaceSettings`` instance
+                (carries ``self.app.model.store`` + ``self.config``).
+            tid: The ``tid_txt`` of the row to flip.
+            app_data_type: ``"app"`` (route to ``app_tab``) or
+                ``"doc"`` (route to ``doc_tab``).
+            visible: The new ``visible_bit`` value -- must be 0 or 1.
+
+        Returns:
+            ``settings`` for chainable call sites, or ``None`` on
+            invalid input.
+        """
+        if visible not in (0, 1):
+            logma.error(f"[settings] cmd_on_change_visible_right_tab: visible={visible!r} " f"is not 0 or 1; rejecting")
+            return None
+        if app_data_type not in ("app", "doc"):
+            logma.error(
+                f"[settings] cmd_on_change_visible_right_tab: app_data_type="
+                f"{app_data_type!r} is not 'app' or 'doc'; rejecting"
+            )
+            return None
+        table = "app_tab" if app_data_type == "app" else "doc_tab"
+        try:
+            store = settings.app.model.store
+            data = {
+                "table": {
+                    table: {
+                        "records": [[visible]],
+                        "columns": ["visible_bit"],
+                    },
                 },
-            },
-        }
-        # Canonical records + columns shape -- NOT the silent-no-op
-        # "data" dict shape (see Sprint 22 sonql fix).
-        store.update_record(data, "tid_txt", tid, "db")
-        # Mirror to config.dikt so the current session sees the
-        # change immediately. The Interface Tab right-side pane
-        # reads from this dict on next reload.
-        visible_right_tabs = settings.config.dikt.setdefault(
-            "visible_right_tabs", {}
-        )
-        visible_right_tabs[tid] = visible
-        logma.debug(
-            f"[settings] cmd_on_change_visible_right_tab: "
-            f"table={table} tid={tid!r} visible={visible}"
-        )
-    except Exception as e:
-        logma.error(
-            f"[settings] cmd_on_change_visible_right_tab failed: {e}",
-            exc_info=True,
-        )
-    return settings
+            }
+            # Canonical records + columns shape -- NOT the silent-no-op
+            # "data" dict shape (see Sprint 22 sonql fix).
+            store.update_record(data, "tid_txt", tid, "db")
+            # Mirror to config.dikt so the current session sees the
+            # change immediately. The Interface Tab right-side pane
+            # reads from this dict on next reload.
+            visible_right_tabs = settings.config.dikt.setdefault("visible_right_tabs", {})
+            visible_right_tabs[tid] = visible
+            logma.debug(f"[settings] cmd_on_change_visible_right_tab: " f"table={table} tid={tid!r} visible={visible}")
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_visible_right_tab failed: {e}",
+                exc_info=True,
+            )
+        return settings
 
     def get_settings(self):
         """"""
@@ -939,6 +906,10 @@ def cmd_on_change_visible_right_tab(settings, tid, app_data_type, visible):
         # selector at the top of the Interface tab is the new
         # canonical per-doc-type settings surface; this loop is just
         # the "Show Launch Catalog" checkbox list.
+        # TODO implement in NchantdOfficeDocumentConfigPane - features
+        #  - auto save document or not
+        #  - default document location to external with config to set default for document type to internal or cloud
+        #  -
         row = 0
         for _, document in self.document_types_df.iterrows():
             label_text = f"{document.get('name_txt', 'Document')}: Show Launch Catalog"
@@ -1003,10 +974,7 @@ def cmd_on_change_visible_right_tab(settings, tid, app_data_type, visible):
         try:
             rows = self._query_right_pane_tab_rows()
         except Exception as e:
-            logma.error(
-                f"[settings] _build_right_pane_visibility_checks: query "
-                f"failed ({type(e).__name__}: {e})"
-            )
+            logma.error(f"[settings] _build_right_pane_visibility_checks: query " f"failed ({type(e).__name__}: {e})")
             return group
         if rows is None or len(rows) == 0:
             return group
@@ -1058,6 +1026,7 @@ def cmd_on_change_visible_right_tab(settings, tid, app_data_type, visible):
         rows = store.get_table("vw_tab", cfg)
         try:
             import pandas as pd
+
             if isinstance(rows, pd.DataFrame):
                 if len(rows) == 0:
                     return []
