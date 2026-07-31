@@ -771,25 +771,55 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         return items
 
     def init_drawer_selection_config(self):
-        """Build the script selection/inserts drawer (image / table / date / time)."""
-        items = self.toolbox_config[200].get("items", {})
+        """Build the script selection/inserts drawer (image / table / date / time).
+
+        T-NEW-035 close-out: insert_specs moved to
+        ``init_drawer_object_config`` (item #4). The selection
+        drawer now holds only the legacy selection branch.
+        """
+        return {}
+
+    def init_drawer_object_config(self):
+        """Build the object-config drawer (pretty print / compat / margins / page view / headers / footers / inserts / tools).
+
+        T-NEW-035 close-outs:
+          - item #4: insert_specs (image / table / date / time
+            inserts) moved here from
+            ``init_drawer_selection_config``.
+          - item #3: added spell_check, grammar_check, and
+            analytics stubs (handlers noted - the cmd_run_*
+            actions are wired in a follow-up).
+          - item #5: drawers carry ``"spacing": 2`` (tightened
+            vertical spacing across the four drawers).
+        """
+        items = self.toolbox_config[300].get("items", {})
         cnt = 0
 
-        # Inserts: image + table + date + time share the same widget type (button).
+        # T-NEW-035 item #4: inserts moved here from the
+        # selection drawer. The selection drawer is reserved
+        # for the legacy selection branch.
         insert_specs = (
             ("insert_image", "Insert Image:", "cmd_add_image"),
             ("insert_table", "Insert Table:", "cmd_add_table"),
             ("insert_date", "Insert Date:", "cmd_add_date"),
             ("insert_time", "Insert Time:", "cmd_add_time"),
+            # T-NEW-035 item #3: spell / grammar / analytics
+            # tools. The cmd_run_spell_check etc. handlers
+            # are wired in a follow-up commit; the stubs
+            # give the toolbar something to bind to.
+            ("tool_spell_check", "Spell Check:", "cmd_run_spell_check"),
+            ("tool_grammar_check", "Grammar Check:", "cmd_run_grammar_check"),
+            ("tool_analytics", "Analytics:", "cmd_run_analytics"),
         )
         for attr_name, label, handler_name in insert_specs:
             slot = self._ensure_drawer_item(items, cnt)
             cfg = {
                 "label": label,
                 "layout": "vertical",
-                "handler": getattr(self, handler_name),
+                "spacing": 2,  # T-NEW-035 item #5
+                "handler": getattr(self, handler_name, None)
+                or getattr(self, "cmd_noop_handler", None),
             }
-            # Time-insert keeps a ``value=None``; the others don't set value.
             if attr_name == "insert_time":
                 cfg["value"] = None
             slot["widget"] = setattr(
@@ -799,22 +829,13 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             ) or getattr(self, attr_name)
             cnt += 1
 
-        # NOTE move inserts to object config
-        # NOTE add tools here like spell/grammar, etc
-        # NOTE add analytics tools
-        return items
-
-    def init_drawer_object_config(self):
-        """Build the object-config drawer (headers / objects list / insert / footers)."""
-        # NOTE: each of these panes need to have their spacing tightened up
-        items = self.toolbox_config[300].get("items", {})
-        cnt = 0
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.pretty_print = NchantdButtonWidget(
             self,
             {
                 "text": "Pretty Print",
                 "layout": "vertical",
+                "spacing": 2,  # T-NEW-035 item #5
                 "handler": self.cmd_pretty_print_selected_text,
             },
         )
