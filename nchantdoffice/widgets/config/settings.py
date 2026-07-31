@@ -40,6 +40,18 @@ from nchantdoffice.widgets.panes.document_settings import (
     get_settings_pane_for_doc_type,
 )
 
+
+# T-NEW-028 — Right-side tab visibility. The fallback list is the
+# legacy hardcoded 4-tab default returned when ``vw_tab`` is empty
+# (fresh DB, no seed rows). Used by ``get_right_pane_tab_options``
+# as the no-regression path.
+RIGHT_PANE_TAB_FALLBACK = [
+    "0 - Journal",
+    "1 - ToolBox",
+    "2 - Calendar",
+    "3 - Calculator",
+]
+
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
@@ -654,32 +666,165 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         """
         return get_settings_pane_for_doc_type(doc_type)
 
-    def get_right_pane_tab_options(self):
-        """Enumerate the available right-pane tabs as dropdown options.
+    def get_right_pane_tab_options(self=None):
+        """Enumerate the available right-side tabs as dropdown options.
 
-        Reads the application's right-pane tab registry when present;
-        falls back to the canonical 4-tab default list when the
-        registry is not yet wired up. Each entry is ``"<index> - <name>"``
-        so the user can identify the tab both by ordinal and label.
+        T-NEW-028: queries the ``vw_tab`` view (a UNION over
+        ``app_tab`` + ``doc_tab``) filtered by
+        ``tabset_type_txt = "right"`` AND ``visible_bit = 1``,
+        ordered by ``position_int``. Each entry is
+        ``"<index> - <name>"`` so the user can identify the tab
+        both by ordinal and label. Falls back to
+        ``RIGHT_PANE_TAB_FALLBACK`` when the query returns no
+        rows (fresh DB or no seed rows) -- this is the
+        no-regression path for users whose DB hasn't been seeded.
+
+        Available both as an instance method (``self.get_right_pane_tab_options()``)
+        and as a module-level helper (``get_right_pane_tab_options(settings)``)
+        so callers without a live Qt parent can drive it.
 
         Returns:
             A list of strings suitable for ``combobox.options``.
         """
+        # Normalise: support both ``self.get_right_pane_tab_options()``
+        # and the module-level ``get_right_pane_tab_options(settings)``
+        # entry point so the off-screen test path can drive it
+        # without a live Qt parent.
+        settings = self if self is not None else _get_right_pane_settings_arg()
         try:
+            store = None
+            if settings is not None:
+                app = getattr(settings, "app", None)
+                if app is not None:
+                    model = getattr(app, "model", None)
+                    if model is not None:
+                        store = getattr(model, "store", None)
+            if store is None:
+                logma.warning(
+                    "[settings] get_right_pane_tab_options: no store available, "
+                    "returning RIGHT_PANE_TAB_FALLBACK"
+                )
+                return list(RIGHT_PANE_TAB_FALLBACK)
+            cfg = {
+                "WHERE": {
+                    "IN": {
+                        "tabset_type_txt": ["right"],
+                        "visible_bit": [1],
+                    },
+                },
+                "ORDER": ["position_int"],
+            }
+            rows = store.get_table("vw_tab", cfg)
             tabs = []
-            view = getattr(self.app, "view", None)
-            if view is not None and hasattr(view, "panes"):
-                pane = view.panes.get("right") if isinstance(view.panes, dict) else None
-                if pane is not None:
-                    for idx, child in enumerate(getattr(pane, "widgets", lambda: [])()):
-                        name = type(child).__name__
-                        tabs.append(f"{idx} - {name}")
+            try:
+                # rows is a pandas DataFrame; iterate via to_dict
+                # so we can pick name_txt + position_int safely.
+                import pandas as pd  # local import -- pandas is core
+                if isinstance(rows, pd.DataFrame) and len(rows) > 0:
+                    records = rows.to_dict(orient="records")
+                    for rec in records:
+                        name = rec.get("name_txt")
+                        position = rec.get("position_int", len(tabs))
+                        if name:
+                            tabs.append(f"{position} - {name}")
+            except Exception as e:
+                logma.warning(
+                    f"[settings] get_right_pane_tab_options: row iteration "
+                    f"failed ({type(e).__name__}: {e}); falling back"
+                )
             if not tabs:
-                tabs = ["0 - Journal", "1 - ToolBox", "2 - Calendar", "3 - Calculator"]
+                return list(RIGHT_PANE_TAB_FALLBACK)
             return tabs
         except Exception as e:
-            logma.error(f"[settings] get_right_pane_tab_options failed: {e}", exc_info=True)
-            return ["0 - Journal", "1 - ToolBox", "2 - Calendar", "3 - Calculator"]
+            logma.error(
+                f"[settings] get_right_pane_tab_options failed: {e}",
+                exc_info=True,
+            )
+            return list(RIGHT_PANE_TAB_FALLBACK)
+
+
+def _get_right_pane_settings_arg():
+    """Module-level shim for ``get_right_pane_tab_options`` callers that
+    pass the settings instance directly (rather than calling the
+    instance method). Returns ``None`` -- callers must supply the
+    settings argument explicitly when using the module-level entry.
+    """
+    return None
+
+
+def cmd_on_change_visible_right_tab(settings, tid, app_data_type, visible):
+    """Toggle ``visible_bit`` for a right-side tab row.
+
+    T-NEW-028 handler wired into the Interface Tab right-side
+    config pane checklist. The right-side tab may live in either
+    ``app_tab`` (canonical tabs seeded by the right-side TabSet)
+    or ``doc_tab`` (right-side docs -- currently none seeded).
+    ``app_data_type`` discriminates: ``"app"`` -> ``app_tab``,
+    ``"doc"`` -> ``doc_tab``.
+
+    Per the user's note: "visibility is either 0 or 1". A value
+    outside that range is rejected (no ``update_record`` call).
+
+    Persists the new state to ``config.dikt["visible_right_tabs"]``
+    (keyed by ``tid``) so the current session sees the change
+    immediately -- mirrors the Sprint 23
+    ``cmd_on_change_prompt_for_*`` config flag pattern.
+
+    Args:
+        settings: The ``NchantdOfficeInterfaceSettings`` instance
+            (carries ``self.app.model.store`` + ``self.config``).
+        tid: The ``tid_txt`` of the row to flip.
+        app_data_type: ``"app"`` (route to ``app_tab``) or
+            ``"doc"`` (route to ``doc_tab``).
+        visible: The new ``visible_bit`` value -- must be 0 or 1.
+
+    Returns:
+        ``settings`` for chainable call sites, or ``None`` on
+        invalid input.
+    """
+    if visible not in (0, 1):
+        logma.error(
+            f"[settings] cmd_on_change_visible_right_tab: visible={visible!r} "
+            f"is not 0 or 1; rejecting"
+        )
+        return None
+    if app_data_type not in ("app", "doc"):
+        logma.error(
+            f"[settings] cmd_on_change_visible_right_tab: app_data_type="
+            f"{app_data_type!r} is not 'app' or 'doc'; rejecting"
+        )
+        return None
+    table = "app_tab" if app_data_type == "app" else "doc_tab"
+    try:
+        store = settings.app.model.store
+        data = {
+            "table": {
+                table: {
+                    "records": [[visible]],
+                    "columns": ["visible_bit"],
+                },
+            },
+        }
+        # Canonical records + columns shape -- NOT the silent-no-op
+        # "data" dict shape (see Sprint 22 sonql fix).
+        store.update_record(data, "tid_txt", tid, "db")
+        # Mirror to config.dikt so the current session sees the
+        # change immediately. The Interface Tab right-side pane
+        # reads from this dict on next reload.
+        visible_right_tabs = settings.config.dikt.setdefault(
+            "visible_right_tabs", {}
+        )
+        visible_right_tabs[tid] = visible
+        logma.debug(
+            f"[settings] cmd_on_change_visible_right_tab: "
+            f"table={table} tid={tid!r} visible={visible}"
+        )
+    except Exception as e:
+        logma.error(
+            f"[settings] cmd_on_change_visible_right_tab failed: {e}",
+            exc_info=True,
+        )
+    return settings
 
     def get_settings(self):
         """"""
@@ -775,6 +920,94 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         row += 1
 
         primary_layout.addLayout(center_settings_group.layout)
+
+    def _build_right_pane_visibility_checks(self):
+        """Build the right-pane tab visibility checklist widget
+        (T-NEW-028). One checkbox per row in ``vw_tab`` filtered by
+        ``tabset_type_txt = "right"`` -- checking/unchecking flips
+        ``visible_bit`` on the underlying ``app_tab`` / ``doc_tab``
+        row via ``cmd_on_change_visible_right_tab``.
+
+        The widget is a ``QGroupBox`` containing a ``QVBoxLayout`` of
+        ``NchantdCheckbox`` rows, one per right-side tab. Returned
+        empty (``QGroupBox`` with no children) when the DB query
+        returns no rows -- no false-positive toggles for users on a
+        fresh DB.
+        """
+        group = pyqt.QGroupBox()
+        group.setTitle("Right Side Tab Visibility")
+        layout = pyqt.QVBoxLayout()
+        layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+        group.setLayout(layout)
+        try:
+            rows = self._query_right_pane_tab_rows()
+        except Exception as e:
+            logma.error(
+                f"[settings] _build_right_pane_visibility_checks: query "
+                f"failed ({type(e).__name__}: {e})"
+            )
+            return group
+        if rows is None or len(rows) == 0:
+            return group
+        for rec in rows:
+            try:
+                name = rec.get("name_txt", "<unnamed>")
+                tid = rec.get("tid_txt", "")
+                app_data_type = rec.get("app_data_type", "app")
+                visible = bool(rec.get("visible_bit", 0))
+                checkbox_cfg = {
+                    "text": f"{name}: visible",
+                    "layout": "horizontal",
+                    "size": ["auto", "auto"],
+                    "value": visible,
+                    "handler": lambda event, _tid=tid, _adt=app_data_type: cmd_on_change_visible_right_tab(
+                        self, _tid, _adt, 1 if event.isChecked() else 0
+                    ),
+                }
+                layout.addWidget(NchantdCheckbox(self, checkbox_cfg).initWidget())
+            except Exception as e:
+                logma.warning(
+                    f"[settings] _build_right_pane_visibility_checks: skip "
+                    f"row name={rec.get('name_txt')!r} ({type(e).__name__}: {e})"
+                )
+        return group
+
+    def _query_right_pane_tab_rows(self):
+        """Run the right-side tab query and return rows as a list of
+        dicts (off-screen-test-friendly shape). Returns ``None`` when
+        the store is unavailable.
+        """
+        app = getattr(self, "app", None)
+        if app is None:
+            return None
+        model = getattr(app, "model", None)
+        if model is None:
+            return None
+        store = getattr(model, "store", None)
+        if store is None:
+            return None
+        cfg = {
+            "WHERE": {
+                "IN": {
+                    "tabset_type_txt": ["right"],
+                },
+            },
+            "ORDER": ["position_int"],
+        }
+        rows = store.get_table("vw_tab", cfg)
+        try:
+            import pandas as pd
+            if isinstance(rows, pd.DataFrame):
+                if len(rows) == 0:
+                    return []
+                return rows.to_dict(orient="records")
+        except Exception:
+            pass
+        # Fallback: assume rows is already iterable of dicts.
+        try:
+            return list(rows)
+        except Exception:
+            return []
 
     def _initialize_left_side(self, primary_layout):
         """"""
@@ -891,6 +1124,16 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         }
         self.refocus_default_document = NchantdDropDown(self, cfg).initWidget()
         right_side_settings_group.addWidget(self.refocus_default_document, 1, 0)
+
+        # T-NEW-028: right-pane tab visibility checklist. Below the
+        # "Selected Right Side Tab" dropdown, render one checkbox per
+        # row in ``app_tab`` / ``doc_tab`` (via ``vw_tab``) filtered
+        # by ``tabset_type_txt = "right"``. Each checkbox's handler
+        # is the module-level ``cmd_on_change_visible_right_tab`` --
+        # clicking flips ``visible_bit`` on the underlying row.
+        self.right_pane_tab_visibility_checks = self._build_right_pane_visibility_checks()
+        right_side_settings_group.addWidget(self.right_pane_tab_visibility_checks, 2, 0)
+
         # cfg = {
         #     "text": "On Startup Show Right Side Pane",
         #     "layout": "horizontal",
@@ -942,6 +1185,19 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             document_group_layout.addWidget(self.quick_launch_document_types[document["name_txt"]])
         right_side_settings_group.addWidget(document_group, cnt, 0)
         right_side_settings_group.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+
+
+# Module-level aliases so off-screen tests + non-method callers can
+# reach the right-pane tab machinery without instantiating the full
+# ``NchantdOfficeInterfaceSettings`` (which needs a live Qt parent).
+# Both aliases delegate to the live implementation (instance method
+# for ``get_right_pane_tab_options``; module-level function for
+# ``cmd_on_change_visible_right_tab``) so there's one source of
+# truth -- no duplication of the query / dispatch logic.
+get_right_pane_tab_options = NchantdOfficeInterfaceSettings.get_right_pane_tab_options
+# ``cmd_on_change_visible_right_tab`` is already module-level (it
+# takes a settings arg explicitly so callers without a live Qt
+# parent can drive it). No alias needed.
 
 
 class NchantdOfficeThemeSettings(NchantdThemeSettings):
