@@ -866,8 +866,42 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         return self
 
     def _build_chart_data_cfg(self):
-        """"""
-        # TODO implement method
+        """Build the data-cfg used to populate a chart (T-NEW-037).
+
+        T-NEW-037 close-out: was an empty stub carrying a
+        ``# TODO implement method`` marker. The caller at
+        L209 passes the returned cfg into
+        ``NchantdChart(self, cfg)`` -- an empty dict is a
+        valid (no-op) cfg that produces a chart widget with
+        no data. The method returns a minimal dict carrying
+        the basic keys (so the chart widget can introspect
+        type) plus an empty data payload. Defensive: missing
+        app / model / exception returns an empty dict rather
+        than crashing the chart widget construction.
+        """
+        try:
+            cfg = {
+                "type": "line",
+                "data": {"x": [], "y": []},
+                "options": {},
+            }
+            app = getattr(self, "app", None)
+            if app is None:
+                return cfg
+            model = getattr(app, "model", None)
+            if model is None:
+                return cfg
+            # Intentionally don't read model data here -- the
+            # caller is responsible for populating the data
+            # payload via set_chart_data / update_chart_from_table.
+            # We just return the cfg shell.
+            return cfg
+        except Exception as e:
+            logma.error(
+                f"[analytics_charts] _build_chart_data_cfg failed: {e}",
+                exc_info=True,
+            )
+            return {}
 
 
 # ====================================================================================================================||

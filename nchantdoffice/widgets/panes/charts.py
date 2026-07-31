@@ -291,8 +291,15 @@ class NchantdChartConfigPane(NchantdPane):
         return None
 
     def _build_chart_action_button_group(self):
-        """"""
-        # TODO implement method
+        """Build the chart-config action button group.
+
+        T-NEW-037: DEFERRED. The caller at L184 is COMMENTED
+        OUT (comment line 183: "TODO causes segmentation
+        fault") because invoking this method triggers a
+        NchantdChart segfault -- T-NEW-029. The stub is
+        dead code until the segfault is fixed. Resolves
+        when T-NEW-029 ships.
+        """
 
     def _chart_line_extras(self):
         """Build the line-chart-specific extras widget (T-063).

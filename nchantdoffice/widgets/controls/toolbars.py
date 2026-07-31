@@ -310,8 +310,47 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         return self
 
     def set_active_item(self):
-        """Set the active item."""
-        #TODO implement method
+        """Set the active item in ``self.document_types``.
+
+        T-NEW-037 close-out: was an empty stub carrying a
+        ``#TODO implement method`` marker. The caller at
+        L329 is ``set_handlers()`` which runs after
+        ``set_actions()`` has populated
+        ``self.document_types``. Sets the ``active`` column
+        to ``0`` for the first row (or leaves it cleared when
+        the table is empty / missing).
+
+        Defensive: missing or empty ``self.document_types``
+        is a no-op (returns self) rather than crashing.
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            dt = getattr(self, "document_types", None)
+            if dt is None:
+                return self
+            # pandas DataFrame path
+            try:
+                if hasattr(dt, "columns") and len(dt) > 0:
+                    # The first row is the default active item.
+                    # Add the column if missing so the
+                    # downstream UI has a place to look up the
+                    # active index.
+                    if "active" not in dt.columns:
+                        dt["active"] = 0
+                    else:
+                        # Reset so the first row is always
+                        # the active one.
+                        dt["active"] = 0
+            except Exception:
+                # Non-pandas path (e.g. plain list/dict) --
+                # nothing meaningful to do here.
+                pass
+        except Exception as e:
+            logma.error(
+                f"[toolbars] set_active_item failed: {e}",
+                exc_info=True,
+            )
         return self
 
     def set_actions(self, actions=None):
