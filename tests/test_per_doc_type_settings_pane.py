@@ -312,3 +312,46 @@ def test_get_doc_type_settings_pane_helper_returns_registry_class():
     assert settings.get_doc_type_settings_pane("Image") is NchantdImageConfigPane
     assert settings.get_doc_type_settings_pane("Diagram") is NchantdOfficeDocumentConfigPane
     assert settings.get_doc_type_settings_pane("UnknownType") is NchantdOfficeDocumentConfigPane
+
+
+def test_center_pane_uses_checkbox_for_per_doc_type_rows():
+    """T-NEW-027 step 5: the per-doc-type "Show Launch Catalog" row loop
+    in ``_initialize_center`` must render a ``NchantdCheckbox``, not a
+    ``NchantdOfficeDocumentConfigPane``. Previously the loop misused
+    the settings pane as a checkbox wrapper -- the pane ignored the
+    checkbox-style cfg keys and rendered as an empty widget.
+
+    This is a source-level test (regex on the file) rather than a
+    behaviour test because driving ``_initialize_center`` requires a
+    live Qt parent + a real ``self.document_types_df`` -- both of
+    which are out of scope for the off-screen test path. The
+    assertion is on the exact line that was buggy (previously called
+    ``NchantdOfficeDocumentConfigPane(self, cfg).initWidget()``).
+    """
+    import re
+    from pathlib import Path
+    settings_py = Path(
+        "/home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/"
+        "widgets/config/settings.py"
+    ).read_text()
+    # Find _initialize_center method body
+    m = re.search(
+        r"def _initialize_center\(self.*?\n(?=\n    def |\Z)",
+        settings_py,
+        re.S,
+    )
+    assert m, "_initialize_center method not found in settings.py"
+    body = m.group(0)
+    # The fix: per-doc-type rows are NchantdCheckbox, not
+    # NchantdOfficeDocumentConfigPane.
+    assert "NchantdCheckbox(self, cfg).initWidget()" in body, (
+        "Per-doc-type 'Show Launch Catalog' row must use "
+        "NchantdCheckbox -- not the old NchantdOfficeDocumentConfigPane "
+        "misuse. The bug was the pane ignored checkbox-style cfg keys "
+        "and rendered as an empty widget."
+    )
+    assert "NchantdOfficeDocumentConfigPane(self, cfg).initWidget()" not in body, (
+        "_initialize_center still calls "
+        "NchantdOfficeDocumentConfigPane(self, cfg).initWidget() "
+        "-- the T-NEW-027 step 5 misuse regression."
+    )

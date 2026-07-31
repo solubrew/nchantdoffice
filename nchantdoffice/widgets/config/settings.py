@@ -37,7 +37,6 @@ from nchantrs.widgets.groups import NchantdVScrollGroupBox, NchantdHGroupBox
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantdoffice.widgets.panes.document_settings import (
-    NchantdOfficeDocumentConfigPane,
     get_settings_pane_for_doc_type,
 )
 
@@ -738,10 +737,17 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         center_settings_group.scroll.setHorizontalScrollBarPolicy(pyqt.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         center_settings_group.setTitle("Center Pane Settings")
 
-        # Per-document-type configuration pane: each registered
+        # Per-document-type launch-catalog toggle: each registered
         # document type gets its own row in the center settings grid.
-        # Each row has a label + a launch-catalog checkbox wired to
-        # ``cmd_on_change_document_catalog``.
+        # Each row is a NchantdCheckbox (text + handler + value) wired
+        # to cmd_on_change_document_catalog. Previously this loop
+        # rendered NchantdOfficeDocumentConfigPane (a settings pane)
+        # per row, but passed it checkbox-style cfg keys (text /
+        # handler / value) -- the pane ignored them and the row
+        # rendered as an empty widget. The T-NEW-027 doc-type
+        # selector at the top of the Interface tab is the new
+        # canonical per-doc-type settings surface; this loop is just
+        # the "Show Launch Catalog" checkbox list.
         row = 0
         for _, document in self.document_types_df.iterrows():
             label_text = f"{document.get('name_txt', 'Document')}: Show Launch Catalog"
@@ -752,8 +758,8 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
                 "handler": self.cmd_on_change_document_catalog,
                 "value": getattr(self, "show_document_catalog", False),
             }
-            config_pane = NchantdOfficeDocumentConfigPane(self, cfg).initWidget()
-            center_settings_group.addWidget(config_pane, row, 0)
+            catalog_toggle = NchantdCheckbox(self, cfg).initWidget()
+            center_settings_group.addWidget(catalog_toggle, row, 0)
             row += 1
 
         # Toolbar name-log popup toggle (T-016 surface)
