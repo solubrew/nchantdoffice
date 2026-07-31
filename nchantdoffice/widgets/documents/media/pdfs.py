@@ -180,7 +180,8 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         if cfg is None:
             cfg = {}
         cfg["buttons"] = {49: "_insert_stretch"}
-        cfg["buttons"][10] = {"action": "set_markup_edit", "handler": ""}
+        # PUSH to 0.0.3 - implement the markup features
+        # cfg["buttons"][10] = {"action": "set_markup_edit", "handler": ""}
         # cfg["buttons"][11] = {"action": "", "handler": ""}
         super().initView(cfg)
 
