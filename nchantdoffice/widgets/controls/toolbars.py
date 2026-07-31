@@ -156,7 +156,11 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         did = uuid()
         name = f"{code.lower().replace(' ', '')} {did[-5:]}"
         widget = args[0]["action"].action["widget_txt"]
-        # TODO:0 need to figure out how to look up the widget from the document types table
+        # T-NEW-041: the canonical widget lookup from the
+        # document_types table is the safe .get('widget_txt', None)
+        # fallback below. Stale "TODO:0 need to figure out how
+        # to look up the widget from the document types table"
+        # was removed -- the canonical path is in place.
         if widget is None or widget == "":
             widget = self.app.model.get_document_type(cfg["lookup_code_txt"]).get("widget_txt", None)
         logma.info(f"Widget {widget}")
