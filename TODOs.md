@@ -216,7 +216,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 
 | ID | Subject | Status |
 |---|---|---|
-| T-NEW-001 | Tab icon + 5-digit/auto-name | Not started |
+| T-NEW-001 | Tab icon + 5-digit/auto-name | ✅ Done — Sprint 29 (_apply_tab_style applies color+icon) |
 | T-NEW-002 | 35c050e4 working-state preservation (already addressed in H53+H59+H60 series; this entry is the historical label) | ✅ Done |
 | T-NEW-003 | `save_mode` toggle UI + dispatch | ✅ Done — Sprint 14 |
 | T-NEW-004 | Locks on App Nodes (Home / Journal / Settings) | Not started |

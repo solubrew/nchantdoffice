@@ -673,6 +673,75 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             maybe_prompt_for_upgrade(user, on_tab_created=True)
         except Exception as e:
             logma.warning(f"[models] add_tab upgrade-prompt skipped: {e}")
+        # T-NEW-001: apply the tab color / icon stored in
+        # self.config.dikt (set by new.py:cmd_color_select /
+        # cmd_icon_select). When neither is set the helper is a
+        # no-op, so single-instance users see no behaviour
+        # change.
+        self._apply_tab_style(tab)
+        return tab
+
+    def _apply_tab_style(self, tab):
+        """Apply the user-selected tab color / icon (T-NEW-001).
+
+        Reads ``self.config.dikt["tab_color"]`` and
+        ``self.config.dikt["tab_icon"]`` (set by
+        ``NchantdOfficeNewPane.cmd_color_select`` /
+        ``cmd_icon_select``) and applies them to the tab
+        widget:
+          - ``tab_color``: applied as a ``background-color``
+            stylesheet on the tab widget.
+          - ``tab_icon``: applied via
+            ``tab.parent().setTabIcon(tab.position, path)``.
+
+        Defensive: missing tab, missing config, missing
+        parent, or any Qt exception is logged + swallowed
+        rather than crashing the add_tab hot path. Returns
+        the tab (or None when tab is None) for chainable
+        call sites.
+
+        Args:
+            tab: the tab widget returned by add_tab, or
+                None when no tab is available.
+
+        Returns:
+            The tab argument unchanged, or None when tab
+            was None.
+        """
+        if tab is None:
+            return None
+        try:
+            config = getattr(self, "config", None)
+            if config is None:
+                return tab
+            dikt = getattr(config, "dikt", None) or {}
+            tab_color = dikt.get("tab_color")
+            if isinstance(tab_color, str) and tab_color:
+                try:
+                    tab.setStyleSheet(
+                        f"background-color: {tab_color};"
+                    )
+                except Exception as e:
+                    logma.warning(
+                        f"[models] _apply_tab_style: "
+                        f"setStyleSheet failed ({type(e).__name__}: {e})"
+                    )
+            tab_icon = dikt.get("tab_icon")
+            if isinstance(tab_icon, str) and tab_icon:
+                try:
+                    parent = tab.parent()
+                    position = getattr(tab, "position", None)
+                    if parent is not None and position is not None:
+                        parent.setTabIcon(position, tab_icon)
+                except Exception as e:
+                    logma.warning(
+                        f"[models] _apply_tab_style: "
+                        f"setTabIcon failed ({type(e).__name__}: {e})"
+                    )
+        except Exception as e:
+            logma.warning(
+                f"[models] _apply_tab_style failed: {e}"
+            )
         return tab
 
     def add_day_node(self, day, month, year, pid=None):
