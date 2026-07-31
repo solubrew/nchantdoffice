@@ -1145,8 +1145,10 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # T-removed: commented-out refocus-right-side-tab checkbox block
         # (T10/T11/T12). The dropdown below (self.refocus_default_document)
         # already covers the "select right side tab" functionality.
+        # TODO lock default right side tab to Ad tab for free users
+
         cfg = {
-            "label": "Selected Right Side Tab",
+            "label": "Default Right Side Tab",
             "layout": "horizontal",
             "combobox": {"options": self.get_right_pane_tab_options()},
             "value": self.default_right_side_tab,
@@ -1154,67 +1156,15 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         }
         self.refocus_default_document = NchantdDropDown(self, cfg).initWidget()
         right_side_settings_group.addWidget(self.refocus_default_document, 1, 0)
-
         # T-NEW-028: right-pane tab visibility checklist. Below the
         # "Selected Right Side Tab" dropdown, render one checkbox per
         # row in ``app_tab`` / ``doc_tab`` (via ``vw_tab``) filtered
         # by ``tabset_type_txt = "right"``. Each checkbox's handler
         # is the module-level ``cmd_on_change_visible_right_tab`` --
         # clicking flips ``visible_bit`` on the underlying row.
+        # make visibilty of Ad tab forced to on and read only config for free users
         self.right_pane_tab_visibility_checks = self._build_right_pane_visibility_checks()
         right_side_settings_group.addWidget(self.right_pane_tab_visibility_checks, 2, 0)
-
-        # cfg = {
-        #     "text": "On Startup Show Right Side Pane",
-        #     "layout": "horizontal",
-        #     "size": ["auto", "auto"],
-        #     "value": self.show_right_side_tab,
-        #     "handler": self.cmd_on_change_show_right_side_pane,
-        # }
-        # self.right_side_pane = NchantdCheckbox(self, cfg).initWidget()
-        # right_side_settings_group.addWidget(self.right_side_pane, 2, 0)
-
-        # group = pyqt.QGroupBox("Right Side Tabs List")
-        # layout = pyqt.QVBoxLayout()
-        # group.setLayout(layout)
-        # data = ["Journal", "ToolBox", "Calendar", "Calculator"]
-        # cfg = {"text": "Right Side Tabs List", "layout": "horizontal", "data": data}
-        # self.right_side_pane_tabs_list = NchantdList(self, cfg).initWidget()
-        # layout.addWidget(self.right_side_pane_tabs_list)
-        # cfg = {"label": "Tab Name: ", "layout": "horizontal"}
-        # self.tab_entry = NchantdEntryEditor(self, cfg).initWidget()
-        # layout.addWidget(self.tab_entry)
-        # cfg = {"label": "Tab Type: ", "layout": "horizontal"}
-        # self.tab_type_entry = NchantdDropDown(self, cfg).initWidget()
-        # layout.addWidget(self.tab_type_entry)
-        # cfg = {"label": "Sequence: ", "layout": "horizontal"}
-        # self.tab_sequence_spin = NchantdLabeledSpinBox(self, cfg).initWidget()
-        # layout.addWidget(self.tab_sequence_spin)
-        # cfg = {"text": "Accept Buttons: ", "layout": "horizontal"}
-        # self.new_tab_accept_buttons = NchantdAcceptButtons(self, cfg).initWidget()
-        # layout.addWidget(self.new_tab_accept_buttons)
-        # right_side_settings_group.addWidget(group, 3, 0)
-        cnt = 0
-        if self.config.dikt.get("has_quick_launch_toolbar", False) is True:
-            self.quick_launch_toolbar.setChecked(True)
-        # left_side_settings_group.addWidget(self.quick_launch_toolbar, cnt, 0)
-        # cnt += 1
-        document_group = pyqt.QGroupBox()
-        document_group.setTitle("Quick launch Documents")
-        document_group_layout = pyqt.QVBoxLayout()
-        document_group_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
-        document_group.setLayout(document_group_layout)
-        self.quick_launch_document_types = {}
-        for i, document in self.document_types_df.iterrows():
-            cfg = {"text": document["name_txt"], "layout": "horizontal", "size": ["auto", "auto"]}
-            self.quick_launch_document_types[document["name_txt"]] = NchantdCheckbox(self, cfg).initWidget()
-            # if not self.quick_launch_toolbar.isChecked():
-            #     self.quick_launch_document_types[document["name_txt"]].setDisabled(True)
-            if document["quick_launch_bit"] == 1:
-                self.quick_launch_document_types[document["name_txt"]].setChecked(True)
-            document_group_layout.addWidget(self.quick_launch_document_types[document["name_txt"]])
-        right_side_settings_group.addWidget(document_group, cnt, 0)
-        right_side_settings_group.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
 
 
 # Module-level aliases so off-screen tests + non-method callers can
