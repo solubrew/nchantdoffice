@@ -231,7 +231,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-027 | Per-document-type settings pane (Interface Tab) | ✅ Done — Sprint 29 (hybrid / Option C: shared base + 4 subclasses) |
 | T-NEW-028 | Right Pane tab visibility config | ✅ Done — Sprint 29 (queries vw_tab for tabset_type_txt="right") |
 | T-NEW-029 | Tab drag-init only on tab-name area | 🆕 Logged (2026-07-30) — design decision required |
-| T-NEW-030 | Drag tab to a different node — persist parent | 🆕 Logged (2026-07-30) |
+| T-NEW-030 | Drag tab to a different node — persist parent | ✅ Done — Sprint 29 (cmd_set_tab_parent via records+columns shape) |
 | T-NEW-031 | Drag tab to rightside tabset — reload to original | 🆕 Logged (2026-07-30) |
 | T-NEW-032 | Tab name updates to file name on file open (Interface Tab config) | 🆕 Logged (2026-07-30) |
 | T-NEW-033 | Search (global / node / tab) + finish `NchantdOfficeApplicationToolBox` | 🆕 Logged (2026-07-30) — design decision required |
@@ -581,6 +581,65 @@ No priority tier — small persistence fix.
    `tests/test_tab_to_node_drag_persistence.py` asserting
    `parent_nid` is written to the DB on drop and a reload
    reads the new parent.
+
+#### T-NEW-030 — Sprint 29 close-out
+
+Implemented in Sprint 29 (commit `c5a0d4f` + tracker).
+
+Two bugs fixed, both pre-existing:
+
+  1. ``NchantdOfficeCloakModel.change_tab_parent`` used the
+     silent-no-op ``"data"`` dict shape (Sprint 22 fix
+     territory) AND scoped by ``nid_txt`` (the source node)
+     instead of ``tid_txt`` (the target tab's primary key).
+     Both bugs would silently lose the parent update.
+
+  2. ``widgets/trees.py:dropEvent`` emitted the
+     ``item_dropped_on_tabs`` signal when a tab was dropped
+     on a tree node, but nothing connected to it. The parent
+     update was lost on every drop.
+
+The canonical implementation now lives on
+``NchantdOfficeCloakModel.cmd_set_tab_parent(tab,
+new_parent_node)`` -- mirrors the Sprint 23
+``cmd_on_change_prompt_for_*`` config-flag pattern, uses the
+canonical records + columns dict shape, scopes on
+``tid_txt`` (the tab's primary key), writes
+``pid_txt = new_parent_node.nid_txt``, and returns
+``self`` for chainable call sites. Defensive: rejects
+missing ``tid_txt`` or ``nid_txt`` rather than writing
+empty values that would orphan the tab.
+
+The legacy ``change_tab_parent(pid)`` is kept as a thin
+wrapper for backward compatibility (zero callers as of
+Sprint 29 per the survey, but the name still appears in
+the test stubs so we don't break the contract).
+
+The drop handler in ``widgets/trees.py`` was rewritten to
+resolve the target tree node via
+``self.tree.indexAt(event.pos())``, look up the source
+tab's ``tid_txt`` from the tab model, and call
+``cmd_set_tab_parent`` directly. Direct call was chosen
+over a signal connect because the previous
+``item_dropped_on_tabs`` signal had no consumers -- a
+signal-to-slot would just add an indirection. The signal
+itself is left in place for any future external listener.
+
+The Migration plan step 2 said "wire the drop handler in
+``widgets/tabs.py``" but the actual drop target is the tree
+widget (``widgets/trees.py``) -- the card had a small
+inaccuracy. The wiring lives in ``trees.py:dropEvent`` +
+``trees.py:_handle_tab_dropped_on_node`` (the new dispatch
+helper).
+
+Test surface: 7 new tests under
+``tests/test_tab_to_node_drag_persistence.py`` (147 -> 154
+passed; +7). Source-level tests guard the wiring between
+``dropEvent`` and ``_handle_tab_dropped_on_node``.
+
+``tabset_type_txt`` was not touched -- the card's affected
+sites were wrong about the column name (it's ``pid_txt``
+not ``parent_nid``). Schema is unchanged.
 
 ### T-NEW-031 — Drag a tab to the rightside tabset — it reloads to its original location (2026-07-30)
 
