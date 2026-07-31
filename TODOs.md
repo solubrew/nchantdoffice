@@ -27,6 +27,7 @@
 - implement the ability to drag a tab to the rightside tabset and it reloads to its original location
 - add to Settings/Interface tab config to allow a user to select that tab name updates to the file name when a file is opened 
 - implement search across all nodes and tabs as well as node specific and tab specific search as well finish code in the NchantdOfficeApplicationToolBox 
+- NchantdOfficeJournalEditor needs to have the always save functionality fixed as it has regressed during development
 
 ---
 
