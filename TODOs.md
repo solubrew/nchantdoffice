@@ -240,7 +240,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-035 | Script-tool polish (`file_format` vs `syntax`, drawer-redraw, object-config inserts, pane-spacing) | 🆕 Logged (2026-07-30) |
 | T-NEW-036 | Journal restore on tab change | ✅ Done — Sprint 29 (refresh_content on tab focus) |
 | T-NEW-037 | Empty method stubs (analytics_charts, charts, toolbars) | ✅ Done — Sprint 29 (2 filled, 1 deferred to T-NEW-029) |
-| T-NEW-038 | Database-save icon for internally stored documents | 🆕 Logged (2026-07-31) |
+| T-NEW-038 | Database-save icon for internally stored documents | ✅ Done — Sprint 29 (_save_action picks save_database for internal docs) |
 | T-NEW-039 | Refactor: move document-save hack to model + consolidate add_tab/add_document | 🆕 Logged (2026-07-31) |
 | T-NEW-040 | Toolbar init tech debt (redundant init_variables + MultiInstance switch) | 🆕 Logged (2026-07-31) |
 | T-NEW-041 | Widget lookup from document_types table | 🆕 Logged (2026-07-31) |

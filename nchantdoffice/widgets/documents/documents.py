@@ -254,8 +254,45 @@ class NchantdOfficeDocumentMixin:
         return self
 
     def cmd_save_tab(self, event=None, *args, **kwargs):
-        """"""
+        """ "" """
         self.save()
+
+    @staticmethod
+    def _save_action(document):
+        """Return the save action name for a document (T-NEW-038).
+
+        When the document's location is ``"internal"`` (stored
+        in the NchantdOffice SQLite database), the action
+        name is ``save_database`` -- the nchantrs action table
+        (applicationmodels.yaml:609) maps that to the
+        ``database-save`` icon. For ``"external"`` (or any
+        unknown / missing location), the action stays the
+        legacy ``save`` (icon: ``save.svg``).
+
+        Defensive: missing document, missing location
+        attribute, or non-string location all fall back to
+        the legacy ``save`` action rather than raising.
+
+        Args:
+            document: the document instance, or ``None``
+                when the helper is called before a document
+                is open (e.g. from a static UI binding).
+
+        Returns:
+            ``"save_database"`` for internal documents,
+            ``"save"`` otherwise.
+        """
+        if document is None:
+            return "save"
+        try:
+            location = getattr(document, "location", None)
+        except Exception:
+            return "save"
+        if not isinstance(location, str):
+            return "save"
+        if location == "internal":
+            return "save_database"
+        return "save"
 
     def create_data_table(self):
         """"""
@@ -348,9 +385,15 @@ class NchantdOfficeDocumentMixin:
             # DEBUG the open file dialog is not respecting close/cancel commands
             100: {"action": "open_local", "handler": self.cmd_open_local_file},
             101: {
-                "action": "save",
+                # T-NEW-038: pick the action that matches the
+                # document's storage location. For internal
+                # (SQLite) docs the action table maps to the
+                # database-save icon; for external (file on disk)
+                # the legacy save.svg icon. The legacy hard-coded
+                # "save" is preserved for unknown / missing docs.
+                "action": self._save_action(self.document),
                 "handler": self.cmd_save_tab,
-            },  # TODO toggle to use the database-save.svg icon for internally stored documents
+            },
             150: {"action": "redo", "handler": self.cmd_redo},
             200: {"action": "undo", "handler": self.cmd_undo},
             400: {"action": "cancel", "handler": self.cmd_delete_tab},
