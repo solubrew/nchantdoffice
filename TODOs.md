@@ -232,7 +232,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-028 | Right Pane tab visibility config | ✅ Done — Sprint 29 (queries vw_tab for tabset_type_txt="right") |
 | T-NEW-029 | Tab drag-init only on tab-name area | 🆕 Logged (2026-07-30) — design decision required |
 | T-NEW-030 | Drag tab to a different node — persist parent | ✅ Done — Sprint 29 (cmd_set_tab_parent via records+columns shape) |
-| T-NEW-031 | Drag tab to rightside tabset — reload to original | 🆕 Logged (2026-07-30) |
+| T-NEW-031 | Drag tab to rightside tabset — reload to original | ✅ Done — Sprint 29 (in-memory scratch view, no DB write) |
 | T-NEW-032 | Tab name updates to file name on file open (Interface Tab config) | 🆕 Logged (2026-07-30) |
 | T-NEW-033 | Search (global / node / tab) + finish `NchantdOfficeApplicationToolBox` | 🆕 Logged (2026-07-30) — design decision required |
 | T-NEW-034 | Data Source config card polish (apikey / tracked / size / retention / save) | 🆕 Logged (2026-07-30) |
@@ -670,6 +670,72 @@ No priority tier — small UX behaviour.
    `tests/test_right_side_tabset_recovery.py` asserting a drop
    onto the right side does NOT change `parent_nid` on disk,
    and a reload restores the original tabset placement.
+
+#### T-NEW-031 — Sprint 29 close-out
+
+Implemented in Sprint 29 (commit `d1b7e2a` + tracker).
+
+The card's plan was a 3-step migration: mark in-memory,
+re-home on reload, test. The implementation took the
+shortest path through those three:
+
+  1. ``NchantdOfficeCloakModel.cmd_open_tab_in_right_scratch(tab)``
+     records the tab's original parent (from ``tab.pid_txt``)
+     in ``self._right_scratch_tabs[tid]`` and APPENDS the tab
+     to the right pane's in-memory ``tabsdata``. Returns
+     ``self`` for chainable call sites. NO DB write -- the
+     method is in-memory only.
+
+  2. "Reload" is automatic: the right pane is rebuilt from
+     the SQL filter ``tabset_type_txt = "right"`` on every
+     ``buildTabSet`` call. Since the dropped tab's DB row
+     ``tabset_type_txt`` was never changed, the next reload's
+     query returns only the original right-side tabs -- the
+     dropped tab is naturally excluded, "springing back" to
+     its original tabset. No explicit re-home step is needed.
+
+  3. The drop handler in ``widgets/tabs.py:dropEvent`` was
+     extended to branch on ``self.tabset == "right"`` (set
+     by ``buildTabSet`` when the right pane is populated).
+     On a right-pane drop, the new
+     ``_handle_tab_dropped_in_right_scratch`` dispatch
+     helper resolves the source tab from the mime position
+     via the tab model and calls
+     ``cmd_open_tab_in_right_scratch``. On a center-pane
+     drop the original tab-reorder behaviour is preserved.
+
+The ``_right_scratch_tabs`` in-memory marker persists across
+reloads (it's not cleared) so a future explicit-undo
+gesture can re-home the tab back to its original node --
+the marker records the original ``pid_txt`` for that.
+
+The card's affected sites mentioned ``widgets/panes/documents.py:725
+tabset.go_to_previous_tab()`` -- that turned out to be
+unrelated; the right-pane reload doesn't need explicit
+go_to_previous_tab calls. The T-NEW-030 trees.py + T-NEW-031
+tabs.py split is the natural separation: trees drop is
+"change parent" (T-NEW-030), tabs drop is "open in right
+pane" (T-NEW-031).
+
+Test surface: 9 new tests under
+``tests/test_right_side_tabset_recovery.py`` (154 -> 163
+passed; +9). The 9 tests cover:
+
+  - the handler adds the tab to the right pane tabsdata
+  - the handler does NOT persist (no DB write)
+  - the handler records the original parent in
+    ``_right_scratch_tabs``
+  - the handler rejects missing tid_txt
+  - the handler returns self for chainable calls
+  - the handler appends (not replaces) when the right pane
+    has existing tabs
+  - the reload path restores the tab to its original tabset
+  - the in-memory marker survives the reload for explicit
+    undo
+  - the drop handler in ``widgets/tabs.py:dropEvent`` wires
+    the new method (source-level)
+
+Audit: 91.91% (unchanged). Testing: 100% pass.
 
 ### T-NEW-032 — Settings/Interface config: tab name updates to file name on file open (2026-07-30)
 
