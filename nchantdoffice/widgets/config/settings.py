@@ -1145,8 +1145,10 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # T-removed: commented-out refocus-right-side-tab checkbox block
         # (T10/T11/T12). The dropdown below (self.refocus_default_document)
         # already covers the "select right side tab" functionality.
+        # TODO lock default right side tab to Ad tab for free users
+
         cfg = {
-            "label": "Selected Right Side Tab",
+            "label": "Default Right Side Tab",
             "layout": "horizontal",
             "combobox": {"options": self.get_right_pane_tab_options()},
             "value": self.default_right_side_tab,
@@ -1154,13 +1156,13 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         }
         self.refocus_default_document = NchantdDropDown(self, cfg).initWidget()
         right_side_settings_group.addWidget(self.refocus_default_document, 1, 0)
-
         # T-NEW-028: right-pane tab visibility checklist. Below the
         # "Selected Right Side Tab" dropdown, render one checkbox per
         # row in ``app_tab`` / ``doc_tab`` (via ``vw_tab``) filtered
         # by ``tabset_type_txt = "right"``. Each checkbox's handler
         # is the module-level ``cmd_on_change_visible_right_tab`` --
         # clicking flips ``visible_bit`` on the underlying row.
+        # make visibilty of Ad tab forced to on and read only config for free users
         self.right_pane_tab_visibility_checks = self._build_right_pane_visibility_checks()
         right_side_settings_group.addWidget(self.right_pane_tab_visibility_checks, 2, 0)
 
