@@ -238,6 +238,13 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-033 | Search (global / node / tab) + finish `NchantdOfficeApplicationToolBox` | 🆕 Logged (2026-07-30) — design decision required |
 | T-NEW-034 | Data Source config card polish (apikey / tracked / size / retention / save) | 🔨 Partial — Sprint 29 (2 stubs filled: pane_size + apikey_visibility; 3 items open) |
 | T-NEW-035 | Script-tool polish (`file_format` vs `syntax`, drawer-redraw, object-config inserts, pane-spacing) | 🆕 Logged (2026-07-30) |
+| T-NEW-036 | Journal restore on tab change | ✅ Done — Sprint 29 (refresh_content on tab focus) |
+| T-NEW-037 | Empty method stubs (analytics_charts, charts, toolbars) | 🆕 Logged (2026-07-31) |
+| T-NEW-038 | Database-save icon for internally stored documents | 🆕 Logged (2026-07-31) |
+| T-NEW-039 | Refactor: move document-save hack to model + consolidate add_tab/add_document | 🆕 Logged (2026-07-31) |
+| T-NEW-040 | Toolbar init tech debt (redundant init_variables + MultiInstance switch) | 🆕 Logged (2026-07-31) |
+| T-NEW-041 | Widget lookup from document_types table | 🆕 Logged (2026-07-31) |
+| T-NEW-042 | Note position increment for multiple notes | 🆕 Logged (2026-07-31) |
 
 ### T-NEW-025 — Content versioning for `NchantdOfficeCloakModel.save` (2026-07-30)
 
@@ -1001,6 +1008,185 @@ improvements" entry which already catalogues this cluster.
    `tests/test_script_drawer_polish.py` asserting the file-
    format/syntax dispatch resolves correctly and each tool
    button opens its drawer.
+
+### T-NEW-036 — Journal restore on tab change (2026-07-31)
+
+The Journal document does not restore its content/state when
+the user switches tabs and comes back. The inline TODO at
+`widgets/documents/journal.py:75` says: "need to fix the
+restore functionality so that Journal restores properly on
+each tab change".
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/journal.py:75` — inline TODO
+- `nchantdoffice/widgets/documents/journal.py` — the
+  `initView` / restore path that runs on tab focus change.
+
+**Migration plan:**
+
+No priority tier — small UX bug.
+
+1. Trace the tab-change → `initView` path for
+   `NchantdOfficeJournalEditor`.
+2. Persist the journal's current entry/date on tab blur;
+   restore on tab focus.
+3. Add a regression test under
+   `tests/test_journal_restore.py`.
+
+### T-NEW-037 — Empty method stubs (2026-07-31)
+
+Three `# TODO implement method` markers flag empty method
+bodies that contribute to the `unfinished_code` audit
+dimension. All three are small method bodies that either
+`pass` or have no implementation.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/analytics/analytics_charts.py:870`
+  — empty method (likely a config or chart builder).
+- `nchantdoffice/widgets/panes/charts.py:295` — empty
+  method in the chart pane.
+- `nchantdoffice/widgets/controls/toolbars.py:314` — empty
+  method in the toolbar.
+
+**Migration plan:**
+
+No priority tier — backlog. Each stub needs its method body
+filled with the minimal viable implementation OR explicitly
+logged as deferred (with a `# See TODOs.md T-NEW-037`
+pointer replacing the `# TODO implement method` marker).
+
+1. Inspect each stub's class context to determine the
+   intended behaviour.
+2. Fill or defer each stub.
+3. Add regression tests for filled stubs.
+
+### T-NEW-038 — Database-save icon for internally stored documents (2026-07-31)
+
+The save button always uses the same icon regardless of
+whether the document is stored internally (SQLite) or
+externally (file on disk). The inline TODO at
+`widgets/documents/documents.py:353` says: "toggle to use
+the database-save.svg icon for internally stored documents".
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/documents.py:353` —
+  inline TODO on the save button config dict.
+
+**Migration plan:**
+
+No priority tier — cosmetic.
+
+1. Check `document.location` ("internal" vs "external").
+2. Set the save button icon conditionally
+   (`database-save.svg` for internal, `save.svg` for
+   external).
+3. Add a regression test under
+   `tests/test_save_button_icon.py`.
+
+### T-NEW-039 — Refactor: move document-save hack to model + consolidate add_tab/add_document (2026-07-31)
+
+Two related refactor TODOs:
+
+  1. `widgets/documents/documents.py:577` — "this has to be
+     moved to NchantdOfficeCloakModel this is a hack". The
+     save path reaches into the store directly from the
+     widget instead of routing through the model.
+  2. `widgets/controls/toolbars.py:193` — "cleanup add_tab,
+     add_document signatures and combine as much code as
+     possible". The two methods have diverged and share
+     significant duplicated logic.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/documents.py:577` —
+  inline TODO on a store-direct write.
+- `nchantdoffice/widgets/controls/toolbars.py:193` —
+  inline TODO on method signature cleanup.
+
+**Migration plan:**
+
+No priority tier — tech-debt refactor. Design decision
+required on the canonical signature shape.
+
+1. Move the store-direct write from `documents.py` to
+   `NchantdOfficeCloakModel`.
+2. Consolidate `add_tab` and `add_document` into a single
+   canonical entry point with kwargs for the optional
+   parameters.
+3. Update all callers.
+4. Add regression tests.
+
+### T-NEW-040 — Toolbar init tech debt (2026-07-31)
+
+Two tech-debt notes in `toolbars.py`:
+
+  1. `toolbars.py:125` — "this is redundant but for now we
+     need the app attribute to be set before the super call".
+     The `init_variables()` call is duplicated before
+     `super().__init__` to work around a parent-child
+     attribute ordering issue.
+  2. `toolbars.py:163` — "Switch to MultiInstance". The DB
+     alias is currently hardcoded; the comment wants
+     `self.app.model.instance.db` instead.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/controls/toolbars.py:125` —
+  redundant `init_variables` call.
+- `nchantdoffice/widgets/controls/toolbars.py:163` —
+  commented-out MultiInstance DB alias.
+
+**Migration plan:**
+
+No priority tier — tech debt. Low risk; can be cleaned up
+when the toolbar class is next touched.
+
+### T-NEW-041 — Widget lookup from document_types table (2026-07-31)
+
+The inline TODO at `toolbars.py:159` says: "need to figure
+out how to look up the widget from the document types
+table". The toolbar creates new document tabs and needs to
+resolve a widget class name from the `document_type` table.
+Currently the lookup is done via a hardcoded fallback or a
+string match; the TODO wants the canonical table lookup.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/controls/toolbars.py:159` —
+  inline TODO.
+
+**Migration plan:**
+
+No priority tier — small refactor.
+
+1. Use `self.app.model.get_document_type(doc_type)` to
+   resolve the `widget_txt` column.
+2. Replace the hardcoded lookup with the model helper.
+3. Add a regression test.
+
+### T-NEW-042 — Note position increment for multiple notes (2026-07-31)
+
+The inline TODO at `toolbars.py:279` says: "if there are
+multiple notes then the position will need to increment".
+The note-creation path currently uses a fixed position; if
+the user creates multiple notes in the same node, they
+would overlap.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/controls/toolbars.py:279` —
+  inline TODO.
+
+**Migration plan:**
+
+No priority tier — small bug-risk fix.
+
+1. Query the current note count for the active node.
+2. Set the new note's position to `count + 1`.
+3. Add a regression test.
 
 ### Live crashes — ALL CLOSED
 
