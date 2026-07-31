@@ -208,14 +208,54 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         super().dragEnterEvent(event)
 
     def dropEvent(self, event):
-        """Handle drops on tree"""
+        """Handle drops on tree
+
+        T-NEW-030: when a tab is dropped on a tree node, persist
+        the new parent via ``cmd_set_tab_parent``. The target
+        tree index is resolved via ``self.tree.indexAt(event.pos())``
+        and the source tab's ``tid`` is recovered from the mime
+        payload (the mime carries the source tab position; we
+        look up the row in the tab model to get the ``tid_txt``).
+        """
         mime_data = event.mimeData()
 
         if mime_data.hasFormat("application/x-nchantd-tab"):
-            # Tab dropped on tree - create reference or open
+            # Tab dropped on tree - persist the new parent.
+            # Resolve the target tree item (new parent).
+            target_index = self.tree.indexAt(event.pos()) if hasattr(self, "tree") else None
+            target_nid = None
+            if target_index is not None and target_index.isValid():
+                # Look up the underlying data via the tree model.
+                # The tree model exposes ``getNodeData(index)`` --
+                # the row carries ``nid_txt`` as its primary key.
+                try:
+                    if hasattr(self.tree.model(), "getNodeData"):
+                        data = self.tree.model().getNodeData(target_index)
+                        target_nid = (
+                            data.get("nid_txt")
+                            if isinstance(data, dict)
+                            else getattr(data, "nid", None)
+                        )
+                except Exception as e:
+                    logma.warning(
+                        f"[trees] dropEvent: target-node lookup "
+                        f"failed ({type(e).__name__}: {e})"
+                    )
+            # Resolve the source tab's tid from the source position.
             tab_data = mime_data.data("application/x-nchantd-tab")
-            logma.info(f"[trees] dropEvent (tab): emitting item_dropped_on_tabs")
-            self.item_dropped_on_tabs.emit(tab_data)
+            try:
+                source_index = int(tab_data.data().decode())
+            except Exception:
+                source_index = -1
+            logma.info(
+                f"[trees] dropEvent (tab): source_pos={source_index} "
+                f"target_nid={target_nid!r}"
+            )
+            # Persist the new parent via the canonical model method
+            # (records + columns dict shape, not the silent-no-op
+            # "data" shape). Only call when both the source tid and
+            # the target nid are available.
+            self._handle_tab_dropped_on_node(source_index, target_nid)
             event.acceptProposedAction()
 
         elif mime_data.hasFormat("application/x-nchantd-tree-item"):
@@ -224,6 +264,83 @@ class NchantdOfficeApplicationTree(NchantdWidget):
             event.acceptProposedAction()
 
         super().dropEvent(event)
+
+    def _handle_tab_dropped_on_node(self, source_tab_pos, target_nid):
+        """T-NEW-030: persist the new parent for a tab dropped on
+        a tree node. Resolves the source tab's ``tid_txt`` from
+        the source position via the tab model, then calls
+        ``cmd_set_tab_parent`` on the application model.
+
+        Args:
+            source_tab_pos: int -- the source tab's position in
+                the tab model (from the mime payload). -1 if
+                unparseable.
+            target_nid: str -- the new parent node's ``nid_txt``.
+                None if the drop landed on empty space (no target
+                node) -- in that case the call is a no-op.
+        """
+        if source_tab_pos < 0 or target_nid is None:
+            logma.debug(
+                f"[trees] _handle_tab_dropped_on_node: skipping "
+                f"(source_tab_pos={source_tab_pos} target_nid={target_nid!r})"
+            )
+            return
+        # Resolve the source tab's tid from the tab model.
+        # The app model exposes get_tab_documents or
+        # current_tab; the tab itself has a tid_txt attribute.
+        source_tid = None
+        try:
+            tab_model = None
+            app = getattr(self, "app", None)
+            if app is not None:
+                view = getattr(app, "view", None)
+                if view is not None and hasattr(view, "panes"):
+                    for pane_key in ("center", "right"):
+                        pane = view.panes.get(pane_key) if isinstance(view.panes, dict) else None
+                        if pane is not None:
+                            tm = getattr(pane, "model", None)
+                            if tm is not None and hasattr(tm, "tabs"):
+                                tab_model = tm
+                                break
+            if tab_model is not None and hasattr(tab_model, "tabs"):
+                tabs = tab_model.tabs
+                if 0 <= source_tab_pos < len(tabs):
+                    tab_obj = tabs[source_tab_pos]
+                    source_tid = (
+                        tab_obj.get("tid_txt")
+                        if isinstance(tab_obj, dict)
+                        else getattr(tab_obj, "tid_txt", None) or getattr(tab_obj, "tid", None)
+                    )
+        except Exception as e:
+            logma.warning(
+                f"[trees] _handle_tab_dropped_on_node: source-tab "
+                f"lookup failed ({type(e).__name__}: {e})"
+            )
+        if not source_tid:
+            logma.debug(
+                f"[trees] _handle_tab_dropped_on_node: could not "
+                f"resolve source tab tid (source_tab_pos={source_tab_pos})"
+            )
+            return
+        # Call the canonical model method (T-NEW-030).
+        try:
+            app = getattr(self, "app", None)
+            model = getattr(app, "model", None) if app is not None else None
+            if model is not None and hasattr(model, "cmd_set_tab_parent"):
+                model.cmd_set_tab_parent(
+                    {"tid_txt": source_tid},
+                    {"nid_txt": target_nid},
+                )
+                logma.debug(
+                    f"[trees] _handle_tab_dropped_on_node: persisted "
+                    f"tab={source_tid!r} new_parent={target_nid!r}"
+                )
+        except Exception as e:
+            logma.error(
+                f"[trees] _handle_tab_dropped_on_node: persist failed "
+                f"({type(e).__name__}: {e})",
+                exc_info=True,
+            )
 
     def initWidget(self, cfg=None):
         """"""

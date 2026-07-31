@@ -232,8 +232,8 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-027 | Per-document-type settings pane (Interface Tab) | ✅ Done — Sprint 29 (hybrid / Option C: shared base + 4 subclasses) |
 | T-NEW-028 | Right Pane tab visibility config | ✅ Done — Sprint 29 (queries vw_tab for tabset_type_txt="right") |
 | T-NEW-029 | Tab drag-init only on tab-name area | 🆕 Logged (2026-07-30) — design decision required |
-| T-NEW-030 | Drag tab to a different node — persist parent | 🆕 Logged (2026-07-30) |
-| T-NEW-031 | Drag tab to rightside tabset — reload to original | 🆕 Logged (2026-07-30) |
+| T-NEW-030 | Drag tab to a different node — persist parent | ✅ Done — Sprint 29 (cmd_set_tab_parent via records+columns shape) |
+| T-NEW-031 | Drag tab to rightside tabset — reload to original | ✅ Done — Sprint 29 (in-memory scratch view, no DB write) |
 | T-NEW-032 | Tab name updates to file name on file open (Interface Tab config) | 🆕 Logged (2026-07-30) |
 | T-NEW-033 | Search (global / node / tab) + finish `NchantdOfficeApplicationToolBox` | 🆕 Logged (2026-07-30) — design decision required |
 | T-NEW-034 | Data Source config card polish (apikey / tracked / size / retention / save) | 🆕 Logged (2026-07-30) |
@@ -583,6 +583,65 @@ No priority tier — small persistence fix.
    `parent_nid` is written to the DB on drop and a reload
    reads the new parent.
 
+#### T-NEW-030 — Sprint 29 close-out
+
+Implemented in Sprint 29 (commit `c5a0d4f` + tracker).
+
+Two bugs fixed, both pre-existing:
+
+  1. ``NchantdOfficeCloakModel.change_tab_parent`` used the
+     silent-no-op ``"data"`` dict shape (Sprint 22 fix
+     territory) AND scoped by ``nid_txt`` (the source node)
+     instead of ``tid_txt`` (the target tab's primary key).
+     Both bugs would silently lose the parent update.
+
+  2. ``widgets/trees.py:dropEvent`` emitted the
+     ``item_dropped_on_tabs`` signal when a tab was dropped
+     on a tree node, but nothing connected to it. The parent
+     update was lost on every drop.
+
+The canonical implementation now lives on
+``NchantdOfficeCloakModel.cmd_set_tab_parent(tab,
+new_parent_node)`` -- mirrors the Sprint 23
+``cmd_on_change_prompt_for_*`` config-flag pattern, uses the
+canonical records + columns dict shape, scopes on
+``tid_txt`` (the tab's primary key), writes
+``pid_txt = new_parent_node.nid_txt``, and returns
+``self`` for chainable call sites. Defensive: rejects
+missing ``tid_txt`` or ``nid_txt`` rather than writing
+empty values that would orphan the tab.
+
+The legacy ``change_tab_parent(pid)`` is kept as a thin
+wrapper for backward compatibility (zero callers as of
+Sprint 29 per the survey, but the name still appears in
+the test stubs so we don't break the contract).
+
+The drop handler in ``widgets/trees.py`` was rewritten to
+resolve the target tree node via
+``self.tree.indexAt(event.pos())``, look up the source
+tab's ``tid_txt`` from the tab model, and call
+``cmd_set_tab_parent`` directly. Direct call was chosen
+over a signal connect because the previous
+``item_dropped_on_tabs`` signal had no consumers -- a
+signal-to-slot would just add an indirection. The signal
+itself is left in place for any future external listener.
+
+The Migration plan step 2 said "wire the drop handler in
+``widgets/tabs.py``" but the actual drop target is the tree
+widget (``widgets/trees.py``) -- the card had a small
+inaccuracy. The wiring lives in ``trees.py:dropEvent`` +
+``trees.py:_handle_tab_dropped_on_node`` (the new dispatch
+helper).
+
+Test surface: 7 new tests under
+``tests/test_tab_to_node_drag_persistence.py`` (147 -> 154
+passed; +7). Source-level tests guard the wiring between
+``dropEvent`` and ``_handle_tab_dropped_on_node``.
+
+``tabset_type_txt`` was not touched -- the card's affected
+sites were wrong about the column name (it's ``pid_txt``
+not ``parent_nid``). Schema is unchanged.
+
 ### T-NEW-031 — Drag a tab to the rightside tabset — it reloads to its original location (2026-07-30)
 
 Dropping a tab on the right-side tabset is treated as an
@@ -612,6 +671,72 @@ No priority tier — small UX behaviour.
    `tests/test_right_side_tabset_recovery.py` asserting a drop
    onto the right side does NOT change `parent_nid` on disk,
    and a reload restores the original tabset placement.
+
+#### T-NEW-031 — Sprint 29 close-out
+
+Implemented in Sprint 29 (commit `d1b7e2a` + tracker).
+
+The card's plan was a 3-step migration: mark in-memory,
+re-home on reload, test. The implementation took the
+shortest path through those three:
+
+  1. ``NchantdOfficeCloakModel.cmd_open_tab_in_right_scratch(tab)``
+     records the tab's original parent (from ``tab.pid_txt``)
+     in ``self._right_scratch_tabs[tid]`` and APPENDS the tab
+     to the right pane's in-memory ``tabsdata``. Returns
+     ``self`` for chainable call sites. NO DB write -- the
+     method is in-memory only.
+
+  2. "Reload" is automatic: the right pane is rebuilt from
+     the SQL filter ``tabset_type_txt = "right"`` on every
+     ``buildTabSet`` call. Since the dropped tab's DB row
+     ``tabset_type_txt`` was never changed, the next reload's
+     query returns only the original right-side tabs -- the
+     dropped tab is naturally excluded, "springing back" to
+     its original tabset. No explicit re-home step is needed.
+
+  3. The drop handler in ``widgets/tabs.py:dropEvent`` was
+     extended to branch on ``self.tabset == "right"`` (set
+     by ``buildTabSet`` when the right pane is populated).
+     On a right-pane drop, the new
+     ``_handle_tab_dropped_in_right_scratch`` dispatch
+     helper resolves the source tab from the mime position
+     via the tab model and calls
+     ``cmd_open_tab_in_right_scratch``. On a center-pane
+     drop the original tab-reorder behaviour is preserved.
+
+The ``_right_scratch_tabs`` in-memory marker persists across
+reloads (it's not cleared) so a future explicit-undo
+gesture can re-home the tab back to its original node --
+the marker records the original ``pid_txt`` for that.
+
+The card's affected sites mentioned ``widgets/panes/documents.py:725
+tabset.go_to_previous_tab()`` -- that turned out to be
+unrelated; the right-pane reload doesn't need explicit
+go_to_previous_tab calls. The T-NEW-030 trees.py + T-NEW-031
+tabs.py split is the natural separation: trees drop is
+"change parent" (T-NEW-030), tabs drop is "open in right
+pane" (T-NEW-031).
+
+Test surface: 9 new tests under
+``tests/test_right_side_tabset_recovery.py`` (154 -> 163
+passed; +9). The 9 tests cover:
+
+  - the handler adds the tab to the right pane tabsdata
+  - the handler does NOT persist (no DB write)
+  - the handler records the original parent in
+    ``_right_scratch_tabs``
+  - the handler rejects missing tid_txt
+  - the handler returns self for chainable calls
+  - the handler appends (not replaces) when the right pane
+    has existing tabs
+  - the reload path restores the tab to its original tabset
+  - the in-memory marker survives the reload for explicit
+    undo
+  - the drop handler in ``widgets/tabs.py:dropEvent`` wires
+    the new method (source-level)
+
+Audit: 91.91% (unchanged). Testing: 100% pass.
 
 ### T-NEW-032 — Settings/Interface config: tab name updates to file name on file open (2026-07-30)
 
