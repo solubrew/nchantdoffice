@@ -246,3 +246,69 @@ def test_interface_tab_renders_correct_pane_on_doc_type_select():
     pane = _instantiate_pane_for_test(resolved)
     assert "formula_bar_visible" in pane._fields
     assert "save_mode" in pane._fields  # common field still present
+
+
+def test_cmd_on_change_doc_type_select_persists_selection_to_config():
+    """The Interface tab dropdown handler writes the user's selection
+    to ``config.dikt["selected_doc_type"]`` (per the Sprint 23 pattern
+    of ``prompt_for_new_*`` config flag handlers).
+
+    The test reads ``config.dikt`` directly (not log lines) so the
+    persistence contract is captured exactly.
+    """
+    from nchantdoffice.widgets.config.settings import NchantdOfficeInterfaceSettings
+
+    settings = NchantdOfficeInterfaceSettings.__new__(NchantdOfficeInterfaceSettings)
+    fake_app = SimpleNamespace(
+        model=SimpleNamespace(),
+        app=None,
+        view=SimpleNamespace(),
+        new_application=True,
+    )
+    settings.parent = fake_app
+    settings.app = fake_app
+    settings.config = SimpleNamespace(
+        dikt={},
+        override=lambda updates: settings.config.dikt.update(updates) if isinstance(updates, dict) else None,
+    )
+
+    # Simulate the user picking "Notebook" from the dropdown. The handler
+    # is called with the dropdown's currentText in event.
+    settings.cmd_on_change_doc_type_select(
+        event=SimpleNamespace(currentText=lambda: "Notebook"),
+    )
+    assert settings.config.dikt.get("selected_doc_type") == "Notebook", (
+        f"cmd_on_change_doc_type_select did not persist 'Notebook'; "
+        f"config.dikt={settings.config.dikt}"
+    )
+
+    # Now simulate the user picking "Script" -- the handler should
+    # overwrite the previous selection.
+    settings.cmd_on_change_doc_type_select(
+        event=SimpleNamespace(currentText=lambda: "Script"),
+    )
+    assert settings.config.dikt.get("selected_doc_type") == "Script"
+
+
+def test_get_doc_type_settings_pane_helper_returns_registry_class():
+    """``NchantdOfficeInterfaceSettings.get_doc_type_settings_pane``
+    is the canonical entry point -- it delegates to
+    ``get_settings_pane_for_doc_type`` so callers don't need to import
+    the registry directly.
+    """
+    from nchantdoffice.widgets.config.settings import NchantdOfficeInterfaceSettings
+
+    settings = NchantdOfficeInterfaceSettings.__new__(NchantdOfficeInterfaceSettings)
+    fake_app = SimpleNamespace(
+        model=SimpleNamespace(),
+        app=None,
+        view=SimpleNamespace(),
+        new_application=True,
+    )
+    settings.parent = fake_app
+    settings.app = fake_app
+    settings.config = SimpleNamespace(dikt={}, override=lambda *_a, **_k: None)
+
+    assert settings.get_doc_type_settings_pane("Image") is NchantdImageConfigPane
+    assert settings.get_doc_type_settings_pane("Diagram") is NchantdOfficeDocumentConfigPane
+    assert settings.get_doc_type_settings_pane("UnknownType") is NchantdOfficeDocumentConfigPane

@@ -36,7 +36,10 @@ from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.groups import NchantdVScrollGroupBox, NchantdHGroupBox
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
-from nchantdoffice.widgets.panes.document_settings import NchantdOfficeDocumentConfigPane
+from nchantdoffice.widgets.panes.document_settings import (
+    NchantdOfficeDocumentConfigPane,
+    get_settings_pane_for_doc_type,
+)
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -135,17 +138,113 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # etc.) that re-activate in the 0.0.3 release. The active
         # code path is only ~20 lines; the rest is intentional
         # release-marker content, not a long method to split.
-        """ """
         super().initView(cfg)
         self.primary_settings_group = pyqt.QGroupBox()
         self.primary_settings_group.setTitle("Interface Settings")
-        primary_layout = pyqt.QHBoxLayout()
+        primary_layout = pyqt.QVBoxLayout()
         self.primary_settings_group.setLayout(primary_layout)
-        self._initialize_left_side(primary_layout)
-        self._initialize_center(primary_layout)
-        self._initialize_right_side(primary_layout)
+
+        # T-NEW-027: doc-type selector + per-type settings pane at the
+        # TOP of the Interface tab. User picks a doc type from the
+        # dropdown; the registered pane class for that type renders
+        # its common + type-specific fields into the render slot
+        # below. Unknown doc types fall back to the shared base.
+        self._initialize_doc_type_selector(primary_layout)
+
+        # Existing 3-panel layout (left / center / right) is unchanged.
+        body_layout = pyqt.QHBoxLayout()
+        primary_layout.addLayout(body_layout)
+        self._initialize_left_side(body_layout)
+        self._initialize_center(body_layout)
+        self._initialize_right_side(body_layout)
+
         self.layout.addWidget(self.primary_settings_group)
         return self
+
+    def _initialize_doc_type_selector(self, parent_layout):
+        """Wire the doc-type dropdown + per-type settings pane slot
+        (T-NEW-027). The dropdown's options come from the registry's
+        ``known_types()`` (which mirrors the document_types_df rows
+        that exist today) so the selector is automatically in sync with
+        the registered doc types. The render slot is a vertical
+        layout that holds the currently selected pane.
+        """
+        try:
+            from nchantdoffice.widgets.panes.document_settings import (
+                DocumentTypeSettingsRegistry,
+                get_settings_pane_for_doc_type,
+            )
+            options = DocumentTypeSettingsRegistry.known_types()
+            if not options:
+                options = ["Matrix", "Notebook", "Image", "Script"]
+            doc_type_select_cfg = {
+                "label": "Doc Type: ",
+                "layout": "horizontal",
+                "options": options,
+                "value": getattr(self, "selected_doc_type", options[0]),
+                "handler": self.cmd_on_change_doc_type_select,
+            }
+            self.doc_type_selector = NchantdDropDown(self, doc_type_select_cfg)
+            self.doc_type_selector.initWidget()
+            parent_layout.addWidget(self.doc_type_selector)
+            # The per-type pane slot. Render the currently selected
+            # type immediately so the UI is populated when the tab opens.
+            self.doc_type_pane_slot = pyqt.QWidget()
+            self.doc_type_pane_layout = pyqt.QVBoxLayout()
+            self.doc_type_pane_slot.setLayout(self.doc_type_pane_layout)
+            parent_layout.addWidget(self.doc_type_pane_slot)
+            initial = (
+                self.doc_type_selector.currentText()
+                if hasattr(self, "doc_type_selector")
+                else options[0]
+            )
+            self._render_doc_type_pane(initial)
+            logma.debug(
+                f"[settings] doc-type selector wired with options={options}"
+            )
+        except Exception as e:
+            logma.error(
+                f"[settings] _initialize_doc_type_selector failed: {e}",
+                exc_info=True,
+            )
+
+    def _render_doc_type_pane(self, doc_type: str):
+        """Resolve ``doc_type`` via the registry and render its fields
+        into ``self.doc_type_pane_layout``. Called by
+        ``_initialize_doc_type_selector`` on first display and by
+        ``cmd_on_change_doc_type_select`` on every dropdown change.
+        """
+        try:
+            from nchantdoffice.widgets.panes.document_settings import (
+                get_settings_pane_for_doc_type,
+            )
+            pane_class = get_settings_pane_for_doc_type(doc_type)
+            # Tear down any previously rendered widgets so we don't
+            # leak. ``takeAt(0)`` walks the layout's children and
+            # deletes them one by one.
+            while self.doc_type_pane_layout.count():
+                item = self.doc_type_pane_layout.takeAt(0)
+                if item is not None:
+                    widget = item.widget()
+                    if widget is not None:
+                        widget.deleteLater()
+            pane = pane_class(self, cfg=None)
+            pane.initModel()
+            pane.initView()
+            # The pane renders its fields into pane._fields via the
+            # shared base's initView. Future commits can swap the
+            # sentinel mapping for real ``NchantdCheckbox`` /
+            # ``NchantdDropDown`` widgets.
+            self.doc_type_pane_layout.addWidget(pane)
+            logma.debug(
+                f"[settings] rendered {pane_class.__name__} for "
+                f"doc_type={doc_type!r} ({len(pane._fields)} fields)"
+            )
+        except Exception as e:
+            logma.error(
+                f"[settings] _render_doc_type_pane({doc_type!r}) failed: {e}",
+                exc_info=True,
+            )
 
     def initWidget(self):
         """"""
@@ -507,6 +606,54 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
                 exc_info=True,
             )
         return self
+
+    # ------------------------------------------------------------------
+    # T-NEW-027 — Doc-type selector (per-document-type settings pane)
+    # ------------------------------------------------------------------
+
+    def cmd_on_change_doc_type_select(self, event=None, *args, **kwargs):
+        """Persist the user's chosen doc type on the Interface tab.
+
+        Reads the dropdown's ``currentText()`` and writes it to
+        ``config.dikt["selected_doc_type"]``. The Interface tab then
+        renders the corresponding per-doc-type settings pane via
+        ``get_doc_type_settings_pane``. Returns ``self`` for
+        chainable call sites.
+
+        Follows the Sprint 23 ``cmd_on_change_prompt_for_new_*`` config
+        flag pattern: read from event first, fall back to the existing
+        attribute, persist on ``config.dikt``, log + swallow on error.
+        """
+        try:
+            value = None
+            if event is not None and hasattr(event, "currentText"):
+                getter = event.currentText
+                if callable(getter):
+                    value = getter()
+            if value is None:
+                value = getattr(self, "selected_doc_type", "")
+            self.selected_doc_type = value
+            self.config.dikt["selected_doc_type"] = value
+            logma.debug(
+                f"[settings] cmd_on_change_doc_type_select: "
+                f"selected_doc_type={value!r}"
+            )
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_doc_type_select failed: {e}",
+                exc_info=True,
+            )
+        return self
+
+    def get_doc_type_settings_pane(self, doc_type: str):
+        """Resolve the per-doc-type settings pane class for ``doc_type``.
+
+        Thin wrapper around ``get_settings_pane_for_doc_type`` so the
+        Interface tab has a single canonical entry point and never has
+        to import the registry directly. Unregistered doc-type names
+        fall back to the shared ``NchantdOfficeDocumentConfigPane``.
+        """
+        return get_settings_pane_for_doc_type(doc_type)
 
     def get_right_pane_tab_options(self):
         """Enumerate the available right-pane tabs as dropdown options.
