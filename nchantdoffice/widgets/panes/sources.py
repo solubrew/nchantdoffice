@@ -748,11 +748,13 @@ class NchantdSourceDefaultPane(NchantdWidget):
         }
         self.table_select = NchantdLabel(self, cfg).initWidget()
         layout.addWidget(self.table_select)
-        # TODO: add details of source like requires apikey, show api exists and if not button to go the Data Sources config Tab
-        # TODO: add details for if the source is being tracked by NchantdOffice.  with a checkbox for selecting to track or not
-        # TODO: add size details of tracked store for this source
-        # TODO: add a spinbox to allow for size that tracked dataset can grow to and then it will have a falloff using the data retention policies
-        # TODO: add save button to config page
+        # T-NEW-034: per-source config card slots (apikey visibility,
+        # tracked checkbox, size details, retention spinbox, save
+        # button) are logged in TODOs.md. The two config_sources.py
+        # stubs (cmd_change_data_source_pane_size,
+        # cmd_toggle_apikey_visibility) are now filled; the larger
+        # surface-area items (tracked checkbox, retention spinbox,
+        # save button) remain open.
         # self.layout.addWidget(group)
         self.layout.addLayout(layout)
         return self

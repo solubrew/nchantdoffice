@@ -112,9 +112,50 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         self.initView()
         return self
 
-    def cmd_change_data_source_pane_size(self):
-        """"""
-        # TODO build out method
+    def cmd_change_data_source_pane_size(self, event=None, *args, **kwargs):
+        """Resize the data-source list pane based on the dropdown selection.
+
+        Reads ``self.data_source_size_combo.currentText()`` (one of
+        "Full", "50%", "10%"), persists the value to
+        ``config.dikt["data_source_pane_size"]``, and resizes
+        the parent splitter / pane. Defensive: when the combo
+        is missing or the parent has no splitter, the handler
+        logs + swallows rather than crashing.
+
+        Returns ``self`` for chainable call sites (Sprint 23
+        config-flag pattern).
+        """
+        try:
+            combo = getattr(self, "data_source_size_combo", None)
+            if combo is None:
+                logma.debug(
+                    "[config_sources] cmd_change_data_source_pane_size: "
+                    "no combo available; skipping"
+                )
+                return self
+            value = combo.currentText() if hasattr(combo, "currentText") else "Full"
+            self.config.dikt["data_source_pane_size"] = value
+            parent = getattr(self, "parent", None)
+            if parent is not None:
+                splitter = getattr(parent, "splitter", None)
+                if splitter is not None:
+                    stretch_map = {"Full": 100, "50%": 50, "10%": 10}
+                    stretch = stretch_map.get(value, 100)
+                    try:
+                        splitter.setStretchFactor(0, stretch)
+                    except Exception:
+                        pass
+            logma.debug(
+                f"[config_sources] cmd_change_data_source_pane_size: "
+                f"value={value!r}"
+            )
+        except Exception as e:
+            logma.error(
+                f"[config_sources] cmd_change_data_source_pane_size "
+                f"failed: {e}",
+                exc_info=True,
+            )
+        return self
 
     def build_data_source_pane(self, source):
         """"""
@@ -159,7 +200,59 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         self.layout.addWidget(source_group)
 
     def cmd_toggle_apikey_visibility(self, event=None, *args, **kwargs):
-        """"""
+        """Toggle the echo mode of the API key entry for the
+        source identified by ``event.config.dikt["apikey_id"]``.
+
+        When the entry's ``QLineEdit`` is in ``Password`` mode
+        (obscured), switches to ``Normal`` (visible). When in
+        ``Normal``, switches to ``Password``.
+
+        Defensive: when ``event`` is None, ``apikey_id`` is
+        missing, or the entry doesn't exist in
+        ``self.apikeys``, the handler logs + swallows rather
+        than raising.
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            if event is None:
+                return self
+            event_cfg = getattr(event, "config", None)
+            dikt = getattr(event_cfg, "dikt", None) or {}
+            apikey_id = dikt.get("apikey_id")
+            if not apikey_id:
+                logma.debug(
+                    "[config_sources] cmd_toggle_apikey_visibility: "
+                    "no apikey_id in event; skipping"
+                )
+                return self
+            entry = self.apikeys.get(apikey_id)
+            if entry is None:
+                logma.debug(
+                    f"[config_sources] cmd_toggle_apikey_visibility: "
+                    f"no entry for apikey_id={apikey_id!r}; skipping"
+                )
+                return self
+            textbox = getattr(entry, "textbox", None)
+            if textbox is None:
+                return self
+            from PySide6.QtWidgets import QLineEdit
+            current_mode = textbox.echoMode()
+            if current_mode == QLineEdit.EchoMode.Password:
+                textbox.setEchoMode(QLineEdit.EchoMode.Normal)
+            else:
+                textbox.setEchoMode(QLineEdit.EchoMode.Password)
+            logma.debug(
+                f"[config_sources] cmd_toggle_apikey_visibility: "
+                f"toggled apikey_id={apikey_id!r}"
+            )
+        except Exception as e:
+            logma.error(
+                f"[config_sources] cmd_toggle_apikey_visibility "
+                f"failed: {e}",
+                exc_info=True,
+            )
+        return self
 
     def cmd_launch_site(self, event=None, *args, **kwargs):
         """Open the source's API-key URL in a new WebBrowser document.
