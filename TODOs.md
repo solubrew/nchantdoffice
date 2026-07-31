@@ -244,7 +244,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-039 | Refactor: move document-save hack to model + consolidate add_tab/add_document | 🆕 Logged (2026-07-31) |
 | T-NEW-040 | Toolbar init tech debt (redundant init_variables + MultiInstance switch) | 🆕 Logged (2026-07-31) |
 | T-NEW-041 | Widget lookup from document_types table | 🆕 Logged (2026-07-31) |
-| T-NEW-042 | Note position increment for multiple notes | 🆕 Logged (2026-07-31) |
+| T-NEW-042 | Note position increment for multiple notes | ✅ Done — Sprint 29 (_compute_note_position helper) |
 
 ### T-NEW-025 — Content versioning for `NchantdOfficeCloakModel.save` (2026-07-30)
 

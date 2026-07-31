@@ -261,6 +261,79 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         self.app.model.add_node(name, ntype, pid, pos, parameters, None, True)
         return self
 
+    def _compute_note_position(self, existing_count, base_x, base_y, step):
+        """Compute the screen position for a new note, offset by
+        the number of existing notes (T-NEW-042).
+
+        Y = ``base_y + existing_count * step`` so each new note
+        appears below the previous one. X is unchanged.
+        ``existing_count`` is clamped to ``>= 0`` defensively
+        (a misbehaving ``get_documents`` query that returns
+        garbage shouldn't produce negative offsets).
+
+        Args:
+            existing_count: int -- number of existing notes for
+                the active node + tabset (from
+                ``self.app.model.get_documents``).
+            base_x, base_y: int -- default position (the legacy
+                ``(1287, 125)`` defaults).
+            step: int -- Y offset per existing note (px).
+
+        Returns:
+            ``{"x": base_x, "y": base_y + max(0, count)*step}``
+        """
+        try:
+            count = max(0, int(existing_count))
+        except (TypeError, ValueError):
+            count = 0
+        return {"x": base_x, "y": base_y + count * step}
+
+    def _count_existing_notes(self):
+        """Count the existing notes for the active node +
+        tabset. Returns 0 on any error (defensive: the caller
+        uses 0 as the default Y offset).
+
+        Used by the note-launcher path to compute the Y
+        position for a new note (T-NEW-042).
+        """
+        try:
+            app = getattr(self, "app", None)
+            if app is None:
+                return 0
+            model = getattr(app, "model", None)
+            if model is None:
+                return 0
+            view = getattr(app, "view", None)
+            panes = getattr(view, "panes", None) if view is not None else None
+            left = panes.get("left") if isinstance(panes, dict) else None
+            tree = getattr(left, "tree", None) if left is not None else None
+            tree_model = getattr(tree, "model", None) if tree is not None else None
+            current_node = (
+                getattr(tree_model, "current_node", None)
+                if tree_model is not None else None
+            )
+            nid = getattr(current_node, "nid", None)
+            if nid is None:
+                return 0
+            df = model.get_documents(nid, "center")
+            # Filter to notes (the model returns all docs for
+            # the node+tabset; the "type" column discriminates).
+            try:
+                notes = df[df["type"] == "note"]
+            except Exception:
+                # Defensive: if "type" column is missing or
+                # not a string, fall back to total count.
+                try:
+                    return int(len(df))
+                except Exception:
+                    return 0
+            return int(len(notes))
+        except Exception as e:
+            logma.warning(
+                f"[toolbars] _count_existing_notes failed: {e}"
+            )
+            return 0
+
     def add_note(self, signal=None, *args, **kwargs):
         """Add a new note.
 
@@ -275,8 +348,13 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         logma.info(f"Launch Note {signal}")
         cfg = args[0]["action"].action
         pid = self.app.view.panes["left"].tree.model.current_node.nid
-        pos = {"x": 1287, "y": 125}
-        # TODO: if there are multiple notes then the position will need to increment
+        # T-NEW-042: increment Y position based on existing note
+        # count so each new note appears below the previous
+        # one. Replaces the hardcoded {"x": 1287, "y": 125}.
+        existing = self._count_existing_notes()
+        pos = self._compute_note_position(
+            existing_count=existing, base_x=1287, base_y=125, step=30
+        )
         # P1 name-entry dialog: respect the config flag.
         prompt = bool(
             (self.config.dikt or {}).get("prompt_for_new_node_name", False)
