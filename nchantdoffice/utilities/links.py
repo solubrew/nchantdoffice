@@ -35,7 +35,7 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "links.yaml")
 
 
-def update_affilate_links(model, last_affilate_update_dttm: str = "2025-01-01 00:00:00", reload=False):
+def update_affiliate_links(model, last_affiliate_update_dttm: str = "2025-01-01 00:00:00", reload=False):
     """T-070: fetch links from the API, split into affiliate / non-affiliate rows.
 
     Steps:
@@ -55,13 +55,13 @@ def update_affilate_links(model, last_affilate_update_dttm: str = "2025-01-01 00
     API_URL = "https://nchantdoffice.com/api/affiliate/links/"
     client = APIClient(API_URL)
     if reload:
-        last_affilate_update_dttm = "2025-01-01 00:00:00"
+        last_affiliate_update_dttm = "2025-01-01 00:00:00"
         try:
-            model.remove_affilate_links()
+            model.remove_affiliate_links()
         except Exception as e:
-            log.error(f"[links] remove_affilate_links failed: {e}", exc_info=True)
+            log.error(f"[links] remove_affiliate_links failed: {e}", exc_info=True)
 
-    params = {"since_dttm": last_affilate_update_dttm}
+    params = {"since_dttm": last_affiliate_update_dttm}
     affiliate_count = 0
     non_affiliate_count = 0
     try:
@@ -88,8 +88,8 @@ def update_affilate_links(model, last_affilate_update_dttm: str = "2025-01-01 00
                     if hasattr(model, "_store_link_affiliate"):
                         model._store_link_affiliate(link_id, affiliate_id, link)
                         affiliate_count += 1
-                    elif hasattr(model, "update_affilate_links"):
-                        model.update_affilate_links([link])
+                    elif hasattr(model, "update_affiliate_links"):
+                        model.update_affiliate_links([link])
                         affiliate_count += 1
                 except Exception as e:
                     log.error(f"[links] affiliate insert failed for link {link_id}: {e}", exc_info=True)
@@ -102,8 +102,8 @@ def update_affilate_links(model, last_affilate_update_dttm: str = "2025-01-01 00
                 except Exception as e:
                     log.error(f"[links] link insert failed for {link_id}: {e}", exc_info=True)
     except Exception as e:
-        log.error(f"[links] update_affilate_links API call failed: {e}", exc_info=True)
-    log.info(f"[links] update_affilate_links: {affiliate_count} affiliate + {non_affiliate_count} non-affiliate")
+        log.error(f"[links] update_affiliate_links API call failed: {e}", exc_info=True)
+    log.info(f"[links] update_affiliate_links: {affiliate_count} affiliate + {non_affiliate_count} non-affiliate")
     return {"affiliate_count": affiliate_count, "non_affiliate_count": non_affiliate_count}
 
 

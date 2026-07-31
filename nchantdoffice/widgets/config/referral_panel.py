@@ -317,15 +317,65 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
         # T-NEW-019 (live crash): guard the self.user access so the
         # Referral tab doesn't AttributeError when the panel is
         # opened without a User instance injected by the host.
+        # T-NEW-026 (close-out step 2): prefer the affiliate id
+        # stored in pycurity.PyKeyStore over the user-id / "anonymous"
+        # fallback chain. The keystore value is set by the user's
+        # Affiliate Manager tab (write_api_caller) and survives
+        # across the user's sessions (vs. the user-id based code,
+        # which changes when the user record changes).
         user_obj = getattr(self, "user", None)
-        user_id = (
-            getattr(user_obj, "id", None)
-            or getattr(user_obj, "user_name", None)
-            or getattr(user_obj, "email", None)
-            or "anonymous"
-        ) if user_obj is not None else "anonymous"
+        try:
+            # T-NEW-026: use the canonical pycurity.pykey.PyKeyStore
+            # import path (matches the rest of the project).
+            from pycurity.pykey import PyKeyStore
+            keystore = PyKeyStore()
+            try:
+                stored_record = keystore.get("affiliate_id")
+            except Exception as e:
+                logma.debug(
+                    f"[referral_panel] PyKeyStore.get(affiliate_id) failed: {e}"
+                )
+                stored_record = None
+            # ``PyKeyStore.get(service)`` returns a dict (or
+            # raises KeyError when missing). We pull the
+            # ``public_id`` field -- the canonical affiliate
+            # identifier slot -- and fall back to ``api_key``,
+            # then ``private_key`` for older record shapes.
+            stored_affiliate_id = None
+            if isinstance(stored_record, dict):
+                stored_affiliate_id = (
+                    stored_record.get("public_id")
+                    or stored_record.get("api_key")
+                    or stored_record.get("private_key")
+                )
+        except Exception as e:
+            logma.debug(
+                f"[referral_panel] PyKeyStore init failed: {e}"
+            )
+            stored_affiliate_id = None
+        if isinstance(stored_affiliate_id, str) and stored_affiliate_id:
+            # T-NEW-026: PyKeyStore value wins over user.id.
+            user_id = stored_affiliate_id
+            logma.info(
+                f"[referral_panel] using PyKeyStore affiliate_id"
+            )
+        elif user_obj is not None:
+            user_id = (
+                getattr(user_obj, "id", None)
+                or getattr(user_obj, "user_name", None)
+                or getattr(user_obj, "email", None)
+                or "anonymous"
+            )
+        else:
+            user_id = "anonymous"
         user_id = str(user_id)
         self.referral_code = ReferralCode.generate(user_id)
+        # T-NEW-026 (close-out step 3): surface the referral
+        # URL to the ad pane so a logged-in user sees the
+        # link alongside the banners. The ad pane may not be
+        # available in all contexts (test harnesses, partial
+        # UI builds) -- the helper handles the missing case.
+        self._surface_referral_url_to_ad_pane()
         try:
             if isinstance(cfg_dikt, dict):
                 cfg_dikt["referral_code"] = str(self.referral_code)
@@ -333,6 +383,48 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
                     user_cfg._save()
         except Exception as e:
             logma.warning(f"[referral_panel] could not persist code: {e}")
+
+    def set_ad_pane(self, ad_pane):
+        """Register the NchantdOfficeAdTab pane so the panel
+        can surface the user's referral URL there (T-NEW-026
+        close-out step 3).
+
+        Defensive: any pane object that has a
+        ``show_referral_url(url)`` method is accepted.
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            self._ad_pane = ad_pane
+        except Exception:
+            self._ad_pane = None
+        return self
+
+    def _surface_referral_url_to_ad_pane(self):
+        """Build the referral URL from the code and push it to
+        the registered ad pane (T-NEW-026 close-out step 3).
+
+        The URL format is ``https://nchantdoffice.com/?r=<code>``
+        (the canonical nchantd office affiliate / referral
+        base URL). Defensive: missing pane, missing code, or
+        any exception is logged + swallowed.
+        """
+        try:
+            pane = getattr(self, "_ad_pane", None)
+            code = getattr(self, "referral_code", None)
+            if pane is None or code is None:
+                return
+            url = f"https://nchantdoffice.com/?r={code}"
+            if hasattr(pane, "show_referral_url"):
+                try:
+                    pane.show_referral_url(url)
+                except Exception as e:
+                    logma.warning(
+                        f"[referral_panel] ad_pane.show_referral_url failed: {e}"
+                    )
+        except Exception as e:
+            logma.warning(
+                f"[referral_panel] _surface_referral_url_to_ad_pane failed: {e}"
+            )
 
     def _fetch_dashboard(self):
         """Fetch earnings + invitations from the server; fall back to local store."""

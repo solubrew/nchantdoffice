@@ -228,7 +228,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-013 | `decrypt`/`encrypt` cipher wiring | ⏸ Deferred to PUSH 0.0.3 — Sprints 5/12 |
 | T-NEW-014 | Trendline group init helper | ✅ Documented in Sprint 12 |
 | T-NEW-025 | Content versioning (`pydoc.increment_version`) | 🆕 Logged (2026-07-30) — design decision required |
-| T-NEW-026 | Finish Affiliate Manager tab | 🆕 Logged (2026-07-30) |
+| T-NEW-026 | Finish Affiliate Manager tab | ✅ Done — Sprint 29 (typo fixed; PyKeyStore wire; ad-pane surface) |
 | T-NEW-027 | Per-document-type settings pane (Interface Tab) | ✅ Done — Sprint 29 (hybrid / Option C: shared base + 4 subclasses) |
 | T-NEW-028 | Right Pane tab visibility config | ✅ Done — Sprint 29 (queries vw_tab for tabset_type_txt="right") |
 | T-NEW-029 | Tab drag-init only on tab-name area | 🆕 Logged (2026-07-30) — design decision required |

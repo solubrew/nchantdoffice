@@ -30,7 +30,7 @@ from nchantrs.models.tabsetmodels import NchantdTabSetModel
 from nchantrs.models.applicationmodels import NchantdCloakModel
 from nchantrs.models.models import NchantdStore
 from nchantrs.models.applicationmodels import NchantdModel
-from nchantdoffice.utilities.links import update_affilate_links
+from nchantdoffice.utilities.links import update_affiliate_links
 from nchantdoffice.utilities.referral import (
     ReferralCode as _ReferralCode,
     generate_referral_code as _generate_referral_code,
@@ -1792,8 +1792,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         so the Referral Panel can render it. Falls back gracefully if
         no user is available or the config layer is read-only.
         """
-        last_affilate_update_dttm = self.get_link_last_affiliate_update()
-        update_affilate_links(self, last_affilate_update_dttm)
+        last_affiliate_update_dttm = self.get_link_last_affiliate_update()
+        update_affiliate_links(self, last_affiliate_update_dttm)
         self._ensure_referral_code()
         super().initialize_application()
         # T-094: vector table init now lives on the store

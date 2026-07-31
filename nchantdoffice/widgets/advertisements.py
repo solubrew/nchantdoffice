@@ -97,6 +97,28 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self._load_banners()
         return self
 
+    def show_referral_url(self, url):
+        """Surface the user's referral URL in the ad tab (T-NEW-026 step 3).
+
+        The Affiliate Manager tab calls this when the user
+        generates / loads their referral code so the link is
+        visible alongside the banners. Defensive: missing url
+        is a no-op. The URL is stored as ``self._referral_url``
+        and rendered in the existing header when set.
+        """
+        try:
+            if not isinstance(url, str) or not url:
+                return
+            self._referral_url = url
+            logma.info(
+                f"[ad_tab] referral URL set: {url}"
+            )
+        except Exception as e:
+            logma.warning(
+                f"[ad_tab] show_referral_url failed: {e}"
+            )
+        return self
+
     def initView(self, cfg=None):
         cfg = cfg or {}
         cfg["fill"] = True
