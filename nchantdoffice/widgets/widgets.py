@@ -192,6 +192,20 @@ class NchantdOfficeTabSet(NchantdTabSet):
                     logma.info("Refreshing right-pane toolbox for focused document")
                     QTimer.singleShot(0, lambda tb=toolbox, doc=widget: tb.refresh_for_document(doc))
 
+            # T-NEW-036: Refresh journal content on tab focus.
+            # The journal's initModel fetched text once at
+            # initWidget time; subsequent tab switches never
+            # re-fetched. When the focused widget exposes
+            # refresh_content (currently only the journal), call
+            # it so the editor shows the current journal text.
+            if hasattr(widget, "refresh_content"):
+                try:
+                    widget.refresh_content()
+                except Exception as e:
+                    logma.warning(
+                        f"on_tab_focus: refresh_content failed ({type(e).__name__}: {e})"
+                    )
+
         # Ensure tabn is valid for super class to avoid IndexError in set_focus.
         # RESOLVED [off-by-one]: the first-click-off-by-one on center/right tabsets
         # was caused by lazy-tab materialization shifting Qt's currentIndex (see the
