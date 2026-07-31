@@ -1,6 +1,17 @@
 
 
 
+2026-07-31 00:35:28,896 - nchantdoffice.widgets.config.settings     211: INFO     - [settings] _initialize_doc_type_selector failed: 'NchantdDropDown' object has no attribute 'currentText'
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/config/settings.py", line 207, in _initialize_doc_type_selector
+    initial = self.doc_type_selector.currentText() if hasattr(self, "doc_type_selector") else options[0]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NchantdDropDown' object has no attribute 'currentText'
+2026-07-31 00:35:33,094 - nchantrs.widgets.widgets                  414: INFO     - Focus Out
+
+
+
+
 js: The resource https://ground.news/_next/static/chunks/328bfdd80a1e8090.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
 2026-07-29 00:07:30,989 - nchantdoffice.widgets.documents.managers.calendars  728: INFO     - Calendar unit changed to: 
 2026-07-29 00:07:30,989 - nchantdoffice.widgets.documents.managers.calendars  728: INFO     - Calendar unit changed to: 

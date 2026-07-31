@@ -1199,22 +1199,22 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             self.quick_launch_toolbar.setChecked(True)
         # left_side_settings_group.addWidget(self.quick_launch_toolbar, cnt, 0)
         # cnt += 1
-        document_group = pyqt.QGroupBox()
-        document_group.setTitle("Quick launch Documents")
-        document_group_layout = pyqt.QVBoxLayout()
-        document_group_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
-        document_group.setLayout(document_group_layout)
-        self.quick_launch_document_types = {}
-        for i, document in self.document_types_df.iterrows():
-            cfg = {"text": document["name_txt"], "layout": "horizontal", "size": ["auto", "auto"]}
-            self.quick_launch_document_types[document["name_txt"]] = NchantdCheckbox(self, cfg).initWidget()
-            # if not self.quick_launch_toolbar.isChecked():
-            #     self.quick_launch_document_types[document["name_txt"]].setDisabled(True)
-            if document["quick_launch_bit"] == 1:
-                self.quick_launch_document_types[document["name_txt"]].setChecked(True)
-            document_group_layout.addWidget(self.quick_launch_document_types[document["name_txt"]])
-        right_side_settings_group.addWidget(document_group, cnt, 0)
-        right_side_settings_group.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
+        # document_group = pyqt.QGroupBox()
+        # document_group.setTitle("Quick launch Documents")
+        # document_group_layout = pyqt.QVBoxLayout()
+        # document_group_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignLeft)
+        # document_group.setLayout(document_group_layout)
+        # self.quick_launch_document_types = {}
+        # for i, document in self.document_types_df.iterrows():
+        #     cfg = {"text": document["name_txt"], "layout": "horizontal", "size": ["auto", "auto"]}
+        #     self.quick_launch_document_types[document["name_txt"]] = NchantdCheckbox(self, cfg).initWidget()
+        #     # if not self.quick_launch_toolbar.isChecked():
+        #     #     self.quick_launch_document_types[document["name_txt"]].setDisabled(True)
+        #     if document["quick_launch_bit"] == 1:
+        #         self.quick_launch_document_types[document["name_txt"]].setChecked(True)
+        #     document_group_layout.addWidget(self.quick_launch_document_types[document["name_txt"]])
+        # right_side_settings_group.addWidget(document_group, cnt, 0)
+        # right_side_settings_group.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
 
 
 # Module-level aliases so off-screen tests + non-method callers can
