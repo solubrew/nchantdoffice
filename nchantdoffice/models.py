@@ -49,7 +49,7 @@ from nchantrs.models.models import NchantdInstance
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
-log = True
+log = False
 debug = True
 if not log:
     logma.off()
@@ -748,14 +748,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             tab_color = dikt.get("tab_color")
             if isinstance(tab_color, str) and tab_color:
                 try:
-                    tab.setStyleSheet(
-                        f"background-color: {tab_color};"
-                    )
+                    tab.setStyleSheet(f"background-color: {tab_color};")
                 except Exception as e:
-                    logma.warning(
-                        f"[models] _apply_tab_style: "
-                        f"setStyleSheet failed ({type(e).__name__}: {e})"
-                    )
+                    logma.warning(f"[models] _apply_tab_style: " f"setStyleSheet failed ({type(e).__name__}: {e})")
             tab_icon = dikt.get("tab_icon")
             if isinstance(tab_icon, str) and tab_icon:
                 try:
@@ -764,14 +759,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     if parent is not None and position is not None:
                         parent.setTabIcon(position, tab_icon)
                 except Exception as e:
-                    logma.warning(
-                        f"[models] _apply_tab_style: "
-                        f"setTabIcon failed ({type(e).__name__}: {e})"
-                    )
+                    logma.warning(f"[models] _apply_tab_style: " f"setTabIcon failed ({type(e).__name__}: {e})")
         except Exception as e:
-            logma.warning(
-                f"[models] _apply_tab_style failed: {e}"
-            )
+            logma.warning(f"[models] _apply_tab_style failed: {e}")
         return tab
 
     def add_day_node(self, day, month, year, pid=None):
@@ -900,10 +890,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         tid = (tab or {}).get("tid_txt")
         nid = (new_parent_node or {}).get("nid_txt")
         if not tid:
-            logma.error(
-                f"[model] cmd_set_tab_parent: tab dict missing "
-                f"tid_txt; refusing to write ({tab!r})"
-            )
+            logma.error(f"[model] cmd_set_tab_parent: tab dict missing " f"tid_txt; refusing to write ({tab!r})")
             return self
         if not nid:
             logma.error(
@@ -924,9 +911,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             }
             self.store.update_record(data, "tid_txt", tid, "db")
             self.has_changed = True
-            logma.debug(
-                f"[model] cmd_set_tab_parent: tab={tid!r} new_pid={nid!r}"
-            )
+            logma.debug(f"[model] cmd_set_tab_parent: tab={tid!r} new_pid={nid!r}")
         except Exception as e:
             logma.error(
                 f"[model] cmd_set_tab_parent failed: {e}",
@@ -969,8 +954,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         tid = (tab or {}).get("tid_txt")
         if not tid:
             logma.error(
-                f"[model] cmd_open_tab_in_right_scratch: tab dict "
-                f"missing tid_txt; refusing to open ({tab!r})"
+                f"[model] cmd_open_tab_in_right_scratch: tab dict " f"missing tid_txt; refusing to open ({tab!r})"
             )
             return self
         try:
@@ -1020,7 +1004,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 exc_info=True,
             )
         return self
-
 
     def change_tab_position(self, position):
         """"""
@@ -1274,10 +1257,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 node_name = getattr(node, "name", "<unknown>")
             except Exception:
                 node_name = "<unknown>"
-            logma.warning(
-                f"[models] delete_node refused: '{node_name}' is "
-                f"a locked app node (T-NEW-004)"
-            )
+            logma.warning(f"[models] delete_node refused: '{node_name}' is " f"a locked app node (T-NEW-004)")
             return self
         super().delete_node(node)
         cfg = {"nid": node.nid}
@@ -1497,8 +1477,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return None
 
     def get_documents(self, node, tabset):
-        """Get documents for a node + tabset.
-        """
+        """Get documents for a node + tabset."""
         if node is None:
             return DataFrame()
         table = "vw_tab_document"
@@ -1510,9 +1489,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning(f"Error getting documents for node {node}: {e}")
             return DataFrame()
 
-    def search_documents(
-        self, query, scope="global", active_nid=None, active_tid=None
-    ):
+    def search_documents(self, query, scope="global", active_nid=None, active_tid=None):
         """Search documents (T-NEW-033).
 
         SQLite-backed search across the document catalog.
@@ -1565,10 +1542,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             try:
                 df = self.get_view_documents_all()
             except Exception as e:
-                logma.warning(
-                    f"[models] search_documents: "
-                    f"get_view_documents_all failed: {e}"
-                )
+                logma.warning(f"[models] search_documents: " f"get_view_documents_all failed: {e}")
                 return DataFrame()
             if df is None or df.empty:
                 return DataFrame()
@@ -1583,19 +1557,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 desc_col = df.get("description_txt", df.get("description"))
                 if name_col is None:
                     return DataFrame()
-                mask = name_col.astype(str).str.lower().str.contains(
-                    q, na=False, regex=False
-                )
+                mask = name_col.astype(str).str.lower().str.contains(q, na=False, regex=False)
                 if desc_col is not None:
-                    mask = mask | desc_col.astype(str).str.lower().str.contains(
-                        q, na=False, regex=False
-                    )
+                    mask = mask | desc_col.astype(str).str.lower().str.contains(q, na=False, regex=False)
                 df = df[mask]
             except Exception as e:
-                logma.warning(
-                    f"[models] search_documents: substring "
-                    f"match failed: {e}"
-                )
+                logma.warning(f"[models] search_documents: substring " f"match failed: {e}")
                 return DataFrame()
             # Apply scope filter
             if scope_normalized == "node":
@@ -1803,7 +1770,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         logma.info(f"Sources {sources}")
         if sources is None:
             return DataFrame()
-        #PUSH to 0.0.3 integrate local sources may not be needed
+        # PUSH to 0.0.3 integrate local sources may not be needed
         # df = DataFrame(self.config.dikt.get("sources", []), columns=list(sources.columns))
         # sources = concat([sources, df])
         return sources
@@ -2317,9 +2284,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     logma.info(f"File Type {current_tab.document.file_type}")
                     logma.info(f"File Type {current_tab.document.doc_type}")
                     logma.info(f"Create New Tab for Document{file}")
-                    document = self.codex.init_script(
-                        self._file_open_cfg(file)
-                    )
+                    document = self.codex.init_script(self._file_open_cfg(file))
                     current_tab.open_file()
                     # document.load_document()
                     self.add_document(document, self.get_current_node().nid, current_tab.pos + 1)
@@ -2373,9 +2338,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     logma.info(f"File Type {current_tab.document.file_type}")
                     logma.info(f"File Type {current_tab.document.doc_type}")
                     logma.info(f"Create New Tab for Document{file}")
-                    document = self.codex.init_image(
-                        self._file_open_cfg(file)
-                    )
+                    document = self.codex.init_image(self._file_open_cfg(file))
                     document.open_file()
                     self.add_document(document, self.get_current_node().nid, current_tab.pos + 1)
                 else:
@@ -2399,13 +2362,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """
         cfg = {"file_path": file}
         try:
-            flag = bool(
-                self.config.dikt.get("update_tab_name_to_file_name", False)
-            )
+            flag = bool(self.config.dikt.get("update_tab_name_to_file_name", False))
         except Exception:
             flag = False
         if flag:
             import os
+
             cfg["name"] = os.path.basename(file)
         return cfg
 
@@ -2707,10 +2669,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # internally; we only need to keep the log call from
         # blowing up the user-visible save.
         doc_payload = pydoc.to_dict()
-        try:
-            logma.json(_json_safe(doc_payload))
-        except Exception as _json_log_exc:
-            logma.error(f"[store_document] logma.json failed: {_json_log_exc}")
         data = {"table": {"doc_media": {"records": [[pydoc.syntax]], "columns": ["syntax_txt"]}}}
         column = "did"
         value = pydoc.did
@@ -3604,8 +3562,6 @@ class NchantdOfficeStore(NchantdStore):
                 content["context"],
             ]
         ]
-        logma.json(decode64(content["content"]))
-        logma.warning(decode64(content["content"]))
         self._store(table, payload, db, columns=self._DOC_MEDIA_CONTENT_COLUMNS)
         # PUSH 0.0.3 move this to a non blocking process
         # set delete for all but the last 30 versions eventually base on variable policy of time/szie/counts

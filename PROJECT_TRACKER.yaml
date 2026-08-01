@@ -646,7 +646,7 @@ dimensions:
           - class: NchantdWhereUsedListPane
             locations:
             - nchantdoffice/widgets/panes/sources.py
-            - nchantdoffice/widgets/documents/analytics/analytics_charts.py
+            - nchantdoffice/widgets/documents/analytics/analytics.py
           - class: NchantdCommunitiesSummary
             locations:
             - nchantdoffice/widgets/documents/atnrg/news.py
@@ -2588,75 +2588,75 @@ dimensions:
         - category: getattr_dynamic
           content: doc = getattr(self, "document", None) or getattr(self.app, "active_document",
             None)
-          file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
+          file: nchantdoffice/widgets/documents/analytics/analytics.py
           line: 69
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: doc = getattr(self, "document", None) or getattr(self.app, "active_document",
             None)
-          file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
+          file: nchantdoffice/widgets/documents/analytics/analytics.py
           line: 69
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: data = getattr(doc, "data", None) or getattr(doc, "rows", None)
             or getattr(doc, "content", None)
-          file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
+          file: nchantdoffice/widgets/documents/analytics/analytics.py
           line: 72
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: data = getattr(doc, "data", None) or getattr(doc, "rows", None)
             or getattr(doc, "content", None)
-          file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
+          file: nchantdoffice/widgets/documents/analytics/analytics.py
           line: 72
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: data = getattr(doc, "data", None) or getattr(doc, "rows", None)
             or getattr(doc, "content", None)
-          file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
+          file: nchantdoffice/widgets/documents/analytics/analytics.py
           line: 72
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: '#         if df is not None and not getattr(df, "empty", True):'
-          file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
+          file: nchantdoffice/widgets/documents/analytics/analytics.py
           line: 105
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: widget = getattr(self, "search_entry", None)
-          file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
+          file: nchantdoffice/widgets/documents/analytics/analytics.py
           line: 321
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(widget, "text", None) or getattr(widget, "get_value",
             None)
-          file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
+          file: nchantdoffice/widgets/documents/analytics/analytics.py
           line: 323
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(widget, "text", None) or getattr(widget, "get_value",
             None)
-          file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
+          file: nchantdoffice/widgets/documents/analytics/analytics.py
           line: 323
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.chart_data_sources_edit_pane, "get_value",
             None) or getattr(
-          file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
+          file: nchantdoffice/widgets/documents/analytics/analytics.py
           line: 349
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: getter = getattr(self.chart_data_sources_edit_pane, "get_value",
             None) or getattr(
-          file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
+          file: nchantdoffice/widgets/documents/analytics/analytics.py
           line: 349
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
@@ -4134,7 +4134,7 @@ dimensions:
         - count: 1
           file: nchantdoffice/widgets/widgets.py
         - count: 1
-          file: nchantdoffice/widgets/documents/analytics/analytics_charts.py
+          file: nchantdoffice/widgets/documents/analytics/analytics.py
         - count: 1
           file: nchantdoffice/widgets/documents/media/images.py
         - count: 1

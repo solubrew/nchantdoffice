@@ -91,6 +91,7 @@ class NchantdEditLayerPane(NchantdPane):
     def initModel(self, cfg=None):
         """"""
         super().initModel(cfg)
+
         return self
 
     def initView(self, cfg=None):
@@ -1069,7 +1070,18 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self._setup_canvas_mouse_handlers()
 
         self.layout.addWidget(self.canvas)
-        self.populate_document()
+        # PUSH to 0.0.3 force external until
+        self.document.set_location("external")
+
+        if self.document.location == "external":
+            self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        else:
+            raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def _restore_document_content(self):
@@ -1389,9 +1401,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             pyqt.QEvent.MouseButtonRelease,
             pyqt.QEvent.MouseButtonDblClick,
         ):
-            logma.info(
-                f"eventFilter: {event_type}, obj={type(obj).__name__}, current_tool={self.current_tool}"
-            )
+            logma.info(f"eventFilter: {event_type}, obj={type(obj).__name__}, current_tool={self.current_tool}")
 
         for qevent_type, method_name in self._EVENT_FILTER_HANDLERS:
             if event_type == qevent_type:
@@ -1423,10 +1433,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         """
         if not self.current_tool:
             return None
-        logma.info(
-            f"eventFilter caught {event.type()}, "
-            f"button={getattr(event, 'button', lambda: '?')()}"
-        )
+        logma.info(f"eventFilter caught {event.type()}, " f"button={getattr(event, 'button', lambda: '?')()}")
         self.mousePressEvent(event)
         self._update_canvas_cursor()
         return True
@@ -1446,9 +1453,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         if not self.drawing:
             expected_cursor = self._get_expected_cursor_shape()
             if self.canvas.cursor().shape() != expected_cursor:
-                logma.warning(
-                    f"Canvas cursor mismatch! Expected {expected_cursor}, got {self.canvas.cursor().shape()}"
-                )
+                logma.warning(f"Canvas cursor mismatch! Expected {expected_cursor}, got {self.canvas.cursor().shape()}")
                 self._update_canvas_cursor()
         return True
 
@@ -1647,13 +1652,13 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
     # ``(widget_attr_name, pane_class, label)``. Adding a new drawing tool
     # means appending one tuple here; no editor branch to update.
     _SKETCH_TOOLPANES = (
-        ("line_tools_group",    "NchantdLineToolPane",    "Line Tool"),
-        ("curve_tool_pane",     "NchantdCurveToolPane",   "Curve Tool"),
-        ("splineline_tool_pane", "NchantdSplineToolPane",  "Spline Tool"),
-        ("polygon_tool_pane",   "NchantdPolygonToolPane", "Polygon Tool"),
-        ("circle_tool_pane",     "NchantdCircleToolPane",  "Circle Tool"),
-        ("object_tool_pane",     "NchantdObjectToolPane",  "Insert Object: "),
-        ("fill_tool_pane",      "NchantdFillToolPane",   "Fill Color: "),
+        ("line_tools_group", "NchantdLineToolPane", "Line Tool"),
+        ("curve_tool_pane", "NchantdCurveToolPane", "Curve Tool"),
+        ("splineline_tool_pane", "NchantdSplineToolPane", "Spline Tool"),
+        ("polygon_tool_pane", "NchantdPolygonToolPane", "Polygon Tool"),
+        ("circle_tool_pane", "NchantdCircleToolPane", "Circle Tool"),
+        ("object_tool_pane", "NchantdObjectToolPane", "Insert Object: "),
+        ("fill_tool_pane", "NchantdFillToolPane", "Fill Color: "),
     )
 
     def _build_sketch_tool_pane(self, attr_name, pane_class_name, label):
@@ -1664,6 +1669,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         if pane_class is None:
             # Fall back to module-level lookup if globals doesn't have it
             import sys
+
             for name, obj in list(sys.modules.items()):
                 if pane_class_name in name:
                     pass
@@ -2015,12 +2021,12 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
     # Dispatch table mapping tool name → drawing method. Adding a new
     # tool means appending one entry here, no switch needed.
     _SHAPE_DRAWERS = {
-        "line":    "_draw_line_shape",
-        "curve":   "_draw_curve_shape",
-        "spline":  "_draw_spline_shape",
+        "line": "_draw_line_shape",
+        "curve": "_draw_curve_shape",
+        "spline": "_draw_spline_shape",
         "polygon": "_draw_polygon_shape",
         "ellipse": "_draw_ellipse_shape",
-        "fill":    "_draw_fill_shape",
+        "fill": "_draw_fill_shape",
     }
 
     def _draw_shape(self, painter, shape_data):

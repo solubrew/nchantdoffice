@@ -171,6 +171,9 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         cfg["buttons"][17] = {"action": "web_page_pin", "handler": self.cmd_pin_page, "value": self.cmd_check_is_pinned}
         cfg["buttons"][49] = "_insert_stretch"
         cfg["fill"] = True
+
+        browser_cfg = {"url": "about:blank", "is_app": True, "links_in_place": True}
+        self.browser = NchantdWebViewer(self, browser_cfg).initWidget()
         super().initView(cfg)
         # Start the embedded viewer on a blank page. Loading the Jupyter URL
         # before the server is up yields an ERR_CONNECTION_REFUSED error page
@@ -179,11 +182,10 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         # links_in_place: new-window/target=_blank requests (how Jupyter opens a
         # notebook when a .ipynb is double-clicked in the tree) load in THIS view
         # instead of being dropped. See NchantdWebEnginePage.createWindow.
-        cfg = {"url": "about:blank", "is_app": True, "links_in_place": True}
         logma.info(f"[notebook] initView: creating web viewer (blank until ready; target={self.server_url})")
         # initWidget (not initView) so the viewer's initModel runs too: it honours
         # is_app/url from cfg and seeds the model-side url state before first show.
-        self.browser = NchantdWebViewer(self, cfg).initWidget()
+
         self._wire_browser_load_logging()
         self.layout.addWidget(self.browser)
         # Auto-start Jupyter server when tab opens (defaults True).
@@ -215,6 +217,18 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         if last_path and self._looks_like_ipynb_path(last_path):
             logma.info(f"[notebook] initView: scheduling reload of {last_path}")
             QTimer.singleShot(1000, self._make_reload_handler(last_path))
+        # PUSH to 0.0.3 force external until
+        self.document.set_location("external")
+
+        # if self.document.location == "external":
+        #     self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        # else:
+        #     raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def _make_reload_handler(self, last_path):
@@ -1121,7 +1135,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def populate_document(self):
         """"""
-        self.browser.load_page(self.file_path)
+        self.browser.goto_page(self.file_path)
         return self
 
     def restart_kernel(self):

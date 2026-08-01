@@ -270,6 +270,8 @@ class NchantdOfficeScratchEditor(NchantdOfficeDocument):
         """"""
         super().initModel(cfg)
         logma.info(f"initModel")
+        self.document = self.app.model.codex.init_script({"document": self.config.get("document", {})})
+        self.document.load_document()
         scope = self.config.dikt.get("scope", "TODAY")
         datetime = dt.datetime.now()
         self.full_text = ""

@@ -15,8 +15,20 @@
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
 import datetime as dt
+from bs4 import BeautifulSoup
+import json as j
 
 # ======================================3rd Party Library Modules=====================================================||
+from pygments import highlight
+from pygments.lexers import PythonLexer, JavaLexer, JavascriptLexer, CLexer
+from pygments.lexers import JsonLexer, YamlLexer, CssLexer, IniLexer
+from pygments.lexers.c_cpp import CppLexer
+from pygments.lexers.dotnet import CSharpLexer
+from pygments.lexers.ruby import RubyLexer
+from pygments.lexers.r import SLexer as RLexer
+from pygments.lexers.shell import BashLexer
+from pygments.formatters import HtmlFormatter
+from numpy import isnan, nan
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
@@ -226,9 +238,12 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         logma.info(f"Full Text {self.full_text}")
         return self
 
-    def initView(self):
+    def initView(self, cfg=None):
         """ """
-        cfg = {"default_toolbar": False}
+        cfg = cfg or {}
+        cfg["default_toolbar"] = False
+        editor_cfg = {"default_text": self.full_text}
+        self.editor = NchantdOfficeJournalAppendEditor(self, editor_cfg).initWidget()
         super().initView(cfg)
         self.top_layout = pyqt.QHBoxLayout()
         # PUSH to 0.0.3
@@ -242,8 +257,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.settings = NchantdLabel(self, cfg).initWidget()
         self.top_layout.addWidget(self.settings)
         self.layout.addLayout(self.top_layout)
-        cfg = {"default_text": self.full_text}
-        self.editor = NchantdOfficeJournalAppendEditor(self, cfg).initWidget()
+
         self.editor.set_background(hex="#4F5665")
         self.layout.addWidget(self.editor)
         return self
@@ -306,15 +320,56 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             self.pages = doc.pages
             if self.editor is not None and hasattr(self.editor, "setPlainText"):
                 self.editor.setPlainText(text)
-            logma.info(
-                f"[journal] refresh_content: restored {len(text)} chars"
-            )
+            logma.info(f"[journal] refresh_content: restored {len(text)} chars")
         except Exception as e:
             logma.error(
                 f"[journal] refresh_content failed: {e}",
                 exc_info=True,
             )
         return self
+
+    def get_content(self):
+        """Return the document content, normalizing the source syntax.
+
+        T-034: the document syntax now comes from the toolbar
+        selector (``self.compatibility`` or
+        ``self.config.dikt['compatibility']``) instead of being
+        hard-coded to ``"html"``. The fallback chain is:
+          1. ``self.compatibility`` attribute
+          2. ``self.config.dikt['compatibility']``
+          3. ``self.document.syntax``
+
+        T-NEW-010 followup: also write the rich-text HTML into the
+        Pyffice unit's ``self.document.text.html`` so reopen can
+        restore the formatting (without this, ``_preserved_unit_html``
+        returns ``None`` and the editor falls through to
+        ``setPlainText``, dropping the rich text).
+        """
+        syntax = (
+            getattr(self, "compatibility", None)
+            or (self.config.dikt.get("compatibility") if hasattr(self, "config") else None)
+            or getattr(self.document, "syntax", None)
+            or "html"
+        )
+        if syntax == "html":
+            html = """
+            <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
+            <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
+            """
+            editor_html = self.editor.toHtml()
+            soup = BeautifulSoup(editor_html, "html.parser")
+            text = html.replace("<[content]>", soup.body.decode_contents())
+            # Persist the editor HTML into the Pyffice unit so
+            # reopen can restore formatting (see _preserved_unit_html).
+            text_attr = getattr(self.document, "text", None)
+            if text_attr is not None and hasattr(text_attr, "html"):
+                text_attr.html = editor_html
+        else:
+            text = self.editor.toPlainText()
+        logma.info(f"File Path {self.file_path}")
+        content = {"content": {"file_path": self.file_path}, "text": text}
+        logma.info(f"CONTENT {content}")
+        return content
 
     def get_journal_document(self, cfg):
         """"""
@@ -327,38 +382,51 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         value = self.settings.get_value()
         return value
 
+    def focusOutEvent(self, event):
+        """"""
+        super().focusOutEvent(event)
+        self.save()
+
+    def populate_data(self):
+        """"""
+        super().populate_document()
+
     def save(self, path=None, format_=None, encrypt=False):
         """"""
-        content = self.editor.toPlainText()
-        logma.info(f"Data {self.document.pages}")
-        logma.info(f"Document {self.document.to_dict()}")
-        self.document.parse_content(content)
-
-        # FIX (was double-save bug): Removed redundant super().save() call.
-        # super().save() was nested inside `if content != self.document.content`
-        # which created an inconsistent save path. self.document.save() handles
-        # persistence (versioning + encryption); super().save() was redundant.
+        if self.document is None:
+            self.new_document()
+        content = self.get_content()
         if content != self.document.content:
             self.document.set_content(content)
-        logma.info(f"Save Content {self.document.content}")
-        self.document.save()
-        logma.info(f"Save Path {path}")
-        if path:
-            self.set_file_path(path)
-        try:
-            pid = self.app.view.panes["left"].tree.model.current_node.nid
-            logma.info(f"Save PID {pid}")
-        except (AttributeError, KeyError) as e:
-            logma.warning(f"Could not resolve PID: {e}")
-        logma.info(f"Save DID {self.document.did}")
-        logma.info(f"Save Document {self.document.to_dict()}")
-        logma.json(self.document.to_dict())
-        self.app.model.add_document_content_app(self.document.to_dict(), version=self.document.version)
-        return self
+        super().save()
+        # TODO: Need to redirect save to the app_media_content table
 
-    # def store_journal(self):
-    #     """"""
-    #     #
+        # content = self.editor.toPlainText()
+        # logma.info(f"Data {self.document.pages}")
+        # logma.info(f"Document {self.document.to_dict()}")
+        # self.document.parse_content(content)
+        #
+        # # FIX (was double-save bug): Removed redundant super().save() call.
+        # # super().save() was nested inside `if content != self.document.content`
+        # # which created an inconsistent save path. self.document.save() handles
+        # # persistence (versioning + encryption); super().save() was redundant.
+        # if content != self.document.content:
+        #     self.document.set_content(content)
+        # logma.info(f"Save Content {self.document.content}")
+        # self.document.save()
+        # logma.info(f"Save Path {path}")
+        # if path:
+        #     self.set_file_path(path)
+        # try:
+        #     pid = self.app.view.panes["left"].tree.model.current_node.nid
+        #     logma.info(f"Save PID {pid}")
+        # except (AttributeError, KeyError) as e:
+        #     logma.warning(f"Could not resolve PID: {e}")
+        # logma.info(f"Save DID {self.document.did}")
+        # logma.info(f"Save Document {self.document.to_dict()}")
+        # logma.json(self.document.to_dict())
+        # self.app.model.add_document_content_app(self.document.to_dict(), version=self.document.version)
+        return self
 
 
 class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):

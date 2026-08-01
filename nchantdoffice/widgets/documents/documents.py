@@ -842,6 +842,18 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         """"""
         super().initView(cfg)
         self.set_notes(self.config.dikt.get("notes", []))
+
+        # PUSH to 0.0.3 force external until
+        self.document.set_location("external")
+        if self.document.location == "external":
+            self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        else:
+            raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def initWidget(self, cfg=None):
@@ -869,6 +881,19 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
     def export_file(self):
         """"""
         super().export_file()
+
+    def get_content_internal(self):
+        """"""
+        return {}
+
+    def get_content(self, content=None, location="external"):
+        """"""
+        content = content or {}
+        content["file_path"] = self.document.file_path
+        content["location"] = self.document.location
+        if self.document.location == "internal":
+            content["internal"] = self.get_content_internal()
+        return content
 
     def get_version(self):
         """returns the current version of the document"""
@@ -952,18 +977,9 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
             logma.error(f"Failed to open remote document: {e}")
         return self
 
-    def get_content_internal(self):
+    def populate_document(self, file=None):
         """"""
-        return {}
-
-    def get_content(self, content=None, location="external"):
-        """"""
-        content = content or {}
-        content["file_path"] = self.document.file_path
-        content["location"] = self.document.location
-        if self.document.location == "internal":
-            content["internal"] = self.get_content_internal()
-        return content
+        return self
 
     def save(self):
         """"""

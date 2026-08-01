@@ -82,6 +82,18 @@ class NchantdOfficeContact(NchantdWidget):
     def initView(self, cfg=None):
         """"""
         super().initView(cfg)
+        # PUSH to 0.0.3 force external until
+        self.document.set_location("external")
+
+        if self.document.location == "external":
+            self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        else:
+            raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def initWidget(self):
@@ -221,7 +233,18 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         self.layout.addLayout(self.contacts_group.layout)
         # Populate contacts
         self.display_contacts(self.contacts)
+        # PUSH to 0.0.3 force external until
+        self.document.set_location("external")
 
+        if self.document.location == "external":
+            self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        else:
+            raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def initWidget(self):
@@ -232,7 +255,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
     def get_filter_option(self):
         """Return the stored value of get_filter_option."""
-        return self.config.dikt.get('filter_option', '') or ''
+        return self.config.dikt.get("filter_option", "") or ""
 
     def init_drawer_document_config(self):
         """"""
@@ -556,6 +579,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
         return self
 
+
 def _format_contact_as_vcard(contact):
     """Return the vCard 3.0 textual representation of one contact.
 
@@ -590,7 +614,6 @@ def _write_vcard_file(file_path, contacts):
     with open(file_path, "w", encoding="utf-8") as f:
         for contact in contacts:
             f.write(_format_contact_as_vcard(contact))
-
 
     def export_to_vcard(self, file_path):
         """Export contacts to vCard file"""

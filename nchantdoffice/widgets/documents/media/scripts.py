@@ -138,63 +138,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self.view_type = self.config.dikt.get("view_type", "note_view")
         return self
 
-    def restore_formatting_from_metadata(self):
-        """T-082: re-apply bold / italic / underline / colour metadata.
-
-        Walks ``self.document.meta_data["formatting"]`` (when
-        present) and feeds each (start, end, attrs) range back
-        into the document editor via the QScintilla / QTextCursor
-        API. Returns ``self``.
-        """
-        try:
-            doc = getattr(self, "document", None)
-            if doc is None:
-                return self
-            md = getattr(doc, "meta_data", None)
-            if not isinstance(md, dict):
-                return self
-            ranges = md.get("formatting") or []
-            if not ranges:
-                return self
-            editor = getattr(self, "document_editor", None) or getattr(self, "editor", None)
-            if editor is None:
-                return self
-            cursor = None
-            if hasattr(editor, "textCursor"):
-                cursor = editor.textCursor()
-            if cursor is None:
-                return self
-            for entry in ranges:
-                if not isinstance(entry, dict):
-                    continue
-                start = int(entry.get("start", 0))
-                end = int(entry.get("end", 0))
-                if end <= start:
-                    continue
-                cursor.setPosition(start)
-                cursor.setPosition(end, cursor.KeepSelection)
-                try:
-                    if entry.get("bold") and hasattr(cursor, "setBold"):
-                        cursor.setBold(bool(entry["bold"]))
-                    if entry.get("italic") and hasattr(cursor, "setItalic"):
-                        cursor.setItalic(bool(entry["italic"]))
-                    if entry.get("underline") and hasattr(cursor, "setUnderline"):
-                        cursor.setUnderline(bool(entry["underline"]))
-                    if entry.get("color") and hasattr(cursor, "setForeground"):
-                        from PySide6 import QtGui
-
-                        cursor.setForeground(QtGui.QColor(str(entry["color"])))
-                except Exception:
-                    pass
-            logma.info(f"[scripts] restore_formatting_from_metadata: re-applied {len(ranges)} ranges")
-        except Exception as e:
-            logma.error(f"[scripts] restore_formatting_from_metadata failed: {e}", exc_info=True)
-        return self
-        if self.context_menu_name is not None:
-            self.initialize_context_menu("context.document.script")
-        self.view_type = self.config.dikt.get("view_type", "note_view")
-        return self
-
     def initView(self, cfg=None):
         """"""
         cfg = cfg or {}
@@ -235,13 +178,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # create paths where the on-disk file does not exist yet and
         # ``PyfficeDocument.set_file_path`` is a no-op. This matches the
         # pattern already used by NchantdOfficeSketch and NchantdOfficeMatrix.
-        if self.file_path is None:
-            self.file_path = (
-                self.document.file_path
-                or self.config.dikt.get("file_path")
-                or (self.document.content or {}).get("file_path")
-                or (self.document.content or {}).get("content", {}).get("file_path")
-            )
+        self.file_path = self.document.file_path
         cfg = {
             "buttons": {
                 10: {"action": "set_page_view", "handler": self.cmd_toggle_page_view},
@@ -279,50 +216,24 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             self.set_note_view()
         else:
             raise Exception("view_type must be 'page_view' or 'note_view'")
-        self._apply_extension_syntax(self.document.file_path)
-        self.populate_document()
+        # PUSH to 0.0.3 force external until
+        # self.document.set_location("external")
+        #
+        # if self.document.location == "external":
+        #     self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        # else:
+        #     raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def initWidget(self):
         """ """
         self.initModel()
         self.initView()
-        return self
-
-    def cmd_top_margin_change(self, event, *args, **kwargs):
-        """Update top margin from spinbox and refresh page view."""
-        if hasattr(self, "top_margin_select") and self.top_margin_select is not None:
-            value = self.top_margin_select.value() if hasattr(self.top_margin_select, "value") else 72
-            self.margin_top = int(value) if value else 72
-            if self.view_type == "page_view":
-                self.set_page_view()
-        return self
-
-    def cmd_left_margin_change(self, event, *args, **kwargs):
-        """Update left margin from spinbox and refresh page view."""
-        if hasattr(self, "left_margin_select") and self.left_margin_select is not None:
-            value = self.left_margin_select.value() if hasattr(self.left_margin_select, "value") else 72
-            self.margin_left = int(value) if value else 72
-            if self.view_type == "page_view":
-                self.set_page_view()
-        return self
-
-    def cmd_right_margin_change(self, event, *args, **kwargs):
-        """Update right margin from spinbox and refresh page view."""
-        if hasattr(self, "right_margin_select") and self.right_margin_select is not None:
-            value = self.right_margin_select.value() if hasattr(self.right_margin_select, "value") else 72
-            self.margin_right = int(value) if value else 72
-            if self.view_type == "page_view":
-                self.set_page_view()
-        return self
-
-    def cmd_bottom_margin_change(self, event, *args, **kwargs):
-        """Update bottom margin from spinbox and refresh page view."""
-        if hasattr(self, "bottom_margin_select") and self.bottom_margin_select is not None:
-            value = self.bottom_margin_select.value() if hasattr(self.bottom_margin_select, "value") else 72
-            self.margin_bottom = int(value) if value else 72
-            if self.view_type == "page_view":
-                self.set_page_view()
         return self
 
     # T-insert-helpers: each cmd_add_<object> creates a real,
@@ -332,44 +243,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):
     # the document so they survive a save -> reload round trip.
     # The label is the visible string the user sees; the marker
     # is the load/reload token that ``_read_placeholder`` keys on.
-
-    def _insert_object_placeholder(self, label, marker, html=None):
-        """Insert a real object placeholder at the current cursor.
-
-        The placeholder is a QTextCharFormat-stamped fragment that
-        shows the user a real, selectable run. The marker is also
-        appended to ``self.document.object_inserts`` so the save
-        path persists it and the open path can re-insert it on
-        reload. Returns ``self`` for chainable callers.
-        """
-        editor = getattr(self, "document_editor", None)
-        if editor is None:
-            return self
-        try:
-            from PySide6 import QtCore as _qc
-            from PySide6 import QtGui as _qg
-
-            cursor = editor.textCursor() if hasattr(editor, "textCursor") else None
-            if cursor is not None:
-                char_format = cursor.charFormat()
-                char_format.setProperty(_qc.Qt.UserRole, marker)
-                cursor.setCharFormat(char_format)
-                cursor.insertText(label)
-                cursor.setCharFormat(_qg.QTextCharFormat())
-        except Exception as exc:
-            logma.warning(f"[scripts] placeholder insert failed for {label!r}: {exc}")
-            # Fallback: plain text insert so the user still sees something.
-            try:
-                editor.insert(label)
-            except Exception:
-                pass
-        if hasattr(self, "document") and self.document is not None:
-            inserts = getattr(self.document, "object_inserts", None)
-            if inserts is None:
-                self.document.object_inserts = []
-                inserts = self.document.object_inserts
-            inserts.append({"label": label, "marker": marker, "html": html})
-        return self
 
     def cmd_add_chart(self, event=None, *args, **kwargs):
         """Insert a chart placeholder at the current cursor position.
@@ -520,6 +393,42 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 self.config.dikt["margin_right"] = value
         return self
 
+    def cmd_top_margin_change(self, event, *args, **kwargs):
+        """Update top margin from spinbox and refresh page view."""
+        if hasattr(self, "top_margin_select") and self.top_margin_select is not None:
+            value = self.top_margin_select.value() if hasattr(self.top_margin_select, "value") else 72
+            self.margin_top = int(value) if value else 72
+            if self.view_type == "page_view":
+                self.set_page_view()
+        return self
+
+    def cmd_left_margin_change(self, event, *args, **kwargs):
+        """Update left margin from spinbox and refresh page view."""
+        if hasattr(self, "left_margin_select") and self.left_margin_select is not None:
+            value = self.left_margin_select.value() if hasattr(self.left_margin_select, "value") else 72
+            self.margin_left = int(value) if value else 72
+            if self.view_type == "page_view":
+                self.set_page_view()
+        return self
+
+    def cmd_right_margin_change(self, event, *args, **kwargs):
+        """Update right margin from spinbox and refresh page view."""
+        if hasattr(self, "right_margin_select") and self.right_margin_select is not None:
+            value = self.right_margin_select.value() if hasattr(self.right_margin_select, "value") else 72
+            self.margin_right = int(value) if value else 72
+            if self.view_type == "page_view":
+                self.set_page_view()
+        return self
+
+    def cmd_bottom_margin_change(self, event, *args, **kwargs):
+        """Update bottom margin from spinbox and refresh page view."""
+        if hasattr(self, "bottom_margin_select") and self.bottom_margin_select is not None:
+            value = self.bottom_margin_select.value() if hasattr(self.bottom_margin_select, "value") else 72
+            self.margin_bottom = int(value) if value else 72
+            if self.view_type == "page_view":
+                self.set_page_view()
+        return self
+
     def cmd_toggle_selection_bold(self, event=None, *args, **kwargs):
         """Toggle bold weight on the current editor selection.
 
@@ -562,6 +471,9 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # NOTE: Change between a full screen and a standard 8.5x11/whatever the current page size is set to
         # view port change
         return self
+
+    def connect_to_file(self):
+        """"""
 
     def extract_images(self):
         """Extract all images from the QTextEdit's HTML content."""
@@ -711,10 +623,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         styles = ["Arial", "San Serif"]
         return styles
 
-    def get_text_background_color_selected(self):
+    def get_margin_options(self):
         """"""
-        color = "White"
-        return color
+        margins = [1, "2 inches", "3 inches", "4 inches"]
+        return margins
 
     def get_left_margin_selected(self):
         """"""
@@ -725,16 +637,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """"""
         right_margin = 1
         return right_margin
-
-    def get_top_margin_selected(self):
-        """"""
-        top_margin = 1
-        return top_margin
-
-    def get_margin_options(self):
-        """"""
-        margins = [1, "2 inches", "3 inches", "4 inches"]
-        return margins
 
     def get_page_view_selected(self):
         """"""
@@ -750,6 +652,16 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """"""
         text = self.document_editor.toPlainText()
         return text
+
+    def get_text_background_color_selected(self):
+        """"""
+        color = "White"
+        return color
+
+    def get_top_margin_selected(self):
+        """"""
+        top_margin = 1
+        return top_margin
 
     def init_drawer_document_config(self):
         """Build the script document-config drawer."""
@@ -769,15 +681,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         cnt += 1
 
         return items
-
-    def init_drawer_selection_config(self):
-        """Build the script selection/inserts drawer (image / table / date / time).
-
-        T-NEW-035 close-out: insert_specs moved to
-        ``init_drawer_object_config`` (item #4). The selection
-        drawer now holds only the legacy selection branch.
-        """
-        return {}
 
     def init_drawer_object_config(self):
         """Build the object-config drawer (pretty print / compat / margins / page view / headers / footers / inserts / tools).
@@ -817,8 +720,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 "label": label,
                 "layout": "vertical",
                 "spacing": 2,  # T-NEW-035 item #5
-                "handler": getattr(self, handler_name, None)
-                or getattr(self, "cmd_noop_handler", None),
+                "handler": getattr(self, handler_name, None) or getattr(self, "cmd_noop_handler", None),
             }
             if attr_name == "insert_time":
                 cfg["value"] = None
@@ -914,6 +816,15 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # NOTE: add template selection/management
         #
         return items
+
+    def init_drawer_selection_config(self):
+        """Build the script selection/inserts drawer (image / table / date / time).
+
+        T-NEW-035 close-out: insert_specs moved to
+        ``init_drawer_object_config`` (item #4). The selection
+        drawer now holds only the legacy selection branch.
+        """
+        return {}
 
     def init_toolbox(self):
         """"""
@@ -1257,6 +1168,225 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self._initial_load = False
         return self
 
+    def populate_data(self):
+        """"""
+
+    def populate_document(self):
+        """T-scripts-populate: route a freshly-opened script document.
+
+        Splits the work into three smaller helpers that are each
+        under 50 lines:
+
+          1. ``_load_external_file()`` — load the on-disk file when
+             ``self.document.file_path`` is set.
+          2. ``_resolve_document_text()`` — read the in-memory
+             payload through every shape (PyfficeScript unit,
+             PyfficeCodex content tree, plain string, bytes).
+          3. ``_apply_syntax_highlighting(text)`` — dispatch on the
+             configured syntax to choose the right editor API.
+
+        T-NEW-023 (live "NchantdScript still not returning text
+        content with formatting"): the reopen path used to ignore
+        the on-disk file when ``file_path`` was set — it always
+        routed through the DB payload and ran pygments over the
+        plain text, dropping all rich-text formatting. The user
+        explicitly noted that the logic should reload the file
+        from path, so what is stored in the DB shouldn't matter
+        when the on-disk source-of-truth is available. Fixed by
+        short-circuiting the DB routing whenever
+        ``_load_external_file()`` actually loaded content from
+        disk; the editor's HTML is preserved verbatim.
+        """
+        logma.info(f"Populating Document")
+
+        # T-NEW-024: on reopen, re-derive the syntax from the file
+        # extension so the dispatch picks the right editor API
+        # even when the DB config.dikt carries a stale
+        # "plaintext" (the saved config predates the extension
+        # detection). The on-disk file is the source of truth.
+        logma.info(f"\n[ NchantdOfficeScript ] - File Path {self.file_path}")
+        if getattr(self, "file_path", None):
+            detected = self._apply_extension_syntax(self.file_path)
+            if detected and detected != "plain-text":
+                self.format_type = detected
+
+        # External file loading: if the document has a file_path set
+        # (e.g. the user opened an external .py / .js / .md / .txt
+        # file via cmd_open_local_file), load its contents into the
+        # editor. Returns True when a file was loaded.
+        loaded_from_disk = self._load_external_file()
+
+        style = f"background-color: #FFFFFF;"
+        self.document_editor.setStyleSheet(style)
+
+        # T-NEW-023 (user-stated contract): the on-disk file is the
+        # source-of-truth. On an *initial* file-open
+        # (cmd_open_local_file -> open_file), apply the syntax
+        # dispatcher so markdown / python / pygments / html render
+        # with their proper editor APIs. On a *reload* (returning to
+        # the tab from a different tabset), mirror the raw bytes via
+        # the setPlainText call already made by
+        # ``_load_external_file`` — running pygments / markdown
+        # / html conversion drops the leading whitespace (verified:
+        # ``setMarkdown('# Hello\n\n    - indented bullet\n')``
+        # followed by ``toPlainText()`` returns
+        # ``'Hello\n- indented bullet'``).
+        if loaded_from_disk:
+            if getattr(self, "_initial_load", False):
+                try:
+                    import os
+
+                    path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path", None)
+                    if path:
+                        path = os.path.abspath(path)
+                        with open(path, "r", encoding="utf-8", errors="replace") as f:
+                            text = f.read()
+                        # Apply the dispatcher for the initial
+                        # file-open so syntax highlighting works.
+                        self._apply_syntax_highlighting(text)
+                except Exception as e:
+                    logma.error(
+                        f"[scripts] populate_document: on-disk dispatch failed: {e}",
+                        exc_info=True,
+                    )
+                return self
+            # Reload from a different tabset: preserve raw bytes.
+            return self
+
+        text = self._resolve_document_text()
+        if self.document is None:
+            self.document_editor.convert_urls_to_links(text)
+            return self
+
+        self._apply_syntax_highlighting(text)
+        return self
+
+    def restore_formatting_from_metadata(self):
+        """T-082: re-apply bold / italic / underline / colour metadata.
+
+        Walks ``self.document.meta_data["formatting"]`` (when
+        present) and feeds each (start, end, attrs) range back
+        into the document editor via the QScintilla / QTextCursor
+        API. Returns ``self``.
+        """
+        try:
+            doc = getattr(self, "document", None)
+            if doc is None:
+                return self
+            md = getattr(doc, "meta_data", None)
+            if not isinstance(md, dict):
+                return self
+            ranges = md.get("formatting") or []
+            if not ranges:
+                return self
+            editor = getattr(self, "document_editor", None) or getattr(self, "editor", None)
+            if editor is None:
+                return self
+            cursor = None
+            if hasattr(editor, "textCursor"):
+                cursor = editor.textCursor()
+            if cursor is None:
+                return self
+            for entry in ranges:
+                if not isinstance(entry, dict):
+                    continue
+                start = int(entry.get("start", 0))
+                end = int(entry.get("end", 0))
+                if end <= start:
+                    continue
+                cursor.setPosition(start)
+                cursor.setPosition(end, cursor.KeepSelection)
+                try:
+                    if entry.get("bold") and hasattr(cursor, "setBold"):
+                        cursor.setBold(bool(entry["bold"]))
+                    if entry.get("italic") and hasattr(cursor, "setItalic"):
+                        cursor.setItalic(bool(entry["italic"]))
+                    if entry.get("underline") and hasattr(cursor, "setUnderline"):
+                        cursor.setUnderline(bool(entry["underline"]))
+                    if entry.get("color") and hasattr(cursor, "setForeground"):
+                        from PySide6 import QtGui
+
+                        cursor.setForeground(QtGui.QColor(str(entry["color"])))
+                except Exception:
+                    pass
+            logma.info(f"[scripts] restore_formatting_from_metadata: re-applied {len(ranges)} ranges")
+        except Exception as e:
+            logma.error(f"[scripts] restore_formatting_from_metadata failed: {e}", exc_info=True)
+        return self
+        if self.context_menu_name is not None:
+            self.initialize_context_menu("context.document.script")
+        self.view_type = self.config.dikt.get("view_type", "note_view")
+        return self
+
+    def save(self):
+        """Capture the current editor contents before persistence."""
+        if self.document is None:
+            self.new_document()
+        content = self.get_content()
+        if content != self.document.content:
+            self.document.set_content(content)
+        super().save()
+        return self
+
+    def set_page_view(self):
+        """"""
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        # Define page size for "Letter" (8.5 x 11 inches in pixels at 96 DPI)
+        self.page_width = 816  # 8.5 inches * 96 DPI
+        self.page_height = 1056  # 11 inches * 96 DPI
+        # Define default margins (in pixels)
+        self.margin_top = 72  # 1 inch
+        self.margin_bottom = 72  # 1 inch
+        self.margin_left = 72  # 1 inch
+        self.margin_right = 72  # 1 inch
+        self.page_scene = pyqt.QGraphicsScene(self)
+        self.page_scene.setBackgroundBrush(pyqt.QBrush(pyqt.QColor("black")))
+        self.view = pyqt.QGraphicsView(self.page_scene)
+        # #self.view.setRenderHint(self.view.viewportUpdateMode)
+        # need add header
+        # add footer
+        # add methods for creating a second page
+        self.layout.addWidget(self.view)
+        # self.page_outline = pyqt.QGraphicsRectItem(0, 0, self.page_width, self.page_height)
+        self.page_outline = pyqt.QGraphicsRectItem(
+            0 + self.margin_left / 2,
+            0 + self.margin_bottom / 2,
+            self.page_width - self.margin_left,
+            self.page_height - self.margin_bottom,
+        )
+        pen = pyqt.QPen(pyqt.QColor("#a6a6a6"))
+        pen.setWidth(self.margin_top)
+        self.page_outline.setPen(pen)
+        self.page_scene.addItem(self.page_outline)
+        self.document_editor.setFont(pyqt.QFont("Arial", 12))  # Default font and size
+        self.document_editor.setGeometry(
+            self.margin_left,
+            self.margin_top,
+            self.page_width - self.margin_left - self.margin_right,
+            self.page_height - self.margin_top - self.margin_bottom,
+        )
+        self.page_scene.addWidget(self.document_editor)
+        # Define page size for "Letter" (8.5 x 11 inches in pixels at 96 DPI)
+        self.page_width = 816  # 8.5 inches * 96 DPI
+        self.page_height = 1056  # 11 inches * 96 DPI
+        # Define default margins (in pixels)
+        self.margin_top = 72  # 1 inch
+        self.margin_bottom = 72  # 1 inch
+        self.margin_left = 72  # 1 inch
+        self.margin_right = 72  # 1 inch
+
+    def set_note_view(self):
+        """"""
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        # self.document_editor = NchantdDocEditor(self, self.config).initWidget()
+        self.document_editor.setFont(pyqt.QFont("Arial", 12))  # Default font and size
+        self.layout.addWidget(self.document_editor)
+
+    def update_toolbar(self):
+        """"""
+        # add/remove buttons baseed on syntax selection
+        return self
+
     def _apply_extension_syntax(self, path):
         """T-NEW-024: derive ``self.format_type`` + ``config.dikt``
         from the file extension so a freshly-opened file routes
@@ -1316,248 +1446,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             if isinstance(meta, dict):
                 meta["syntax"] = syntax
         return syntax
-
-    def _load_external_file(self):
-        """Load an external script file into the document editor.
-
-        Reads ``self.file_path`` (or ``self.current_notebook_path``
-        as a fallback) and, when the path points at an existing
-        readable text file, copies its contents into the editor
-        via ``setPlainText`` / ``set_text``. Returns ``True`` when
-        a file was loaded, ``False`` when there was no file to
-        load (no path, missing file, or unsupported extension).
-
-        Whitelisted text formats: ``.py``, ``.js``, ``.md``,
-        ``.txt``, ``.json``, ``.yaml``, ``.yml``, ``.html``,
-        ``.css``, ``.xml``, ``.csv``, ``.ini``, ``.toml``,
-        ``.sh``. The editor is left untouched when the
-        extension isn't on the whitelist (the in-memory
-        document text takes over).
-        """
-        try:
-            import os
-
-            path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path", None)
-            if not path:
-                return False
-            path = os.path.abspath(path)
-            if not os.path.isfile(path):
-                return False
-            ext = os.path.splitext(path)[1].lower()
-            supported = {
-                ".py",
-                ".js",
-                ".md",
-                ".txt",
-                ".json",
-                ".yaml",
-                ".yml",
-                ".html",
-                ".css",
-                ".xml",
-                ".csv",
-                ".ini",
-                ".toml",
-                ".sh",
-            }
-            if ext not in supported:
-                return False
-            with open(path, "r", encoding="utf-8", errors="replace") as f:
-                text = f.read()
-            editor = getattr(self, "document_editor", None) or getattr(self, "editor", None)
-            if editor is None:
-                return False
-            if hasattr(editor, "setPlainText"):
-                editor.setPlainText(text)
-            elif hasattr(editor, "set_text"):
-                editor.set_text(text)
-            else:
-                return False
-            logma.info(f"[scripts] _load_external_file loaded {len(text)} chars from {path}")
-            return True
-        except Exception as e:
-            logma.error(f"[scripts] _load_external_file failed: {e}", exc_info=True)
-            return False
-
-    def populate_document(self):
-        """T-scripts-populate: route a freshly-opened script document.
-
-        Splits the work into three smaller helpers that are each
-        under 50 lines:
-
-          1. ``_load_external_file()`` — load the on-disk file when
-             ``self.document.file_path`` is set.
-          2. ``_resolve_document_text()`` — read the in-memory
-             payload through every shape (PyfficeScript unit,
-             PyfficeCodex content tree, plain string, bytes).
-          3. ``_apply_syntax_highlighting(text)`` — dispatch on the
-             configured syntax to choose the right editor API.
-
-        T-NEW-023 (live "NchantdScript still not returning text
-        content with formatting"): the reopen path used to ignore
-        the on-disk file when ``file_path`` was set — it always
-        routed through the DB payload and ran pygments over the
-        plain text, dropping all rich-text formatting. The user
-        explicitly noted that the logic should reload the file
-        from path, so what is stored in the DB shouldn't matter
-        when the on-disk source-of-truth is available. Fixed by
-        short-circuiting the DB routing whenever
-        ``_load_external_file()`` actually loaded content from
-        disk; the editor's HTML is preserved verbatim.
-        """
-        logma.info(f"Populating Document")
-
-        # T-NEW-024: on reopen, re-derive the syntax from the file
-        # extension so the dispatch picks the right editor API
-        # even when the DB config.dikt carries a stale
-        # "plaintext" (the saved config predates the extension
-        # detection). The on-disk file is the source of truth.
-        if getattr(self, "file_path", None):
-            detected = self._apply_extension_syntax(self.file_path)
-            if detected and detected != "plain-text":
-                self.format_type = detected
-
-        # External file loading: if the document has a file_path set
-        # (e.g. the user opened an external .py / .js / .md / .txt
-        # file via cmd_open_local_file), load its contents into the
-        # editor. Returns True when a file was loaded.
-        loaded_from_disk = self._load_external_file()
-
-        style = f"background-color: #FFFFFF;"
-        self.document_editor.setStyleSheet(style)
-
-        # T-NEW-023 (user-stated contract): the on-disk file is the
-        # source-of-truth. On an *initial* file-open
-        # (cmd_open_local_file -> open_file), apply the syntax
-        # dispatcher so markdown / python / pygments / html render
-        # with their proper editor APIs. On a *reload* (returning to
-        # the tab from a different tabset), mirror the raw bytes via
-        # the setPlainText call already made by
-        # ``_load_external_file`` — running pygments / markdown
-        # / html conversion drops the leading whitespace (verified:
-        # ``setMarkdown('# Hello\n\n    - indented bullet\n')``
-        # followed by ``toPlainText()`` returns
-        # ``'Hello\n- indented bullet'``).
-        if loaded_from_disk:
-            if getattr(self, "_initial_load", False):
-                try:
-                    import os
-
-                    path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path", None)
-                    if path:
-                        path = os.path.abspath(path)
-                        with open(path, "r", encoding="utf-8", errors="replace") as f:
-                            text = f.read()
-                        # Apply the dispatcher for the initial
-                        # file-open so syntax highlighting works.
-                        self._apply_syntax_highlighting(text)
-                except Exception as e:
-                    logma.error(
-                        f"[scripts] populate_document: on-disk dispatch failed: {e}",
-                        exc_info=True,
-                    )
-                return self
-            # Reload from a different tabset: preserve raw bytes.
-            return self
-
-        text = self._resolve_document_text()
-        if self.document is None:
-            self.document_editor.convert_urls_to_links(text)
-            return self
-
-        self._apply_syntax_highlighting(text)
-        return self
-
-    def _resolve_document_text(self):
-        """Pull the script text from ``self.document`` through every shape.
-
-        The PyfficeScript surface area exposes the text payload in
-        three different shapes depending on the open path:
-          - ``self.document.text`` is a PyfficeScript unit with
-            ``.to_dict()["unit"]["value"]``;
-          - ``self.document.content["content"]["text"]["value"]`` is
-            the structured form used by the legacy codex;
-          - the open path may have already decoded bytes/Base64 to
-            a plain ``str`` or ``dict``.
-
-        Falls back to ``""`` when nothing is present and logs a
-        warning so an empty editor is at least diagnosable.
-        """
-        if self.document is None:
-            logma.info(f"Document is None")
-            return self.document_editor.get_text() if hasattr(self, "document_editor") else ""
-        doc_text = getattr(self.document, "text", None)
-        if doc_text is not None and hasattr(doc_text, "to_dict"):
-            unit = doc_text.to_dict().get("unit", {})
-            text = unit.get("value", None) if isinstance(unit, dict) else None
-        else:
-            text = None
-        if text is None:
-            content_obj = getattr(self.document, "content", None) or {}
-            content_inner = content_obj.get("content", {}) if isinstance(content_obj, dict) else {}
-            text_obj = content_inner.get("text", {}) if isinstance(content_inner, dict) else {}
-            text = text_obj.get("value", "") if isinstance(text_obj, dict) else (text_obj or "")
-        if text is None:
-            logma.warning(f"[scripts] populate_document: doc has no text content yet - starting with empty editor")
-            text = ""
-        if isinstance(text, bytes):
-            text = decode64(text)
-        if isinstance(text, dict):
-            text = text.get("value", "")
-        # Preserve leading whitespace verbatim — ``text.lstrip()`` was
-        # destroying indentation for Python / YAML / markdown lists
-        # (T-NEW-008 fix). The previous behaviour only made sense if
-        # the editor always re-emitted the text via toHtml() /
-        # toPlainText() — which it does on save, so lstrip was
-        # redundant AND harmful.
-        logma.info(f"Text: {text}")
-        logma.info(f"Type: {type(text)}")
-        logma.info(f"Syntax {getattr(self.document, 'syntax', None) if self.document is not None else None}")
-        return text
-
-    def _preserved_unit_html(self):
-        """Return the saved PyfficeText unit HTML if non-empty, else None.
-
-        The PyfficeScript unit stores rich text under
-        ``self.document.text.html``; ``self.document.data["pages"]``
-        carries the same payload under pages[0]["entries"][...]
-        when reconstructed from the saved content_enc64_txt blob.
-        Returns the first non-empty HTML found in either shape.
-        """
-        if self.document is None:
-            return None
-        text_attr = getattr(self.document, "text", None)
-        if text_attr is not None:
-            html = getattr(text_attr, "html", None)
-            if html:
-                return html
-        data = getattr(self.document, "data", None) or {}
-        if not isinstance(data, dict):
-            return None
-        pages = data.get("pages") or {}
-        if not isinstance(pages, dict):
-            return None
-        for page_key in sorted(pages.keys(), key=lambda k: int(k) if str(k).isdigit() else 0):
-            page = pages[page_key]
-            if not isinstance(page, dict):
-                continue
-            entries = page.get("entries") or {}
-            if not isinstance(entries, dict):
-                continue
-            for entry_key in sorted(entries.keys(), key=lambda k: int(k) if str(k).isdigit() else 0):
-                entry = entries[entry_key]
-                if not isinstance(entry, dict):
-                    continue
-                meta = entry.get("meta_data") or {}
-                if not isinstance(meta, dict):
-                    continue
-                unit = meta.get("unit") or {}
-                if not isinstance(unit, dict):
-                    continue
-                html = unit.get("html")
-                if html:
-                    return html
-        return None
 
     def _apply_syntax_highlighting(self, text):
         """Dispatch to the right editor API based on the script syntax.
@@ -1654,74 +1542,196 @@ class NchantdOfficeScript(NchantdOfficeDocument):
 
         raise Exception(f"unknown syntax {self.document.syntax}")
 
-    def save(self):
-        """Capture the current editor contents before persistence."""
+    def _insert_object_placeholder(self, label, marker, html=None):
+        """Insert a real object placeholder at the current cursor.
+
+        The placeholder is a QTextCharFormat-stamped fragment that
+        shows the user a real, selectable run. The marker is also
+        appended to ``self.document.object_inserts`` so the save
+        path persists it and the open path can re-insert it on
+        reload. Returns ``self`` for chainable callers.
+        """
+        editor = getattr(self, "document_editor", None)
+        if editor is None:
+            return self
+        try:
+            from PySide6 import QtCore as _qc
+            from PySide6 import QtGui as _qg
+
+            cursor = editor.textCursor() if hasattr(editor, "textCursor") else None
+            if cursor is not None:
+                char_format = cursor.charFormat()
+                char_format.setProperty(_qc.Qt.UserRole, marker)
+                cursor.setCharFormat(char_format)
+                cursor.insertText(label)
+                cursor.setCharFormat(_qg.QTextCharFormat())
+        except Exception as exc:
+            logma.warning(f"[scripts] placeholder insert failed for {label!r}: {exc}")
+            # Fallback: plain text insert so the user still sees something.
+            try:
+                editor.insert(label)
+            except Exception:
+                pass
+        if hasattr(self, "document") and self.document is not None:
+            inserts = getattr(self.document, "object_inserts", None)
+            if inserts is None:
+                self.document.object_inserts = []
+                inserts = self.document.object_inserts
+            inserts.append({"label": label, "marker": marker, "html": html})
+        return self
+
+    def _load_external_file(self):
+        """Load an external script file into the document editor.
+
+        Reads ``self.file_path`` (or ``self.current_notebook_path``
+        as a fallback) and, when the path points at an existing
+        readable text file, copies its contents into the editor
+        via ``setPlainText`` / ``set_text``. Returns ``True`` when
+        a file was loaded, ``False`` when there was no file to
+        load (no path, missing file, or unsupported extension).
+
+        Whitelisted text formats: ``.py``, ``.js``, ``.md``,
+        ``.txt``, ``.json``, ``.yaml``, ``.yml``, ``.html``,
+        ``.css``, ``.xml``, ``.csv``, ``.ini``, ``.toml``,
+        ``.sh``. The editor is left untouched when the
+        extension isn't on the whitelist (the in-memory
+        document text takes over).
+        """
+        try:
+            import os
+
+            path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path", None)
+            if not path:
+                return False
+            path = os.path.abspath(path)
+            if not os.path.isfile(path):
+                return False
+            ext = os.path.splitext(path)[1].lower()
+            supported = {
+                ".py",
+                ".js",
+                ".md",
+                ".txt",
+                ".json",
+                ".yaml",
+                ".yml",
+                ".html",
+                ".css",
+                ".xml",
+                ".csv",
+                ".ini",
+                ".toml",
+                ".sh",
+            }
+            if ext not in supported:
+                return False
+            with open(path, "r", encoding="utf-8", errors="replace") as f:
+                text = f.read()
+            editor = getattr(self, "document_editor", None) or getattr(self, "editor", None)
+            if editor is None:
+                return False
+            if hasattr(editor, "setPlainText"):
+                editor.setPlainText(text)
+            elif hasattr(editor, "set_text"):
+                editor.set_text(text)
+            else:
+                return False
+            logma.info(f"[scripts] _load_external_file loaded {len(text)} chars from {path}")
+            return True
+        except Exception as e:
+            logma.error(f"[scripts] _load_external_file failed: {e}", exc_info=True)
+            return False
+
+    def _preserved_unit_html(self):
+        """Return the saved PyfficeText unit HTML if non-empty, else None.
+
+        The PyfficeScript unit stores rich text under
+        ``self.document.text.html``; ``self.document.data["pages"]``
+        carries the same payload under pages[0]["entries"][...]
+        when reconstructed from the saved content_enc64_txt blob.
+        Returns the first non-empty HTML found in either shape.
+        """
         if self.document is None:
-            self.new_document()
-        content = self.get_content()
-        if content != self.document.content:
-            self.document.set_content(content)
-        super().save()
-        return self
+            return None
+        text_attr = getattr(self.document, "text", None)
+        if text_attr is not None:
+            html = getattr(text_attr, "html", None)
+            if html:
+                return html
+        data = getattr(self.document, "data", None) or {}
+        if not isinstance(data, dict):
+            return None
+        pages = data.get("pages") or {}
+        if not isinstance(pages, dict):
+            return None
+        for page_key in sorted(pages.keys(), key=lambda k: int(k) if str(k).isdigit() else 0):
+            page = pages[page_key]
+            if not isinstance(page, dict):
+                continue
+            entries = page.get("entries") or {}
+            if not isinstance(entries, dict):
+                continue
+            for entry_key in sorted(entries.keys(), key=lambda k: int(k) if str(k).isdigit() else 0):
+                entry = entries[entry_key]
+                if not isinstance(entry, dict):
+                    continue
+                meta = entry.get("meta_data") or {}
+                if not isinstance(meta, dict):
+                    continue
+                unit = meta.get("unit") or {}
+                if not isinstance(unit, dict):
+                    continue
+                html = unit.get("html")
+                if html:
+                    return html
+        return None
 
-    def set_page_view(self):
-        """"""
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        # Define page size for "Letter" (8.5 x 11 inches in pixels at 96 DPI)
-        self.page_width = 816  # 8.5 inches * 96 DPI
-        self.page_height = 1056  # 11 inches * 96 DPI
-        # Define default margins (in pixels)
-        self.margin_top = 72  # 1 inch
-        self.margin_bottom = 72  # 1 inch
-        self.margin_left = 72  # 1 inch
-        self.margin_right = 72  # 1 inch
-        self.page_scene = pyqt.QGraphicsScene(self)
-        self.page_scene.setBackgroundBrush(pyqt.QBrush(pyqt.QColor("black")))
-        self.view = pyqt.QGraphicsView(self.page_scene)
-        # #self.view.setRenderHint(self.view.viewportUpdateMode)
-        # need add header
-        # add footer
-        # add methods for creating a second page
-        self.layout.addWidget(self.view)
-        # self.page_outline = pyqt.QGraphicsRectItem(0, 0, self.page_width, self.page_height)
-        self.page_outline = pyqt.QGraphicsRectItem(
-            0 + self.margin_left / 2,
-            0 + self.margin_bottom / 2,
-            self.page_width - self.margin_left,
-            self.page_height - self.margin_bottom,
-        )
-        pen = pyqt.QPen(pyqt.QColor("#a6a6a6"))
-        pen.setWidth(self.margin_top)
-        self.page_outline.setPen(pen)
-        self.page_scene.addItem(self.page_outline)
-        self.document_editor.setFont(pyqt.QFont("Arial", 12))  # Default font and size
-        self.document_editor.setGeometry(
-            self.margin_left,
-            self.margin_top,
-            self.page_width - self.margin_left - self.margin_right,
-            self.page_height - self.margin_top - self.margin_bottom,
-        )
-        self.page_scene.addWidget(self.document_editor)
-        # Define page size for "Letter" (8.5 x 11 inches in pixels at 96 DPI)
-        self.page_width = 816  # 8.5 inches * 96 DPI
-        self.page_height = 1056  # 11 inches * 96 DPI
-        # Define default margins (in pixels)
-        self.margin_top = 72  # 1 inch
-        self.margin_bottom = 72  # 1 inch
-        self.margin_left = 72  # 1 inch
-        self.margin_right = 72  # 1 inch
+    def _resolve_document_text(self):
+        """Pull the script text from ``self.document`` through every shape.
 
-    def set_note_view(self):
-        """"""
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        # self.document_editor = NchantdDocEditor(self, self.config).initWidget()
-        self.document_editor.setFont(pyqt.QFont("Arial", 12))  # Default font and size
-        self.layout.addWidget(self.document_editor)
+        The PyfficeScript surface area exposes the text payload in
+        three different shapes depending on the open path:
+          - ``self.document.text`` is a PyfficeScript unit with
+            ``.to_dict()["unit"]["value"]``;
+          - ``self.document.content["content"]["text"]["value"]`` is
+            the structured form used by the legacy codex;
+          - the open path may have already decoded bytes/Base64 to
+            a plain ``str`` or ``dict``.
 
-    def update_toolbar(self):
-        """"""
-        # add/remove buttons baseed on syntax selection
-        return self
+        Falls back to ``""`` when nothing is present and logs a
+        warning so an empty editor is at least diagnosable.
+        """
+        if self.document is None:
+            logma.info(f"Document is None")
+            return self.document_editor.get_text() if hasattr(self, "document_editor") else ""
+        doc_text = getattr(self.document, "text", None)
+        if doc_text is not None and hasattr(doc_text, "to_dict"):
+            unit = doc_text.to_dict().get("unit", {})
+            text = unit.get("value", None) if isinstance(unit, dict) else None
+        else:
+            text = None
+        if text is None:
+            content_obj = getattr(self.document, "content", None) or {}
+            content_inner = content_obj.get("content", {}) if isinstance(content_obj, dict) else {}
+            text_obj = content_inner.get("text", {}) if isinstance(content_inner, dict) else {}
+            text = text_obj.get("value", "") if isinstance(text_obj, dict) else (text_obj or "")
+        if text is None:
+            logma.warning(f"[scripts] populate_document: doc has no text content yet - starting with empty editor")
+            text = ""
+        if isinstance(text, bytes):
+            text = decode64(text)
+        if isinstance(text, dict):
+            text = text.get("value", "")
+        # Preserve leading whitespace verbatim — ``text.lstrip()`` was
+        # destroying indentation for Python / YAML / markdown lists
+        # (T-NEW-008 fix). The previous behaviour only made sense if
+        # the editor always re-emitted the text via toHtml() /
+        # toPlainText() — which it does on save, so lstrip was
+        # redundant AND harmful.
+        logma.info(f"Text: {text}")
+        logma.info(f"Type: {type(text)}")
+        logma.info(f"Syntax {getattr(self.document, 'syntax', None) if self.document is not None else None}")
+        return text
 
 
 # ====================================================================================================================||

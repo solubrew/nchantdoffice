@@ -709,24 +709,38 @@ class NchantdOfficeImage(NchantdOfficeDocument):
                 49: "_insert_stretch",
             }
         }
-        super().initView(cfg)
-        cfg = {
+        image_cfg = {
             "size": ["auto", "auto"],
             "document": self.document,
             "path": self.document.file_path,
         }
-        logma.info(f"Content {self.document.content}")
-        self.file_path = (
-            self.document.file_path
-            or self.config.dikt.get("file_path")
-            or (self.document.content or {}).get("file_path")
-            or (self.document.content or {}).get("content", {}).get("file_path")
-        )
         if self.document.content is not None:
-            cfg["image_data"] = self.document.content.get("L0", {}).get("bytes", None)
-            logma.info(f"Image Data: {cfg['image_data']}")
-        self.image = NchantdImage(self, cfg).initWidget()
-        self.populate_document()
+            image_cfg["image_data"] = self.document.content.get("L0", {}).get("bytes", None)
+            logma.info(f"Image Data: {image_cfg['image_data']}")
+        self.image = NchantdImage(self, image_cfg).initWidget()
+        super().initView(cfg)
+
+        logma.info(f"Content {self.document.content}")
+        # self.file_path = (
+        #     self.document.file_path
+        #     or self.config.dikt.get("file_path")
+        #     or (self.document.content or {}).get("file_path")
+        #     or (self.document.content or {}).get("content", {}).get("file_path")
+        # )
+
+
+        # PUSH to 0.0.3 force external until
+        self.document.set_location("external")
+
+        # if self.document.location == "external":
+        #     self.open_file(self.document.file_path)
+        # # PUSH to 0.0.3
+        # # elif self.document.location == "internal":
+        # #    self.populate_data()
+        # # elif self.document.location == "cloud":
+        # #    self.connect_to_file()
+        # else:
+        #     raise Exception("Internal and Cloud locations not supported yet")
         self.layout.addWidget(self.image)
         self.layout.setSpacing(3)
         return self
@@ -1058,19 +1072,22 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         from a database blob). Falls back to ``load_image(file_path)``
         when no binary is available.
         """
+        super().populate_document()
         logma.info(f"[images] Populate image {self.file_path}")
         doc = getattr(self, "document", None)
-        binary = None
-        if doc is not None:
-            binary = getattr(doc, "binary", None) or getattr(doc, "bytes", None) or getattr(doc, "data", None)
-        if binary and hasattr(self.image, "load_image_bytes"):
-            try:
-                self.image.load_image_bytes(binary)
-                return self
-            except Exception as e:
-                logma.error(f"[images] populate_document: load_image_bytes failed: {e}", exc_info=True)
-        if self.file_path and hasattr(self.image, "load_image"):
-            self.image.load_image(self.file_path)
+        if doc.location == "internal":
+            binary = None
+            if doc is not None:
+                binary = getattr(doc, "binary", None) or getattr(doc, "bytes", None) or getattr(doc, "data", None)
+            if binary and hasattr(doc, "load_image_bytes"):
+                try:
+                    doc.load_image_bytes(binary)
+                    return self
+                except Exception as e:
+                    logma.error(f"[images] populate_document: load_image_bytes failed: {e}", exc_info=True)
+        elif doc.location == "external":
+            if self.file_path and hasattr(self.image, "load_image"):
+                self.image.load_image(self.file_path)
         return self
 
     def cmd_open_tool_drawer(self, tool_name=None, *args, **kwargs):
@@ -1120,9 +1137,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
                                 pass
                         break
         except Exception as e:
-            logma.warning(
-                f"[images] cmd_open_tool_drawer failed: {e}"
-            )
+            logma.warning(f"[images] cmd_open_tool_drawer failed: {e}")
         return self
 
     def save(self):

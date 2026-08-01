@@ -50,7 +50,6 @@ pxcfg = join(here, "_data_", "browsers.yaml")
 
 
 class NchantdOfficeWebBrowser(NchantdOfficeDocument):
-    
 
     def _ensure_drawer_item(self, items, cnt):
         """Lazily create a default drawer-item slot.
@@ -133,6 +132,18 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(3)
         self.populate_document()
+        # PUSH to 0.0.3 force external until
+        # self.document.set_location("external")
+        #
+        # if self.document.location == "external":
+        #     self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        # else:
+        #     raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def initWidget(self):
@@ -996,6 +1007,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         bookmarks are configured.
         """
         from kahndor.logma import Logma
+
         logma_local = Logma(__name__)
         bookmarks = self.config.dikt.get("bookmarks", []) or []
         if not bookmarks:
@@ -1387,6 +1399,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
                 cache_dir = self.app.model.browser_cache_dir
             if cache_dir:
                 import os
+
                 if os.path.isdir(cache_dir):
                     removed = 0
                     for entry in os.listdir(cache_dir):
@@ -1407,8 +1420,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             store = getattr(self.app.model, "store", None)
             if store is not None and hasattr(store, "execute"):
                 # ds_recent_* tables (rss, search, documents, etc.)
-                tables = ["ds_recent_rss_entries", "ds_recent_searches",
-                          "ds_recent_documents", "browser_history"]
+                tables = ["ds_recent_rss_entries", "ds_recent_searches", "ds_recent_documents", "browser_history"]
                 for table in tables:
                     try:
                         store.execute(
@@ -1465,6 +1477,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         try:
             profile = self.document.profile_manager.get_current_profile()
             import os
+
             cache_dir = None
             qweb = getattr(profile, "qweb_profile", None) if profile is not None else None
             if qweb is not None and hasattr(qweb, "cachePath"):
@@ -1502,6 +1515,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
                 return self
             try:
                 from PySide6 import QtWebEngineCore
+
                 if hasattr(qweb, "cookieStore") and hasattr(QtWebEngineCore, "QWebEngineCookieStore"):
                     try:
                         store = qweb.cookieStore()
@@ -1531,6 +1545,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
                 return self
             try:
                 from PySide6 import QtWebEngineCore
+
                 store = qweb.cookieStore()
                 if hasattr(store, "deleteAllCookies"):
                     store.deleteAllCookies()

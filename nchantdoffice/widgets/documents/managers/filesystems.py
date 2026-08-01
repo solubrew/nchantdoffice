@@ -92,6 +92,18 @@ class NchantdCompressPane(NchantdPane):
         self.tool_buttons = NchantdButtonBar(self, cfg).initWidget()
         self.group_layout.addWidget(self.tool_buttons)
         self.layout.addWidget(group)
+        # PUSH to 0.0.3 force external until
+        self.document.set_location("external")
+
+        # if self.document.location == "external":
+        #    self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        # else:
+        #    raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def initWidget(self):
@@ -108,7 +120,9 @@ class NchantdCompressPane(NchantdPane):
 
     def cmd_delete_files_on_compress(self, event=None, *args, **kwargs):
         """Toggle whether files are deleted after compression"""
-        self.delete_on_compress_enabled = self.delete_on_compress.isChecked() if hasattr(self, 'delete_on_compress') else True
+        self.delete_on_compress_enabled = (
+            self.delete_on_compress.isChecked() if hasattr(self, "delete_on_compress") else True
+        )
         logma.info(f"Delete on compress: {self.delete_on_compress_enabled}")
         return self
 
@@ -172,6 +186,7 @@ class NchantdCompressPane(NchantdPane):
                 logma.info("[filesystems] cmd_move_files_on_compress: from_folder / to_folder not set")
                 return self
             import os as _os, shutil
+
             if not _os.path.isdir(from_dir):
                 return self
             _os.makedirs(to_dir, exist_ok=True)
@@ -192,7 +207,9 @@ class NchantdCompressPane(NchantdPane):
 
     def cmd_rename_on_compress(self, event, *args, **kwargs):
         """Toggle whether files are renamed after compression"""
-        self.rename_on_compress_enabled = self.rename_on_compress.isChecked() if hasattr(self, 'rename_on_compress') else True
+        self.rename_on_compress_enabled = (
+            self.rename_on_compress.isChecked() if hasattr(self, "rename_on_compress") else True
+        )
         logma.info(f"Rename on compress: {self.rename_on_compress_enabled}")
         return self
 
@@ -304,12 +321,14 @@ class NchantdImportPane(NchantdPane):
             pattern = self.config.dikt.get("file_search_pattern", "*")
             from os.path import join
             from glob import glob
+
             matches = glob(join(root, pattern), recursive=True)
             for path in matches:
                 self.cmd_import_file(path=path)
         except Exception as e:
             logma.error(f"[filesystems] cmd_automate_import failed: {e}", exc_info=True)
         return self
+
     def cmd_file_change(self, event=None, *args, **kwargs):
         """Record the user-selected file from the file picker.
 
@@ -325,6 +344,7 @@ class NchantdImportPane(NchantdPane):
                     self.file_path = value
                     self.config.dikt["file_path"] = value
         return self
+
     def cmd_import_file(self, event=None, *args, **kwargs):
         """Import a file from disk into the active filesystem view.
 
@@ -337,6 +357,7 @@ class NchantdImportPane(NchantdPane):
             return self
         try:
             from os.path import exists
+
             if not exists(path):
                 logma.warning(f"[filesystems] cmd_import_file: not found: {path}")
                 return self
@@ -351,12 +372,15 @@ class NchantdImportPane(NchantdPane):
         except Exception as e:
             logma.error(f"[filesystems] cmd_import_file failed: {e}", exc_info=True)
         return self
+
     def get_file(self):
         """Return the stored value of get_file."""
-        return getattr(self, 'file_path', None) or self.config.dikt.get('file_path', '')
+        return getattr(self, "file_path", None) or self.config.dikt.get("file_path", "")
+
     def get_file_options(self):
         """Return the stored value of get_file_options."""
-        return self.config.dikt.get('file_options', []) or []
+        return self.config.dikt.get("file_options", []) or []
+
     def set_file(self, path):
         """Set the active file path (real implementation).
 
@@ -366,6 +390,7 @@ class NchantdImportPane(NchantdPane):
         """
         try:
             import os as _os
+
             self.file_path = path or ""
             if hasattr(self, "config"):
                 self.config.dikt["file_path"] = self.file_path
@@ -374,6 +399,7 @@ class NchantdImportPane(NchantdPane):
         except Exception as e:
             logma.error(f"[filesystems] set_file failed: {e}", exc_info=True)
         return self
+
 
 class NchantdMovePane(NchantdPane):
     """"""
@@ -437,6 +463,7 @@ class NchantdMovePane(NchantdPane):
         """
         try:
             import os as _os, shutil, re, datetime
+
             from_dir = getattr(self, "from_folder", None)
             if not from_dir or not _os.path.isdir(from_dir):
                 logma.info("[filesystems] cmd_automate_move: no from_folder")
@@ -484,6 +511,7 @@ class NchantdMovePane(NchantdPane):
                 logma.info("[filesystems] cmd_move_files: from_folder / to_folder not set")
                 return self
             import os as _os, shutil
+
             if not _os.path.isdir(from_dir):
                 return self
             _os.makedirs(to_dir, exist_ok=True)
@@ -512,6 +540,7 @@ class NchantdMovePane(NchantdPane):
         """
         try:
             from nchantrs.widgets.editors.entries import NchantdFolderOpenSigil
+
             self.from_folder = NchantdFolderOpenSigil(self, {}).initWidget().get_path()
             self.to_folder = NchantdFolderOpenSigil(self, {}).initWidget().get_path()
             if hasattr(self, "config"):
@@ -583,6 +612,7 @@ class NchantdRenamePane(NchantdPane):
                 if value:
                     self.config.dikt["file_format"] = value
         return self
+
     def cmd_automate_rename(self, event=None, *args, **kwargs):
         """Set up automated file renaming rules"""
         logma.info("Setting up rename automation...")
@@ -647,13 +677,13 @@ class NchantdRenamePane(NchantdPane):
     # Rename-format dispatch — adding a new format means adding one entry here.
     # Each method receives ``(name, ext, filename, index)``.
     _RENAME_FORMATS = {
-        "Add Prefix":         _rename_add_prefix,
-        "Add Suffix":         _rename_add_suffix,
+        "Add Prefix": _rename_add_prefix,
+        "Add Suffix": _rename_add_suffix,
         "Sequential Numbers": _rename_sequential,
-        "Date Prefix":        _rename_date_prefix,
-        "Lowercase":          _rename_lowercase,
-        "Uppercase":          _rename_uppercase,
-        "Remove Spaces":      _rename_remove_spaces,
+        "Date Prefix": _rename_date_prefix,
+        "Lowercase": _rename_lowercase,
+        "Uppercase": _rename_uppercase,
+        "Remove Spaces": _rename_remove_spaces,
     }
 
     def apply_rename_format(self, filename, index, format_pattern):
@@ -672,7 +702,8 @@ class NchantdRenamePane(NchantdPane):
 
     def get_file_rename_format(self):
         """Return the stored value of get_file_rename_format."""
-        return self.config.dikt.get('file_rename_format', '') or ''
+        return self.config.dikt.get("file_rename_format", "") or ""
+
     def set_file(self, path):
         """Set the active file path (real implementation).
 
@@ -682,6 +713,7 @@ class NchantdRenamePane(NchantdPane):
         """
         try:
             import os as _os
+
             self.file_path = path or ""
             if hasattr(self, "config"):
                 self.config.dikt["file_path"] = self.file_path
@@ -690,6 +722,7 @@ class NchantdRenamePane(NchantdPane):
         except Exception as e:
             logma.error(f"[filesystems] set_file failed: {e}", exc_info=True)
         return self
+
 
 class NchantdStorageEditPane(NchantdPane):
     """"""
@@ -732,6 +765,7 @@ class NchantdStorageEditPane(NchantdPane):
         """
         try:
             import os as _os
+
             self.file_path = path or ""
             if hasattr(self, "config"):
                 self.config.dikt["file_path"] = self.file_path
@@ -740,6 +774,7 @@ class NchantdStorageEditPane(NchantdPane):
         except Exception as e:
             logma.error(f"[filesystems] set_file failed: {e}", exc_info=True)
         return self
+
 
 class NchantdOfficeFileSystem(NchantdOfficeDocument):
     """ ""File system document - implements PyfficeFileSystem"""
@@ -861,6 +896,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         try:
             from os import walk
             from os.path import join, getsize, getmtime
+
             root = self.config.dikt.get("file_root", ".")
             flat = []
             for dirpath, _dirnames, filenames in walk(root):
@@ -883,7 +919,9 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         uses the chosen strategy (e.g. "glob", "regex", "name").
         """
         if hasattr(self, "file_search_method_select") and self.file_search_method_select is not None:
-            getter = getattr(self.file_search_method_select, "currentText", None) or getattr(self.file_search_method_select, "get_value", None)
+            getter = getattr(self.file_search_method_select, "currentText", None) or getattr(
+                self.file_search_method_select, "get_value", None
+            )
             if callable(getter):
                 value = getter()
                 if value:
@@ -905,11 +943,13 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             if method == "glob":
                 from glob import glob
                 from os.path import join
+
                 results = glob(join(root, pattern), recursive=True)
             elif method == "regex":
                 import re
                 from os import walk
                 from os.path import join
+
                 compiled = re.compile(pattern)
                 for dirpath, _dirnames, filenames in walk(root):
                     for name in filenames:
@@ -918,6 +958,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             elif method == "name":
                 from os import walk
                 from os.path import join
+
                 for dirpath, _dirnames, filenames in walk(root):
                     for name in filenames:
                         if pattern and pattern in name:
@@ -1374,7 +1415,8 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
     def get_binary(self):
         """Return the stored value of get_binary."""
-        return self.config.dikt.get('file_binary', b'') or b''
+        return self.config.dikt.get("file_binary", b"") or b""
+
     def show_tree(self, file=None):
         """"""
         if file is None or file == "":

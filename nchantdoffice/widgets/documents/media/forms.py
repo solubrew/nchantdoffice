@@ -71,6 +71,18 @@ class NchantdOfficeForm(NchantdForm):
     def initView(self):
         """"""
         super().initView()
+        # PUSH to 0.0.3 force external until
+        self.document.set_location("external")
+
+        if self.document.location == "external":
+            self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        else:
+            raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def initWidget(self):
@@ -173,8 +185,6 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         self.form_view_group = None
         self.new_item_pane = None
 
-
-
     def cmd_excel_to_form(self, event=None, *args, **kwargs):
         """Read an uploaded Excel file and convert it to a form schema.
 
@@ -185,6 +195,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         ``cmd_deploy_as_google_form``).
         """
         import os as _os
+
         path = kwargs.get("file_path") or getattr(self, "file_path", None)
         if not path or not _os.path.isfile(path):
             logma.warning("[forms] cmd_excel_to_form: no file")
@@ -241,12 +252,11 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         except ImportError:
             logma.warning("[forms] requests not installed")
             return None
-        api_key = (
-            self.config.dikt.get("forms_api_key") if hasattr(self, "config") else None
-        )
+        api_key = self.config.dikt.get("forms_api_key") if hasattr(self, "config") else None
         if not api_key:
             try:
                 import pykey
+
                 api_key = pykey.PYKEYSTORE.get("forms_api_key")
             except Exception:
                 pass
@@ -260,8 +270,10 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
                 json={
                     "info": {"title": schema.get("title", "Form"), "documentTitle": schema.get("title", "Form")},
                     "items": [
-                        {"title": f.get("label", f.get("name", f"Field {i}")),
-                         "questionItem": {"question": {"required": False, "textQuestion": {}}}}
+                        {
+                            "title": f.get("label", f.get("name", f"Field {i}")),
+                            "questionItem": {"question": {"required": False, "textQuestion": {}}},
+                        }
                         for i, f in enumerate(schema.get("fields", []))
                     ],
                 },
@@ -291,6 +303,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             return None
         try:
             import json
+
             if not hasattr(self, "codex") or self.codex is None:
                 return None
             payload = {
@@ -304,9 +317,18 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             if document is None:
                 return None
             if hasattr(self, "add_document_app"):
-                self.add_document_app(document, None, getattr(self, "parent", None), 0,
-                                       "Form", widgdata={"form": schema.get("title", "Form")},
-                                       doc_type="form", tabset="center", db="db", in_doc=True)
+                self.add_document_app(
+                    document,
+                    None,
+                    getattr(self, "parent", None),
+                    0,
+                    "Form",
+                    widgdata={"form": schema.get("title", "Form")},
+                    doc_type="form",
+                    tabset="center",
+                    db="db",
+                    in_doc=True,
+                )
             logma.info(f"[forms] cmd_save_form_schema_locally: saved {schema.get('title', 'Form')}")
             return document
         except Exception as e:
@@ -387,6 +409,18 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         self.layout.addLayout(manager_layout)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
+        # PUSH to 0.0.3 force external until
+        self.document.set_location("external")
+
+        if self.document.location == "external":
+            self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        else:
+            raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def initWidget(self):
@@ -485,10 +519,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             value = 1
             widget = getattr(self, "ask_rate_spin", None)
             if widget is not None:
-                getter = (
-                    getattr(widget, "value", None)
-                    or getattr(widget, "get_value", None)
-                )
+                getter = getattr(widget, "value", None) or getattr(widget, "get_value", None)
                 if callable(getter):
                     value = int(getter())
                 elif hasattr(widget, "text"):
@@ -613,15 +644,9 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
                 logma.warning("[forms] cmd_connect_to_service: missing widgets")
                 return self
             service = (
-                self.form_service_select.currentText()
-                if hasattr(self.form_service_select, "currentText")
-                else None
+                self.form_service_select.currentText() if hasattr(self.form_service_select, "currentText") else None
             )
-            account = (
-                self.form_account_name.get_text()
-                if hasattr(self.form_account_name, "get_text")
-                else None
-            )
+            account = self.form_account_name.get_text() if hasattr(self.form_account_name, "get_text") else None
             logma.info(f"[forms] cmd_connect_to_service: {service} / {account}")
             if not service:
                 self.config.dikt["forms_connection_status"] = "No service selected"
@@ -632,8 +657,8 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             # caller can fall back to local-only operation).
             endpoints = {
                 "Google Forms": "https://forms.googleapis.com/v1/forms",
-                "Typeform":     "https://api.typeform.com/forms",
-                "Nchantd Forms":"https://api.nchantrs.com/forms",
+                "Typeform": "https://api.typeform.com/forms",
+                "Nchantd Forms": "https://api.nchantrs.com/forms",
             }
             endpoint = endpoints.get(service)
             if not endpoint:
@@ -644,6 +669,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             api_key = None
             try:
                 import pykey
+
                 api_key = pykey.PYKEYSTORE.get("forms_api_key")
             except Exception:
                 pass
@@ -652,6 +678,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
 
             try:
                 import requests  # type: ignore
+
                 headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
                 response = requests.get(endpoint, headers=headers, timeout=5)
                 if response.status_code < 400:
@@ -662,9 +689,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
                     logma.info(f"[forms] cmd_connect_to_service: {service} OK ({response.status_code})")
                 else:
                     self.config.dikt["forms_connection_status"] = f"Failed ({response.status_code})"
-                    logma.warning(
-                        f"[forms] cmd_connect_to_service: {service} status {response.status_code}"
-                    )
+                    logma.warning(f"[forms] cmd_connect_to_service: {service} status {response.status_code}")
             except Exception as e:
                 self.config.dikt["forms_connection_status"] = f"Unavailable ({e})"
                 logma.error(f"[forms] cmd_connect_to_service: {service} failed: {e}", exc_info=True)
@@ -856,6 +881,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         api_key = None
         try:
             import pykey
+
             api_key = pykey.PYKEYSTORE.get("forms_api_key")
         except Exception:
             pass
@@ -877,9 +903,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             if response.status_code < 300:
                 logma.info(f"[forms] submit_to_google_forms: {form_id} OK ({response.status_code})")
                 return True
-            logma.warning(
-                f"[forms] submit_to_google_forms: {form_id} status {response.status_code}, saving locally"
-            )
+            logma.warning(f"[forms] submit_to_google_forms: {form_id} status {response.status_code}, saving locally")
         except Exception as e:
             logma.error(f"[forms] submit_to_google_forms failed: {e}", exc_info=True)
         return self.submit_to_local_storage(form_data)
@@ -917,6 +941,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         if not tracker_token:
             try:
                 import pykey
+
                 tracker_token = pykey.PYKEYSTORE.get("tracker_token")
             except Exception:
                 pass
@@ -934,9 +959,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             if response.status_code < 300:
                 logma.info(f"[forms] submit_to_tracker: {tracker_url} OK ({response.status_code})")
                 return True
-            logma.warning(
-                f"[forms] submit_to_tracker: {tracker_url} status {response.status_code}, saving locally"
-            )
+            logma.warning(f"[forms] submit_to_tracker: {tracker_url} status {response.status_code}, saving locally")
         except Exception as e:
             logma.error(f"[forms] submit_to_tracker failed: {e}", exc_info=True)
         return self.submit_to_local_storage(form_data)
@@ -1327,8 +1350,6 @@ class NchantdOfficeFeedback(NchantdWidget):
             logma.error(f"Error sending feedback: {e}")
             return False
 
-
-
     def send_to_server(self, feedback_data):
         """T-084: send feedback to a remote issue tracker.
 
@@ -1345,6 +1366,7 @@ class NchantdOfficeFeedback(NchantdWidget):
             if not tracker_url or not tracker_token:
                 try:
                     import pykey
+
                     tracker_url = tracker_url or pykey.PYKEYSTORE.get("feedback_tracker_url")
                     tracker_token = tracker_token or pykey.PYKEYSTORE.get("feedback_tracker_token")
                 except Exception:

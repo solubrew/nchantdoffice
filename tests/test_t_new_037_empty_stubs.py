@@ -5,7 +5,7 @@ method` markers. Each gets a different treatment based on
 the call site:
 
   1. ``NchantdOfficeAnalyticsChart._build_chart_data_cfg``
-     (analytics_charts.py:868) -- FILL. The caller at L209
+     (analytics.py:868) -- FILL. The caller at L209
      passes the returned cfg into ``NchantdChart(...)``;
      an empty dict is a valid (no-op) cfg that produces a
      chart widget with no data. Defensive: returns a dict
@@ -30,11 +30,11 @@ import sys
 from types import SimpleNamespace
 
 from PySide6.QtWidgets import QApplication
+
 _QAPP = QApplication.instance() or QApplication(sys.argv)
 
-import nchantdoffice.widgets.documents.analytics.analytics_charts  # noqa: F401
+import nchantdoffice.widgets.documents.analytics.analytics  # noqa: F401
 import nchantdoffice.widgets.controls.toolbars  # noqa: F401
-
 
 # ---------------------------------------------------------------------------
 # _build_chart_data_cfg
@@ -42,9 +42,10 @@ import nchantdoffice.widgets.controls.toolbars  # noqa: F401
 
 
 def _make_analytics_chart():
-    from nchantdoffice.widgets.documents.analytics.analytics_charts import (
+    from nchantdoffice.widgets.documents.analytics.analytics import (
         NchantdOfficeChart,
     )
+
     chart = NchantdOfficeChart.__new__(NchantdOfficeChart)
     chart.app = SimpleNamespace(
         model=SimpleNamespace(
@@ -62,9 +63,7 @@ def test_build_chart_data_cfg_returns_dict_with_required_keys():
     """
     chart = _make_analytics_chart()
     result = chart._build_chart_data_cfg()
-    assert isinstance(result, dict), (
-        f"_build_chart_data_cfg must return a dict. Got: {type(result)}"
-    )
+    assert isinstance(result, dict), f"_build_chart_data_cfg must return a dict. Got: {type(result)}"
 
 
 def test_build_chart_data_cfg_swallows_exception():
@@ -73,9 +72,11 @@ def test_build_chart_data_cfg_swallows_exception():
     widget construction.
     """
     chart = _make_analytics_chart()
+
     # Make the model raise
     def _raise(*args, **kwargs):
         raise RuntimeError("simulated model failure")
+
     chart.app.model.get_current_tab = _raise
     # Must NOT raise
     result = chart._build_chart_data_cfg()
@@ -104,15 +105,16 @@ def test_build_chart_action_button_group_has_no_todo_implement_marker():
     level guard.
     """
     from pathlib import Path
+
     charts_py = Path(
-        "/home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/"
-        "widgets/panes/charts.py"
+        "/home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/" "widgets/panes/charts.py"
     ).read_text()
     # The deferred stub line should still exist (we keep
     # the method for when the segfault is fixed) but the
     # TODO must point to T-NEW-037 (or T-NEW-029).
     # Find the stub region (5 lines after the def).
     import re
+
     m = re.search(
         r"def _build_chart_action_button_group\(self\):.*?(?=\n    def |\nclass |\Z)",
         charts_py,
@@ -122,12 +124,10 @@ def test_build_chart_action_button_group_has_no_todo_implement_marker():
     body = m.group(0)
     # The TODO is now a pointer (not "implement").
     assert "TODO implement" not in body, (
-        "The TODO implement marker must be replaced with a "
-        "T-NEW-037/T-NEW-029 pointer (T-NEW-037 close-out)"
+        "The TODO implement marker must be replaced with a " "T-NEW-037/T-NEW-029 pointer (T-NEW-037 close-out)"
     )
     assert "T-NEW-037" in body or "T-NEW-029" in body, (
-        "The deferred stub must reference T-NEW-037 (this card) "
-        "or T-NEW-029 (the segfault that blocks the caller)"
+        "The deferred stub must reference T-NEW-037 (this card) " "or T-NEW-029 (the segfault that blocks the caller)"
     )
 
 
@@ -138,11 +138,11 @@ def test_build_chart_action_button_group_has_no_todo_implement_marker():
 
 def _make_toolbar():
     from nchantdoffice.widgets.controls.toolbars import NchantdNewDocumentToolBar
+
     bar = NchantdNewDocumentToolBar.__new__(NchantdNewDocumentToolBar)
     import pandas as pd
-    bar.document_types = pd.DataFrame(
-        [{"name_txt": "Notebook"}, {"name_txt": "Script"}, {"name_txt": "Image"}]
-    )
+
+    bar.document_types = pd.DataFrame([{"name_txt": "Notebook"}, {"name_txt": "Script"}, {"name_txt": "Image"}])
     return bar
 
 
@@ -153,8 +153,7 @@ def test_set_active_item_sets_first_entry_active():
     bar = _make_toolbar()
     bar.set_active_item()
     assert bar.document_types["active"].iloc[0] == 0, (
-        f"First entry must be marked active. "
-        f"Got: {bar.document_types['active'].iloc[0]}"
+        f"First entry must be marked active. " f"Got: {bar.document_types['active'].iloc[0]}"
     )
 
 
@@ -172,6 +171,7 @@ def test_set_active_item_handles_empty_document_types():
     """
     from nchantdoffice.widgets.controls.toolbars import NchantdNewDocumentToolBar
     import pandas as pd
+
     bar = NchantdNewDocumentToolBar.__new__(NchantdNewDocumentToolBar)
     bar.document_types = pd.DataFrame()
     # Must NOT raise
@@ -185,6 +185,7 @@ def test_set_active_item_handles_none_document_types():
     without crashing.
     """
     from nchantdoffice.widgets.controls.toolbars import NchantdNewDocumentToolBar
+
     bar = NchantdNewDocumentToolBar.__new__(NchantdNewDocumentToolBar)
     bar.document_types = None
     # Must NOT raise

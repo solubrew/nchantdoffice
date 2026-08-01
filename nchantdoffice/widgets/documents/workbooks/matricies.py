@@ -160,6 +160,20 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
         self.layout.setSpacing(3)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignCenter)
+
+        # PUSH to 0.0.3 force external until
+        # self.document.set_location("external")
+        #
+        # if self.document.location == "external":
+        #     self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        # else:
+        #     raise Exception("Internal and Cloud locations not supported yet")
+
         return self
 
     def initWidget(self):
@@ -273,14 +287,15 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         }
         # if self.document.is_saved:  # is_data_set
         #     cfg["buttons"][200] = {"action": "show_data_set"}
+        table_cfg = {"num_rows": 100, "num_columns": 40, "min_column_width": 30, "handler": self.cmd_cell_change}
+        self.table = NchantdOfficeTable(self.parent, self.config.override(table_cfg)).initWidget()
         super().initView(cfg)
-        cfg = {"num_rows": 100, "num_columns": 40, "min_column_width": 30, "handler": self.cmd_cell_change}
-        self.table = NchantdOfficeTable(self.parent, self.config.override(cfg)).initWidget()
         self.layout.addWidget(self.table, stretch=1)
         self.layout.setSpacing(3)
         # self.layout.setContentsMargins(0, 0, 0, 0)
         logma.info(f"[ INITIALIZE NCHANTD OFFICE MATRIX VIEW ] - populate document")
-        self.populate_document()
+        #self.populate_document()
+        self.formula_input = pyqt.QLineEdit()
         return self
 
     def initWidget(self):
@@ -1715,6 +1730,10 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         ``chr(65 + item.column())``. Guard against ``None`` and
         out-of-range column indexes.
         """
+        if item is None:
+            return
+        if item.column is None:
+            return
         column = item.column()
         row = item.row() + 1
         if column is None or not isinstance(column, int):
@@ -1955,84 +1974,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.connect_signals()
         return self
 
-    def _apply_cell_sizes(self):
-        """T-075: apply per-column / per-row sizes from the document.
-
-        Reads ``self.document.column_sizes`` / ``document.row_sizes``
-        (mapping column index -> pixel width or row index -> pixel
-        height) and applies them to the table widget. Falls back
-        to a sensible default (column 120 / row 25).
-        """
-        if not hasattr(self, "table") or self.table is None:
-            return
-        try:
-            doc = getattr(self, "document", None)
-            if doc is None:
-                return
-            col_sizes = getattr(doc, "column_sizes", None) or {}
-            for col_idx, width in col_sizes.items():
-                try:
-                    self.table.setColumnWidth(int(col_idx), int(width))
-                except Exception:
-                    continue
-            row_sizes = getattr(doc, "row_sizes", None) or {}
-            for row_idx, height in row_sizes.items():
-                try:
-                    self.table.setRowHeight(int(row_idx), int(height))
-                except Exception:
-                    continue
-            # Default sizes for columns/rows that were not specified
-            try:
-                from PySide6 import QtWidgets
-
-                default_w = 120
-                default_h = 25
-                for c in range(self.table.columnCount()):
-                    if c not in (col_sizes or {}):
-                        self.table.setColumnWidth(c, default_w)
-                for r in range(self.table.rowCount()):
-                    if r not in (row_sizes or {}):
-                        self.table.setRowHeight(r, default_h)
-            except Exception:
-                # Non-PySide6 fallback - set defaults silently
-                pass
-        except Exception as e:
-            logma.error(f"[matricies] _apply_cell_sizes failed: {e}", exc_info=True)
-
-    def _open_file(self, path):
-        """Load a spreadsheet file from disk into the table.
-
-        Uses ``pyffice`` (the Excel-equivalent backing library) when
-        available to parse ``path``. Updates ``self.file_path`` and
-        triggers a UI refresh. Returns ``self`` for chainable callers.
-        """
-        if not path:
-            return self
-        try:
-            from pyffice.workbooks.spreadsheets import load_workbook
-        except ImportError:
-            logma.warning("[matricies] pyffice not available; cannot open file")
-            return self
-        try:
-            workbook = load_workbook(path, data_only=True)
-            sheet = workbook.active if hasattr(workbook, "active") else None
-            if sheet is None:
-                return self
-            rows = list(sheet.iter_rows(values_only=True))
-            if not rows:
-                return self
-            self.table.setRowCount(len(rows))
-            self.table.setColumnCount(max(len(r) for r in rows))
-            for r_idx, row in enumerate(rows):
-                for c_idx, value in enumerate(row):
-                    self.table.setItem(r_idx, c_idx, pyqt.QTableWidgetItem(str(value) if value is not None else ""))
-            self.file_path = path
-            self.num_rows = len(rows)
-            self.num_cols = max(len(r) for r in rows) if rows else 0
-        except Exception as e:
-            logma.error(f"[matricies] _open_file failed: {e}", exc_info=True)
-        return self
-
     def save(self):
         """Save the spreadsheet document.
 
@@ -2061,47 +2002,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             logma.error(f"[matricies] save: grid capture failed: {e}", exc_info=True)
         super().save()
         return self
-
-    def _read_table_to_grid(self):
-        """T-083 helper - walk the table and return (grid, formulas).
-
-        Returns a tuple of:
-
-          - ``grid``: list of rows, each row a list of cell
-            text strings
-          - ``formulas``: list of rows with the formula text
-            (starts with ``=``) for any cell whose text starts
-            with ``=``
-
-        Returns ``([], [])`` if the table is missing.
-        """
-        grid = []
-        formulas = []
-        try:
-            table = getattr(self, "table", None)
-            if table is None:
-                return grid, formulas
-            row_count = table.rowCount() if hasattr(table, "rowCount") else 0
-            col_count = table.columnCount() if hasattr(table, "columnCount") else 0
-            for r in range(row_count):
-                row = []
-                frow = []
-                for c in range(col_count):
-                    try:
-                        item = table.item(r, c)
-                        text = item.text() if item is not None and hasattr(item, "text") else ""
-                    except Exception:
-                        text = ""
-                    row.append(text or "")
-                    if text and text.startswith("="):
-                        frow.append(text)
-                    else:
-                        frow.append("")
-                grid.append(row)
-                formulas.append(frow)
-        except Exception as e:
-            logma.error(f"[matricies] _read_table_to_grid failed: {e}", exc_info=True)
-        return grid, formulas
 
     def save_auto(self):
         """Auto-save the current document"""
@@ -2413,7 +2313,123 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         for idx, value in enumerate(formulas):
             self.table.setItem(1, idx, pyqt.QTableWidgetItem(value))
         self.table.resizeColumnsToContents()
+    def _apply_cell_sizes(self):
+        """T-075: apply per-column / per-row sizes from the document.
 
+        Reads ``self.document.column_sizes`` / ``document.row_sizes``
+        (mapping column index -> pixel width or row index -> pixel
+        height) and applies them to the table widget. Falls back
+        to a sensible default (column 120 / row 25).
+        """
+        if not hasattr(self, "table") or self.table is None:
+            return
+        try:
+            doc = getattr(self, "document", None)
+            if doc is None:
+                return
+            col_sizes = getattr(doc, "column_sizes", None) or {}
+            for col_idx, width in col_sizes.items():
+                try:
+                    self.table.setColumnWidth(int(col_idx), int(width))
+                except Exception:
+                    continue
+            row_sizes = getattr(doc, "row_sizes", None) or {}
+            for row_idx, height in row_sizes.items():
+                try:
+                    self.table.setRowHeight(int(row_idx), int(height))
+                except Exception:
+                    continue
+            # Default sizes for columns/rows that were not specified
+            try:
+                from PySide6 import QtWidgets
+
+                default_w = 120
+                default_h = 25
+                for c in range(self.table.columnCount()):
+                    if c not in (col_sizes or {}):
+                        self.table.setColumnWidth(c, default_w)
+                for r in range(self.table.rowCount()):
+                    if r not in (row_sizes or {}):
+                        self.table.setRowHeight(r, default_h)
+            except Exception:
+                # Non-PySide6 fallback - set defaults silently
+                pass
+        except Exception as e:
+            logma.error(f"[matricies] _apply_cell_sizes failed: {e}", exc_info=True)
+
+    def _open_file(self, path):
+        """Load a spreadsheet file from disk into the table.
+
+        Uses ``pyffice`` (the Excel-equivalent backing library) when
+        available to parse ``path``. Updates ``self.file_path`` and
+        triggers a UI refresh. Returns ``self`` for chainable callers.
+        """
+        if not path:
+            return self
+        try:
+            from pyffice.workbooks.spreadsheets import load_workbook
+        except ImportError:
+            logma.warning("[matricies] pyffice not available; cannot open file")
+            return self
+        try:
+            workbook = load_workbook(path, data_only=True)
+            sheet = workbook.active if hasattr(workbook, "active") else None
+            if sheet is None:
+                return self
+            rows = list(sheet.iter_rows(values_only=True))
+            if not rows:
+                return self
+            self.table.setRowCount(len(rows))
+            self.table.setColumnCount(max(len(r) for r in rows))
+            for r_idx, row in enumerate(rows):
+                for c_idx, value in enumerate(row):
+                    self.table.setItem(r_idx, c_idx, pyqt.QTableWidgetItem(str(value) if value is not None else ""))
+            self.file_path = path
+            self.num_rows = len(rows)
+            self.num_cols = max(len(r) for r in rows) if rows else 0
+        except Exception as e:
+            logma.error(f"[matricies] _open_file failed: {e}", exc_info=True)
+        return self
+    def _read_table_to_grid(self):
+        """T-083 helper - walk the table and return (grid, formulas).
+
+        Returns a tuple of:
+
+          - ``grid``: list of rows, each row a list of cell
+            text strings
+          - ``formulas``: list of rows with the formula text
+            (starts with ``=``) for any cell whose text starts
+            with ``=``
+
+        Returns ``([], [])`` if the table is missing.
+        """
+        grid = []
+        formulas = []
+        try:
+            table = getattr(self, "table", None)
+            if table is None:
+                return grid, formulas
+            row_count = table.rowCount() if hasattr(table, "rowCount") else 0
+            col_count = table.columnCount() if hasattr(table, "columnCount") else 0
+            for r in range(row_count):
+                row = []
+                frow = []
+                for c in range(col_count):
+                    try:
+                        item = table.item(r, c)
+                        text = item.text() if item is not None and hasattr(item, "text") else ""
+                    except Exception:
+                        text = ""
+                    row.append(text or "")
+                    if text and text.startswith("="):
+                        frow.append(text)
+                    else:
+                        frow.append("")
+                grid.append(row)
+                formulas.append(frow)
+        except Exception as e:
+            logma.error(f"[matricies] _read_table_to_grid failed: {e}", exc_info=True)
+        return grid, formulas
 
 # ====================================================================================================================||
 

@@ -183,15 +183,24 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         # PUSH to 0.0.3 - implement the markup features
         # cfg["buttons"][10] = {"action": "set_markup_edit", "handler": ""}
         # cfg["buttons"][11] = {"action": "", "handler": ""}
-        super().initView(cfg)
-
         self.view.setPageMode(pyqt.QPdfView.PageMode.MultiPage)
         # This is where the file is opened and set to be viewed in the application
         # end
         self.pdf = pyqt.QPdfDocument(self.view)
+        super().initView(cfg)
         logma.info(f"File Path {self.document.file_path}")
-        if self.document.file_path is not None:
-            self.open_file(self.document.file_path)
+        # PUSH to 0.0.3 force external until
+        #self.document.set_location("external")
+
+        #if self.document.location == "external":
+        #    self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        # else:
+        #     raise Exception("Internal and Cloud locations not supported yet")
 
         # FIX: Add PDF view to existing layout instead of replacing it
         # The toolbar was already added by super().initView(), so we just add this widget

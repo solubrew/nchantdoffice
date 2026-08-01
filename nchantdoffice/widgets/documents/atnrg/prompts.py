@@ -28,6 +28,7 @@ from nchantrs.widgets.controls.radios import NchantdRadioButtonGroup
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.buttons import NchantdButton
+
 try:
     from nchantrs.widgets.tables.lists import NchantdBulletedList, NchantdFilmStrip
 except ImportError:
@@ -85,6 +86,19 @@ class NchantdContextListPane(NchantdPane):
             layout = pyqt.QVBoxLayout()
             group.setLayout(layout)
             self.layout.addWidget(group)
+        # PUSH to 0.0.3 force external until
+        self.document.set_location("external")
+
+        if self.document.location == "external":
+            self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        else:
+            raise Exception("Internal and Cloud locations not supported yet")
+
         return self
 
     def initWidget(self):
@@ -130,18 +144,22 @@ class NchantdOfficePromptManager(NchantdManager):
                 )
                 if df is not None and not getattr(df, "empty", True):
                     for _, row in df.iterrows():
-                        self.prompts.append({
-                            "name": row.get("name_txt") or row.get("name") or "Prompt",
-                            "topic": row.get("topic_txt", "general"),
-                            "template": row.get("template_txt", ""),
-                            "style": row.get("style_txt", "neutral"),
-                            "source": "registry",
-                        })
+                        self.prompts.append(
+                            {
+                                "name": row.get("name_txt") or row.get("name") or "Prompt",
+                                "topic": row.get("topic_txt", "general"),
+                                "template": row.get("template_txt", ""),
+                                "style": row.get("style_txt", "neutral"),
+                                "source": "registry",
+                            }
+                        )
         except Exception as e:
             logma.error(f"[prompts] initModel registry load failed: {e}", exc_info=True)
         # Always provide a blank entry
         if not any(p.get("name") == "Blank" for p in self.prompts):
-            self.prompts.insert(0, {"name": "Blank", "topic": "general", "template": "", "style": "neutral", "source": "default"})
+            self.prompts.insert(
+                0, {"name": "Blank", "topic": "general", "template": "", "style": "neutral", "source": "default"}
+            )
         return self
 
     def initView(self):
@@ -172,7 +190,18 @@ class NchantdOfficePromptManager(NchantdManager):
         # put in a catalog here with specialized catalog items composing an image and its prompt
         left_layout.addWidget(recent_list)
         self.layout.addLayout(left_layout)
+        # PUSH to 0.0.3 force external until
+        self.document.set_location("external")
 
+        if self.document.location == "external":
+            self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        else:
+            raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def initWidget(self):
@@ -251,6 +280,20 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         cfg = {"model_cnt": self.model_cnt, "size": ["auto", 200]}
         self.pane = NchantdOfficeSuperPromptPane(self, cfg).initWidget()
         self.layout.addWidget(self.pane)
+
+        # PUSH to 0.0.3 force external until
+        self.document.set_location("external")
+
+        if self.document.location == "external":
+            self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        else:
+            raise Exception("Internal and Cloud locations not supported yet")
+
         return self
 
     def initWidget(self, compare=False):
@@ -272,10 +315,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
             widget = getattr(self, "models_select", None)
             selected = None
             if widget is not None:
-                getter = (
-                    getattr(widget, "currentText", None)
-                    or getattr(widget, "get_value", None)
-                )
+                getter = getattr(widget, "currentText", None) or getattr(widget, "get_value", None)
                 if callable(getter):
                     selected = getter()
             if hasattr(self, "config"):
@@ -299,10 +339,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
             days = None
             spinbox = getattr(self, "chat_history_spin", None)
             if spinbox is not None:
-                getter = (
-                    getattr(spinbox, "value", None)
-                    or getattr(spinbox, "get_value", None)
-                )
+                getter = getattr(spinbox, "value", None) or getattr(spinbox, "get_value", None)
                 if callable(getter):
                     days = getter()
             if days is None:
@@ -452,7 +489,8 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         try:
             endpoint = (
                 self.config.dikt.get("model_api_endpoint", "https://api.nchantrs.com/v1/models")
-                if hasattr(self, "config") else "https://api.nchantrs.com/v1/models"
+                if hasattr(self, "config")
+                else "https://api.nchantrs.com/v1/models"
             )
             api_key = None
             if hasattr(self, "config"):
@@ -460,21 +498,21 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
             if not api_key:
                 try:
                     import pykey
+
                     api_key = pykey.PYKEYSTORE.get("model_api_key")
                 except Exception:
                     pass
             headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
             try:
                 import requests  # type: ignore
+
                 response = requests.head(endpoint, headers=headers, timeout=5)
                 if response.status_code < 400:
                     self.config.dikt["model_connection_status"] = "Connected"
                     logma.info("[prompts] cmd_test_model_connection: OK")
                 else:
                     self.config.dikt["model_connection_status"] = f"Error {response.status_code}"
-                    logma.warning(
-                        f"[prompts] cmd_test_model_connection: status {response.status_code}"
-                    )
+                    logma.warning(f"[prompts] cmd_test_model_connection: status {response.status_code}")
             except Exception as e:
                 self.config.dikt["model_connection_status"] = f"Error: {e}"
                 logma.error(f"[prompts] cmd_test_model_connection failed: {e}", exc_info=True)

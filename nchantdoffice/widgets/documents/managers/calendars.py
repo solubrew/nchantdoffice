@@ -608,6 +608,18 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         self.calendar = NchantdCalendar(self, cfg).initWidget()
         self.layout.addWidget(self.calendar)
         self.layout.setSpacing(3)
+        # PUSH to 0.0.3 force external until
+        # self.document.set_location("external")
+        #
+        # if self.document.location == "external":
+        #     self.open_file(self.document.file_path)
+        # PUSH to 0.0.3
+        # elif self.document.location == "internal":
+        #    self.populate_data()
+        # elif self.document.location == "cloud":
+        #    self.connect_to_file()
+        # else:
+        #     raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def initWidget(self):
