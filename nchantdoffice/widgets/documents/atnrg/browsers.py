@@ -1000,53 +1000,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
         return items
 
-    def _build_bookmarks_pane(self):
-        """Build a bookmark list pane from config.dikt["bookmarks"].
-
-        Falls back to a single 'Add Bookmark' placeholder when no
-        bookmarks are configured.
-        """
-        from kahndor.logma import Logma
-
-        logma_local = Logma(__name__)
-        bookmarks = self.config.dikt.get("bookmarks", []) or []
-        if not bookmarks:
-            cfg = {"text": "Add Bookmark (no bookmarks yet)"}
-            return NchantdLabel(self, cfg).initWidget()
-        cfg = {
-            "text": "Bookmarks",
-            "data": bookmarks,
-            "layout": "vertical",
-        }
-        try:
-            return NchantdList(self, cfg).initWidget()
-        except Exception:
-            logma_local.warning("[browsers] NchantdList unavailable, falling back to label")
-            return NchantdLabel(self, cfg).initWidget()
-
-    def _build_quick_app_links_pane(self):
-        """Build a mini-catalog of quick-app links.
-
-        Reads ``self.app.model.get_quick_apps()`` when the API is
-        available; falls back to a label with a 'catalog not yet
-        configured' message.
-        """
-        cfg = {"text": "Quick Apps (catalog not yet configured)", "layout": "vertical"}
-        model = getattr(self.app, "model", None)
-        if model is not None and hasattr(model, "get_quick_apps"):
-            try:
-                apps = model.get_quick_apps() or []
-                if apps:
-                    cfg = {
-                        "text": "Quick Apps",
-                        "data": [a.get("name_txt", str(a)) for a in apps],
-                        "layout": "vertical",
-                    }
-                    return NchantdList(self, cfg).initWidget()
-            except Exception as e:
-                logma.error(f"[browsers] get_quick_apps failed: {e}", exc_info=True)
-        return NchantdLabel(self, cfg).initWidget()
-
     def init_toolbox(self):
         """"""
         super().init_toolbox()
@@ -1362,6 +1315,53 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.set_current_parameters()
         self.set_current_whois()
         return self
+
+    def _build_bookmarks_pane(self):
+        """Build a bookmark list pane from config.dikt["bookmarks"].
+
+        Falls back to a single 'Add Bookmark' placeholder when no
+        bookmarks are configured.
+        """
+        from kahndor.logma import Logma
+
+        logma_local = Logma(__name__)
+        bookmarks = self.config.dikt.get("bookmarks", []) or []
+        if not bookmarks:
+            cfg = {"text": "Add Bookmark (no bookmarks yet)"}
+            return NchantdLabel(self, cfg).initWidget()
+        cfg = {
+            "text": "Bookmarks",
+            "data": bookmarks,
+            "layout": "vertical",
+        }
+        try:
+            return NchantdList(self, cfg).initWidget()
+        except Exception:
+            logma_local.warning("[browsers] NchantdList unavailable, falling back to label")
+            return NchantdLabel(self, cfg).initWidget()
+
+    def _build_quick_app_links_pane(self):
+        """Build a mini-catalog of quick-app links.
+
+        Reads ``self.app.model.get_quick_apps()`` when the API is
+        available; falls back to a label with a 'catalog not yet
+        configured' message.
+        """
+        cfg = {"text": "Quick Apps (catalog not yet configured)", "layout": "vertical"}
+        model = getattr(self.app, "model", None)
+        if model is not None and hasattr(model, "get_quick_apps"):
+            try:
+                apps = model.get_quick_apps() or []
+                if apps:
+                    cfg = {
+                        "text": "Quick Apps",
+                        "data": [a.get("name_txt", str(a)) for a in apps],
+                        "layout": "vertical",
+                    }
+                    return NchantdList(self, cfg).initWidget()
+            except Exception as e:
+                logma.error(f"[browsers] get_quick_apps failed: {e}", exc_info=True)
+        return NchantdLabel(self, cfg).initWidget()
 
     def _delete_browsing_history(self):
         """Delete all browsing history for the current profile.

@@ -3,7 +3,7 @@ NchantdOfficeWebBrowser:
     default_url: "http://www.duckduckgo.com/"
     toolbox:
       100:
-          title: URLs
+          title: URL
           items:
               0: {"action": "", "type": ""}
       200:

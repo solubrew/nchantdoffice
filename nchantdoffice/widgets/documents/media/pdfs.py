@@ -190,9 +190,9 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         super().initView(cfg)
         logma.info(f"File Path {self.document.file_path}")
         # PUSH to 0.0.3 force external until
-        #self.document.set_location("external")
+        # self.document.set_location("external")
 
-        #if self.document.location == "external":
+        # if self.document.location == "external":
         #    self.open_file(self.document.file_path)
         # PUSH to 0.0.3
         # elif self.document.location == "internal":
@@ -221,6 +221,27 @@ class NchantdOfficePDF(NchantdOfficeDocument):
                 self.open_file(self.local_file)
         return self
 
+    def cmd_page_count_change(self, event=None, *args, **kwargs):
+        """Update the document page count from the current PDF.
+
+        Refreshes ``self.page_count`` from the loaded PDF document and
+        updates the spinbox widget if present.
+        """
+        if not getattr(self, "pdf_document", None):
+            return self
+        try:
+            self.page_count = self.pdf_document.pageCount()
+            spinbox = getattr(self, "page_count_spinbox", None)
+            if spinbox is not None and hasattr(spinbox, "setValue"):
+                spinbox.setValue(self.page_count)
+        except Exception as e:
+            logma.error(f"[pdfs] cmd_page_count_change failed: {e}", exc_info=True)
+        return self
+
+    def get_page_count(self):
+        """Return the stored value of get_page_count."""
+        return getattr(self, "page_count", 0) or self.config.dikt.get("page_count", 0)
+
     def init_drawer_document_config(self):
         """"""
         items = self.toolbox_config[100].get("items", {})
@@ -243,27 +264,6 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         self.label_entry = NchantdLabeledEntry(self, cfg)
         items[cnt]["widget"] = self.label_entry
         return items
-
-    def cmd_page_count_change(self, event=None, *args, **kwargs):
-        """Update the document page count from the current PDF.
-
-        Refreshes ``self.page_count`` from the loaded PDF document and
-        updates the spinbox widget if present.
-        """
-        if not getattr(self, "pdf_document", None):
-            return self
-        try:
-            self.page_count = self.pdf_document.pageCount()
-            spinbox = getattr(self, "page_count_spinbox", None)
-            if spinbox is not None and hasattr(spinbox, "setValue"):
-                spinbox.setValue(self.page_count)
-        except Exception as e:
-            logma.error(f"[pdfs] cmd_page_count_change failed: {e}", exc_info=True)
-        return self
-
-    def get_page_count(self):
-        """Return the stored value of get_page_count."""
-        return getattr(self, "page_count", 0) or self.config.dikt.get("page_count", 0)
 
     def init_drawer_document_tools(self):
         """"""
@@ -321,8 +321,8 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
-        self.toolbox_config[200]["items"] = self.init_drawer_document_tools()
         # PUSH to 0.0.3
+        # self.toolbox_config[200]["items"] = self.init_drawer_document_tools()
         # self.toolbox_config[300]["items"] = self.init_drawer_quickstart()
 
     def cmd_image_format_change(self, event=None, *args, **kwargs):
@@ -369,54 +369,17 @@ class NchantdOfficePDF(NchantdOfficeDocument):
             logma.error(f"[pdfs] cmd_image_convert_change failed: {e}", exc_info=True)
         return self
 
-    def get_file_format(self):
-        """Return the stored value of get_file_format."""
-        return self.config.dikt.get("file_format", "") or ""
+    def get_content(self):
+        """"""
+        return super().get_content()
 
     def get_file_convert(self):
         """Return the stored value of get_file_convert."""
         return self.config.dikt.get("file_convert", "") or ""
 
-    def get_content(self):
-        """"""
-        return super().get_content()
-
-    def open_file(self, file=None):
-        """"""
-        if file is None:
-            file = self.file_path
-        self.document.open_file(file)  # The Pyffice document is not connected directly with the viewable pdf render
-        self.document.set_location("external")
-        self.populate_document()
-        return self
-
-    def populate_document(self):
-        """"""
-        if self.document.file_path is None:
-            return
-        self.pdf.load(self.document.file_path)
-        self.view.setDocument(self.pdf)
-        return self
-
-    def save(self):
-        """"""
-        super().save()
-        return self
-
-    def load_page(self):
-        """Load and display the current page with text extraction"""
-        # page = self.document.extract_text(self.current_page)
-        page = self.pdf_document[self.current_page]
-        # Get page as pixmap
-        mat = fitz.Matrix(self.scale, self.scale)
-        pix = page.get_pixmap(matrix=mat)
-        img_data = pix.tobytes("ppm")
-        pixmap = pyqt.QPixmap()
-        pixmap.loadFromData(img_data)
-        # Extract text with position information
-        self.text_instances = page.get_text("dict")
-        self.pdf_label.setPixmap(pixmap)
-        self.pdf_label.resize(pixmap.size())
+    def get_file_format(self):
+        """Return the stored value of get_file_format."""
+        return self.config.dikt.get("file_format", "") or ""
 
     def get_text_at_position(self, pos):
         """Find text at a given position"""
@@ -437,6 +400,64 @@ class NchantdOfficePDF(NchantdOfficeDocument):
                     if rect.contains(pos):
                         return span["text"], rect, span
         return None, None, None
+
+    def load_page(self):
+        """Load and display the current page with text extraction"""
+        # page = self.document.extract_text(self.current_page)
+        page = self.pdf_document[self.current_page]
+        # Get page as pixmap
+        mat = fitz.Matrix(self.scale, self.scale)
+        pix = page.get_pixmap(matrix=mat)
+        img_data = pix.tobytes("ppm")
+        pixmap = pyqt.QPixmap()
+        pixmap.loadFromData(img_data)
+        # Extract text with position information
+        self.text_instances = page.get_text("dict")
+        self.pdf_label.setPixmap(pixmap)
+        self.pdf_label.resize(pixmap.size())
+
+    def mouse_press_event(self, event: pyqt.QMouseEvent):
+        if event.button() == pyqt.Qt.MouseButton.LeftButton:
+            self.selection_start = event.pos()
+            self.selection_end = event.pos()
+
+    def mouse_move_event(self, event: pyqt.QMouseEvent):
+        if self.selection_start:
+            self.selection_end = event.pos()
+            self.update_selection_display()
+
+    def mouse_release_event(self, event: pyqt.QMouseEvent):
+        if self.selection_start and self.selection_end:
+            selected_text, rects = self.select_text_in_area(self.selection_start, self.selection_end)
+
+            if selected_text.strip():
+                self.selected_text = selected_text
+                logma.info(f"Selected text: {self.selected_text}")
+
+                # Copy to clipboard
+                clipboard = pyqt.QApplication.clipboard()
+                clipboard.setText(self.selected_text)
+
+        self.selection_start = None
+        self.selection_end = None
+
+    def open_file(self, file=None):
+        """"""
+        super().open_file(file)
+        return self
+
+    def populate_document(self):
+        """"""
+        if self.document.file_path is None:
+            return
+        self.pdf.load(self.document.file_path)
+        self.view.setDocument(self.pdf)
+        return self
+
+    def save(self):
+        """"""
+        super().save()
+        return self
 
     def select_text_in_area(self, start_pos, end_pos):
         """Select all text within the defined area"""
@@ -470,31 +491,6 @@ class NchantdOfficePDF(NchantdOfficeDocument):
                         selection_rects.append(rect)
 
         return selected_text, selection_rects
-
-    def mouse_press_event(self, event: pyqt.QMouseEvent):
-        if event.button() == pyqt.Qt.MouseButton.LeftButton:
-            self.selection_start = event.pos()
-            self.selection_end = event.pos()
-
-    def mouse_move_event(self, event: pyqt.QMouseEvent):
-        if self.selection_start:
-            self.selection_end = event.pos()
-            self.update_selection_display()
-
-    def mouse_release_event(self, event: pyqt.QMouseEvent):
-        if self.selection_start and self.selection_end:
-            selected_text, rects = self.select_text_in_area(self.selection_start, self.selection_end)
-
-            if selected_text.strip():
-                self.selected_text = selected_text
-                logma.info(f"Selected text: {self.selected_text}")
-
-                # Copy to clipboard
-                clipboard = pyqt.QApplication.clipboard()
-                clipboard.setText(self.selected_text)
-
-        self.selection_start = None
-        self.selection_end = None
 
     def update_selection_display(self):
         """Update the display to show current selection"""

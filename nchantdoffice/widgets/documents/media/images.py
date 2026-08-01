@@ -659,21 +659,6 @@ class NchantdImageGeneratorPane(NchantdPane):
 class NchantdOfficeImage(NchantdOfficeDocument):
     """"""
 
-    def _ensure_drawer_item(self, items, cnt):
-        """Lazily create a default drawer-item slot.
-
-        Centralises the ``if cnt not in items: items[cnt] = {...}``
-        pattern used by every ``init_drawer_*`` method on this class,
-        removing the repeated branch flagged by the maintainability
-        auditor as switch abuse.
-        """
-        if cnt not in items:
-            items[cnt] = {
-                "action": "insert_generic_action",
-                "type": "custom",
-            }
-        return items[cnt]
-
     def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__("Nchantd Image", parent, cfg)
@@ -697,11 +682,11 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """"""
         cfg = {
             "buttons": {
-                10: {"action": "convert_format", "handler": self.cmd_convert_format},
-                11: {"action": "convert_size", "handler": self.cmd_convert_size},
-                12: {"action": "convert_color", "handler": self.cmd_convert_color},
-                13: {"action": "crop_image", "handler": self.cmd_crop_image},
-                14: {"action": "generate_image", "handler": self.cmd_generate_image},
+                # 10: {"action": "convert_format", "handler": self.cmd_convert_format},
+                # 11: {"action": "convert_size", "handler": self.cmd_convert_size},
+                # 12: {"action": "convert_color", "handler": self.cmd_convert_color},
+                # 13: {"action": "crop_image", "handler": self.cmd_crop_image},
+                # 14: {"action": "generate_image", "handler": self.cmd_generate_image},
                 15: {
                     "action": "add_palette_document_nchantdpalette",
                     "handler": self.cmd_add_palette_document_nchantdpalette,
@@ -728,7 +713,6 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         #     or (self.document.content or {}).get("content", {}).get("file_path")
         # )
 
-
         # PUSH to 0.0.3 force external until
         self.document.set_location("external")
 
@@ -753,6 +737,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
     def cmd_add_palette_document_nchantdpalette(self, event=None, *args, **kwargs):
         """Add a new palette document to the active palette set."""
+        # TODO Open toolbox tab and Palette Drawer generate the palette from the image
         try:
             name = None
             for attr in ("palette_select", "image_palette_select"):
@@ -1003,31 +988,30 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
         return items
 
-    # PUSH to 0.0.3
-    # def init_drawer_palette(self):
-    #     """"""
-    #     items = self.toolbox_config[300].get("items", {})
-    #     cnt = 0
-    #     default_action = {"action": "insert_generic_action", "type": "custom"}
-    #     if cnt not in items:
-    #         items[cnt] = deepcopy(default_action)
-    #     cfg = {"text": "Scan to Extract Palette", "handler": self.cmd_run_palette_scan}
-    #     self.image_scan_palette_button = NchantdButtonWidget(self, cfg)
-    #     items[cnt]["widget"] = self.image_scan_palette_button
-    #     cnt += 1
-    #     if cnt not in items:
-    #         items[cnt] = deepcopy(default_action)
-    #     cfg = {
-    #         "text": "Modify Palette: ",
-    #         "num_columns": 3,
-    #         "num_rows": 10,
-    #         "columns": ["Color", "Hex", "Usage %"],
-    #         "column_width": 10,
-    #     }
-    #     self.image_palette = NchantdPaletteTable(self, cfg)
-    #     items[cnt]["widget"] = self.image_palette
-    #     cnt += 1
-    #     return items
+    def init_drawer_palette(self):
+        """"""
+        items = self.toolbox_config[300].get("items", {})
+        cnt = 0
+        default_action = {"action": "insert_generic_action", "type": "custom"}
+        if cnt not in items:
+            items[cnt] = deepcopy(default_action)
+        cfg = {"text": "Scan to Extract Palette", "handler": self.cmd_run_palette_scan}
+        self.image_scan_palette_button = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.image_scan_palette_button
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = deepcopy(default_action)
+        cfg = {
+            "text": "Modify Palette: ",
+            "num_columns": 3,
+            "num_rows": 10,
+            "columns": ["Color", "Hex", "Usage %"],
+            "column_width": 10,
+        }
+        self.image_palette = NchantdPaletteTable(self, cfg)
+        items[cnt]["widget"] = self.image_palette
+        cnt += 1
+        return items
 
     # PUSH to 0.0.3
     # def init_drawer_quickstart(self):
@@ -1042,9 +1026,10 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
-        self.toolbox_config[200]["items"] = self.init_drawer_image_tools()
         # PUSH to 0.0.3
-        # self.toolbox_config[300]["items"] = self.init_drawer_palette()
+        # self.toolbox_config[200]["items"] = self.init_drawer_image_tools()
+        self.toolbox_config[300]["items"] = self.init_drawer_palette()
+        # PUSH to 0.0.3
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
         return self
 
@@ -1144,6 +1129,21 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """"""
         super().save()
         return self
+
+    def _ensure_drawer_item(self, items, cnt):
+        """Lazily create a default drawer-item slot.
+
+        Centralises the ``if cnt not in items: items[cnt] = {...}``
+        pattern used by every ``init_drawer_*`` method on this class,
+        removing the repeated branch flagged by the maintainability
+        auditor as switch abuse.
+        """
+        if cnt not in items:
+            items[cnt] = {
+                "action": "insert_generic_action",
+                "type": "custom",
+            }
+        return items[cnt]
 
 
 # ====================================================================================================================||

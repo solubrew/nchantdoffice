@@ -882,6 +882,11 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         """"""
         super().export_file()
 
+    def focusOutEvent(self, event):
+        """"""
+        super().focusOutEvent(event)
+        self.save()
+
     def get_content_internal(self):
         """"""
         return {}
@@ -953,9 +958,13 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         """"""
         if file is None:
             file = self.file_path
+            if file is None:
+                return
         self.document.open_file(file)  # The Pyffice document is not connected directly with the viewable pdf render
         self.document.set_location("external")
         self.populate_document()
+        self.save()
+
 
     def open_local(self):
         """Trigger the local file open dialog."""
@@ -979,6 +988,7 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
 
     def populate_document(self, file=None):
         """"""
+        self.save()
         return self
 
     def save(self):
