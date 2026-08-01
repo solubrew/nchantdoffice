@@ -290,8 +290,9 @@ class NchantdOfficeDocumentMixin:
             return "save"
         if not isinstance(location, str):
             return "save"
-        if location == "internal":
-            return "save_database"
+        # TODO implement location tracking default to local_file_system - options (local_file_system, "cloud", "nchantdoffice_instance")
+        # if location == "internal":
+        #     return "save_database"
         return "save"
 
     def create_data_table(self):
@@ -425,6 +426,7 @@ class NchantdOfficeDocumentMixin:
             from nchantdoffice.widgets.advertisements import (
                 NchantdOfficeAdTab,
             )
+
             cfg = {
                 "text": "Get Pro",
                 # Wire the toolbar "Get Pro" button to the
@@ -435,10 +437,7 @@ class NchantdOfficeDocumentMixin:
                 # NchantdTreeView wrapper) and calls
                 # ``set_current_node`` to actually update the
                 # center tabset.
-                "handler": (
-                    lambda *a, _self=self, **k: NchantdOfficeAdTab
-                    .redirect_to_get_pro(_self.app)
-                ),
+                "handler": (lambda *a, _self=self, **k: NchantdOfficeAdTab.redirect_to_get_pro(_self.app)),
                 "height": 24,
                 "background_color": "green",
             }
@@ -794,6 +793,10 @@ class NchantdOfficeDocumentMixin:
             return self.update_document()
         logma.warning(f"update_document_page({page_num}) called but multi-page support is not implemented")
         return self
+
+    def _save_action(self, document):
+        """"""
+        return "save"
 
     def _store_document(self):
         """"""
