@@ -21,6 +21,7 @@
 # New TODOs
 - Image Document tab is push the widgth instead of resizing the image, image should fit to width and size the height maintianing the aspect ratio
 - NchantdOfficeBrowser is not keeping track of url navigation or reloading to the last visited site
+- FileDetailsPane is not updated on initial file open need to implement a refresh
  
  
 - fix and finish Affiliate Manager tab
