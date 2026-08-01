@@ -73,9 +73,10 @@ class NchantdOfficeNodeEditPane(NchantdPane):
             "layout": "horizontal",
             "actions": {
                 0: {"action": "duplicate_document", "type": "", "handler": self.cmd_duplicate_document},
+                # PUSH to 0.0.3
                 # 1: {"action": "import_document", "type": "", "handler": self.cmd_import_file},
                 # 2: {"action": "export_document", "type": "", "handler": self.cmd_export_document},
-                2: {"action": "take_snapshot", "handler": self.cmd_take_snapshot},
+                # 2: {"action": "take_snapshot", "handler": self.cmd_take_snapshot},
                 3: {
                     "action": "sort_children_ascending",
                     "type": "",
@@ -237,8 +238,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
                     self.app.model.has_changed = True
         except Exception as exc:
             logma.error(
-                f"[panes/documents] cmd_set_tab_name: DB "
-                f"persist failed: {exc}",
+                f"[panes/documents] cmd_set_tab_name: DB " f"persist failed: {exc}",
                 exc_info=True,
             )
         return self
@@ -649,10 +649,11 @@ class NchantdOfficeTabEditPane(NchantdPane):
             "layout": "horizontal",
             "actions": {
                 0: {"action": "duplicate_document", "type": "", "handler": self.cmd_duplicate_document},
-                1: {"action": "import_document", "type": "", "handler": self.cmd_import_file},
-                2: {"action": "export_document", "type": "", "handler": self.cmd_export_document},
+                # PUSH to 0.0.3
+                # 1: {"action": "import_document", "type": "", "handler": self.cmd_import_file},
+                # 2: {"action": "export_document", "type": "", "handler": self.cmd_export_document},
                 # 3: {"action": "create_dataset", "type": "", "handler": self.cmd_create_dataset},
-                4: {"action": "take_snapshot", "handler": self.cmd_take_snapshot},
+                # 4: {"action": "take_snapshot", "handler": self.cmd_take_snapshot},
                 # 5: {
                 #     "action": "unlock_view",
                 #     "handler": self.lock_page,
@@ -821,8 +822,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
                     self.app.model.has_changed = True
         except Exception as exc:
             logma.error(
-                f"[panes/documents] cmd_set_tab_name: DB "
-                f"persist failed: {exc}",
+                f"[panes/documents] cmd_set_tab_name: DB " f"persist failed: {exc}",
                 exc_info=True,
             )
         return self

@@ -48,14 +48,14 @@ NchantdOfficeScript:
 #        items:
 #            0: {"action": "show_selected_text", "type": "entryeditor", "readonly": True}
 #            1: {"action": "select_text_font_style", "type": ""}
-    300:
-      title: Object Configuration
-      items:
-          0: {"action": "set_document_header", "type": ""}
-          1: {"name": "set_page_header", "type": ""}
-          2: {"action": "insert_object", "type": ""}
-          3: {"action": "set_page_footer", "type": ""}
-          4: {"action": "set_document_footer", "type": ""}
+#    300:
+#      title: Object Configuration
+#      items:
+#          0: {"action": "set_document_header", "type": ""}
+#          1: {"name": "set_page_header", "type": ""}
+#          2: {"action": "insert_object", "type": ""}
+#          3: {"action": "set_page_footer", "type": ""}
+#          4: {"action": "set_document_footer", "type": ""}
 #    400:
 #        title: Nchantd Script Quickstart
 #        items:

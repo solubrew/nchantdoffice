@@ -260,6 +260,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
 
         self.editor.set_background(hex="#4F5665")
         self.layout.addWidget(self.editor)
+        # TODO always scroll to bottom of document
         return self
 
     def initWidget(self):
@@ -386,6 +387,12 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         """"""
         super().focusOutEvent(event)
         self.save()
+
+    def parse(self):
+        """parse text from journal to extract into each date time entry as an object for later retrieval
+        also need to store what document was active in the center tabset during writing of note for context view
+        """
+        # TODO implement extraction and storage schema input
 
     def populate_data(self):
         """"""
