@@ -211,7 +211,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.num_cols = 0
         self.cfg = cfg or {}
         self.parent_window = parent
-        self.app = pyqt.QApplication.instance()
+        # self.app = pyqt.QApplication.instance()
 
         # Spreadsheet state
         self.current_sheet = None

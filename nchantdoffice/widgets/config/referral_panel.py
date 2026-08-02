@@ -28,6 +28,7 @@
     security: seclvl2
     <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -41,15 +42,21 @@ from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.buttons import NchantdButton
-from nchantrs.widgets.groups import NchantdGridScrollGroupBox, NchantdVScrollGroupBox, NchantdHGroupBox
-from nchantrs.widgets.widgets import NchantdWidget
-
-from nchantdoffice.widgets.documents.documents import NchantdOfficeDocumentManager
+from nchantrs.widgets.groups import NchantdGroup
+from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantdoffice.utilities.referral import (
-    DEFAULT_API_BASE, DEFAULT_PAYOUT_MIN_CENTS, REFERRAL_STATE_ACTIVE,
-    REFERRAL_STATE_EXPIRED, REFERRAL_STATE_SUSPENDED, REFERRAL_STATE_USED,
-    ReferralAPIClient, ReferralCode, build_share_urls, generate_referral_code,
-    payout_eligible, validate_referral_code,
+    DEFAULT_API_BASE,
+    DEFAULT_PAYOUT_MIN_CENTS,
+    REFERRAL_STATE_ACTIVE,
+    REFERRAL_STATE_EXPIRED,
+    REFERRAL_STATE_SUSPENDED,
+    REFERRAL_STATE_USED,
+    ReferralAPIClient,
+    ReferralCode,
+    build_share_urls,
+    generate_referral_code,
+    payout_eligible,
+    validate_referral_code,
 )
 
 logma = Logma(__name__)
@@ -58,7 +65,7 @@ here = join(dirname(__file__), "")  # ||
 pxcfg = join(here, "_data_", "referral_panel.yaml")  # optional; falls back to code-driven layout
 
 
-class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
+class NchantdOfficeReferralPanel(NchantdOfficeDocument):
     """In-app Referral Panel (DESK-2 / ATNRG spec §5).
 
     T-NOTE: was ``NchantdOfficeAffiliateManager`` (a stub webview
@@ -75,8 +82,8 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
         doesn't inject one), and ``_load_or_generate_code``
         falls back to ``"anonymous"`` in that case.
         """
-        super().__init__(parent, cfg)
         self.name = "NchantdOffice Referral Panel"
+        super().__init__(self.name, parent, cfg)
         self.api_client = ReferralAPIClient(base_url=DEFAULT_API_BASE)
         self.user = user
         self.referral_code: ReferralCode = None
@@ -85,30 +92,34 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
         self.invitations_remaining: int = 0
 
     def initModel(self):
+        """"""
         super().initModel()
+        document = {"document": self.config.get("document", {})}
+        logma.info(f"Document {document}")
         # Load referral code from user config, or generate one
+        self.document = self.app.model.codex.init_config(document)
+        self.document.load_document()
         self._load_or_generate_code()
         self._fetch_dashboard()
         return self
 
-    def initView(self):
-        cfg = super().initView()
+    def initView(self, cfg=None):
+        """"""
+        cfg = cfg or {}
+        super().initView(cfg)
         layout = pyqt.QVBoxLayout()
         layout.setContentsMargins(20, 20, 20, 20)
-
         # Title
-        title = NchantdLabel(self)
+        cfg = {}
+        title = NchantdLabel(self, cfg).initWidget()
         title.setText("Referral Program")
         title.setStyleSheet("font-size: 18pt; font-weight: bold;")
         layout.addWidget(title)
-
-        layout.addSpacing(10)
         layout.addWidget(self._build_code_card())
         layout.addSpacing(10)
         layout.addWidget(self._build_share_card())
         layout.addSpacing(10)
         layout.addWidget(self._build_earnings_card())
-
         self.layout.addLayout(layout)
         return cfg
 
@@ -118,7 +129,9 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
 
     def _build_code_card(self):
         """Card: shows the referral code + invitations remaining."""
-        card = NchantdGridScrollGroupBox(self)
+        card = NchantdGroup(self)
+        layout = pyqt.QVBoxLayout()
+        card.setLayout(layout)
         card.setTitle("Your Referral Code")
 
         code = str(self.referral_code) if self.referral_code else "(generating...)"
@@ -130,13 +143,10 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
         # Invitations remaining
         inv_label = NchantdLabel(card)
         if self.invitations_remaining > 0:
-            inv_label.setText(
-                f"You have <b>{self.invitations_remaining}</b> invitation(s) remaining this phase."
-            )
+            inv_label.setText(f"You have <b>{self.invitations_remaining}</b> invitation(s) remaining this phase.")
         else:
             inv_label.setText(
-                "<i>You've used all your invites this phase. "
-                "We'll unlock more as we expand the program.</i>"
+                "<i>You've used all your invites this phase. " "We'll unlock more as we expand the program.</i>"
             )
         card.addWidget(inv_label)
 
@@ -226,8 +236,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
         else:
             need = min_payout - pending
             payout_label.setText(
-                f"<i>${need/100:.2f} more needed to reach "
-                f"${min_payout/100:.2f} payout minimum</i>"
+                f"<i>${need/100:.2f} more needed to reach " f"${min_payout/100:.2f} payout minimum</i>"
             )
         card.addWidget(payout_label)
 
@@ -284,8 +293,10 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
         with a named factory; satisfies the lambda-antipattern
         auditor and makes the slot testable in isolation.
         """
+
         def _handler(_checked=False, _url=url):
             self._open_url(_url)
+
         return _handler
 
     # ------------------------------------------------------------------
@@ -328,13 +339,12 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
             # T-NEW-026: use the canonical pycurity.pykey.PyKeyStore
             # import path (matches the rest of the project).
             from pycurity.pykey import PyKeyStore
+
             keystore = PyKeyStore()
             try:
                 stored_record = keystore.get("affiliate_id")
             except Exception as e:
-                logma.debug(
-                    f"[referral_panel] PyKeyStore.get(affiliate_id) failed: {e}"
-                )
+                logma.debug(f"[referral_panel] PyKeyStore.get(affiliate_id) failed: {e}")
                 stored_record = None
             # ``PyKeyStore.get(service)`` returns a dict (or
             # raises KeyError when missing). We pull the
@@ -344,21 +354,15 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
             stored_affiliate_id = None
             if isinstance(stored_record, dict):
                 stored_affiliate_id = (
-                    stored_record.get("public_id")
-                    or stored_record.get("api_key")
-                    or stored_record.get("private_key")
+                    stored_record.get("public_id") or stored_record.get("api_key") or stored_record.get("private_key")
                 )
         except Exception as e:
-            logma.debug(
-                f"[referral_panel] PyKeyStore init failed: {e}"
-            )
+            logma.debug(f"[referral_panel] PyKeyStore init failed: {e}")
             stored_affiliate_id = None
         if isinstance(stored_affiliate_id, str) and stored_affiliate_id:
             # T-NEW-026: PyKeyStore value wins over user.id.
             user_id = stored_affiliate_id
-            logma.info(
-                f"[referral_panel] using PyKeyStore affiliate_id"
-            )
+            logma.info(f"[referral_panel] using PyKeyStore affiliate_id")
         elif user_obj is not None:
             user_id = (
                 getattr(user_obj, "id", None)
@@ -418,13 +422,9 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
                 try:
                     pane.show_referral_url(url)
                 except Exception as e:
-                    logma.warning(
-                        f"[referral_panel] ad_pane.show_referral_url failed: {e}"
-                    )
+                    logma.warning(f"[referral_panel] ad_pane.show_referral_url failed: {e}")
         except Exception as e:
-            logma.warning(
-                f"[referral_panel] _surface_referral_url_to_ad_pane failed: {e}"
-            )
+            logma.warning(f"[referral_panel] _surface_referral_url_to_ad_pane failed: {e}")
 
     def _fetch_dashboard(self):
         """Fetch earnings + invitations from the server; fall back to local store."""
@@ -432,12 +432,9 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocumentManager):
             data = self.api_client.fetch_earnings()
             if data:
                 self.earnings_data = data
-                self.invitations_remaining = int(
-                    data.get("invitations_remaining", self.invitations_remaining)
-                )
+                self.invitations_remaining = int(data.get("invitations_remaining", self.invitations_remaining))
                 logma.info(
-                    f"[referral_panel] dashboard fetched: "
-                    f"{self.earnings_data.get('total_referrals', 0)} referrals"
+                    f"[referral_panel] dashboard fetched: " f"{self.earnings_data.get('total_referrals', 0)} referrals"
                 )
                 return
         except Exception as e:

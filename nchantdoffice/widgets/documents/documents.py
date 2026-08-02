@@ -856,10 +856,10 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
             raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def initWidget(self, cfg=None):
+    def initWidget(self):
         """"""
-        self.initModel(cfg)
-        self.initView(cfg)
+        self.initModel()
+        self.initView()
         return self
 
     def add_automation(self):
