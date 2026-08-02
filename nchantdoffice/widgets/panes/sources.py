@@ -750,7 +750,7 @@ class NchantdSourceDefaultPane(NchantdWidget):
         layout.addWidget(self.table_select)
         # T-NEW-034: per-source config card slots (apikey visibility,
         # tracked checkbox, size details, retention spinbox, save
-        # button) are logged in TODOs.md. The two config_sources.py
+        # button) are logged in TODOs.md. The two source_config.py
         # stubs (cmd_change_data_source_pane_size,
         # cmd_toggle_apikey_visibility) are now filled; the larger
         # surface-area items (tracked checkbox, retention spinbox,

@@ -1,7 +1,7 @@
 """T-NEW-034 -- Data Source config stubs regression tests.
 
 Two empty methods in ``NchantdOfficeDataSourcesSettings``
-(``widgets/config/config_sources.py``) need real
+(``widgets/config/source_config.py``) need real
 implementations:
 
   1. ``cmd_change_data_source_pane_size`` — read the pane-size
@@ -23,10 +23,10 @@ import sys
 from types import SimpleNamespace
 
 from PySide6.QtWidgets import QApplication, QLineEdit
+
 _QAPP = QApplication.instance() or QApplication(sys.argv)
 
-import nchantdoffice.widgets.config.config_sources  # establish import order
-
+import nchantdoffice.widgets.config.source_config  # establish import order
 
 # ---------------------------------------------------------------------------
 # Fixture: build NchantdOfficeDataSourcesSettings via __new__ + inject
@@ -37,12 +37,11 @@ def _make_settings():
     """Build a NchantdOfficeDataSourcesSettings-lite via __new__
     so we can drive the handlers without a live Qt parent
     chain (Sprint 28-29 pattern)."""
-    from nchantdoffice.widgets.config.config_sources import (
+    from nchantdoffice.widgets.config.source_config import (
         NchantdOfficeDataSourcesSettings,
     )
-    settings = NchantdOfficeDataSourcesSettings.__new__(
-        NchantdOfficeDataSourcesSettings
-    )
+
+    settings = NchantdOfficeDataSourcesSettings.__new__(NchantdOfficeDataSourcesSettings)
     settings.config = SimpleNamespace(dikt={})
     settings.apikeys = {}
     settings.data_source_size_combo = None
@@ -60,9 +59,7 @@ def test_cmd_change_data_source_pane_size_persists_selection():
     persists it to ``config.dikt["data_source_pane_size"]``.
     """
     settings = _make_settings()
-    settings.data_source_size_combo = SimpleNamespace(
-        currentText=lambda: "50%"
-    )
+    settings.data_source_size_combo = SimpleNamespace(currentText=lambda: "50%")
     result = settings.cmd_change_data_source_pane_size()
     assert settings.config.dikt["data_source_pane_size"] == "50%"
     assert result is settings
@@ -72,9 +69,7 @@ def test_cmd_change_data_source_pane_size_persists_full():
     """Test with each of the three options."""
     for option in ("Full", "50%", "10%"):
         settings = _make_settings()
-        settings.data_source_size_combo = SimpleNamespace(
-            currentText=lambda opt=option: opt
-        )
+        settings.data_source_size_combo = SimpleNamespace(currentText=lambda opt=option: opt)
         settings.cmd_change_data_source_pane_size()
         assert settings.config.dikt["data_source_pane_size"] == option
 
@@ -84,9 +79,7 @@ def test_cmd_change_data_source_pane_size_returns_self():
     call sites.
     """
     settings = _make_settings()
-    settings.data_source_size_combo = SimpleNamespace(
-        currentText=lambda: "Full"
-    )
+    settings.data_source_size_combo = SimpleNamespace(currentText=lambda: "Full")
     result = settings.cmd_change_data_source_pane_size()
     assert result is settings
 

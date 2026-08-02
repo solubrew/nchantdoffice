@@ -59,18 +59,6 @@ pxcfg = join(here, "_data_", "scripts.yaml")
 
 class NchantdOfficeScript(NchantdOfficeDocument):
 
-    def _ensure_drawer_item(self, items, cnt):
-        """Lazily create a default drawer-item slot.
-
-        Centralises the ``if cnt not in items: items[cnt] = {...}``
-        pattern used by ``init_drawer_document_config`` and
-        ``init_drawer_object_config``, removing the repeated branch
-        flagged by the maintainability auditor as switch abuse.
-        """
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        return items[cnt]
-
     PYTYPE = "script"  # Pyffice script type
 
     @classmethod
@@ -181,22 +169,23 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self.file_path = self.document.file_path
         cfg = {
             "buttons": {
-                10: {"action": "set_page_view", "handler": self.cmd_toggle_page_view},
-                11: {
-                    "action": "select_document_format",
-                    "handler": self.cmd_on_change_document_syntax,
-                    "widget": self.document_syntax_select,
-                },
-                12: {
-                    "action": "set_text_font_config",
-                    "widget": self.font_config_header,
-                },
-                13: {"action": "set_background_color"},
-                14: add_image,
-                15: add_table,
-                16: add_chart,
-                17: add_shape,
-                18: add_textbox,
+                # PUSH to 0.0.3
+                # 10: {"action": "set_page_view", "handler": self.cmd_toggle_page_view},
+                # 11: {
+                #     "action": "select_document_format",
+                #     "handler": self.cmd_on_change_document_syntax,
+                #     "widget": self.document_syntax_select,
+                # },
+                # 12: {
+                #     "action": "set_text_font_config",
+                #     "widget": self.font_config_header,
+                # },
+                # 13: {"action": "set_background_color"},
+                # 14: add_image,
+                # 15: add_table,
+                # 16: add_chart,
+                # 17: add_shape,
+                # 18: add_textbox,
                 49: "_insert_stretch",
             }
         }
@@ -1541,6 +1530,18 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             return
 
         raise Exception(f"unknown syntax {self.document.syntax}")
+
+    def _ensure_drawer_item(self, items, cnt):
+        """Lazily create a default drawer-item slot.
+
+        Centralises the ``if cnt not in items: items[cnt] = {...}``
+        pattern used by ``init_drawer_document_config`` and
+        ``init_drawer_object_config``, removing the repeated branch
+        flagged by the maintainability auditor as switch abuse.
+        """
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        return items[cnt]
 
     def _insert_object_placeholder(self, label, marker, html=None):
         """Insert a real object placeholder at the current cursor.

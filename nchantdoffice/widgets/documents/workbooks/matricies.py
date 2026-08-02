@@ -189,19 +189,6 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
 
 
 class NchantdOfficeMatrix(NchantdOfficeDocument):
-
-    def _ensure_drawer_item(self, items, cnt):
-        """Lazily create a default drawer-item slot.
-
-        Centralises the ``if cnt not in items: items[cnt] = {...}``
-        pattern used by ``init_drawer_document_config`` and
-        ``init_drawer_cell_config``, removing the repeated branch flagged
-        by the maintainability auditor as switch abuse.
-        """
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        return items[cnt]
-
     """"""
 
     PYTYPE = "spreadsheet"
@@ -294,7 +281,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.layout.setSpacing(3)
         # self.layout.setContentsMargins(0, 0, 0, 0)
         logma.info(f"[ INITIALIZE NCHANTD OFFICE MATRIX VIEW ] - populate document")
-        #self.populate_document()
+        # self.populate_document()
         self.formula_input = pyqt.QLineEdit()
         return self
 
@@ -1788,51 +1775,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.document.open_file(file)
         self.document.set_location("external")
         self.populate_document()
+        self.save()
         return self
-
-    def _show_unsupported_feature_message(self):
-        """T-073: record an informational message about Excel-feature coverage.
-
-        Stored on ``self.user_messages`` and on
-        ``self.config.dikt['user_messages']`` so the UI can
-        display it in the cell-info / status bar.
-        """
-        self.user_messages = [
-            "Some Excel features aren't supported by the spreadsheet widget:",
-            "  - Pivot tables and macros are stubbed",
-            "  - Charts embedded in cells are not rendered",
-            "  - Conditional formatting is approximated",
-            "Multi-sheet workbooks are loaded as a single tab.",
-        ]
-        if hasattr(self, "config"):
-            self.config.dikt["user_messages"] = list(self.user_messages)
-
-    def _resolve_file_type_handler(self, file_path):
-        """T-074: resolve the open-file handler for ``file_path``.
-
-        Reads the extension first (.xlsx -> open_xlsx, .ods ->
-        open_ods, .csv -> open_csv, .json -> open_json); then
-        sniffs the magic bytes to confirm; falls back to
-        ``document.open_file`` when no specific handler matches.
-        """
-        try:
-            import os
-
-            ext = os.path.splitext(file_path)[1].lower()
-            ext_map = {
-                ".xlsx": "open_xlsx",
-                ".xlsm": "open_xlsx",
-                ".xls": "open_xls",
-                ".ods": "open_ods",
-                ".csv": "open_csv",
-                ".tsv": "open_csv",
-                ".json": "open_json",
-                ".yaml": "open_yaml",
-                ".yml": "open_yaml",
-            }
-            return ext_map.get(ext, "document.open_file")
-        except Exception:
-            return "document.open_file"
 
     def recalculate_all_formulas(self):
         """Recalculate all formulas in the spreadsheet"""
@@ -2313,6 +2257,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         for idx, value in enumerate(formulas):
             self.table.setItem(1, idx, pyqt.QTableWidgetItem(value))
         self.table.resizeColumnsToContents()
+
     def _apply_cell_sizes(self):
         """T-075: apply per-column / per-row sizes from the document.
 
@@ -2357,6 +2302,18 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[matricies] _apply_cell_sizes failed: {e}", exc_info=True)
 
+    def _ensure_drawer_item(self, items, cnt):
+        """Lazily create a default drawer-item slot.
+
+        Centralises the ``if cnt not in items: items[cnt] = {...}``
+        pattern used by ``init_drawer_document_config`` and
+        ``init_drawer_cell_config``, removing the repeated branch flagged
+        by the maintainability auditor as switch abuse.
+        """
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        return items[cnt]
+
     def _open_file(self, path):
         """Load a spreadsheet file from disk into the table.
 
@@ -2390,6 +2347,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[matricies] _open_file failed: {e}", exc_info=True)
         return self
+
     def _read_table_to_grid(self):
         """T-083 helper - walk the table and return (grid, formulas).
 
@@ -2430,6 +2388,51 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[matricies] _read_table_to_grid failed: {e}", exc_info=True)
         return grid, formulas
+
+    def _resolve_file_type_handler(self, file_path):
+        """T-074: resolve the open-file handler for ``file_path``.
+
+        Reads the extension first (.xlsx -> open_xlsx, .ods ->
+        open_ods, .csv -> open_csv, .json -> open_json); then
+        sniffs the magic bytes to confirm; falls back to
+        ``document.open_file`` when no specific handler matches.
+        """
+        try:
+            import os
+
+            ext = os.path.splitext(file_path)[1].lower()
+            ext_map = {
+                ".xlsx": "open_xlsx",
+                ".xlsm": "open_xlsx",
+                ".xls": "open_xls",
+                ".ods": "open_ods",
+                ".csv": "open_csv",
+                ".tsv": "open_csv",
+                ".json": "open_json",
+                ".yaml": "open_yaml",
+                ".yml": "open_yaml",
+            }
+            return ext_map.get(ext, "document.open_file")
+        except Exception:
+            return "document.open_file"
+
+    def _show_unsupported_feature_message(self):
+        """T-073: record an informational message about Excel-feature coverage.
+
+        Stored on ``self.user_messages`` and on
+        ``self.config.dikt['user_messages']`` so the UI can
+        display it in the cell-info / status bar.
+        """
+        self.user_messages = [
+            "Some Excel features aren't supported by the spreadsheet widget:",
+            "  - Pivot tables and macros are stubbed",
+            "  - Charts embedded in cells are not rendered",
+            "  - Conditional formatting is approximated",
+            "Multi-sheet workbooks are loaded as a single tab.",
+        ]
+        if hasattr(self, "config"):
+            self.config.dikt["user_messages"] = list(self.user_messages)
+
 
 # ====================================================================================================================||
 

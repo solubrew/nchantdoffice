@@ -251,8 +251,8 @@ NchantdOfficeTabSetModel:
               #- ['Active', 'nchantdoffice.widgets.config.automations.NchantdAutomationsManager', "{}", '067d5e25-a405-7122-8000-1574a03c4522', "4db5365e-d5fb-483c-bc08-d5d7253ff2c9", 0, 'custom_widget', 'center']
               #- ['Settings', 'nchantdoffice.widgets.config.automations.NchantdAutomationSettings', "{}", '067d5e25-a405-7122-8000-1574a03c4522', "e8fe276c-b994-4cb6-b3c6-2487ca018daf", 1, 'custom_widget', 'center']
               # Sources
-              - ['Data Sources', 'nchantdoffice.widgets.config.config_sources.NchantdOfficeDataSourcesSettings', "{}", '066c9768-8efd-7816-8000-3bd305f0de84', "c7669186-76bc-4043-b024-c9b53ba0fd84", 0, 'custom_widget', 'center']
-              - ['DataSource Manager', 'nchantdoffice.widgets.config.config_sources.NchantdOfficeSourceManager', "{}", '066c9768-8efd-7816-8000-3bd305f0de84', "c7669186-76bc-4043-b024-c9b53ba0fd84", 0, 'custom_widget', 'center']
+              - ['Data Sources', 'nchantdoffice.widgets.config.source_config.NchantdOfficeDataSourcesSettings', "{}", '066c9768-8efd-7816-8000-3bd305f0de84', "c7669186-76bc-4043-b024-c9b53ba0fd84", 0, 'custom_widget', 'center']
+              - ['DataSource Manager', 'nchantdoffice.widgets.config.source_config.NchantdOfficeSourceManager', "{}", '066c9768-8efd-7816-8000-3bd305f0de84', "c7669186-76bc-4043-b024-c9b53ba0fd84", 0, 'custom_widget', 'center']
               #- ['Available Sources', 'nchantdoffice.widgets.catalogs.NchantdDataSourcesCatalog', "{}", '066c9768-8efd-7816-8000-3bd305f0de84', "11daaa75-c1e3-4824-811f-3b2bf81cbb82", 1, 'custom_widget', 'center']
               #- ['APIs', 'nchantdoffice.widgets.config.apis.NchantdOfficeAPIFile', "{}", '066c9768-8efd-7816-8000-3bd305f0de84', "b5ac46bc-230a-4380-bb60-e6dca155cb27", 2, 'custom_widget', 'center']
               #Help Documents

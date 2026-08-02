@@ -2299,26 +2299,26 @@ dimensions:
           severity: 60
         - category: getattr_dynamic
           content: model = getattr(self.app, "model", None)
-          file: nchantdoffice/widgets/config/config_sources.py
+          file: nchantdoffice/widgets/config/source_config.py
           line: 187
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: 'key = getattr(entry.config, "get", lambda k: None)("key")'
-          file: nchantdoffice/widgets/config/config_sources.py
+          file: nchantdoffice/widgets/config/source_config.py
           line: 238
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: return getattr(self, "source_table", "") or ""
-          file: nchantdoffice/widgets/config/config_sources.py
+          file: nchantdoffice/widgets/config/source_config.py
           line: 396
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: model = getattr(self.app, "model", None) if hasattr(self, "app")
             else None
-          file: nchantdoffice/widgets/config/config_sources.py
+          file: nchantdoffice/widgets/config/source_config.py
           line: 413
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
@@ -4130,7 +4130,7 @@ dimensions:
         - count: 2
           file: nchantdoffice/widgets/documents/documents.py
         - count: 2
-          file: nchantdoffice/widgets/config/config_sources.py
+          file: nchantdoffice/widgets/config/source_config.py
         - count: 1
           file: nchantdoffice/widgets/widgets.py
         - count: 1
@@ -4170,11 +4170,11 @@ dimensions:
           line: 109
           method: go_to_previous_tab
         - class: NchantdOfficeDataSourcesSettings
-          file: nchantdoffice/widgets/config/config_sources.py
+          file: nchantdoffice/widgets/config/source_config.py
           line: 115
           method: cmd_change_data_source_pane_size
         - class: NchantdOfficeDataSourcesSettings
-          file: nchantdoffice/widgets/config/config_sources.py
+          file: nchantdoffice/widgets/config/source_config.py
           line: 161
           method: cmd_toggle_apikey_visibility
         issues:

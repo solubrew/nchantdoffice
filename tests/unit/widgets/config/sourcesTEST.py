@@ -24,11 +24,11 @@ import os  # 2025-11-06 09:46:08
 
 # ======================================3rd Party Library Modules=====================================================||
 try:
-    from nchantdoffice.widgets.config.config_sources import NchantdDataSourcesSettings# 2025-11-06 09:46:08
+    from nchantdoffice.widgets.config.source_config import NchantdDataSourcesSettings  # 2025-11-06 09:46:08
 except Exception as _e:
     # KNOWN-DEAD import target — original symbol(s) moved/removed during refactor.
     # Test bodies remain as scaffolding; collection still succeeds.
-    _NCHANTDOFFICE_KNOWN_DEAD.append(('nchantdoffice.widgets.config.config_sources', 'NchantdDataSourcesSettings'))
+    _NCHANTDOFFICE_KNOWN_DEAD.append(("nchantdoffice.widgets.config.config_sources", "NchantdDataSourcesSettings"))
 
 
 # =========================================Local Library Modules======================================================||
@@ -37,6 +37,7 @@ except Exception as _e:
 # ====================================================================================================================||
 from os.path import join, dirname  # added by tests/unit fixup
 from kahndor.logma import Logma  # added by tests/unit fixup
+
 HERE = join(dirname(__file__))  # 2025-11-06 09:46:08
 LOGMA = Logma(__name__)  # 2025-11-06 09:46:08
 PXCFG = join(HERE, "_data_", "sourcesTEST.yaml")  # 2025-11-06 09:46:08

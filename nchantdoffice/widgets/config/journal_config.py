@@ -43,17 +43,17 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
 
     def __init__(self, parent=None, cfg=None):
         """ """
-        logma.info(f"[config_journal] NchantdOfficeJournalSettings.__init__ parent={type(parent).__name__ if parent else None}")
-        try:
-            super().__init__(parent, cfg)
-            self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeJournalSettings").override(cfg))
-        except Exception as e:
-            logma.error(f"[config_journal] NchantdOfficeJournalSettings.__init__ failed: {e}", exc_info=True)
-            raise
+        logma.info(
+            f"[config_journal] NchantdOfficeJournalSettings.__init__ parent={type(parent).__name__ if parent else None}"
+        )
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeJournalSettings").override(cfg))
 
     def initModel(self):
         """"""
-        logma.info("[config_journal] initModel: initialising journal setting flags (all None - store calls commented out)")
+        logma.info(
+            "[config_journal] initModel: initialising journal setting flags (all None - store calls commented out)"
+        )
         try:
             super().initModel()
             self.journal_edit_enable = None  # self.app.model.store.get_settings_journal_edit_enable()
@@ -64,7 +64,9 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
             self.journal_history_expirary_length = (
                 None  # self.app.model.store.get_settings_journal_history_expirary_length()
             )
-            self.journal_share_instance_enable = None  # self.app.model.store.get_settings_journal_share_instance_enable()
+            self.journal_share_instance_enable = (
+                None  # self.app.model.store.get_settings_journal_share_instance_enable()
+            )
             self.journal_tree_enable = None  # self.app.model.store.get_settings_journal_tree_enable()
             logma.debug("[config_journal] initModel: 9 journal setting flags initialised")
         except Exception as e:
@@ -227,7 +229,9 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
 
     def save(self):
         """"""
-        logma.info("[config_journal] save: all change-detection blocks are commented out - delegating to super().save()")
+        logma.info(
+            "[config_journal] save: all change-detection blocks are commented out - delegating to super().save()"
+        )
         # if self.enable_today_tab.changed:
         #     self.app.model.store.store_settings_journal()
         # if self.enable_daily_headlines.changed:

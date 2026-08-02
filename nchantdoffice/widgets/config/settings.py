@@ -194,8 +194,9 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             self.doc_type_pane_layout = pyqt.QVBoxLayout()
             self.doc_type_pane_slot.setLayout(self.doc_type_pane_layout)
             parent_layout.addWidget(self.doc_type_pane_slot)
-            initial = self.doc_type_selector.currentText() if hasattr(self, "doc_type_selector") else options[0]
-            self._render_doc_type_pane(initial)
+            #BUG
+            #initial = self.doc_type_selector.currentText() if hasattr(self, "doc_type_selector") else options[0]
+            #self._render_doc_type_pane(initial)
             logma.debug(f"[settings] doc-type selector wired with options={options}")
         except Exception as e:
             logma.error(

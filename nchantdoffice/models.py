@@ -2669,6 +2669,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # internally; we only need to keep the log call from
         # blowing up the user-visible save.
         doc_payload = pydoc.to_dict()
+        logma.info(f"PAYLOAD {doc_payload}")
         data = {"table": {"doc_media": {"records": [[pydoc.syntax]], "columns": ["syntax_txt"]}}}
         column = "did"
         value = pydoc.did

@@ -24,11 +24,11 @@ import os  # 2025-11-06 09:46:02
 
 # ======================================3rd Party Library Modules=====================================================||
 try:
-    from nchantdoffice.widgets.config.config_journal import NchantdJournalSettings# 2025-11-06 09:46:02
+    from nchantdoffice.widgets.config.journal_config import NchantdJournalSettings  # 2025-11-06 09:46:02
 except Exception as _e:
     # KNOWN-DEAD import target — original symbol(s) moved/removed during refactor.
     # Test bodies remain as scaffolding; collection still succeeds.
-    _NCHANTDOFFICE_KNOWN_DEAD.append(('nchantdoffice.widgets.config.config_journal', 'NchantdJournalSettings'))
+    _NCHANTDOFFICE_KNOWN_DEAD.append(("nchantdoffice.widgets.config.config_journal", "NchantdJournalSettings"))
 
 
 # =========================================Local Library Modules======================================================||
@@ -37,6 +37,7 @@ except Exception as _e:
 # ====================================================================================================================||
 from os.path import join, dirname  # added by tests/unit fixup
 from kahndor.logma import Logma  # added by tests/unit fixup
+
 HERE = join(dirname(__file__))  # 2025-11-06 09:46:02
 LOGMA = Logma(__name__)  # 2025-11-06 09:46:02
 PXCFG = join(HERE, "_data_", "journalTEST.yaml")  # 2025-11-06 09:46:02
