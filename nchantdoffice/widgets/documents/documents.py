@@ -982,7 +982,7 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
             logma.error(f"Failed to open remote document: {e}")
         return self
 
-    def populate_data(self, data):
+    def populate_data(self, data=None):
         """"""
         # TODO implement method
         self.document.set_location("internal")
