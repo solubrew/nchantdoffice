@@ -171,12 +171,13 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
         self.tab_edit_pane = NchantdOfficeTabEditPane(self, cfg)
         items[cnt]["widget"] = self.tab_edit_pane
         cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {"layout": "horizontal", "handler": self.cmd_tag_edit}
-        self.note_edit_pane = NchantdOfficeNoteEditPane(self, cfg)
-        items[cnt]["widget"] = self.note_edit_pane
-        cnt += 1
+        # PUSH to 0.0.3
+        # if cnt not in items:
+        #     items[cnt] = default_action
+        # cfg = {"layout": "horizontal", "handler": self.cmd_tag_edit}
+        # self.note_edit_pane = NchantdOfficeNoteEditPane(self, cfg)
+        # items[cnt]["widget"] = self.note_edit_pane
+        # cnt += 1
         return items
 
     def init_toolbox(self):

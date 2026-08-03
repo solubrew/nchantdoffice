@@ -20,6 +20,7 @@
     security: seclvl2
     <(WT)>: -32
 """
+
 # -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
@@ -94,6 +95,8 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             cfg["document"] = {"data": {"unit": {}}}
         self.config.override(cfg)
         super().initModel(self.config.dikt)
+        self.document = self.app.model.codex.init_browser({"document": self.config.get("document", {})})
+        self.document.load_document()
         self._load_banners()
         return self
 
@@ -110,13 +113,9 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             if not isinstance(url, str) or not url:
                 return
             self._referral_url = url
-            logma.info(
-                f"[ad_tab] referral URL set: {url}"
-            )
+            logma.info(f"[ad_tab] referral URL set: {url}")
         except Exception as e:
-            logma.warning(
-                f"[ad_tab] show_referral_url failed: {e}"
-            )
+            logma.warning(f"[ad_tab] show_referral_url failed: {e}")
         return self
 
     def initView(self, cfg=None):
@@ -192,17 +191,13 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
 
         title = NchantdLabel(card)
         title.setText(f"<b style='color: {fg};'>{banner.get('title', '')}</b>")
-        title.setStyleSheet(
-            f"color: {fg}; font-size: 14pt; background-color: {bg}; padding: 6px;"
-        )
+        title.setStyleSheet(f"color: {fg}; font-size: 14pt; background-color: {bg}; padding: 6px;")
         card.addWidget(title)
 
         if banner.get("subtitle"):
             sub = NchantdLabel(card)
             sub.setText(banner["subtitle"])
-            sub.setStyleSheet(
-                f"color: {fg}; background-color: {bg}; padding: 6px;"
-            )
+            sub.setStyleSheet(f"color: {fg}; background-color: {bg}; padding: 6px;")
             card.addWidget(sub)
 
         if banner.get("cta_text") and banner.get("cta_url"):
@@ -212,15 +207,14 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             cta.clicked.connect(self._make_open_url_handler(url))
             card.addWidget(cta)
 
-        card.setStyleSheet(
-            f"QGroupBox {{ background-color: {bg}; border-radius: 8px; padding: 6px; }}"
-        )
+        card.setStyleSheet(f"QGroupBox {{ background-color: {bg}; border-radius: 8px; padding: 6px; }}")
         return card
 
     def _load_banners(self):
         """Fetch banners from nchantdoffice_com; fall back to local list."""
         try:
             from nchantdoffice.utilities.referral import ReferralAPIClient
+
             client = ReferralAPIClient()
             data = client.fetch_banners()
             if data and isinstance(data, list):
@@ -247,6 +241,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         instead.
         """
         NchantdOfficeAdTab.redirect_to_get_pro(self.app)
+
     # ------------------------------------------------------------------
     # Public navigation helper (Sprint 28)
     # ------------------------------------------------------------------
@@ -287,8 +282,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             view = getattr(app, "view", None) if app is not None else None
             if view is None:
                 logma.info(
-                    "[ad_tab] no app.view available; "
-                    "skipping redirect to %s",
+                    "[ad_tab] no app.view available; " "skipping redirect to %s",
                     target_url,
                 )
                 return False
@@ -296,8 +290,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             pane = getattr(view, "panes", {}).get("left")
             if pane is None:
                 logma.info(
-                    "[ad_tab] no left pane available; "
-                    "skipping redirect to %s",
+                    "[ad_tab] no left pane available; " "skipping redirect to %s",
                     target_url,
                 )
                 return False
@@ -305,18 +298,14 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             inner_tree = getattr(pane, "tree", None)
             if inner_tree is None:
                 logma.info(
-                    "[ad_tab] no inner tree on left pane; "
-                    "skipping redirect to %s",
+                    "[ad_tab] no inner tree on left pane; " "skipping redirect to %s",
                     target_url,
                 )
                 return False
 
             # Resolve the nchantrs treeview WRAPPER (not the
             # bare QTreeWidget) that owns set_current_node.
-            tree_view = (
-                getattr(inner_tree, "view", None)
-                or inner_tree
-            )
+            tree_view = getattr(inner_tree, "view", None) or inner_tree
 
             # Locate the "Nchantd Account" node (the embedded
             # browser for the nchantdoffice_com account
@@ -351,13 +340,13 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             if hasattr(tree_view, "set_current_node"):
                 tree_view.set_current_node(target_item)
                 logma.info(
-                    "[ad_tab] routed to %s via "
-                    "tree_view.set_current_node",
+                    "[ad_tab] routed to %s via " "tree_view.set_current_node",
                     target_item.text(0),
                 )
                 return True
             elif hasattr(inner_tree, "itemPressed"):
                 from PySide6 import QtCore
+
                 inner_tree.scrollToItem(target_item)
                 QtCore.QCoreApplication.postEvent(
                     inner_tree.viewport(),
@@ -371,8 +360,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                 )
                 return True
             logma.info(
-                "[ad_tab] no navigation path available; "
-                "user can navigate manually to reach %s",
+                "[ad_tab] no navigation path available; " "user can navigate manually to reach %s",
                 target_url,
             )
             return False
@@ -400,8 +388,10 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         auditor (the body is a Call expression) and makes the
         slot testable in isolation.
         """
+
         def _handler(_checked=False, _url=url):
             self._open_url(_url)
+
         return _handler
 
 
