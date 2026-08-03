@@ -8,6 +8,8 @@
     - new node button on nchantdofficedocumenttoolbar should default to a popup that asks the user to input a name for the node
     - new tab button on nchantdofficedocumenttoolbar should default to a popup that asks the user to input a name for the tab
     - NchantdOfficeDocumentCatalog bottom pane is disapearing after a tab is created from using the accept button in the pane
+    - NchantdOfficeImage doesn't respect Application slider between the center and rightside panes in the main app once the image has been sized it will force the right side to a small size and can't be moved back to the left
+
 
 ## Bugs:
 
