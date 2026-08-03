@@ -842,14 +842,11 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         """"""
         super().initView(cfg)
         self.set_notes(self.config.dikt.get("notes", []))
-
-        # PUSH to 0.0.3 force external until
-        self.document.set_location("external")
         if self.document.location == "external":
             self.open_file(self.document.file_path)
+        elif self.document.location == "internal":
+            self.populate_data()
         # PUSH to 0.0.3
-        # elif self.document.location == "internal":
-        #    self.populate_data()
         # elif self.document.location == "cloud":
         #    self.connect_to_file()
         else:
@@ -961,10 +958,9 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
             if file is None:
                 return
         self.document.open_file(file)  # The Pyffice document is not connected directly with the viewable pdf render
-        self.document.set_location("external")
+        self.document.set_location("external")  # PUSH to 0.0.3 - transition to local and cloud
         self.populate_document()
         self.save()
-
 
     def open_local(self):
         """Trigger the local file open dialog."""
@@ -985,6 +981,12 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         except Exception as e:
             logma.error(f"Failed to open remote document: {e}")
         return self
+
+    def populate_data(self, data):
+        """"""
+        # TODO implement method
+        self.document.set_location("internal")
+        self.save()
 
     def populate_document(self, file=None):
         """"""

@@ -28,7 +28,10 @@ from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.groups import NchantdGridScrollGroupBox
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocumentManager
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
-from nchantdoffice.widgets.panes.document_settings import get_settings_pane_for_doc_type
+from nchantdoffice.widgets.panes.document_settings import (
+    get_settings_pane_for_doc_type,
+    NchantdOfficeDocumentConfigPane,
+)
 
 # T-NEW-028 — Right-side tab visibility. The fallback list is the
 # legacy hardcoded 4-tab default returned when ``vw_tab`` is empty
@@ -115,9 +118,8 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         self.refocus_right_side_tab = (
             None  # settings[settings["label_txt"] == "refocus_right_side_tab"].values.tolist()[0]
         )
-        self.default_right_side_tab = (
-            None  # settings[settings["label_txt"] == "default_right_side_tab"].values.tolist()[0]
-        )
+        self.default_right_side_tab = "4 - Ad"  # if not self.app.user.has_pro else self.get_setting("default_right_side_tab")# settings[settings["label_txt"] == "default_right_side_tab"].values.tolist()[0]
+
         self.show_right_side_tab = None  # settings[settings["label_txt"] == "show_right_side_tab"].values.tolist()[0]
         self.quick_launch_toolbar_change = False
         self.quick_launch_document_types_change = False
@@ -149,7 +151,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # dropdown; the registered pane class for that type renders
         # its common + type-specific fields into the render slot
         # below. Unknown doc types fall back to the shared base.
-        self._initialize_doc_type_selector(primary_layout)
+        # self._initialize_doc_type_selector(primary_layout)
 
         # Existing 3-panel layout (left / center / right) is unchanged.
         body_layout = pyqt.QHBoxLayout()
@@ -160,87 +162,6 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
 
         self.layout.addWidget(self.primary_settings_group)
         return self
-
-    def _initialize_doc_type_selector(self, parent_layout):
-        """Wire the doc-type dropdown + per-type settings pane slot
-        (T-NEW-027). The dropdown's options come from the registry's
-        ``known_types()`` (which mirrors the document_types_df rows
-        that exist today) so the selector is automatically in sync with
-        the registered doc types. The render slot is a vertical
-        layout that holds the currently selected pane.
-        """
-        try:
-            from nchantdoffice.widgets.panes.document_settings import (
-                DocumentTypeSettingsRegistry,
-                get_settings_pane_for_doc_type,
-            )
-
-            options = DocumentTypeSettingsRegistry.known_types()
-            if not options:
-                options = ["Matrix", "Notebook", "Image", "Script"]
-            doc_type_select_cfg = {
-                "label": "Doc Type: ",
-                "layout": "horizontal",
-                "options": options,
-                "value": getattr(self, "selected_doc_type", options[0]),
-                "handler": self.cmd_on_change_doc_type_select,
-            }
-            self.doc_type_selector = NchantdDropDown(self, doc_type_select_cfg)
-            self.doc_type_selector.initWidget()
-            parent_layout.addWidget(self.doc_type_selector)
-            # The per-type pane slot. Render the currently selected
-            # type immediately so the UI is populated when the tab opens.
-            self.doc_type_pane_slot = pyqt.QWidget()
-            self.doc_type_pane_layout = pyqt.QVBoxLayout()
-            self.doc_type_pane_slot.setLayout(self.doc_type_pane_layout)
-            parent_layout.addWidget(self.doc_type_pane_slot)
-            #BUG
-            #initial = self.doc_type_selector.currentText() if hasattr(self, "doc_type_selector") else options[0]
-            #self._render_doc_type_pane(initial)
-            logma.debug(f"[settings] doc-type selector wired with options={options}")
-        except Exception as e:
-            logma.error(
-                f"[settings] _initialize_doc_type_selector failed: {e}",
-                exc_info=True,
-            )
-
-    def _render_doc_type_pane(self, doc_type: str):
-        """Resolve ``doc_type`` via the registry and render its fields
-        into ``self.doc_type_pane_layout``. Called by
-        ``_initialize_doc_type_selector`` on first display and by
-        ``cmd_on_change_doc_type_select`` on every dropdown change.
-        """
-        try:
-            from nchantdoffice.widgets.panes.document_settings import (
-                get_settings_pane_for_doc_type,
-            )
-
-            pane_class = get_settings_pane_for_doc_type(doc_type)
-            # Tear down any previously rendered widgets so we don't
-            # leak. ``takeAt(0)`` walks the layout's children and
-            # deletes them one by one.
-            while self.doc_type_pane_layout.count():
-                item = self.doc_type_pane_layout.takeAt(0)
-                if item is not None:
-                    widget = item.widget()
-                    if widget is not None:
-                        widget.deleteLater()
-            pane = pane_class(self, cfg=None)
-            pane.initModel()
-            pane.initView()
-            # The pane renders its fields into pane._fields via the
-            # shared base's initView. Future commits can swap the
-            # sentinel mapping for real ``NchantdCheckbox`` /
-            # ``NchantdDropDown`` widgets.
-            self.doc_type_pane_layout.addWidget(pane)
-            logma.debug(
-                f"[settings] rendered {pane_class.__name__} for " f"doc_type={doc_type!r} ({len(pane._fields)} fields)"
-            )
-        except Exception as e:
-            logma.error(
-                f"[settings] _render_doc_type_pane({doc_type!r}) failed: {e}",
-                exc_info=True,
-            )
 
     def initWidget(self):
         """"""
@@ -756,14 +677,6 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
             return list(RIGHT_PANE_TAB_FALLBACK)
 
-    def _get_right_pane_settings_arg():
-        """Module-level shim for ``get_right_pane_tab_options`` callers that
-        pass the settings instance directly (rather than calling the
-        instance method). Returns ``None`` -- callers must supply the
-        settings argument explicitly when using the module-level entry.
-        """
-        return None
-
     def cmd_on_change_visible_right_tab(settings, tid, app_data_type, visible):
         """Toggle ``visible_bit`` for a right-side tab row.
 
@@ -879,71 +792,6 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         #     data.append([self.default_tab_switch.currentText()])
         return self
 
-    def _initialize_center(self, primary_layout):
-        """"""
-        # Center Settings Group
-        center_settings_group = NchantdGridScrollGroupBox()
-        center_settings_group.scroll.setHorizontalScrollBarPolicy(pyqt.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        center_settings_group.setTitle("Center Pane Settings")
-
-        # Per-document-type launch-catalog toggle: each registered
-        # document type gets its own row in the center settings grid.
-        # Each row is a NchantdCheckbox (text + handler + value) wired
-        # to cmd_on_change_document_catalog. Previously this loop
-        # rendered NchantdOfficeDocumentConfigPane (a settings pane)
-        # per row, but passed it checkbox-style cfg keys (text /
-        # handler / value) -- the pane ignored them and the row
-        # rendered as an empty widget. The T-NEW-027 doc-type
-        # selector at the top of the Interface tab is the new
-        # canonical per-doc-type settings surface; this loop is just
-        # the "Show Launch Catalog" checkbox list.
-        # TODO implement in NchantdOfficeDocumentConfigPane - features
-        #  - auto save document or not
-        #  - default document location to external with config to set default for document type to internal or cloud
-        #  -
-        row = 0
-        for _, document in self.document_types_df.iterrows():
-            label_text = f"{document.get('name_txt', 'Document')}: Show Launch Catalog"
-            cfg = {
-                "text": label_text,
-                "layout": "horizontal",
-                "size": ["auto", "auto"],
-                "handler": self.cmd_on_change_document_catalog,
-                "value": getattr(self, "show_document_catalog", False),
-            }
-            catalog_toggle = NchantdCheckbox(self, cfg).initWidget()
-            center_settings_group.addWidget(catalog_toggle, row, 0)
-            row += 1
-
-        # Toolbar name-log popup toggle (T-016 surface)
-        cfg = {
-            "text": "Show Tab/Node Name Log Dialog",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "handler": self.cmd_on_change_default_tab_bit,
-            "value": getattr(self, "create_default_tab", False),
-        }
-        self.default_tab = NchantdCheckbox(self, cfg).initWidget()
-        center_settings_group.addWidget(self.default_tab, row, 0)
-        row += 1
-
-        # T-NEW-032: rename a tab to the opened file's basename
-        # when a local file is opened via cmd_open_local_file.
-        # Default False -- matches the current behaviour where
-        # the tab keeps whatever name it had at add-tab time.
-        cfg = {
-            "text": "Rename tab to file name on file open",
-            "layout": "horizontal",
-            "size": ["auto", "auto"],
-            "handler": self.cmd_on_change_update_tab_name_to_file_name,
-            "value": getattr(self, "update_tab_name_to_file_name", False),
-        }
-        self.update_tab_name_to_file_name_entry = NchantdCheckbox(self, cfg).initWidget()
-        center_settings_group.addWidget(self.update_tab_name_to_file_name_entry, row, 0)
-        row += 1
-
-        primary_layout.addLayout(center_settings_group.layout)
-
     def _build_right_pane_visibility_checks(self):
         """Build the right-pane tab visibility checklist widget
         (T-NEW-028). One checkbox per row in ``vw_tab`` filtered by
@@ -992,43 +840,80 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
                 )
         return group
 
-    def _query_right_pane_tab_rows(self):
-        """Run the right-side tab query and return rows as a list of
-        dicts (off-screen-test-friendly shape). Returns ``None`` when
-        the store is unavailable.
+    def _get_right_pane_settings_arg():
+        """Module-level shim for ``get_right_pane_tab_options`` callers that
+        pass the settings instance directly (rather than calling the
+        instance method). Returns ``None`` -- callers must supply the
+        settings argument explicitly when using the module-level entry.
         """
-        app = getattr(self, "app", None)
-        if app is None:
-            return None
-        model = getattr(app, "model", None)
-        if model is None:
-            return None
-        store = getattr(model, "store", None)
-        if store is None:
-            return None
-        cfg = {
-            "WHERE": {
-                "IN": {
-                    "tabset_type_txt": ["right"],
-                },
-            },
-            "ORDER": ["position_int"],
-        }
-        rows = store.get_table("vw_tab", cfg)
-        try:
-            import pandas as pd
+        return None
 
-            if isinstance(rows, pd.DataFrame):
-                if len(rows) == 0:
-                    return []
-                return rows.to_dict(orient="records")
-        except Exception:
-            pass
-        # Fallback: assume rows is already iterable of dicts.
-        try:
-            return list(rows)
-        except Exception:
-            return []
+    def _initialize_center(self, primary_layout):
+        """"""
+        # Center Settings Group
+        center_settings_group = NchantdGridScrollGroupBox()
+        center_settings_group.scroll.setHorizontalScrollBarPolicy(pyqt.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        center_settings_group.setTitle("Center Pane Settings")
+
+        # Per-document-type launch-catalog toggle: each registered
+        # document type gets its own row in the center settings grid.
+        # Each row is a NchantdCheckbox (text + handler + value) wired
+        # to cmd_on_change_document_catalog. Previously this loop
+        # rendered NchantdOfficeDocumentConfigPane (a settings pane)
+        # per row, but passed it checkbox-style cfg keys (text /
+        # handler / value) -- the pane ignored them and the row
+        # rendered as an empty widget. The T-NEW-027 doc-type
+        # selector at the top of the Interface tab is the new
+        # canonical per-doc-type settings surface; this loop is just
+        # the "Show Launch Catalog" checkbox list.
+        # TODO implement in NchantdOfficeDocumentConfigPane - features
+        #  - auto save document or not
+        #  - default document location to external with config to set default for document type to internal or cloud
+        #  -
+        row = 0
+        for _, document in self.document_types_df.iterrows():
+            label_text = f"{document.get('name_txt', 'Document')}: Show Launch Catalog"
+            # cfg = {
+            #     "text": label_text,
+            #     "layout": "horizontal",
+            #     "size": ["auto", "auto"],
+            #     "handler": self.cmd_on_change_document_catalog,
+            #     "value": getattr(self, "show_document_catalog", False),
+            # }
+            # catalog_toggle = NchantdCheckbox(self, cfg).initWidget()
+            cfg = {}
+            document_config_pane = NchantdOfficeDocumentConfigPane(self, cfg).initWidget()
+            center_settings_group.addWidget(document_config_pane, row, 0)
+            row += 1
+
+        # Toolbar name-log popup toggle (T-016 surface)
+        cfg = {
+            "text": "Show Tab/Node Name Log Dialog",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_on_change_default_tab_bit,
+            "value": getattr(self, "create_default_tab", False),
+        }
+        self.default_tab = NchantdCheckbox(self, cfg).initWidget()
+        center_settings_group.addWidget(self.default_tab, row, 0)
+        row += 1
+
+        # T-NEW-032: rename a tab to the opened file's basename
+        # when a local file is opened via cmd_open_local_file.
+        # Default False -- matches the current behaviour where
+        # the tab keeps whatever name it had at add-tab time.
+        cfg = {
+            "text": "Rename tab to file name on file open",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_on_change_update_tab_name_to_file_name,
+            "value": getattr(self, "update_tab_name_to_file_name", False),
+        }
+        self.update_tab_name_to_file_name_entry = NchantdCheckbox(self, cfg).initWidget()
+        center_settings_group.addWidget(self.update_tab_name_to_file_name_entry, row, 0)
+        row += 1
+
+        primary_layout.addLayout(center_settings_group.layout)
 
     def _initialize_left_side(self, primary_layout):
         """"""
@@ -1156,6 +1041,125 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # make visibilty of Ad tab forced to on and read only config for free users
         self.right_pane_tab_visibility_checks = self._build_right_pane_visibility_checks()
         right_side_settings_group.addWidget(self.right_pane_tab_visibility_checks, 2, 0)
+
+    def _initialize_doc_type_selector(self, parent_layout):
+        """Wire the doc-type dropdown + per-type settings pane slot
+        (T-NEW-027). The dropdown's options come from the registry's
+        ``known_types()`` (which mirrors the document_types_df rows
+        that exist today) so the selector is automatically in sync with
+        the registered doc types. The render slot is a vertical
+        layout that holds the currently selected pane.
+        """
+        try:
+            from nchantdoffice.widgets.panes.document_settings import (
+                DocumentTypeSettingsRegistry,
+                get_settings_pane_for_doc_type,
+            )
+
+            options = DocumentTypeSettingsRegistry.known_types()
+            if not options:
+                options = ["Matrix", "Notebook", "Image", "Script"]
+            doc_type_select_cfg = {
+                "label": "Doc Type: ",
+                "layout": "horizontal",
+                "options": options,
+                "value": getattr(self, "selected_doc_type", options[0]),
+                "handler": self.cmd_on_change_doc_type_select,
+            }
+            self.doc_type_selector = NchantdDropDown(self, doc_type_select_cfg)
+            self.doc_type_selector.initWidget()
+            parent_layout.addWidget(self.doc_type_selector)
+            # The per-type pane slot. Render the currently selected
+            # type immediately so the UI is populated when the tab opens.
+            self.doc_type_pane_slot = pyqt.QWidget()
+            self.doc_type_pane_layout = pyqt.QVBoxLayout()
+            self.doc_type_pane_slot.setLayout(self.doc_type_pane_layout)
+            parent_layout.addWidget(self.doc_type_pane_slot)
+            # BUG
+            # initial = self.doc_type_selector.currentText() if hasattr(self, "doc_type_selector") else options[0]
+            # self._render_doc_type_pane(initial)
+            logma.debug(f"[settings] doc-type selector wired with options={options}")
+        except Exception as e:
+            logma.error(
+                f"[settings] _initialize_doc_type_selector failed: {e}",
+                exc_info=True,
+            )
+
+    def _query_right_pane_tab_rows(self):
+        """Run the right-side tab query and return rows as a list of
+        dicts (off-screen-test-friendly shape). Returns ``None`` when
+        the store is unavailable.
+        """
+        app = getattr(self, "app", None)
+        if app is None:
+            return None
+        model = getattr(app, "model", None)
+        if model is None:
+            return None
+        store = getattr(model, "store", None)
+        if store is None:
+            return None
+        cfg = {
+            "WHERE": {
+                "IN": {
+                    "tabset_type_txt": ["right"],
+                },
+            },
+            "ORDER": ["position_int"],
+        }
+        rows = store.get_table("vw_tab", cfg)
+        try:
+            import pandas as pd
+
+            if isinstance(rows, pd.DataFrame):
+                if len(rows) == 0:
+                    return []
+                return rows.to_dict(orient="records")
+        except Exception:
+            pass
+        # Fallback: assume rows is already iterable of dicts.
+        try:
+            return list(rows)
+        except Exception:
+            return []
+
+    def _render_doc_type_pane(self, doc_type: str):
+        """Resolve ``doc_type`` via the registry and render its fields
+        into ``self.doc_type_pane_layout``. Called by
+        ``_initialize_doc_type_selector`` on first display and by
+        ``cmd_on_change_doc_type_select`` on every dropdown change.
+        """
+        try:
+            from nchantdoffice.widgets.panes.document_settings import (
+                get_settings_pane_for_doc_type,
+            )
+
+            pane_class = get_settings_pane_for_doc_type(doc_type)
+            # Tear down any previously rendered widgets so we don't
+            # leak. ``takeAt(0)`` walks the layout's children and
+            # deletes them one by one.
+            while self.doc_type_pane_layout.count():
+                item = self.doc_type_pane_layout.takeAt(0)
+                if item is not None:
+                    widget = item.widget()
+                    if widget is not None:
+                        widget.deleteLater()
+            pane = pane_class(self, cfg=None)
+            pane.initModel()
+            pane.initView()
+            # The pane renders its fields into pane._fields via the
+            # shared base's initView. Future commits can swap the
+            # sentinel mapping for real ``NchantdCheckbox`` /
+            # ``NchantdDropDown`` widgets.
+            self.doc_type_pane_layout.addWidget(pane)
+            logma.debug(
+                f"[settings] rendered {pane_class.__name__} for " f"doc_type={doc_type!r} ({len(pane._fields)} fields)"
+            )
+        except Exception as e:
+            logma.error(
+                f"[settings] _render_doc_type_pane({doc_type!r}) failed: {e}",
+                exc_info=True,
+            )
 
 
 # Module-level aliases so off-screen tests + non-method callers can

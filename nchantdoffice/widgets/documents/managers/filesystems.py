@@ -846,11 +846,14 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             "widget": self.file_search_method_select,
             "handler": self.cmd_on_file_search_method_change,
         }
-        super().initView(cfg)
         self.table_layout = pyqt.QHBoxLayout()
-        cfg = {}
+        fs_cfg = {}
         logma.info(f"Initialize File System")
-        self.fs_tree = NchantdFileSystem(self, cfg).initWidget()
+        self.fs_tree = NchantdFileSystem(self, fs_cfg).initWidget()
+        super().initView(cfg)
+
+
+
         self.fs_tree.itemExpanded.connect(self.cmd_on_node_expansion)
         self.fs_tree.itemPressed.connect(self.cmd_on_node_selection)  # may need to move to the underlieing widget
         self.fs_tree.setFixedWidth(self.width() * 0.15)

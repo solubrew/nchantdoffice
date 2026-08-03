@@ -99,7 +99,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         # Load referral code from user config, or generate one
         self.document = self.app.model.codex.init_config(document)
         self.document.load_document()
-        self._load_or_generate_code()
+        self._load_or_generate_code()  # TODO: must always load from external source
         self._fetch_dashboard()
         return self
 
