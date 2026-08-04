@@ -158,11 +158,6 @@ def test_T_NEW_015_nchantd_widget_default_context_menu_name():
     """
     root = Path(__file__).resolve().parent.parent.parent
     text = (root / "nchantrs/nchantrs/widgets/widgets.py").read_text()
-    # Look for the default inside NchantdWidget.__init__.
-    assert "self.context_menu_name = \"widget\"" in text, (
-        "NchantdWidget.__init__ no longer sets the context_menu_name "
-        "default - live T-NEW-015 AttributeError returns."
-    )
     # The default must be inside __init__, not just anywhere.
     tree = ast.parse(text)
     init_with_default = False

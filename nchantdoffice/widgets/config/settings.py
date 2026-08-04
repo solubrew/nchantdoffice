@@ -873,17 +873,15 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         row = 0
         for _, document in self.document_types_df.iterrows():
             label_text = f"{document.get('name_txt', 'Document')}: Show Launch Catalog"
-            # cfg = {
-            #     "text": label_text,
-            #     "layout": "horizontal",
-            #     "size": ["auto", "auto"],
-            #     "handler": self.cmd_on_change_document_catalog,
-            #     "value": getattr(self, "show_document_catalog", False),
-            # }
-            # catalog_toggle = NchantdCheckbox(self, cfg).initWidget()
-            cfg = {}
-            document_config_pane = NchantdOfficeDocumentConfigPane(self, cfg).initWidget()
-            center_settings_group.addWidget(document_config_pane, row, 0)
+            cfg = {
+                "text": label_text,
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+                "handler": self.cmd_on_change_document_catalog,
+                "value": getattr(self, "show_document_catalog", False),
+            }
+            catalog_toggle = NchantdCheckbox(self, cfg).initWidget()
+            center_settings_group.addWidget(catalog_toggle, row, 0)
             row += 1
 
         # Toolbar name-log popup toggle (T-016 surface)

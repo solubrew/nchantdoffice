@@ -290,9 +290,8 @@ class NchantdOfficeDocumentMixin:
             return "save"
         if not isinstance(location, str):
             return "save"
-        # TODO implement location tracking default to local_file_system - options (local_file_system, "cloud", "nchantdoffice_instance")
-        # if location == "internal":
-        #     return "save_database"
+        if location == "internal":
+            return "save_database"
         return "save"
 
     def create_data_table(self):
@@ -793,10 +792,6 @@ class NchantdOfficeDocumentMixin:
             return self.update_document()
         logma.warning(f"update_document_page({page_num}) called but multi-page support is not implemented")
         return self
-
-    def _save_action(self, document):
-        """"""
-        return "save"
 
     def _store_document(self):
         """"""

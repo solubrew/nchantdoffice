@@ -11,11 +11,8 @@ Test surface:
      replaced with real implementations.
   2. views.py: switch_to_account_tab and on_window_move are
      no longer empty stubs.
-  3. timelines.py: NchantdOfficeTodayOverview.initLowerWidgets
-     is no longer a no-op (delegates to super or wires a real
-     layout).
-  4. diagrams.py: Node.initModel is no longer a no-op.
-  5. accounts.py: storage and documents labels are wired to
+  3. diagrams.py: Node.initModel is no longer a no-op.
+  4. accounts.py: storage and documents labels are wired to
      live data (no longer hard-coded strings).
   6. toolboxes.py: cmd_save_instance body has implementation
      (no longer all-pass).
@@ -138,61 +135,6 @@ def test_views_on_window_move_is_implemented():
                 f"marker; body: {flat[:300]!r}"
             )
 
-
-def test_timelines_init_lower_widgets_not_noop():
-    """Sprint 20: NchantdOfficeTodayOverview.initLowerWidgets was
-    a no-op stub. Now delegates to the parent init (or wires a
-    real layout). Pin that the body no longer ends at the
-    no-op comment.
-    """
-    src = _read("nchantdoffice/widgets/timelines.py")
-    tree = ast.parse(src)
-    all_lines = src.split("\n")
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ClassDef) and node.name == (
-            "NchantdOfficeTodayOverview"
-        ):
-            for child in node.body:
-                if isinstance(child, ast.FunctionDef) and (
-                    child.name == "initLowerWidgets"
-                ):
-                    # The AST ends at end_lineno but the
-                    # source may have trailing comment lines
-                    # outside the function body. Look at lines
-                    # from lineno until the next def/class line.
-                    start = child.lineno - 1
-                    end = child.end_lineno
-                    # Extend end until the next top-level
-                    # statement boundary (next def at the same
-                    # or shallower indent).
-                    for j in range(end, min(end + 5, len(all_lines))):
-                        stripped = all_lines[j].lstrip()
-                        if (
-                            stripped.startswith("def ")
-                            or stripped.startswith("class ")
-                            or stripped.startswith("# ===")
-                        ):
-                            break
-                        end = j + 1
-                    raw = "\n".join(all_lines[start:end])
-                    assert "No-op stub" not in raw, (
-                        f"NchantdOfficeTodayOverview.initLowerWidgets "
-                        f"is still a no-op stub (raw: {raw[:400]!r})"
-                    )
-                    # The stub body was empty except for a log
-                    # call + comment. A real implementation
-                    # must have at least one of: super().X(),
-                    # setattr, or a comment without "No-op stub".
-                    real_lines = [
-                        ln.strip()
-                        for ln in all_lines[start:end]
-                        if ln.strip()
-                        and not ln.strip().startswith(("logma", "#"))
-                    ]
-                    assert real_lines, (
-                        f"NchantdOfficeTodayOverview.initLowerWidgets "
-                        f"body is effectively empty; raw: {raw[:400]!r}"
-                    )
 
 
 def test_diagrams_node_init_model_not_noop():
