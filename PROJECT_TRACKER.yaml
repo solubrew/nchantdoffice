@@ -1,10 +1,10 @@
 agent: m3rl1n
 analysis:
   counts:
-    files: 485
-    python_files: 223
-    python_lines: 76240
-    test_files: 138
+    files: 486
+    python_files: 224
+    python_lines: 76436
+    test_files: 139
 audit_date: '1785682798.8803072'
 dimensions:
   aspirational_tests:
@@ -142,17 +142,17 @@ dimensions:
               from the image'
             file: nchantdoffice/widgets/documents/media/images.py
             line: 740
-            symbol: Palette
-          - comment: '# TODO Open toolbox tab and Palette Drawer generate the palette
-              from the image'
-            file: nchantdoffice/widgets/documents/media/images.py
-            line: 740
             symbol: Open
           - comment: '# TODO Open toolbox tab and Palette Drawer generate the palette
               from the image'
             file: nchantdoffice/widgets/documents/media/images.py
             line: 740
             symbol: Drawer
+          - comment: '# TODO Open toolbox tab and Palette Drawer generate the palette
+              from the image'
+            file: nchantdoffice/widgets/documents/media/images.py
+            line: 740
+            symbol: Palette
           - comment: '# TODO implement logic so that when a tool like NchantdConvertSize
               button is clicked on the document'
             file: nchantdoffice/widgets/documents/media/images.py
@@ -222,7 +222,7 @@ dimensions:
   dependency_strategy:
     details:
       details:
-        external_imports: 721
+        external_imports: 724
         info: 'Hint: 28 GitVein projects available but not used: condor, eaglis, falcon,
           glain, goalt...'
         internal_import_details:
@@ -258,14 +258,14 @@ dimensions:
           project: nchantdoffice
         internal_imports: 227
         internal_projects_used:
-        - pyffice
-        - nchantdoffice
         - nchantrs
+        - nchantdoffice
+        - pyffice
         - kahndor
-        leverage_score: 23.95
+        leverage_score: 23.87
         score: 100
         status: pass
-        total_imports: 948
+        total_imports: 951
       score: 100
       status: pass
     score: 100
@@ -432,7 +432,7 @@ dimensions:
           branches:
             local: []
             remote: []
-          commit_count: 731
+          commit_count: 733
           commits: []
           contributors: []
           is_repo: true
@@ -4527,7 +4527,7 @@ dimensions:
         score: 100
         status: pass
         test_dir: tests
-        test_file_count: 137
+        test_file_count: 138
         total_source_files: 72
       score: 100
       status: pass
@@ -4659,7 +4659,7 @@ rubric:
   categories: []
   max_points: 0
   percentage: 0.0
-  rubric_name: 06a722b5-bac2-7da8-8000-2bbe03d52128
+  rubric_name: 06a722f0-a7d2-7af5-8000-882b52348dc4
   rubric_score: 0
   rubric_version: '1.0'
   score_difference: -88.05
@@ -4673,13 +4673,13 @@ summary:
   total_auditors: 12
   total_dimensions: 58
 test_execution:
-  duration_seconds: 51.384676456451416
+  duration_seconds: 51.40367388725281
   project_score: 88.05
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
   results:
     tests_failed: 0
-    tests_passed: 302
-    tests_run: 302
+    tests_passed: 305
+    tests_run: 305
     tests_skipped: 0
   runner: falcon
   score_adjustment: 2
@@ -4689,7 +4689,7 @@ test_execution:
   status_message: +2% bonus (100% tests passed)
   timestamp: ''
 versions:
-  project: fd2f880
+  project: 8db6613
   project_status: dirty
   project_uncommitted_changes: 3
   sasquatch: c25d9c5
