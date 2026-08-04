@@ -1094,6 +1094,77 @@ No priority tier — cosmetic.
 3. Add a regression test under
    `tests/test_save_button_icon.py`.
 
+### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
+
+Per `testing-report_20260803.md`, after accepting a newly created
+tab from the Document Catalog, the catalog's lower pane
+disappears and the catalog no longer responds. The user is
+unable to re-create documents from the catalog until the
+NchantdOfficeDocumentsCatalog widget is rebuilt.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/catalogs.py` — the catalog
+  (`NchantdOfficeDocumentsCatalog`) holds the lower pane via
+  the inherited `self.display` group. The new-tab accept
+  flow lives in
+  `nchantdoffice/widgets/panes/new.py::NchantdOfficeNewDocumentPane::accept`,
+  which calls into the model and may mutate the catalog
+  display state in a way that hides ``self.display``.
+
+**Migration plan:**
+
+This card is blocked on a Qt parent subprocess harness. The
+test must open the catalog, drive ``accept()`` on the new-doc
+pane, and assert the catalog's lower pane group remains
+visible and non-empty.
+
+1. Add a minimal Qt parent subprocess harness that opens the
+   catalog and drives the accept flow.
+2. Pin a RED test that asserts the catalog's
+   ``self.display.isVisible()`` remains True after accept.
+3. Fix the accept-time mutation so the catalog's display
+   group is preserved (or rebuilt) after a tab is created.
+4. Re-verify the harness assertion.
+
+### T-NEW-044 — Browser traversal history does not visibly restore on reopen (2026-08-04)
+
+Per `testing-report_20260803.md`, closing and reopening a browser
+document does not visibly restore the active URL or the
+back/forward traversal order. The serialised bytes round-trip
+correctly (see `tests/test_browser_db_roundtrip.py`); the
+defect is in the Qt rendering path.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/atnrg/browsers.py` —
+  `populate_document` and the embedded `NchantdWebViewer`
+  rebuild the page from the codex document. The viewer's
+  QWebEngineView history does not appear to be replayed from
+  the document's `history` payload, so the visible URL
+  reverts to the page default.
+- `nchantrs/widgets/browsers/browsers.py` — the embedded
+  `NchantdWebViewer` rebuilds the page from its ``url``
+  attribute; it does not appear to consume a structured
+  ``history`` list.
+
+**Migration plan:**
+
+This card is blocked on a Qt parent subprocess harness. The
+test must open a browser document, navigate to several URLs,
+serialise the document, reopen it, and assert the visible
+URL plus the back/forward order match the pre-close state.
+Without that harness we cannot drive the render path.
+
+1. Add a minimal Qt parent subprocess harness (subprocess,
+   not pytest) that opens ``NchantdOfficeWebBrowser`` and
+   drives several ``set_url`` calls.
+2. Pin a RED test that asserts ``browser.history()`` matches
+   the pre-close list on reopen.
+3. Wire ``NchantdWebViewer`` (or the populate path) to
+   replay the document's history list after load.
+4. Re-verify the harness assertion.
+
 ### T-NEW-043 — Image rendering permanently narrows the right pane (2026-08-04)
 
 Per `testing-report_20260803.md`, opening/resizing an image document
