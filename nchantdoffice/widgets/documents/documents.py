@@ -946,16 +946,23 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
                         self.document_editor.setPlainText(str(self.document.content))
         return self
 
-    def open_file(self, file):
+    def open_cloud(self, path):
+        """"""
+        # PUSH to 0.0.3 - implement opening of cloud based documents like .gsheet, etc
+
+    def open_file(self, file, _populate_document=True, _save=True):
         """"""
         if file is None:
             file = self.file_path
             if file is None:
                 return
+        self.set_file_path(file)
         self.document.open_file(file)  # The Pyffice document is not connected directly with the viewable pdf render
-        self.document.set_location("external")  # PUSH to 0.0.3 - transition to local and cloud
-        self.populate_document()
-        self.save()
+        self.document.set_location("external")
+        if _populate_document:
+            self.populate_document()
+        if _save:
+            self.save()
 
     def open_local(self):
         """Trigger the local file open dialog."""
