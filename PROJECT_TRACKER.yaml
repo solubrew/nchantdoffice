@@ -1,10 +1,10 @@
 agent: m3rl1n
 analysis:
   counts:
-    files: 483
-    python_files: 221
-    python_lines: 75739
-    test_files: 137
+    files: 485
+    python_files: 223
+    python_lines: 76240
+    test_files: 138
 audit_date: '1785682798.8803072'
 dimensions:
   aspirational_tests:
@@ -222,7 +222,7 @@ dimensions:
   dependency_strategy:
     details:
       details:
-        external_imports: 719
+        external_imports: 721
         info: 'Hint: 28 GitVein projects available but not used: condor, eaglis, falcon,
           glain, goalt...'
         internal_import_details:
@@ -258,14 +258,14 @@ dimensions:
           project: nchantdoffice
         internal_imports: 227
         internal_projects_used:
-        - nchantrs
-        - nchantdoffice
-        - kahndor
         - pyffice
-        leverage_score: 24.0
+        - nchantdoffice
+        - nchantrs
+        - kahndor
+        leverage_score: 23.95
         score: 100
         status: pass
-        total_imports: 946
+        total_imports: 948
       score: 100
       status: pass
     score: 100
@@ -432,7 +432,7 @@ dimensions:
           branches:
             local: []
             remote: []
-          commit_count: 728
+          commit_count: 731
           commits: []
           contributors: []
           is_repo: true
@@ -4527,7 +4527,7 @@ dimensions:
         score: 100
         status: pass
         test_dir: tests
-        test_file_count: 136
+        test_file_count: 137
         total_source_files: 72
       score: 100
       status: pass
@@ -4659,7 +4659,7 @@ rubric:
   categories: []
   max_points: 0
   percentage: 0.0
-  rubric_name: 06a7224d-11bd-765f-8000-2d34aa625996
+  rubric_name: 06a722b5-bac2-7da8-8000-2bbe03d52128
   rubric_score: 0
   rubric_version: '1.0'
   score_difference: -88.05
@@ -4673,13 +4673,13 @@ summary:
   total_auditors: 12
   total_dimensions: 58
 test_execution:
-  duration_seconds: 20.6411612033844
+  duration_seconds: 51.384676456451416
   project_score: 88.05
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
   results:
     tests_failed: 0
-    tests_passed: 296
-    tests_run: 296
+    tests_passed: 302
+    tests_run: 302
     tests_skipped: 0
   runner: falcon
   score_adjustment: 2
@@ -4689,7 +4689,7 @@ test_execution:
   status_message: +2% bonus (100% tests passed)
   timestamp: ''
 versions:
-  project: 19d598a
+  project: fd2f880
   project_status: dirty
   project_uncommitted_changes: 3
   sasquatch: c25d9c5
