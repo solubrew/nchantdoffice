@@ -1148,6 +1148,37 @@ tree, center document, right side-tabset) and is enforced by
   the stretch-factor-values assertion, and the
   regression-only guard for the BEFORE-fix state.
 
+
+**Progress (2026-08-04, ``fd2f880`` + step 2):** the qt_parent
+subprocess harness is live (step 1, TDD proven). A direct
+in-process characterisation test
+(``tests/test_catalog_lower_pane_after_accept.py``) builds a
+real ``NchantdCatalog`` with the minimum state, simulates the
+post-accept catalog state via ``update_item_pane``, and
+asserts ``self.display.isVisible()`` stays True and
+``self.display`` remains in the parent layout. The
+characterisation test passes for all three assertions --
+``update_item_pane`` does NOT hide the catalog's display in
+the simplified harness.
+
+**Implication:** the live "lower pane disappears" defect, as
+literally described, is not reproducible in the
+``update_item_pane`` code path. It may live in a different
+path that the full new-doc pane ``accept()`` chain reaches
+(via ``add_document`` or ``add_feature``) -- both of which
+require the full ``nchantment()`` boot (wizard, profile,
+store, network) and are unreachable in the headless env.
+
+**Pinned characterisation tests (regression guard):**
+- ``tests/test_catalog_lower_pane_after_accept.py`` (3 tests)
+  asserts the catalog's display survives ``update_item_pane``.
+
+**Remaining work:**
+- Drive the full ``nchantment()`` boot via the qt_parent
+  subprocess harness (step 3 in the original plan) so the
+  real ``NchantdOfficeNewDocumentPane.accept()`` is
+  reachable. Then either reproduce the live defect or
+  re-classify it as a different code path.
 ### T-NEW-044 — Browser traversal history does not visibly restore on reopen (2026-08-04)
 
 Per `testing-report_20260803.md`, closing and reopening a browser
