@@ -1127,6 +1127,27 @@ visible and non-empty.
    group is preserved (or rebuilt) after a tab is created.
 4. Re-verify the harness assertion.
 
+
+
+**Resolution (commit 8e3a1f2):** the central ``QSplitter`` in
+``NchantdOfficeCloakView`` was never told how to distribute
+space between its panes. Any descendant widget that called
+``setMinimumSize`` / ``setMaximumSize`` (the image stack does
+this in several places) collapsed one of the panes
+unilaterally, with no recovery.
+
+**Fix:** pin stretch factors on the splitter at view-init time
+in ``nchantdoffice/views.py::NchantdOfficeCloakView.initView``.
+The 1:4:2 ratio matches the canonical 3Pane layout (left
+tree, center document, right side-tabset) and is enforced by
+``QSplitter`` at resize time, not at child-min-size time.
+
+**Pinned by:**
+- ``tests/test_splitter_stretch_factors.py`` (3 tests):
+  unit test for the contract on a bare ``QSplitter``,
+  the stretch-factor-values assertion, and the
+  regression-only guard for the BEFORE-fix state.
+
 ### T-NEW-044 — Browser traversal history does not visibly restore on reopen (2026-08-04)
 
 Per `testing-report_20260803.md`, closing and reopening a browser
@@ -1165,7 +1186,7 @@ Without that harness we cannot drive the render path.
    replay the document's history list after load.
 4. Re-verify the harness assertion.
 
-### T-NEW-043 — Image rendering permanently narrows the right pane (2026-08-04)
+### T-NEW-043 — Image rendering permanently narrows the right pane (CLOSED 2026-08-04, `8e3a1f2`)
 
 Per `testing-report_20260803.md`, opening/resizing an image document
 forces the right-side pane narrow and leaves it stuck for every
