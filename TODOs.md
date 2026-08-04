@@ -1094,6 +1094,50 @@ No priority tier — cosmetic.
 3. Add a regression test under
    `tests/test_save_button_icon.py`.
 
+### T-NEW-043 — Image rendering permanently narrows the right pane (2026-08-04)
+
+Per `testing-report_20260803.md`, opening/resizing an image document
+forces the right-side pane narrow and leaves it stuck for every
+subsequent document. The user is unable to drag the splitter back
+to the right.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/media/images.py` — the
+  image document / image-viewer code path. No call site for
+  ``setSizes`` or ``setStretchFactor`` is currently visible in
+  this module, so the regression may originate from a
+  downstream consumer (NchantdImage, NchantdImageThumbnailViewer)
+  or from a layout/splitter interaction only reachable through
+  the live Qt parent harness.
+
+- The only in-tree ``setSizes`` call today is
+  `NchantdOfficeApplicationToolBox.balance_pane_widths`
+  (`widgets/controls/toolboxes.py:214`), which is unrelated to
+  image rendering.
+
+**Migration plan:**
+
+This card is blocked until a Qt parent subprocess harness can
+reproduce the regression. TDD requires a RED-capable loop; the
+headless env cannot drive image rendering through
+``QWebEngineView`` / ``NchantdImage`` in a way that triggers the
+right-pane split.
+
+1. Build a minimal Qt parent harness (subprocess, not pytest)
+   that opens an image document and snapshots the right-pane
+   splitter sizes before and after.
+2. Pin the regression with a size-equality assertion
+   (``splitter.sizes()`` must remain within the configured
+   ratio before and after image open / resize).
+3. Identify the call site that writes the off-ratio sizes
+   (likely in ``NchantdImage`` /
+   ``NchantdImageThumbnailViewer`` init or resize events).
+4. Fix the call site to honour the configured pane ratio
+   (or skip the resize when no explicit user resize has
+   happened).
+5. Re-verify the harness assertion.
+
 ### T-NEW-039 — Refactor: move document-save hack to model + consolidate add_tab/add_document (2026-07-31)
 
 Two related refactor TODOs:
