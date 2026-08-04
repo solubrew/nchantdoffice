@@ -142,17 +142,17 @@ dimensions:
               from the image'
             file: nchantdoffice/widgets/documents/media/images.py
             line: 740
+            symbol: Palette
+          - comment: '# TODO Open toolbox tab and Palette Drawer generate the palette
+              from the image'
+            file: nchantdoffice/widgets/documents/media/images.py
+            line: 740
             symbol: Open
           - comment: '# TODO Open toolbox tab and Palette Drawer generate the palette
               from the image'
             file: nchantdoffice/widgets/documents/media/images.py
             line: 740
             symbol: Drawer
-          - comment: '# TODO Open toolbox tab and Palette Drawer generate the palette
-              from the image'
-            file: nchantdoffice/widgets/documents/media/images.py
-            line: 740
-            symbol: Palette
           - comment: '# TODO implement logic so that when a tool like NchantdConvertSize
               button is clicked on the document'
             file: nchantdoffice/widgets/documents/media/images.py
@@ -260,8 +260,8 @@ dimensions:
         internal_projects_used:
         - nchantrs
         - nchantdoffice
-        - pyffice
         - kahndor
+        - pyffice
         leverage_score: 23.87
         score: 100
         status: pass
@@ -432,7 +432,7 @@ dimensions:
           branches:
             local: []
             remote: []
-          commit_count: 733
+          commit_count: 735
           commits: []
           contributors: []
           is_repo: true
@@ -4659,7 +4659,7 @@ rubric:
   categories: []
   max_points: 0
   percentage: 0.0
-  rubric_name: 06a722f0-a7d2-7af5-8000-882b52348dc4
+  rubric_name: 06a72304-95eb-7700-8000-6d8c3585a3e9
   rubric_score: 0
   rubric_version: '1.0'
   score_difference: -88.05
@@ -4673,7 +4673,7 @@ summary:
   total_auditors: 12
   total_dimensions: 58
 test_execution:
-  duration_seconds: 51.40367388725281
+  duration_seconds: 51.5652334690094
   project_score: 88.05
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
   results:
@@ -4689,7 +4689,7 @@ test_execution:
   status_message: +2% bonus (100% tests passed)
   timestamp: ''
 versions:
-  project: 8db6613
+  project: cf6e057
   project_status: dirty
   project_uncommitted_changes: 3
   sasquatch: c25d9c5
