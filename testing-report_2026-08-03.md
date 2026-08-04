@@ -4,7 +4,7 @@
 
 ## Issues Found:
     - NchantdOfficeCalculator still doesn't pickup input from number pad or number row....buttons only respond to clicks
-    - browser still not saving and restoring url history
+    - browser still not saving and restoring url traversal history
     - new node button on nchantdofficedocumenttoolbar should default to a popup that asks the user to input a name for the node
     - new tab button on nchantdofficedocumenttoolbar should default to a popup that asks the user to input a name for the tab
     - NchantdOfficeDocumentCatalog bottom pane is disapearing after a tab is created from using the accept button in the pane
