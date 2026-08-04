@@ -42,7 +42,7 @@ from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.buttons import NchantdButton
-from nchantrs.widgets.groups import NchantdGroup
+from nchantrs.widgets.groups import NchantdGridScrollGroupBox, NchantdGroup
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantdoffice.utilities.referral import (
     DEFAULT_API_BASE,
