@@ -1179,6 +1179,32 @@ store, network) and are unreachable in the headless env.
   real ``NchantdOfficeNewDocumentPane.accept()`` is
   reachable. Then either reproduce the live defect or
   re-classify it as a different code path.
+
+**Follow-up task T-NEW-048 -- full ``nchantment()`` boot via qt_parent (DEFERRED):**
+
+Step 2 of the qt_parent plan ran the characterisation test on a
+synthetic catalog fixture. The full ``nchantdOfficeNewDocumentPane.accept()``
+path requires the real ``nchantment()`` boot (wizard, profile,
+store, network), which is unreachable in the headless env.
+
+T-NEW-048 is the deferred task to wire the real boot into the
+qt_parent subprocess harness so the live T-NEW-045 defect (and
+T-NEW-047 browser history) become reproducible end-to-end.
+
+Scope:
+- Extend ``tests/qt_parent/server.py`` to call ``nchantment()``
+  with a minimal ``cfg`` (no splash, no wizard, seeded profile).
+- Add a ``--qt-parent-seed-config`` flag to ``nchantdoffice/__main__.py``.
+- Add ``sizes``, ``is_visible``, ``click``, ``type_text``,
+  ``navigate``, ``screenshot`` commands to the socket protocol.
+- Stand up a fake ``app.model.store`` that records writes but
+  serves a known seeded project.
+
+Estimated effort: 2-3 days of TDD. Deferred until the live
+defect is reproduced by other means or the user re-prioritises.
+
+This card exists so a future session agent reading TODOs.md
+knows the path is known and the cost is bounded.
 ### T-NEW-044 — Browser traversal history does not visibly restore on reopen (2026-08-04)
 
 Per `testing-report_20260803.md`, closing and reopening a browser
