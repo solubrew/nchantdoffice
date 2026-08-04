@@ -19,20 +19,6 @@
 
 ---
 # New TODOs
-
-
-- make a passphrase popup field instead of triggering the getpass cli logic
-    2026-08-04 11:43:30,107 - pyffice.document                         1338: INFO     - 
-    [PyfficeDocument] File Path None
-    Master passphrase: 
-    2026-08-04 11:43:56,254 - pycurity.pykey                            548: INFO     - Connecting to /home/solubrew/.local/share/pycurity/secure_store.db
-    2026-08-04 11:43:56,257 - pycurity.pykey                            548: INFO     - Connecting to /home/solubrew/.local/share/pycurity/secure_store.db
-    2026-08-04 11:43:56,258 - pycurity.pykey                            548: INFO     - Connecting to /home/solubrew/.local/share/pycurity/secure_store.db
-    2026-08-04 11:43:56,260 - pycurity.pykey                            548: INFO     - Connecting to /home/solubrew/.local/share/pycurity/secure_store.db
-    2026-08-04 11:43:56,261 - nchantdoffice.widgets.config.referral_panel  347: INFO     - [referral_panel] PyKeyStore.get(affiliate_id) failed: 'No key found for service: affiliate_id'
-    2026-08-04 11:43:56,261 - nchantdoffice.utilities.referral          105: INFO     - ReferralCode created: value='NB-Z5C-1WFD'
-
-
 - Image Document tab is push the widgth instead of resizing the image, image should fit to width and size the height maintianing the aspect ratio
 - NchantdOfficeBrowser is not keeping track of url navigation or reloading to the last visited site
 - FileDetailsPane is not updated on initial file open need to implement a refresh
