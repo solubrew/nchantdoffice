@@ -1,10 +1,10 @@
 agent: m3rl1n
 analysis:
   counts:
-    files: 481
-    python_files: 219
-    python_lines: 75457
-    test_files: 135
+    files: 482
+    python_files: 220
+    python_lines: 75560
+    test_files: 136
 audit_date: '1785682798.8803072'
 dimensions:
   aspirational_tests:
@@ -147,12 +147,12 @@ dimensions:
               from the image'
             file: nchantdoffice/widgets/documents/media/images.py
             line: 740
-            symbol: Drawer
+            symbol: Palette
           - comment: '# TODO Open toolbox tab and Palette Drawer generate the palette
               from the image'
             file: nchantdoffice/widgets/documents/media/images.py
             line: 740
-            symbol: Palette
+            symbol: Drawer
           - comment: '# TODO implement logic so that when a tool like NchantdConvertSize
               button is clicked on the document'
             file: nchantdoffice/widgets/documents/media/images.py
@@ -260,8 +260,8 @@ dimensions:
         internal_projects_used:
         - kahndor
         - nchantdoffice
-        - nchantrs
         - pyffice
+        - nchantrs
         leverage_score: 24.15
         score: 100
         status: pass
@@ -432,7 +432,7 @@ dimensions:
           branches:
             local: []
             remote: []
-          commit_count: 721
+          commit_count: 726
           commits: []
           contributors: []
           is_repo: true
@@ -2481,33 +2481,45 @@ dimensions:
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
+          content: prompt = getattr(self, "_pykey_prompt", None)
+          file: nchantdoffice/widgets/config/referral_panel.py
+          line: 350
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
           content: getattr(user_obj, "id", None)
           file: nchantdoffice/widgets/config/referral_panel.py
-          line: 368
+          line: 378
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: or getattr(user_obj, "user_name", None)
           file: nchantdoffice/widgets/config/referral_panel.py
-          line: 369
+          line: 379
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: or getattr(user_obj, "email", None)
           file: nchantdoffice/widgets/config/referral_panel.py
-          line: 370
+          line: 380
+          pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
+          severity: 60
+        - category: getattr_dynamic
+          content: parent = getattr(self, "parent", None) or self
+          file: nchantdoffice/widgets/config/referral_panel.py
+          line: 418
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: pane = getattr(self, "_ad_pane", None)
           file: nchantdoffice/widgets/config/referral_panel.py
-          line: 416
+          line: 460
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
           content: code = getattr(self, "referral_code", None)
           file: nchantdoffice/widgets/config/referral_panel.py
-          line: 417
+          line: 461
           pattern: getattr\([^,]+,\s*['\"][\w]+['\"]
           severity: 60
         - category: getattr_dynamic
@@ -4515,7 +4527,7 @@ dimensions:
         score: 100
         status: pass
         test_dir: tests
-        test_file_count: 134
+        test_file_count: 135
         total_source_files: 72
       score: 100
       status: pass
@@ -4563,13 +4575,13 @@ dimensions:
         issues:
         - rule: low_coverage
           severity: medium
-          total: 2387
+          total: 2388
           typed: 53
         score: 2
         status: partial
-        total_functions: 2387
+        total_functions: 2388
         typed_functions: 53
-        untyped_functions: 2334
+        untyped_functions: 2335
       score: 2
       status: partial
     score: 2
@@ -4647,7 +4659,7 @@ rubric:
   categories: []
   max_points: 0
   percentage: 0.0
-  rubric_name: 06a7211b-4b99-70b0-8000-2957e6993fc9
+  rubric_name: 06a721ae-0dd6-7ff5-8000-b38ee17299e5
   rubric_score: 0
   rubric_version: '1.0'
   score_difference: -88.05
@@ -4661,13 +4673,13 @@ summary:
   total_auditors: 12
   total_dimensions: 58
 test_execution:
-  duration_seconds: 20.67143678665161
+  duration_seconds: 20.636717081069946
   project_score: 88.05
   report_file: /home/solubrew/.hermes/projects/nchantdoffice/FALCON_TEST.yaml
   results:
     tests_failed: 0
-    tests_passed: 292
-    tests_run: 292
+    tests_passed: 293
+    tests_run: 293
     tests_skipped: 0
   runner: falcon
   score_adjustment: 2
@@ -4677,7 +4689,7 @@ test_execution:
   status_message: +2% bonus (100% tests passed)
   timestamp: ''
 versions:
-  project: 74bafb0
+  project: cae0f15
   project_status: dirty
-  project_uncommitted_changes: 4
+  project_uncommitted_changes: 3
   sasquatch: c25d9c5
