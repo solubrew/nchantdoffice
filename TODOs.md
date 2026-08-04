@@ -1186,6 +1186,19 @@ Without that harness we cannot drive the render path.
    replay the document's history list after load.
 4. Re-verify the harness assertion.
 
+
+**Progress (2026-08-04):** the serialised history round-trips through
+``content_enc64_txt`` -- pinned by
+``tests/test_browser_db_roundtrip.py::test_browser_save_writes_full_payload_into_doc_media_content``
+which encodes a ``history: [...]`` array into the payload and
+asserts it decodes back losslessly. The *visible*-restore defect
+(``NchantdWebViewer`` not replaying the document's history on
+reopen) is harness-blocked. Recommend splitting into:
+- T-NEW-046 (serialised history round-trip -- DONE, pinned by
+  the existing test).
+- T-NEW-047 (visible history replay on reopen -- needs the Qt
+  parent subprocess harness from the Shroud review).
+
 ### T-NEW-043 — Image rendering permanently narrows the right pane (CLOSED 2026-08-04, `8e3a1f2`)
 
 Per `testing-report_20260803.md`, opening/resizing an image document
