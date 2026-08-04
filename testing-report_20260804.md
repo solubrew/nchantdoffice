@@ -12,7 +12,7 @@
     2026-08-04 11:43:56,260 - pycurity.pykey                            548: INFO     - Connecting to /home/solubrew/.local/share/pycurity/secure_store.db
     2026-08-04 11:43:56,261 - nchantdoffice.widgets.config.referral_panel  347: INFO     - [referral_panel] PyKeyStore.get(affiliate_id) failed: 'No key found for service: affiliate_id'
     2026-08-04 11:43:56,261 - nchantdoffice.utilities.referral          105: INFO     - ReferralCode created: value='NB-Z5C-1WFD'
-
+- Need to implement NchantdOfficePalette document into the NchantdOfficeImage document toolbar should launch the palette toolbox drawer where the palette document is displayed with a list of colors and percentage usage in the image
 
 ## Bugs:
 
