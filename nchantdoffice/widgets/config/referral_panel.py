@@ -340,7 +340,17 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
             # import path (matches the rest of the project).
             from pycurity.pykey import PyKeyStore
 
-            keystore = PyKeyStore()
+            # T-NEW-XXX: never let the desktop fall through to
+            # PyKeyStore's CLI ``getpass.getpass`` prompt. The
+            # desktop must surface a Qt masked-entry dialog before
+            # the keystore is opened. Tests inject a sentinel
+            # callback via ``_pykey_prompt``; production callers
+            # see the default ``_qt_passphrase_prompt`` that pops
+            # a ``QInputDialog`` with EchoMode.Password.
+            prompt = getattr(self, "_pykey_prompt", None)
+            if prompt is None:
+                prompt = self._qt_passphrase_prompt
+            keystore = PyKeyStore(passphrase_prompt=prompt)
             try:
                 stored_record = keystore.get("affiliate_id")
             except Exception as e:
@@ -387,6 +397,40 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
                     user_cfg._save()
         except Exception as e:
             logma.warning(f"[referral_panel] could not persist code: {e}")
+
+    def _qt_passphrase_prompt(self):
+        """Return the master passphrase via a Qt masked-entry dialog.
+
+        The desktop must never trigger the CLI ``getpass.getpass``
+        prompt when a Qt event loop is available. This helper
+        pops a single ``QInputDialog`` with ``EchoMode.Password``
+        and returns the user-entered passphrase. The caller
+        (PyKeyStore) already swallows the empty-string result
+        and raises the canonical "no key" exception.
+        """
+        try:
+            from PySide6.QtWidgets import QInputDialog, QLineEdit
+        except Exception as e:
+            logma.debug(
+                f"[referral_panel] Qt unavailable for passphrase prompt: {e}"
+            )
+            return ""
+        parent = getattr(self, "parent", None) or self
+        try:
+            text, ok = QInputDialog.getText(
+                parent,
+                "Master Passphrase",
+                "Enter the master passphrase for PyKeyStore:",
+                QLineEdit.Password,
+            )
+        except Exception as e:
+            logma.debug(
+                f"[referral_panel] QInputDialog.getText failed: {e}"
+            )
+            return ""
+        if not ok:
+            return ""
+        return text or ""
 
     def set_ad_pane(self, ad_pane):
         """Register the NchantdOfficeAdTab pane so the panel
