@@ -122,7 +122,7 @@ dependencies = [
     "matplotlib==3.10.9",
     "seaborn==0.13.1",
     "graphviz==0.20.3",
-    # "colormath==3.0.0",  # Removed - source-only on PyPI (no wheel), not imported anywhere in nchantdoffice
+    "colormath==3.0.0",
     # "cairosvg==2.8.2",  # Removed - heavy Cairo dependency, rarely used
     # "solidpython==1.1.2",  # Removed - OpenSCAD, rarely used
     # "sweetviz==2.3.3",  # Removed - data profiling, rarely core
