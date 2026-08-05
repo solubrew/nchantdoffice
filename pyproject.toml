@@ -124,8 +124,8 @@ dependencies = [
     "graphviz==0.20.3",
     "colormath==3.0.0",
     # "cairosvg==2.8.2",  # Removed - heavy Cairo dependency, rarely used
-    # "solidpython==1.1.2",  # Removed - OpenSCAD, rarely used
-    # "sweetviz==2.3.3",  # Removed - data profiling, rarely core
+    # "solidpython==1.1.2",  # Removed - OpenSCAD, rarely used #PUSH to 0.1.0.0.1.0 Nchantd CAD
+    # "sweetviz==2.3.3",  # Removed - data profiling, rarely core #PUSH to 0.1.0.0.1.0 Nchantd Data Source
     
     # Image & Video
     "Pillow==12.1.1",
@@ -144,7 +144,7 @@ dependencies = [
     "webp==0.3.0",
     
     # ML/AI
-    # "scikit-learn==1.8.0",  # Removed - heavy ML dependency, rarely core
+    # "scikit-learn==1.8.0",  # Removed - heavy ML dependency, rarely core #PUSH to 0.1.0.0.1.0 Nchantd Analytics
     
     # Dev tools
     "black==26.5.0",
@@ -180,7 +180,7 @@ dependencies = [
     # "esptool==5.2.0",  # Removed - ESP32 flashing, rarely used
 
     # Special formats
-    # "floweaver==2.0.0",  # Removed - Sankey diagrams, rarely core
+    # "floweaver==2.0.0",  # Removed - Sankey diagrams, rarely core #PUSH to 0.1.0 Nchantd Analytics
     
     # Web3/Ethereum
     "bitarray==3.8.1",
@@ -376,8 +376,12 @@ spreadsheet = [
 internal = [
     "nchantrs @ file:///mnt/overse/SBST01/vein/GitVein/nchantrs.git@gamma",
     "pyffice @ file:///mnt/overse/SBST01/vein/GitVein/pyffice.git@gamma",
-    "ladyol @ file:///mnt/overse/SBST01/vein/GitVein/ladyol.git@gamma",
-    "senbai @ file:///mnt/overse/SBST01/vein/GitVein/senbai.git@gamma",
+    "kahndor @ file:///mnt/overse/SBST01/vein/GitVein/kahndor.git@gamma",
+    "subtrix @ file:///mnt/overse/SBST01/vein/GitVein/subtrix.git@gamma",
+    "micromole @ file:///mnt/overse/SBST01/vein/GitVein/micromole.git@gamma",
+    "squirl @ file:///mnt/overse/SBST01/vein/GitVein/squirl.git@gamma",
+    "pycurity @ file:///mnt/overse/SBST01/vein/GitVein/pycurity.git@gamma",
+    #"metrologic @ file:///mnt/overse/SBST01/vein/GitVein/metrologic.git@gamma", # PUSH to 0.1.0 NchantdAnalytics
 ]
 # All optional dependencies
 all = [
