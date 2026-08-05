@@ -71,23 +71,9 @@ dependencies = [
     "pycryptodome==3.21.0",
     "coincurve==20.0.0",
     "ecdsa==0.19.1",
-    "pyasn1==0.6.2",
     "asn1crypto==1.5.0",
     "bcrypt==4.3.0",
-    
-    # Web3
-    "web3==7.16.0",
-    "base58==2.1.1",
-    "eth-abi==5.2.0",
-    "eth-account==0.13.7",  # eth-keyfile constrained by this package
-    "eth-hash==0.7.1",
-    # "eth-keyfile",  # Resolved by eth-account dependency
-    "eth-keys==0.7.0",
-    "eth-rlp==2.2.0",
-    "eth-typing==6.0.0",
-    "eth-utils==6.0.0",
-    "rlp==4.1.0",
-    
+
     # Web & HTTP
     "aiohttp==3.13.5",
     "aiohappyeyeballs==2.6.1",
@@ -221,12 +207,8 @@ dependencies = [
     "mdurl==0.1.2",  # via markdown-it-py
     "pygments==2.20.0",  # via ipython, rich
 
-    # via pydantic
-    "typing-inspection==0.4.2",  # via pydantic
-    "typing-extensions==4.16.0",  # via aiosignal, anyio, pydantic
-
-    # via httpx (pulled by jupyterlab, notion-client, ultimate-notion)
-    "httpx==0.28.1",  # via jupyterlab, notion-client, ultimate-notion
+    # via httpx (pulled by jupyterlab)
+    "httpx==0.28.1",  # via jupyterlab
     "httpcore==1.0.9",  # via httpx
     "h11==0.16.0",  # via httpcore
     "anyio==4.14.2",  # via httpx, jupyter-server
@@ -262,9 +244,6 @@ dependencies = [
 
     # via zeroconf
     "ifaddr==0.2.0",  # via zeroconf
-
-    # via eth-account (constrained by web3)
-    "eth-keyfile==0.8.1",  # via eth-account
 
     # via black
     "mypy-extensions==1.1.0",  # via black
