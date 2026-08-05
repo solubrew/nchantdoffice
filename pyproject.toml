@@ -373,13 +373,30 @@ spreadsheet = [
 ]
 # Internal projects (peer SB packages). Install with:
 #   pip install nchantdoffice[internal]
+# Only includes packages actually imported across the SB stack
+# (nchantdoffice, nchantrs, pyffice). Verified 2026-08-05:
+#   nchantrs: imported by 61 nchantdoffice + 138 nchantrs files
+#   pyffice:  imported by 16 nchantdoffice + 96 pyffice files
+#   squirl:   imported by 7 nchantrs + 7 pyffice files
+#   micromole: imported by 1 nchantdoffice + 1 nchantrs files
+#   subtrix:  imported by 7 nchantdoffice + 17 nchantrs + 5 pyffice
+#   kahndor:  imported by 72 nchantdoffice + 193 nchantrs + 84 pyffice
+# Removed (dead — no imports anywhere in the SB stack):
+#   - ladyol: 0 imports across all SB projects
+#   - senbai: 0 imports across all SB projects
 internal = [
     "nchantrs @ file:///mnt/overse/SBST01/vein/GitVein/nchantrs.git@gamma",
     "pyffice @ file:///mnt/overse/SBST01/vein/GitVein/pyffice.git@gamma",
-    "ladyol @ file:///mnt/overse/SBST01/vein/GitVein/ladyol.git@gamma",
-    "senbai @ file:///mnt/overse/SBST01/vein/GitVein/senbai.git@gamma",
+    "squirl @ file:///mnt/overse/SBST01/vein/GitVein/squirl.git@gamma",
+    "micromole @ file:///mnt/overse/SBST01/vein/GitVein/micromole.git@gamma",
+    "subtrix @ file:///mnt/overse/SBST01/vein/GitVein/subtrix.git@gamma",
+    "kahndor @ file:///mnt/overse/SBST01/vein/GitVein/kahndor.git@gamma",
 ]
-# All optional dependencies
+# All optional dependencies (pdf + spreadsheet are referenced via
+# try/except ImportError so users without these features don't
+# get import-time errors). The internal extras are NOT included
+# in 'all' because they're typically installed separately as
+# peer SB packages.
 all = [
     "pypdf>=3.0.0",
     "openpyxl>=3.1.0",
