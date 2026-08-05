@@ -205,6 +205,159 @@ dependencies = [
     #upstream dependencies
     "sqlite_vec==0.1.1",
     "jupyter==1.1.1",
+
+    # ===== Transitive dependencies (auto-documented 2026-08-05) =====
+    # These are resolved by pip from the direct deps above but were not
+    # previously listed explicitly. Documented here so the full dependency
+    # tree is visible in pyproject.toml. Generated via:
+    #   uv pip compile pyproject.toml (Python 3.12, Linux x86_64)
+    # Each entry shows the parent package(s) that pull it in.
+
+    # via typer
+    "annotated-doc==0.0.5",  # via typer
+    "rich==15.0.0",  # via typer
+    "shellingham==1.5.4",  # via typer
+    "markdown-it-py==4.2.0",  # via rich
+    "mdurl==0.1.2",  # via markdown-it-py
+    "pygments==2.20.0",  # via ipython, rich
+
+    # via pydantic
+    "typing-inspection==0.4.2",  # via pydantic
+    "typing-extensions==4.16.0",  # via aiosignal, anyio, pydantic
+
+    # via httpx (pulled by jupyterlab, notion-client, ultimate-notion)
+    "httpx==0.28.1",  # via jupyterlab, notion-client, ultimate-notion
+    "httpcore==1.0.9",  # via httpx
+    "h11==0.16.0",  # via httpcore
+    "anyio==4.14.2",  # via httpx, jupyter-server
+
+    # via cryptography / coincurve
+    "cffi==2.1.1",  # via argon2-cffi-bindings, coincurve, cryptography
+    "pycparser==3.0",  # via cffi
+
+    # via matplotlib
+    "contourpy==1.3.3",  # via matplotlib
+    "cycler==0.12.1",  # via matplotlib
+    "fonttools==4.63.0",  # via matplotlib
+    "kiwisolver==1.5.0",  # via matplotlib
+    "pyparsing==3.3.2",  # via matplotlib, pydot
+
+    # via plotly
+    "narwhals==2.24.0",  # via plotly
+
+    # via beautifulsoup4
+    "soupsieve==2.9.1",  # via beautifulsoup4
+
+    # via python-pptx
+    "xlsxwriter==3.2.9",  # via python-pptx
+
+    # via proglog
+    "tqdm==4.70.0",  # via proglog
+
+    # via ffmpeg-python
+    "future==1.0.0",  # via ffmpeg-python
+
+    # via furl
+    "orderedmultidict==1.0.2",  # via furl
+
+    # via zeroconf
+    "ifaddr==0.2.0",  # via zeroconf
+
+    # via eth-account (constrained by web3)
+    "eth-keyfile==0.8.1",  # via eth-account
+
+    # via black
+    "mypy-extensions==1.1.0",  # via black
+    "pathspec==1.1.1",  # via black
+    "platformdirs==4.11.0",  # via black, jupyter-core
+    "pytokens==0.4.1",  # via black
+    "packaging==26.3",  # via black, ipykernel, jupyter-events
+
+    # via ultimate-notion
+    "emoji==2.15.0",  # via ultimate-notion
+    "pendulum==3.2.0",  # via ultimate-notion
+    "tabulate==0.10.0",  # via ultimate-notion
+    "tomli==2.4.1",  # via ultimate-notion
+    "tomli-w==1.2.0",  # via ultimate-notion
+    "url-normalize==3.0.0",  # via ultimate-notion
+    "mistune==3.3.4",  # via nbconvert, ultimate-notion
+
+    # via jsonschema
+    "fqdn==1.5.1",  # via jsonschema
+    "isoduration==20.11.0",  # via jsonschema
+    "jsonpointer==3.1.1",  # via jsonschema
+    "jsonschema-specifications==2025.9.1",  # via jsonschema
+    "referencing==0.37.0",  # via jsonschema, jsonschema-specifications
+    "rfc3339-validator==0.1.4",  # via jsonschema, jupyter-events
+    "rfc3986-validator==0.1.1",  # via jsonschema, jupyter-events
+    "rfc3987-syntax==1.1.0",  # via jsonschema
+    "rpds-py==2026.6.3",  # via jsonschema, referencing
+    "uri-template==1.3.0",  # via jsonschema
+    "webcolors==25.10.0",  # via jsonschema
+    "lark==1.3.1",  # via rfc3987-syntax
+    "arrow==1.4.0",  # via isoduration
+
+    # via nbformat
+    "fastjsonschema==2.22.1",  # via nbformat
+
+    # via jupyter (pulled by jupyter metapackage)
+    "ipykernel==7.3.0",  # via jupyter, jupyter-console, jupyterlab
+    "ipywidgets==8.1.8",  # via jupyter
+    "jupyter-console==6.6.3",  # via jupyter
+    "jupyterlab==4.6.2",  # via jupyter, notebook
+    "notebook==7.6.1",  # via jupyter
+    "nbconvert==7.17.1",  # via jupyter, jupyter-server
+    "jupyter-client==8.9.1",  # via ipykernel, jupyter-console
+    "jupyter-core==5.9.1",  # via ipykernel, jupyter-builder, jupyter-client
+    "jupyter-builder==1.2.1",  # via jupyterlab, notebook
+    "jupyter-lsp==2.3.1",  # via jupyterlab
+    "jupyter-server==2.20.0",  # via jupyter-lsp, jupyterlab
+    "jupyter-server-terminals==0.5.4",  # via jupyter-server
+    "jupyter-events==0.12.1",  # via jupyter-server
+    "jupyterlab-server==2.28.0",  # via jupyterlab, notebook
+    "notebook-shim==0.2.4",  # via jupyterlab, notebook
+    "async-lru==2.3.0",  # via jupyterlab
+    "comm==0.2.3",  # via ipykernel, ipywidgets
+    "widgetsnbextension==4.0.15",  # via ipywidgets
+    "jupyterlab-widgets==3.0.16",  # via ipywidgets
+    "jupyterlab-pygments==0.3.0",  # via nbconvert
+    "babel==2.18.0",  # via jupyterlab-server
+    "json5==0.15.0",  # via jupyterlab-server
+    "argon2-cffi==25.1.0",  # via jupyter-server
+    "argon2-cffi-bindings==25.1.0",  # via argon2-cffi
+    "send2trash==2.1.0",  # via jupyter-server
+    "terminado==0.18.1",  # via jupyter-server, jupyter-server-terminals
+    "websocket-client==1.9.0",  # via jupyter-server
+    "prometheus-client==0.26.0",  # via jupyter-server
+    "python-json-logger==4.1.0",  # via jupyter-events
+    "jinja2==3.1.6",  # via jupyter-server, jupyterlab
+    "markupsafe==3.0.3",  # via jinja2, nbconvert
+    "bleach==6.4.0",  # via nbconvert
+    "defusedxml==0.7.1",  # via nbconvert
+    "pandocfilters==1.5.1",  # via nbconvert
+    "nbclient==0.11.0",  # via nbconvert
+    "tinycss2==1.5.1",  # via bleach
+    "webencodings==0.5.1",  # via bleach, tinycss2
+    "tornado==6.5.7",  # via ipykernel, jupyter-client, jupyter-server
+    "pyzmq==27.1.0",  # via ipykernel, jupyter-client
+    "traitlets==5.16.1",  # via ipykernel, ipython, ipywidgets
+    "nest-asyncio2==1.7.2",  # via ipykernel
+
+    # via ipython (pulled by ipykernel, ipywidgets)
+    "ipython==9.16.1",  # via ipykernel, ipywidgets, jupyter-console
+    "ipython-pygments-lexers==1.1.1",  # via ipython
+    "debugpy==1.8.21",  # via ipykernel
+    "matplotlib-inline==0.2.2",  # via ipykernel, ipython
+    "jedi==0.20.0",  # via ipython
+    "parso==0.8.7",  # via jedi
+    "pexpect==4.9.0",  # via ipython
+    "ptyprocess==0.7.0",  # via pexpect, terminado
+    "prompt-toolkit==3.0.53",  # via ipython, jupyter-console
+    "wcwidth==0.8.2",  # via prompt-toolkit
+    "stack-data==0.6.3",  # via ipython
+    "asttokens==3.0.2",  # via stack-data
+    "executing==2.2.1",  # via stack-data
+    "pure-eval==0.2.3",  # via stack-data
 ]
 
 [project.optional-dependencies]
