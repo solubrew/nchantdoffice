@@ -2,6 +2,7 @@
 - the following issues were found to existing testing the NchantdOffice Desktop Application with all its most updated internal dependencies.
 
 ## Issues Found:
+- NchantdLabeledCheckbox is collapsing the displayed label to only show the center of the text.
 - make a passphrase popup field instead of triggering the getpass cli logic
     2026-08-04 11:43:30,107 - pyffice.document                         1338: INFO     - 
     [PyfficeDocument] File Path None

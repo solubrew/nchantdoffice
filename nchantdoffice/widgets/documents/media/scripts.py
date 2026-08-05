@@ -114,13 +114,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):
              re-applies them on top of the text-restore.
         """
         super().initModel()
-        try:
-            self.document = self.app.model.codex.init_script({"document": self.config.get("document", {})})
-            self.document.load_document()
-            self.restore_formatting_from_metadata()
-            logma.info(f"[scripts] initModel: loaded script document with restored formatting")
-        except Exception as e:
-            logma.error(f"[scripts] initModel failed: {e}", exc_info=True)
+        self.document = self.app.model.codex.init_script({"document": self.config.get("document", {})})
+        self.document.load_document()
+        self.restore_formatting_from_metadata()
+        logma.info(f"[scripts] initModel: loaded script document with restored formatting")
         if self.context_menu_name is not None:
             self.initialize_context_menu("context.document.script")
         self.view_type = self.config.dikt.get("view_type", "note_view")
@@ -1087,7 +1084,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """Run a save of the doc editor data to the database"""
         return self
 
-    def open_file(self, file=None):
+    def open_file(self, file=None, _populate_document=False, _save=True):
         """Open a script file from disk and update the widget state.
 
         T-NEW-024 (live "NchantdScript breaks initial format
@@ -1122,39 +1119,51 @@ class NchantdOfficeScript(NchantdOfficeDocument):
           .sh -> bash
           everything else -> plain-text
         """
-        try:
-            self.set_file_path(file)
-            if file is not None:
-                # T-NEW-024: derive the syntax from the file extension
-                # so the reopen dispatch picks the right editor API.
-                detected_syntax = self._apply_extension_syntax(file)
-                self.document.open_file(file)
-                # T-NEW-024 followup: the in-memory document.syntax
-                # is correct, but the doc_media row in the DB
-                # still carries the "html" default written at
-                # tab-creation time. On the next reopen, the
-                # loaded tab reads syntax="html" from the DB
-                # and the dispatch falls through to setPlainText.
-                # Push the detected syntax to the doc_media row
-                # so the next reopen reads the correct value.
-                doc = getattr(self, "document", None)
-                doc_id = getattr(doc, "did", None) if doc is not None else None
-                if detected_syntax and doc_id:
-                    model = getattr(self, "app", None) and getattr(self.app, "model", None)
-                    if model is not None and hasattr(model, "update_doc_media_syntax"):
-                        model.update_doc_media_syntax(doc_id, detected_syntax)
-        except Exception as e:
-            logma.warning(e)
-            logma.debug(f"[scripts] open_file traceback: {e}", exc_info=True)
-        self.document.set_location("external")
-        # T-NEW-023 marker: this open_file() call is the *initial*
-        # file-open path (cmd_open_local_file) and must run the
-        # syntax dispatcher; populate_document() reloads (called
-        # from initView on tab-return) honour the raw-bytes
-        # contract instead.
+        super().open_file(file, _populate_document, _save)
+        detected_syntax = self._apply_extension_syntax(file)
+        doc = getattr(self, "document", None)
+        doc_id = getattr(doc, "did", None) if doc is not None else None
+        if detected_syntax and doc_id:
+            model = getattr(self, "app", None) and getattr(self.app, "model", None)
+            if model is not None and hasattr(model, "update_doc_media_syntax"):
+                model.update_doc_media_syntax(doc_id, detected_syntax)
         self._initial_load = True
         self.populate_document()
         self._initial_load = False
+
+        # try:
+        #     self.set_file_path(file)
+        #     if file is not None:
+        #         # T-NEW-024: derive the syntax from the file extension
+        #         # so the reopen dispatch picks the right editor API.
+        #         detected_syntax = self._apply_extension_syntax(file)
+        #         self.document.open_file(file)
+        #         # T-NEW-024 followup: the in-memory document.syntax
+        #         # is correct, but the doc_media row in the DB
+        #         # still carries the "html" default written at
+        #         # tab-creation time. On the next reopen, the
+        #         # loaded tab reads syntax="html" from the DB
+        #         # and the dispatch falls through to setPlainText.
+        #         # Push the detected syntax to the doc_media row
+        #         # so the next reopen reads the correct value.
+        #         doc = getattr(self, "document", None)
+        #         doc_id = getattr(doc, "did", None) if doc is not None else None
+        #         if detected_syntax and doc_id:
+        #             model = getattr(self, "app", None) and getattr(self.app, "model", None)
+        #             if model is not None and hasattr(model, "update_doc_media_syntax"):
+        #                 model.update_doc_media_syntax(doc_id, detected_syntax)
+        # except Exception as e:
+        #     logma.warning(e)
+        #     logma.debug(f"[scripts] open_file traceback: {e}", exc_info=True)
+        # self.document.set_location("external")
+        # # T-NEW-023 marker: this open_file() call is the *initial*
+        # # file-open path (cmd_open_local_file) and must run the
+        # # syntax dispatcher; populate_document() reloads (called
+        # # from initView on tab-return) honour the raw-bytes
+        # # contract instead.
+        # self._initial_load = True
+        # self.populate_document()
+        # self._initial_load = False
         return self
 
     def populate_data(self):
