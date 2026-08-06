@@ -21,7 +21,7 @@
 # New TODOs
 - Image Document tab is push the widgth instead of resizing the image, image should fit to width and size the height maintianing the aspect ratio
 - NchantdOfficeBrowser is not keeping track of url navigation or reloading to the last visited site
-- FileDetailsPane is not updated on initial file open need to implement a refresh
+- FileDetailsPane refresh on initial file open — fixed (refresh() helper + set_file_path calls refresh)
  
  
 - fix and finish Affiliate Manager tab
@@ -62,7 +62,7 @@
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
 | Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests -q` |
-| Current test surface | **397 passed, 6 skipped, 0 failed** (2026-08-06) |
+| Current test surface | **402 passed, 6 skipped, 0 failed** (2026-08-06) |
 
 ### Internal-project stack (CORE INTEGRATED)
 

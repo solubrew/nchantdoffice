@@ -89,6 +89,30 @@ class NchantdFileDetailsPane(NchantdPane):
         self.initView()
         return self
 
+    def refresh(self):
+        """Re-read file details from disk and update the widget fields.
+
+        T-NEW-038: ``FileDetailsPane is not updated on initial file
+        open need to implement a refresh`` -- the file details
+        widgets are populated once during initView with the initial
+        values, but the getters (``get_file_size``, ``get_hash``,
+        etc.) only update the widget when the file path is set
+        AFTER the widgets are built. ``refresh()`` re-runs all
+        getters so the pane reflects the current file path at any
+        time without needing a rebuild.
+        """
+        try:
+            self.get_name()
+            self.get_file_path()
+            self.get_file_size()
+            self.get_created_date()
+            self.get_access_date()
+            self.get_modified_date()
+            self.get_hash()
+        except Exception as e:
+            logma.warning(f"[files] refresh failed: {e}")
+        return self
+
     def get_access_date(self, path=None):
         """"""
         logma.debug(f"[files] get_access_date: path={path!r}")
@@ -192,9 +216,19 @@ class NchantdFileDetailsPane(NchantdPane):
         return date
 
     def get_name(self, path=None):
-        """"""
+        """Read the file name (basename) and update the file-name widget.
+
+        T-NEW-038: prior to this, ``get_name`` only returned the
+        basename without updating ``self.file_name_entry``. Now it
+        mirrors the pattern used by the other getters (``get_file_size``
+        etc.) and writes the name into the widget so a ``refresh()``
+        after ``initView`` actually refreshes every field.
+        """
         path = path or self.file_path or Path("")
-        return path.name
+        name = path.name
+        if self.file_name_entry is not None:
+            self.file_name_entry.setText(str(name))
+        return name
 
     def set_file_name(self, name):
         """"""
@@ -205,13 +239,24 @@ class NchantdFileDetailsPane(NchantdPane):
         return self
 
     def set_file_path(self, path):
-        """"""
+        """Set the file path and refresh all detail fields.
+
+        T-NEW-038: ``FileDetailsPane is not updated on initial file
+        open`` -- calling ``set_file_path`` previously only updated
+        the path-entry widget. The size / hash / date widgets
+        stayed at their initView-time values. Now ``set_file_path``
+        also calls ``refresh()`` so every getter re-runs against
+        the new path. Defensive: when the widgets haven't been
+        built yet (``initView`` not called), ``refresh()`` is a
+        no-op because the getters bail out on missing widgets.
+        """
         logma.debug(f"[files] set_file_path: path={path!r}")
         path = path or ""
         self.file_path = Path(path)
         if self.file_path_entry is None:
             return self
         self.file_path_entry.setText(self.file_path)
+        self.refresh()
         return self
 
 
