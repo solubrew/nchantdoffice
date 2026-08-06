@@ -711,12 +711,19 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """
         Add a tab to the application model.
 
-        T-NEW-054: enforces ``max_tabs_per_node`` (default 35) so a
-        node can't accumulate an unbounded number of tabs. When the
-        limit is reached the tab is rejected with a warning.
+        T-NEW-054: enforces ``max_tabs_per_node`` (default 35). When
+        the limit is reached, a CHILD node is automatically created
+        under ``pid`` and the new tab is added there -- so the user's
+        flow is never blocked, the tree just grows by one level.
+
+        The auto-child name pattern is ``<parent_name>_<n>`` where
+        ``n`` is the next free index. The new node shares the
+        parent's tabset so the user sees the new tab in the same
+        pane (center by default).
 
         :param name: Tab name.
-        :param pid: Parent node ID.
+        :param pid: Parent node ID. May be replaced by a freshly
+                    created child node if the limit is hit.
         :param pos: Tab position.
         :param widget: Widget to display in the tab.
         :param widgdata: Initial data for the widget.
@@ -725,12 +732,14 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         :param tabset: Target tab set.
         :param in_doc: Whether the tab is part of a document.
         :param db: Database alias.
-        :return: Created tab object, or None if the limit was hit.
+        :return: Created tab object, or None if the limit was hit
+                 AND a child node could not be created.
         """
-        if not self._check_max_tabs_per_node(pid, tabset):
+        pid = self._resolve_pid_for_max_tabs(pid, tabset)
+        if pid is None:
             logma.warning(
                 f"[models] add_tab rejected: max_tabs_per_node limit "
-                f"reached for node {pid} (tabset={tabset})"
+                f"reached and could not auto-create child node"
             )
             return None
         tab = super().add_tab(name, pid, pos, widget, widgdata, did, doc_type, tabset, in_doc, db)
@@ -754,27 +763,105 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self._apply_tab_style(tab)
         return tab
 
-    def _check_max_tabs_per_node(self, pid, tabset=None):
-        """Check whether a new tab can be added under ``pid`` (T-NEW-054).
+
+
+    def _resolve_pid_for_max_tabs(self, pid, tabset=None):
+        """Return the pid to use for a new tab (T-NEW-054).
 
         Reads ``self.config.dikt["max_tabs_per_node"]`` (default 35).
-        Returns True if the current tab count is below the limit.
-        Returns True if the limit is 0 or negative (disabled).
-        Best-effort: any exception returns True so the hot path
-        never blocks tab creation on a config/store error.
+        If the current tab count for ``pid`` is below the limit,
+        returns ``pid`` unchanged. When the limit is reached,
+        auto-creates a child node under ``pid`` and returns the new
+        child's nid -- so the user keeps their flow and the tree
+        grows by one level.
+
+        Returns ``None`` when the limit is hit AND a child node
+        cannot be created (store error, etc.).
+
+        Best-effort: any exception returns the original ``pid`` so
+        the hot path never blocks tab creation on a config/store error.
         """
         try:
             limit = self.config.dikt.get("max_tabs_per_node", 35)
             if not isinstance(limit, (int, float)) or limit <= 0:
-                return True
-            # Count existing tabs for this node + tabset
+                return pid
             df = self.get_documents(pid, tabset or "center")
             if df is None or df.empty:
-                return True
-            return len(df) < int(limit)
+                return pid
+            if len(df) < int(limit):
+                return pid
+            # Limit hit -- auto-create child node.
+            new_pid = self._create_child_node(pid)
+            if new_pid is None:
+                return None
+            logma.info(
+                f"[models] max_tabs_per_node ({limit}) hit at pid={pid}; "
+                f"auto-created child pid={new_pid}"
+            )
+            return new_pid
         except Exception as e:
-            logma.warning(f"[models] _check_max_tabs_per_node failed: {e}")
-            return True
+            logma.warning(f"[models] _resolve_pid_for_max_tabs failed: {e}")
+            return pid
+
+    def _create_child_node(self, pid):
+        """Create a generic child node under ``pid`` and return its nid.
+
+        T-NEW-054: auto-creates a child node when the tab limit for
+        ``pid`` is hit. The child name is ``<parent>_<n>`` where ``n``
+        is the next free index under the parent. Returns the new
+        nid, or None on failure.
+
+        Defensive: missing store, missing app, or any exception
+        returns None so the caller can decide whether to fall back
+        to the original pid.
+        """
+        try:
+            parent_name = self._get_node_name(pid) or "node"
+            existing = self._count_children_of(pid)
+            child_name = f"{parent_name}_{existing + 1}"
+            new_pid = self.add_node(
+                name=child_name,
+                ntype="auto_child",
+                pid=pid,
+                pos=existing + 1,
+                parameters=None,
+                tabset=None,
+                return_node=False,
+            )
+            return new_pid
+        except Exception as e:
+            logma.warning(f"[models] _create_child_node failed for pid={pid}: {e}")
+            return None
+
+    def _get_node_name(self, pid):
+        """Best-effort lookup of a node's name by nid (T-NEW-054 helper)."""
+        try:
+            store = getattr(self, "store", None)
+            if store is None:
+                return None
+            df = store.get_table("doc_tree_node", {"WHERE": {"EQUAL": {"nid_txt": str(pid)}}})
+            if df is None or df.empty:
+                return None
+            row = df.iloc[0]
+            for col in ("name_txt", "name", "label_txt"):
+                if col in df.columns:
+                    val = row.get(col)
+                    if val:
+                        return str(val)
+        except Exception as e:
+            logma.warning(f"[models] _get_node_name failed for pid={pid}: {e}")
+        return None
+
+    def _count_children_of(self, pid):
+        """Count the direct children of ``pid`` (T-NEW-054 helper)."""
+        try:
+            df = self.get_nodes()
+            if df is None or df.empty or "pid_txt" not in df.columns:
+                return 0
+            return int((df["pid_txt"].astype(str) == str(pid)).sum())
+        except Exception as e:
+            logma.warning(f"[models] _count_children_of failed for pid={pid}: {e}")
+            return 0
 
     def _apply_tab_style(self, tab):
         """Apply the user-selected tab color / icon (T-NEW-001).

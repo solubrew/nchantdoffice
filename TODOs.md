@@ -1263,23 +1263,34 @@ Only `NchantdAdvancedCalculator` had keyboard routing.
 
 **Regression test:** `tests/test_calculator_keyboard.py` (7 tests).
 
-### T-NEW-054 — Cap tabs connected to a node (default 35) (2026-08-06) ✅ DONE
+### T-NEW-054 — Cap tabs connected to a node (default 35) — auto-create child (2026-08-06) ✅ DONE
 
 Per `testing-report_20260803.md`, the number of tabs connected to a
 node should be capped with an adjustable parameter defaulting to 35.
 
-**Fix:**
-1. `_check_max_tabs_per_node(pid, tabset)` helper on
-   `NchantdOfficeCloakModel` reads `config.dikt["max_tabs_per_node"]`
-   (default 35). Returns True if below the limit, False if at limit.
-   0 or negative disables the limit.
-2. `add_tab` calls the helper before creating the tab; returns None
-   when the limit is reached.
-3. `cmd_on_change_max_tabs_per_node` settings handler persists the
-   user-chosen value to `config.dikt`.
-4. Interface Tab renders a `NchantdSpinBox` wired to the handler.
+User correction (2026-08-06): when the per-node tab limit is hit,
+the model should automatically create a CHILD node under the
+overflow node and place the next tab there -- so the user's flow
+is never blocked; the tree just grows by one level.
 
-**Regression test:** `tests/test_max_tabs_per_node.py` (14 tests).
+**Fix:**
+1. `_resolve_pid_for_max_tabs(pid, tabset)` helper on
+   `NchantdOfficeCloakModel` reads `config.dikt["max_tabs_per_node"]`
+   (default 35). Returns the original ``pid`` if below the limit.
+   When the limit is hit, auto-creates a child node and returns the
+   new child's nid. Returns ``None`` only when the limit is hit AND
+   the child cannot be created. 0 or negative disables the limit.
+2. `_create_child_node(pid)` creates a generic child node whose
+   name is ``<parent>_<n>`` (n = next free index under parent).
+3. `_get_node_name(pid)` / `_count_children_of(pid)` helpers
+   back the child-naming logic.
+4. `add_tab` uses `_resolve_pid_for_max_tabs` -- replaces the
+   earlier boolean `_check_max_tabs_per_node` (deleted).
+5. `cmd_on_change_max_tabs_per_node` settings handler persists the
+   user-chosen value to `config.dikt`.
+6. Interface Tab renders a `NchantdSpinBox` wired to the handler.
+
+**Regression test:** `tests/test_max_tabs_per_node.py` (25 tests).
 
 ### T-NEW-055 — NchantdOfficePalette integration with NchantdOfficeImage toolbar (2026-08-06)
 
