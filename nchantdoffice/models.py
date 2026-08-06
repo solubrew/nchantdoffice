@@ -562,13 +562,32 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def add_node(self, name, ntype, pid, pos, parameters=None, tabset=None, return_node=False):
-        """"""
+        """Add a node (T-NEW-056: gated by max_nodes_per_user).
+
+        Non-pro users can create at most
+        ``config.dikt["max_nodes_per_user"]`` (default 100) total
+        nodes. When the limit is reached, returns ``None`` without
+        writing. Pro users (per ``is_pro_user(user)``) bypass the
+        limit.
+        """
+        if not self._check_max_nodes_for_user():
+            logma.warning(
+                f"[models] add_node rejected: max_nodes_per_user "
+                f"limit reached for user (ntype={ntype!r}, name={name!r})"
+            )
+            return None
         node = super().add_node(name, ntype, pid, pos, parameters, tabset, return_node)
         self.has_changed = True
         return node
 
     def add_node_app(self, name, ntype, pid, pos, parameters=None, tabset=None, return_node=False):
-        """"""
+        """Add an app-schema node (T-NEW-056: same gating as add_node)."""
+        if not self._check_max_nodes_for_user():
+            logma.warning(
+                f"[models] add_node_app rejected: max_nodes_per_user "
+                f"limit reached for user (ntype={ntype!r}, name={name!r})"
+            )
+            return None
         node = super().add_node(name, ntype, pid, pos, parameters, tabset, return_node)
         self.has_changed = True
         return node
@@ -862,6 +881,41 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         except Exception as e:
             logma.warning(f"[models] _count_children_of failed for pid={pid}: {e}")
             return 0
+
+    def _check_max_nodes_for_user(self, user=None):
+        """Whether the user can create another node (T-NEW-056).
+
+        Reads ``self.config.dikt["max_nodes_per_user"]`` (default 100).
+        Returns True if total node count is below the limit.
+        Pro users (``user.has_pro is True``) bypass the limit.
+        Returns True if the limit is 0 or negative (disabled).
+        Best-effort: any exception returns True so the hot path
+        never blocks node creation on a config/store error.
+
+        Args:
+            user: optional user object (typically ``self.user``).
+                Pulled from the model attribute when not supplied.
+        """
+        try:
+            if user is None:
+                user = getattr(self, "user", None)
+            # Pro bypass
+            try:
+                from nchantdoffice.utilities.upgrades import is_pro_user
+                if is_pro_user(user):
+                    return True
+            except Exception:
+                pass
+            limit = self.config.dikt.get("max_nodes_per_user", 100)
+            if not isinstance(limit, (int, float)) or limit <= 0:
+                return True
+            df = self.get_nodes()
+            if df is None:
+                return True
+            return len(df) < int(limit)
+        except Exception as e:
+            logma.warning(f"[models] _check_max_nodes_for_user failed: {e}")
+            return True
 
     def _apply_tab_style(self, tab):
         """Apply the user-selected tab color / icon (T-NEW-001).

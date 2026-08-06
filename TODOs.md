@@ -42,6 +42,7 @@
 - **T-NEW-053** ✅ Calculator keyboard input (number pad / number row) — fixed
 - **T-NEW-054** ✅ Cap tabs per node (adjustable param, default 35) — fixed
 - **T-NEW-055** NchantdOfficePalette integration with NchantdOfficeImage toolbar
+- **T-NEW-056** Cap total nodes per non-pro user at 100 (limit configurable via Interface Tab)
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1318,6 +1319,42 @@ No priority tier — feature enhancement.
    the color distribution from the loaded image.
 3. Add a regression test asserting the palette drawer opens and
    displays color percentages.
+
+### T-NEW-056 — Limit total nodes per non-pro user (default 100) (2026-08-06)
+
+Per user direction (2026-08-06): cap the total number of tree nodes
+a non-pro user can create at 100. Pro users (those with
+``user.has_pro == True``) are exempt.
+
+**Affected sites:**
+
+- `nchantdoffice/models.py` — `add_node` (and `add_node_app`) on
+  `NchantdOfficeCloakModel` must consult the configured limit before
+  writing a new node.
+- `nchantdoffice/widgets/config/settings.py` — new
+  `cmd_on_change_max_nodes_per_user` handler + Interface Tab UI entry.
+
+**Migration plan:**
+
+This is a small UX safeguard. Implementation is straightforward:
+
+1. Add `_check_max_nodes_for_user(user=None)` helper on
+   `NchantdOfficeCloakModel` that reads
+   `config.dikt["max_nodes_per_user"]` (default 100) and returns
+   True if the user can create another node, False otherwise.
+   - Pro users (per `is_pro_user(user)`) bypass the limit.
+   - 0 or negative disables the limit.
+   - Best-effort: any exception returns True (never block node
+     creation on a config/store error).
+2. `add_node` (and `add_node_app`) call the helper before
+   `super().add_node(...)`; on False they return None without
+   writing.
+3. `cmd_on_change_max_nodes_per_user` settings handler persists the
+   user-chosen value to `config.dikt`.
+4. Interface Tab renders a `NchantdSpinBox` (default 100) wired to
+   the handler.
+
+**Regression test:** `tests/test_max_nodes_per_user.py` (TBD).
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 

@@ -550,6 +550,37 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return self
 
+    # ------------------------------------------------------------------
+    # T-NEW-056 — Max total nodes per non-pro user
+    # ------------------------------------------------------------------
+
+    def cmd_on_change_max_nodes_per_user(self, event=None, *args, **kwargs):
+        """Set the ``max_nodes_per_user`` config value (T-NEW-056).
+
+        Reads the SpinBox value and persists
+        ``max_nodes_per_user`` on ``config.dikt``. Default 100.
+        When 0 or negative, the limit is disabled (unlimited nodes).
+        Pro users (per ``is_pro_user(user)``) always bypass the limit
+        -- this knob only restricts non-pro users.
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            value = 100
+            if event is not None and hasattr(event, "value"):
+                value = int(event.value())
+            elif event is not None and hasattr(event, "isChecked"):
+                value = int(event.isChecked())
+            self.max_nodes_per_user = value
+            self.config.dikt["max_nodes_per_user"] = value
+            logma.info(f"[settings] max_nodes_per_user set to {value}")
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_max_nodes_per_user failed: {e}",
+                exc_info=True,
+            )
+        return self
+
     def cmd_on_change_update_tab_name_to_file_name(self, event=None, *args, **kwargs):
         """Toggle the ``update_tab_name_to_file_name`` flag (T-NEW-032).
 
@@ -955,6 +986,21 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         }
         self.max_tabs_per_node_entry = NchantdSpinBox(self, cfg).initWidget()
         center_settings_group.addWidget(self.max_tabs_per_node_entry, row, 0)
+        row += 1
+
+        # T-NEW-056: cap total nodes per non-pro user. Default 100.
+        # 0 disables the limit. Pro users (per is_pro_user) bypass.
+        cfg = {
+            "text": "Max total nodes per non-pro user (0 = unlimited)",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_on_change_max_nodes_per_user,
+            "min": 0,
+            "max": 10000,
+            "value": int(self.config.dikt.get("max_nodes_per_user", 100)),
+        }
+        self.max_nodes_per_user_entry = NchantdSpinBox(self, cfg).initWidget()
+        center_settings_group.addWidget(self.max_nodes_per_user_entry, row, 0)
         row += 1
 
         primary_layout.addLayout(center_settings_group.layout)
