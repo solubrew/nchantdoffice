@@ -35,7 +35,7 @@ Fix in project source, not auditor (unless real bug). All work on `gamma` branch
 - All internal projects: `git clone -b gamma file:///mnt/overse/SBST01/vein/GitVein/<name>.git`
 - Install editable: `pip install -e /home/solubrew/.hermes/projects/<name> --no-deps`
 - PyKeyStore: deliberate security design — store secrets via PyKeyStore, not env vars
-- Logging: `from kahndor.logma import Logma` (not `from ogma.logma`)
+- Logging: `from kahndor.logma import Logma` (not `from kahndor.logma`)
 - Config: `from kahndor import kahndor`
 
 ## Session Commit Log (this sprint)

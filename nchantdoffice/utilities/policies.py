@@ -21,7 +21,7 @@ import json as j
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from subtrix.subtrix import uuid
 
 from nchantdoffice.models import NchantdOfficeCloakModel

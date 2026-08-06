@@ -41,17 +41,12 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from PySide6.QtWidgets import QApplication, QWidget
+
 _QAPP = QApplication.instance() or QApplication(sys.argv)
 
 
-SCRIPTS_PY = Path(
-    "/home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/"
-    "widgets/documents/media/scripts.py"
-)
-IMAGES_PY = Path(
-    "/home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/"
-    "widgets/documents/media/images.py"
-)
+SCRIPTS_PY = Path("/home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/" "widgets/documents/media/scripts.py")
+IMAGES_PY = Path("/home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/" "widgets/documents/media/images.py")
 
 
 # ---------------------------------------------------------------------------
@@ -76,17 +71,20 @@ def test_cmd_open_tool_drawer_hides_all_panes_then_shows_named_one():
     ``tool_name``.
 
     We don't import NchantdOfficeImage (its top-level
-    `from ogma.logma import Logma` requires the ogma package
+    `from kahndor.logma import Logma` requires the ogma package
     which isn't in the sasquatch venv). Instead we drive the
     helper via a simple namespace duck-typed class -- the
     helper only needs the 5 pane attributes + the cmd call.
     """
+
     class _FakePane:
         def __init__(self):
             self._hidden = False
             self._shown = False
+
         def hide(self):
             self._hidden = True
+
         def show(self):
             self._hidden = False
             self._shown = True
@@ -141,12 +139,15 @@ def test_cmd_open_tool_drawer_hides_all_panes_then_shows_named_one():
 
 def test_cmd_open_tool_drawer_handles_missing_tool_name():
     """Defensive: when tool_name is None, hide all panes."""
+
     class _FakePane:
         def __init__(self):
             self._hidden = False
             self._shown = False
+
         def hide(self):
             self._hidden = True
+
         def show(self):
             self._hidden = False
             self._shown = True
@@ -194,11 +195,14 @@ def test_cmd_open_tool_drawer_handles_missing_tool_name():
 
 def test_cmd_open_tool_drawer_handles_unknown_tool():
     """Defensive: when tool_name doesn't match, hide all."""
+
     class _FakePane:
         def __init__(self):
             self._hidden = False
+
         def hide(self):
             self._hidden = True
+
         def show(self):
             pass
 
@@ -244,6 +248,7 @@ def test_cmd_open_tool_drawer_handles_unknown_tool():
 
 def test_cmd_open_tool_drawer_handles_missing_panes():
     """Defensive: when panes are missing, return self without raising."""
+
     class _FakeImage:
         def cmd_open_tool_drawer(self, tool_name=None, *args, **kwargs):
             panes = [
@@ -323,19 +328,20 @@ def test_insert_specs_moved_from_selection_to_object_drawer():
     assert obj_match, "init_drawer_object_config not found"
     selection_body = sel_match.group(1)
     object_body = obj_match.group(1)
+
     # Check the body for actual code (not docstrings).
     # Strip the docstring by finding the closing """ after
     # the def line.
     def strip_doc(body):
         m = re.search(r'^.*?""".*?"""', body, re.S)
         if m:
-            return body[m.end():]
+            return body[m.end() :]
         return body
+
     selection_body = strip_doc(selection_body)
     object_body = strip_doc(object_body)
     assert "insert_specs" in object_body, (
-        "insert_specs must live in init_drawer_object_config "
-        "(T-NEW-035 item #4: move inserts to object config)"
+        "insert_specs must live in init_drawer_object_config " "(T-NEW-035 item #4: move inserts to object config)"
     )
     assert "insert_specs" not in selection_body, (
         "insert_specs must NOT live in init_drawer_selection_config "
@@ -355,8 +361,7 @@ def test_drawers_carry_spacing_2_in_widget_cfg():
     """
     txt = SCRIPTS_PY.read_text()
     assert '"spacing": 2' in txt or "'spacing': 2" in txt, (
-        "drawer widget cfgs must carry spacing=2 "
-        "(T-NEW-035 item #5: tighten pane spacing)"
+        "drawer widget cfgs must carry spacing=2 " "(T-NEW-035 item #5: tighten pane spacing)"
     )
 
 

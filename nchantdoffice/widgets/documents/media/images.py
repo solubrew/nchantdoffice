@@ -22,7 +22,7 @@ from copy import deepcopy
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
 from nchantrs.libraries import pyqt
-from ogma.logma import Logma
+from kahndor.logma import Logma
 from nchantrs.widgets.managers import NchantdBasketManager
 from nchantrs.widgets.media.images import NchantdImage
 from nchantrs.widgets.media.palettes import NchantdPaletteTable
