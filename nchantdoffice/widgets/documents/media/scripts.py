@@ -1459,20 +1459,19 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         language is a single tuple.
         """
 
-        # TODO untagle file_format and syntax
-        # self.document.file_format = self.config.dikt.get("document", {}).get("syntax", "plain-text")
-        if self.document.file_format is None:
-            logma.info(f"Set Default File Format")
-            self.document.file_format = "plain-text"
-        logma.info(f"Syntax {self.document.syntax}")
-        logma.info(f"Type {type(self.document.syntax)}")
+        # T-NEW-035: ``file_format`` and ``syntax`` are now the same
+        # thing on the script document. ``syntax`` is the
+        # canonical name (per the T-NEW-024 doc-media / T-NEW-035
+        # rollout); ``file_format`` is kept as a backward-compat
+        # alias that mirrors ``syntax`` so the older dispatch
+        # paths which still read ``file_format`` keep working
+        # until the rename completes across the app.
         if self.document.syntax is None or isinstance(self.document.syntax, float):  # NaN guard
             self.document.syntax = "plain-text"
+        if hasattr(self.document, "file_format"):
+            self.document.file_format = self.document.syntax
         logma.info(f"Document Format: {self.document.file_format}")
         logma.info(f"Syntax {self.document.syntax}")
-        # TOOD Refactor file format syntax seperation and tracking
-        if self.document.file_format == "markdown":
-            self.document.syntax = "markdown"
 
         # 1:1 setters — no transformation
         if self.document.syntax == "markdown":

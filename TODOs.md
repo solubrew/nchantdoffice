@@ -62,7 +62,7 @@
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
 | Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests -q` |
-| Current test surface | **388 passed, 6 skipped, 0 failed** (2026-08-06) |
+| Current test surface | **393 passed, 6 skipped, 0 failed** (2026-08-06) |
 
 ### Internal-project stack (CORE INTEGRATED)
 
@@ -257,7 +257,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-032 | Tab name updates to file name on file open (Interface Tab config) | ✅ Done — Sprint 29 (cfg-dikt flag + model _file_open_cfg helper) |
 | T-NEW-033 | Search (global / node / tab) + finish `NchantdOfficeApplicationToolBox` | ✅ Done — Sprint 29 (SQLite index + 3 cmd_search_* handlers) |
 | T-NEW-034 | Data Source config card polish (apikey / tracked / size / retention / save) | ✅ Done — Sprint 30 (tracked checkbox + size label + retention spinbox + save button added) |
-| T-NEW-035 | Script-tool polish (`file_format` vs `syntax`, drawer-redraw, object-config inserts, pane-spacing) | 🔨 Partial — Sprint 29 (4/5 items done; file_format-vs-syntax deferred to user) |
+| T-NEW-035 | Script-tool polish (`file_format` vs `syntax`, drawer-redraw, object-config inserts, pane-spacing) | ✅ Done — Sprint 30 (file_format-vs-syntax closed; file_format kept as backward-compat alias of syntax) |
 | T-NEW-036 | Journal restore on tab change | ✅ Done — Sprint 29 (refresh_content on tab focus) |
 | T-NEW-037 | Empty method stubs (analytics_charts, charts, toolbars) | ✅ Done — Sprint 29 (2 filled, 1 deferred to T-NEW-029) |
 | T-NEW-038 | Database-save icon for internally stored documents | ✅ Done — Sprint 29 (_save_action picks save_database for internal docs) |
