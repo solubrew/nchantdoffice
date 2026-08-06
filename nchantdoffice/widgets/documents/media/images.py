@@ -688,8 +688,12 @@ class NchantdOfficeImage(NchantdOfficeDocument):
                 # 13: {"action": "crop_image", "handler": self.cmd_crop_image},
                 # 14: {"action": "generate_image", "handler": self.cmd_generate_image},
                 15: {
-                    "action": "add_palette_document_nchantdpalette",
-                    "handler": self.cmd_add_palette_document_nchantdpalette,
+                    "action": "show_palette_drawer",
+                    "handler": self.cmd_show_palette_drawer,
+                },
+                16: {
+                    "action": "scan_palette_from_image",
+                    "handler": self.cmd_run_palette_scan,
                 },
                 49: "_insert_stretch",
             }
@@ -865,6 +869,101 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[images] cmd_run_palette_scan failed: {e}", exc_info=True)
         return self
+
+    def cmd_show_palette_drawer(self, event=None, *args, **kwargs):
+        """Open the palette drawer with the current image's color list.
+
+        T-NEW-055: scans the image for its color palette (or
+        uses the cached ``config.dikt["palette_scan"]``), then opens
+        the toolbox drawer where the palette document is displayed
+        with a list of colors and percentage usage in the image.
+
+        Best-effort: any exception is logged and the drawer is
+        opened with whatever's available (cached palette, default
+        palette, etc.).
+        """
+        try:
+            # Re-run the palette scan if no cached palette exists.
+            if not self.config.dikt.get("palette_scan"):
+                try:
+                    self.cmd_run_palette_scan()
+                except Exception as exc:
+                    logma.warning(
+                        f"[images] cmd_show_palette_drawer: palette scan "
+                        f"failed: {exc}"
+                    )
+            # Refresh the palette table widget now that we have data.
+            palette = self.config.dikt.get("palette_scan") or {}
+            self._populate_palette_table(palette)
+            # Open the toolbox / drawer.
+            if hasattr(self, "cmd_open_tool_drawer"):
+                try:
+                    self.cmd_open_tool_drawer("palette")
+                except Exception as exc:
+                    logma.warning(
+                        f"[images] cmd_show_palette_drawer: open drawer "
+                        f"failed: {exc}"
+                    )
+            logma.info("[images] cmd_show_palette_drawer: palette drawer opened")
+        except Exception as e:
+            logma.error(
+                f"[images] cmd_show_palette_drawer failed: {e}", exc_info=True
+            )
+        return self
+
+    def _populate_palette_table(self, palette):
+        """Populate the palette table widget from a palette dict.
+
+        T-NEW-055 helper: the palette dict shape is::
+
+            {"colors": [{"hex": "#rrggbb", "count": <int>, "percent": <float>}, ...]}
+
+        Falls back to a flat list of (hex, count) tuples when the
+        dict shape is unknown. Best-effort: any exception is logged
+        and swallowed so the drawer still opens.
+        """
+        try:
+            table = getattr(self, "image_palette", None)
+            if table is None:
+                return
+            rows = []
+            colors = palette.get("colors") if isinstance(palette, dict) else None
+            if colors is None and isinstance(palette, (list, tuple)):
+                # Flat list of (hex, count, percent) tuples
+                for entry in palette:
+                    if isinstance(entry, dict):
+                        rows.append({
+                            "hex": entry.get("hex"),
+                            "usage": entry.get("percent", entry.get("usage", 0)),
+                            "count": entry.get("count", 0),
+                        })
+                    elif isinstance(entry, (list, tuple)) and len(entry) >= 2:
+                        rows.append({
+                            "hex": entry[0],
+                            "usage": entry[2] if len(entry) >= 3 else 0,
+                            "count": entry[1],
+                        })
+            elif colors:
+                for entry in colors:
+                    rows.append({
+                        "hex": entry.get("hex") if isinstance(entry, dict) else None,
+                        "usage": entry.get("percent", 0) if isinstance(entry, dict) else 0,
+                        "count": entry.get("count", 0) if isinstance(entry, dict) else 0,
+                    })
+            # Delegate to the table's populator when available.
+            if hasattr(table, "set_data"):
+                try:
+                    table.set_data(rows)
+                    return
+                except Exception:
+                    pass
+            if hasattr(table, "populate"):
+                try:
+                    table.populate(rows)
+                except Exception:
+                    pass
+        except Exception as e:
+            logma.warning(f"[images] _populate_palette_table failed: {e}")
 
     def cmd_image_width_change(self, event=None, *args, **kwargs):
         """Update the image-width field on the config."""
@@ -1094,13 +1193,17 @@ class NchantdOfficeImage(NchantdOfficeDocument):
 
         Returns ``self`` for chainable call sites.
         """
-        # Map of tool_name -> attribute name on the pane
+        # Map of tool_name -> attribute name on the pane.
+        # T-NEW-055 added "palette" so the Show Palette button
+        # (T-NEW-055) can open the palette drawer via the same
+        # mechanism.
         panes = [
             ("format_conversion", "image_format_conversion_pane"),
             ("size_conversion", "image_size_conversion_pane"),
             ("color_shift", "image_color_shift_pane"),
             ("crop", "image_crop_pane"),
             ("generator", "image_generator_pane"),
+            ("palette", "image_palette"),
         ]
         try:
             for _, attr_name in panes:

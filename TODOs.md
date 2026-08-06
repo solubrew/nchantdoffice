@@ -41,7 +41,7 @@
 - **T-NEW-052** Action show_pane_left Lookup Config Empty — toolbar init crash
 - **T-NEW-053** ✅ Calculator keyboard input (number pad / number row) — fixed
 - **T-NEW-054** ✅ Cap tabs per node (adjustable param, default 35) — fixed
-- **T-NEW-055** NchantdOfficePalette integration with NchantdOfficeImage toolbar
+- **T-NEW-055** ✅ NchantdOfficePalette integration with NchantdOfficeImage toolbar — fixed
 - **T-NEW-056** ✅ Cap total nodes per non-pro user at 100 (configurable) — fixed
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
@@ -62,7 +62,7 @@
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
 | Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests -q` |
-| Current test surface | **369 passed, 6 skipped, 0 failed** (2026-08-06) |
+| Current test surface | **377 passed, 6 skipped, 0 failed** (2026-08-06) |
 
 ### Internal-project stack (CORE INTEGRATED)
 
@@ -1293,32 +1293,27 @@ is never blocked; the tree just grows by one level.
 
 **Regression test:** `tests/test_max_tabs_per_node.py` (25 tests).
 
-### T-NEW-055 — NchantdOfficePalette integration with NchantdOfficeImage toolbar (2026-08-06)
+### T-NEW-055 — NchantdOfficePalette integration with NchantdOfficeImage toolbar (2026-08-06) ✅ DONE
 
 Per `testing-report_20260804.md`, the `NchantdOfficePalette` document
 needs to be integrated into the `NchantdOfficeImage` toolbar. The
 palette should launch as a toolbox drawer showing the palette document
 with a list of colors and their percentage usage in the image.
 
-**Affected sites:**
+**Fix** (in `nchantdoffice/widgets/documents/media/images.py`):
+1. Image toolbar buttons dict now has button 15 wired to
+   `cmd_show_palette_drawer` (replacing the previous
+   `add_palette_document_nchantdpalette` placeholder) and button 16
+   wired to `cmd_run_palette_scan` (explicit scan).
+2. `cmd_show_palette_drawer` runs the palette scan if needed,
+   populates the `NchantdPaletteTable` via the new
+   `_populate_palette_table` helper, then opens the toolbox drawer.
+3. `cmd_open_tool_drawer("palette")` now hides the other panes and
+   shows the palette table.
+4. `_populate_palette_table` accepts the canonical palette dict
+   shape and a flat-tuple fallback.
 
-- `nchantdoffice/widgets/documents/media/sketches.py:2272` —
-  `NchantdOfficePalette` class exists but is not wired into the image
-  toolbar.
-- `nchantdoffice/widgets/documents/media/images.py` — the image
-  toolbar needs a new button that launches the palette drawer.
-- `nchantdoffice/_data_/models.yaml:74` — the palette document type
-  is seeded but commented out in the tab config.
-
-**Migration plan:**
-
-No priority tier — feature enhancement.
-
-1. Add a "Show Palette" button to `NchantdOfficeImage`'s toolbar.
-2. On click, open the palette as a drawer that extracts and displays
-   the color distribution from the loaded image.
-3. Add a regression test asserting the palette drawer opens and
-   displays color percentages.
+**Regression test:** `tests/test_palette_in_image_toolbar.py` (8 tests).
 
 ### T-NEW-056 — Limit total nodes per non-pro user (default 100) (2026-08-06) ✅ DONE
 
