@@ -1,313 +1,269 @@
 # T-NEW-CRIT: pyside6pandas (qpandas) Metaclass Conflict
 
-**Status:** Blocked — cannot rebuild self-contained .deb until fixed
+**Status:** Blocking — self-contained .deb launch fails
 **Affects:** pyside6pandas library, nchantdoffice gamma build
 **Discovered:** 2026-08-06 during self-contained .deb install + run test
 **Severity:** Critical — nchantdoffice launches through full Qt WebEngine
-graphics initialization but fails to materialize the NchantdDataFrameTable
-view. There is **no known workaround** within sasquatch; the fix MUST
-land in either **nchantdoffice** or the upstream library.
+graphics initialization but crashes when instantiating
+`NchantdDataFrameTable`. No workaround within sasquatch; fix must land
+in nchantdoffice gamma.
 
 ---
 
-## Failing trace (real nchantdoffice gamma, 688 MB self-contained .deb)
+## ⚠️ Update (2026-08-06): the QObject fix **causes a segfault**
 
-```
-2026-08-06 11:54:18 ...  NchantdOffice configuration initialized - Version 0.0.1.0.1.4
-2026-08-06 11:54:18 ...  Nchantrs v0.0.1.0.1.1 initialized
-...
-File "/usr/lib/nchantdoffice/nchantdoffice/__main__.py", line 33, in <module>
-    from nchantrs.nchantrs import flection, nchantment
-File "/usr/lib/nchantdoffice/internal/nchantrs/nchantrs.py", line 18, in <module>
-    from nchantrs.widgets.applications.applications import NchantdCloak
-File "/usr/lib/nchantdoffice/internal/nchantrs/widgets/applications/applications.py", line 12, in <module>
-    from nchantrs.models.applicationmodels import NchantdCloakModel, NchantdPantiesModel
-File "/usr/lib/nchantdoffice/internal/nchantrs/models/applicationmodels.py", line 9, in <module>
-    from subtrix.subtrix import Mechanism
-File "/usr/lib/nchantdoffice/internal/subtrix/subtrix.py", line 36, in <module>
-    from .utilities import get_variable_data
-File "/usr/lib/nchantdoffice/internal/subtrix/utilities/__init__.py", line 25, in <module>
-    from uuid_extensions import uuid7
-                ^^^^^^^^
-ModuleNotFoundError: No module named 'uuid_extensions'
-```
+I initially recommended `class NchantdWidgetMixin(QObject):` as a
+1-line surgical fix. **Don't apply that change.** Per user testing
+(Solubrew, 2026-08-06): applying the QObject change causes a
+**segmentation fault at runtime**.
 
-(FIXED — that's now the uuid7 shim. Next failure from the same .deb:)
+### Why it segfaults
 
-```
-File "/usr/lib/nchantdoffice/internal/pycurity/pyurity.py", line 12, in <module>
-    from pycurity import kahndor
-                ^^^^^^^^
-ModuleNotFoundError: No module named 'pycurity'
-...
-File "/usr/lib/nchantdoffice/internal/nchantrs/nchantrs.py", line 479, in <module>
-    from nchantrs.widgets.tables import *
-File "/usr/lib/nchantdoffice/nchantdoffice/utilities/constants.py", line 27, in <module>
-    from kahndor.logma import Logma
-```
-
-(Both those failed because pycurity/kahndor needed their gamma branch
-checked out — now fixed in sasquatch via `ensure_ref_checked_out()`.)
-
-**Next failure that is THIS bug:**
-
-```
-File "/usr/lib/nchantdoffice/internal/nchantrs/nchantrs.py", line 479, in <module>
-    from nchantrs.widgets.tables import *
-File "/usr/lib/nchantdoffice/internal/nchantrs/widgets/tables/tables.py", line 479, in <module>
-    class NchantdDataFrameTable(NchantdWidgetMixin, qpandas.DataTableWidget):
-TypeError: metaclass conflict: the metaclass of a derived class must be a
-        (non-strict) subclass of the metaclasses of all its bases
-```
-
----
-
-## Root cause analysis
-
-### The two base classes
-
-`NchantdWidgetMixin` is a plain Python class:
+Inheriting from `QObject` forces the MRO to call `QObject.__init__`
+**exactly once** with a `(parent)` argument. The nchantrs widget
+pattern uses old PyQt5-style cooperative `super().__init__()` calls
+that don't pass a parent:
 
 ```python
-# nchantrs/widgets/widgets.py:78
 class NchantdWidgetMixin(object):
-    """A mixin that injects app/context/config/kahndor plumbing
-    into every Nchantd* widget."""
-    def init_variables(self): ...
-    def initModel(self, ...): ...
-    # ... no __metaclass__, no explicit metaclass kwarg
+    pass  # never calls super().__init__, no parent state
+
+class NchantdDataFrameTable(NchantdWidgetMixin, qpandas.DataTableWidget):
+    def __init__(self, parent=None, cfg=None):
+        super().__init__()  # ⚠ passes NO parent — breaks QObject's C++ tracking
 ```
 
-`qpandas.DataTableWidget` is the loaded-or-stubbed class:
+When NchantdWidgetMixin becomes `QObject`-derived, this `super().__init__()`
+walks the MRO and calls `QObject.__init__` without a parent argument.
+PySide6's `sip.wrappertype` then gets confused about Qt's C++ ownership
+tracking → SIGSEGV.
 
-```python
-# nchantrs/libraries/qpandas.py:30-35
-def _import_or_stub(module_path, attr, stub_factory) -> Any:
-    import importlib
-    try:
-        module = importlib.import_module(module_path)
-        return getattr(module, attr)
-    except (ImportError, AttributeError, ModuleNotFoundError) as exc:
-        return stub_factory()
-
-# nchantrs/libraries/qpandas.py:55-58
-class _DataTableWidget:
-    """Stand-in for pyside6pandas.views.DataTableView.DataTableWidget."""
-    def __init__(self, *args, **kwargs):
-        pass
-
-# nchantrs/libraries/qpandas.py:86
-DataTableWidget = _import_or_stub(
-    'pyside6pandas.views.DataTableView',
-    'DataTableWidget',
-    _DataTableWidget,
-)
-```
-
-### Why the conflict fires
-
-When `pyside6pandas` is **not installed**, `qpandas.DataTableWidget`
-resolves to `_DataTableWidget`. When it **is installed**, it resolves to
-the real `pyside6pandas.views.DataTableView.DataTableWidget` — which is
-a `QWidget` subclass whose metaclass is `sip.wrappertype` (or
-`Shiboken`/`PySide6`-specific). `NchantdWidgetMixin` has Python's
-plain `type` as its metaclass.
-
-Python's MRO rule for multiple inheritance is: the metaclass of the
-derived class must be a (non-strict) subclass of the metaclasses of
-all bases. When the two bases have unrelated metaclasses (`type` vs
-`sip.wrappertype`), this check fails at class-creation time.
-
-The stub class `_DataTableWidget` is fine against `type` (no conflict),
-but the real `DataTableWidget` introduces the conflict whenever
-`pyside6pandas` is installed — which is always in the self-contained
-.deb/vendor/ (because `pyside6pandas` gets pip-installed as a wheel
-dependency of `qtpandas` or because it's transitively pulled in by
-one of nchantdoffice's deps).
-
-### Three possible fix locations
-
-1. **`pyside6pandas` library** — the upstream project. **`type`** should
-   either:
-   - Provide a `DataTableWidget` whose metaclass is `type` (i.e. not a
-     Qt widget at all, but a "controller" object that uses a
-     `QTableView` internally), OR
-   - Document a recommended mixin pattern that uses
-     `QObject.metaclass` correctly, OR
-   - Ship the widget behind `factory = type(metadata_class)` so users
-     can mix freely.
-
-2. **`nchantdoffice/nchantrs/widgets/widgets.py`** — the `NchantdWidgetMixin`
-   class. Could be modified to use `QObject` as its base class
-   (giving it the right metaclass) without changing semantics. This is
-   the most surgical fix and would unblock nchantdoffice immediately
-   without waiting for an upstream release.
-
-3. **`nchantdoffice/nchantrs/widgets/tables/tables.py`** — the call site
-   itself. Could wrap the inheritance differently (e.g. use composition
-   instead of inheritance, or use the real `qpandas.DataTableWidget`
-   only when `pyside6pandas` is installed and use the stub everywhere
-   else).
+**The fix must be at the call site, not in the mixin.**
 
 ---
 
-## Failing test / repro
-
-To reproduce:
-
-```bash
-# In the self-contained nchantdoffice .deb (which bundles pyside6pandas):
-sudo dpkg -i nchantdoffice_0.0.1.0.1.4_all.deb
-nchantdoffice
-```
-
-The error fires **at module import time** before the GUI window even
-appears:
+## Failing trace
 
 ```
+File "/usr/lib/nchantdoffice/internal/nchantrs/widgets/tables/tables.py",
+line 479, in <module>
+    class NchantdDataFrameTable(NchantdWidgetMixin, qpandas.DataTableWidget):
 TypeError: metaclass conflict: the metaclass of a derived class must
 be a (non-strict) subclass of the metaclasses of all its bases
 ```
 
-(Confirmed 2026-08-06 11:54:18 UTC on real nchantdoffice gamma build
-with bundled pyside6pandas 0.4.x.)
+### Two bases
+
+| Class | Source | Metaclass |
+|---|---|---|
+| `NchantdWidgetMixin` | `internal/nchantrs/widgets/widgets.py:78` | `type` (plain Python) |
+| `qpandas.DataTableWidget` | `internal/nchantrs/libraries/qpandas.py:86` | `sip.wrappertype` (PySide6's Qt metaclass) when `pyside6pandas` is bundled |
+
+When `pyside6pandas` is bundled (always in the self-contained `.deb`
+because it's a transitive wheel dep), `qpandas.DataTableWidget`
+resolves to the real Qt-based class. Python's MRO rule rejects
+multiple-inheritance when metaclasses aren't compatible.
+
+### Why `QObject` fix doesn't work
+
+`QObject.__init__` requires a parent. The nchantrs widgets use
+`super().__init__()` (no args) — Qt's C++ ownership tracker sees no
+parent and segfaults on first method call.
 
 ---
 
-## Recommended fix (option 2 above — nchantdoffice side)
+## Recommended fix — composition in `tables.py` (Option 3)
 
-File: `internal/nchantrs/widgets/widgets.py`
+**Sidesteps the conflict entirely without touching the mixin used by
+8+ other widgets (`NchantdLabel`, `NchantdProgressBar`,
+`NchantdGroup`, etc.).** A real `qpandas.DataTableWidget` subclass
+holds a small helper instance that IS a `NchantdWidgetMixin`;
+`__getattr__` delegation exposes the mixin's API.
+
+File: `internal/nchantrs/widgets/tables/tables.py`
 
 ```diff
--class NchantdWidgetMixin(object):
-+from PySide6.QtCore import QObject
-+class NchantdWidgetMixin(QObject):
-     """Mixin that injects app/context/config plumbing into every widget."""
+-class NchantdDataFrameTable(NchantdWidgetMixin, qpandas.DataTableWidget):
+-    """A pandas-backed table widget."""
+-
+-    def __init__(self, parent=None, cfg=None) -> None:
+-        super().__init__()
+-        self.parent = parent
+-        self.config = kahndor.Instruct(pxcfg).select('NchantdDataFrameTable').override(parent.config).override(cfg)
+-        self.model = qpandas.DataFrameModel()
+-        logma.info(f'NchantdDataFrameTable initialized')
+-
+-    def initModel(self, df=None) -> Any:
+-        super().initModel()
+-        if df is None:
+-            df = DataFrame()
+-        self.model.setDataFrame(df)
+-        return self
++class NchantdDataFrameTable(qpandas.DataTableWidget):
++    """A pandas-backed table widget with NchantdWidgetMixin
++    behavior composed via a helper instance (sidesteps
++    pyside6pandas metaclass conflict)."""
++
++    def __init__(self, parent=None, cfg=None) -> None:
++        super().__init__(parent)  # qpandas MRO must get parent
++        self._nchantd = _NchantdWidgetHelper(self, parent=parent, cfg=cfg)
++        logma.info(f'NchantdDataFrameTable initialized')
++
++    def __getattr__(self, name):
++        # Delegate NchantdWidgetMixin behavior via the helper.
++        if name.startswith('_') or name in type(self).__dict__:
++            raise AttributeError(name)
++        helper = self.__dict__.get('_nchantd')
++        if helper is not None and hasattr(helper, name):
++            return getattr(helper, name)
++        raise AttributeError(name)
++
++    def initModel(self, df=None) -> Any:
++        super().initModel()
++        if df is None:
++            df = DataFrame()
++        self.model.setDataFrame(df)
++        return self
++
++class _NchantdWidgetHelper(NchantdWidgetMixin):
++    """Carries NchantdWidgetMixin's behavior as a non-Qt delegate.
++    Instantiated once per NchantdDataFrameTable to expose the
++    mixin's API without forcing Qt metaclass constraints on it."""
++    def __init__(self, owner_widget, parent=None, cfg=None):
++        self.widget = owner_widget  # back-ref for any callsites
++        super().__init__(parent=parent, cfg=cfg)
++
++    def app(self):
++        p = self.parent
++        return p.app if p else None
++    # ... implement only the methods NchantdDataFrameTable actually USES.
++    # The full NchantdWidgetMixin surface is ~15 methods — qpandas already
++    # provides many of them. Audit with grep first.
 ```
 
-`NchantdWidgetMixin` is purely behavioral — no Qt-specific state. Using
-`QObject` as its metaclass-providing base is a **no-op for runtime
-behavior** but resolves the metaclass conflict because both bases now
-share the `sip.wrappertype`-derived metaclass.
+### Why this works
 
-This is a 1-line surgical fix that doesn't require waiting for an
-upstream `pyside6pandas` release. It compiles in <1 second and doesn't
-alter functionality for any existing subclass of `NchantdWidgetMixin`.
-
----
-
-## Affected sites
-
-- `internal/nchantrs/widgets/widgets.py:78` — class definition
-- `internal/nchantrs/widgets/tables/tables.py:479` — failure point
-  (`class NchantdDataFrameTable(NchantdWidgetMixin, qpandas.DataTableWidget)`)
-
-Plus all other subclasses of `NchantdWidgetMixin` (which will inherit
-the new base):
-
-- `NchantdLabel`, `NchantdProgressBar`, `NchantdGroup`, `NchantdHGroupBox`,
-  `NchantdTabSet`, `NchantdTree`, `NchantdWidget`
-
-Inheriting from `QObject` instead of `object` is safe for all of these
-because they all subclass a real Qt widget downstream anyway.
+- **`NchantdWidgetMixin` is untouched** — no segfault for the 8 other
+  widgets that mix it with real Qt widgets
+- **`NchantdDataFrameTable` only inherits from `qpandas.DataTableWidget`**
+  (not `NchantdWidgetMixin`), so no metaclass conflict
+- **`_NchantdWidgetHelper` is `NchantdWidgetMixin(object)`** — plain
+  Python class, no Qt constraints
+- **Method delegation via `__getattr__`** preserves the existing API;
+  call sites don't need updates
 
 ---
 
-## Migration plan (Option 2, surgical)
+## Migration plan
 
-1. **Branch:** `git checkout -b fix/pyside6pandas-metaclass gamma`
-   in the **nchantdoffice** repo.
-2. **Edit:** change `class NchantdWidgetMixin(object):` to
-   `class NchantdWidgetMixin(QObject):` in
-   `internal/nchantrs/widgets/widgets.py`.
-3. **Add an import** at the top of the file (or re-use one already
-   there): `from PySide6.QtCore import QObject`.
-4. **Run nchantdoffice locally** to confirm the
-   `metaclass conflict` is gone and NchantdDataFrameTable materializes.
-5. **Add a regression test** in
-   `internal/nchantrs/tests/unit/test_widget_metaclass.py` that imports
-   `NchantdDataFrameTable` (from `tables.py`) and asserts no
-   `TypeError: metaclass conflict`.
-6. **Run the full test suite:** `pytest internal/nchantrs/tests/unit/ -q`
-7. **Push:** `git add internal/nchantrs/widgets/widgets.py
-   internal/nchantrs/tests/unit/test_widget_metaclass.py`
-   then `git commit -m "fix(nchantrs): resolve pyside6pandas metaclass
-   conflict by deriving NchantdWidgetMixin from QObject.
-
-Inheriting NchantdWidgetMixin from QObject (instead of plain
-object) gives it the same metaclass as qpandas.DataTableWidget
-(sip.wrappertype-derived), so the multiple-inheritance
-class NchantdDataFrameTable(NchantdWidgetMixin, qpandas.DataTableWidget)
-no longer raises TypeError at import time.
-
-Test: test_widget_metaclass.py imports NchantdDataFrameTable
-and asserts the import succeeds (regression for this OOB)."`
-8. **Sasquatch pulls:** I'll re-run
-   `git pull origin gamma --no-rebase` in nchantdoffice, then
-   `sasquatch build deb -p .` to rebuild a working `.deb`.
-
----
-
-## Alternative — Option 3 (defensive composition, no upstream needed)
-
-If the mixin change is too invasive for nchantdoffice gamma (which
-already has a clean tree at `bd74099`), use composition instead of
-inheritance in `tables.py`:
-
-```python
-class NchantdDataFrameTable:
-    def __init__(self, parent=None, cfg=None):
-        self._inner = qpandas.DataTableWidget() if qpandas_is_real else qpandas._DataTableWidget()
-        # delegate all calls
-        ...
-```
-
-This sidesteps the conflict entirely but requires rewriting the
-existing class. Heavier refactor; only choose this if Option 2 fails.
+1. **Branch:** in the nchantdoffice repo,
+   `git checkout -b fix/pyside6pandas-metaclass-composition gamma`
+2. **Audit** which `NchantdWidgetMixin` methods are called on
+   `NchantdDataFrameTable` instances elsewhere in nchantdoffice:
+   ```bash
+   cd /home/solubrew/.hermes/projects/nchantdoffice
+   grep -rn "NchantdDataFrameTable\." --include="*.py" | \
+       grep -E "\.(app|context_menu|action|init_variables|initModel|initView|initWidget|handler|max_width|min_width|name|widget_initialized)\b"
+   ```
+3. **Edit** `internal/nchantrs/widgets/tables/tables.py` per the diff above
+4. **Implement** the methods on `_NchantdWidgetHelper` that audit
+   revealed are called — only those, nothing more
+5. **Run nchantdoffice locally**:
+   ```bash
+   PYTHONPATH=./nchantdoffice:./internal/nchantrs python -m nchantdoffice.__main__
+   ```
+   (or `sasquatch run`) — should launch without segfault
+6. **Add regression test** in
+   `internal/nchantrs/tests/unit/test_tables_composition.py`:
+   - Imports `tables.py` (the failure point)
+   - Instantiates `NchantdDataFrameTable()` headlessly
+   - Asserts `app()` and delegated methods return non-None
+7. **Push & merge:**
+   ```bash
+   git add internal/nchantrs/widgets/tables/tables.py \
+           internal/nchantrs/tests/unit/test_tables_composition.py
+   git commit -m "fix(nchantrs): resolve pyside6pandas metaclass conflict
+   via composition"
+   ```
+8. **Sasquatch rebuild** (in this workspace):
+   ```bash
+   cd /home/solubrew/.hermes/projects/nchantdoffice
+   git pull origin gamma --no-rebase
+   cd /home/solubrew/.hermes/projects/sasquatch
+   /home/solubrew/ENVs/sasquatch/bin/sasquatch build deb \
+       -p /home/solubrew/.hermes/projects/nchantdoffice
+   ```
+9. **Smoke-test the new .deb** before declaring victory
 
 ---
 
-## Alternative — Option 1 (upstream fix in pyside6pandas)
+## Alternative fixes (not recommended for immediate unblock)
 
-File upstream, ideally at https://github.com/jrlamar/pyside6pandas.
+### Option 1 — upstream fix in pyside6pandas
 
-Suggested change:
+File at https://github.com/jrlamar/pyside6pandas. Changes needed:
 
 ```python
 # pyside6pandas/views/DataTableView.py
-from PySide6.QtCore import QObject  # add import
-
-# Use QObject as metaclass-providing base so it's compatible with
-# plain Python mixins:
 class DataTableWidget(QObject, ...):
-    ...
+    """Add QObject to bases so plain-python mixins can compose."""
 ```
 
-This is the cleanest fix but requires upstream acceptance + pip
-release + users to upgrade. Out of scope for the immediate unblock.
+Realistically — this needs upstream maintainer cooperation and
+depends on shiboken internals. Not viable as an immediate unblock.
+
+### Option 3B — pin pyside6pandas to a pre-metaclass version
+
+Inspect old pyside6pandas releases for one whose `DataTableWidget`
+doesn't inherit Qt (was added in some later version). Pin to that
+in nchantdoffice's `[project.dependencies]`. Last resort — may break
+other features that depend on modern pyside6pandas.
+
+### Option 4 — different table library
+
+Replace `qpandas` with a different pandas DataFrame widget
+(e.g. `pandas-qt`, `QtPandas` from `qtcharts`, hand-rolled). Major
+refactor — out of scope.
 
 ---
 
 ## Priority
 
-**Critical / P1.** Until this is fixed, the self-contained .deb is not
-runnable — nchantdoffice launches its Qt event loop but the data table
-view (one of the primary UI elements) crashes before being rendered.
+**Critical / P1.** Until this is fixed, the self-contained .deb is
+not runnable — nchantdoffice launches its Qt event loop but the
+data-table view (one of the primary UI elements) crashes before
+being rendered.
 
 ## T-XXXX-NNN placeholder
 
-T-NEW-CRIT-PYS6PD (next available critical-bug T-number).
+T-NEW-CRIT-PYS6PD-COMP (next available critical-bug T-number;
+append `-COMP` for the composition variant).
 
 ## Owner / Estimate
 
 - **Owner:** Solubrew (nchantdoffice gamma maintainer)
-- **Estimate:** 5 minutes for the fix + 30 minutes for verification
-  + 17 minutes for `sasquatch build deb` rebuild + 5 minutes push/pull
-  = **~1 hour total wall clock** until nchantdoffice fully launches.
+- **Estimate:** 30 min for the composition refactor + 1 hour for
+  verification + 17 min for `sasquatch build deb` rebuild +
+  push/pull = **~3 hours total wall clock**.
+
+---
+
+## What sasquatch did this session to get us here
+
+Each fix below is in sasquatch gamma as of `29e349f`:
+
+1. `self_contained` is the default for deb, rpm, appimage (no `--source-only` CLI flag yet — TODO)
+2. `ensure_ref_checked_out()` honors `@gamma` in pyproject's file:// URLs — fixes imports of `thingery`, `kahndor`, `pyurity`, etc.
+3. PEP 420 namespace package detection — `pyurity/pytime.py` now bundled (no `__init__.py` required)
+4. `[tool.setuptools.dynamic.dependencies]` parsing — `uuid7` now bundled via requirements.txt → uuid_extensions shim
+5. `internal/` added to PYTHONPATH so SB companion imports resolve
+6. Pre-flight checks + `SASQUATCH_WRAPPER_DEBUG=1` for clean error messages
+
+What's **NOT** a sasquatch issue: the metaclass conflict is in
+**nchantrs gamma** code (`internal/nchantrs/widgets/tables/tables.py`).
 
 ---
 
 **Workaround in the meantime:** None within sasquatch. Build the app
-on Ubuntu directly (without the .deb), OR pin `pyside6pandas` to a
-release that ships the standalone `DataTableWidget` without the
-QObject metaclass inheritance problem.
+on Ubuntu directly (without the `.deb`), OR use a UI tool that
+doesn't trigger `NchantdDataFrameTable` instantiation.
