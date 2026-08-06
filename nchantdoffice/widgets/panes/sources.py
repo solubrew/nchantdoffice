@@ -32,6 +32,7 @@ from nchantrs.widgets.tables.lists import NchantdList, NchantdBulletedList
 from nchantrs.widgets.tables.tables import NchantdTable
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
+from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.groups import NchantdGroup
 from nchantrs.widgets.groups import NchantdVScrollGroupBox
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
@@ -60,7 +61,12 @@ class NchantdSourceEditPane(NchantdPane):
         return self
 
     def initView(self, cfg=None):
-        """"""
+        """T-NEW-034: per-source config card.
+
+        Renders the canonical 4 slots: tracked-by-NchantdOffice
+        checkbox, size-detail label, retention-spinbox, and a
+        save button that persists the values to config.dikt.
+        """
         super().initView(cfg)
         cfg = {"text": self.config.dikt.get("label", "Data Set: ")}
         group = NchantdGroup(self, cfg)
@@ -76,6 +82,36 @@ class NchantdSourceEditPane(NchantdPane):
         cfg = {"text": "+ Add Filter"}
         self.add_filter_button = NchantdButton(self, cfg).initWidget()
         layout.addWidget(self.add_filter_button)
+        # T-NEW-034: tracked / size / retention / save slots
+        cfg = {
+            "text": "Track this source in NchantdOffice",
+            "value": self.config.dikt.get("source_tracked", False),
+            "handler": self.cmd_on_change_source_tracked,
+            "size": ["auto", "auto"],
+            "layout": "horizontal",
+        }
+        self.source_tracked_checkbox = NchantdCheckbox(self, cfg).initWidget()
+        layout.addWidget(self.source_tracked_checkbox)
+        cfg = {
+            "label": "Current Size:",
+            "value": self.config.dikt.get("source_size", "0 MB"),
+            "layout": "horizontal",
+        }
+        self.source_size_label = NchantdLabeledEntry(self, cfg).initWidget()
+        layout.addWidget(self.source_size_label)
+        cfg = {
+            "label": "Max Size (MB):",
+            "min": 0,
+            "max": 100000,
+            "value": self.config.dikt.get("source_retention_mb", 1024),
+            "handler": self.cmd_on_change_source_retention,
+            "layout": "horizontal",
+        }
+        self.source_retention_spinbox = NchantdLabeledSpinBox(self, cfg).initWidget()
+        layout.addWidget(self.source_retention_spinbox)
+        cfg = {"text": "Save Source Settings", "handler": self.cmd_save_source_settings}
+        self.source_save_button = NchantdButton(self, cfg).initWidget()
+        layout.addWidget(self.source_save_button)
         cfg = {}
         self.accept_buttons = NchantdAcceptButtons(self, cfg).initWidget()
         layout.addWidget(self.accept_buttons)
@@ -83,6 +119,55 @@ class NchantdSourceEditPane(NchantdPane):
         self.layout.addStretch()
         # self.spacer = pyqt.QSpacerItem(20, 40, pyqt.QSizePolicy.Minimum, pyqt.QSizePolicy.Expanding)
         # self.layout.addItem(self.spacer)
+        return self
+
+    def cmd_on_change_source_tracked(self, event=None, *args, **kwargs):
+        """T-NEW-034: track / un-track the active source."""
+        try:
+            checked = bool(event) if event is not None else False
+            self.config.dikt["source_tracked"] = checked
+            logma.info(f"[sources] source_tracked={checked}")
+        except Exception as e:
+            logma.warning(f"[sources] cmd_on_change_source_tracked: {e}")
+        return self
+
+    def cmd_on_change_source_retention(self, event=None, *args, **kwargs):
+        """T-NEW-034: read the retention spinbox value."""
+        try:
+            value = None
+            for attr in ("source_retention_spinbox", "retention_spinbox"):
+                widget = getattr(self, attr, None)
+                if widget is not None and hasattr(widget, "value"):
+                    value = widget.value()
+                    break
+            if value is not None:
+                self.config.dikt["source_retention_mb"] = int(value)
+        except Exception as e:
+            logma.warning(f"[sources] cmd_on_change_source_retention: {e}")
+        return self
+
+    def cmd_save_source_settings(self, event=None, *args, **kwargs):
+        """T-NEW-034: persist the per-source config to config.dikt."""
+        try:
+            # Pull the current values from the widget attributes and
+            # write them onto config.dikt.
+            if hasattr(self, "source_tracked_checkbox"):
+                self.config.dikt["source_tracked"] = bool(
+                    self.source_tracked_checkbox.isChecked()
+                )
+            if hasattr(self, "source_retention_spinbox"):
+                self.config.dikt["source_retention_mb"] = int(
+                    self.source_retention_spinbox.value()
+                )
+            logma.info(f"[sources] saved source settings: {self.config.dikt.get('source_tracked')=} {self.config.dikt.get('source_retention_mb')=}")
+        except Exception as e:
+            logma.warning(f"[sources] cmd_save_source_settings: {e}")
+        return self
+
+    def initWidget(self):
+        """"""
+        self.initModel()
+        self.initView()
         return self
 
     def initWidget(self):

@@ -62,7 +62,7 @@
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
 | Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests -q` |
-| Current test surface | **377 passed, 6 skipped, 0 failed** (2026-08-06) |
+| Current test surface | **388 passed, 6 skipped, 0 failed** (2026-08-06) |
 
 ### Internal-project stack (CORE INTEGRATED)
 
@@ -256,7 +256,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-031 | Drag tab to rightside tabset — reload to original | ✅ Done — Sprint 29 (in-memory scratch view, no DB write) |
 | T-NEW-032 | Tab name updates to file name on file open (Interface Tab config) | ✅ Done — Sprint 29 (cfg-dikt flag + model _file_open_cfg helper) |
 | T-NEW-033 | Search (global / node / tab) + finish `NchantdOfficeApplicationToolBox` | ✅ Done — Sprint 29 (SQLite index + 3 cmd_search_* handlers) |
-| T-NEW-034 | Data Source config card polish (apikey / tracked / size / retention / save) | 🔨 Partial — Sprint 29 (2 stubs filled: pane_size + apikey_visibility; 3 items open) |
+| T-NEW-034 | Data Source config card polish (apikey / tracked / size / retention / save) | ✅ Done — Sprint 30 (tracked checkbox + size label + retention spinbox + save button added) |
 | T-NEW-035 | Script-tool polish (`file_format` vs `syntax`, drawer-redraw, object-config inserts, pane-spacing) | 🔨 Partial — Sprint 29 (4/5 items done; file_format-vs-syntax deferred to user) |
 | T-NEW-036 | Journal restore on tab change | ✅ Done — Sprint 29 (refresh_content on tab focus) |
 | T-NEW-037 | Empty method stubs (analytics_charts, charts, toolbars) | ✅ Done — Sprint 29 (2 filled, 1 deferred to T-NEW-029) |
@@ -978,6 +978,22 @@ items can follow once those are done.
 4. Add a regression test under
    `tests/test_source_config_card.py` asserting each slot
    exists and the save button persists the values.
+
+#### T-NEW-034 — Sprint 30 close-out
+
+The 3 remaining items (tracked checkbox, size detail, retention
+spinbox, save button) are now wired to `NchantdSourceEditPane.initView`.
+New handlers:
+
+- `cmd_on_change_source_tracked` — persists `source_tracked`
+  bool to `config.dikt`.
+- `cmd_on_change_source_retention` — reads the retention
+  spinbox value to `config.dikt["source_retention_mb"]`.
+- `cmd_save_source_settings` — pulls the current values from the
+  widget attributes and writes onto `config.dikt`.
+
+Regression test: `tests/test_source_config_card.py` (11 tests).
+Test surface: 388 passed, 6 skipped.
 
 ### T-NEW-035 — Script-tool polish: untangle `file_format` vs `syntax`, drawer-redraw on tool click, object-config inserts, pane-spacing (2026-07-30)
 
