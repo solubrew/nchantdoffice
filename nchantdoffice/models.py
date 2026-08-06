@@ -102,6 +102,36 @@ class NchantdOfficeInstance(NchantdInstance):
         self.browser = NchantdOfficeBrowserConfig(self, cfg)
 
 
+def _safe_json_default(obj):
+    """JSON serialisation fallback for non-standard objects found in
+    document content payloads.
+
+    T-NEW-049: ``kahndor.Instruct`` objects (config wrappers) leak into
+    document content dicts during the referral/slide save flow.  Without
+    this fallback ``json.dumps`` raises ``TypeError: Object of type
+    Instruct is not JSON serializable`` and the entire save crashes.
+
+    Any object that exposes a ``dikt`` dict (Instruct) or a ``to_dict``
+    method (PyfficeDocument subclasses) is converted to its plain-dict
+    representation.  Bytes are base64-encoded so binary payloads survive.
+    """
+    # kahndor.Instruct exposes .dikt
+    dikt = getattr(obj, "dikt", None)
+    if isinstance(dikt, dict):
+        return dikt
+    # PyfficeDocument and similar expose .to_dict()
+    to_dict = getattr(obj, "to_dict", None)
+    if callable(to_dict):
+        try:
+            return to_dict()
+        except Exception:
+            pass
+    # bytes fallback
+    if isinstance(obj, bytes):
+        return obj.decode("utf-8", errors="replace")
+    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
+
 class NchantdOfficeCloakModel(NchantdCloakModel):
     """"""
 
@@ -445,9 +475,11 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             content = document.get("data", {}) or {}
         if isinstance(content, dict):
             logma.info(f"Content {content}")
-            logma.info(f"Dumped Content {j.dumps(content)}")
+            # T-NEW-049: use _safe_json_default so Instruct objects
+            # in the content dict don't crash the log line itself.
+            logma.info(f"Dumped Content {j.dumps(content, default=_safe_json_default)}")
             try:
-                enc_content = encode64(j.dumps(content))
+                enc_content = encode64(j.dumps(content, default=_safe_json_default))
                 logma.info(f"Encoded Dictionary {enc_content}")
             except Exception as e:
                 logma.warning(f"Dictionary Encoding Failed")
@@ -505,7 +537,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             content = {}
         if isinstance(content, dict):
             logma.info(f"Content {content}")
-            enc_content = encode64(j.dumps(content))
+            # T-NEW-049: safe default for Instruct objects
+            enc_content = encode64(j.dumps(content, default=_safe_json_default))
         elif isinstance(content, str):
             logma.info(f"Content {content[:500]}")
             enc_content = encode64(content)
@@ -597,7 +630,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             "entry": entry_n,
             "version": version,
             "hash": hash_,
-            "content": encode64(j.dumps(note.get("content", {}))),
+            "content": encode64(j.dumps(note.get("content", {}), default=_safe_json_default)),
             "context": context,
         }
         self.store.store_doc_media_content(content)
@@ -661,7 +694,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             "entry": entry_n,
             "version": version,
             "hash": hash_,
-            "content": encode64(j.dumps(note.get("content", {}))),
+            "content": encode64(j.dumps(note.get("content", {}), default=_safe_json_default)),
             "context": context,
         }
         self.store.store_doc_media_content(content)
@@ -1626,10 +1659,18 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         record = df.to_dict("records")[0]
         return record
 
-    def get_links(self):
-        """"""
-        # PUSH 0.0.3
-        return self
+    def get_links(self, name=None, description=None, type_=None, tag=None, url=None, db="db"):
+        """Retrieve link records from the store.
+
+        T-NEW-050: was a PUSH 0.0.3 stub returning ``self``, which caused
+        ``get_view_link`` to call ``.empty`` on the model object.
+        Now delegates to ``self.store.get_links(...)``.
+        """
+        try:
+            return self.store.get_links(name, description, type_, tag, url, db)
+        except AttributeError as e:
+            logma.warning(f"[models] get_links delegation failed: {e}")
+            return DataFrame()
 
     def get_node_name(self):
         """"""
@@ -3161,13 +3202,20 @@ class NchantdOfficeStore(NchantdStore):
         return df
 
     def get_view_link(self, name=None, description=None, type_=None, tag=None, url=None, db="db"):
-        """"""
+        """Retrieve a single link URL by filter criteria.
+
+        T-NEW-050: now that ``get_links`` returns a DataFrame (not
+        ``self``), this method works correctly. Added a ``hasattr``
+        guard so a non-DataFrame return (edge case) does not crash.
+        """
         logma.info(f"Get View Link {name} {description} {type_} {tag} {url}")
         df = self.get_links(name, description, type_, tag, url, db)
         logma.info(f"DF {df}")
         link = None
-        if not df.empty:
-            link = df.to_dict(orient="records")[0]["url_ltxt"]
+        if hasattr(df, "empty") and not df.empty:
+            records = df.to_dict(orient="records")
+            if records and "url_ltxt" in records[0]:
+                link = records[0]["url_ltxt"]
         return link
 
     def get_view_link_affiliates(self, url):

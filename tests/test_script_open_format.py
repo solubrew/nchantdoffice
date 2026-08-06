@@ -197,9 +197,11 @@ def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
         syntax="plaintext",
         file_format="plaintext",
         file_path=str(md),
+        content="",
         meta_data={"syntax": "plaintext"},
         open_file=lambda _path: None,  # T-NEW-023 reload stub
         set_location=lambda _loc: None,  # T-NEW-023 reload stub
+        set_content=lambda _c: None,  # save() calls this
     )
 
     # Extension re-apply runs at the top of populate_document.
@@ -282,6 +284,10 @@ def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
     # formatting (per T-NEW-024 + T-NEW-023 contract).
     captured.__init__()
     widget._initial_load = True
+    # Stub out save() — the full save chain requires the app/view/model
+    # which the test mock doesn't have. We're testing the dispatch, not
+    # the persistence.
+    widget.save = lambda *a, **kw: None
     widget.open_file(str(md))
 
     # The dispatcher must use setMarkdown for .md so the

@@ -1,4 +1,4 @@
-# NchantdOffice TODOs — current state (2026-07-29)
+# NchantdOffice TODOs — current state (2026-08-06)
 
 > **Consolidation date:** 2026-07-29.
 >
@@ -34,6 +34,17 @@
 - implement search across all nodes and tabs as well as node specific and tab specific search as well finish code in the NchantdOfficeApplicationToolBox 
 - NchantdOfficeJournalEditor needs to have the always save functionality fixed as it has regressed during development
 
+## New TODOs from testing-report_20260803 / _20260804 (2026-08-06 catalog)
+- **T-NEW-049** CRITICAL: Instruct object not JSON serializable — crashes save flow
+- **T-NEW-050** get_view_link → _build_filter_config missing on NchantdOfficeStore
+- **T-NEW-051** app_action ORDER BY position_int — column not in schema
+- **T-NEW-052** Action show_pane_left Lookup Config Empty — toolbar init crash
+- **T-NEW-053** Calculator ignores keyboard input (number pad / number row)
+- **T-NEW-054** Cap tabs per node (adjustable param, default 35)
+- **T-NEW-055** NchantdOfficePalette integration with NchantdOfficeImage toolbar
+- **test fix** test_script_open_format failing — test mock missing `.content` attribute
+- **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
+
 
 
 
@@ -50,7 +61,7 @@
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
 | Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests -q` |
-| Current test surface | **77 passed, 0 skipped** (was 13 at H43, 45 at Sprint 7) |
+| Current test surface | **291 passed, 1 failed, 1 segfault** (2026-08-06 baseline) |
 
 ### Internal-project stack (CORE INTEGRATED)
 
@@ -1093,6 +1104,222 @@ No priority tier — cosmetic.
    external).
 3. Add a regression test under
    `tests/test_save_button_icon.py`.
+
+### T-NEW-049 — Instruct object not JSON serializable — CRITICAL save crash (2026-08-06)
+
+Per `testing-report_20260804.md`, saving a referral/slide document
+crashes because the document content dict contains a raw
+`kahndor.Instruct` object (a non-JSON-serialisable Python class)
+instead of a plain dict. The crash occurs at
+`models.py:448` inside `add_document_content` when it calls
+`j.dumps(content)` and the encoder hits the `Instruct` instance.
+
+**Trace:** `models.py:448` → `json.dumps` →
+`TypeError: Object of type Instruct is not JSON serializable`
+
+**Affected sites:**
+
+- `nchantdoffice/models.py:438-492` — `add_document_content` calls
+  `j.dumps(content)` which crashes when content holds an `Instruct`.
+  The `logma.info(f"Dumped Content {j.dumps(content)}")` at line 448
+  crashes first; the `encode64(j.dumps(content))` at line 450 has
+  a try/except but re-raises when `debug` is True.
+- `nchantdoffice/models.py:494-605` — `add_document_content_app` has
+  the same pattern but WITHOUT any try/except (line 508).
+- `kahndor/kahndor/kahndor.py:73` — `Instruct` class has no `to_dict`
+  / `__json__` / serialization hook; it wraps a `.dikt` dict.
+
+**Migration plan:**
+
+1. Add a `_safe_json_default` helper on the model (or a module-level
+   function) that converts `Instruct` instances to their `.dikt` dict
+   when `json.dumps` encounters them. Register via `json.dumps(default=...)`.
+2. Update both `add_document_content` and `add_document_content_app`
+   to use `json.dumps(content, default=_safe_json_default)`.
+3. Remove the bare `j.dumps(content)` in the logma.info call at line
+   448 (it has no try/except and is the actual crash point).
+4. Add a regression test under
+   `tests/test_instruct_serialization.py` asserting that a payload
+   containing an `Instruct` object serialises without raising.
+
+### T-NEW-050 — get_view_link calls non-existent store.get_links; _build_filter_config missing (2026-08-06)
+
+Per `testing-report_20260803.md`, the Document Catalog's accept flow
+calls `models.py:get_view_link` which delegates to `self.get_links(...)`.
+But `NchantdOfficeCloakModel.get_links` at line 1629 is a PUSH 0.0.3
+stub (`return self`), so it returns `self` (the model) instead of a
+DataFrame. Then `get_view_link` tries `df.empty` which raises.
+
+In nchantrs, `NchantdStore.get_links` calls `self._build_filter_config`
+which does not exist on `NchantdOfficeStore` (it has `_build_tag_config`
+and `_build_where_clause` instead — the method was renamed in nchantrs
+but the old name was never cleaned up in the store's ancestor chain).
+
+**Trace:** `panes/new.py:119` → `models.py:1616:get_link` →
+`models.py:3166:get_view_link` → `models.py:3167:get_links` →
+nchantrs `models.py:546:_build_filter_config` →
+`AttributeError: 'NchantdOfficeStore' object has no attribute '_build_filter_config'`
+
+**Affected sites:**
+
+- `nchantdoffice/models.py:3163-3171` — `get_view_link` calls
+  `self.get_links(...)` which returns `self` (stub), not a DataFrame.
+- `nchantdoffice/models.py:1629-1632` — `get_links` is a PUSH 0.0.3
+  stub that returns `self`.
+- `nchantrs/models/models.py:543-547` — `NchantdStore.get_links` calls
+  `self._build_filter_config(...)` which doesn't exist on
+  `NchantdOfficeStore`.
+
+**Migration plan:**
+
+1. Implement `get_links` on `NchantdOfficeCloakModel` to delegate
+   to `self.store.get_links(name, description, type_, tag, url, db)`,
+   returning the DataFrame.
+2. Ensure `NchantdOfficeStore` inherits `_build_where_clause` (the
+   renamed `_build_filter_config`) from nchantrs, OR add a compat
+   alias `_build_filter_config = _build_where_clause` on the store.
+3. Add a regression test under `tests/test_get_view_link.py`.
+
+### T-NEW-051 — app_action ORDER BY position_int fails — column not in schema (2026-08-06)
+
+Per `testing-report_20260804.md`, the app_action query fails because
+it uses `ORDER BY position_int` but the `app_action` table in
+`nchantdoffice/_data_/models.yaml` does NOT define a `position_int`
+column. The nchantrs `applicationmodels.yaml` also lacks it on the
+`app_action` table definition.
+
+**Trace:** `squirl.orgql.sonql:2887` —
+`SQLT Read Failed due to no such column: position_int`
+
+**Affected sites:**
+
+- `nchantdoffice/_data_/models.yaml:13-23` — `app_action` table
+  columns: `code_group_txt`, `lookup_code_txt`, `name_txt`,
+  `description_ltxt`, `UUID`, `icon_txt`, `short_cut_txt`,
+  `tip_txt`, `advanced_tip_txt`, `widget_txt`, `parameters_dict`.
+  Missing: `position_int`.
+- The query that adds `ORDER BY position_int` originates from the
+  nchantrs `lookup()` function reading `app_action`.
+
+**Migration plan:**
+
+1. Add `position_int` (type integer) column to the `app_action`
+   table definition in `_data_/models.yaml`.
+2. Add `position_int` values to the seed records (or default to 0
+   for existing records).
+3. Verify the same column exists in nchantrs' `applicationmodels.yaml`
+   `app_action` definition.
+
+### T-NEW-052 — Action show_pane_left Lookup Config is Empty — toolbar init crash (2026-08-06)
+
+Per `testing-report_20260804.md`, the document toolbar init crashes
+when building the button bar because `lookup(self.app, 'show_pane_left')`
+returns an empty config `{}`. The nchantrs `lookup()` function
+(`nchantrs/utilities/utils.py:96`) raises when the action lookup
+returns empty.
+
+This is related to T-NEW-051: if the `app_action` query fails (due
+to `position_int`), the action cache is never populated, so ALL
+lookups fail with "Lookup Config is Empty".
+
+**Trace:** `documents.py:448` → `toolbars.py:98` →
+`utils.py:96` → `Exception: Action show_pane_left Lookup Config is Empty {}`
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/documents.py:448` —
+  `NchantdDocument.init_toolbar` builds the button bar.
+- `nchantrs/widgets/controls/toolbars.py:65` —
+  `lookup(self.app, action)` call.
+- `nchantrs/utilities/utils.py:82-98` — `lookup()` raises when
+  cache is empty.
+
+**Migration plan:**
+
+Blocked on T-NEW-051 — once the `position_int` column is added and
+the action query succeeds, the cache populates and `show_pane_left`
+resolves correctly. Additionally:
+
+1. Make `lookup()` return an empty dict rather than raising when
+   the cache is genuinely empty (defensive — a single missing action
+   should not crash the whole toolbar).
+2. Add a regression test under `tests/test_action_lookup_resilience.py`.
+
+### T-NEW-053 — NchantdOfficeCalculator ignores keyboard input (2026-08-06)
+
+Per `testing-report_20260803.md`, the calculator only responds to
+button clicks, not keyboard input from the number pad or number row.
+
+**Affected sites:**
+
+- The calculator widget (likely in nchantrs or
+  `nchantdoffice/widgets/`) needs a `keyPressEvent` override that
+  maps digit keys to the same handlers as the button clicks.
+  The calculator class was not found in the nchantdoffice source,
+  so it likely lives in nchantrs.
+
+**Migration plan:**
+
+No priority tier — UX enhancement.
+
+1. Locate the calculator widget class (search nchantrs).
+2. Override `keyPressEvent` to handle `Qt.Key_0` through `Qt.Key_9`,
+   `Qt.Key_Plus`, `Qt.Key_Minus`, etc., routing to the same
+   handlers as the button clicks.
+3. Ensure `setFocusPolicy(Qt.StrongFocus)` is set so the widget
+   receives keyboard events.
+4. Add a regression test asserting key events produce the same
+   result as button clicks.
+
+### T-NEW-054 — Cap tabs connected to a node (default 35) (2026-08-06)
+
+Per `testing-report_20260803.md`, the number of tabs connected to a
+node should be capped with an adjustable parameter defaulting to 35.
+
+**Affected sites:**
+
+- `nchantdoffice/models.py` — `add_tab` / `add_document` should
+  check the current tab count for the target node before creating
+  a new tab.
+- `nchantdoffice/widgets/config/settings.py` — add a configurable
+  `max_tabs_per_node` setting (default 35).
+
+**Migration plan:**
+
+No priority tier — UX safeguard.
+
+1. Add `max_tabs_per_node` config key (default 35) to `config.dikt`.
+2. Add a check in `add_tab` / `add_document` that raises a user-facing
+   warning when the limit is reached.
+3. Add a settings UI entry under Settings → Interface.
+4. Add a regression test.
+
+### T-NEW-055 — NchantdOfficePalette integration with NchantdOfficeImage toolbar (2026-08-06)
+
+Per `testing-report_20260804.md`, the `NchantdOfficePalette` document
+needs to be integrated into the `NchantdOfficeImage` toolbar. The
+palette should launch as a toolbox drawer showing the palette document
+with a list of colors and their percentage usage in the image.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/media/sketches.py:2272` —
+  `NchantdOfficePalette` class exists but is not wired into the image
+  toolbar.
+- `nchantdoffice/widgets/documents/media/images.py` — the image
+  toolbar needs a new button that launches the palette drawer.
+- `nchantdoffice/_data_/models.yaml:74` — the palette document type
+  is seeded but commented out in the tab config.
+
+**Migration plan:**
+
+No priority tier — feature enhancement.
+
+1. Add a "Show Palette" button to `NchantdOfficeImage`'s toolbar.
+2. On click, open the palette as a drawer that extracts and displays
+   the color distribution from the loaded image.
+3. Add a regression test asserting the palette drawer opens and
+   displays color percentages.
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 

@@ -13,14 +13,15 @@ NchantdOfficeCloakModel:
           app_action: &app_action
             description: >
               The app_action table is a table of all actions that the nchantrs application can perform which are then
-              used to assign actions to buttons and other widgets with the table holding the python call that will be 
+              used to assign actions to buttons and other widgets with the table holding the python call that will be
               made by the action.  This feature allows for significant decoupling of the gui and logic systems
-            columns: [{"name": 'code_group_txt', "type": "text"}, {"name": 'lookup_code_txt', "type": "text"},
-                      {"name": 'name_txt', "type": "text"}, {"name": 'description_ltxt', "type": "text"},
-                      {"name": 'UUID', "type": "text"}, {"name": 'icon_txt', "type": "text"},
-                      {"name": 'short_cut_txt', "type": "text"}, {"name": 'tip_txt', "type": "text"},
-                      {"name": 'advanced_tip_txt', "type": "text"}, {"name": 'widget_txt', "type": "text"},
-                      {"name": 'parameters_dict', "type": "text"}]
+            columns: [{'name': 'code_group_txt', 'type': 'text'}, {'name': 'lookup_code_txt', 'type': 'text'},
+                      {'name': 'name_txt', 'type': 'text'}, {'name': 'description_ltxt', 'type': 'text'},
+                      {'name': 'UUID', 'type': 'text'}, {'name': 'icon_txt', 'type': 'text'},
+                      {'name': 'short_cut_txt', 'type': 'text'}, {'name': 'tip_txt', 'type': 'text'},
+                      {'name': 'advanced_tip_txt', 'type': 'text'}, {'name': 'widget_txt', 'type': 'text'},
+                      {'name': 'parameters_dict', 'type': 'text'},
+                      {'name': 'position_int', 'type': 'integer'}]
           app_document_type:
             columns: [{"name": 'UUID', "type": "text"}, {"name": 'document_txt', "type": "text"},
                       {"name": 'file_type_txt', "type": "text"}, {"name": 'name_txt', "type": "text"},
