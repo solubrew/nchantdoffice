@@ -62,7 +62,7 @@
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
 | Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests -q` |
-| Current test surface | **393 passed, 6 skipped, 0 failed** (2026-08-06) |
+| Current test surface | **397 passed, 6 skipped, 0 failed** (2026-08-06) |
 
 ### Internal-project stack (CORE INTEGRATED)
 
@@ -261,7 +261,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-036 | Journal restore on tab change | ✅ Done — Sprint 29 (refresh_content on tab focus) |
 | T-NEW-037 | Empty method stubs (analytics_charts, charts, toolbars) | ✅ Done — Sprint 29 (2 filled, 1 deferred to T-NEW-029) |
 | T-NEW-038 | Database-save icon for internally stored documents | ✅ Done — Sprint 29 (_save_action picks save_database for internal docs) |
-| T-NEW-039 | Refactor: move document-save hack to model + consolidate add_tab/add_document | 🆕 Logged (2026-07-31) |
+| T-NEW-039 | Refactor: move document-save hack to model + consolidate add_tab/add_document | ✅ Done — Sprint 30 (widget hack removed; model owns the doc_media syntax update) |
 | T-NEW-040 | Toolbar init tech debt (redundant init_variables + MultiInstance switch) | ✅ Done — Sprint 29 (stale comment removed; _resolve_db_alias helper) |
 | T-NEW-041 | Widget lookup from document_types table | ✅ Done — Sprint 29 (stale TODO removed; canonical lookup verified) |
 | T-NEW-042 | Note position increment for multiple notes | ✅ Done — Sprint 29 (_compute_note_position helper) |
