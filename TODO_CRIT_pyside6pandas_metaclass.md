@@ -10,12 +10,41 @@ in nchantdoffice gamma.
 
 ---
 
-## ⚠️ Update (2026-08-06): the QObject fix **causes a segfault**
+## ⚠️ RESOLVED (2026-08-06): fix landed in nchantrs gamma (75457f7)
 
-I initially recommended `class NchantdWidgetMixin(QObject):` as a
-1-line surgical fix. **Don't apply that change.** Per user testing
-(Solubrew, 2026-08-06): applying the QObject change causes a
-**segmentation fault at runtime**.
+The metaclass conflict + QObject-segfault problem is fixed in
+nchantrs gamma via commit `75457f7`. The fix uses a custom metaclass:
+
+```python
+# nchantrs/widgets/widgets.py
+_NCHANTD_MIXIN_META = type(
+    type(pyqt.QObject).__name__, (type(pyqt.QObject), type), {}
+)
+
+class NchantdWidgetMixin(object, metaclass=_NCHANTD_MIXIN_META):
+    ...
+```
+
+This subclasses BOTH Qt's metaclass (`Shiboken.ObjectType`) AND plain
+`type`, so NchantdWidgetMixin satisfies Python's MRO check when
+combined with Qt widgets via multiple inheritance — WITHOUT the
+segfault that the QObject fix introduced.
+
+Also fixed in pyside6pandas gamma commit `c383265`: `compat.py` no
+longer logs `'No module named 'sip'` error (sip is PyQt5/6 only;
+PySide6 uses shiboken6).
+
+Both fixes are at the source, so sasquatch's next build of
+nchantdoffice will bundle the corrected nchantrs + pyside6pandas.
+
+## Recommended fix — composition in `tables.py` (Option 3) — NO LONGER NEEDED
+
+~~**Sidesteps the conflict entirely without touching the mixin used by
+8+ other widgets (`NchantdLabel`, `NchantdProgressBar`,
+`NchantdGroup`, etc.).** ...~~
+
+The custom-metaclass fix above is simpler and doesn't require any
+changes to `tables.py`.
 
 ### Why it segfaults
 
