@@ -349,6 +349,7 @@ internal = [
     "micromole @ file:///mnt/overse/SBST01/vein/GitVein/micromole.git@gamma",
     "squirl @ file:///mnt/overse/SBST01/vein/GitVein/squirl.git@gamma",
     "pycurity @ file:///mnt/overse/SBST01/vein/GitVein/pycurity.git@gamma",
+    "thingery @ file:///mnt/overse/SBST01/vein/GitVein/thingery.git@gamma",
     #"metrologic @ file:///mnt/overse/SBST01/vein/GitVein/metrologic.git@gamma", # PUSH to 0.1.0 NchantdAnalytics
 ]
 # All optional dependencies
