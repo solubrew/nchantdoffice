@@ -702,6 +702,12 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             "size": ["auto", "auto"],
             "document": self.document,
             "path": self.document.file_path,
+            # T-NEW-NOTE: scale image to fit the tab width while
+            # preserving aspect ratio (nchantrs NchantdImage
+            # sets `setScaledContents(False)` by default, which
+            # displays the image at its native size and pushes
+            # the tab width to the image's pixel width).
+            "scaled": True,
         }
         if self.document.content is not None:
             image_cfg["image_data"] = self.document.content.get("L0", {}).get("bytes", None)
