@@ -39,7 +39,7 @@
 - **T-NEW-050** get_view_link → _build_filter_config missing on NchantdOfficeStore
 - **T-NEW-051** app_action ORDER BY position_int — column not in schema
 - **T-NEW-052** Action show_pane_left Lookup Config Empty — toolbar init crash
-- **T-NEW-053** Calculator ignores keyboard input (number pad / number row)
+- **T-NEW-053** ✅ Calculator keyboard input (number pad / number row) — fixed
 - **T-NEW-054** Cap tabs per node (adjustable param, default 35)
 - **T-NEW-055** NchantdOfficePalette integration with NchantdOfficeImage toolbar
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
@@ -1245,31 +1245,23 @@ resolves correctly. Additionally:
    should not crash the whole toolbar).
 2. Add a regression test under `tests/test_action_lookup_resilience.py`.
 
-### T-NEW-053 — NchantdOfficeCalculator ignores keyboard input (2026-08-06)
+### T-NEW-053 — NchantdOfficeCalculator ignores keyboard input (2026-08-06) ✅ DONE
 
-Per `testing-report_20260803.md`, the calculator only responds to
+Per `testing-report_20260803.md`, the calculator only responded to
 button clicks, not keyboard input from the number pad or number row.
 
-**Affected sites:**
+**Root cause:** the right-side Calculator tab was seeded with
+`NchantdCalculator` (the base class) which had NO `keyPressEvent`.
+Only `NchantdAdvancedCalculator` had keyboard routing.
 
-- The calculator widget (likely in nchantrs or
-  `nchantdoffice/widgets/`) needs a `keyPressEvent` override that
-  maps digit keys to the same handlers as the button clicks.
-  The calculator class was not found in the nchantdoffice source,
-  so it likely lives in nchantrs.
+**Fix:**
+1. `keyPressEvent` + `focusInEvent` / `focusOutEvent` moved to the
+   base `NchantdCalculator` (nchantrs `calculators.py`) so ALL
+   calculator subclasses get keyboard support.
+2. `_data_/models.yaml` seed changed from `NchantdCalculator` to
+   `NchantdAdvancedCalculator`.
 
-**Migration plan:**
-
-No priority tier — UX enhancement.
-
-1. Locate the calculator widget class (search nchantrs).
-2. Override `keyPressEvent` to handle `Qt.Key_0` through `Qt.Key_9`,
-   `Qt.Key_Plus`, `Qt.Key_Minus`, etc., routing to the same
-   handlers as the button clicks.
-3. Ensure `setFocusPolicy(Qt.StrongFocus)` is set so the widget
-   receives keyboard events.
-4. Add a regression test asserting key events produce the same
-   result as button clicks.
+**Regression test:** `tests/test_calculator_keyboard.py` (7 tests).
 
 ### T-NEW-054 — Cap tabs connected to a node (default 35) (2026-08-06)
 
