@@ -24,6 +24,7 @@ from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.config.settings import NchantdInterfaceSettings, NchantdSettingsWidget, NchantdThemeSettings
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
+from nchantrs.widgets.controls.advanced_buttons import NchantdSpinBox
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.groups import NchantdGridScrollGroupBox
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocumentManager
@@ -520,6 +521,35 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
     # T-NEW-032 — Tab name updates to file name on file open
     # ------------------------------------------------------------------
 
+    # ------------------------------------------------------------------
+    # T-NEW-054 — Max tabs per node
+    # ------------------------------------------------------------------
+
+    def cmd_on_change_max_tabs_per_node(self, event=None, *args, **kwargs):
+        """Set the ``max_tabs_per_node`` config value (T-NEW-054).
+
+        Reads the SpinBox value and persists
+        ``max_tabs_per_node`` on ``config.dikt``. Default 35.
+        When 0 or negative, the limit is disabled (unlimited tabs).
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            value = 35
+            if event is not None and hasattr(event, "value"):
+                value = int(event.value())
+            elif event is not None and hasattr(event, "isChecked"):
+                value = int(event.isChecked())
+            self.max_tabs_per_node = value
+            self.config.dikt["max_tabs_per_node"] = value
+            logma.info(f"[settings] max_tabs_per_node set to {value}")
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_max_tabs_per_node failed: {e}",
+                exc_info=True,
+            )
+        return self
+
     def cmd_on_change_update_tab_name_to_file_name(self, event=None, *args, **kwargs):
         """Toggle the ``update_tab_name_to_file_name`` flag (T-NEW-032).
 
@@ -909,6 +939,22 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         }
         self.update_tab_name_to_file_name_entry = NchantdCheckbox(self, cfg).initWidget()
         center_settings_group.addWidget(self.update_tab_name_to_file_name_entry, row, 0)
+        row += 1
+
+        # T-NEW-054: cap tabs per node. Default 35. 0 disables the
+        # limit. The check lives in NchantdOfficeCloakModel.add_tab
+        # and reads self.config.dikt["max_tabs_per_node"].
+        cfg = {
+            "text": "Max tabs per node (0 = unlimited)",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_on_change_max_tabs_per_node,
+            "min": 0,
+            "max": 1000,
+            "value": int(self.config.dikt.get("max_tabs_per_node", 35)),
+        }
+        self.max_tabs_per_node_entry = NchantdSpinBox(self, cfg).initWidget()
+        center_settings_group.addWidget(self.max_tabs_per_node_entry, row, 0)
         row += 1
 
         primary_layout.addLayout(center_settings_group.layout)

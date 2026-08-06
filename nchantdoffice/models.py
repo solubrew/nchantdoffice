@@ -711,6 +711,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """
         Add a tab to the application model.
 
+        T-NEW-054: enforces ``max_tabs_per_node`` (default 35) so a
+        node can't accumulate an unbounded number of tabs. When the
+        limit is reached the tab is rejected with a warning.
+
         :param name: Tab name.
         :param pid: Parent node ID.
         :param pos: Tab position.
@@ -721,8 +725,14 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         :param tabset: Target tab set.
         :param in_doc: Whether the tab is part of a document.
         :param db: Database alias.
-        :return: Created tab object.
+        :return: Created tab object, or None if the limit was hit.
         """
+        if not self._check_max_tabs_per_node(pid, tabset):
+            logma.warning(
+                f"[models] add_tab rejected: max_tabs_per_node limit "
+                f"reached for node {pid} (tabset={tabset})"
+            )
+            return None
         tab = super().add_tab(name, pid, pos, widget, widgdata, did, doc_type, tabset, in_doc, db)
         self.has_changed = True
         # T-DESK: Fire upgrade prompt at the "after 3rd tab" friction
@@ -743,6 +753,28 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # change.
         self._apply_tab_style(tab)
         return tab
+
+    def _check_max_tabs_per_node(self, pid, tabset=None):
+        """Check whether a new tab can be added under ``pid`` (T-NEW-054).
+
+        Reads ``self.config.dikt["max_tabs_per_node"]`` (default 35).
+        Returns True if the current tab count is below the limit.
+        Returns True if the limit is 0 or negative (disabled).
+        Best-effort: any exception returns True so the hot path
+        never blocks tab creation on a config/store error.
+        """
+        try:
+            limit = self.config.dikt.get("max_tabs_per_node", 35)
+            if not isinstance(limit, (int, float)) or limit <= 0:
+                return True
+            # Count existing tabs for this node + tabset
+            df = self.get_documents(pid, tabset or "center")
+            if df is None or df.empty:
+                return True
+            return len(df) < int(limit)
+        except Exception as e:
+            logma.warning(f"[models] _check_max_tabs_per_node failed: {e}")
+            return True
 
     def _apply_tab_style(self, tab):
         """Apply the user-selected tab color / icon (T-NEW-001).

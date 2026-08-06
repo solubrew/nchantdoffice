@@ -40,7 +40,7 @@
 - **T-NEW-051** app_action ORDER BY position_int — column not in schema
 - **T-NEW-052** Action show_pane_left Lookup Config Empty — toolbar init crash
 - **T-NEW-053** ✅ Calculator keyboard input (number pad / number row) — fixed
-- **T-NEW-054** Cap tabs per node (adjustable param, default 35)
+- **T-NEW-054** ✅ Cap tabs per node (adjustable param, default 35) — fixed
 - **T-NEW-055** NchantdOfficePalette integration with NchantdOfficeImage toolbar
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
@@ -1263,28 +1263,23 @@ Only `NchantdAdvancedCalculator` had keyboard routing.
 
 **Regression test:** `tests/test_calculator_keyboard.py` (7 tests).
 
-### T-NEW-054 — Cap tabs connected to a node (default 35) (2026-08-06)
+### T-NEW-054 — Cap tabs connected to a node (default 35) (2026-08-06) ✅ DONE
 
 Per `testing-report_20260803.md`, the number of tabs connected to a
 node should be capped with an adjustable parameter defaulting to 35.
 
-**Affected sites:**
+**Fix:**
+1. `_check_max_tabs_per_node(pid, tabset)` helper on
+   `NchantdOfficeCloakModel` reads `config.dikt["max_tabs_per_node"]`
+   (default 35). Returns True if below the limit, False if at limit.
+   0 or negative disables the limit.
+2. `add_tab` calls the helper before creating the tab; returns None
+   when the limit is reached.
+3. `cmd_on_change_max_tabs_per_node` settings handler persists the
+   user-chosen value to `config.dikt`.
+4. Interface Tab renders a `NchantdSpinBox` wired to the handler.
 
-- `nchantdoffice/models.py` — `add_tab` / `add_document` should
-  check the current tab count for the target node before creating
-  a new tab.
-- `nchantdoffice/widgets/config/settings.py` — add a configurable
-  `max_tabs_per_node` setting (default 35).
-
-**Migration plan:**
-
-No priority tier — UX safeguard.
-
-1. Add `max_tabs_per_node` config key (default 35) to `config.dikt`.
-2. Add a check in `add_tab` / `add_document` that raises a user-facing
-   warning when the limit is reached.
-3. Add a settings UI entry under Settings → Interface.
-4. Add a regression test.
+**Regression test:** `tests/test_max_tabs_per_node.py` (14 tests).
 
 ### T-NEW-055 — NchantdOfficePalette integration with NchantdOfficeImage toolbar (2026-08-06)
 
