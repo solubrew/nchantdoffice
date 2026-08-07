@@ -451,9 +451,10 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         """Build the referral URL from the code and push it to
         the registered ad pane (T-NEW-026 close-out step 3).
 
-        The URL format is ``https://nchantdoffice.com/?r=<code>``
-        (the canonical nchantd office affiliate / referral
-        base URL). Defensive: missing pane, missing code, or
+        The URL format is
+        ``https://nchantdoffice.com/download?ref=<code>``
+        (the canonical format per AppReferralSpec §4).
+        Defensive: missing pane, missing code, or
         any exception is logged + swallowed.
         """
         try:
@@ -461,7 +462,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
             code = getattr(self, "referral_code", None)
             if pane is None or code is None:
                 return
-            url = f"https://nchantdoffice.com/?r={code}"
+            url = f"https://nchantdoffice.com/download?ref={code}"
             if hasattr(pane, "show_referral_url"):
                 try:
                     pane.show_referral_url(url)

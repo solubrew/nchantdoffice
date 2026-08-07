@@ -76,7 +76,7 @@ APP_VERSION: str = "0.0.1.0.1.4"
 # APP_VERSION would make the comparison silently fail.
 # Bump this in lockstep with the version-gate system
 # (see nchantdofficeATNRG/VersionAlignment.md).
-APP_VERSION_SHORT: str = "0.1.0"
+APP_VERSION_SHORT: str = "0.0.1"
 APP_ID: str = "nchantdoffice"
 
 # Application Type

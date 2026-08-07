@@ -218,7 +218,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         if self.user.has_pro:
             cfg["url"] = "https://www.nchantdoffice.com/whats_new"
         elif self.user.has_account:
-            cfg["url"] = "https://www.nchantdoffice.com/get_pro"
+            cfg["url"] = "https://www.nchantdoffice.com/compare"
         self.browser = NchantdWebViewer(self, cfg).initWidget()
         layout.addWidget(self.browser)
         self.layout.addLayout(layout)
@@ -332,7 +332,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             if self.user.has_pro:
                 url = "https://www.nchantdoffice.com/whats_new"
             elif self.user.has_account:
-                url = "https://www.nchantdoffice.com/get_pro"
+                url = "https://www.nchantdoffice.com/compare"
             else:
                 url = "https://www.nchantdoffice.com/registration"
 

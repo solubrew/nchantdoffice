@@ -45,6 +45,14 @@ pxcfg = join(here, "_data_", "advertisements.yaml")
 # Each entry: {title, subtitle, cta_text, cta_url, background, foreground}.
 FALLBACK_BANNERS = [
     {
+        "title": "OpenAI - Build with GPT models",
+        "subtitle": "$200 credit for new users. Access GPT models and build AI apps.",
+        "cta_text": "Get OpenAI",
+        "cta_url": "https://platform.openai.com?ref=nchantdoffice",
+        "background": "#10A37F",
+        "foreground": "#FFFFFF",
+    },
+    {
         "title": "Try Notion - All-in-one workspace",
         "subtitle": "Get 50% off your first year when you sign up via this link.",
         "cta_text": "Get Notion",
