@@ -277,7 +277,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         Returns ``True`` when the navigation succeeded,
         ``False`` when it was skipped (graceful no-op).
         """
-        target_url = "https://www.nchantdoffice.com/get_pro"
+        target_url = "https://www.nchantdoffice.com/compare"
         try:
             view = getattr(app, "view", None) if app is not None else None
             if view is None:

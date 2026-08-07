@@ -194,7 +194,7 @@ def _show_upgrade_prompt(prompt_key: str, state: dict) -> None:
         result = box.exec()
         if result == pyqt.QMessageBox.StandardButton.Yes:
             pyqt.QDesktopServices.openUrl(
-                pyqt.QUrl("https://www.nchantdoffice.com/get_pro")
+                pyqt.QUrl("https://www.nchantdoffice.com/compare")
             )
         elif result == pyqt.QMessageBox.StandardButton.Close:
             state["prompt_dismissed"][prompt_key] = True

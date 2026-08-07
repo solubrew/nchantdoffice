@@ -41,10 +41,13 @@ _ALPHABET = string.ascii_uppercase + string.digits
 _CODE_RE = re.compile(r"^[A-Z0-9]{10,12}$")
 _FORMAT_RE = re.compile(r"^([A-Z0-9]{2,4})-([A-Z0-9]{3,4})-([A-Z0-9]{2,4})$")
 
-# Default API base (nchantdoffice.com — see nchantdoffice_com/app/apis/affiliate_api.py)
+# Default API base. The v1 namespaced endpoints live at
+# https://nchantdoffice.com/api/v1/{affiliate,referral,quicklinks}
+# (T-DESK-052 alignment, 2026-08-07). The previous
+# /api/affiliate/... paths no longer exist on the live server.
 DEFAULT_API_BASE = os.environ.get(
     "NCHANT_API_BASE",
-    "https://nchantdoffice.com/api/affiliate",
+    "https://nchantdoffice.com/api/v1",
 )
 
 # Referral state machine (mirrors ATNRG spec §6)
@@ -274,33 +277,81 @@ class InMemoryReferralStore:
 
 
 class ReferralAPIClient:
-    """REST client for the affiliate/referral endpoints on nchantdoffice_com.
+    """REST client for the v1 namespaced affiliate/referral/
+    quicklinks endpoints on nchantdoffice_com (T-DESK-052).
 
-    Endpoints consumed (see nchantdoffice_com/app/apis/affiliate_api.py):
+    Endpoints consumed (see nchantdoffice_com/app/apis/affiliate_api.py,
+    referral_api.py, and quicklinks_api.py):
 
-        GET    /api/affiliate/referrals        -> ReferralCode + tier + counts
-        GET    /api/affiliate/earnings        -> EarningsDashboard JSON
-        POST   /api/affiliate/payouts/request  -> request a payout
-        POST   /api/affiliate/track/click/<id> -> record an outbound click
+      POST /api/desktop/register         -> register a new desktop
+      GET  /api/v1/referral/stats/<uid>  -> ReferralCode + tier + counts
+      GET  /api/v1/referral/earnings/<uid>-> EarningsDashboard JSON
+      GET  /api/v1/referral/share/<uid>  -> share link
+      POST /api/v1/referral/generate-code -> mint a new referral code
+      POST /api/v1/referral/track-click  -> record an outbound quicklink click
+      POST /api/v1/referral/track-install-> record a referral install
+      POST /api/v1/affiliate/payout/request -> request a payout
+      GET  /api/v1/affiliate/dashboard   -> affiliate dashboard
+      POST /api/v1/affiliate/link        -> create an affiliate link
+      GET  /api/v1/quicklinks/           -> quicklinks catalog
+      GET  /api/v1/quicklinks/categories -> quicklinks categories
+      POST /api/v1/quicklinks/track-click -> track a quicklink click
 
-    All calls are best-effort: any network failure returns ``None`` /
-    empty result rather than raising, so the in-app panel degrades
-    gracefully when offline.
+    Auth model: when an ``api_key`` is configured (i.e. the
+    desktop has registered and the key is in the credentials
+    store), it's sent as the ``x-api-key`` header on every
+    request. The v1 referral/affiliate/quicklinks endpoints
+    are currently open (no auth required) but the header is
+    still sent for forward-compat: if the server starts
+    requiring auth, the desktop is already wired.
+
+    All calls are best-effort: any network failure returns
+    ``None`` / empty result rather than raising, so the in-app
+    panel degrades gracefully when offline.
     """
 
     def __init__(self, base_url: str = DEFAULT_API_BASE,
                  api_key: Optional[str] = None,
+                 user_id: Optional[int] = None,
                  timeout: float = 5.0):
+        """
+        Args:
+            base_url: API base URL. Defaults to DEFAULT_API_BASE
+                (``https://nchantdoffice.com/api/v1``). Override
+                for testing.
+            api_key: per-desktop api_key from the registration
+                response. When set, sent as ``x-api-key`` header
+                on every request. Optional — the v1 endpoints
+                are open today.
+            user_id: the FAB user id. Required by the per-user
+                endpoints (``stats/<uid>``, ``earnings/<uid>``,
+                ``share/<uid>``). When ``None``, the methods
+                that need a user_id will return ``None`` rather
+                than make the call.
+            timeout: HTTP request timeout in seconds. Default
+                5.0 (per ATNRG spec; was previously
+                ``connect_timeout=5`` which was too tight
+                against the live server).
+        """
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
+        self.user_id = user_id
         self.timeout = timeout
         self._session = requests.Session()
         if api_key:
-            self._session.headers["Authorization"] = f"Bearer {api_key}"
+            # T-DESK-052: server expects x-api-key, not Bearer.
+            self._session.headers["x-api-key"] = api_key
 
     def _request(self, method: str, path: str, *,
                  json: Optional[dict] = None,
                  params: Optional[dict] = None) -> Optional[Any]:
+        """Issue a request, return parsed JSON or None on failure.
+
+        Best-effort: any HTTP error or network failure is
+        logged at warning level and ``None`` is returned.
+        Callers should treat ``None`` as "API unreachable"
+        and fall back to local data.
+        """
         url = f"{self.base_url}/{path.lstrip('/')}"
         try:
             response = self._session.request(
@@ -314,48 +365,189 @@ class ReferralAPIClient:
             )
             return None
 
+    # ---- Registration (called once at first launch) ----
+
+    @staticmethod
+    def register_desktop(
+        base_url: str,
+        username: str,
+        public_key: str,
+        timeout: float = 5.0,
+    ) -> Optional[Dict[str, Any]]:
+        """Register a new desktop with the server.
+
+        T-DESK-052: this is a STATIC method because the desktop
+        doesn't have a server-issued api_key yet (that's the
+        whole point of calling this). Calls
+        ``POST /api/desktop/register`` (unauthenticated) and
+        returns the server's response:
+
+            {
+                "desktop_uuid": "...",
+                "api_key": "...",
+                "user_name_txt": "...",
+            }
+
+        Args:
+            base_url: server base URL, WITHOUT the /api/v1
+                suffix. The desktop/register endpoint lives
+                one level up at ``/api/desktop/register``.
+            username: the ab_user.username the desktop is
+                registering for.
+            public_key: the desktop's public key (a string;
+                the server stores it in
+                NchantdUserDesktopModel.default_address_public_key).
+                For now we send a 128-char random string; the
+                real ATN RPC layer would send a real Paillier
+                public key.
+            timeout: HTTP request timeout.
+
+        Returns:
+            The server's response dict, or None on failure.
+        """
+        url = f"{base_url.rstrip('/')}/api/desktop/register"
+        try:
+            response = requests.post(
+                url,
+                json={"username": username, "public_key": public_key},
+                timeout=timeout,
+            )
+            response.raise_for_status()
+            return response.json() if response.content else {}
+        except (requests.RequestException, ValueError) as e:
+            logma.warning(
+                f"[referral_api] POST {url} failed: {e}",
+            )
+            return None
+
     # ---- Reads ----
 
-    def fetch_referrals(self) -> Optional[Dict[str, Any]]:
-        """Fetch the user's referral-code + tier + count summary."""
-        return self._request("GET", "referrals")
+    def fetch_referral_stats(
+        self, user_id: Optional[int] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Fetch the user's referral-code + tier + count summary.
 
-    def fetch_earnings(self) -> Optional[Dict[str, Any]]:
-        """Fetch the full earnings dashboard JSON."""
-        return self._request("GET", "earnings")
+        Calls ``GET /api/v1/referral/stats/<user_id>``. Returns
+        ``None`` if no ``user_id`` is available (either set on
+        the client or passed here).
+        """
+        uid = user_id if user_id is not None else self.user_id
+        if uid is None:
+            logma.warning(
+                "[referral_api] fetch_referral_stats: no user_id, "
+                "skipping call.",
+            )
+            return None
+        return self._request("GET", f"referral/stats/{uid}")
+
+    def fetch_earnings(
+        self, user_id: Optional[int] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Fetch the full earnings dashboard JSON.
+
+        Calls ``GET /api/v1/referral/earnings/<user_id>``.
+        """
+        uid = user_id if user_id is not None else self.user_id
+        if uid is None:
+            return None
+        return self._request("GET", f"referral/earnings/{uid}")
+
+    def fetch_share_link(
+        self, user_id: Optional[int] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Fetch the shareable referral link.
+
+        Calls ``GET /api/v1/referral/share/<user_id>``.
+        """
+        uid = user_id if user_id is not None else self.user_id
+        if uid is None:
+            return None
+        return self._request("GET", f"referral/share/{uid}")
 
     def fetch_offers(self, category: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
-        """Fetch active offers (Service Quick Links catalog)."""
+        """Fetch active offers (Service Quick Links catalog).
+
+        Calls ``GET /api/v1/quicklinks/`` (the v1 QuickLinks
+        endpoint replaces the old /api/affiliate/offers
+        endpoint which no longer exists).
+
+        Args:
+            category: optional category filter (passed as
+                ``?category=...`` query param).
+        """
         params = {"category": category} if category else None
-        result = self._request("GET", "offers", params=params)
+        result = self._request("GET", "quicklinks/", params=params)
+        # The v1 quicklinks endpoint may return either a list
+        # directly, or a dict with an "items"/"offers" key.
         if isinstance(result, list):
             return result
         if isinstance(result, dict):
-            return result.get("offers", [])
+            for key in ("items", "offers", "quicklinks", "links"):
+                if key in result and isinstance(result[key], list):
+                    return result[key]
         return None
 
     def fetch_banners(self) -> Optional[List[Dict[str, Any]]]:
-        """Fetch ad-tab banner feed."""
-        result = self._request("GET", "banners")
-        if isinstance(result, list):
+        """Fetch ad-tab banner feed.
+
+        The v1 server has no dedicated banners endpoint. The
+        closest equivalent is the quicklinks catalog. Returns
+        the quicklinks as "banners" — the ad tab can render
+        them as banner-style cards even though the server
+        doesn't differentiate.
+
+        Returns an empty list on failure so the caller can
+        fall back to FALLBACK_BANNERS.
+        """
+        result = self.fetch_offers()
+        if result:
             return result
-        if isinstance(result, dict):
-            return result.get("banners", [])
         return None
+
+    def fetch_dashboard(self) -> Optional[Dict[str, Any]]:
+        """Fetch the affiliate dashboard.
+
+        Calls ``GET /api/v1/affiliate/dashboard``. Returns
+        the full dashboard JSON (clicks, conversions, payouts
+        summary, etc.).
+        """
+        return self._request("GET", "affiliate/dashboard")
 
     # ---- Writes ----
 
     def request_payout(self, amount_cents: int) -> Optional[Dict[str, Any]]:
-        """Request a payout (must be >= min threshold)."""
+        """Request a payout (must be >= min threshold).
+
+        Calls ``POST /api/v1/affiliate/payout/request``.
+        """
         return self._request(
-            "POST", "payouts/request", json={"amount_cents": amount_cents},
+            "POST", "affiliate/payout/request",
+            json={"amount_cents": amount_cents},
         )
 
-    def track_click(self, offer_id: int, *, service_slug: Optional[str] = None,
-                    session_id: Optional[str] = None,
-                    tier: Optional[str] = None) -> bool:
-        """Record an outbound quicklink click (ATNRG spec §1 analytics)."""
-        payload = {"offer_id": offer_id}
+    def generate_referral_code(self) -> Optional[Dict[str, Any]]:
+        """Mint a new referral code for the current user.
+
+        Calls ``POST /api/v1/referral/generate-code``.
+        """
+        return self._request("POST", "referral/generate-code", json={})
+
+    def track_click(
+        self, offer_id: int, *,
+        service_slug: Optional[str] = None,
+        session_id: Optional[str] = None,
+        tier: Optional[str] = None,
+    ) -> bool:
+        """Record an outbound quicklink click.
+
+        T-DESK-052: was ``POST /api/affiliate/track/click/<id>``
+        (404 on the live server). Now calls
+        ``POST /api/v1/referral/track-click`` (the new endpoint
+        in referral_api.py) with the offer_id in the body.
+
+        Returns True on success, False on failure.
+        """
+        payload: Dict[str, Any] = {"offer_id": offer_id}
         if service_slug:
             payload["service_slug"] = service_slug
         if session_id:
@@ -363,8 +555,18 @@ class ReferralAPIClient:
         if tier:
             payload["tier"] = tier
         result = self._request(
-            "POST", f"track/click/{offer_id}", json=payload,
+            "POST", "referral/track-click", json=payload,
         )
+        return result is not None
+
+    def track_install(self) -> bool:
+        """Record a referral install (called once at first launch).
+
+        Calls ``POST /api/v1/referral/track-install``. The
+        server reads the api_key from the header to determine
+        which referral code (if any) attributed this install.
+        """
+        result = self._request("POST", "referral/track-install", json={})
         return result is not None
 
     # ---- Convenience ----

@@ -70,11 +70,18 @@ DOWNLOAD_INCOMPLETE = 0
 # Application Identity
 APP_NAME: str = "NchantdOffice"
 APP_VERSION: str = "0.0.1.0.1.4"
+# Short (3-segment) version sent to the server's
+# /api/check-update endpoint. The server's _parse_version()
+# only handles 3-segment versions; sending the 5-segment
+# APP_VERSION would make the comparison silently fail.
+# Bump this in lockstep with the version-gate system
+# (see nchantdofficeATNRG/VersionAlignment.md).
+APP_VERSION_SHORT: str = "0.1.0"
 APP_ID: str = "nchantdoffice"
 
 # Application Type
 APP_TYPE: str = "desktop"  # desktop, web, mobile, cli
-APP_PLATFORM: str = "qt5"  # qt5, qt6, gtk, web
+APP_PLATFORM: str = "qt6"  # qt5, qt6, gtk, web
 
 # Window Configuration
 WINDOW_MIN_WIDTH: int = 800
