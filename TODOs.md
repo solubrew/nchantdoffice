@@ -32,7 +32,7 @@
 - implement the ability to drag a tab to the rightside tabset and it reloads to its original location
 - add to Settings/Interface tab config to allow a user to select that tab name updates to the file name when a file is opened 
 - implement search across all nodes and tabs as well as node specific and tab specific search as well finish code in the NchantdOfficeApplicationToolBox 
-- NchantdOfficeJournalEditor needs to have the always save functionality fixed as it has regressed during development
+- NchantdOfficeJournalEditor always-save functionality fixed (outer save() now calls _parse_entry + parent.save)
 
 ## New TODOs from testing-report_20260803 / _20260804 (2026-08-06 catalog)
 - **T-NEW-049** CRITICAL: Instruct object not JSON serializable — crashes save flow
@@ -62,7 +62,7 @@
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
 | Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests -q` |
-| Current test surface | **402 passed, 6 skipped, 0 failed** (2026-08-06) |
+| Current test surface | **410 passed, 6 skipped, 0 failed** (2026-08-06) |
 
 ### Internal-project stack (CORE INTEGRATED)
 

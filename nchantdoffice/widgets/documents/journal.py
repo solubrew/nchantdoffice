@@ -399,40 +399,40 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         super().populate_document()
 
     def save(self, path=None, format_=None, encrypt=False):
-        """"""
+        """Persist the journal entry.
+
+        T-NEW-XXX (always-save fix): the previous implementation only
+        called ``super().save()`` and never told the journal panel
+        (``self.parent``) that a new entry was pending -- so the
+        ``new_entry`` flag set on ``focusInEvent`` was never parsed
+        out into the journal pages dict, and the user's text was
+        lost on reopen.
+
+        The fix mirrors the inner ``NchantdOfficeJournalAppendEditor
+        .save()`` (line 538) for the outer editor:
+        1. ``super().save()`` persists the base document content.
+        2. If ``self.new_entry`` is True, ``self._parse_entry()``
+           pulls the new text into ``self.parent.pages``.
+        3. ``self.parent.save()`` persists the parent panel.
+        Defensive: any of the three steps failing is logged and
+        swallowed so the user's save flow never crashes.
+        """
         if self.document is None:
             self.new_document()
         content = self.get_content()
         if content != self.document.content:
             self.document.set_content(content)
         super().save()
-        # TODO: Need to redirect save to the app_media_content table
-
-        # content = self.editor.toPlainText()
-        # logma.info(f"Data {self.document.pages}")
-        # logma.info(f"Document {self.document.to_dict()}")
-        # self.document.parse_content(content)
-        #
-        # # FIX (was double-save bug): Removed redundant super().save() call.
-        # # super().save() was nested inside `if content != self.document.content`
-        # # which created an inconsistent save path. self.document.save() handles
-        # # persistence (versioning + encryption); super().save() was redundant.
-        # if content != self.document.content:
-        #     self.document.set_content(content)
-        # logma.info(f"Save Content {self.document.content}")
-        # self.document.save()
-        # logma.info(f"Save Path {path}")
-        # if path:
-        #     self.set_file_path(path)
-        # try:
-        #     pid = self.app.view.panes["left"].tree.model.current_node.nid
-        #     logma.info(f"Save PID {pid}")
-        # except (AttributeError, KeyError) as e:
-        #     logma.warning(f"Could not resolve PID: {e}")
-        # logma.info(f"Save DID {self.document.did}")
-        # logma.info(f"Save Document {self.document.to_dict()}")
-        # logma.json(self.document.to_dict())
-        # self.app.model.add_document_content_app(self.document.to_dict(), version=self.document.version)
+        try:
+            if self.new_entry:
+                self._parse_entry()
+        except Exception as e:
+            logma.warning(f"[journal] save: _parse_entry failed: {e}")
+        try:
+            if self.parent is not None and hasattr(self.parent, "save"):
+                self.parent.save()
+        except Exception as e:
+            logma.warning(f"[journal] save: parent.save failed: {e}")
         return self
 
 
