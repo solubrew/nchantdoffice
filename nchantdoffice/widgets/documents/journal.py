@@ -393,6 +393,8 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         also need to store what document was active in the center tabset during writing of note for context view
         """
         # TODO implement extraction and storage schema input
+        new_content = ""
+        for entry in new_content.split("|--")
 
     def populate_data(self):
         """"""
@@ -422,7 +424,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         content = self.get_content()
         if content != self.document.content:
             self.document.set_content(content)
-        super().save()
+        self.save_app()  # TODO save has to redirect to the app_doc_content table
         try:
             if self.new_entry:
                 self._parse_entry()

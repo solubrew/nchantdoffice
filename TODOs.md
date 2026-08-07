@@ -19,6 +19,8 @@
 
 ---
 # New TODOs
+- need to add pycurity initialization of password vault in the NchantdOfficeApplicationSetupWizard...need to relocate pycurity related to nchantdoffice to a private location not standard pycurity path
+
 - Image Document tab is push the widgth instead of resizing the image, image should fit to width and size the height maintianing the aspect ratio
 - NchantdOfficeBrowser is not keeping track of url navigation or reloading to the last visited site
 - FileDetailsPane refresh on initial file open — fixed (refresh() helper + set_file_path calls refresh)

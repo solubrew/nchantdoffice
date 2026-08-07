@@ -757,8 +757,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         pid = self._resolve_pid_for_max_tabs(pid, tabset)
         if pid is None:
             logma.warning(
-                f"[models] add_tab rejected: max_tabs_per_node limit "
-                f"reached and could not auto-create child node"
+                f"[models] add_tab rejected: max_tabs_per_node limit " f"reached and could not auto-create child node"
             )
             return None
         tab = super().add_tab(name, pid, pos, widget, widgdata, did, doc_type, tabset, in_doc, db)
@@ -781,8 +780,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # change.
         self._apply_tab_style(tab)
         return tab
-
-
 
     def _resolve_pid_for_max_tabs(self, pid, tabset=None):
         """Return the pid to use for a new tab (T-NEW-054).
@@ -813,10 +810,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             new_pid = self._create_child_node(pid)
             if new_pid is None:
                 return None
-            logma.info(
-                f"[models] max_tabs_per_node ({limit}) hit at pid={pid}; "
-                f"auto-created child pid={new_pid}"
-            )
+            logma.info(f"[models] max_tabs_per_node ({limit}) hit at pid={pid}; " f"auto-created child pid={new_pid}")
             return new_pid
         except Exception as e:
             logma.warning(f"[models] _resolve_pid_for_max_tabs failed: {e}")
@@ -902,6 +896,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             # Pro bypass
             try:
                 from nchantdoffice.utilities.upgrades import is_pro_user
+
                 if is_pro_user(user):
                     return True
             except Exception:
@@ -2860,7 +2855,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             raise Exception(f"data object not recognized {type(data)}")
         yield None, None
 
-    def store_document(self, pydoc):
+    def store_document(self, pydoc, app_doc=False):
         """
         :param document:
         :return:
@@ -2884,10 +2879,16 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # blowing up the user-visible save.
         doc_payload = pydoc.to_dict()
         logma.info(f"PAYLOAD {doc_payload}")
-        data = {"table": {"doc_media": {"records": [[pydoc.syntax]], "columns": ["syntax_txt"]}}}
+        table = "doc_media"
+        if app_doc:
+            table = "app_media"
+        data = {"table": {table: {"records": [[pydoc.syntax]], "columns": ["syntax_txt"]}}}
         column = "did"
         value = pydoc.did
         self.store.update_record(data, column, value, "db")
+        if app_doc:
+            self.add_document_content_app(doc_payload, version=pydoc.version)
+            return pydoc
         self.add_document_content(doc_payload, version=pydoc.version)
         return pydoc
 
