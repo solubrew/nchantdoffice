@@ -2075,3 +2075,113 @@ and god_class are the biggest gaps).
 
 - T-NEW-001 Tab icon + 5-digit/auto-name.
 - T-NEW-004 Locks on App Nodes (Home / Journal / Settings).
+
+---
+
+## T-DESK-052 through T-DESK-065 — Cross-repo alignment with nchantdoffice_com + nchantdofficeATNRG (2026-08-07)
+
+**Context:** A cross-repo review (see
+`docs/cross-repo-review_20260807.md`) identified 14 changes the
+desktop needs to fully align with the server side
+(`nchantdoffice_com`) and the marketing/sales source of truth
+(`nchantdofficeATNRG`).
+
+**The 5 critical gaps (block the integration):**
+
+- **T-DESK-052** `nchantdoffice/utilities/referral.py:276-340` —
+  `ReferralAPIClient` calls paths that don't exist on the
+  server (`/api/affiliate/referrals`, `/api/affiliate/earnings`,
+  `/api/affiliate/banners`, etc.). The actual paths are
+  `/api/v1/referral/...` and `/api/v1/affiliate/...`. Also
+  uses `Authorization: Bearer` but server expects `x-api-key`
+  header. Add `register_desktop()` static method that calls
+  `POST /api/desktop/register`.
+- **T-DESK-053** NEW: `nchantdoffice/updates/checker.py` —
+  `UpdateChecker` worker that polls
+  `GET /api/check-update?current_version=<APP_VERSION_SHORT>&os=<os>`
+  on startup + every 6h. Tray notification when
+  `update_available: true`. Persist dismissed versions in
+  `~/.nchantd/state.yaml`.
+- **T-DESK-054** NEW: `nchantdoffice/utilities/feature_gates.py` —
+  `FeatureGate` module consuming `GET /api/version-config`.
+  Cache to `~/.nchantd/feature_flags_cache.json`. Expose
+  `is_feature_enabled(name, user_tier)`. Wire into
+  `widgets/advertisements.py::_is_visible_for_user` (currently
+  only knows Free vs Pro; needs 4-tier).
+- **T-DESK-055** `nchantdoffice/utilities/constants.py:72` —
+  Add `APP_VERSION_SHORT: str = "0.1.0"` for marketing
+  version (separate from internal sprint version
+  `0.0.1.0.1.4`). The server's `_parse_version()` only handles
+  3-segment versions, so a 5-segment version comparison is
+  broken.
+- **T-DESK-056** `nchantdoffice/utilities/constants.py:77` —
+  `APP_PLATFORM: str = "qt6"` (codebase uses PySide6; constant
+  currently lies).
+
+**Important gaps (degrade integration, don't block):**
+
+- **T-DESK-057** `nchantdoffice/widgets/advertisements.py:48-78` —
+  Refresh `FALLBACK_BANNERS` from 3 hand-picked services to
+  the 16-service catalog in `nchantdofficeATNRG/ReferralLinks.yaml`.
+  Move to `nchantdoffice/_data_/ads.yaml` build artifact.
+- **T-DESK-058** NEW: `nchantdoffice/sync/applier.py` +
+  `rollback.py` — Content-update sync. Poll
+  `GET /api/updates?last_update_date=<ISO>` every 15min. Apply
+  `binary_delta` (with `bspatch`) and `data_json` (per-collection
+  upsert) updates with snapshot+rollback on failure. This is
+  the "delta sync" piece per
+  `nchantdoffice_com/docs/desktop-integration-plan.md` §2.5.
+  Scope: ~3-5 days.
+- **T-DESK-059** NEW: `nchantdoffice/utilities/credentials.py` —
+  `~/.nchantd/credentials.json` (mode 0600) management. On
+  first launch: prompt for username, generate public key, POST
+  to `/api/desktop/register`, persist `{desktop_uuid, api_key,
+  username, user_tier}`. On subsequent launches: load from
+  disk. On 401 from any endpoint: clear and re-prompt.
+- **T-DESK-060** `nchantdoffice/widgets/catalogs.py` — Audit
+  the quicklinks widget. Confirm it reads from
+  `GET /api/v1/quicklinks/`. If not, add a `QuicklinksAPIClient`
+  mirroring `ReferralAPIClient` but at the quicklinks namespace.
+- **T-DESK-061** All `*APIClient` classes — Add
+  `RateLimitTracker` mixin. Server has per-endpoint rate limits
+  (60/hour for `/api/updates` + `/api/affiliate/links/` per
+  `nchantdoffice_com/app/rate_limit.py`). Count requests,
+  cache repeat calls in the same hour, parse `Retry-After`
+  on 429s.
+- **T-DESK-062** `nchantdoffice/widgets/advertisements.py:280` —
+  `target_url = "https://www.nchantdoffice.com/get_pro"` likely
+  404s. Confirm the actual upgrade route on the server
+  (`/compare` is current; `/get_pro` may not exist) and fix.
+- **T-DESK-063** NEW: `nchantdoffice/utilities/server_status.py`
+  + status-bar widget — "🟢 Connected / 🟡 Degraded / 🔴 Offline"
+  indicator showing connection state to the server.
+
+**Plus the T-NEW-052 dependent work:**
+
+- **T-DESK-052*** (rolled into T-DESK-052) — Wire
+  `FeatureGate` into `_is_visible_for_user` in
+  `widgets/advertisements.py:173`. Currently only checks Free
+  vs Pro; needs 4-tier (Free/Pro/ProData/Enterprise) to match
+  the live server.
+
+**Phase plan:**
+
+- **Phase 1 (1 week, critical):** T-DESK-052, T-DESK-055,
+  T-DESK-056, T-DESK-059, T-DESK-062
+- **Phase 2 (3 days, version+features):** T-DESK-053, T-DESK-054,
+  T-DESK-063
+- **Phase 3 (1 week, ads+sync):** T-DESK-057, T-DESK-058,
+  T-DESK-060, T-DESK-061
+
+**Cross-package impact:** Desktop only. No server or marketing
+changes needed. The 4 T-NEW-025/026/027/028 items in
+`nchantdoffice_com` (ads API, heartbeat, crash-report, per-desktop
+api_key rotation) are the **server-side** blocks; they live in
+the server repo's TODOs.md, not here.
+
+**Refs:**
+- `docs/cross-repo-review_20260807.md` — the full review
+- `nchantdoffice_com/docs/desktop-integration-plan.md` — the
+  server team's perspective on the same integration
+- `nchantdofficeATNRG/DesktopIntegration.md` — the marketing
+  TL;DR
