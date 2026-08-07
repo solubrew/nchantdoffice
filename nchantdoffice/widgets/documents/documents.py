@@ -611,6 +611,60 @@ class NchantdOfficeDocumentMixin:
         self.app.model.store_document(self.document)
         return self
 
+    def save_app(self, path=None, format_=None, encrypt=False):
+        """
+        Save method saves the current document in its most recent format ie internal or external file saving
+        this can be different than a store_document command
+        :return:
+        """
+        if self.document is None:
+            return self
+        # PII / secrets guard: log metadata only, never the payload body
+        # or stored content blob.
+        try:
+            content = self.document.content if self.document is not None else None
+        except Exception:
+            content = None
+        if isinstance(content, (dict, list, str, bytes, int, float, type(None))):
+            content_repr = type(content).__name__
+        else:
+            content_repr = "unknown"
+        logma.info(
+            f"Save Content type={content_repr} "
+            f"keys={list(content.keys())[:5] if isinstance(content, dict) else 'n/a'}"
+        )
+        logma.info(f"Save Path {path}")
+        if path is not None:
+            self.set_file_path(path)
+            if hasattr(self.document, "set_file_path"):
+                self.document.set_file_path(path)
+            else:
+                self.document.file_path = path
+        elif self.file_path is None:
+            self.file_path = getattr(self.document, "file_path", None)
+        if self.app.view.panes["left"].tree.model.current_node is None:
+            return self
+        pid = self.app.view.panes["left"].tree.model.current_node.nid
+        logma.info(f"Save PID {pid}")
+        if self.app.view.panes["center"].model.current_tab is None:
+            return self
+        pos = self.app.view.panes["center"].model.current_tab.position
+        logma.info(f"Save Pos {pos}")
+        logma.info(f"Save DID {self.document.did}")
+        try:
+            widget_content = self.get_content()
+        except Exception as e:
+            widget_content = None
+            logma.error(f"[documents] save: get_content failed: {e}", exc_info=True)
+        if widget_content and self.document is not None:
+            try:
+                self.document.set_content(widget_content)
+            except Exception as e:
+                logma.error(f"[documents] save: set_content failed: {e}", exc_info=True)
+        self.document.save(self.file_path)  # increments versions and (internal encryption..future)
+        self.app.model.store_document(self.document, True)
+        return self
+
     def set_save_mode(self, mode):
         """Update ``self.save_mode`` and persist it on the document config.
 
