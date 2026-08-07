@@ -23,8 +23,7 @@
 
 # -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
-from os.path import abspath, dirname, join
-import datetime as dt
+from os.path import dirname, join
 
 # ======================================3rd Party Library Modules=====================================================||
 from nchantrs.libraries import pyqt
@@ -211,7 +210,42 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         return card
 
     def _load_banners(self):
-        """Fetch banners from nchantdoffice_com; fall back to local list."""
+        """Fetch banners from the base-layer feed, then the
+        affiliate API, then fall back to the local list.
+
+        T-DESK-063 (2026-08-07): the base-layer feed
+        (``GET /api/ads/base-layer``) is the curated house-ad
+        slate. It's the first source because:
+          1. It's unauthenticated (works before registration).
+          2. It's operator-managed (the operator can add/edit
+             ads without a code change).
+          3. It's cached locally (the desktop has ads even
+             offline).
+
+        The affiliate API (``fetch_banners``) is the second
+        source — it returns campaign-targeted banners that
+        may override the base layer.
+
+        The hardcoded FALLBACK_BANNERS is the last resort
+        when both server sources are unreachable.
+        """
+        # Step 1: Base-layer feed (cached, unauthenticated).
+        try:
+            from nchantdoffice.utilities.base_layer import (
+                get_base_layer_ads,
+            )
+            base_ads = get_base_layer_ads()
+            if base_ads:
+                self.banners = base_ads
+                logma.info(
+                    f"[ad_tab] loaded {len(base_ads)} ads "
+                    f"from base-layer feed"
+                )
+                return
+        except Exception as e:
+            logma.warning(f"[ad_tab] base-layer fetch failed: {e}")
+
+        # Step 2: Affiliate API (campaign-targeted banners).
         try:
             from nchantdoffice.utilities.referral import ReferralAPIClient
 
@@ -224,6 +258,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         except Exception as e:
             logma.warning(f"[ad_tab] fetch_banners failed: {e}")
 
+        # Step 3: Hardcoded fallback (always works, even offline).
         logma.info("[ad_tab] using local fallback banners")
         self.banners = list(FALLBACK_BANNERS)
 
