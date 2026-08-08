@@ -330,19 +330,45 @@ for the registration can be derived from the device_id.
 
 ### 2.6 — Affiliate quicklinks (16 services) not consumed
 
-**File:** `nchantdoffice/widgets/catalogs.py` (need to check)
+**File:** `nchantdoffice/widgets/catalogs.py` (audit complete)
+
+**Status:** ✅ Audit complete, NO fix needed (the original card
+mis-classified the file's scope).
 
 The server exposes `/api/v1/quicklinks/` and
 `/api/v1/quicklinks/categories` and
 `/api/v1/quicklinks/track-click`. The desktop has a catalogs
-widget but it might not be wired to the server.
+widget, but on audit it's actually a LOCAL document-catalog
+widget (filesystem-based) — NOT a server-backed quicklinks
+catalog.
 
-**Fix:** Audit `widgets/catalogs.py` to confirm it reads from
-the server. If it doesn't, add a `QuicklinksAPIClient` that
-mirrors `ReferralAPIClient` but hits `/api/v1/quicklinks/`.
+**Audit findings (`widgets/catalogs.py`):**
 
-**T-NEW:** T-DESK-060 (proposed) — audit first, may already be
-done.
+- 4 catalog classes, all subclass `nchantdCatalog` (the
+  nchantrs filesystem base): `NchantdOfficeDocumentsCatalog`,
+  `NchantdOfficeExtensionsCatalog`,
+  `NchantdOfficeServicesCatalog`,
+  `NchantdDataSourcesCatalog`.
+- ZERO HTTP calls (no `requests.`, no `urllib`, no
+  `nchantdoffice_com` import, no
+  `ReferralAPIClient`/`QuicklinksAPIClient`).
+- Renders via `pandas.DataFrame` — the local-catalog
+  pattern.
+
+**Conclusion:** `widgets/catalogs.py` is a LOCAL
+filesystem browser for documents / extensions /
+services / datasources. It is NOT the quicklinks
+catalog the original card assumed. Closing this gap
+would require a NEW widget (server-backed quicklinks
+browser) — that's a new feature, not a T-DESK-060
+fix.
+
+**T-NEW:** T-DESK-060 ✅ (audit complete, no code change).
+
+If a server-backed quicklinks widget is wanted later,
+file it as a new `T-NEW-NNN`. Don't retrofit
+`widgets/catalogs.py` — keeping the local widget
+filesystem-only is the right architectural choice.
 
 ---
 
