@@ -682,3 +682,45 @@ content changes:
 - The commit body in any ATNRG content update references
   the desktop impl commit hash.
 
+
+
+---
+
+### R-5 — Mirror `FALLBACK_BANNERS` from ATNRG `ReferralLinks.yaml`
+
+The desktop bundles the offline fallback catalog in
+`nchantdoffice/utilities/affiliate_fallback.py::FALLBACK_BANNERS`
+(mirrored from `nchantdofficeATNRG/ReferralLinks.yaml`'s
+`status: active` entries). Without this mirror, a fresh
+install / offline user only sees 3 hand-picked services
+instead of the full active catalog.
+
+When ATNRG `ReferralLinks.yaml` changes (operator adds a
+new `status: active` entry, changes a `base_url`, removes
+a service):
+
+1. Open `nchantdofficeATNRG/ReferralLinks.yaml` and find the
+   new/changed `status: active` entries.
+2. For each new entry, add a banner dict to
+   `nchantdoffice/utilities/affiliate_fallback.py`'s
+   `FALLBACK_BANNERS` list (preserve the brand-aligned
+   hex colors: `#10A37F` OpenAI, `#1F2937` Railway,
+   `#3ECF8E` Supabase, `#0061FF` Dropbox — or pick from the
+   same palette for a new service).
+3. For each changed `base_url` / `display_name`, update
+   the matching banner dict in place (don't add a new entry).
+4. Re-run `pytest tests/test_affiliate_fallback.py` — the
+   `test_fallback_count_meets_release_checklist` test
+   asserts `len(FALLBACK_BANNERS) >= active_count_in_yaml`,
+   so additions don't break it, but a regression (operator
+   drops an entry without a matching YAML removal) will.
+5. Commit with body:
+   `chore(utilities): mirror N active services from ATNRG ReferralLinks.yaml`
+   and reference both the ATNRG commit hash and T-DESK-057.
+
+**Why this matters:** `FALLBACK_BANNERS` is the offline
+catalog. Without this mirror, the desktop silently shows
+stale banners after every ATNRG YAML update. The
+`test_fallback_count_meets_release_checklist` test
+catches the drift automatically — the user's first
+complaint will be "the ads stopped being relevant".

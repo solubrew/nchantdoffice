@@ -365,42 +365,17 @@ class AffiliateSlot(RotationSlot):
         return card
 
 
-# Local fallback banner feed (used when nchantdoffice_com is unreachable).
-# Each entry: {title, subtitle, cta_text, cta_url, background, foreground}.
-FALLBACK_BANNERS = [
-    {
-        "title": "OpenAI - Build with GPT models",
-        "subtitle": "$200 credit for new users. Access GPT models and build AI apps.",
-        "cta_text": "Get OpenAI",
-        "cta_url": "https://platform.openai.com?ref=nchantdoffice",
-        "background": "#10A37F",
-        "foreground": "#FFFFFF",
-    },
-    {
-        "title": "Try Notion - All-in-one workspace",
-        "subtitle": "Get 50% off your first year when you sign up via this link.",
-        "cta_text": "Get Notion",
-        "cta_url": "https://www.notion.so/affiliate?ref=nchantdoffice",
-        "background": "#FF6B6B",
-        "foreground": "#FFFFFF",
-    },
-    {
-        "title": "Railway - Deploy in seconds",
-        "subtitle": "$5 credit for every new Railway user you refer.",
-        "cta_text": "Try Railway",
-        "cta_url": "https://railway.app?ref=nchantdoffice",
-        "background": "#1F2937",
-        "foreground": "#FFFFFF",
-    },
-    {
-        "title": "Supabase - The open source Firebase",
-        "subtitle": "$50 credit per referred organization. Build faster.",
-        "cta_text": "Start with Supabase",
-        "cta_url": "https://supabase.com?ref=nchantdoffice",
-        "background": "#3ECF8E",
-        "foreground": "#0F172A",
-    },
-]
+# T-DESK-057 — ``FALLBACK_BANNERS`` is now sourced from
+# ``nchantdoffice.utilities.affiliate_fallback`` (the bundled
+# mirror of ``nchantdofficeATNRG/ReferralLinks.yaml``'s
+# ``active`` entries). The inline list literal was removed
+# to keep ``advertisements.py`` focused on rotation logic;
+# see R-5 in ``docs/cross-repo-review_20260807.md`` for the
+# release-checklist mirror procedure.
+from nchantdoffice.utilities.affiliate_fallback import (  # noqa: E402,F401
+    FALLBACK_BANNERS,
+    load_fallback_banners,
+)
 
 
 class NchantdOfficeAdTab(NchantdOfficeDocument):
