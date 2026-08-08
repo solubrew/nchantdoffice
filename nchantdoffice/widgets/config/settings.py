@@ -972,6 +972,31 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         center_settings_group.addWidget(self.update_tab_name_to_file_name_entry, row, 0)
         row += 1
 
+        # Sprint 23: name-entry dialog flags
+        # Prompt for name when creating new nodes
+        cfg = {
+            "text": "Prompt for name when creating new node",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_on_change_prompt_for_new_node_name,
+            "value": getattr(self, "prompt_for_new_node_name", False),
+        }
+        self.prompt_for_new_node_name_entry = NchantdCheckbox(self, cfg).initWidget()
+        center_settings_group.addWidget(self.prompt_for_new_node_name_entry, row, 0)
+        row += 1
+
+        # Prompt for name when creating new tabs
+        cfg = {
+            "text": "Prompt for name when creating new tab",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_on_change_prompt_for_new_tab_name,
+            "value": getattr(self, "prompt_for_new_tab_name", False),
+        }
+        self.prompt_for_new_tab_name_entry = NchantdCheckbox(self, cfg).initWidget()
+        center_settings_group.addWidget(self.prompt_for_new_tab_name_entry, row, 0)
+        row += 1
+
         # T-NEW-054: cap tabs per node. Default 35. 0 disables the
         # limit. The check lives in NchantdOfficeCloakModel.add_tab
         # and reads self.config.dikt["max_tabs_per_node"].
