@@ -584,3 +584,105 @@ def test_build_banner_card_is_removed():
         "a card builder, add a static method on RotationSlot "
         "instead of resurrecting this helper."
     )
+
+
+# ---------------------------------------------------------------------------
+# Contract 11: cross-repo parity — desktop TIPS_FEED must mirror ATNRG
+# ---------------------------------------------------------------------------
+
+
+def test_tips_feed_count_matches_atnrg_source():
+    """R-1 release checklist (docs/cross-repo-review_20260807.md):
+    the desktop ``TIPS_FEED`` is the bundled mirror of
+    ``nchantdofficeATNRG/content/memes/tips.md``. When the
+    ATNRG source adds/removes tips, the desktop bundle must
+    be updated in lockstep.
+
+    The test asserts ``len(TIPS_FEED) >= len(atnrg_tips)`` —
+    the desktop bundle is allowed to grow beyond the source
+    (operators may add extra tips that haven't yet landed
+    upstream), but it must never silently drop below it
+    (that would mean an ATNRG update was forgotten).
+
+    The Ctrl+Shift+T anchor from R-1 step 4 is already
+    pinned by ``test_tips_feed_contains_ctrl_shift_t_anchor``
+    above, so an ATNRG rewrite that drops the canonical tip
+    is caught separately.
+    """
+    src = _read(AD_TAB)
+    desktop_tips = _module_top_level_list(src, "TIPS_FEED")
+
+    atnrg_path = (
+        PROJ_ROOT.parent
+        / "nchantdofficeATNRG"
+        / "content"
+        / "memes"
+        / "tips.md"
+    )
+    if not atnrg_path.exists():
+        # The ATNRG checkout isn't always co-located with the
+        # desktop repo (e.g. CI without the marketing repo).
+        # Skip rather than fail — the local tip count pin in
+        # ``test_tips_feed_has_at_least_thirty_entries``
+        # still guards the absolute floor.
+        import pytest
+
+        pytest.skip(
+            f"ATNRG tips.md not found at {atnrg_path} — skip "
+            "cross-repo parity check (ATNRG repo not present "
+            "in this checkout)."
+        )
+
+    atnrg_text = atnrg_path.read_text()
+    # ATNRG tips.md uses numbered markdown list items like
+    # ``1. **Use Ctrl + Shift + T** …``. Count them.
+    import re as _re
+
+    atnrg_tips = _re.findall(r"^\s*\d+\.\s+", atnrg_text, flags=_re.MULTILINE)
+
+    assert len(desktop_tips) >= len(atnrg_tips), (
+        f"desktop TIPS_FEED has {len(desktop_tips)} tips but "
+        f"ATNRG content/memes/tips.md has {len(atnrg_tips)} — "
+        "the desktop bundle fell behind the marketing source. "
+        "Follow the R-1 mirror steps in "
+        "docs/cross-repo-review_20260807.md."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Contract 12: release-checklist doc exists with the R-1 mirror steps
+# ---------------------------------------------------------------------------
+
+
+def test_release_checklist_documents_tips_mirror_steps():
+    """R-1 release checklist: the tip-mirror procedure must
+    be documented somewhere visible. The desktop docs at
+    ``docs/cross-repo-review_20260807.md`` carry the R-1
+    section (added 2026-08-07 during T-DESK-066).
+
+    Pinning this here so a future cleanup can't silently
+    remove the procedure and leave the next operator
+    guessing how to mirror ATNRG content updates.
+    """
+    doc_path = PROJ_ROOT / "docs" / "cross-repo-review_20260807.md"
+    assert doc_path.exists(), (
+        "docs/cross-repo-review_20260807.md must exist "
+        "(the R-1 release checklist lives there)."
+    )
+    text = doc_path.read_text()
+    assert "## Release checklist" in text, (
+        "docs/cross-repo-review_20260807.md must include a "
+        "'## Release checklist' section (added for T-DESK-066)."
+    )
+    assert "R-1" in text and "Mirror" in text, (
+        "Release checklist must include the R-1 mirror step "
+        "for ATNRG content/memes/tips.md → TIPS_FEED."
+    )
+    assert "TIPS_FEED" in text, (
+        "Release checklist must name the TIPS_FEED symbol "
+        "(the bundled mirror target)."
+    )
+    assert "content/memes/tips.md" in text, (
+        "Release checklist must name the ATNRG source path "
+        "content/memes/tips.md."
+    )

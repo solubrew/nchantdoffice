@@ -594,3 +594,91 @@ reference the same T-NEW ID.
 - `nchantdoffice/widgets/catalogs.py` — Catalog widget (2.6)
 - `BUGs.md` — historical stacktrace archive (1.1 evidence)
 - `TODOs.md` — for adding the 14 T-DESK-XXX items
+---
+
+## Release checklist (added 2026-08-07 — T-DESK-066)
+
+Items that prevent silent drift between this repo and
+`nchantdofficeATNRG`. Run these before any release that ships
+the Ad tab rotation.
+
+### R-1 — Mirror `TIPS_FEED` from ATNRG `content/memes/tips.md`
+
+The desktop bundles the 30 productivity tips locally in
+`nchantdoffice/widgets/advertisements.py::TIPS_FEED` so the
+rotation works offline. The canonical source is
+`nchantdofficeATNRG/content/memes/tips.md` (commit `48352d3`).
+
+When ATNRG `tips.md` changes (operator adds new tips,
+rewords existing ones, removes a stale tip):
+
+1. Open `nchantdofficeATNRG/content/memes/tips.md` and copy
+   the updated numbered list (1–N).
+2. Paste into `nchantdoffice/widgets/advertisements.py` in
+   the `TIPS_FEED` list literal (preserve order, preserve
+   the markdown bold wrappers around the actionable phrase).
+3. Bump the test pin `test_tips_feed_has_at_least_thirty_entries`
+   in `tests/test_ad_tab_rotation.py` if the count grew past
+   30 (the test asserts `len(tips) >= 30` so additions don't
+   break it, but a regression below 30 will).
+4. Re-run `pytest tests/test_ad_tab_rotation.py` — all
+   15 tests must stay green.
+5. Commit with body:
+   `chore(ad-tab): mirror N tips from ATNRG content/memes/tips.md`
+   and reference both the ATNRG commit hash and the
+   `T-NEW-029` card (commit `b06e022`).
+
+**Why this matters:** `TIPS_FEED` is a static fallback.
+Without this mirror step, the desktop silently shows stale
+tips after every ATNRG content update. The user's first
+complaint will be "the tips stopped being useful".
+
+### R-2 — Grow `SUBSTACK_FEED` from outreach results
+
+`SUBSTACK_FEED` in
+`nchantdoffice/widgets/advertisements.py` is hand-curated
+(5 starter entries: Ness Labs, Farnam Street, Productivity
+Game, The Weekly Review, Refactoring). The ATNRG revenue
+plan (`0-5kpm-revenue-plan.md` §"Symbiosis Substack
+Strategy") has the operator running outreach that converts
+interested Substacks into reciprocal placement partners.
+
+When a new Substack partnership closes:
+
+1. Add a `{title, url, blurb}` entry to `SUBSTACK_FEED`.
+2. The rotation auto-includes it (no other wiring needed —
+   `_load_slots()` iterates the full list).
+3. The test pin `test_substack_feed_has_at_least_three_entries`
+   only requires ≥ 3 entries, so growth never breaks the
+   test (pin a stricter threshold later if you want a
+   floor).
+
+**Why this matters:** the symbiosis strategy's whole point
+is "value content in the Ad tab in exchange for partnership".
+A Substack that signs up but isn't added to `SUBSTACK_FEED`
+is a partnership that doesn't deliver value to the user.
+
+### R-3 — Verify `advertisements.yaml` rotation tuning
+
+`nchantdoffice/widgets/_data_/advertisements.yaml` carries
+the `interval_ms` key (default 12000). Before each release,
+confirm:
+
+- The YAML is present and well-formed (yaml.safe_load
+  must succeed).
+- The `interval_ms` value is in the operator-acceptable
+  range (3000–60000 ms; values < 3s make the tab flicker,
+  values > 60s make the rotation feel broken).
+
+### R-4 — Cross-repo parity check
+
+Both repos must ship in lockstep for T-NEW-029 / T-DESK-066
+content changes:
+
+- `nchantdofficeATNRG/TODOS.md` T-NEW-029 status flips
+  from 🟡 Open to ✅ Complete when the desktop impl lands.
+- The commit body in the desktop impl references the ATNRG
+  card commit hash.
+- The commit body in any ATNRG content update references
+  the desktop impl commit hash.
+

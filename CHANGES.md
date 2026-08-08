@@ -15,6 +15,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `nchantdoffice/config.py` - Centralized configuration module with 100+ constants
 - `tests/unit/__init__.py` - Unit test package
 - `tests/unit/test_config.py` - Configuration module tests
+- **Ad tab four-slot rotation** (T-DESK-066 / paired with nchantdofficeATNRG/T-NEW-029):
+  The right-side Ad tab now rotates between `[tip → substack × 5 → pro_cta → affiliate × 4]`
+  on a `QTimer` (default 12s, operator-tunable via `advertisements.yaml::interval_ms`).
+  - `RotationSlot` dataclass + 4 subclasses (`TipSlot`, `SubstackSlot`, `ProCtaSlot`, `AffiliateSlot`)
+  - `TIPS_FEED` (30 productivity tips mirrored from ATNRG `content/memes/tips.md`)
+  - `SUBSTACK_FEED` (5 starter entries for the symbiosis-reciprocal placement)
+  - `_load_slots()` builds the rotation in canonical order
+  - `_advance_slot()` cycles the visible slot + `_start_rotation()` wires the QTimer
+  - Pro users get no rotation (existing `_is_visible_for_user` short-circuit preserved)
+  - Manual "Next ›" button for users who don't want to wait
+- **Release checklist section** in `docs/cross-repo-review_20260807.md`:
+  R-1 (mirror TIPS_FEED from ATNRG), R-2 (grow SUBSTACK_FEED from outreach),
+  R-3 (verify rotation tuning), R-4 (cross-repo parity check). Prevents silent
+  drift between the marketing source of truth and the desktop bundle.
+- `tests/test_ad_tab_rotation.py` — 17 contract tests pinning the rotation behaviour:
+  - 14 source-level pins (slot dataclasses, TIPS_FEED, SUBSTACK_FEED, ordering, QTimer wiring)
+  - 1 dead-code pin (`_build_banner_card` removed)
+  - 1 cross-repo drift detector (`TIPS_FEED` ≥ ATNRG `tips.md` count)
+  - 1 release-checklist pin (R-1 section present with all required markers)
 
 ### Changed
 - `nchantdoffice/__init__.py` - Added version and config exports
