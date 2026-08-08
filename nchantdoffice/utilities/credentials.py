@@ -2,7 +2,7 @@
 
 The server's per-desktop authentication model requires the
 desktop to call ``POST /api/desktop/register`` once at first
-launch, then send ``x-api-key: <api_key>`` on every
+launch, then send ``x-api-key: *** on every
 authenticated request. The api_key is server-generated,
 unique per desktop, and never sent to the user.
 
@@ -10,9 +10,7 @@ Persistence requirements:
 
   1. The api_key MUST be encrypted at rest. We use the
      existing ``pykey.PYKEYSTORE`` (pycurity's PyKeyStore)
-     — the same module the desktop already uses for
-     ``affiliate_id``, ``model_api_key``, etc. The api_key
-     is stored as a service called ``nchantdoffice_desktop``.
+     with a private nchantdoffice store.
   2. The desktop_uuid + username + user_tier are stored in
      the same encrypted record (so reading the file alone
      without the keystore passphrase reveals nothing).
@@ -26,8 +24,8 @@ The rest of the codebase calls ``load_credentials()`` and
 
 Locations:
 
-  - PyKeyStore: ``~/.local/share/pycurity/secure_store.db``
-    (the existing pycurity path, set in pykey's config)
+  - PyKeyStore: ``~/.local/share/nchantdoffice/pycurity/secure_store.db``
+    (private nchantdoffice store, separate from system's pycurity)
   - Credentials metadata: stored in the same encrypted
     service record under ``map_dict`` (api_key is the
     encrypted one; everything else is plain JSON)
@@ -38,11 +36,16 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable
 
 # The service name used in pykey.PYKEYSTORE. Hard-coded so
 # callers don't have to know about pykey.
 CREDENTIALS_SERVICE = "nchantdoffice_desktop"
+
+# Private nchantdoffice pycurity store location
+NCHANTDOFFICE_PYCURITY_DIR = Path.home() / ".local" / "share" / "nchantdoffice" / "pycurity"
+NCHANTDOFFICE_SECURE_STORE = NCHANTDOFFICE_PYCURITY_DIR / "secure_store.db"
+NCHANTDOFFICE_SALT_FILE = NCHANTDOFFICE_PYCURITY_DIR / "secure_store.salt"
 
 # On-disk file is a marker only (so we can detect "has
 # this desktop ever been registered" without prompting for
@@ -94,9 +97,12 @@ class DesktopCredentials:
 # ── pykey import (lazy) ────────────────────────────────────
 
 
-def _keystore():
+def _keystore(passphrase: Optional[str] = None):
     """Return the pykey.PYKEYSTORE instance, or None if pykey
     isn't available (the pycurity project isn't on sys.path).
+
+    Uses the private nchantdoffice store at:
+    ~/.local/share/nchantdoffice/pycurity/secure_store.db
 
     Callers should handle the None case gracefully — the
     desktop can still operate without persistent credentials
@@ -104,9 +110,51 @@ def _keystore():
     """
     try:
         import pykey
-        return pykey.PYKEYSTORE
+        return pykey.PYKEYSTORE(
+            db_path=str(NCHANTDOFFICE_SECURE_STORE),
+            salt_path=str(NCHANTDOFFICE_SALT_FILE),
+            passphrase=passphrase,
+        )
     except ImportError:
         return None
+
+
+# ── Vault initialization ───────────────────────────────────
+
+
+def init_vault(passphrase_prompt: Callable[[], str]) -> bool:
+    """Initialize the nchantdoffice pycurity vault with a master password.
+
+    This should be called during the SetupWizard on first install.
+    Creates the private store directory and initializes the vault.
+
+    Args:
+        passphrase_prompt: A callable that prompts the user for a
+            master password (e.g., getpass.getpass).
+
+    Returns:
+        True if vault was initialized successfully, False otherwise.
+    """
+    # Create the private directory
+    NCHANTDOFFICE_PYCURITY_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Initialize vault with passphrase
+    try:
+        import pykey
+        ks = pykey.PYKEYSTORE(
+            db_path=str(NCHANTDOFFICE_SECURE_STORE),
+            salt_path=str(NCHANTDOFFICE_SALT_FILE),
+        )
+        # Create the vault with the user's passphrase
+        ks.create(passphrase=passphrase_prompt())
+        return True
+    except Exception:
+        return False
+
+
+def vault_exists() -> bool:
+    """Check if the nchantdoffice pycurity vault exists."""
+    return NCHANTDOFFICE_SECURE_STORE.exists()
 
 
 # ── Save / load ────────────────────────────────────────────
