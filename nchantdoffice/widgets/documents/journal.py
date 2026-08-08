@@ -394,7 +394,8 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         """
         # TODO implement extraction and storage schema input
         new_content = ""
-        for entry in new_content.split("|--")
+        for entry in new_content.split("|--"):
+            pass
 
     def populate_data(self):
         """"""
@@ -424,6 +425,10 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         content = self.get_content()
         if content != self.document.content:
             self.document.set_content(content)
+        try:
+            super().save()  # Persist base document content
+        except Exception as e:
+            logma.warning(f"[journal] save: super().save() failed: {e}")
         self.save_app()  # TODO save has to redirect to the app_doc_content table
         try:
             if self.new_entry:

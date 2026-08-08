@@ -554,6 +554,13 @@ class NchantdOfficeDocumentMixin:
             f"keys={list(content.keys())[:5] if isinstance(content, dict) else 'n/a'}"
         )
         logma.info(f"Save Path {path}")
+        # Guard for widgets that fundamentally don't support file_path-based saving
+        # (e.g., JournalEditor doesn't have this attribute at all).
+        # Only skip if the attribute literally doesn't exist - NOT if it's None.
+        # Widgets like browsers should still save to DB even without file_path.
+        if not hasattr(self, "file_path"):
+            logma.debug("[documents] save_app: no file_path attribute, skipping app-level save")
+            return self
         if path is not None:
             self.set_file_path(path)
             if hasattr(self.document, "set_file_path"):
@@ -562,6 +569,8 @@ class NchantdOfficeDocumentMixin:
                 self.document.file_path = path
         elif self.file_path is None:
             self.file_path = getattr(self.document, "file_path", None)
+        # Note: we intentionally allow saving to DB even when file_path is None.
+        # Widgets like browsers save content to DB without a file_path.
         if self.app.view.panes["left"].tree.model.current_node is None:
             return self
         pid = self.app.view.panes["left"].tree.model.current_node.nid
@@ -634,6 +643,13 @@ class NchantdOfficeDocumentMixin:
             f"keys={list(content.keys())[:5] if isinstance(content, dict) else 'n/a'}"
         )
         logma.info(f"Save Path {path}")
+        # Guard for widgets that fundamentally don't support file_path-based saving
+        # (e.g., JournalEditor doesn't have this attribute at all).
+        # Only skip if the attribute literally doesn't exist - NOT if it's None.
+        # Widgets like browsers should still save to DB even without file_path.
+        if not hasattr(self, "file_path"):
+            logma.debug("[documents] save_app: no file_path attribute, skipping app-level save")
+            return self
         if path is not None:
             self.set_file_path(path)
             if hasattr(self.document, "set_file_path"):
@@ -642,6 +658,8 @@ class NchantdOfficeDocumentMixin:
                 self.document.file_path = path
         elif self.file_path is None:
             self.file_path = getattr(self.document, "file_path", None)
+        # Note: we intentionally allow saving to DB even when file_path is None.
+        # Widgets like browsers save content to DB without a file_path.
         if self.app.view.panes["left"].tree.model.current_node is None:
             return self
         pid = self.app.view.panes["left"].tree.model.current_node.nid
