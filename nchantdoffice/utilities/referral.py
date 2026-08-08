@@ -34,6 +34,12 @@ import requests
 # ======================================Solutions Brewer Library Modules=============================================||
 from kahndor.logma import Logma
 
+# T-DESK-061 — compose RateLimitTracker for per-endpoint
+# counting + Retry-After honoring (the server is rate-limited
+# at 5/minute on /api/updates + /api/affiliate/links/ via
+# flask-limiter; the desktop would silently 429 without this).
+from nchantdoffice.utilities.rate_limit import RateLimitTracker
+
 logma = Logma(__name__)
 
 # Referral code format: NB-X7K2-PQ or NBABCD12 (10-12 chars uppercase alphanumeric)
@@ -297,6 +303,10 @@ class ReferralAPIClient:
       GET  /api/v1/quicklinks/categories -> quicklinks categories
       POST /api/v1/quicklinks/track-click -> track a quicklink click
 
+    Rate-limit-aware (T-DESK-061): composes
+    ``RateLimitTracker`` for per-endpoint counting + the
+    server's ``Retry-After`` header is honored on 429s.
+
     Auth model: when an ``api_key`` is configured (i.e. the
     desktop has registered and the key is in the credentials
     store), it's sent as the ``x-api-key`` header on every
@@ -341,6 +351,11 @@ class ReferralAPIClient:
         if api_key:
             # T-DESK-052: server expects x-api-key, not Bearer.
             self._session.headers["x-api-key"] = api_key
+        # T-DESK-061: per-endpoint rate-limit tracker. The
+        # server's flask-limiter caps /api/updates + /api/affiliate/links/
+        # at 5/minute per IP; without this tracker a chatty UI
+        # silently hits 429.
+        self._rate_limit = RateLimitTracker()
 
     def _request(self, method: str, path: str, *,
                  json: Optional[dict] = None,
