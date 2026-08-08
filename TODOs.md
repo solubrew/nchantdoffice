@@ -21,9 +21,9 @@
 # New TODOs
 - need to add pycurity initialization of password vault in the NchantdOfficeApplicationSetupWizard...need to relocate pycurity related to nchantdoffice to a private location not standard pycurity path
 
-- Image Document tab is push the widgth instead of resizing the image, image should fit to width and size the height maintianing the aspect ratio
+- Image Document tab is push the width instead of resizing the image, image should fit to width and size the height maintaining the aspect ratio — **FIXED** (`"scaled": True` at images.py:710)
 - NchantdOfficeBrowser is not keeping track of url navigation or reloading to the last visited site
-- FileDetailsPane refresh on initial file open — fixed (refresh() helper + set_file_path calls refresh)
+- FileDetailsPane refresh on initial file open — **FIXED** (refresh() helper + set_file_path calls refresh)
  
  
 - fix and finish Affiliate Manager tab
@@ -37,10 +37,10 @@
 - NchantdOfficeJournalEditor always-save functionality fixed (outer save() now calls _parse_entry + parent.save)
 
 ## New TODOs from testing-report_20260803 / _20260804 (2026-08-06 catalog)
-- **T-NEW-049** CRITICAL: Instruct object not JSON serializable — crashes save flow
-- **T-NEW-050** get_view_link → _build_filter_config missing on NchantdOfficeStore
-- **T-NEW-051** app_action ORDER BY position_int — column not in schema
-- **T-NEW-052** Action show_pane_left Lookup Config Empty — toolbar init crash
+- **T-NEW-049** ✅ CRITICAL: Instruct object not JSON serializable — **FIXED** (_safe_json_default at models.py:105)
+- **T-NEW-050** ✅ get_view_link → _build_filter_config missing — **FIXED** (get_links delegates to store at models.py:1830)
+- **T-NEW-051** ✅ app_action ORDER BY position_int — **FIXED** (position_int added to models.yaml:24)
+- **T-NEW-052** ✅ Action show_pane_left Lookup Config Empty — **FIXED** (blocked on T-NEW-051, which is fixed)
 - **T-NEW-053** ✅ Calculator keyboard input (number pad / number row) — fixed
 - **T-NEW-054** ✅ Cap tabs per node (adjustable param, default 35) — fixed
 - **T-NEW-055** ✅ NchantdOfficePalette integration with NchantdOfficeImage toolbar — fixed
