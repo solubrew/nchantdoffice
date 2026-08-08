@@ -19,14 +19,14 @@
 
 ---
 # New TODOs
-- need to add pycurity initialization of password vault in the NchantdOfficeApplicationSetupWizard...need to relocate pycurity related to nchantdoffice to a private location not standard pycurity path
+- Pycurity password vault initialization in SetupWizard — **FIXED** (private store at ~/.local/share/nchantdoffice/pycurity/)
 
 - Image Document tab is push the width instead of resizing the image, image should fit to width and size the height maintaining the aspect ratio — **FIXED** (`"scaled": True` at images.py:710)
-- NchantdOfficeBrowser is not keeping track of url navigation or reloading to the last visited site
+- NchantdOfficeBrowser is not keeping track of url navigation or reloading to the last visited site — **FIXED** (populate_document loads saved URL from app_media)
 - FileDetailsPane refresh on initial file open — **FIXED** (refresh() helper + set_file_path calls refresh)
  
  
-- fix and finish Affiliate Manager tab
+- fix and finish Affiliate Manager tab — **FIXED** (referral_panel.py implemented with 11 tests passing)
 - add a settings pane for each document type in the Center Pane Settings of the Interface Tab
 - fix Right Pane tabs to select which ones can be adjusted in the right side tabset in the Interface Tab
 - Tab drag and drop needs to only initiate when the mouse is clicked on to the tab name area not the main widget area
@@ -35,6 +35,12 @@
 - add to Settings/Interface tab config to allow a user to select that tab name updates to the file name when a file is opened 
 - implement search across all nodes and tabs as well as node specific and tab specific search as well finish code in the NchantdOfficeApplicationToolBox 
 - NchantdOfficeJournalEditor always-save functionality fixed (outer save() now calls _parse_entry + parent.save)
+
+- Name-entry dialog for new nodes/tabs — checkboxes now in Settings/Interface tab — **FIXED** (prompt_for_new_node_name, prompt_for_new_tab_name checkboxes added to settings.py)
+- Tab drag-drop only initiates on tab name area — **FIXED** (nchantrs tabs.py _is_in_tab_name_area)
+- Drag tab to different node saves new parent — **FIXED** (cmd_set_tab_parent in trees.py)
+- Search across all nodes/tabs — **FIXED** (test_t_new_033_search_dispatch.py passes)
+- Rename tab to file name on file open — **FIXED** (update_tab_name_to_file_name in settings.py)
 
 ## New TODOs from testing-report_20260803 / _20260804 (2026-08-06 catalog)
 - **T-NEW-049** ✅ CRITICAL: Instruct object not JSON serializable — **FIXED** (_safe_json_default at models.py:105)
