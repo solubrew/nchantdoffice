@@ -561,3 +561,26 @@ def test_module_dunder_all_lists_new_symbols():
         assert sym in found, (
             f"__all__ must include {sym!r} (T-DESK-066 export)."
         )
+
+
+# ---------------------------------------------------------------------------
+# Contract 10: dead-code removal — _build_banner_card is gone
+# ---------------------------------------------------------------------------
+
+
+def test_build_banner_card_is_removed():
+    """T-DESK-066 step 6 cleanup: the legacy
+    ``_build_banner_card`` helper was deleted once its
+    visual language was absorbed into
+    ``AffiliateSlot.render()``. Pinning the absence so a
+    future refactor can't accidentally resurrect the dead
+    helper alongside the new render() path.
+    """
+    src = _read(AD_TAB)
+    assert _ast_function(src, "_build_banner_card") is None, (
+        "_build_banner_card must be removed — its visual "
+        "language was absorbed into AffiliateSlot.render() "
+        "during the T-DESK-066 step-6 cleanup. If you need "
+        "a card builder, add a static method on RotationSlot "
+        "instead of resurrecting this helper."
+    )

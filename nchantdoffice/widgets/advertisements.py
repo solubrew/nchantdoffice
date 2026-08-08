@@ -326,9 +326,11 @@ class AffiliateSlot(RotationSlot):
     kind: str = "affiliate"
 
     def render(self, parent):
-        # The original Ad tab used _build_banner_card(parent, dict)
-        # — we replicate that here so the visual language stays
-        # identical to the pre-rotation ad tab.
+        # Render an affiliate/team-pack banner card. The
+        # visual language mirrors the pre-rotation
+        # ``_build_banner_card`` helper (removed in T-DESK-066
+        # step 6 — AffiliateSlot.render() is now the single
+        # source of truth for this card shape).
         banner = self.payload
         card = NchantdGridScrollGroupBox(parent)
         card.setTitle("")
@@ -622,35 +624,6 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         if user is None:
             return True
         return not bool(getattr(user, "has_pro", False))
-
-    def _build_banner_card(self, parent, banner: dict):
-        """Render a single banner card."""
-        card = NchantdGridScrollGroupBox(parent)
-        card.setTitle("")
-
-        bg = banner.get("background", "#2563eb")
-        fg = banner.get("foreground", "#ffffff")
-
-        title = NchantdLabel(card)
-        title.setText(f"<b style='color: {fg};'>{banner.get('title', '')}</b>")
-        title.setStyleSheet(f"color: {fg}; font-size: 14pt; background-color: {bg}; padding: 6px;")
-        card.addWidget(title)
-
-        if banner.get("subtitle"):
-            sub = NchantdLabel(card)
-            sub.setText(banner["subtitle"])
-            sub.setStyleSheet(f"color: {fg}; background-color: {bg}; padding: 6px;")
-            card.addWidget(sub)
-
-        if banner.get("cta_text") and banner.get("cta_url"):
-            cta = NchantdButton(card)
-            cta.setText(banner["cta_text"])
-            url = banner["cta_url"]
-            cta.clicked.connect(self._make_open_url_handler(url))
-            card.addWidget(cta)
-
-        card.setStyleSheet(f"QGroupBox {{ background-color: {bg}; border-radius: 8px; padding: 6px; }}")
-        return card
 
     def _load_slots(self):
         """T-DESK-066 — populate ``self.slots`` in the canonical
