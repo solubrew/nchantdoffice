@@ -16,7 +16,7 @@
 from os.path import dirname, join
 import datetime as dt
 from bs4 import BeautifulSoup
-import json as j
+import json
 
 # ======================================3rd Party Library Modules=====================================================||
 from pygments import highlight
@@ -42,11 +42,12 @@ from nchantrs.widgets.media.editors.editors import NchantdDocEditor
 from nchantrs.widgets.media.editors.editors import NchantdAppendOnlyEditor
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.media.editors.selectors import NchantdComboBox, NchantdDropDown
-
+from pycurity.pyhash import decode64
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
-log = False
+log = True
 logma = Logma(__name__)
+debug = True
 if not log:
     logma.off()
 # ====================================================================================================================||
@@ -79,144 +80,11 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.text = None
         self.data = None
         self.document = None
+        self.entries = {}
 
     def initModel(self):
         """ "" """
         super().initModel()
-
-        # T-NEW-036: The restore functionality for Journal was broken --
-        # initModel fetched the journal text once at initWidget time and
-        # never refreshed on tab change. The refresh_content method (below)
-        # handles the re-fetch. The inline TODO that was here has been
-        # resolved; see TODOs.md T-NEW-036 for the close-out.
-        #  current storage schema for journal document
-        # {
-        #     "content": "--|2026-07-30 23:09:00|--\nis data sotored?",
-        #     "document_type": "script",
-        #     "pages": {
-        #         "0": {
-        #             "entries": {
-        #                 "0": {
-        #                     "did": "06a6c11d-5e43-725b-8000-b5aa78470430",
-        #                     "name": "06a6c11d-5e43-725b-8000-b5aa78470430",
-        #                     "description": "",
-        #                     "meta_data": {
-        #                         "author": "",
-        #                         "context": "",
-        #                         "editors": [],
-        #                         "encoding": "utf-8",
-        #                         "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        #                         "location": "internal",
-        #                         "path": "",
-        #                         "syntax": "plain-text",
-        #                         "semver": "0.1.0",
-        #                         "schema_version": [1, 0, 0],
-        #                         "creon_dttm": "2026-07-31 03:09:09",
-        #                         "mod_dttm": "2026-07-31 03:09:09",
-        #                         "tags": [],
-        #                     },
-        #                     "unit": {
-        #                         "data_format": {},
-        #                         "font": {
-        #                             "size": null,
-        #                             "color": {
-        #                                 "did": "06a6c11d-5e46-7e0b-8000-08d9611cbf84",
-        #                                 "name": "06a6c11d-5e46-7e0b-8000-08d9611cbf84",
-        #                                 "description": "",
-        #                                 "meta_data": {
-        #                                     "author": "",
-        #                                     "context": "",
-        #                                     "editors": [],
-        #                                     "encoding": "utf-8",
-        #                                     "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        #                                     "location": "internal",
-        #                                     "path": "",
-        #                                     "syntax": "plain-text",
-        #                                     "semver": "0.1.0",
-        #                                     "schema_version": [1, 0, 0],
-        #                                     "creon_dttm": "2026-07-31 03:09:09",
-        #                                     "mod_dttm": "2026-07-31 03:09:09",
-        #                                     "tags": [],
-        #                                 },
-        #                                 "unit": {
-        #                                     "color_name": "black",
-        #                                     "hex": "#000000",
-        #                                     "rgb": [0, 0, 0],
-        #                                     "rgba": null,
-        #                                     "xyz": null,
-        #                                 },
-        #                             },
-        #                             "background": {
-        #                                 "did": "06a6c11d-5e4a-77b0-8000-e9c3d92109a0",
-        #                                 "name": "06a6c11d-5e4a-77b0-8000-e9c3d92109a0",
-        #                                 "description": "",
-        #                                 "meta_data": {
-        #                                     "author": "",
-        #                                     "context": "",
-        #                                     "editors": [],
-        #                                     "encoding": "utf-8",
-        #                                     "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        #                                     "location": "internal",
-        #                                     "path": "",
-        #                                     "syntax": "plain-text",
-        #                                     "semver": "0.1.0",
-        #                                     "schema_version": [1, 0, 0],
-        #                                     "creon_dttm": "2026-07-31 03:09:09",
-        #                                     "mod_dttm": "2026-07-31 03:09:09",
-        #                                     "tags": [],
-        #                                 },
-        #                                 "unit": {
-        #                                     "color_name": "black",
-        #                                     "hex": "#000000",
-        #                                     "rgb": [0, 0, 0],
-        #                                     "rgba": null,
-        #                                     "xyz": null,
-        #                                 },
-        #                             },
-        #                             "highlight": {
-        #                                 "did": "06a6c11d-5e4e-70d7-8000-b218de77aa7a",
-        #                                 "name": "06a6c11d-5e4e-70d7-8000-b218de77aa7a",
-        #                                 "description": "",
-        #                                 "meta_data": {
-        #                                     "author": "",
-        #                                     "context": "",
-        #                                     "editors": [],
-        #                                     "encoding": "utf-8",
-        #                                     "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        #                                     "location": "internal",
-        #                                     "path": "",
-        #                                     "syntax": "plain-text",
-        #                                     "semver": "0.1.0",
-        #                                     "schema_version": [1, 0, 0],
-        #                                     "creon_dttm": "2026-07-31 03:09:09",
-        #                                     "mod_dttm": "2026-07-31 03:09:09",
-        #                                     "tags": [],
-        #                                 },
-        #                                 "unit": {
-        #                                     "color_name": "black",
-        #                                     "hex": "#000000",
-        #                                     "rgb": [0, 0, 0],
-        #                                     "rgba": null,
-        #                                     "xyz": null,
-        #                                 },
-        #                             },
-        #                             "style": null,
-        #                             "bold": null,
-        #                             "italic": null,
-        #                             "underline": null,
-        #                             "subscript": null,
-        #                             "superscript": null,
-        #                         },
-        #                         "html": "",
-        #                         "value": "--|2026-07-30 23:09:00|--\nis data sotored?",
-        #                         "alignment": {"horizontal": {}, "vertical": null},
-        #                     },
-        #                 }
-        #             }
-        #         }
-        #     },
-        # }
-
         logma.info(f"initModel")
         scope = self.config.dikt.get("scope", "TODAY")
         datetime = dt.datetime.now()
@@ -226,16 +94,15 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         tags = {"nid": self.app.model.get_current_node().nid, "tid": tid}
         cfg = {"tags": tags, "scope": scope, "datetime": datetime}
         document = {"document": self.get_journal_document(cfg)}
-        # logma.json(document)
         logma.info(f"Document {document}")
         self.document = self.app.model.codex.init_script(document)
         self.document.load_document()
-        # logma.json(self.document.to_dict())
         self.pages = self.document.pages
         logma.info(f"Pages {self.pages}")
-        # self.full_text = self.document.full_text
         self.full_text = text = self.document.text.to_dict()["unit"].get("value", "")
         logma.info(f"Full Text {self.full_text}")
+        if self.context_menu_name is not None:
+            self.initialize_context_menu("context.document.journal")
         return self
 
     def initView(self, cfg=None):
@@ -269,65 +136,65 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.initView()
         return self
 
-    def refresh_content(self):
-        """Re-fetch the journal document from the model and update the editor.
-
-        T-NEW-036: ``initModel`` fetches the journal text once at
-        ``initWidget`` time. On subsequent tab-focus changes,
-        ``initModel`` is never re-called, so the editor showed
-        stale content. This method re-fetches the current journal
-        text (same path as ``initModel``: get_view_journal ->
-        codex.init_script -> load_document -> text.to_dict) and
-        pushes the result into ``self.full_text`` + the editor
-        widget.
-
-        Called from ``NchantdOfficeTabSet.on_tab_focus`` when the
-        focused tab's widget has a ``refresh_content`` method.
-
-        Defensive: missing ``self.app``, missing model, or a
-        raised exception is logged + swallowed (returns self)
-        rather than crashing the UI.
-
-        Returns ``self`` for chainable call sites.
-        """
-        try:
-            app = getattr(self, "app", None)
-            if app is None:
-                return self
-            model = getattr(app, "model", None)
-            if model is None:
-                return self
-            scope = self.config.dikt.get("scope", "TODAY")
-            datetime = dt.datetime.now()
-            tid = None
-            try:
-                tab = model.get_current_tab()
-                tid = getattr(tab, "tid", None)
-            except Exception:
-                pass
-            try:
-                node = model.get_current_node()
-                nid = getattr(node, "nid", None)
-            except Exception:
-                nid = None
-            tags = {"nid": nid, "tid": tid}
-            cfg = {"tags": tags, "scope": scope, "datetime": datetime}
-            document = {"document": model.get_view_journal(cfg)}
-            doc = model.codex.init_script(document)
-            doc.load_document()
-            text = doc.text.to_dict()["unit"].get("value", "")
-            self.full_text = text
-            self.document = doc
-            self.pages = doc.pages
-            if self.editor is not None and hasattr(self.editor, "setPlainText"):
-                self.editor.setPlainText(text)
-            logma.info(f"[journal] refresh_content: restored {len(text)} chars")
-        except Exception as e:
-            logma.error(
-                f"[journal] refresh_content failed: {e}",
-                exc_info=True,
-            )
-        return self
+    # def refresh_content(self):
+    #     """Re-fetch the journal document from the model and update the editor.
+    #
+    #     T-NEW-036: ``initModel`` fetches the journal text once at
+    #     ``initWidget`` time. On subsequent tab-focus changes,
+    #     ``initModel`` is never re-called, so the editor showed
+    #     stale content. This method re-fetches the current journal
+    #     text (same path as ``initModel``: get_view_journal ->
+    #     codex.init_script -> load_document -> text.to_dict) and
+    #     pushes the result into ``self.full_text`` + the editor
+    #     widget.
+    #
+    #     Called from ``NchantdOfficeTabSet.on_tab_focus`` when the
+    #     focused tab's widget has a ``refresh_content`` method.
+    #
+    #     Defensive: missing ``self.app``, missing model, or a
+    #     raised exception is logged + swallowed (returns self)
+    #     rather than crashing the UI.
+    #
+    #     Returns ``self`` for chainable call sites.
+    #     """
+    #     try:
+    #         app = getattr(self, "app", None)
+    #         if app is None:
+    #             return self
+    #         model = getattr(app, "model", None)
+    #         if model is None:
+    #             return self
+    #         scope = self.config.dikt.get("scope", "TODAY")
+    #         datetime = dt.datetime.now()
+    #         tid = None
+    #         try:
+    #             tab = model.get_current_tab()
+    #             tid = getattr(tab, "tid", None)
+    #         except Exception:
+    #             pass
+    #         try:
+    #             node = model.get_current_node()
+    #             nid = getattr(node, "nid", None)
+    #         except Exception:
+    #             nid = None
+    #         tags = {"nid": nid, "tid": tid}
+    #         cfg = {"tags": tags, "scope": scope, "datetime": datetime}
+    #         document = {"document": model.get_view_journal(cfg)}
+    #         doc = model.codex.init_script(document)
+    #         doc.load_document()
+    #         text = doc.text.to_dict()["unit"].get("value", "")
+    #         self.full_text = text
+    #         self.document = doc
+    #         self.pages = doc.pages
+    #         if self.editor is not None and hasattr(self.editor, "setPlainText"):
+    #             self.editor.setPlainText(text)
+    #         logma.info(f"[journal] refresh_content: restored {len(text)} chars")
+    #     except Exception as e:
+    #         logma.error(
+    #             f"[journal] refresh_content failed: {e}",
+    #             exc_info=True,
+    #         )
+    #     return self
 
     def get_content(self):
         """Return the document content, normalizing the source syntax.
@@ -372,34 +239,63 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         logma.info(f"CONTENT {content}")
         return content
 
+    def get_content_text(self, cfg=None):
+        """"""
+        document = self.get_journal_document(cfg)
+        logma.info(document)
+        text = document.get("content_enc64_txt", None)
+        if text is None:
+            if debug:
+                raise
+            return ""
+        text = json.loads(decode64(text)).get("content", {}).get("text")
+        logma.info(text)
+        return text
+
+
     def get_journal_document(self, cfg):
         """"""
         document = self.app.model.get_view_journal(cfg)
-        logma.json(document)
+        logma.info(document)
         return document
 
     def get_journal_organization(self):
         """"""
-        value = self.settings.get_value()
-        return value
+        #value = self.settings.get_value()
+        #return value
 
     def focusOutEvent(self, event):
         """"""
         super().focusOutEvent(event)
         self.save()
 
-    def parse(self):
+    def parse(self, content):
         """parse text from journal to extract into each date time entry as an object for later retrieval
         also need to store what document was active in the center tabset during writing of note for context view
         """
         # TODO implement extraction and storage schema input
-        new_content = ""
-        for entry in new_content.split("|--"):
-            pass
+        logma.info(content)
+        # for _date, entry in content.split("--|{date}|--"):
+        #     self.entries[_date] = entry
 
-    def populate_data(self):
+    def populate_document(self):
         """"""
-        super().populate_document()
+        # super().populate_document()
+        # doc = getattr(self, "document", None)
+        # if doc.location == "internal":
+        #     content = self.get_content()
+        #     self.editor.set_text(content["content"]["text"])
+        #     # binary = None
+        #     # if doc is not None:
+        #     #     binary = getattr(doc, "binary", None) or getattr(doc, "bytes", None) or getattr(doc, "data", None)
+        #     # if binary and hasattr(doc, "load_image_bytes"):
+        #     #     try:
+        #     #         doc.load_image_bytes(binary)
+        #     #         return self
+        #     #     except Exception as e:
+        #     #         logma.error(f"[images] populate_document: load_image_bytes failed: {e}", exc_info=True)
+        # elif doc.location == "external":
+        #     raise ("External Journal Not Supported")
 
     def save(self, path=None, format_=None, encrypt=False):
         """Persist the journal entry.
@@ -425,10 +321,8 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         content = self.get_content()
         if content != self.document.content:
             self.document.set_content(content)
-        try:
-            super().save()  # Persist base document content
-        except Exception as e:
-            logma.warning(f"[journal] save: super().save() failed: {e}")
+        self.parse(content)
+        #version is not keeping in place causing the newest save not to be reloaded
         self.save_app()  # TODO save has to redirect to the app_doc_content table
         try:
             if self.new_entry:
@@ -460,12 +354,13 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
     def initModel(self):
         """"""
         super().initModel()
-
+        self.text = self.get_journal_text()
         return self
 
     def initView(self):
         """"""
         super().initView()
+        self.setText(self.text)
         return self
 
     def initWidget(self):
@@ -538,8 +433,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         scope = self.config.dikt.get("scope", "TODAY")
         datetime = dt.datetime.now()
         tags = {"nid": self.app.model.get_current_node().nid, "tid": tid}
-        text = self.app.model.get_journal(scope, datetime, tags)
-        text = ""
+        text = self.parent.get_content_text()
         return text
 
     def save(self):
