@@ -3086,13 +3086,11 @@ class NchantdOfficeStore(NchantdStore):
     # embedding storage to ~1.5KB per row.
     VECTOR_DIMENSION = 384
 
-    def __init__(self, name, parent=None, cfg=None, journal_path=None):
-        """NchantdOfficeStore constructor. Passes journal_path
-        through to NchantdStore → MicroStash for opt-in WAL
-        semantics (T-DESK-058 step 2)."""
+    def __init__(self, name, parent=None, cfg=None):
+        """NchantdOfficeStore constructor."""
         self.name = name.lower().replace(" ", "")  # "nchantdoffice"
         # this controls the location of the database storage on the local drive
-        super().__init__(self.name, parent, cfg, journal_path=journal_path)
+        super().__init__(self.name, parent, cfg)
         # T-NEW-007: one SQLite DB per app instance. Each
         # NchantdOfficeStore holds at most one active SQLite
         # connection. ``open_sqlite`` is the canonical entry

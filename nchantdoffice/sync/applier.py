@@ -151,13 +151,18 @@ class ContentUpdateSync:
         (0 when no updates available or server unreachable).
 
         Flow:
-          1. Load credentials (desktop_uuid + api_key).
-          2. Load last_update_date watermark.
-          3. Poll ``GET /api/updates``.
-          4. Apply each update (dispatch by update_type).
-          5. Persist the new watermark.
-          6. Record success/failure on ServerStatus.
+          1. Enable journaling on the store (derives path from
+             the store's own DB path).
+          2. Load credentials (desktop_uuid + api_key).
+          3. Load last_update_date watermark.
+          4. Poll ``GET /api/updates``.
+          5. Apply each update (dispatch by update_type).
+          6. Persist the new watermark.
+          7. Record success/failure on ServerStatus.
         """
+        # Enable journaling (derived from the store's own path).
+        if self.store is not None and getattr(self.store, "_journal", None) is None:
+            self.store.enable_journal()
         from nchantdoffice.utilities.server_status import (
             timed_call,
             DEFAULT_STATUS,
