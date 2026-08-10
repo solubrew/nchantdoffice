@@ -55,6 +55,7 @@
 - **T-NEW-058** ✅ Wire `UpdateChecker` + DBUpdate into boot — `_upgrade_lock` flag + `run_update_process` helper + 3 boot-hook tests, commit `c85fcf4` (2026-08-10, t-new-058).
 - **T-NEW-059** ✅ User-configurable update-check interval — `refresh_interval_seconds(cfg)` helper + `cmd_on_change_check_update_interval_hours` spinbox + 4 interval tests, commit `10c8848` (2026-08-10, t-new-059).
 - **T-NEW-060** ✅ Tray icon + per-version snooze (`dismiss_version(days=7)`), commit `619b493` (2026-08-10, t-new-060).
+- **T-NEW-062** ✅ Notebook Jupyter-side URL sync (`_sync_notebook_from_url`), commit `126489b` (2026-08-10, t-new-062).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1706,6 +1707,72 @@ click. This card implements both pieces.
   §3 (Recommended implementation order item #3).
 - T-DESK-053 — the original dismiss_version/is_dismissed
   design (commit `6f537d1`); T-NEW-060 extends its surface.
+
+### T-NEW-062 — Notebook Jupyter-side URL sync (2026-08-10)
+
+**Status:** ✅ Resolved in commit `126489b` (2026-08-10,
+t-new-062 branch).
+
+Per `testing-report_20260810.md` line 7:
+> "NchantdOfficeNotebook doesn't remember and restore when a
+> notebook has been opened in that tab previously. we need a
+> hook to opening via double click of the file, right click
+> open, and file open within the notebook filebrowser itself".
+
+User clarification: "the file browser is part of jupyter
+notebook itself in the initial page that is loaded from the
+server". So the "filebrowser" referenced in the report is
+Jupyter's built-in ``/tree`` page, served by the Jupyter
+subprocess that Nchantd embeds in a QWebEngineView. The
+double-click / right-click / filebrowser-open paths all
+route through Jupyter's webview, which triggers
+``urlChanged`` on the Qt side. This card wires that signal
+to Nchantd state.
+
+The double-click / right-click Nchantd-side paths (opening
+.ipynb from the left tree) were already wired via
+``cmd_open_local_file`` → ``load_notebook_file`` (line 1085)
+and were working — the user only flagged the Jupyter-side
+reopen.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/workbooks/notebooks.py` —
+  added `_sync_notebook_from_url(url)` method that parses
+  a Jupyter URL, extracts the notebook filename, resolves
+  it against ``dirname(self.file_path)`` (the Jupyter cwd),
+  and updates ``self.file_path`` + ``self.current_notebook_path``
+  + ``config.dikt["last_notebook_path"]`` + the URL dropdown.
+  Wired into the existing `urlChanged` callback (line 1718)
+  so every Jupyter navigation triggers the sync.
+- `tests/test_notebook_url_sync.py` (new file, 5 tests).
+
+**Migration plan:**
+
+1. Add `_sync_notebook_from_url` helper. ✅
+2. Wire it into the existing `urlChanged` callback. ✅
+3. Add `last_notebook_path` to `config.dikt` so app restart
+   can reopen the user's currently-open notebook (already
+   done by `open_notebook` at line 295; `initModel` already
+   reads `config.dikt["file_path"]` for reopen). ✅
+4. Pin 5 tests in `tests/test_notebook_url_sync.py`. ✅
+
+**Verification (real):**
+
+- `pytest tests/test_notebook_url_sync.py tests/test_notebook_reopen.py tests/test_notebook_save_bytes.py tests/test_update_checker.py tests/test_update_checker_review.py tests/test_update_checker_boot_hook.py tests/test_update_checker_interval.py tests/test_dismiss_version_duration.py -q`
+  → **41 passed, 0 failed**.
+- `python cmds/_review_update_process.py` → fresh-server
+  scenario still green.
+- `ruff check nchantdoffice/widgets/documents/workbooks/notebooks.py` → clean.
+- `ast.parse(open('nchantdoffice/widgets/documents/workbooks/notebooks.py').read())` → no errors.
+
+**Refs:**
+
+- `testing-report_20260810.md` line 7 — user-reported defect.
+- `nchantdoffice/widgets/documents/workbooks/notebooks.py:1718`
+  — the `urlChanged` callback that now calls the new helper.
+- T-NEW-011 / T-NEW-006 — earlier notebook-reopen work this
+  card extends.
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 

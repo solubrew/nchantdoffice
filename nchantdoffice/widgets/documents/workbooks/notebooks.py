@@ -303,6 +303,109 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] open_notebook failed: {e}", exc_info=True)
         return self
 
+    def _sync_notebook_from_url(self, url):
+        """T-NEW-062: keep Nchantd state in sync with Jupyter-side navigation.
+
+        When the embedded Jupyter webview navigates (via the
+        filebrowser ``/tree`` page, a direct URL entry in the
+        toolbar, or a ``load_notebook_file`` call), this helper:
+
+          1. Parses the URL for a ``/notebooks/<name>`` path.
+          2. Resolves ``<name>`` against the Jupyter cwd
+             (``dirname(self.file_path)`` when known, else the
+             process cwd).
+          3. Sets ``self.file_path`` + ``self.current_notebook_path``
+             so the document model + URL dropdown stay consistent.
+          4. Refreshes the URL dropdown widget so the toolbar
+             shows the new URL.
+          5. Persists ``last_notebook_path`` so app restart can
+             reopen the user's currently-open notebook.
+
+        No-op for ``/tree`` (the Jupyter filebrowser root) and
+        any URL whose path doesn't match ``/notebooks/<name>``.
+        Defensive against malformed URLs (returns silently).
+
+        Parameters
+        ----------
+        url : str
+            The Jupyter URL the webview just navigated to
+            (typically ``http://localhost:8888/notebooks/foo.ipynb``
+            or ``http://localhost:8888/tree``).
+        """
+        try:
+            from urllib.parse import urlparse, unquote
+            import os
+
+            parsed = urlparse(url)
+            path = parsed.path or ""
+            # Match ``/notebooks/<name>`` — Jupyter's canonical URL
+            # for a single notebook. Note JupyterLab may use
+            # ``/lab/tree/<path>`` or other variants; we accept the
+            # plain ``/notebooks/`` form for now (matches the URLs
+            # this widget's ``open_notebook`` + ``load_notebook_file``
+            # already issue).
+            if not path.startswith("/notebooks/"):
+                # /tree, /lab, /api, /nbextensions, etc. — no sync.
+                return
+            name = unquote(path[len("/notebooks/"):].split("?", 1)[0].split("#", 1)[0])
+            if not name or not name.endswith(".ipynb"):
+                logma.info(
+                    f"[notebook] _sync_notebook_from_url: ignoring URL "
+                    f"without .ipynb basename: name={name!r}"
+                )
+                return
+            # Resolve against the Jupyter cwd. We prefer the
+            # directory of the current file_path (the cwd the
+            # Jupyter server was started with); fall back to the
+            # process cwd if file_path is unset.
+            cwd = (
+                os.path.dirname(self.file_path)
+                if getattr(self, "file_path", None)
+                else os.getcwd()
+            )
+            resolved = os.path.abspath(os.path.join(cwd, name))
+            if not os.path.isfile(resolved):
+                logma.warning(
+                    f"[notebook] _sync_notebook_from_url: file not found "
+                    f"at resolved path {resolved!r} (cwd={cwd!r}, name={name!r})"
+                )
+                return
+            self.file_path = resolved
+            self.current_notebook_path = resolved
+            # Persist so initModel / run_on_launch can reopen on
+            # next app launch.
+            if hasattr(self, "config"):
+                self.config.dikt["last_notebook_path"] = resolved
+            # Refresh the URL dropdown so the toolbar shows the
+            # current URL. ``update_options`` replaces the dropdown
+            # items in-place; ``set_option_selection`` sets the
+            # active selection. Both are defensive — the dropdown
+            # may be None during teardown (guard with hasattr).
+            if (
+                hasattr(self, "url_select_entry")
+                and self.url_select_entry is not None
+            ):
+                try:
+                    self.url_select_entry.update_options(
+                        self.get_url_history(), replace=True, sort=False
+                    )
+                    self.url_select_entry.set_option_selection(
+                        self.get_current_url()
+                    )
+                except Exception as e:
+                    logma.warning(
+                        f"[notebook] _sync_notebook_from_url: "
+                        f"url_select_entry update failed: {e}"
+                    )
+            logma.info(
+                f"[notebook] _sync_notebook_from_url: synced file_path={resolved!r}"
+            )
+        except Exception as e:
+            logma.warning(
+                f"[notebook] _sync_notebook_from_url failed for {url!r}: {e}",
+                exc_info=True,
+            )
+
     def get_current_url(self):
         """Return the URL the notebook is currently displaying.
 
@@ -1714,6 +1817,26 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                         logma.info(f"[notebook] user navigation -> tracking target={cur}")
                         self._target_url = cur
                         self._nav_retries = 0
+                        # T-NEW-062 — sync Nchantd state when Jupyter
+                        # navigates to a new notebook URL. The Jupyter
+                        # filebrowser (``/tree``) and direct navigation
+                        # to a notebook (``/notebooks/<name>``) both
+                        # trigger ``urlChanged`` here. We:
+                        #   1. Extract the notebook filename from the URL.
+                        #   2. Resolve it against the Jupyter cwd
+                        #      (``dirname(self.file_path)`` if known,
+                        #      else the Jupyter process cwd).
+                        #   3. Update ``self.file_path`` and
+                        #      ``self.current_notebook_path`` so the
+                        #      document model reflects the user's
+                        #      current selection.
+                        #   4. Refresh the URL dropdown so the
+                        #      toolbar shows the new URL.
+                        #   5. Persist ``last_notebook_path`` so app
+                        #      restart can reopen.
+                        # No-op for ``/tree`` (filebrowser root) and
+                        # any non-``/notebooks/`` path.
+                        self._sync_notebook_from_url(cur)
 
             view.urlChanged.connect(_on_url_changed)
 
