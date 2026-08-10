@@ -101,9 +101,10 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
             super().initView(NchantdOfficeDocumentCatalogItem, NchantdOfficeNewDocumentPane)
             self.display.setTitle("NchantdOffice Documents Catalog")
             self.item_pane_group.setTitle("NchantdOffice New Document Tab")
+            # Builds Node creation panel items
             row, col = 0, 0
             for i, item in self.prime_display_items.iterrows():
-                if col >= 4:
+                if col >= 5:
                     row += 1
                     col = 0
                 logma.info(f"Item{item.get('parameters_dict', '{}')}Blank")

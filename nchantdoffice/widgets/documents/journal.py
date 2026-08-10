@@ -43,6 +43,7 @@ from nchantrs.widgets.media.editors.editors import NchantdAppendOnlyEditor
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.media.editors.selectors import NchantdComboBox, NchantdDropDown
 from pycurity.pyhash import decode64
+
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
@@ -242,6 +243,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
     def get_content_text(self, cfg=None):
         """"""
         document = self.get_journal_document(cfg)
+        self.document.set_version(document.get("content_version_int", None))
         logma.info(document)
         text = document.get("content_enc64_txt", None)
         if text is None:
@@ -252,17 +254,16 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         logma.info(text)
         return text
 
-
     def get_journal_document(self, cfg):
         """"""
         document = self.app.model.get_view_journal(cfg)
-        logma.info(document)
+        logma.info(f"Document {document}")
         return document
 
     def get_journal_organization(self):
         """"""
-        #value = self.settings.get_value()
-        #return value
+        # value = self.settings.get_value()
+        # return value
 
     def focusOutEvent(self, event):
         """"""
@@ -322,19 +323,21 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         if content != self.document.content:
             self.document.set_content(content)
         self.parse(content)
-        #version is not keeping in place causing the newest save not to be reloaded
+        # version is not keeping in place causing the newest save not to be reloaded
+        logma.info(f"[NCHANTDOFFICEJOURNALEDITOR] - save\n")
         self.save_app()  # TODO save has to redirect to the app_doc_content table
-        try:
-            if self.new_entry:
-                self._parse_entry()
-        except Exception as e:
-            logma.warning(f"[journal] save: _parse_entry failed: {e}")
-        try:
-            if self.parent is not None and hasattr(self.parent, "save"):
-                self.parent.save()
-        except Exception as e:
-            logma.warning(f"[journal] save: parent.save failed: {e}")
-        return self
+        logma.info(f"")
+        # try:
+        #     if self.new_entry:
+        #         self._parse_entry()
+        # except Exception as e:
+        #     logma.warning(f"[journal] save: _parse_entry failed: {e}")
+        # try:
+        #     if self.parent is not None and hasattr(self.parent, "save"):
+        #         self.parent.save()
+        # except Exception as e:
+        #     logma.warning(f"[journal] save: parent.save failed: {e}")
+        # return self
 
 
 class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):

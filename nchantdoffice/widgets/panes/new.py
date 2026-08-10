@@ -184,13 +184,12 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         """
         from nchantrs.libraries import pyqt
         from pyqt import QtWidgets
+
         if widgdata is None:
             widgdata = {}
         # widgdata["doc_type"] = self.active_item.document_nm
         # P1 name-entry dialog: respect the config flag.
-        prompt = bool(
-            (self.config.dikt or {}).get("prompt_for_new_tab_name", False)
-        )
+        prompt = bool((self.config.dikt or {}).get("prompt_for_new_tab_name", False))
         if prompt and self.active_item is not None:
             default_name = getattr(self.active_item, "name", "") or ""
             _name, ok = QtWidgets.QInputDialog.getText(
@@ -253,6 +252,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         """
         try:
             from subtrix.utilities import uuid
+
             node = {"did": str(uuid()), "name_txt": name or f"bulk_node_{str(uuid())[:5]}"}
             logma.info(f"[panes/new] add_bulk_node: created {node.get('did')}")
             return node
@@ -267,6 +267,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         """
         try:
             from subtrix.utilities import uuid
+
             tab = {
                 "UUID": str(uuid()),
                 "did": str(uuid()),
@@ -456,10 +457,11 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
     def update_file_buttons(self):
         """"""
         logma.info(f"Update File Buttons {self.active_item.has_google_options}")
-        if self.active_item.has_google_options:
-            self.show_google_drive_button()
-        else:
-            self.unshow_google_drive_button()
+        # PUSH to 0.0.2.0.2.0
+        # if self.active_item.has_google_options:
+        #    self.show_google_drive_button()
+        # else:
+        self.unshow_google_drive_button()
         if self.active_item.has_local_options:
             self.show_local_drive_button()
             self.show_import_file_button()
@@ -468,37 +470,31 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.unshow_import_file_button()
         return self
 
-
-
     # T-050: format -> tool-type routing table. Keys are document
     # formats (file extensions or API identifiers); values are the
     # ``widget_code`` to instantiate + ``load_strategy`` describing
     # how the file is loaded (local / remote / api / web).
     _FORMAT_ROUTING = {
         "xlsx": {"widget_code": "pyffice.workbooks.spreadsheets", "load_strategy": "local"},
-        "xls":  {"widget_code": "pyffice.workbooks.spreadsheets", "load_strategy": "local"},
-        "ods":  {"widget_code": "pyffice.workbooks.spreadsheets", "load_strategy": "local"},
-        "docx": {"widget_code": "pyffice.documents.text",        "load_strategy": "local"},
-        "txt":  {"widget_code": "pyffice.documents.text",        "load_strategy": "local"},
-        "pdf":  {"widget_code": "nchantdoffice.widgets.documents.media.pdfs", "load_strategy": "local"},
-        "png":  {"widget_code": "nchantdoffice.widgets.documents.media.images", "load_strategy": "local"},
-        "jpg":  {"widget_code": "nchantdoffice.widgets.documents.media.images", "load_strategy": "local"},
-        "ipynb":{"widget_code": "nchantdoffice.widgets.documents.workbooks.notebooks", "load_strategy": "local"},
+        "xls": {"widget_code": "pyffice.workbooks.spreadsheets", "load_strategy": "local"},
+        "ods": {"widget_code": "pyffice.workbooks.spreadsheets", "load_strategy": "local"},
+        "docx": {"widget_code": "pyffice.documents.text", "load_strategy": "local"},
+        "txt": {"widget_code": "pyffice.documents.text", "load_strategy": "local"},
+        "pdf": {"widget_code": "nchantdoffice.widgets.documents.media.pdfs", "load_strategy": "local"},
+        "png": {"widget_code": "nchantdoffice.widgets.documents.media.images", "load_strategy": "local"},
+        "jpg": {"widget_code": "nchantdoffice.widgets.documents.media.images", "load_strategy": "local"},
+        "ipynb": {"widget_code": "nchantdoffice.widgets.documents.workbooks.notebooks", "load_strategy": "local"},
         "json": {"widget_code": "nchantdoffice.widgets.documents.media.forms", "load_strategy": "local"},
-        "google_sheets":    {"widget_code": "web.spreadsheets.google",   "load_strategy": "api"},
-        "google_forms":     {"widget_code": "web.forms.google",         "load_strategy": "api"},
-        "google_drive":     {"widget_code": "web.drive.google",         "load_strategy": "api"},
-        "notion_db":        {"widget_code": "web.notion.database",      "load_strategy": "api"},
+        "google_sheets": {"widget_code": "web.spreadsheets.google", "load_strategy": "api"},
+        "google_forms": {"widget_code": "web.forms.google", "load_strategy": "api"},
+        "google_drive": {"widget_code": "web.drive.google", "load_strategy": "api"},
+        "notion_db": {"widget_code": "web.notion.database", "load_strategy": "api"},
     }
 
     def _resolve_widget_code(self, widgdata):
         """Resolve the widget_code for a ``widgdata`` dict via the routing table."""
         try:
-            fmt = (
-                widgdata.get("format")
-                or widgdata.get("file_format")
-                or widgdata.get("document_type")
-            )
+            fmt = widgdata.get("format") or widgdata.get("file_format") or widgdata.get("document_type")
             if not fmt:
                 return None
             fmt = str(fmt).lower().lstrip(".")
@@ -513,11 +509,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
     def _resolve_load_strategy(self, widgdata):
         """Resolve the load strategy ("local" / "api" / "web") via the routing table."""
         try:
-            fmt = (
-                widgdata.get("format")
-                or widgdata.get("file_format")
-                or widgdata.get("document_type")
-            )
+            fmt = widgdata.get("format") or widgdata.get("file_format") or widgdata.get("document_type")
             if not fmt:
                 return None
             fmt = str(fmt).lower().lstrip(".")
@@ -549,14 +541,17 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         or ``None``.
         """
         try:
-            cfg = {"filter": "Documents (*.gdoc *.gsheet *.gform *.pdf *.docx *.xlsx); "
-                              "Spreadsheets (*.gsheet *.xlsx *.csv); "
-                              "All Files (*)"}
+            cfg = {
+                "filter": "Documents (*.gdoc *.gsheet *.gform *.pdf *.docx *.xlsx); "
+                "Spreadsheets (*.gsheet *.xlsx *.csv); "
+                "All Files (*)"
+            }
 
             # Pull OAuth token
             token = None
             try:
                 import pykey
+
                 token = pykey.PYKEYSTORE.get("gdrive_oauth_token")
             except Exception:
                 pass
@@ -566,6 +561,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             if not token:
                 logma.info("[panes.new] show_google_drive_load_dialog: no OAuth token; falling back to local picker")
                 from nchantrs.widgets.editors.entries import NchantdFileOpenSigil
+
                 picker = NchantdFileOpenSigil(self, cfg).initWidget()
                 path = picker.get_path() if picker is not None else None
                 if path:
@@ -575,6 +571,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             # Token present - query Drive REST API v3
             try:
                 import requests  # type: ignore
+
                 headers = {"Authorization": f"Bearer {token}"}
                 response = requests.get(
                     "https://www.googleapis.com/drive/v3/files",
@@ -590,13 +587,17 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
                     # Pick the first file as a default selection;
                     # a real dialog would let the user pick.
                     chosen = files[0]
-                    return {"name": chosen.get("name"), "id": chosen.get("id"),
-                            "web_view_link": chosen.get("webViewLink")}
+                    return {
+                        "name": chosen.get("name"),
+                        "id": chosen.get("id"),
+                        "web_view_link": chosen.get("webViewLink"),
+                    }
             except Exception as e:
                 logma.error(f"[panes.new] Drive API query failed: {e}", exc_info=True)
 
             # Final fallback - local picker
             from nchantrs.widgets.editors.entries import NchantdFileOpenSigil
+
             picker = NchantdFileOpenSigil(self, cfg).initWidget()
             path = picker.get_path() if picker is not None else None
             if path:
@@ -651,10 +652,10 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
                 self._default_handlers_wired = True
                 handler_map = {
                     "google_drive": self.show_google_drive_load_dialog,
-                    "local_drive":  self.cmd_local_drive_select,
-                    "import_file":  self.cmd_import_file,
+                    "local_drive": self.cmd_local_drive_select,
+                    "import_file": self.cmd_import_file,
                     "color_select": self.cmd_color_select,
-                    "icon_select":  self.cmd_icon_select,
+                    "icon_select": self.cmd_icon_select,
                 }
                 for btn_name, handler in handler_map.items():
                     btn = getattr(self, btn_name, None)
@@ -674,6 +675,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         """Open the local file picker when 'Local Drive' is clicked."""
         try:
             from nchantrs.widgets.editors.entries import NchantdFileOpenSigil
+
             cfg = {"filter": "Documents (*.xlsx *.docx *.pdf *.txt *.json); All Files (*)"}
             path = NchantdFileOpenSigil(self, cfg).initWidget().get_path()
             if path:
@@ -692,6 +694,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         try:
             cfg = {"title": "Pick Tab Color", "default": "#1f4e79"}
             from PySide6 import QtWidgets
+
             color = QtWidgets.QColorDialog.getColor(QtWidgets.QColor("#1f4e79"), self, "Pick Tab Color")
             if color.isValid():
                 self.config.dikt["tab_color"] = color.name()
@@ -704,6 +707,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         try:
             cfg = {"filter": "Images (*.png *.svg *.ico)"}
             from nchantrs.widgets.editors.entries import NchantdFileOpenSigil
+
             path = NchantdFileOpenSigil(self, cfg).initWidget().get_path()
             if path:
                 self.config.dikt["tab_icon"] = path

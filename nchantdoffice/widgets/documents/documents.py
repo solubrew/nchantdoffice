@@ -647,9 +647,9 @@ class NchantdOfficeDocumentMixin:
         # (e.g., JournalEditor doesn't have this attribute at all).
         # Only skip if the attribute literally doesn't exist - NOT if it's None.
         # Widgets like browsers should still save to DB even without file_path.
-        if not hasattr(self, "file_path"):
-            logma.debug("[documents] save_app: no file_path attribute, skipping app-level save")
-            return self
+        # if not hasattr(self, "file_path"):
+        #     logma.debug("[documents] save_app: no file_path attribute, skipping app-level save")
+        #     return self
         if path is not None:
             self.set_file_path(path)
             if hasattr(self.document, "set_file_path"):
@@ -662,25 +662,25 @@ class NchantdOfficeDocumentMixin:
         # Widgets like browsers save content to DB without a file_path.
         if self.app.view.panes["left"].tree.model.current_node is None:
             return self
-        pid = self.app.view.panes["left"].tree.model.current_node.nid
-        logma.info(f"Save PID {pid}")
-        if self.app.view.panes["center"].model.current_tab is None:
-            return self
-        pos = self.app.view.panes["center"].model.current_tab.position
-        logma.info(f"Save Pos {pos}")
-        logma.info(f"Save DID {self.document.did}")
-        try:
-            widget_content = self.get_content()
-        except Exception as e:
-            widget_content = None
-            logma.error(f"[documents] save: get_content failed: {e}", exc_info=True)
-        if widget_content and self.document is not None:
-            try:
-                self.document.set_content(widget_content)
-            except Exception as e:
-                logma.error(f"[documents] save: set_content failed: {e}", exc_info=True)
+        # pid = self.app.view.panes["left"].tree.model.current_node.nid
+        # logma.info(f"Save PID {pid}")
+        # if self.app.view.panes["center"].model.current_tab is None:
+        #     return self
+        # pos = self.app.view.panes["center"].model.current_tab.position
+        # logma.info(f"Save Pos {pos}")
+        # logma.info(f"Save DID {self.document.did}")
+        # try:
+        #     widget_content = self.get_content()
+        # except Exception as e:
+        #     widget_content = None
+        #     logma.error(f"[documents] save: get_content failed: {e}", exc_info=True)
+        # if widget_content and self.document is not None:
+        #     try:
+        #         self.document.set_content(widget_content)
+        #     except Exception as e:
+        #         logma.error(f"[documents] save: set_content failed: {e}", exc_info=True)
         self.document.save(self.file_path)  # increments versions and (internal encryption..future)
-        self.app.model.store_document(self.document, True)
+        self.app.model.store_document(self.document, True)  # True stors to app_doc
         return self
 
     def set_save_mode(self, mode):
