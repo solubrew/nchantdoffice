@@ -20,8 +20,7 @@ NchantdOfficeCloakModel:
                       {'name': 'UUID', 'type': 'text'}, {'name': 'icon_txt', 'type': 'text'},
                       {'name': 'short_cut_txt', 'type': 'text'}, {'name': 'tip_txt', 'type': 'text'},
                       {'name': 'advanced_tip_txt', 'type': 'text'}, {'name': 'widget_txt', 'type': 'text'},
-                      {'name': 'parameters_dict', 'type': 'text'},
-                      {'name': 'position_int', 'type': 'integer'}]
+                      {'name': 'parameters_dict', 'type': 'text'}]
           app_document_type:
             columns: [{"name": 'UUID', "type": "text"}, {"name": 'document_txt', "type": "text"},
                       {"name": 'file_type_txt', "type": "text"}, {"name": 'name_txt', "type": "text"},
