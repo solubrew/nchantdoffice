@@ -58,7 +58,7 @@
 - **T-NEW-062** ✅ Notebook Jupyter-side URL sync (`_sync_notebook_from_url`), commit `126489b` (2026-08-10, t-new-062).
 - **T-NEW-063** ✅ Image aspect-ratio preservation, commit `f879e47` (2026-08-10, t-new-063).
 - **T-NEW-064** ✅ Script tab "Missing Text" stub removed, commit `6a1b9e2` (2026-08-10, t-new-064).
-- **T-NEW-065** ✅ Journal content compaction (version-based, narrow scope) — `NchantdOfficeCloakModel.compact_journal_content(max_versions_per_doc=30)` groups `app_media_content` rows by `pUUID`, keeps top 30 versions per parent, bulk-deletes the rest. Wired into `close_application()`. 5 tests. PII detector deferred (per user). Time-based + data-policy + mark-for-deletion work deferred to T-NEW-066/067.
+- **T-NEW-065** ✅ Journal content compaction (narrow scope), commit `b213122` (2026-08-10, t-new-065). PII deferred; time-based/policy/mark-for-deletion deferred to T-NEW-066/067/068.
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1904,9 +1904,8 @@ by `NchantdOfficeNote` (`widgets/documents/media/notes.py:193`).
 
 ### T-NEW-065 — Journal content compaction (version-based, narrow scope) (2026-08-10)
 
-**Status:** ✅ Resolved (narrow first cut; see deferred-work
-section). Implementation commit hash backfilled in the follow-up
-commit per the T-NEW single-repo lifecycle.
+**Status:** ✅ Resolved in commit `b213122` (2026-08-10,
+t-new-065 branch).
 
 Per `testing-report_20260810.md` line 18:
 > "will need a process cto compact the journal
