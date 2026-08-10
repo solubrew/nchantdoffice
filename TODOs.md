@@ -64,7 +64,7 @@
 - **T-NEW-068** ✅ NchantdFilesystem location memory, commit `46cb95f` (2026-08-10, t-new-068).
 - **T-NEW-069** ✅ NchantdBrowser URL history tracking, commit `10e62cc` (2026-08-10, t-new-069).
 - **T-NEW-070** ✅ NchantdOfficeNotebook click capture/redirect/replace, commit `264df18` (2026-08-10, t-new-070).
-- **T-NEW-071** ✅ NchantdOfficeJournalSettings pro-tier editor — added "Journal Editor (Pro tier)" group with two checkboxes ("Allow Editing on Entry" / "Allow Editing on Re-Entry") gated on `is_pro_user()`. Non-pro users see checkboxes as disabled-with-tooltip. Values persisted via `cmd_set_journal_edit_enable` / `cmd_set_journal_reedit_enable` to `config.dikt`. 8 tests in `tests/test_journal_settings_pro_tier.py`.
+- **T-NEW-071** ✅ NchantdOfficeJournalSettings pro-tier editor, commit `a9c1f6f` (2026-08-10, t-new-071).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -2200,8 +2200,8 @@ Per the user's directive:
 
 ### T-NEW-071 — NchantdOfficeJournalSettings pro-tier editor (2026-08-10)
 
-**Status:** ✅ Resolved. Implementation commit hash backfilled
-in the follow-up commit per the T-NEW single-repo lifecycle.
+**Status:** ✅ Resolved in commit `a9c1f6f` (2026-08-10,
+t-new-071 branch).
 
 Per `testing-report_20260810.md` line 17:
 > "many people will not like the no edit so we can offer
