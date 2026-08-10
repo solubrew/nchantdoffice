@@ -51,7 +51,8 @@
 - **T-NEW-054** ✅ Cap tabs per node (adjustable param, default 35) — fixed
 - **T-NEW-055** ✅ NchantdOfficePalette integration with NchantdOfficeImage toolbar — fixed
 - **T-NEW-056** ✅ Cap total nodes per non-pro user at 100 (configurable) — fixed
-- **T-NEW-057** ✅ Review doc + cmd + RED regression tests landed in commit `bcfb730` (2026-08-10, gamma). Implementation follow-up is T-NEW-058 / T-NEW-059 / T-NEW-060 / T-NEW-061 — T-NEW-058 is ✅ (this commit), T-NEW-059/060/061 still open.
+- **T-NEW-057** ✅ Review doc + cmd + RED regression tests landed in commit `bcfb730` (2026-08-10, gamma). Implementation follow-up is T-NEW-058 / T-NEW-059 / T-NEW-060 / T-NEW-061.
+- **T-NEW-058** ✅ Wire `UpdateChecker` + DBUpdate into boot — `_upgrade_lock` flag + `run_update_process` helper + 3 boot-hook tests, commit `c85fcf4` (2026-08-10, t-new-058).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1484,17 +1485,15 @@ code lands.
 
 ### T-NEW-058 — Wire `UpdateChecker` and `NchantdOfficeDBUpdate` into the boot sequence (2026-08-10)
 
-**Status:** ✅ Resolved. `_upgrade_lock` flag added to
-`NchantdOfficeDBUpdate` (guarded `update_pyffice_document()` against
-double-migration); `UpdateChecker` constructed in
-`NchantdOfficeCloak.__init__`; `run_on_launch` delegates to the new
-module-level `run_update_process(dbupdate, update_checker)` helper;
+**Status:** ✅ Resolved in commit `c85fcf4` (2026-08-10, gamma).
+`_upgrade_lock` flag added to `NchantdOfficeDBUpdate` (guarded
+`update_pyffice_document()` against double-migration);
+`UpdateChecker` constructed in `NchantdOfficeCloak.__init__`;
+`run_on_launch` delegates to the new module-level
+`run_update_process(dbupdate, update_checker)` helper;
 3 new tests in `tests/test_update_checker_boot_hook.py` (all green).
 Pinned the T-NEW-057 RED tests `test_upgrade_lock_attribute_exists`
 and `test_update_checker_constructed_at_boot` to GREEN.
-
-Implementation commit hash backfilled in the follow-up commit
-per the T-NEW single-repo lifecycle (Phase 5).
 
 The T-NEW-057 review doc
 (`docs/update-process-review_20260810.md` §1.2/§2.4) established
