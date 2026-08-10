@@ -62,7 +62,7 @@
 - **T-NEW-066** ✅ Matrix chart extraction from Excel workbooks — **landed in pyffice** (upstream of nchantdoffice). `PyfficeMatrix.load_excel()` now extracts charts from `ws._charts` via two new helpers (`_extract_charts_from_worksheet` + `_chart_from_openpyxl`). 5 tests in `tests/pyffice_unit/unit/matrix/chartExtractionTEST.py`. Commit `95a8d9f` (pyffice gamma, merged as `4ed8768`). User-facing: NchantdOfficeMatrix inherits the change automatically.
 - **T-NEW-067** ✅ PyfficeChart direct .xlsx loading — **landed in pyffice**. New `PyfficeChart.load_from_xlsx(file_path, chart_index=0, include_data=True)` opens a chart directly without going through Matrix. 4 tests in `tests/pyffice_unit/unit/charts/loadFromXlsxTEST.py`. Commit `3fb26cf` (pyffice gamma, merged as `b3aee3f`). User-facing: NchantdOfficeChart inherits the change automatically.
 - **T-NEW-068** ✅ NchantdFilesystem location memory, commit `46cb95f` (2026-08-10, t-new-068).
-- **T-NEW-069** ✅ NchantdBrowser URL history tracking — `NchantdOfficeWebViewer.set_url_path` now tracks URLs in a persistent `config.dikt["url_history"]` list (most-recent-first, deduped, capped at 50). Replaces the URL dropdown options (was appending duplicates before). `build_toolbar` restores the history on re-open. 9 tests in `tests/test_browser_url_history.py`.
+- **T-NEW-069** ✅ NchantdBrowser URL history tracking, commit `10e62cc` (2026-08-10, t-new-069).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -2056,8 +2056,8 @@ Per `testing-report_20260810.md` lines 26–27:
 
 ### T-NEW-069 — NchantdBrowser URL history tracking (2026-08-10)
 
-**Status:** ✅ Resolved. Implementation commit hash backfilled
-in the follow-up commit per the T-NEW single-repo lifecycle.
+**Status:** ✅ Resolved in commit `10e62cc` (2026-08-10,
+t-new-069 branch).
 
 Per `testing-report_20260810.md` line 28:
 > "NchantdBrowser still not tracking history and respecting
