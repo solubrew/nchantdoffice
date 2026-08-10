@@ -103,6 +103,20 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self._nav_retries = 0
         self.pinned = False
 
+        # T-NEW-070 — click-capture state. Python-side lists of
+        # handlers / redirect rules / replacement actions.
+        # The JS-side instrumentation (installed by
+        # _install_click_instrumentation) calls back into these
+        # via the global ``window.__nchantd_clicks`` array and
+        # the per-rule ``window.__nchantd_click_redirects`` /
+        # ``window.__nchantd_click_replacements`` arrays. See
+        # cmd_register_click_handler / cmd_redirect_click /
+        # cmd_replace_click_action for the public API.
+        self._click_handlers = []
+        self._click_redirects = []  # list of (pattern, replacement)
+        self._click_replacements = []  # list of (selector, action)
+        self._click_capture_enabled = False
+
     def initModel(self):
         """Load the notebook document and reload the .ipynb from disk.
 
@@ -1877,6 +1891,11 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             # Install fetch/WebSocket instrumentation ONCE, at document creation,
             # so it wraps window.fetch/WebSocket before JupyterLab captures them.
             self._install_net_instrumentation(view)
+            # T-NEW-070 — install click capture / redirect /
+            # replacement JS instrumentation. Same DocumentCreation
+            # timing so the listeners are in place BEFORE
+            # JupyterLab bootstraps.
+            self._install_click_instrumentation(view)
             # Capture uncaught errors + unhandled promise rejections with full
             # stack traces. QtWebEngine reports these as bare "Uncaught (in
             # promise) TypeError: ..." lines with no source/stack; this surfaces
@@ -1951,6 +1970,357 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 logma.info("[notebook] net instrumentation installed at DocumentCreation")
         except Exception as e:
             logma.error(f"[notebook] could not install net instrumentation: {e}", exc_info=True)
+        return self
+
+    # T-NEW-070 — click capture / redirect / replace.
+
+    def cmd_register_click_handler(self, handler=None, *args, **kwargs):
+        """Register a Python callback to fire on every web-page click.
+
+        ``handler`` is invoked with a dict payload describing
+        the click (selector, target href, time, coords). The
+        handler can be any callable; the return value is
+        ignored. Returns ``self`` for chaining.
+
+        Use ``cmd_drain_click_events`` to pull the captured
+        events from the webview (the JS instrumentation pushes
+        each click into ``window.__nchantd_clicks``).
+        """
+        if handler is None or not callable(handler):
+            logma.warning(
+                "[notebook] cmd_register_click_handler: handler "
+                f"is {handler!r}; expected a callable. Ignoring."
+            )
+            return self
+        self._click_handlers.append(handler)
+        logma.info(
+            f"[notebook] click handler registered (total: "
+            f"{len(self._click_handlers)})"
+        )
+        return self
+
+    def cmd_redirect_click(self, url_pattern, replacement_url, *args, **kwargs):
+        """Add a click-redirect rule.
+
+        When a user clicks an element whose ``href`` (or
+        ``action`` attribute) matches ``url_pattern``, the
+        navigation is cancelled and the browser is redirected
+        to ``replacement_url`` instead.
+
+        ``url_pattern`` is a Python-side marker — the JS
+        instrumentation receives the rule via
+        ``window.__nchantd_click_redirects`` and uses
+        ``String.prototype.includes`` (substring match). For
+        full regex, register a custom handler via
+        ``cmd_register_click_handler``.
+
+        Returns ``self`` for chaining.
+        """
+        if not isinstance(url_pattern, str) or not url_pattern:
+            logma.warning(
+                "[notebook] cmd_redirect_click: url_pattern must "
+                "be a non-empty string. Ignoring."
+            )
+            return self
+        if not isinstance(replacement_url, str):
+            logma.warning(
+                "[notebook] cmd_redirect_click: replacement_url "
+                f"must be a string; got {type(replacement_url).__name__}. "
+                "Ignoring."
+            )
+            return self
+        self._click_redirects.append((url_pattern, replacement_url))
+        # Push the new rule into the live webview (if any).
+        self._push_click_redirect_to_webview(url_pattern, replacement_url)
+        logma.info(
+            f"[notebook] click redirect registered: "
+            f"{url_pattern!r} -> {replacement_url!r} "
+            f"(total: {len(self._click_redirects)})"
+        )
+        return self
+
+    def cmd_replace_click_action(self, selector, action, *args, **kwargs):
+        """Add a click-action replacement rule.
+
+        When a user clicks an element matching ``selector``
+        (CSS selector, substring match on element id /
+        class / tag), the default click action is REPLACED
+        with ``action``. ``action`` is a string the JS
+        instrumentation recognises:
+          - ``"block"``        — ``event.preventDefault()``
+          - ``"log"``          — log the click, allow default
+          - ``"stop"``         — ``event.stopPropagation()``
+          - ``"stop+block"``   — both
+
+        Returns ``self`` for chaining.
+        """
+        valid = {"block", "log", "stop", "stop+block"}
+        if not isinstance(selector, str) or not selector:
+            logma.warning(
+                "[notebook] cmd_replace_click_action: selector must "
+                "be a non-empty string. Ignoring."
+            )
+            return self
+        if action not in valid:
+            logma.warning(
+                f"[notebook] cmd_replace_click_action: action must "
+                f"be one of {sorted(valid)!r}; got {action!r}. Ignoring."
+            )
+            return self
+        self._click_replacements.append((selector, action))
+        self._push_click_replacement_to_webview(selector, action)
+        logma.info(
+            f"[notebook] click replacement registered: "
+            f"{selector!r} -> {action!r} "
+            f"(total: {len(self._click_replacements)})"
+        )
+        return self
+
+    def _push_click_redirect_to_webview(self, url_pattern, replacement_url):
+        """Push a single redirect rule into the live webview."""
+        if not self._has_webview():
+            return
+        js = (
+            "window.__nchantd_click_redirects = "
+            "window.__nchantd_click_redirects || [];"
+            "window.__nchantd_click_redirects.push({"
+            f"  pattern: {self._js_quote(url_pattern)},"
+            f"  replacement: {self._js_quote(replacement_url)}"
+            "});"
+        )
+        self._run_js(js)
+
+    def _push_click_replacement_to_webview(self, selector, action):
+        """Push a single replacement rule into the live webview."""
+        if not self._has_webview():
+            return
+        js = (
+            "window.__nchantd_click_replacements = "
+            "window.__nchantd_click_replacements || [];"
+            "window.__nchantd_click_replacements.push({"
+            f"  selector: {self._js_quote(selector)},"
+            f"  action: {self._js_quote(action)}"
+            "});"
+        )
+        self._run_js(js)
+
+    def _has_webview(self):
+        """Return True iff the embedded webview is constructed."""
+        return (
+            hasattr(self, "browser")
+            and self.browser is not None
+            and hasattr(self.browser, "page")
+            and self.browser.page() is not None
+        )
+
+    def _run_js(self, js):
+        """Run a JS snippet on the embedded webview page."""
+        try:
+            page = self.browser.page()
+            if page is not None:
+                page.runJavaScript(js)
+        except Exception as e:
+            logma.warning(f"[notebook] _run_js failed: {e}")
+
+    @staticmethod
+    def _js_quote(value):
+        """Quote a Python string for safe inclusion in a JS literal.
+
+        Uses ``JSON.stringify`` semantics so embedded quotes
+        / backslashes / unicode don't break the JS.
+        """
+        import json
+        return json.dumps(value)
+
+    def cmd_drain_click_events(self, *args, **kwargs):
+        """Drain all captured click events from the webview.
+
+        Returns a list of dicts. Each dict has keys:
+          - ``ts``      (ms since epoch when the click fired)
+          - ``selector`` (CSS selector of the clicked element)
+          - ``tag``     (lowercased tag name)
+          - ``href``    (the element's href, or ``""``)
+          - ``text``    (textContent of the element, first 80 chars)
+
+        Each call drains the JS-side ``window.__nchantd_clicks``
+        array, so subsequent calls return only NEW clicks.
+        Returns ``[]`` when no webview is loaded yet or the
+        instrumentation is disabled.
+        """
+        if not self._has_webview():
+            return []
+        # runJavaScript is async; use a synchronous QEventLoop
+        # to block briefly. For the click-drain use case
+        # (operator-driven, not hot loop) a short wait is
+        # acceptable.
+        from PySide6 import QtCore
+        result = {"clicks": []}
+        loop = QtCore.QEventLoop()
+        js = (
+            "(function(){"
+            "  var arr = window.__nchantd_clicks || [];"
+            "  var out = arr.slice();"
+            "  window.__nchantd_clicks = [];"
+            "  return JSON.stringify(out);"
+            "})()"
+        )
+        try:
+            page = self.browser.page()
+            page.runJavaScript(
+                js,
+                lambda v: (result.__setitem__("clicks", v), loop.quit()),
+            )
+            # Block for up to 2 seconds; click drain is fast.
+            QtCore.QTimer.singleShot(2000, loop.quit)
+            loop.exec()
+        except Exception as e:
+            logma.warning(f"[notebook] cmd_drain_click_events failed: {e}")
+            return []
+        raw = result["clicks"] or "[]"
+        try:
+            import json
+            parsed = json.loads(raw) if isinstance(raw, str) else raw
+            if not isinstance(parsed, list):
+                return []
+            return parsed
+        except Exception:
+            return []
+
+    def _install_click_instrumentation(self, view):
+        """T-NEW-070 — install click-capture JS into the webview.
+
+        Wraps ``document.addEventListener('click', ...)`` so
+        every click on the page is pushed into
+        ``window.__nchantd_clicks`` (drained by
+        ``cmd_drain_click_events``). Redirects and replacements
+        registered via ``cmd_redirect_click`` /
+        ``cmd_replace_click_action`` are honoured BEFORE the
+        default action fires.
+
+        Installed at DocumentCreation so the listener is in
+        place BEFORE JupyterLab bootstraps (matches the pattern
+        used by ``_install_net_instrumentation`` and
+        ``_install_error_instrumentation``).
+        """
+        if getattr(self, "_click_instrumented", False):
+            return self
+        js = r"""
+        (function(){
+          if (window.__nchantd_click_wrap) return;
+          window.__nchantd_click_wrap = true;
+          window.__nchantd_clicks = window.__nchantd_clicks || [];
+          window.__nchantd_click_redirects =
+            window.__nchantd_click_redirects || [];
+          window.__nchantd_click_replacements =
+            window.__nchantd_click_replacements || [];
+          function _selector(el){
+            if (!el || !el.tagName) return '';
+            var s = el.tagName.toLowerCase();
+            if (el.id) s += '#' + el.id;
+            if (el.className && typeof el.className === 'string') {
+              s += '.' + el.className.trim().split(/\s+/).join('.');
+            }
+            return s;
+          }
+          function _matchesSelector(el, selector){
+            if (!el || !selector) return false;
+            // Substring match on id / class / tag — the Python
+            // side documents that this is a substring match, not
+            // a full CSS selector match. Callers wanting full
+            // CSS selector matching should use a custom handler.
+            try {
+              if (el.matches && el.matches(selector)) return true;
+            } catch (e) { /* invalid selector — fall through */ }
+            var t = (el.tagName || '').toLowerCase();
+            if (t && selector.toLowerCase().indexOf(t) >= 0) return true;
+            if (el.id && selector.indexOf(el.id) >= 0) return true;
+            if (el.className && typeof el.className === 'string') {
+              if (selector.indexOf(el.className) >= 0) return true;
+            }
+            return false;
+          }
+          document.addEventListener('click', function(ev){
+            try {
+              var el = ev.target;
+              var ts = Date.now();
+              var href = '';
+              var n = el && el.closest ? el.closest('a[href]') : null;
+              if (n && n.getAttribute) href = n.getAttribute('href') || '';
+              var text = (el && el.textContent) ?
+                String(el.textContent).slice(0, 80) : '';
+              // Record the click (always).
+              window.__nchantd_clicks.push({
+                ts: ts,
+                selector: _selector(el),
+                tag: (el && el.tagName ? el.tagName.toLowerCase() : ''),
+                href: href,
+                text: text,
+              });
+              // Replacement rules — checked first (highest priority).
+              var reps = window.__nchantd_click_replacements || [];
+              for (var i = 0; i < reps.length; i++) {
+                var r = reps[i];
+                if (_matchesSelector(el, r.selector)) {
+                  if (r.action === 'block') {
+                    ev.preventDefault();
+                  } else if (r.action === 'stop') {
+                    ev.stopPropagation();
+                  } else if (r.action === 'stop+block') {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                  }
+                  // 'log' is the default — just record + allow.
+                  if (r.action === 'block' || r.action === 'stop+block') {
+                    return;
+                  }
+                }
+              }
+              // Redirect rules — substring match on href.
+              var reds = window.__nchantd_click_redirects || [];
+              for (var j = 0; j < reds.length; j++) {
+                var rd = reds[j];
+                if (href && href.indexOf(rd.pattern) >= 0) {
+                  ev.preventDefault();
+                  try { window.location.href = rd.replacement; }
+                  catch (e) { console.log('[nchantd-click-redirect] ' + e); }
+                  return;
+                }
+              }
+            } catch (err) {
+              console.log('[nchantd-click-capture-ERR] ' + err);
+            }
+          }, true);
+          console.log('[nchantd] click capture installed at DocumentCreation');
+        })();
+        """
+        try:
+            script = pyqt.QWebEngineScript()
+            script.setName("nchantd_click_instrumentation")
+            script.setSourceCode(js)
+            script.setInjectionPoint(pyqt.QWebEngineScript.DocumentCreation)
+            script.setWorldId(pyqt.QWebEngineScript.MainWorld)
+            script.setRunsOnSubFrames(True)
+            page = view.page()
+            if page is not None:
+                page.scripts().insert(script)
+                self._click_instrumented = True
+                self._click_capture_enabled = True
+                # Seed any pre-registered rules (e.g. if the user
+                # registered redirects BEFORE the webview was
+                # constructed).
+                for pattern, replacement in self._click_redirects:
+                    self._push_click_redirect_to_webview(pattern, replacement)
+                for selector, action in self._click_replacements:
+                    self._push_click_replacement_to_webview(selector, action)
+                logma.info(
+                    "[notebook] click instrumentation installed at "
+                    "DocumentCreation"
+                )
+        except Exception as e:
+            logma.error(
+                f"[notebook] could not install click instrumentation: {e}",
+                exc_info=True,
+            )
         return self
 
     def _install_error_instrumentation(self, view):
