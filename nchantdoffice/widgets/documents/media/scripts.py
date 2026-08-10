@@ -132,6 +132,17 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             "highlight": True,
             "show_label": False,
         }
+        # T-NEW-064 — pass ``default_text=""`` explicitly so the
+        # new Script tab does NOT show the upstream "Missing
+        # Text" placeholder (the symptom reported in
+        # testing-report_20260810.md line 12). NchantdDocEditor's
+        # default fallback is "Missing Text" — we override it
+        # with an empty string so a fresh Script tab starts
+        # blank. The cfg copy below is merged into the editor's
+        # config via NchantdDocEditor's initModel, which reads
+        # ``default_text`` before falling back to its built-in
+        # default.
+        self.config.dikt["default_text"] = ""
         self.document_editor = NchantdDocEditor(self, self.config).initWidget()
         fcbcfg["editor"] = self.document_editor
         self.font_config_header = NchantdFontConfigBar(self, fcbcfg)

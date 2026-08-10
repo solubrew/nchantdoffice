@@ -57,6 +57,7 @@
 - **T-NEW-060** ✅ Tray icon + per-version snooze (`dismiss_version(days=7)`), commit `619b493` (2026-08-10, t-new-060).
 - **T-NEW-062** ✅ Notebook Jupyter-side URL sync (`_sync_notebook_from_url`), commit `126489b` (2026-08-10, t-new-062).
 - **T-NEW-063** ✅ Image aspect-ratio preservation, commit `f879e47` (2026-08-10, t-new-063).
+- **T-NEW-064** ✅ Script tab "Missing Text" stub removed — `NchantdOfficeScript.initView` sets `config.dikt["default_text"] = ""` before constructing `NchantdDocEditor` so the upstream fallback returns empty string, not "Missing Text". 3 tests in `tests/test_script_no_missing_text.py`.
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1834,6 +1835,71 @@ fixes the new symptom while keeping the old fix's benefits.
 - T-NEW-NOTE comment at `nchantdoffice/widgets/documents/media/images.py:705`
   — the previous fix that introduced the `scaled: True`
   workaround; this card layers the aspect-ratio fix on top.
+
+### T-NEW-064 — Script tab "Missing Text" stub removed (2026-08-10)
+
+**Status:** ✅ Resolved. Implementation commit hash backfilled
+in the follow-up commit per the T-NEW single-repo lifecycle.
+
+Per `testing-report_20260810.md` line 12:
+> "Meed to remove the \"Missing Text\" stub from new
+> NchantdOfficeScript tabas tabs".
+
+The "Missing Text" placeholder comes from the upstream
+`NchantdDocEditor.initView` fallback at
+`nchantrs/nchantrs/widgets/media/editors/editors.py:46`, which
+kicks in when neither ``text`` nor ``default_text`` is set
+in the cfg. The fallback chain is:
+  1. ``cfg["text"]`` if present and non-empty
+  2. ``cfg["default_text"]`` if cfg["text"] is None or empty
+  3. "Missing Text" hard-coded fallback
+
+`NchantdOfficeScript` is one of the few callers that don't
+pass an explicit ``text`` or ``default_text``, so the
+hard-coded "Missing Text" showed up in every fresh Script tab.
+
+**Why a downstream fix instead of upstream?** Changing the
+upstream default in `nchantrs/nchantrs/widgets/media/editors/editors.py:46`
+would affect every consumer of `NchantdDocEditor` across the
+SB stack. Some callers may rely on the "Missing Text"
+placeholder as a visual cue during development. The
+downstream fix (set ``default_text=""`` explicitly in
+`NchantdOfficeScript.initView`) is local, safe, and doesn't
+disturb other consumers. The same pattern is already used
+by `NchantdOfficeNote` (`widgets/documents/media/notes.py:193`).
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/media/scripts.py` —
+  `NchantdOfficeScript.initView` now sets
+  ``self.config.dikt["default_text"] = ""`` BEFORE
+  constructing the inner ``NchantdDocEditor``.
+- `tests/test_script_no_missing_text.py` (new file, 3 tests).
+
+**Migration plan:**
+
+1. Add `self.config.dikt["default_text"] = ""` in
+   `NchantdOfficeScript.initView` before the editor
+   constructor. ✅
+2. Pin 3 tests in `tests/test_script_no_missing_text.py`. ✅
+
+**Verification (real):**
+
+- `pytest tests/test_script_no_missing_text.py tests/test_script_open_format.py tests/test_script_reopen.py tests/test_script_html_envelope.py tests/test_script_doc_media_syntax_update.py tests/test_script_newline_roundtrip.py tests/test_image_aspect_ratio.py tests/test_image_blur.py tests/test_palette_in_image_toolbar.py tests/test_notebook_url_sync.py tests/test_notebook_reopen.py tests/test_update_checker.py tests/test_update_checker_review.py tests/test_update_checker_boot_hook.py tests/test_update_checker_interval.py tests/test_dismiss_version_duration.py -q`
+  → **66 passed, 0 failed** (50 from this session + 16 pre-existing script tests).
+- `python cmds/_review_update_process.py` → fresh-server
+  scenario still green.
+- `ruff check nchantdoffice/widgets/documents/media/scripts.py` → clean.
+- `ast.parse(open('nchantdoffice/widgets/documents/media/scripts.py').read())` → no errors.
+
+**Refs:**
+
+- `testing-report_20260810.md` line 12 — user-reported defect.
+- `nchantrs/nchantrs/widgets/media/editors/editors.py:46`
+  — the upstream fallback chain this fix overrides.
+- `nchantdoffice/widgets/documents/media/notes.py:193`
+  — sibling pattern (`default_text=""` on a Notes widget)
+  that this card mirrors.
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 
