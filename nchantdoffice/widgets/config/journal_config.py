@@ -28,6 +28,7 @@ from nchantrs.widgets.media.editors.selectors import NchantdDropDown, NchantdCom
 from kahndor.logma import Logma
 from nchantrs.widgets.groups import NchantdVScrollGroupBox
 from nchantrs.widgets.config.settings import NchantdSettingsWidget
+from nchantdoffice.utilities.upgrades import is_pro_user
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -49,6 +50,32 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeJournalSettings").override(cfg))
 
+    def _resolve_user_is_pro(self):
+        """T-NEW-071 — whether the current user is on Pro tier.
+
+        Pro users can ENABLE journal entry editing (the
+        "Allow Editing on Entry" + "Allow Editing on Re-Entry"
+        checkboxes). Non-pro users see the checkboxes as
+        disabled-with-tooltip so the UI is still discoverable
+        but the values can only be set after upgrading.
+
+        Returns ``False`` when the user object is missing or
+        has no ``has_pro`` attribute (safe default — matches
+        ``is_pro_user`` semantics in upgrades.py).
+        """
+        try:
+            user = None
+            if hasattr(self, "app") and self.app is not None:
+                user = getattr(self.app.model, "user", None) if hasattr(
+                    self.app, "model"
+                ) else None
+            return is_pro_user(user)
+        except Exception as e:
+            logma.warning(
+                f"[config_journal] _resolve_user_is_pro failed: {e}"
+            )
+            return False
+
     def initModel(self):
         """"""
         logma.info(
@@ -56,8 +83,25 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
         )
         try:
             super().initModel()
-            self.journal_edit_enable = None  # self.app.model.store.get_settings_journal_edit_enable()
-            self.journal_reedit_enable = None  # self.app.model.store.get_settings_journal_reedit_enable()
+            # T-NEW-071 — read the persisted journal-edit flags from
+            # config.dikt so the checkboxes restore their state on
+            # re-open. Defaults match the per-user intent:
+            #   - non-pro users: editing DISABLED (False)
+            #   - pro users:     editing ENABLED  (True)
+            # The actual gating on is_pro_user happens in initView
+            # (the checkboxes are disabled for non-pro users).
+            self.user_is_pro = self._resolve_user_is_pro()
+            default_edit = bool(self.user_is_pro)
+            self.journal_edit_enable = bool(
+                self.config.dikt.get(
+                    "journal_edit_enable", default_edit,
+                )
+            )
+            self.journal_reedit_enable = bool(
+                self.config.dikt.get(
+                    "journal_reedit_enable", default_edit,
+                )
+            )
             self.journal_date_insert_enable = None  # self.app.model.store.get_settings_journal_date_insert_enable()
             self.journal_editor_enable = None  # self.app.model.store.get_settings_journal_editor_enable()
             self.journal_history_enable = None  # self.app.model.store.get_settings_journal_history_enable()
@@ -108,6 +152,82 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
             today_settings_group.setMinimumHeight(self.today_settings_layout.sizeHint().height() * 1.2)
             self.settings_group.addWidget(today_settings_group)
             logma.debug("[config_journal] initView: 3 Today checkboxes built")
+
+            # T-NEW-071 — Journal Editor group. Per the user's
+            # testing-report_20260810.md line 17:
+            #   "many people will not like the no edit so we can
+            #    offer those settings to adjust function in the
+            #    pro users settings tabs".
+            # This group adds the two edit toggles ("Allow Editing
+            # on Entry" + "Allow Editing on Re-Entry") and gates
+            # them on is_pro_user. Non-pro users see the
+            # checkboxes as disabled-with-tooltip so the UI is
+            # discoverable but the values can't change.
+            editor_settings_group = pyqt.QGroupBox(self)
+            editor_settings_group.setTitle("Journal Editor (Pro tier)")
+            editor_settings_layout = pyqt.QGridLayout()
+            editor_settings_layout.setAlignment(pyqt.Qt.AlignTop | pyqt.Qt.AlignLeft)
+            editor_settings_group.setLayout(editor_settings_layout)
+            # "Allow Editing on Entry"
+            cfg = {
+                "text": "Allow Editing on Entry (Pro only)",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+            }
+            self.journal_edit_enable = NchantdCheckbox(self, cfg).initWidget()
+            # Apply the persisted value + pro-tier gating.
+            try:
+                self.journal_edit_enable.setChecked(
+                    bool(getattr(self, "journal_edit_enable", False))
+                )
+                if not getattr(self, "user_is_pro", False):
+                    self.journal_edit_enable.setEnabled(False)
+                    self.journal_edit_enable.setToolTip(
+                        "Upgrade to Pro to enable journal entry editing."
+                    )
+            except Exception:
+                pass
+            editor_settings_layout.addWidget(self.journal_edit_enable, 0, 0)
+            # T-NEW-071 — wire the handler so checkbox toggles persist.
+            try:
+                self.journal_edit_enable.toggled.connect(
+                    self.cmd_set_journal_edit_enable
+                )
+            except Exception:
+                pass
+            # "Allow Editing on Re-Entry"
+            cfg = {
+                "text": "Allow Editing on Re-Entry (Pro only)",
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+            }
+            self.journal_reedit_enable = NchantdCheckbox(self, cfg).initWidget()
+            try:
+                self.journal_reedit_enable.setChecked(
+                    bool(getattr(self, "journal_reedit_enable", False))
+                )
+                if not getattr(self, "user_is_pro", False):
+                    self.journal_reedit_enable.setEnabled(False)
+                    self.journal_reedit_enable.setToolTip(
+                        "Upgrade to Pro to enable journal entry editing."
+                    )
+            except Exception:
+                pass
+            editor_settings_layout.addWidget(self.journal_reedit_enable, 1, 0)
+            try:
+                self.journal_reedit_enable.toggled.connect(
+                    self.cmd_set_journal_reedit_enable
+                )
+            except Exception:
+                pass
+            editor_settings_group.setMinimumHeight(
+                editor_settings_layout.sizeHint().height() * 1.2
+            )
+            self.settings_group.addWidget(editor_settings_group)
+            logma.debug(
+                f"[config_journal] initView: Journal Editor group built "
+                f"(user_is_pro={self.user_is_pro})"
+            )
 
             # history_settings_group = pyqt.QGroupBox(self)
             # history_settings_group.setTitle("Journal History")
@@ -226,6 +346,49 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
         """"""
         logma.info("[config_journal] get_settings: delegating to super (section=journal)")
         return super().get_settings("journal")
+
+    # T-NEW-071 — cmd handlers for the Journal Editor checkboxes.
+    # Each persists to config.dikt so the value round-trips
+    # through app restart. The checkboxes themselves are
+    # disabled for non-pro users (see initView) so these handlers
+    # won't normally be invoked by them, but the persistence
+    # is unguarded in case a future code path flips the value.
+
+    def cmd_set_journal_edit_enable(self, event=None, *args, **kwargs):
+        """Persist the "Allow Editing on Entry" checkbox value."""
+        try:
+            value = bool(getattr(self, "journal_edit_enable", False))
+            if hasattr(self.journal_edit_enable, "isChecked"):
+                value = bool(self.journal_edit_enable.isChecked())
+        except Exception as e:
+            logma.warning(
+                f"[config_journal] cmd_set_journal_edit_enable "
+                f"could not read checkbox state: {e}"
+            )
+            value = bool(getattr(self, "journal_edit_enable", False))
+        self.config.dikt["journal_edit_enable"] = value
+        logma.info(
+            f"[config_journal] journal_edit_enable -> {value}"
+        )
+        return self
+
+    def cmd_set_journal_reedit_enable(self, event=None, *args, **kwargs):
+        """Persist the "Allow Editing on Re-Entry" checkbox value."""
+        try:
+            value = bool(getattr(self, "journal_reedit_enable", False))
+            if hasattr(self.journal_reedit_enable, "isChecked"):
+                value = bool(self.journal_reedit_enable.isChecked())
+        except Exception as e:
+            logma.warning(
+                f"[config_journal] cmd_set_journal_reedit_enable "
+                f"could not read checkbox state: {e}"
+            )
+            value = bool(getattr(self, "journal_reedit_enable", False))
+        self.config.dikt["journal_reedit_enable"] = value
+        logma.info(
+            f"[config_journal] journal_reedit_enable -> {value}"
+        )
+        return self
 
     def save(self):
         """"""
