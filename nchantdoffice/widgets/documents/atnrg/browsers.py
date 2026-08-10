@@ -164,9 +164,34 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #     return self
 
     def build_toolbar(self):
-        """"""
+        """T-NEW-069 — build the toolbar + restore URL dropdown history.
+
+        Delegates the URL history restore to the inner
+        ``NchantdOfficeWebViewer`` (which owns the dropdown
+        widget + the history helpers). The dropdown is
+        re-seeded with the persisted history (most-recent-first)
+        on every re-open.
+        """
         buttons = self.browser.build_toolbar()
         self.browser.url_select_entry.config.dikt["handler"] = self.cmd_goto_page
+        # T-NEW-069 — restore URL history into the dropdown. The
+        # viewer owns the helpers; we delegate to it so the
+        # persisted state is the single source of truth.
+        if (
+            self.url_select_entry is not None
+            and hasattr(self.browser, "_get_url_history")
+        ):
+            try:
+                history = self.browser._get_url_history()
+                self.url_select_entry.update_options(
+                    history, replace=True, sort=False,
+                )
+            except Exception as e:
+                logma.warning(
+                    f"[browsers] build_toolbar: URL history "
+                    f"restore failed: {e}",
+                    exc_info=True,
+                )
 
         buttons[17] = {"action": "web_page_pin", "handler": self.cmd_pin_page, "value": self.cmd_check_is_pinned}
         buttons[100] = "_skip"
@@ -1601,6 +1626,11 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
         logma.info(f"NchantdOfficeWebViewer init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebViewer").override(cfg))
+        # T-NEW-069 — URL history cap (most-recent-first, deduped).
+        # The history is persisted via config.dikt["url_history"]
+        # and read back at build_toolbar time so the dropdown
+        # survives app restart.
+        self._url_history_max = 50
 
     def initModel(self, cfg=None):
         """"""
@@ -1632,16 +1662,59 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
         """"""
         return self
 
+    # T-NEW-069 — URL dropdown history helpers (live on the
+    # WebViewer because that's where set_url_path lives).
+
+    def _track_url(self, url):
+        """Add ``url`` to the persistent URL history.
+
+        Maintains ``config.dikt["url_history"]`` as a
+        most-recent-first list, deduped (case-sensitive),
+        capped at ``_url_history_max`` entries. No-op when
+        ``url`` is None or empty. Returns the resulting
+        history list (most-recent-first).
+        """
+        if not url or not isinstance(url, str):
+            return list(self.config.dikt.get("url_history", []) or [])
+        history = list(self.config.dikt.get("url_history", []) or [])
+        history = [u for u in history if u != url]
+        history.insert(0, url)
+        history = history[: max(1, int(self._url_history_max))]
+        self.config.dikt["url_history"] = history
+        return history
+
+    def _clear_url_history(self):
+        """Wipe the URL history list (dropdown-only)."""
+        self.config.dikt["url_history"] = []
+
+    def _get_url_history(self):
+        """Return the URL history list (most-recent-first)."""
+        return list(self.config.dikt.get("url_history", []) or [])
+
     def set_url_path(self, url=None):
-        """"""
+        """T-NEW-069 — navigate to ``url`` and sync the dropdown.
+
+        Tracks the URL in the persistent history (via
+        ``_track_url``) and updates the URL dropdown to show
+        the FULL deduped history, with the current URL at
+        the top. Previously this method called
+        ``update_options([url], False, False)`` which appended
+        the URL to existing options without dedup — every
+        navigation added a duplicate. New implementation
+        uses ``replace=True`` and seeds with the deduped
+        history.
+        """
         super().set_url_path(url)
         if url is not None:
             if isinstance(url, pyqt.QUrl):
                 url = url.toString()
             if self.url_select_entry is None:
                 return self
+            history = self._track_url(url)
             self.url_select_entry.combobox.setCurrentText(url)
-            self.url_select_entry.update_options([url], False, False)
+            self.url_select_entry.update_options(
+                history, replace=True, sort=False,
+            )
         # self.save()
         # self.parent.document.add_page({"url": url})
         return self

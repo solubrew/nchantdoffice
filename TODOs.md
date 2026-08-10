@@ -62,6 +62,7 @@
 - **T-NEW-066** ✅ Matrix chart extraction from Excel workbooks — **landed in pyffice** (upstream of nchantdoffice). `PyfficeMatrix.load_excel()` now extracts charts from `ws._charts` via two new helpers (`_extract_charts_from_worksheet` + `_chart_from_openpyxl`). 5 tests in `tests/pyffice_unit/unit/matrix/chartExtractionTEST.py`. Commit `95a8d9f` (pyffice gamma, merged as `4ed8768`). User-facing: NchantdOfficeMatrix inherits the change automatically.
 - **T-NEW-067** ✅ PyfficeChart direct .xlsx loading — **landed in pyffice**. New `PyfficeChart.load_from_xlsx(file_path, chart_index=0, include_data=True)` opens a chart directly without going through Matrix. 4 tests in `tests/pyffice_unit/unit/charts/loadFromXlsxTEST.py`. Commit `3fb26cf` (pyffice gamma, merged as `b3aee3f`). User-facing: NchantdOfficeChart inherits the change automatically.
 - **T-NEW-068** ✅ NchantdFilesystem location memory, commit `46cb95f` (2026-08-10, t-new-068).
+- **T-NEW-069** ✅ NchantdBrowser URL history tracking, commit `10e62cc` (2026-08-10, t-new-069).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -2052,6 +2053,68 @@ Per `testing-report_20260810.md` lines 26–27:
   — original `cmd_set_root` (now persists).
 - `nchantdoffice/widgets/documents/managers/filesystems.py:1423`
   — original `show_tree` (now persists).
+
+### T-NEW-069 — NchantdBrowser URL history tracking (2026-08-10)
+
+**Status:** ✅ Resolved in commit `10e62cc` (2026-08-10,
+t-new-069 branch).
+
+Per `testing-report_20260810.md` line 28:
+> "NchantdBrowser still not tracking history and respecting
+> url overrides properly".
+
+**What this card ships:**
+
+- `NchantdOfficeWebViewer.set_url_path` now calls a new
+  `_track_url(url)` helper that maintains a persistent
+  `config.dikt["url_history"]` list — most-recent-first,
+  deduped (case-sensitive), capped at 50 entries.
+- The URL dropdown is updated via
+  `update_options(history, replace=True, sort=False)`
+  (was `update_options([url], False, False)` — appending
+  duplicates on every navigation).
+- `NchantdOfficeWebBrowser.build_toolbar` restores the
+  dropdown from the persisted history on every re-open
+  via `self.browser._get_url_history()`.
+- Three helpers on `NchantdOfficeWebViewer`:
+  `_track_url`, `_clear_url_history`, `_get_url_history`.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/atnrg/browsers.py` —
+  `NchantdOfficeWebViewer.__init__`, `_track_url`,
+  `_clear_url_history`, `_get_url_history`, `set_url_path`;
+  `NchantdOfficeWebBrowser.build_toolbar` (delegates to
+  `self.browser._get_url_history()`).
+- `tests/test_browser_url_history.py` (new file, 9 tests).
+
+**Migration plan:**
+
+1. Add `_url_history_max = 50` to WebViewer `__init__`. ✅
+2. Add `_track_url` / `_clear_url_history` / `_get_url_history`
+   to WebViewer. ✅
+3. Modify `set_url_path` to call `_track_url` and replace
+   dropdown options. ✅
+4. Modify `build_toolbar` to delegate to inner viewer's
+   `_get_url_history()`. ✅
+5. Pin 9 tests in `tests/test_browser_url_history.py`. ✅
+
+**Verification (real):**
+
+- `pytest tests/test_browser_url_history.py tests/test_browser_db_roundtrip.py tests/test_filesystem_location_memory.py tests/test_compact_journal_content.py tests/test_script_no_missing_text.py tests/test_image_aspect_ratio.py tests/test_notebook_url_sync.py tests/test_update_checker.py tests/test_update_checker_review.py tests/test_update_checker_boot_hook.py tests/test_update_checker_interval.py tests/test_dismiss_version_duration.py -q`
+  → **63 passed, 0 failed** (9 new + 54 pre-existing).
+- `python cmds/_review_update_process.py` → fresh-server
+  scenario still green.
+- `ruff check nchantdoffice/widgets/documents/atnrg/browsers.py` → clean.
+- `ast.parse(open('nchantdoffice/widgets/documents/atnrg/browsers.py').read())` → no errors.
+
+**Refs:**
+
+- `testing-report_20260810.md` line 28 — user-reported defect.
+- `nchantdoffice/widgets/documents/atnrg/browsers.py:1705`
+  — original `set_url_path` (was appending duplicates).
+- `nchantdoffice/widgets/documents/atnrg/browsers.py:172`
+  — `build_toolbar` (now restores dropdown history).
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 
