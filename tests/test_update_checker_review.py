@@ -244,16 +244,27 @@ def test_dismiss_version_accepts_days_parameter():
         f"Expected default=7 (snooze duration)."
     )
 
-    # Verify the default is 7
+    # Verify the default is 7 — either a literal int 7 OR a
+    # reference to the DISMISS_DURATION_DAYS constant (which
+    # itself is 7). The implementation chose the named-constant
+    # route for clarity (avoids duplicating the literal in two
+    # places). Both forms pass.
     days_default_idx = arg_names.index("days") - num_no_default
     if 0 <= days_default_idx < len(defaults):
         days_default = defaults[days_default_idx]
-        # The default can be ast.Constant(value=7) or an ast.UnaryOp
-        # for negative numbers; for our case it's a plain int 7.
         actual_value = None
         if isinstance(days_default, ast.Constant):
             actual_value = days_default.value
+        elif isinstance(days_default, ast.Name):
+            # Named reference — resolve DISMISS_DURATION_DAYS = 7.
+            # Look up the module-level constant's value via the
+            # same AST scan pattern.
+            ref_name = days_default.id
+            const_value_node = _module_top_level_constant(src, ref_name)
+            if isinstance(const_value_node, ast.Constant):
+                actual_value = const_value_node.value
         assert actual_value == 7, (
             f"T-NEW-060 step 3: 'days' default is {actual_value!r}; "
-            f"expected 7 (matches the review doc's 7-day snooze)."
+            f"expected 7 (matches the review doc's 7-day snooze, "
+            f"either literal or via DISMISS_DURATION_DAYS constant)."
         )

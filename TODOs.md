@@ -54,6 +54,7 @@
 - **T-NEW-057** ✅ Review doc + cmd + RED regression tests landed in commit `bcfb730` (2026-08-10, gamma). Implementation follow-up is T-NEW-058 / T-NEW-059 / T-NEW-060 / T-NEW-061.
 - **T-NEW-058** ✅ Wire `UpdateChecker` + DBUpdate into boot — `_upgrade_lock` flag + `run_update_process` helper + 3 boot-hook tests, commit `c85fcf4` (2026-08-10, t-new-058).
 - **T-NEW-059** ✅ User-configurable update-check interval — `refresh_interval_seconds(cfg)` helper + `cmd_on_change_check_update_interval_hours` spinbox + 4 interval tests, commit `10c8848` (2026-08-10, t-new-059).
+- **T-NEW-060** ✅ Tray icon + per-version snooze (`dismiss_version(days=7)`), commit `619b493` (2026-08-10, t-new-060).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1621,6 +1622,90 @@ This card implements that decision.
   §3 (Recommended implementation order item #2).
 - T-NEW-054 / T-NEW-056 — sibling cards that established the
   SpinBox-in-Interface-Tab config-flag pattern.
+
+### T-NEW-060 — Tray icon + per-version snooze (`dismiss_version(days=7)`) (2026-08-10)
+
+**Status:** ✅ Resolved in commit `619b493` (2026-08-10,
+t-new-060 branch).
+
+The T-NEW-057 review doc §2.3 decided that the dismissed-versions
+state should be expanded from a flat list to a per-version snooze
+with a default 7-day duration, AND the user-facing UI needs a
+system-tray menu so the user can dismiss a notification with one
+click. This card implements both pieces.
+
+**Affected sites:**
+
+- `nchantdoffice/updates/checker.py` —
+  - Added `DISMISS_DURATION_DAYS: int = 7` module-level constant.
+  - `dismiss_version(version, days=DISMISS_DURATION_DAYS)` — new
+    optional `days` parameter; writes per-version snooze expiry
+    (UTC ISO-timestamp) to state.yaml. Re-dismissing with a
+    shorter `days` does NOT shorten an existing snooze (longer
+    wins).
+  - `is_dismissed(version)` — now checks the snooze expiry
+    against the current UTC time. Past-expiry entries are
+    treated as not-dismissed so the notification re-fires when
+    the snooze lapses.
+  - `_load_state` / `_save_state` — migrated state format from
+    a flat YAML list to a per-version dict. Old flat-list files
+    are migrated transparently on first read (each entry gets
+    a fresh DISMISS_DURATION_DAYS window).
+- `nchantdoffice/nchantdoffice.py` —
+  - `NchantdOfficeMainWindow.__init__` now creates a
+    `QSystemTrayIcon` (no menu yet; that's wired when an update
+    arrives). Graceful no-op when the system tray is
+    unavailable (e.g. headless test env).
+  - New `_populate_update_tray_menu(info)` method builds the
+    menu with "New version available: X" (label) + "Open
+    download page" + "Dismiss for 7 days" actions, then shows
+    the tray icon + a 5-second balloon notification.
+  - New `_open_url(url)` helper uses `QDesktopServices.openUrl`
+    with a `webbrowser.open` fallback.
+  - `run_update_process(dbupdate, update_checker, main_window=None)`
+    — new optional `main_window` parameter; when provided AND the
+    checker returns an `update_available=True` response, calls
+    `main_window._populate_update_tray_menu(info)` and records
+    `tray_populated=True` in the summary dict.
+  - `NchantdOfficeCloak.run_on_launch` — passes `self.main` so
+    the tray wiring happens at boot.
+- `tests/test_dismiss_version_duration.py` (new file, 5 tests).
+- `tests/test_update_checker_review.py` — extended the T-NEW-057
+  RED test `test_dismiss_version_accepts_days_parameter` to
+  recognise both `days=7` (literal) and `days=DISMISS_DURATION_DAYS`
+  (named-constant reference; resolves to 7 via AST scan).
+
+**Migration plan:**
+
+1. Add `DISMISS_DURATION_DAYS` constant + `days` parameter to
+   `dismiss_version`. ✅
+2. Migrate `_load_state` / `_save_state` format; old files
+   migrate transparently. ✅
+3. Update `is_dismissed` to check expiry timestamps. ✅
+4. Add `QSystemTrayIcon` to `NchantdOfficeMainWindow.__init__`. ✅
+5. Add `_populate_update_tray_menu(info)` helper. ✅
+6. Add `_open_url(url)` helper (Qt + webbrowser fallback). ✅
+7. Extend `run_update_process` with `main_window` parameter
+   and wire it from `NchantdOfficeCloak.run_on_launch`. ✅
+8. Pin 5 tests in `tests/test_dismiss_version_duration.py`. ✅
+9. (test infra) Update the T-NEW-057 RED test to accept the
+   named-constant default. ✅
+
+**Verification (real):**
+
+- `pytest tests/test_dismiss_version_duration.py tests/test_update_checker.py tests/test_update_checker_boot_hook.py tests/test_update_checker_interval.py tests/test_update_checker_review.py -q`
+  → **28 passed, 0 failed**.
+- `python cmds/_review_update_process.py` → fresh-server
+  scenario still green.
+- `ruff check nchantdoffice/updates/checker.py nchantdoffice/nchantdoffice.py` → clean.
+- `ast.parse(open('nchantdoffice/updates/checker.py').read())` → no errors.
+
+**Refs:**
+
+- T-NEW-057 (umbrella review) — §2.3 (Dismissed-versions UX),
+  §3 (Recommended implementation order item #3).
+- T-DESK-053 — the original dismiss_version/is_dismissed
+  design (commit `6f537d1`); T-NEW-060 extends its surface.
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 

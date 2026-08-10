@@ -63,8 +63,14 @@ MAX_CHECK_UPDATE_INTERVAL_HOURS: int = 168  # 1 week
 # Local cache file (~/.nchantd/update_check_cache.json, mode 0o600).
 CACHE_FILENAME: str = "update_check_cache.json"
 
-# Dismissed-versions store (~~/.nchantd/state.yaml).
+# Dismissed-versions store (~/.nchantd/state.yaml).
 STATE_FILENAME: str = "state.yaml"
+
+# T-NEW-060 — snooze duration (days) when the user clicks
+# "Dismiss for 7 days" in the tray-icon menu. The value is
+# the default; callers can override per-call via
+# ``dismiss_version(version, days=...)``.
+DISMISS_DURATION_DAYS: int = 7
 
 # Per-call HTTP timeout (5 s; matches ReferralAPIClient).
 HTTP_TIMEOUT: float = 5.0
@@ -360,18 +366,24 @@ def _load_state() -> Dict[str, Any]:
     missing or malformed (the dismissed-versions store is
     best-effort — losing it just means a notification may
     re-fire once, which is fine).
+
+    T-NEW-060: the state shape changed from a flat list of
+    version strings to a dict mapping version → ISO-timestamp
+    (the snooze expiry). Each entry's value is the UTC
+    timestamp when the snooze expires (not when it was
+    dismissed). Old flat-list files are migrated transparently:
+    every entry is rewritten with the current time +
+    DISMISS_DURATION_DAYS so the existing snooze behaviour is
+    preserved.
     """
     try:
         if not _STATE_PATH.exists():
-            return {}
-        # Tiny hand-rolled parser — keeps zero new deps.
-        # state.yaml looks like:
-        #   dismissed_versions:
-        #     - 0.1.0
-        #     - 0.2.0
+            return {"dismissed_versions": {}}
         text = _STATE_PATH.read_text(encoding="utf-8")
-        state: Dict[str, Any] = {"dismissed_versions": []}
+        state: Dict[str, Any] = {"dismissed_versions": {}}
         current_list_key: Optional[str] = None
+        # Old-format flat-list state: ``dismissed_versions:\n  - 0.1.0``
+        # T-NEW-060 migrates to: ``dismissed_versions:\n  0.1.0: <iso>\n  0.2.0: <iso>``
         for line in text.splitlines():
             stripped = line.strip()
             if not stripped or stripped.startswith("#"):
@@ -379,61 +391,125 @@ def _load_state() -> Dict[str, Any]:
             if stripped.endswith(":"):
                 key = stripped[:-1].strip()
                 if key == "dismissed_versions":
-                    state[key] = []
                     current_list_key = key
                 else:
                     current_list_key = None
             elif current_list_key and stripped.startswith("- "):
-                state[current_list_key].append(stripped[2:].strip())
+                # Old-format entry: bare version string.
+                v = stripped[2:].strip()
+                if v:
+                    state["dismissed_versions"][v] = (
+                        dt.datetime.now(dt.timezone.utc)
+                        + dt.timedelta(days=DISMISS_DURATION_DAYS)
+                    ).isoformat()
+            elif current_list_key and ":" in stripped:
+                # New-format entry: ``  version: iso-timestamp``
+                version, _, ts = stripped.partition(":")
+                version = version.strip()
+                ts = ts.strip()
+                if version and ts:
+                    state["dismissed_versions"][version] = ts
         return state
     except OSError as e:
         logma.warning(f"[update_checker] state read failed: {e}")
-        return {"dismissed_versions": []}
+        return {"dismissed_versions": {}}
 
 
 def _save_state(state: Dict[str, Any]) -> None:
     """Persist the dismissed-versions state to
     ``~/.nchantd/state.yaml``. Mode 0o600 (mirrors the
     credentials / cache pattern).
+
+    T-NEW-060: writes the new ``version: iso-timestamp`` format
+    (per-version snooze expiry).
     """
     try:
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
         lines = ["dismissed_versions:"]
-        for v in state.get("dismissed_versions", []):
-            lines.append(f"  - {v}")
+        for v, ts in sorted(state.get("dismissed_versions", {}).items()):
+            lines.append(f"  {v}: {ts}")
         _STATE_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
         os.chmod(_STATE_PATH, 0o600)
     except OSError as e:
         logma.warning(f"[update_checker] state write failed: {e}")
 
 
-def dismiss_version(version: str) -> None:
+def dismiss_version(version: str, days: int = DISMISS_DURATION_DAYS) -> None:
     """Record that the user dismissed the notification for
-    ``version``. Idempotent (no duplicates).
+    ``version`` until ``now + days`` (T-NEW-060).
 
-    T-DESK-053 step "Persist dismissed versions in
-    ~/.nchantd/state.yaml".
+    The snooze expiry is an absolute UTC ISO-timestamp; on
+    re-check the notification is suppressed until that
+    timestamp passes. Idempotent: re-dismissing an already
+    dismissed version extends the snooze (or leaves it as-is
+    if the new expiry is earlier than the existing one).
+
+    Parameters
+    ----------
+    version : str
+        The version string (typically ``UpdateInfo.latest_version``).
+    days : int, optional
+        How many days to suppress the notification. Default
+        ``DISMISS_DURATION_DAYS`` (7). Values <= 0 are rejected
+        (returns without modifying state) — the operator must
+        explicitly call ``is_dismissed() == False`` to clear a
+        stale snooze, or delete the entry from state.yaml by hand.
     """
     if not version or not isinstance(version, str):
         return
+    if not isinstance(days, int) or days <= 0:
+        logma.warning(
+            f"[update_checker] dismiss_version: invalid days={days!r}; "
+            f"expected a positive int. Skipping."
+        )
+        return
+    new_expiry = (
+        dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=days)
+    ).isoformat()
     state = _load_state()
-    dismissed = state.setdefault("dismissed_versions", [])
-    if version not in dismissed:
-        dismissed.append(version)
-        _save_state(state)
+    dismissed = state.setdefault("dismissed_versions", {})
+    # If a snooze is already active for this version and it
+    # expires LATER than the new expiry, keep the longer one
+    # (so a user "dismissing again" doesn't accidentally
+    # shorten their snooze).
+    existing = dismissed.get(version)
+    if existing:
+        try:
+            existing_dt = dt.datetime.fromisoformat(existing)
+            new_dt = dt.datetime.fromisoformat(new_expiry)
+            if existing_dt > new_dt:
+                # Keep the longer snooze.
+                return
+        except (ValueError, TypeError):
+            pass  # Malformed existing; overwrite.
+    dismissed[version] = new_expiry
+    _save_state(state)
 
 
 def is_dismissed(version: str) -> bool:
     """Return True iff the user previously dismissed
-    ``version``. Caller passes the ``UpdateInfo.latest_version``
-    string; comparison is exact-match (the server uses
-    semantic versioning so two releases can't share a version
-    string).
+    ``version`` AND the snooze has not yet expired (T-NEW-060).
+
+    Returns False when:
+      - version is empty / non-string,
+      - version is not in the state,
+      - version's snooze expiry is in the past (operator can
+        re-dismiss to start a new snooze window).
     """
     if not version or not isinstance(version, str):
         return False
     state = _load_state()
-    return version in state.get("dismissed_versions", [])
+    dismissed = state.get("dismissed_versions", {})
+    expiry = dismissed.get(version)
+    if not expiry:
+        return False
+    try:
+        expiry_dt = dt.datetime.fromisoformat(expiry)
+        now = dt.datetime.now(dt.timezone.utc)
+        return now < expiry_dt
+    except (ValueError, TypeError):
+        # Malformed expiry; treat as not dismissed.
+        return False
 
 
 __all__ = [
@@ -443,6 +519,11 @@ __all__ = [
     "is_dismissed",
     "DEFAULT_CHECK_UPDATE_PATH",
     "REFRESH_INTERVAL_SECONDS",
+    "refresh_interval_seconds",
+    "DEFAULT_CHECK_UPDATE_INTERVAL_HOURS",
+    "MIN_CHECK_UPDATE_INTERVAL_HOURS",
+    "MAX_CHECK_UPDATE_INTERVAL_HOURS",
+    "DISMISS_DURATION_DAYS",
     "CACHE_FILENAME",
     "STATE_FILENAME",
 ]
