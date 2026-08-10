@@ -63,6 +63,7 @@
 - **T-NEW-067** ✅ PyfficeChart direct .xlsx loading — **landed in pyffice**. New `PyfficeChart.load_from_xlsx(file_path, chart_index=0, include_data=True)` opens a chart directly without going through Matrix. 4 tests in `tests/pyffice_unit/unit/charts/loadFromXlsxTEST.py`. Commit `3fb26cf` (pyffice gamma, merged as `b3aee3f`). User-facing: NchantdOfficeChart inherits the change automatically.
 - **T-NEW-068** ✅ NchantdFilesystem location memory, commit `46cb95f` (2026-08-10, t-new-068).
 - **T-NEW-069** ✅ NchantdBrowser URL history tracking, commit `10e62cc` (2026-08-10, t-new-069).
+- **T-NEW-070** ✅ NchantdOfficeNotebook click capture/redirect/replace — `cmd_register_click_handler`, `cmd_redirect_click`, `cmd_replace_click_action`, `cmd_drain_click_events` methods on NchantdOfficeNotebook. JS-side `QWebEngineScript` installed at DocumentCreation wraps `document.addEventListener('click', ...)`. 9 tests in `tests/test_notebook_click_capture.py`.
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -2115,6 +2116,86 @@ Per `testing-report_20260810.md` line 28:
   — original `set_url_path` (was appending duplicates).
 - `nchantdoffice/widgets/documents/atnrg/browsers.py:172`
   — `build_toolbar` (now restores dropdown history).
+
+### T-NEW-070 — NchantdOfficeNotebook click capture / redirect / replace (2026-08-10)
+
+**Status:** ✅ Resolved. Implementation commit hash backfilled
+in the follow-up commit per the T-NEW single-repo lifecycle.
+
+Per the user's directive:
+> "NchantdOfficeNotebook create methods for capture all
+> clicks in the web page so that we can intercept/redirect
+> or replace as needed".
+
+**What this card ships:**
+
+- 4 Python-side methods on `NchantdOfficeNotebook`:
+  - ``cmd_register_click_handler(handler)`` — register a
+    Python callable to fire on every web-page click.
+  - ``cmd_redirect_click(url_pattern, replacement_url)`` —
+    when a click's ``href`` matches ``url_pattern`` (substring),
+    cancel the navigation and redirect to
+    ``replacement_url``.
+  - ``cmd_replace_click_action(selector, action)`` — for
+    clicks matching ``selector``, replace the default
+    action with ``block`` / ``log`` / ``stop`` /
+    ``stop+block``.
+  - ``cmd_drain_click_events()`` — pull the JS-side
+    ``window.__nchantd_clicks`` array into Python.
+- New ``_install_click_instrumentation(view)`` helper that
+  installs a ``QWebEngineScript`` at ``DocumentCreation``
+  (matching the existing pattern in
+  ``_install_net_instrumentation`` / ``_install_error_instrumentation``).
+  The JS wraps
+  ``document.addEventListener('click', ...)`` so every
+  click is pushed into ``window.__nchantd_clicks`` BEFORE
+  JupyterLab bootstraps (avoids the "ran too late"
+  trap that hits the existing net instrumentation at
+  loadFinished).
+- Replacement rules are checked first (highest priority);
+  redirect rules use substring match on ``href``.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/workbooks/notebooks.py` —
+  ``__init__`` (state init), ``cmd_register_click_handler``,
+  ``cmd_redirect_click``, ``cmd_replace_click_action``,
+  ``_push_click_redirect_to_webview``,
+  ``_push_click_replacement_to_webview``, ``_has_webview``,
+  ``_run_js``, ``_js_quote``, ``cmd_drain_click_events``,
+  ``_install_click_instrumentation``.
+- `tests/test_notebook_click_capture.py` (new, 9 tests).
+
+**Migration plan:**
+
+1. Add click-capture state to ``__init__``. ✅
+2. Add 3 ``cmd_*`` methods + 3 push helpers + 1 drain
+   method. ✅
+3. Add ``_install_click_instrumentation(view)`` JS payload. ✅
+4. Wire into the existing instrumentation chain in
+   ``initWidget``. ✅
+5. Pin 9 tests in
+   ``tests/test_notebook_click_capture.py``. ✅
+
+**Verification (real):**
+
+- `pytest tests/test_notebook_click_capture.py tests/test_notebook_url_sync.py tests/test_notebook_reopen.py tests/test_notebook_save_bytes.py tests/test_browser_url_history.py tests/test_browser_db_roundtrip.py tests/test_filesystem_location_memory.py tests/test_compact_journal_content.py tests/test_script_no_missing_text.py tests/test_image_aspect_ratio.py tests/test_update_checker.py tests/test_update_checker_review.py tests/test_update_checker_boot_hook.py tests/test_update_checker_interval.py tests/test_dismiss_version_duration.py -q`
+  → **80 passed, 0 failed** (9 new + 71 pre-existing).
+- `python cmds/_review_update_process.py` → fresh-server
+  scenario still green.
+- `ruff check nchantdoffice/widgets/documents/workbooks/notebooks.py` → clean.
+- `ast.parse(open('nchantdoffice/widgets/documents/workbooks/notebooks.py').read())` → no errors.
+
+**Refs:**
+
+- User directive in this session: "create methods for
+  capture all clicks in the web page so that we can
+  intercept/redirect or replace as needed".
+- `nchantdoffice/widgets/documents/workbooks/notebooks.py:1891`
+  — wiring point (right after `_install_net_instrumentation`).
+- `nchantdoffice/widgets/documents/workbooks/notebooks.py:1878`
+  — the existing `_install_net_instrumentation` pattern
+  that T-NEW-070 mirrors.
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 
