@@ -51,7 +51,7 @@
 - **T-NEW-054** ✅ Cap tabs per node (adjustable param, default 35) — fixed
 - **T-NEW-055** ✅ NchantdOfficePalette integration with NchantdOfficeImage toolbar — fixed
 - **T-NEW-056** ✅ Cap total nodes per non-pro user at 100 (configurable) — fixed
-- **T-NEW-057** ⚠️ Open: Review and upgrade the NchantdOffice update process — review doc at `docs/update-process-review_20260810.md`; cmd at `cmds/_review_update_process.py`; follow-up cards T-NEW-058 / T-NEW-059 / T-NEW-060 / T-NEW-061 derived from the review.
+- **T-NEW-057** ✅ Review doc + cmd + RED regression tests landed in commit `bcfb730` (2026-08-10, gamma). Implementation follow-up is T-NEW-058 / T-NEW-059 / T-NEW-060 / T-NEW-061 — T-NEW-058 is ✅ (this commit), T-NEW-059/060/061 still open.
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -71,7 +71,7 @@
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
 | Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests -q` |
-| Current test surface | 12 + 4 RED in tests/test_update_checker_review.py (T-NEW-057 follow-up tests, all failing as designed awaiting T-NEW-058/059/060 implementation) |
+| Current test surface | 20 passed (12 update_checker + 3 boot-hook + 5 review-pinning RED-tests still RED awaiting T-NEW-059/060). Pre-existing failure `test_app_action_has_position_int_nchantdoffice` is unrelated to T-NEW-058. |
 
 ### Internal-project stack (CORE INTEGRATED)
 
@@ -1481,6 +1481,80 @@ code lands.
 - `nchantdoffice_com/app/apis/updates.py:209` — server side
   of `/api/check-update`, the source of truth for the
   response shape.
+
+### T-NEW-058 — Wire `UpdateChecker` and `NchantdOfficeDBUpdate` into the boot sequence (2026-08-10)
+
+**Status:** ✅ Resolved. `_upgrade_lock` flag added to
+`NchantdOfficeDBUpdate` (guarded `update_pyffice_document()` against
+double-migration); `UpdateChecker` constructed in
+`NchantdOfficeCloak.__init__`; `run_on_launch` delegates to the new
+module-level `run_update_process(dbupdate, update_checker)` helper;
+3 new tests in `tests/test_update_checker_boot_hook.py` (all green).
+Pinned the T-NEW-057 RED tests `test_upgrade_lock_attribute_exists`
+and `test_update_checker_constructed_at_boot` to GREEN.
+
+Implementation commit hash backfilled in the follow-up commit
+per the T-NEW single-repo lifecycle (Phase 5).
+
+The T-NEW-057 review doc
+(`docs/update-process-review_20260810.md` §1.2/§2.4) established
+that both `UpdateChecker` and `NchantdOfficeDBUpdate` were
+dead-code at the call layer — defined + tested, but no live code
+in the app constructed or invoked them. This card is the
+implementation of the §3 "Recommended implementation order"
+recommendation #1.
+
+**Affected sites:**
+
+- `nchantdoffice/updates/db.py` — added `self._upgrade_lock: bool`
+  instance flag to `NchantdOfficeDBUpdate.__init__`; guarded
+  `update_pyffice_document()` to return early when the lock is
+  True (logged at info level for operator visibility).
+- `nchantdoffice/nchantdoffice.py` — added
+  `from nchantdoffice.updates.checker import UpdateChecker`;
+  `NchantdOfficeCloak.__init__` now constructs
+  `self.update_checker = UpdateChecker()`; `run_on_launch`
+  delegates the new logic to the testable module-level helper
+  `run_update_process(dbupdate, update_checker)` (defined at
+  the bottom of the same file).
+- `tests/test_update_checker_boot_hook.py` (new file, 3 tests).
+
+**Migration plan:**
+
+1. Add `_upgrade_lock` instance flag to
+   `NchantdOfficeDBUpdate.__init__`. ✅
+2. Guard `update_pyffice_document()` with early return when
+   the lock is set. ✅
+3. Construct `UpdateChecker` in `NchantdOfficeCloak.__init__`
+   (after the `dbupdate` line). ✅
+4. Add the module-level `run_update_process(dbupdate,
+   update_checker)` helper so tests don't have to instantiate
+   the Qt-singleton `NchantdOfficeCloak`. ✅
+5. Pin 3 tests in `tests/test_update_checker_boot_hook.py`:
+   (a) `run_update_process` invokes `check()` exactly once;
+   (b) it invokes `update_pyffice_document()` exactly once with
+   `upgrade_run=True` in the summary; (c) a second invocation
+   is a no-op (`upgrade_run=False`). ✅
+
+**Verification (real):**
+
+- `pytest tests/test_update_checker.py tests/test_update_checker_review.py tests/test_update_checker_boot_hook.py -q`
+  → **20 passed, 2 failed** (the 2 failures are the T-NEW-059
+  and T-NEW-060 RED tests, still RED as designed).
+- `python cmds/_review_update_process.py --scenario upgrade-lock`
+  → `[upgrade-lock] OK — second call was a no-op (get_document_types called 1×)`.
+  Was `[upgrade-lock] WARNING` before this commit.
+- `ruff check nchantdoffice/updates/db.py nchantdoffice/nchantdoffice.py`
+  → clean (no new F821/security issues).
+- `ast.parse(open('nchantdoffice/nchantdoffice.py').read())` → no errors.
+
+**Refs:**
+
+- T-NEW-057 (umbrella review) — `docs/update-process-review_20260810.md`
+  §1.2 (Call Graph), §2.4 (Schema upgrade double-invocation),
+  §3 (Recommended implementation order).
+- T-DESK-053 — the original `UpdateChecker` design (commit
+  `6f537d1`).
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 
