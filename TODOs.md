@@ -53,6 +53,7 @@
 - **T-NEW-056** ✅ Cap total nodes per non-pro user at 100 (configurable) — fixed
 - **T-NEW-057** ✅ Review doc + cmd + RED regression tests landed in commit `bcfb730` (2026-08-10, gamma). Implementation follow-up is T-NEW-058 / T-NEW-059 / T-NEW-060 / T-NEW-061.
 - **T-NEW-058** ✅ Wire `UpdateChecker` + DBUpdate into boot — `_upgrade_lock` flag + `run_update_process` helper + 3 boot-hook tests, commit `c85fcf4` (2026-08-10, t-new-058).
+- **T-NEW-059** ✅ User-configurable update-check interval — `refresh_interval_seconds(cfg)` helper + `cmd_on_change_check_update_interval_hours` spinbox + 4 interval tests in `tests/test_update_checker_interval.py`. Pinned the T-NEW-057 RED test `test_refresh_interval_is_function_or_configurable` to GREEN.
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1554,6 +1555,72 @@ recommendation #1.
   §3 (Recommended implementation order).
 - T-DESK-053 — the original `UpdateChecker` design (commit
   `6f537d1`).
+
+### T-NEW-059 — User-configurable update-check interval (2026-08-10)
+
+**Status:** ✅ Resolved. Implementation commit hash backfilled
+in the follow-up commit per the T-NEW single-repo lifecycle.
+
+The T-NEW-057 review doc §2.1 decided that the 6h polling cadence
+should stay the default for v0.1.0 but become user-configurable.
+This card implements that decision.
+
+**Affected sites:**
+
+- `nchantdoffice/updates/checker.py` — added
+  `refresh_interval_seconds(cfg=None)` module-level helper that
+  reads `cfg.get("check_update_interval_hours", 6) * 3600` and
+  clamps invalid values (< 1 or > 168) back to the default. Also
+  added the `_cfg` attribute to `UpdateChecker.__init__` so
+  `check()` honours the user's choice; the `_read_cache`
+  freshness check now uses `refresh_interval_seconds(self._cfg)`
+  instead of the hard-coded `REFRESH_INTERVAL_SECONDS` constant.
+  The constant is retained for backward compatibility with any
+  out-of-tree callers that still reference it.
+- `nchantdoffice/nchantdoffice.py` —
+  `NchantdOfficeCloak.__init__` now constructs
+  `self.update_checker = UpdateChecker(cfg=self.config.dikt)`,
+  threading the cloak config into the checker so the user's
+  override takes effect.
+- `nchantdoffice/widgets/config/settings.py` — added
+  `cmd_on_change_check_update_interval_hours` handler (mirrors
+  the T-NEW-054/056 pattern) + Interface Tab SpinBox widget
+  (range 1–168, default 6) wired to it.
+- `tests/test_update_checker_interval.py` (new file, 4 tests).
+
+**Migration plan:**
+
+1. Add `refresh_interval_seconds(cfg)` helper to
+   `updates/checker.py`. ✅
+2. Thread `cfg` through `UpdateChecker.__init__` and use the
+   helper in `_read_cache`'s freshness check. ✅
+3. Pass `cfg=self.config.dikt` when constructing the checker
+   in `NchantdOfficeCloak.__init__`. ✅
+4. Add `cmd_on_change_check_update_interval_hours` handler +
+   SpinBox widget in `widgets/config/settings.py`. ✅
+5. Pin 4 tests in `tests/test_update_checker_interval.py`. ✅
+6. (test infra) Update the T-NEW-057 review test
+   `test_refresh_interval_is_function_or_configurable` to also
+   recognise the new `refresh_interval_seconds` function
+   (the implementation kept the constant for backward
+   compatibility). ✅
+
+**Verification (real):**
+
+- `pytest tests/test_update_checker_interval.py tests/test_update_checker.py tests/test_update_checker_boot_hook.py tests/test_update_checker_review.py -q`
+  → **22 passed, 1 failed** (the 1 failure is the T-NEW-060
+  RED test, still RED as designed).
+- `python cmds/_review_update_process.py` → fresh-server
+  scenario still green.
+- `ruff check nchantdoffice/updates/checker.py nchantdoffice/widgets/config/settings.py nchantdoffice/nchantdoffice.py` → clean.
+- `ast.parse(open('nchantdoffice/updates/checker.py').read())` → no errors.
+
+**Refs:**
+
+- T-NEW-057 (umbrella review) — §2.1 (Polling cadence),
+  §3 (Recommended implementation order item #2).
+- T-NEW-054 / T-NEW-056 — sibling cards that established the
+  SpinBox-in-Interface-Tab config-flag pattern.
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 

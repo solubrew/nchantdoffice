@@ -190,6 +190,13 @@ def test_refresh_interval_is_function_or_configurable():
     if is_function:
         return  # GREEN by option A
 
+    # Option A': a sibling function ``refresh_interval_seconds(cfg)``
+    # exists that reads from cfg. T-NEW-059 chose this path (kept
+    # the constant for backward compatibility, added the function
+    # alongside it).
+    if _ast_function(checker_src, "refresh_interval_seconds") is not None:
+        return  # GREEN by option A'
+
     # Option B: still a constant but the config YAML exposes the knob
     if NCHANTDOFFICE_YAML.exists():
         yaml_src = _read(NCHANTDOFFICE_YAML)
@@ -199,7 +206,8 @@ def test_refresh_interval_is_function_or_configurable():
     # Neither path is satisfied — fail with a clear message.
     assert False, (
         "T-NEW-059 step 1 missing: REFRESH_INTERVAL_SECONDS is "
-        "still a module-level constant AND "
+        "still a module-level constant AND no "
+        "refresh_interval_seconds() function exists AND "
         "check_update_interval_hours is not in nchantdoffice.yaml. "
         "See docs/update-process-review_20260810.md §2.1."
     )

@@ -90,6 +90,23 @@ def _make_update_checker(base_url="https://example.invalid"):
     return UpdateChecker(base_url=base_url)
 
 
+def _force_cache_to_tempdir():
+    """Rebind the module-level _CACHE_PATH to our tempdir.
+
+    The module-level _CACHE_PATH is computed at import time from
+    NCHANT_DATA_DIR (or ~/.nchantd/). If another test file
+    imported the module first WITHOUT setting NCHANT_DATA_DIR,
+    _CACHE_PATH points at the user's real ~/.nchantd/. We patch
+    it here so the boot-hook test never writes to the user's
+    real cache directory regardless of import order.
+    """
+    from nchantdoffice.updates import checker as checker_mod
+    temp_cache = Path(_TMPDIR) / "update_check_cache.json"
+    # Mutate the module-level binding in place.
+    checker_mod._CACHE_PATH = temp_cache
+    return temp_cache
+
+
 def _stub_network_payload():
     """Return a (payload, mock_response) tuple for patching
     ``requests.Session.get``."""
@@ -121,12 +138,12 @@ def test_run_update_process_invokes_check_exactly_once():
     dbupdate, _ = _make_dbupdate()
     update_checker = _make_update_checker()
     _, mock_response = _stub_network_payload()
+    cache_path = _force_cache_to_tempdir()
 
     with patch("requests.Session.get", return_value=mock_response):
         summary = run_update_process(dbupdate, update_checker)
 
     # Cache file written => check() was called.
-    cache_path = Path(_TMPDIR) / "update_check_cache.json"
     assert cache_path.exists(), (
         "T-NEW-058 missing: run_update_process did not call "
         "UpdateChecker.check() (no cache file written at "

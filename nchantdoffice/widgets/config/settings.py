@@ -581,6 +581,53 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return self
 
+    # ------------------------------------------------------------------
+    # T-NEW-059 — Update check interval (hours)
+    # ------------------------------------------------------------------
+
+    def cmd_on_change_check_update_interval_hours(self, event=None, *args, **kwargs):
+        """Set the ``check_update_interval_hours`` config value (T-NEW-059).
+
+        Reads the SpinBox value and persists
+        ``check_update_interval_hours`` on ``config.dikt``. Default 6.
+        Range 1–168 (1 hour to 1 week). The value is read by
+        ``nchantdoffice.updates.checker.refresh_interval_seconds()``
+        to decide how stale the cache can be before triggering a
+        server poll. The new value takes effect on the NEXT
+        ``UpdateChecker.check()`` call (the cached interval is
+        captured at module-import time of the constant; the
+        function reads from the config each call).
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            value = 6
+            if event is not None and hasattr(event, "value"):
+                value = int(event.value())
+            elif event is not None and hasattr(event, "isChecked"):
+                value = int(event.isChecked())
+            # Clamp to the documented range; out-of-range values
+            # fall back to the default (mirrors
+            # refresh_interval_seconds's defensive behavior).
+            if value < 1 or value > 168:
+                logma.warning(
+                    f"[settings] check_update_interval_hours={value} out of "
+                    f"range 1–168; keeping existing value "
+                    f"{self.config.dikt.get('check_update_interval_hours', 6)}."
+                )
+                return self
+            self.check_update_interval_hours = value
+            self.config.dikt["check_update_interval_hours"] = value
+            logma.info(
+                f"[settings] check_update_interval_hours set to {value}"
+            )
+        except Exception as e:
+            logma.error(
+                f"[settings] cmd_on_change_check_update_interval_hours failed: {e}",
+                exc_info=True,
+            )
+        return self
+
     def cmd_on_change_update_tab_name_to_file_name(self, event=None, *args, **kwargs):
         """Toggle the ``update_tab_name_to_file_name`` flag (T-NEW-032).
 
@@ -1026,6 +1073,26 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         }
         self.max_nodes_per_user_entry = NchantdSpinBox(self, cfg).initWidget()
         center_settings_group.addWidget(self.max_nodes_per_user_entry, row, 0)
+        row += 1
+
+        # T-NEW-059: update-check interval (hours). Default 6,
+        # range 1–168 (1 week). The Interval knob affects how
+        # often UpdateChecker polls /api/check-update. The
+        # minimum is 1h to avoid hammering the server; the
+        # maximum is 1 week to avoid missing urgent releases.
+        # The value lives in config.dikt["check_update_interval_hours"]
+        # and is read by nchantdoffice.updates.checker.refresh_interval_seconds().
+        cfg = {
+            "text": "Update check interval (hours, 1–168)",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_on_change_check_update_interval_hours,
+            "min": 1,
+            "max": 168,
+            "value": int(self.config.dikt.get("check_update_interval_hours", 6)),
+        }
+        self.check_update_interval_hours_entry = NchantdSpinBox(self, cfg).initWidget()
+        center_settings_group.addWidget(self.check_update_interval_hours_entry, row, 0)
         row += 1
 
         primary_layout.addLayout(center_settings_group.layout)
