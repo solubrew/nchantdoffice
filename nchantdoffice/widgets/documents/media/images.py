@@ -707,12 +707,66 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             # sets `setScaledContents(False)` by default, which
             # displays the image at its native size and pushes
             # the tab width to the image's pixel width).
+            # T-NEW-063: ``scaled=True`` alone uses Qt's
+            # IgnoreAspectRatio, which stretches the image to
+            # fill BOTH axes (the symptom from
+            # testing-report_20260810.md line 6). The
+            # post-init override below constrains the label's
+            # height to the available tab height so Qt
+            # honours the aspect ratio when scaling.
             "scaled": True,
         }
         if self.document.content is not None:
             image_cfg["image_data"] = self.document.content.get("L0", {}).get("bytes", None)
             logma.info(f"Image Data: {image_cfg['image_data']}")
         self.image = NchantdImage(self, image_cfg).initWidget()
+        # T-NEW-063 — post-init override: constrain the inner
+        # label's height to the tab's available height so Qt
+        # keeps the aspect ratio when setScaledContents(True)
+        # scales the pixmap. Without this, ``scaled=True``
+        # causes the image to stretch to fill the label's
+        # width AND height (the symptom reported in
+        # testing-report_20260810.md line 6). We read the
+        # parent tab's available height (the parent layout
+        # slot the widget sits in) and cap the label's
+        # maximum height there. Falls back to a sensible
+        # default if the parent geometry isn't readable yet.
+        try:
+            label = getattr(self.image, "label", None)
+            if label is not None and hasattr(label, "setMaximumHeight"):
+                # Prefer the actual parent height; fall back to
+                # 600 px (matches the default tab body height
+                # in NchantdOfficeMainWindow).
+                parent_h = None
+                parent = self.parent()
+                if parent is not None and hasattr(parent, "height"):
+                    try:
+                        parent_h = int(parent.height())
+                    except Exception:
+                        parent_h = None
+                if not parent_h or parent_h <= 0:
+                    parent_h = 600
+                label.setMaximumHeight(parent_h)
+                # Preferred-size policy that lets Qt compute
+                # the aspect-ratio-correct width when the
+                # height is capped. Maximum = the parent's
+                # height (so the image never overflows);
+                # Preferred lets the layout pick the natural
+                # width at the constrained height.
+                policy = pyqt.QSizePolicy(
+                    pyqt.QSizePolicy.Policy.Preferred,
+                    pyqt.QSizePolicy.Policy.Preferred,
+                )
+                label.setSizePolicy(policy)
+                # Force an immediate re-scale so the change
+                # is visible without waiting for a resize event.
+                if hasattr(self.image, "refresh"):
+                    self.image.refresh()
+        except Exception as e:
+            logma.warning(
+                f"[NchantdOfficeImage] T-NEW-063 post-init override failed: {e}",
+                exc_info=True,
+            )
         super().initView(cfg)
 
         logma.info(f"Content {self.document.content}")
