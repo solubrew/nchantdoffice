@@ -1861,7 +1861,7 @@ Both are scoped for v0.2.0 because:
 
 ### T-NEW-072 — TODOs.md update-process consolidation (2026-08-10)
 
-**Status:** ✅ Resolved in commit `b8a4c7d` (2026-08-10,
+**Status:** ✅ Resolved in commit `8824871` (2026-08-10,
 t-new-072 branch).
 
 Per the user's directive:
@@ -1901,13 +1901,13 @@ Per the user's directive:
 
 **Verification (real):**
 
-- `wc -l TODOs.md` → 3254 lines (up from 3115).
+- `wc -l TODOs.md` → 3254 lines (up from 3112).
 - The new section renders correctly when viewed (the ASCII
   diagram uses box-drawing characters `┌─┐│└┘` — these are
   valid Markdown and will render as text in Telegram).
 - All T-NEW-057→061 refs remain consistent with their
   cards.
-- `git diff --stat` shows `+198 / -0` lines in TODOs.md.
+- `git diff --stat` shows `+202 / -0` lines in TODOs.md.
 
 **Refs:**
 
