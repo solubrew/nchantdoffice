@@ -50,16 +50,57 @@ logma = Logma(__name__)
 DEFAULT_CHECK_UPDATE_PATH: str = "/api/check-update"
 
 # How often to re-poll the server (6 hours; mirrors base_layer.py).
+# T-NEW-059: retained as a default constant for callers that don't
+# pass a cfg dict. New code should call ``refresh_interval_seconds(cfg)``
+# with the app config to honour the user's
+# ``check_update_interval_hours`` override (see Interface Tab
+# settings → "Update check interval (hours)").
 REFRESH_INTERVAL_SECONDS: int = 6 * 60 * 60
+DEFAULT_CHECK_UPDATE_INTERVAL_HOURS: int = 6
+MIN_CHECK_UPDATE_INTERVAL_HOURS: int = 1
+MAX_CHECK_UPDATE_INTERVAL_HOURS: int = 168  # 1 week
 
 # Local cache file (~/.nchantd/update_check_cache.json, mode 0o600).
 CACHE_FILENAME: str = "update_check_cache.json"
 
-# Dismissed-versions store (~/.nchantd/state.yaml).
+# Dismissed-versions store (~~/.nchantd/state.yaml).
 STATE_FILENAME: str = "state.yaml"
 
 # Per-call HTTP timeout (5 s; matches ReferralAPIClient).
 HTTP_TIMEOUT: float = 5.0
+
+
+def refresh_interval_seconds(cfg=None):
+    """Return the configured update-check interval in seconds (T-NEW-059).
+
+    Reads ``cfg.get("check_update_interval_hours", DEFAULT_CHECK_UPDATE_INTERVAL_HOURS)``
+    and converts to seconds. Invalid values (< MIN or > MAX) fall back
+    to the default. Accepts a plain dict OR a kahndor.Instruct-like
+    object that supports ``.get(...)``.
+
+    Parameters
+    ----------
+    cfg : dict or object with .get(), optional
+        The app config (typically ``self.config.dikt`` on
+        ``NchantdOfficeCloak``). If None, returns the default
+        interval.
+
+    Returns
+    -------
+    int
+        The interval in seconds. Guaranteed to be >= MIN and <= MAX.
+    """
+    if cfg is None:
+        hours = DEFAULT_CHECK_UPDATE_INTERVAL_HOURS
+    else:
+        try:
+            raw = cfg.get("check_update_interval_hours", DEFAULT_CHECK_UPDATE_INTERVAL_HOURS)
+            hours = int(raw)
+        except (TypeError, ValueError):
+            hours = DEFAULT_CHECK_UPDATE_INTERVAL_HOURS
+    if hours < MIN_CHECK_UPDATE_INTERVAL_HOURS or hours > MAX_CHECK_UPDATE_INTERVAL_HOURS:
+        return DEFAULT_CHECK_UPDATE_INTERVAL_HOURS * 3600
+    return hours * 3600
 
 # Where caches + state live. Override with NCHANT_DATA_DIR for tests.
 _CACHE_DIR = Path(
@@ -162,11 +203,16 @@ class UpdateChecker:
         base_url: str = "https://nchantdoffice.com",
         check_path: str = DEFAULT_CHECK_UPDATE_PATH,
         timeout: float = HTTP_TIMEOUT,
+        cfg=None,
     ):
         self.base_url = base_url.rstrip("/")
         self.check_path = check_path.lstrip("/")
         self.timeout = timeout
         self._session = requests.Session()
+        # T-NEW-059: store the config reference so check() can
+        # honour the user's ``check_update_interval_hours`` override.
+        # None means "use the module-level default".
+        self._cfg = cfg
 
     # ------------------------------------------------------------------
     # Public API
@@ -226,7 +272,9 @@ class UpdateChecker:
     def _read_cache(self, allow_stale: bool = False) -> Optional[UpdateInfo]:
         """Return the cached ``UpdateInfo`` if present and
         fresh. When ``allow_stale=True`` (the fallback path),
-        return even if older than REFRESH_INTERVAL_SECONDS.
+        return even if older than ``refresh_interval_seconds(self._cfg)``
+        (T-NEW-059 — the user-configurable interval; was hard-coded
+        ``REFRESH_INTERVAL_SECONDS`` before T-NEW-059).
         """
         try:
             if not _CACHE_PATH.exists():
@@ -237,7 +285,8 @@ class UpdateChecker:
             logma.warning(f"[update_checker] cache read failed: {e}")
             return None
 
-        # Freshness check — skipped when allow_stale=True.
+        # Freshness check — skipped when allow_stale=True. T-NEW-059
+        # honours the user-configurable check_update_interval_hours.
         if not allow_stale:
             try:
                 cache_time = dt.datetime.fromisoformat(
@@ -246,7 +295,7 @@ class UpdateChecker:
                 age = (
                     dt.datetime.now(dt.timezone.utc) - cache_time
                 ).total_seconds()
-                if age >= REFRESH_INTERVAL_SECONDS:
+                if age >= refresh_interval_seconds(self._cfg):
                     return None
             except (ValueError, TypeError):
                 # No timestamp or malformed — treat as stale.

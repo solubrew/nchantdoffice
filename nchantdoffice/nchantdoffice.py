@@ -57,7 +57,10 @@ class NchantdOfficeCloak(NchantdCloak):
         # so the boot hook (run_on_launch) can invoke check() without
         # importing the class there. The instance is caller-driven;
         # the class itself does not start a background thread.
-        self.update_checker = UpdateChecker()
+        # T-NEW-059: pass self.config.dikt so UpdateChecker.check()
+        # honours the user's check_update_interval_hours override
+        # (Interface Tab settings → "Update check interval (hours)").
+        self.update_checker = UpdateChecker(cfg=self.config.dikt)
         self.application_NCD = "40c94efb-d374-437f-a48b-3c6b843fd110"
         self.install = True
         self.primary_focus = "office_platform"
