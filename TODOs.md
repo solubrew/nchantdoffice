@@ -64,6 +64,7 @@
 - **T-NEW-068** ✅ NchantdFilesystem location memory, commit `46cb95f` (2026-08-10, t-new-068).
 - **T-NEW-069** ✅ NchantdBrowser URL history tracking, commit `10e62cc` (2026-08-10, t-new-069).
 - **T-NEW-070** ✅ NchantdOfficeNotebook click capture/redirect/replace, commit `264df18` (2026-08-10, t-new-070).
+- **T-NEW-071** ✅ NchantdOfficeJournalSettings pro-tier editor, commit `a9c1f6f` (2026-08-10, t-new-071).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -2196,6 +2197,85 @@ Per the user's directive:
 - `nchantdoffice/widgets/documents/workbooks/notebooks.py:1878`
   — the existing `_install_net_instrumentation` pattern
   that T-NEW-070 mirrors.
+
+### T-NEW-071 — NchantdOfficeJournalSettings pro-tier editor (2026-08-10)
+
+**Status:** ✅ Resolved in commit `a9c1f6f` (2026-08-10,
+t-new-071 branch).
+
+Per `testing-report_20260810.md` line 17:
+> "many people will not like the no edit so we can offer
+> those settings to adjust function in the pro users settings
+> tabs".
+
+**What this card ships:**
+
+- New "Journal Editor (Pro tier)" group in
+  `NchantdOfficeJournalSettings.initView` with two checkboxes:
+  - "Allow Editing on Entry" — controlled by
+    `cmd_set_journal_edit_enable`.
+  - "Allow Editing on Re-Entry" — controlled by
+    `cmd_set_journal_reedit_enable`.
+- Both checkboxes are **gated on `is_pro_user(user)`**:
+  non-pro users see them as `setEnabled(False)` with a
+  "Upgrade to Pro to enable journal entry editing."
+  tooltip; pro users can toggle freely.
+- `_resolve_user_is_pro()` helper reads `app.model.user.has_pro`
+  with safe fallbacks (returns False when missing — matches
+  `is_pro_user()` semantics).
+- `initModel` seeds `journal_edit_enable` /
+  `journal_reedit_enable` from `config.dikt` (default =
+  `user_is_pro`), so the values round-trip across app restarts.
+- The 5 other journal flags (`journal_date_insert_enable`,
+  `journal_editor_enable`, `journal_history_enable`,
+  `journal_history_expirary_length`,
+  `journal_share_instance_enable`, `journal_tree_enable`)
+  remain `None` (the upstream store-calls are commented out
+  in the original code) — out of scope for this card.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/config/journal_config.py` —
+  import `is_pro_user`, new `_resolve_user_is_pro` method,
+  `initModel` reads persisted flags, `initView` adds the
+  "Journal Editor (Pro tier)" group with two checkboxes,
+  two new `cmd_set_*` handlers, checkbox `toggled` signal
+  wired to the handlers.
+- `tests/test_journal_settings_pro_tier.py` (new file, 8 tests).
+
+**Migration plan:**
+
+1. Add `_resolve_user_is_pro()` helper. ✅
+2. Wire `initModel` to read `journal_edit_enable` /
+   `journal_reedit_enable` from `config.dikt` with
+   `user_is_pro` as the default. ✅
+3. Add the "Journal Editor (Pro tier)" group to
+   `initView`. ✅
+4. Apply pro-tier gating (`setEnabled(False)` + tooltip for
+   non-pro users). ✅
+5. Add `cmd_set_journal_edit_enable` /
+   `cmd_set_journal_reedit_enable` handlers. ✅
+6. Wire `checkbox.toggled.connect(cmd_set_*)`. ✅
+7. Pin 8 tests in
+   `tests/test_journal_settings_pro_tier.py`. ✅
+
+**Verification (real):**
+
+- `pytest tests/test_journal_settings_pro_tier.py tests/test_notebook_click_capture.py tests/test_notebook_url_sync.py tests/test_browser_url_history.py tests/test_browser_db_roundtrip.py tests/test_filesystem_location_memory.py tests/test_compact_journal_content.py tests/test_script_no_missing_text.py tests/test_image_aspect_ratio.py tests/test_update_checker.py tests/test_update_checker_review.py tests/test_update_checker_boot_hook.py tests/test_update_checker_interval.py tests/test_dismiss_version_duration.py -q`
+  → **80 passed, 0 failed** (8 new + 72 pre-existing).
+- `python cmds/_review_update_process.py` → fresh-server
+  scenario still green.
+- `ruff check nchantdoffice/widgets/config/journal_config.py` → clean.
+- `ast.parse(open('nchantdoffice/widgets/config/journal_config.py').read())` → no errors.
+
+**Refs:**
+
+- `testing-report_20260810.md` line 17 — user-reported requirement.
+- `nchantdoffice/utilities/upgrades.py:95` — `is_pro_user(user)`
+  used to gate the checkboxes.
+- `nchantdoffice/widgets/config/journal_config.py:97` — the
+  commented-out `journal_edit_enable` /
+  `journal_reedit_enable` block that this card activates.
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 
