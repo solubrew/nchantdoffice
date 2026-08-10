@@ -57,7 +57,7 @@
 - **T-NEW-060** ✅ Tray icon + per-version snooze (`dismiss_version(days=7)`), commit `619b493` (2026-08-10, t-new-060).
 - **T-NEW-062** ✅ Notebook Jupyter-side URL sync (`_sync_notebook_from_url`), commit `126489b` (2026-08-10, t-new-062).
 - **T-NEW-063** ✅ Image aspect-ratio preservation, commit `f879e47` (2026-08-10, t-new-063).
-- **T-NEW-064** ✅ Script tab "Missing Text" stub removed — `NchantdOfficeScript.initView` sets `config.dikt["default_text"] = ""` before constructing `NchantdDocEditor` so the upstream fallback returns empty string, not "Missing Text". 3 tests in `tests/test_script_no_missing_text.py`.
+- **T-NEW-064** ✅ Script tab "Missing Text" stub removed, commit `6a1b9e2` (2026-08-10, t-new-064).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1838,8 +1838,8 @@ fixes the new symptom while keeping the old fix's benefits.
 
 ### T-NEW-064 — Script tab "Missing Text" stub removed (2026-08-10)
 
-**Status:** ✅ Resolved. Implementation commit hash backfilled
-in the follow-up commit per the T-NEW single-repo lifecycle.
+**Status:** ✅ Resolved in commit `6a1b9e2` (2026-08-10,
+t-new-064 branch).
 
 Per `testing-report_20260810.md` line 12:
 > "Meed to remove the \"Missing Text\" stub from new
