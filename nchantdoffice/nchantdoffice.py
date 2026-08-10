@@ -102,9 +102,12 @@ class NchantdOfficeCloak(NchantdCloak):
         # call run_update_process() directly so they don't need to
         # instantiate the full NchantdOfficeCloak (which is a Qt
         # singleton).
+        # T-NEW-060: pass self.main so the tray icon can be
+        # populated when an update-available response comes back.
         run_update_process(
             dbupdate=self.dbupdate,
             update_checker=self.update_checker,
+            main_window=self.main,
         )
         return self
 
@@ -160,6 +163,21 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
         super().__init__(parent, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeMainWindow").override(cfg))
+        # T-NEW-060 — QSystemTrayIcon for update notifications.
+        # The icon is created in __init__ (cheap; no menu yet) so
+        # that callers can wire menu actions later without re-checking
+        # ``QSystemTrayIcon.isSystemTrayAvailable()``. The tray is
+        # populated when UpdateChecker.check() returns an
+        # update-available response — see
+        # ``_populate_update_tray_menu()``.
+        self.tray_icon = None
+        if pyqt is not None and hasattr(pyqt, "QSystemTrayIcon"):
+            try:
+                self.tray_icon = pyqt.QSystemTrayIcon(self)
+            except Exception as e:
+                logma.warning(
+                    f"[NchantdOfficeMainWindow] QSystemTrayIcon init failed: {e}"
+                )
 
     def initModel(self, cfg=None):
         """"""
@@ -181,13 +199,112 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
         """ "" """
         super().hideEvent(event)
 
+    def _populate_update_tray_menu(self, info):
+        """T-NEW-060: populate the tray icon menu with the latest
+        update notification + dismiss action.
+
+        Wired from ``run_update_process()`` when
+        ``UpdateChecker.check()`` returns an ``UpdateInfo`` with
+        ``update_available=True`` AND ``is_dismissed(latest_version)``
+        is False. The dismiss action calls
+        ``dismiss_version(latest_version, days=DISMISS_DURATION_DAYS)``
+        which writes the snooze to ``~/.nchantd/state.yaml``.
+
+        No-op when the tray icon is unavailable (no system tray in
+        the user's environment) or when the version is already
+        dismissed.
+
+        Parameters
+        ----------
+        info : UpdateInfo
+            The result of ``UpdateChecker.check()``. Only
+            ``latest_version`` and ``download_url`` are read here.
+        """
+        if self.tray_icon is None:
+            return
+        # Lazy imports — keep the module surface small when the
+        # system tray is unavailable (e.g. headless venv tests).
+        try:
+            from nchantdoffice.updates.checker import (
+                DISMISS_DURATION_DAYS,
+                dismiss_version,
+                is_dismissed,
+            )
+        except Exception:
+            return
+        if info is None or not info.latest_version:
+            return
+        if is_dismissed(info.latest_version):
+            logma.info(
+                f"[NchantdOfficeMainWindow] _populate_update_tray_menu: "
+                f"version {info.latest_version!r} is dismissed; skipping."
+            )
+            return
+        try:
+            menu = pyqt.QMenu()
+            version_action = menu.addAction(
+                f"New version available: {info.latest_version}"
+            )
+            version_action.setEnabled(False)  # label only
+            if info.download_url:
+                download_action = menu.addAction("Open download page")
+                # Capture info.download_url for the lambda — avoid
+                # the classic Python closure-over-loop-variable bug
+                # by binding as default arg.
+                download_action.triggered.connect(
+                    lambda checked=False, url=info.download_url: self._open_url(url)
+                )
+            dismiss_action = menu.addAction(
+                f"Dismiss for {DISMISS_DURATION_DAYS} days"
+            )
+            dismiss_action.triggered.connect(
+                lambda checked=False, v=info.latest_version: dismiss_version(v)
+            )
+            self.tray_icon.setContextMenu(menu)
+            self.tray_icon.show()
+            self.tray_icon.showMessage(
+                "NchantdOffice update available",
+                f"Version {info.latest_version} is now available.",
+                pyqt.QSystemTrayIcon.Information,
+                5000,  # 5-second balloon
+            )
+            logma.info(
+                f"[NchantdOfficeMainWindow] tray icon menu populated for "
+                f"version {info.latest_version!r}."
+            )
+        except Exception as e:
+            logma.warning(
+                f"[NchantdOfficeMainWindow] _populate_update_tray_menu failed: {e}",
+                exc_info=True,
+            )
+
+    def _open_url(self, url):
+        """Open ``url`` in the user's default browser (T-NEW-060).
+
+        Uses ``QDesktopServices.openUrl`` when available; falls
+        back to ``webbrowser.open`` when Qt's helper raises.
+        """
+        if not url:
+            return
+        try:
+            if hasattr(pyqt, "QDesktopServices") and hasattr(pyqt, "QUrl"):
+                pyqt.QDesktopServices.openUrl(pyqt.QUrl(url))
+                return
+        except Exception as e:
+            logma.warning(f"[NchantdOfficeMainWindow] QDesktopServices failed: {e}")
+        try:
+            import webbrowser
+            webbrowser.open(url)
+        except Exception as e:
+            logma.warning(f"[NchantdOfficeMainWindow] webbrowser.open failed: {e}")
+
 
 # ====================================================================================================================||
 # T-NEW-058 — module-level helper for the boot-hook logic.
 # ====================================================================================================================||
 
 
-def run_update_process(dbupdate, update_checker):
+def run_update_process(dbupdate, update_checker, main_window=None):
     """T-NEW-058: run the two update-process entry points at boot.
 
     Extracted from ``NchantdOfficeCloak.run_on_launch`` so that
@@ -199,6 +316,12 @@ def run_update_process(dbupdate, update_checker):
     upgrade nor the network check should ever block app startup.
     Failures are logged and swallowed.
 
+    T-NEW-060: when ``main_window`` is provided AND the checker
+    returns a non-dismissed update-available ``UpdateInfo``, the
+    tray icon menu is populated. The ``main_window`` argument is
+    optional so test scenarios can pass ``None`` (no tray
+    available) and still exercise the rest of the flow.
+
     Parameters
     ----------
     dbupdate : NchantdOfficeDBUpdate
@@ -208,15 +331,18 @@ def run_update_process(dbupdate, update_checker):
         The app-version update checker. ``check()`` polls the server
         and caches the response; ``None`` return means the server was
         unreachable AND no fresh cache exists.
+    main_window : NchantdOfficeMainWindow, optional
+        The main window whose tray icon to populate when a new
+        version is available. Defaults to None (no tray wiring).
 
     Returns
     -------
     dict
         Summary of what ran: ``{"upgrade_run": bool, "checker_info":
-        Optional[UpdateInfo]}``. Useful for tests and for the
-        future T-NEW-060 tray icon.
+        Optional[UpdateInfo], "tray_populated": bool}``. Useful for
+        tests and for future debugging tools.
     """
-    summary = {"upgrade_run": False, "checker_info": None}
+    summary = {"upgrade_run": False, "checker_info": None, "tray_populated": False}
 
     # Schema upgrade — guarded by _upgrade_lock inside
     # NchantdOfficeDBUpdate so a double-invocation is harmless.
@@ -242,6 +368,21 @@ def run_update_process(dbupdate, update_checker):
                 f"latest_version={info.latest_version!r} "
                 f"update_available={info.update_available!r}"
             )
+            # T-NEW-060: populate the tray icon menu when an
+            # update is available AND the user hasn't dismissed it.
+            if (
+                info.update_available
+                and main_window is not None
+                and hasattr(main_window, "_populate_update_tray_menu")
+            ):
+                try:
+                    main_window._populate_update_tray_menu(info)
+                    summary["tray_populated"] = True
+                except Exception as e:
+                    logma.warning(
+                        f"[run_update_process] tray icon population failed: {e}",
+                        exc_info=True,
+                    )
     except Exception as e:
         logma.warning(
             f"[run_update_process] update_checker.check() failed: {e}",
