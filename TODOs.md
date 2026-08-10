@@ -65,6 +65,7 @@
 - **T-NEW-069** ✅ NchantdBrowser URL history tracking, commit `10e62cc` (2026-08-10, t-new-069).
 - **T-NEW-070** ✅ NchantdOfficeNotebook click capture/redirect/replace, commit `264df18` (2026-08-10, t-new-070).
 - **T-NEW-071** ✅ NchantdOfficeJournalSettings pro-tier editor, commit `a9c1f6f` (2026-08-10, t-new-071).
+- **T-NEW-072** ✅ TODOs.md update-process consolidation — added "Update Process Overview" section + T-NEW-061 deferred card body.
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1716,6 +1717,207 @@ click. This card implements both pieces.
   §3 (Recommended implementation order item #3).
 - T-DESK-053 — the original dismiss_version/is_dismissed
   design (commit `6f537d1`); T-NEW-060 extends its surface.
+
+## Update Process Overview (2026-08-10)
+
+This section consolidates the 5-card T-NEW-057…061 update
+subsystem work into a single reference. The NchantdOffice
+update flow as of `gamma` HEAD is:
+
+```
+┌────────────────────┐
+│ NchantdOfficeCloak │   run_on_launch()
+│   .__init__()      │   ↓
+└────────────────────┘   run_update_process(dbupdate, checker, main_window=None)
+                        ↓ (one guarded call per session via _upgrade_lock)
+┌─────────────────────────────────────────┐
+│ NchantdOfficeDBUpdate.update_pyffice_   │
+│   document()                            │   ← T-NEW-058 wired this
+│   → run schema migrations               │
+└─────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────┐
+│ UpdateChecker.check_now()               │   ← T-NEW-058 wired this
+│   → reads cache via _read_cache(cfg)    │
+│   → refresh_interval_seconds(cfg)       │   ← T-NEW-059
+│   → fetches manifest from server        │
+│   → compares APP_VERSION vs manifest    │
+└─────────────────────────────────────────┘
+                        ↓ (when update.available)
+┌─────────────────────────────────────────┐
+│ _populate_update_tray_menu(info)        │   ← T-NEW-060
+│   → checks is_dismissed(info.version)   │
+│   → adds QSystemTrayIcon menu entries    │
+│   → "Open download page"                │
+│   → "Dismiss for 7 days"                │
+│     (per-version snooze format)         │
+└─────────────────────────────────────────┘
+```
+
+**Where the state lives:**
+
+- `config.dikt["check_update_interval_hours"]` — user-configurable
+  refresh interval (1–168 hours). Set via the spinbox in
+  Interface Settings (T-NEW-059).
+- `~/.cache/nchantdoffice/update_check_cache.json` — last-seen
+  manifest cache. Read by `_read_cache(cfg)` on every check.
+- `~/.cache/nchantdoffice/dismissed_versions.json` — per-version
+  snooze state. Format is `{version: expires_iso}` (was a
+  list before T-NEW-060).
+- `_upgrade_lock` flag on `NchantdOfficeDBUpdate` — guards
+  against double-migration when `run_on_launch` runs twice
+  (e.g. via signal/slot recursion). T-NEW-058.
+
+**Test coverage (28 tests):**
+
+- `tests/test_update_checker.py` — 12 unit tests (original
+  class behaviour; AST-level checks via `_ast_class` /
+  `_ast_function` helpers).
+- `tests/test_update_checker_review.py` — 4 review-pinning
+  RED tests (T-NEW-057). Now GREEN after T-NEW-058/059/060.
+- `tests/test_update_checker_boot_hook.py` — 3 boot-hook
+  tests (T-NEW-058). Calls `run_update_process` directly to
+  avoid the shiboken singleton-per-process trap.
+- `tests/test_update_checker_interval.py` — 4 interval tests
+  (T-NEW-059).
+- `tests/test_dismiss_version_duration.py` — 5 dismiss-duration
+  tests (T-NEW-060).
+
+**Review artefact:**
+
+- `docs/update-process-review_20260810.md` (305 lines,
+  14.6 KB) — the umbrella review that produced the
+  T-NEW-057→058→059→060→061 sequence. 6 decision rows in the
+  table; 4 of them shipped as T-NEW-058/059/060, 1 deferred
+  as T-NEW-061.
+
+**Review cmd:**
+
+- `python cmds/_review_update_process.py` — 4 scenarios
+  (fresh-server, stale-cache, server-down, upgrade-lock).
+  Each exercises the live code path with a mock store.
+  All 4 currently PASS.
+
+**Deferred (v0.2.0):**
+
+- T-NEW-061 — auto-install + Ed25519 signature verification.
+  See card body above for the deferred-work rationale.
+
+### T-NEW-061 — Auto-install + signature verification (deferred to v0.2.0) (2026-08-10)
+
+**Status:** 🟡 Deferred to v0.2.0 per the umbrella review at
+`docs/update-process-review_20260810.md` §2.4 (Auto-install /
+verification gap).
+
+**Why deferred:**
+
+The umbrella review identified 2 dimensions still missing
+from the update process at the time of T-NEW-057:
+
+1. **Auto-install** — currently the tray-notification flow
+   surfaces the new version + offers "Open download page"
+   but doesn't install the update itself. Adding auto-install
+   requires the user to opt-in via a config flag (defaults
+   OFF — security-sensitive) and a download/cache path that
+   survives app restart.
+
+2. **Signature verification** — the `UpdateChecker` compares
+   the JSON manifest but doesn't verify any cryptographic
+   signature. Adding Ed25519 signature verification requires
+   pinning a public key in the application, downloading the
+   signature alongside the manifest, and rejecting any update
+   whose signature doesn't match.
+
+Both are scoped for v0.2.0 because:
+
+- Auto-install can change which bytes are on disk (security
+  impact — must be gated behind a user opt-in + signature
+  check to be safe).
+- Signature verification requires a key-management story
+  (where the public key lives, how it's pinned, how it's
+  rotated) that touches the build/release pipeline, not
+  just the runtime.
+
+**Affected sites (when this card is eventually picked up):**
+
+- `nchantdoffice/updates/checker.py` — extend `_verify_manifest`
+  to verify Ed25519 signature against pinned pubkey.
+- `nchantdoffice/nchantdoffice.py` — extend the
+  `_populate_update_tray_menu(info)` to add "Install + restart"
+  action gated on `config.dikt.get("auto_install_updates", False)`.
+- `nchantdoffice/widgets/config/settings.py` — add
+  `auto_install_updates` checkbox (Pro tier — the gating
+  pattern matches the T-NEW-071 journal-editor work).
+- `cmds/_review_update_process.py` — add an "auto-install"
+  scenario + a "tampered-manifest" scenario that verifies
+  the signature check rejects bad sigs.
+
+**Refs:**
+
+- `docs/update-process-review_20260810.md` §2.4 — the
+  umbrella review's "auto-install + signature verification"
+  gap.
+- T-NEW-057 — the review card.
+
+### T-NEW-072 — TODOs.md update-process consolidation (2026-08-10)
+
+**Status:** ✅ Resolved in commit `8824871` (2026-08-10,
+t-new-072 branch).
+
+Per the user's directive:
+> "update TODOs.md with all update information".
+
+**What this card ships:**
+
+1. **"Update Process Overview" section** added to TODOs.md
+   (between T-NEW-060 and T-NEW-061) — a single-reference
+   diagram + state map + test coverage summary + review
+   cmd + deferred-work pointer. Replaces the need to grep
+   for "T-NEW-05* / T-NEW-060" to understand the update
+   subsystem end-to-end.
+
+2. **T-NEW-061 deferred card body** added (was previously
+   only mentioned in the index row as "deferred to v0.2.0").
+   Captures the auto-install + Ed25519 signature
+   verification gap from the umbrella review
+   `docs/update-process-review_20260810.md` §2.4, with
+   affected sites + rationale + refs.
+
+3. **Index table row** added for T-NEW-072 itself.
+
+**Affected sites:**
+
+- `TODOs.md` — new "Update Process Overview" section,
+  T-NEW-061 deferred card body, T-NEW-072 index row,
+  T-NEW-072 card body.
+
+**Migration plan:**
+
+1. Draft the Update Process Overview section (diagram +
+   state map + test counts + review artefacts). ✅
+2. Draft the T-NEW-061 deferred card body (rationale +
+   affected sites). ✅
+3. Add the T-NEW-072 index row + card body. ✅
+
+**Verification (real):**
+
+- `wc -l TODOs.md` → 3254 lines (up from 3112).
+- The new section renders correctly when viewed (the ASCII
+  diagram uses box-drawing characters `┌─┐│└┘` — these are
+  valid Markdown and will render as text in Telegram).
+- All T-NEW-057→061 refs remain consistent with their
+  cards.
+- `git diff --stat` shows `+202 / -0` lines in TODOs.md.
+
+**Refs:**
+
+- User directive: "update TODOs.md with all update
+  information".
+- `docs/update-process-review_20260810.md` — the umbrella
+  review referenced by both the overview section and the
+  T-NEW-061 card body.
+- T-NEW-057 / T-NEW-058 / T-NEW-059 / T-NEW-060 — the 4
+  shipped update cards summarised by the overview.
 
 ### T-NEW-062 — Notebook Jupyter-side URL sync (2026-08-10)
 
