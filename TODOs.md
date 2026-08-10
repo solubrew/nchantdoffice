@@ -63,7 +63,7 @@
 - **T-NEW-067** ✅ PyfficeChart direct .xlsx loading — **landed in pyffice**. New `PyfficeChart.load_from_xlsx(file_path, chart_index=0, include_data=True)` opens a chart directly without going through Matrix. 4 tests in `tests/pyffice_unit/unit/charts/loadFromXlsxTEST.py`. Commit `3fb26cf` (pyffice gamma, merged as `b3aee3f`). User-facing: NchantdOfficeChart inherits the change automatically.
 - **T-NEW-068** ✅ NchantdFilesystem location memory, commit `46cb95f` (2026-08-10, t-new-068).
 - **T-NEW-069** ✅ NchantdBrowser URL history tracking, commit `10e62cc` (2026-08-10, t-new-069).
-- **T-NEW-070** ✅ NchantdOfficeNotebook click capture/redirect/replace — `cmd_register_click_handler`, `cmd_redirect_click`, `cmd_replace_click_action`, `cmd_drain_click_events` methods on NchantdOfficeNotebook. JS-side `QWebEngineScript` installed at DocumentCreation wraps `document.addEventListener('click', ...)`. 9 tests in `tests/test_notebook_click_capture.py`.
+- **T-NEW-070** ✅ NchantdOfficeNotebook click capture/redirect/replace, commit `264df18` (2026-08-10, t-new-070).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -2119,8 +2119,8 @@ Per `testing-report_20260810.md` line 28:
 
 ### T-NEW-070 — NchantdOfficeNotebook click capture / redirect / replace (2026-08-10)
 
-**Status:** ✅ Resolved. Implementation commit hash backfilled
-in the follow-up commit per the T-NEW single-repo lifecycle.
+**Status:** ✅ Resolved in commit `264df18` (2026-08-10,
+t-new-070 branch).
 
 Per the user's directive:
 > "NchantdOfficeNotebook create methods for capture all
