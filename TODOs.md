@@ -56,7 +56,7 @@
 - **T-NEW-059** ✅ User-configurable update-check interval — `refresh_interval_seconds(cfg)` helper + `cmd_on_change_check_update_interval_hours` spinbox + 4 interval tests, commit `10c8848` (2026-08-10, t-new-059).
 - **T-NEW-060** ✅ Tray icon + per-version snooze (`dismiss_version(days=7)`), commit `619b493` (2026-08-10, t-new-060).
 - **T-NEW-062** ✅ Notebook Jupyter-side URL sync (`_sync_notebook_from_url`), commit `126489b` (2026-08-10, t-new-062).
-- **T-NEW-063** ✅ Image aspect-ratio preservation — post-init override on the inner `NchantdImage.label` (set `setMaximumHeight(parent_height)` + `setSizePolicy(Preferred, Preferred)`) so Qt honours the aspect ratio instead of stretching both axes. 3 tests in `tests/test_image_aspect_ratio.py`.
+- **T-NEW-063** ✅ Image aspect-ratio preservation, commit `f879e47` (2026-08-10, t-new-063).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1777,8 +1777,8 @@ reopen.
 
 ### T-NEW-063 — Image aspect-ratio preservation (2026-08-10)
 
-**Status:** ✅ Resolved. Implementation commit hash backfilled
-in the follow-up commit per the T-NEW single-repo lifecycle.
+**Status:** ✅ Resolved in commit `f879e47` (2026-08-10,
+t-new-063 branch).
 
 Per `testing-report_20260810.md` line 6:
 > "NchantdOfficeImage is stretching images to fit height and
