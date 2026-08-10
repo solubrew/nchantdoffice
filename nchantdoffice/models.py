@@ -1216,8 +1216,140 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """"""
         if self.has_changed is True:
             self.auto_save()
+        # T-NEW-065: journal-content compaction (per testing-report
+        # _20260810.md line 18 — "will need a process cto compact
+        # the journal app_media_content table to stop growth out
+        # of control"). Wrapped in try/except so a compaction
+        # failure does NOT block application close.
+        try:
+            self.compact_journal_content()
+        except Exception as e:
+            logma.warning(
+                f"[close_application] compact_journal_content failed: {e}",
+                exc_info=True,
+            )
         self.store.compact_database()
         return self
+
+    def compact_journal_content(
+        self, max_versions_per_doc=30, db="db",
+    ):
+        """T-NEW-065: prune old versions from ``app_media_content``.
+
+        Reads the ``app_media_content`` table, groups rows by
+        ``pUUID`` (the parent document UUID), and deletes every
+        row whose ``version_int`` is below the per-group cutoff
+        (the top ``max_versions_per_doc`` versions are kept).
+
+        The default of 30 versions per parent matches the
+        commented-out ``_archive_versions(table, uuid, gcolumn,
+        dcolumn, max_versions=3)`` design intent at
+        ``models.py:3791`` (the upstream call was left
+        commented-out; this card ships a working version with
+        a more generous default of 30 because journal entries
+        are smaller than typical doc payloads).
+
+        Returns a tuple ``(rows_scanned, rows_deleted)`` for
+        the test + monitoring layer to surface in the log.
+
+        Scope deliberately narrow:
+          - **Version-based only** — the schema has no
+            ``MODON_DTTM``/``created_at`` column (see
+            ``_APP_MEDIA_CONTENT_COLUMNS`` line 3806), so
+            time-based retention is out of scope. Future card
+            T-NEW-066 can add a timestamp column +
+            time-based policy.
+          - **No data-policy lookup** — the upstream
+            ``compact_database`` references a "Data Retention
+            Policy" via ``get_app_policy`` that has no
+            concrete schema in this codebase. This method
+            uses the ``max_versions_per_doc`` argument as
+            the only knob; future card T-NEW-067 can wire
+            the data-policy layer.
+          - **No mark-for-deletion phase** — deletes are
+            immediate. The ``delete_marked`` pattern referenced
+            everywhere in the storage chain is itself
+            unimplemented (see ``micromole/storage.py:309``);
+            that work belongs to its own card.
+        """
+        import pandas as pd
+
+        table = "app_media_content"
+        rows_scanned = 0
+        rows_deleted = 0
+        try:
+            df = self.store.get_table(table, {}, db)
+            if df is None or (isinstance(df, pd.DataFrame) and df.empty):
+                logma.info(
+                    f"[compact_journal_content] {table} is empty; no-op."
+                )
+                return (rows_scanned, rows_deleted)
+            rows_scanned = len(df)
+            # Group by pUUID, sort each group by version_int
+            # descending, and mark rows beyond the cutoff for
+            # deletion. Uses vectorized pandas ops (no
+            # row-by-row apply) — matches the upstream
+            # ``compact_table`` style at ``micromole/storage.py:336``.
+            if "pUUID" not in df.columns or "version_int" not in df.columns or "UUID" not in df.columns:
+                logma.warning(
+                    f"[compact_journal_content] table {table} is missing "
+                    f"required columns (pUUID / version_int / UUID); "
+                    f"got columns={list(df.columns)!r}; skipping."
+                )
+                return (rows_scanned, rows_deleted)
+            # Rank each row by version_int within its pUUID group.
+            # ``method='first'`` so ties (rare) keep the lowest UUID.
+            df = df.sort_values(
+                by=["pUUID", "version_int"], ascending=[True, False],
+            )
+            df["_rank"] = (
+                df.groupby("pUUID")["version_int"]
+                .rank(method="first", ascending=False)
+            )
+            to_delete = df[df["_rank"] > max_versions_per_doc]
+            if to_delete.empty:
+                logma.info(
+                    f"[compact_journal_content] no rows exceed "
+                    f"max_versions_per_doc={max_versions_per_doc}; "
+                    f"scanned={rows_scanned}, deleted=0."
+                )
+                return (rows_scanned, rows_deleted)
+            uuids_to_delete = to_delete["UUID"].astype(str).tolist()
+            # Best-effort delete — the storage layer's delete API
+            # shape varies; try the canonical WHERE-IN form first,
+            # fall back to per-row delete if that fails.
+            try:
+                self.store.docs[db].delete(
+                    table, {"WHERE": {"IN": {"UUID": uuids_to_delete}}},
+                )
+                rows_deleted = len(uuids_to_delete)
+            except Exception as bulk_err:
+                logma.warning(
+                    f"[compact_journal_content] bulk delete failed "
+                    f"({bulk_err}); falling back to per-row delete."
+                )
+                for uuid_str in uuids_to_delete:
+                    try:
+                        self.store.docs[db].delete(
+                            table, {"WHERE": {"EQUAL": {"UUID": uuid_str}}},
+                        )
+                        rows_deleted += 1
+                    except Exception as row_err:
+                        logma.warning(
+                            f"[compact_journal_content] delete {uuid_str} failed: "
+                            f"{row_err}"
+                        )
+            logma.info(
+                f"[compact_journal_content] done: "
+                f"scanned={rows_scanned}, deleted={rows_deleted}, "
+                f"max_versions_per_doc={max_versions_per_doc}."
+            )
+        except Exception as e:
+            logma.warning(
+                f"[compact_journal_content] failed: {e}",
+                exc_info=True,
+            )
+        return (rows_scanned, rows_deleted)
 
     def convert_database(self, version_from, version_to):
         """"""
