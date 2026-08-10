@@ -53,7 +53,7 @@
 - **T-NEW-056** ✅ Cap total nodes per non-pro user at 100 (configurable) — fixed
 - **T-NEW-057** ✅ Review doc + cmd + RED regression tests landed in commit `bcfb730` (2026-08-10, gamma). Implementation follow-up is T-NEW-058 / T-NEW-059 / T-NEW-060 / T-NEW-061.
 - **T-NEW-058** ✅ Wire `UpdateChecker` + DBUpdate into boot — `_upgrade_lock` flag + `run_update_process` helper + 3 boot-hook tests, commit `c85fcf4` (2026-08-10, t-new-058).
-- **T-NEW-059** ✅ User-configurable update-check interval — `refresh_interval_seconds(cfg)` helper + `cmd_on_change_check_update_interval_hours` spinbox + 4 interval tests in `tests/test_update_checker_interval.py`. Pinned the T-NEW-057 RED test `test_refresh_interval_is_function_or_configurable` to GREEN.
+- **T-NEW-059** ✅ User-configurable update-check interval — `refresh_interval_seconds(cfg)` helper + `cmd_on_change_check_update_interval_hours` spinbox + 4 interval tests, commit `10c8848` (2026-08-10, t-new-059).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1558,8 +1558,8 @@ recommendation #1.
 
 ### T-NEW-059 — User-configurable update-check interval (2026-08-10)
 
-**Status:** ✅ Resolved. Implementation commit hash backfilled
-in the follow-up commit per the T-NEW single-repo lifecycle.
+**Status:** ✅ Resolved in commit `10c8848` (2026-08-10,
+t-new-059 branch).
 
 The T-NEW-057 review doc §2.1 decided that the 6h polling cadence
 should stay the default for v0.1.0 but become user-configurable.
