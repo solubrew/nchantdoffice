@@ -67,7 +67,7 @@
 | Project | NchantdOffice |
 | Type | Desktop GUI application (PySide6) |
 | Branch | `gamma` (in sync with `origin/gamma`) |
-| HEAD | TBD (this commit lands; backfilled in follow-up) |
+| HEAD | `bcfb730` (nchantdoffice/gamma) |
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
 | Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests -q` |
@@ -1363,11 +1363,9 @@ a non-pro user can create at 100. Pro users (those with
 
 ### T-NEW-057 — Review and upgrade the NchantdOffice update process (2026-08-10)
 
-**Status:** ⚠️ Open (review doc + cmd + RED regression tests
-landed; implementation follow-up is T-NEW-058 / T-NEW-059 /
-T-NEW-060 / T-NEW-061). Implementation land-target commit hash
-to be backfilled in a follow-up commit per the T-NEW single-repo
-lifecycle.
+**Status:** ✅ Review doc + cmd + RED regression tests landed
+in commit `bcfb730` (2026-08-10, gamma). Implementation
+follow-up is T-NEW-058 / T-NEW-059 / T-NEW-060 / T-NEW-061.
 
 Per user directive ("add TODO to review and upgrade the NchantdOffice
 update process"), the existing update path has two distinct concerns
