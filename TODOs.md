@@ -51,7 +51,7 @@
 - **T-NEW-054** ✅ Cap tabs per node (adjustable param, default 35) — fixed
 - **T-NEW-055** ✅ NchantdOfficePalette integration with NchantdOfficeImage toolbar — fixed
 - **T-NEW-056** ✅ Cap total nodes per non-pro user at 100 (configurable) — fixed
-- **T-NEW-057** ⚠️ Open: Review and upgrade the NchantdOffice update process — see full card below
+- **T-NEW-057** ⚠️ Open: Review and upgrade the NchantdOffice update process — review doc at `docs/update-process-review_20260810.md`; cmd at `cmds/_review_update_process.py`; follow-up cards T-NEW-058 / T-NEW-059 / T-NEW-060 / T-NEW-061 derived from the review.
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -67,11 +67,11 @@
 | Project | NchantdOffice |
 | Type | Desktop GUI application (PySide6) |
 | Branch | `gamma` (in sync with `origin/gamma`) |
-| HEAD | `9467990` (nchantdoffice/gamma) |
+| HEAD | TBD (this commit lands; backfilled in follow-up) |
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
 | Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests -q` |
-| Current test surface | **410 passed, 6 skipped, 0 failed** (2026-08-06) |
+| Current test surface | 12 + 4 RED in tests/test_update_checker_review.py (T-NEW-057 follow-up tests, all failing as designed awaiting T-NEW-058/059/060 implementation) |
 
 ### Internal-project stack (CORE INTEGRATED)
 
@@ -1362,6 +1362,12 @@ a non-pro user can create at 100. Pro users (those with
 **Regression test:** `tests/test_max_nodes_per_user.py` (22 tests).
 
 ### T-NEW-057 — Review and upgrade the NchantdOffice update process (2026-08-10)
+
+**Status:** ⚠️ Open (review doc + cmd + RED regression tests
+landed; implementation follow-up is T-NEW-058 / T-NEW-059 /
+T-NEW-060 / T-NEW-061). Implementation land-target commit hash
+to be backfilled in a follow-up commit per the T-NEW single-repo
+lifecycle.
 
 Per user directive ("add TODO to review and upgrade the NchantdOffice
 update process"), the existing update path has two distinct concerns
