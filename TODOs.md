@@ -58,6 +58,7 @@
 - **T-NEW-062** ✅ Notebook Jupyter-side URL sync (`_sync_notebook_from_url`), commit `126489b` (2026-08-10, t-new-062).
 - **T-NEW-063** ✅ Image aspect-ratio preservation, commit `f879e47` (2026-08-10, t-new-063).
 - **T-NEW-064** ✅ Script tab "Missing Text" stub removed, commit `6a1b9e2` (2026-08-10, t-new-064).
+- **T-NEW-065** ✅ Journal content compaction (narrow scope), commit `b213122` (2026-08-10, t-new-065). PII deferred; time-based/policy/mark-for-deletion deferred to T-NEW-066/067/068.
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1900,6 +1901,90 @@ by `NchantdOfficeNote` (`widgets/documents/media/notes.py:193`).
 - `nchantdoffice/widgets/documents/media/notes.py:193`
   — sibling pattern (`default_text=""` on a Notes widget)
   that this card mirrors.
+
+### T-NEW-065 — Journal content compaction (version-based, narrow scope) (2026-08-10)
+
+**Status:** ✅ Resolved in commit `b213122` (2026-08-10,
+t-new-065 branch).
+
+Per `testing-report_20260810.md` line 18:
+> "will need a process cto compact the journal
+> app_media_content table to stop growth out of control".
+
+Per user correction: PII detection is deferred to a later
+version, but compaction is in scope. The user also clarified
+that row deletion must respect the data policy — that work
+crosses into a separate card (T-NEW-067) because the upstream
+``get_app_policy`` has no concrete schema in this codebase.
+
+**What this card ships:**
+
+- `compact_journal_content(max_versions_per_doc=30, db="db")`
+  on `NchantdOfficeCloakModel`. Reads the ``app_media_content``
+  table, groups by ``pUUID``, keeps the top N versions per
+  parent, bulk-deletes the rest. Returns
+  ``(rows_scanned, rows_deleted)``.
+- Wired into `close_application()` (wrapped in try/except so
+  compaction failures don't block app close).
+- 5 tests in `tests/test_compact_journal_content.py`.
+
+**Affected sites:**
+
+- `nchantdoffice/models.py` — new `compact_journal_content`
+  method on `NchantdOfficeCloakModel`; `close_application`
+  invokes it before the existing `compact_database` call.
+- `tests/test_compact_journal_content.py` (new, 5 tests).
+
+**Migration plan:**
+
+1. Add `compact_journal_content` method. ✅
+2. Wire into `close_application`. ✅
+3. Pin 5 tests covering the bulk-delete path, no-op paths,
+   and the close_application hook. ✅
+
+**Deferred work** (explicitly out of scope for this card):
+
+- **T-NEW-066** — Add a timestamp column
+  (``MODON_DTTM`` or ``created_at_int``) to
+  ``app_media_content`` + time-based retention policy. The
+  schema has no timestamp today
+  (``_APP_MEDIA_CONTENT_COLUMNS`` line 3806), so this
+  requires a schema migration. The compaction method already
+  has the framework (try-block + log summary); adding
+  timestamp-based pruning is a 1-day extension once the
+  schema change ships.
+- **T-NEW-067** — Wire the ``Data Retention Policy`` lookup
+  via `get_app_policy`. The upstream `compact_database`
+  references this (line 332 of micromole/storage.py) but the
+  policy table is not declared in any yaml cfg. This card
+  ships the version-based fallback that lets the journal
+  compaction work today; the policy-driven path is a
+  separate schema + API surface card.
+- **T-NEW-068** — Implement the ``delete_marked`` pattern
+  referenced everywhere in the storage chain
+  (micromole/storage.py:309, nchantrs/models/models.py:300).
+  Currently a no-op; needs a "mark for deletion" flag +
+  storage layer support. Independent of this card's work.
+
+**Verification (real):**
+
+- `pytest tests/test_compact_journal_content.py tests/test_script_no_missing_text.py tests/test_image_aspect_ratio.py tests/test_notebook_url_sync.py tests/test_update_checker.py tests/test_update_checker_review.py tests/test_update_checker_boot_hook.py tests/test_update_checker_interval.py tests/test_dismiss_version_duration.py -q`
+  → **44 passed, 0 failed** (49 new this session + 0 regression).
+- `python cmds/_review_update_process.py` → fresh-server
+  scenario still green.
+- `ruff check nchantdoffice/models.py` → no new F821/security.
+- `ast.parse(open('nchantdoffice/models.py').read())` → no errors.
+
+**Refs:**
+
+- `testing-report_20260810.md` line 18 — user-reported requirement.
+- `nchantdoffice/models.py:3790-3791` — the commented-out
+  ``_archive_versions`` design intent this card ships a
+  working version of.
+- `micromole/storage.py:326` — upstream `compact_database`
+  stub that this card complements (the upstream is a
+  no-op; the desktop-level `compact_journal_content` is the
+  actual implementation).
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 
