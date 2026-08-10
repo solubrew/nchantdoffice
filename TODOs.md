@@ -54,7 +54,7 @@
 - **T-NEW-057** ✅ Review doc + cmd + RED regression tests landed in commit `bcfb730` (2026-08-10, gamma). Implementation follow-up is T-NEW-058 / T-NEW-059 / T-NEW-060 / T-NEW-061.
 - **T-NEW-058** ✅ Wire `UpdateChecker` + DBUpdate into boot — `_upgrade_lock` flag + `run_update_process` helper + 3 boot-hook tests, commit `c85fcf4` (2026-08-10, t-new-058).
 - **T-NEW-059** ✅ User-configurable update-check interval — `refresh_interval_seconds(cfg)` helper + `cmd_on_change_check_update_interval_hours` spinbox + 4 interval tests, commit `10c8848` (2026-08-10, t-new-059).
-- **T-NEW-060** ✅ Tray icon + per-version snooze (`dismiss_version(days=7)`) — `DISMISS_DURATION_DAYS` constant + `_load_state`/`_save_state` format migration + `QSystemTrayIcon` on `NchantdOfficeMainWindow` + `_populate_update_tray_menu` helper + `run_update_process(main_window=...)` wiring + 5 dismiss-duration tests. Pinned the T-NEW-057 RED test `test_dismiss_version_accepts_days_parameter` to GREEN.
+- **T-NEW-060** ✅ Tray icon + per-version snooze (`dismiss_version(days=7)`), commit `619b493` (2026-08-10, t-new-060).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1625,8 +1625,8 @@ This card implements that decision.
 
 ### T-NEW-060 — Tray icon + per-version snooze (`dismiss_version(days=7)`) (2026-08-10)
 
-**Status:** ✅ Resolved. Implementation commit hash backfilled
-in the follow-up commit per the T-NEW single-repo lifecycle.
+**Status:** ✅ Resolved in commit `619b493` (2026-08-10,
+t-new-060 branch).
 
 The T-NEW-057 review doc §2.3 decided that the dismissed-versions
 state should be expanded from a flat list to a per-version snooze
