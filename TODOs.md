@@ -55,7 +55,7 @@
 - **T-NEW-058** ✅ Wire `UpdateChecker` + DBUpdate into boot — `_upgrade_lock` flag + `run_update_process` helper + 3 boot-hook tests, commit `c85fcf4` (2026-08-10, t-new-058).
 - **T-NEW-059** ✅ User-configurable update-check interval — `refresh_interval_seconds(cfg)` helper + `cmd_on_change_check_update_interval_hours` spinbox + 4 interval tests, commit `10c8848` (2026-08-10, t-new-059).
 - **T-NEW-060** ✅ Tray icon + per-version snooze (`dismiss_version(days=7)`), commit `619b493` (2026-08-10, t-new-060).
-- **T-NEW-062** ✅ Notebook Jupyter-side URL sync — `_sync_notebook_from_url` helper wires webview `urlChanged` to update `file_path` + URL dropdown + `last_notebook_path`, with 5 tests in `tests/test_notebook_url_sync.py`. Resolves the "notebook doesn't remember reopen" issue for the Jupyter filebrowser path (the user's `file open within the notebook filebrowser itself`).
+- **T-NEW-062** ✅ Notebook Jupyter-side URL sync (`_sync_notebook_from_url`), commit `126489b` (2026-08-10, t-new-062).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1710,8 +1710,8 @@ click. This card implements both pieces.
 
 ### T-NEW-062 — Notebook Jupyter-side URL sync (2026-08-10)
 
-**Status:** ✅ Resolved. Implementation commit hash backfilled
-in the follow-up commit per the T-NEW single-repo lifecycle.
+**Status:** ✅ Resolved in commit `126489b` (2026-08-10,
+t-new-062 branch).
 
 Per `testing-report_20260810.md` line 7:
 > "NchantdOfficeNotebook doesn't remember and restore when a
