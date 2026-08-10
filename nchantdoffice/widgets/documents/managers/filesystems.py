@@ -859,7 +859,17 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.fs_tree.setFixedWidth(self.width() * 0.15)
         self.fs_tree.setMinimumWidth(200)
         self.table_layout.addWidget(self.fs_tree)
-        self.show_tree(self.document.file_path)
+        # T-NEW-068 — restore last-visited directory on re-open.
+        # ``last_root_path`` was set by the previous session's
+        # ``show_tree`` call (or by an explicit ``cmd_set_root``).
+        # Falling back to ``self.document.file_path`` preserves
+        # the pre-existing behaviour for first-launch / no-history.
+        # ``last_root_path`` takes precedence because the user
+        # may have navigated to a sub-directory and saved that
+        # explicitly via ``cmd_set_root`` (which doesn't update
+        # ``self.document.file_path``).
+        restore_path = self._resolve_restore_path()
+        self.show_tree(restore_path)
         self.layout.addLayout(self.table_layout)
         self.cmd_on_node_selection()
         return self
@@ -1012,16 +1022,64 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
                 self.populate_table_two()
         return self
 
-    def cmd_go_home(self, event=None, *args, **kwargs):
-        """"""
-        self.fs_tree.current_level_path = expanduser("~")
-        return self.cmd_set_root()
+    def _resolve_restore_path(self):
+        """T-NEW-068 — pick the path ``initView`` should restore on re-open.
 
-    def cmd_set_root(self, event=None, *args, **kwargs):
-        """"""
-        logma.info(f"Command Set Root")
-        self.show_tree(self.fs_tree.current_level_path)
-        return self
+        Returns ``config.dikt["last_root_path"]`` when it is a
+        non-empty string; otherwise falls back to
+        ``self.document.file_path``. Pure function over
+        ``self.config.dikt`` + ``self.document.file_path`` —
+        no Qt state — so it's directly unit-testable.
+
+        Whitespace-only strings (e.g. ``"   "``) are treated
+        as unset so a previous bad write doesn't break
+        restoration.
+        """
+        last_root = self.config.dikt.get("last_root_path")
+        if (
+            last_root
+            and isinstance(last_root, str)
+            and last_root.strip()
+        ):
+            return last_root
+        return getattr(self.document, "file_path", None)
+
+    def cmd_go_home(self, event=None, path=None, *args, **kwargs):
+        """T-NEW-068 — navigate to a "home" directory.
+
+        Default ``path`` is ``expanduser("~")``. Accepts an
+        explicit ``path`` kwarg so callers / tests can override
+        without patching. Mirrors the new interface contract
+        requested by the user (testing-report_20260810.md
+        line 27: "need to nailed down the interface inputs").
+
+        Returns self for chainable callers.
+        """
+        if path is None or path == "":
+            path = expanduser("~")
+        self.fs_tree.current_level_path = path
+        return self.cmd_set_root(path=path)
+
+    def cmd_set_root(self, event=None, path=None, *args, **kwargs):
+        """T-NEW-068 — navigate to ``path`` (or the current
+        ``fs_tree.current_level_path`` when None).
+
+        Accepts an explicit ``path`` kwarg. Persists the
+        resolved path to ``config.dikt["last_root_path"]`` so
+        the next ``initView`` call (e.g. app restart) restores
+        the user to the same directory.
+
+        Returns self for chainable callers.
+        """
+        if path is None or path == "":
+            path = getattr(self.fs_tree, "current_level_path", None)
+        logma.info(f"[filesystems] Command Set Root path={path!r}")
+        if path:
+            self.fs_tree.current_level_path = path
+            # T-NEW-068 — persist so the next initView restores
+            # this directory.
+            self.config.dikt["last_root_path"] = path
+        return self.show_tree(path)
 
     def cmd_toggle_compare_directory(self, event=None, *args, **kwargs):
         """"""
@@ -1421,12 +1479,23 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         return self.config.dikt.get("file_binary", b"") or b""
 
     def show_tree(self, file=None):
-        """"""
+        """T-NEW-068 — show the file tree at ``file``.
+
+        Persists the resolved path to
+        ``config.dikt["last_root_path"]`` so the next
+        ``initView`` call (e.g. app restart) restores the
+        user to the same directory.
+        """
         if file is None or file == "":
             file = self.file_path
         if file == "":
             file = None
         logma.info(f"File Path {file}")
+        if file:
+            # T-NEW-068 — persist on every show_tree call so
+            # direct callers (and the initView restoration path)
+            # all converge on the same persisted state.
+            self.config.dikt["last_root_path"] = file
         self.document.open_file(file)
         self.fs_tree.set_root(file)
         self.populate_document()

@@ -61,6 +61,7 @@
 - **T-NEW-065** ✅ Journal content compaction (narrow scope), commit `b213122` (2026-08-10, t-new-065). PII deferred; time-based/policy/mark-for-deletion deferred to T-NEW-066/067/068.
 - **T-NEW-066** ✅ Matrix chart extraction from Excel workbooks — **landed in pyffice** (upstream of nchantdoffice). `PyfficeMatrix.load_excel()` now extracts charts from `ws._charts` via two new helpers (`_extract_charts_from_worksheet` + `_chart_from_openpyxl`). 5 tests in `tests/pyffice_unit/unit/matrix/chartExtractionTEST.py`. Commit `95a8d9f` (pyffice gamma, merged as `4ed8768`). User-facing: NchantdOfficeMatrix inherits the change automatically.
 - **T-NEW-067** ✅ PyfficeChart direct .xlsx loading — **landed in pyffice**. New `PyfficeChart.load_from_xlsx(file_path, chart_index=0, include_data=True)` opens a chart directly without going through Matrix. 4 tests in `tests/pyffice_unit/unit/charts/loadFromXlsxTEST.py`. Commit `3fb26cf` (pyffice gamma, merged as `b3aee3f`). User-facing: NchantdOfficeChart inherits the change automatically.
+- **T-NEW-068** ✅ NchantdFilesystem location memory — `initView` now restores the last-visited directory from `config.dikt["last_root_path"]` (with `document.file_path` fallback). New `_resolve_restore_path()` helper for the path-selection logic. `cmd_set_root` and `cmd_go_home` accept explicit `path=` kwargs and persist via `show_tree`. 9 tests in `tests/test_filesystem_location_memory.py`.
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1987,6 +1988,70 @@ crosses into a separate card (T-NEW-067) because the upstream
   stub that this card complements (the upstream is a
   no-op; the desktop-level `compact_journal_content` is the
   actual implementation).
+
+### T-NEW-068 — NchantdFilesystem location memory (2026-08-10)
+
+**Status:** ✅ Resolved. Implementation commit hash backfilled
+in the follow-up commit per the T-NEW single-repo lifecycle.
+
+Per `testing-report_20260810.md` lines 26–27:
+> "NchantdFilesystem still no maintaining location to
+> return back to ... need to nailed down the interface inputs".
+
+**What this card ships:**
+
+- `initView` now restores the last-visited directory from
+  `config.dikt["last_root_path"]` (with `document.file_path`
+  fallback when unset). The user returns to the same
+  directory after app restart.
+- New `_resolve_restore_path()` helper centralises the
+  path-selection logic. Whitespace-only or non-string
+  `last_root_path` is treated as unset so a previous bad
+  write doesn't break restoration.
+- `cmd_set_root(path=...)` accepts an explicit path kwarg
+  and persists the resolved path to
+  `config.dikt["last_root_path"]`.
+- `cmd_go_home(path=...)` accepts an explicit path kwarg
+  (default `expanduser("~")`) — pins the "interface
+  inputs nailed down" requirement.
+- `show_tree(path=...)` persists `last_root_path` on every
+  call so any caller (not just `cmd_set_root`) converges on
+  the same persisted state.
+
+**Affected sites:**
+
+- `nchantdoffice/widgets/documents/managers/filesystems.py` —
+  `initView`, `cmd_set_root`, `cmd_go_home`, `show_tree`,
+  and the new `_resolve_restore_path` helper.
+- `tests/test_filesystem_location_memory.py` (new file, 9 tests).
+
+**Migration plan:**
+
+1. Add `_resolve_restore_path` helper. ✅
+2. Wire `_resolve_restore_path` into `initView`. ✅
+3. Persist `last_root_path` in `show_tree`. ✅
+4. Extend `cmd_set_root` / `cmd_go_home` with explicit
+   `path=` kwarg. ✅
+5. Pin 9 tests in `tests/test_filesystem_location_memory.py`. ✅
+
+**Verification (real):**
+
+- `pytest tests/test_filesystem_location_memory.py tests/test_filesystem_persistence.py tests/test_compact_journal_content.py tests/test_script_no_missing_text.py tests/test_image_aspect_ratio.py tests/test_notebook_url_sync.py tests/test_update_checker.py tests/test_update_checker_review.py tests/test_update_checker_boot_hook.py tests/test_update_checker_interval.py tests/test_dismiss_version_duration.py -q`
+  → **55 passed, 0 failed** (9 new + 46 pre-existing).
+- `python cmds/_review_update_process.py` → fresh-server
+  scenario still green.
+- `ruff check nchantdoffice/widgets/documents/managers/filesystems.py` → clean.
+- `ast.parse(open('nchantdoffice/widgets/documents/managers/filesystems.py').read())` → no errors.
+
+**Refs:**
+
+- `testing-report_20260810.md` lines 26–27 — user-reported defect.
+- `nchantdoffice/widgets/documents/managers/filesystems.py:1015`
+  — original `cmd_go_home` (now accepts explicit path).
+- `nchantdoffice/widgets/documents/managers/filesystems.py:1020`
+  — original `cmd_set_root` (now persists).
+- `nchantdoffice/widgets/documents/managers/filesystems.py:1423`
+  — original `show_tree` (now persists).
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 
