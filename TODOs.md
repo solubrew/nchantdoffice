@@ -51,6 +51,7 @@
 - **T-NEW-054** ✅ Cap tabs per node (adjustable param, default 35) — fixed
 - **T-NEW-055** ✅ NchantdOfficePalette integration with NchantdOfficeImage toolbar — fixed
 - **T-NEW-056** ✅ Cap total nodes per non-pro user at 100 (configurable) — fixed
+- **T-NEW-057** ⚠️ Open: Review and upgrade the NchantdOffice update process — see full card below
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1359,6 +1360,123 @@ a non-pro user can create at 100. Pro users (those with
    the handler.
 
 **Regression test:** `tests/test_max_nodes_per_user.py` (22 tests).
+
+### T-NEW-057 — Review and upgrade the NchantdOffice update process (2026-08-10)
+
+Per user directive ("add TODO to review and upgrade the NchantdOffice
+update process"), the existing update path has two distinct concerns
+that have grown organically and need a focused review pass before
+the 0.1.0 push:
+
+1. **App-version update checker** — `updates/checker.py` polls
+   `GET /api/check-update` on startup + every `REFRESH_INTERVAL_SECONDS`
+   (6h), caches at `~/.nchantd/update_check_cache.json`, and surfaces
+   a "new version available" notification. Best-effort, no install
+   flow — a tray notification is the only user-visible result.
+2. **Document / schema upgrade** — `updates/db.py`
+   (`NchantdOfficeDBUpdate`) wraps `nchantrs.updates.db.NchantdDBUpdate`
+   and calls `self.parent.codex.update()` to migrate stored
+   Pyffice documents to the latest `SERIALIZATION_VERSION` per
+   document type.
+
+Open questions that the review must answer before any code lands:
+- Is the 6h polling interval the right cadence, or should it adapt
+  to user activity (foreground vs background)?
+- Should the desktop download and verify the new `.deb`/`pip` wheel
+  itself, or is the current "notify only" the intended v0.1.0 scope?
+- How does the dismissed-versions state (`state.yaml`) interact
+  with the tray icon — is the "snooze for 7 days" UX already
+  implemented or only stubbed in the cache file?
+- For the DB upgrade path, where does
+  `NchantdOfficeDBUpdate.update_pyffice_document()` get invoked
+  on boot, and is there a guard that prevents running it twice in
+  the same process? (The `nchantdoffice/models.py:1219
+  self.store.compact_database()` call on `close_application()` may
+  collide with the upgrade path.)
+- `APP_VERSION` in `utilities/constants.py:72` is `0.0.1.0.1.4` —
+  six-segment version. Does the server's `_parse_version()`
+  understand this shape, or does the desktop need a
+  semver-only fallback when comparing against the server's
+  `latest_version`?
+
+**Affected sites:**
+
+- `nchantdoffice/updates/checker.py` — the `UpdateChecker` class
+  (lines 137–end), the `UpdateInfo` dataclass (lines 80–129), and
+  the module-level constants (`REFRESH_INTERVAL_SECONDS`,
+  `CACHE_FILENAME`, `STATE_FILENAME`, `HTTP_TIMEOUT`,
+  `DEFAULT_CHECK_UPDATE_PATH` at lines 50–72).
+- `nchantdoffice/updates/db.py` — `NchantdOfficeDBUpdate` (lines
+  38–60), specifically `update_pyffice_document()` (line 49) and
+  the comment at line 57 flagging the missing per-row schema check.
+- `nchantdoffice/utilities/constants.py:72-79` — `APP_VERSION`,
+  `APP_VERSION_SHORT`, and the `_parse_version()` helper
+  referenced in the comment.
+- `nchantdoffice/models.py:1215-1220` — `close_application()`,
+  which calls `self.store.compact_database()`; potential
+  collision with the upgrade path.
+- `nchantdoffice/main.py` and `nchantdoffice/app.py` — the
+  startup hook that wires `UpdateChecker.check()` into the
+  boot sequence (location needs confirmation during the review).
+- `tests/test_update_checker.py` — current coverage scope (line
+  counts and missing-scenario inventory need to be confirmed).
+
+**Migration plan:**
+
+No priority tier — this is a design review first, code second.
+The output of step 1 (the review doc) is what determines what
+code lands.
+
+1. **Produce a review doc** at
+   `docs/update-process-review_20260810.md` covering: polling
+   cadence rationale, install-vs-notify decision, dismissed-state
+   UX, double-invocation guards, version-string compatibility
+   with the server, and a prioritized list of follow-up
+   T-NEW-NNN cards for each concrete improvement.
+2. **Add a `_review_update_process.py` cmd** under `cmds/` that
+   exercises the live `UpdateChecker` against a stubbed
+   `/api/check-update` response and prints the parsed
+   `UpdateInfo`. Used both for the review (smoke test the
+   parser/serializer) and as the foundation for an integration
+   test.
+3. **Verify the boot-time wiring**: trace `UpdateChecker.check()`
+   through the application entry point; confirm whether it
+   actually fires on first launch or only on the 6h timer tick.
+   Document the result in the review doc.
+4. **Verify the upgrade-vs-compact collision**: run
+   `close_application()` once with a non-empty doc store and
+   confirm `update_pyffice_document()` does not double-migrate
+   the same rows. If it does, add a `_upgrade_lock` flag on
+   the store.
+5. **Pin a regression test** under
+   `tests/test_update_checker_review.py` covering: (a) cache
+   hit < `REFRESH_INTERVAL_SECONDS` skips network; (b)
+   network failure leaves cache intact; (c) dismissed
+   versions do not re-notify; (d) `APP_VERSION` compares
+   correctly against the server's `latest_version` (both the
+   six-segment shape and a semver fallback).
+6. **If the review surfaces concrete code changes**, each one
+   gets its own T-NEW-NNN card linked back to T-NEW-057.
+   T-NEW-057 stays as the umbrella "what we decided" doc;
+   the per-fix cards track the implementation commits.
+
+**Verification:**
+
+- `ast.parse(open('nchantdoffice/updates/checker.py').read())` → no errors
+- `pytest tests/test_update_checker.py -q` → green (current count, plus any new tests from step 5)
+- `python -c "from nchantdoffice.updates.checker import UpdateChecker, UpdateInfo; print(UpdateInfo.from_response({'latest_version':'0.0.2','update_available':True}))"` → prints `UpdateInfo(latest_version='0.0.2', ...)` with the rest defaulted
+- `ruff check nchantdoffice/updates/ nchantdoffice/utilities/constants.py` → no new F821/security issues introduced
+- `git log --oneline | grep T-NEW-057` → finds both this card and any follow-up impl commits
+
+**Refs:**
+
+- T-DESK-053 — the cross-repo review that landed the current
+  `UpdateChecker` (commit `6f537d1`).
+- T-NEW-053 — sibling card pattern for "review + numbered
+  steps" lifecycle used here.
+- `nchantdoffice_com/app/apis/updates.py:209` — server side
+  of `/api/check-update`, the source of truth for the
+  response shape.
 
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 
