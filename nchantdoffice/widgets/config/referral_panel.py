@@ -90,6 +90,13 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         self.share_urls: dict = {}
         self.earnings_data: dict = {}
         self.invitations_remaining: int = 0
+        # T-NEW-044 (UI-1): authoritative payout-eligibility from
+        # the server (PAY-1). Free-tier referrers are blocked
+        # with reason='free_tier' (not 'eligible'). Without this
+        # override, the panel would render "Eligible for payout"
+        # for free users based on a CLIENT-SIDE check that
+        # ignores the tier gate.
+        self.payout_eligibility_data: dict = {}
 
     def initModel(self):
         """"""
@@ -225,29 +232,66 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         )
         card.addWidget(money)
 
-        # Payout eligibility
-        eligible = pending >= min_payout
+        # T-NEW-044 (UI-1): use the AUTHORITATIVE server-side
+        # payout-eligibility dict (PAY-1). This is the only
+        # place that knows the referrer's tier — the client-side
+        # check below ignores tier-gating (a free user with
+        # $30 pending would be shown "Eligible" — wrong).
+        eligibility = self.payout_eligibility_data or {}
+        eligible = bool(eligibility.get("eligible"))
+        reason = eligibility.get("reason")
+        threshold_dollars = float(eligibility.get("threshold", min_payout / 100))
+        pending_total = float(eligibility.get("pending_total", pending / 100))
+        tier = eligibility.get("tier", "free")
+
         payout_label = NchantdLabel(card)
-        if eligible:
+        if not eligibility:
+            # Server hasn't responded yet (or offline). Show a
+            # neutral state — never claim "Eligible" without
+            # server confirmation.
+            payout_label.setText(
+                "<i>Checking payout eligibility...</i>"
+            )
+        elif reason == "free_tier":
+            # Free-tier referrer (AppReferralSpec §10): not
+            # eligible for paid payouts. They get "ad-tab-free
+            # hours" instead (see UI-2 follow-up).
+            payout_label.setText(
+                f"<i>You're on the <b>{tier.title()}</b> tier — free "
+                f"accounts don't receive paid payouts. Upgrade to Pro "
+                f"to unlock cash payouts (or stay free for the "
+                f"ad-tab-free hours reward).</i>"
+            )
+        elif reason == "below_threshold":
+            need = threshold_dollars - pending_total
+            payout_label.setText(
+                f"<i>${need:.2f} more needed to reach "
+                f"${threshold_dollars:.2f} payout minimum "
+                f"(pending ${pending_total:.2f})</i>"
+            )
+        elif eligible:
             payout_label.setText(
                 f"<b style='color: green;'>✓ Eligible for payout "
-                f"(pending ${pending/100:.2f} ≥ ${min_payout/100:.2f} minimum)</b>"
+                f"(pending ${pending_total:.2f} ≥ "
+                f"${threshold_dollars:.2f} minimum, "
+                f"{tier.title()} tier)</b>"
             )
         else:
-            need = min_payout - pending
+            # Unknown reason — fail safe with neutral copy.
             payout_label.setText(
-                f"<i>${need/100:.2f} more needed to reach " f"${min_payout/100:.2f} payout minimum</i>"
+                "<i>Payout status unavailable. Try refreshing "
+                "the panel.</i>"
             )
         card.addWidget(payout_label)
 
-        # Request payout button
+        # Request payout button (only if server says eligible).
         if eligible:
             request_btn = NchantdButton(card)
             request_btn.setText("Request Payout")
             request_btn.clicked.connect(self._on_request_payout)
             card.addWidget(request_btn)
 
-        return card
+                return card
 
     # ------------------------------------------------------------------
     # Event handlers
@@ -471,8 +515,32 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         except Exception as e:
             logma.warning(f"[referral_panel] _surface_referral_url_to_ad_pane failed: {e}")
 
-    def _fetch_dashboard(self):
-        """Fetch earnings + invitations from the server; fall back to local store."""
+    def _fetch_payout_eligibility(self):
+        """T-NEW-044 (UI-1): fetch the authoritative
+        payout-eligibility dict from the server. Best-effort —
+        silent on failure (the panel falls back to a neutral
+        "Checking eligibility..." state).
+        """
+        try:
+            user_id = getattr(self.user, "id", None)
+            if user_id is None:
+                return
+            data = self.api_client.fetch_payout_eligibility(user_id)
+            self.payout_eligibility_data = data or {}
+        except Exception as e:
+            logma.warning(
+                f"[referral_panel] fetch_payout_eligibility failed: {e}"
+            )
+
+        def _fetch_dashboard(self):
+        """Fetch earnings + invitations from the server; fall back to local store.
+
+        T-NEW-044 (UI-1): also fetches the payout-eligibility
+        dict in parallel — they're independent calls.
+        """
+        # T-NEW-044 (UI-1): always call this first so the
+        # earnings card can render the server-side state.
+        self._fetch_payout_eligibility()
         try:
             data = self.api_client.fetch_earnings()
             if data:

@@ -548,6 +548,51 @@ class ReferralAPIClient:
         """
         return self._request("GET", "affiliate/dashboard")
 
+    def fetch_payout_eligibility(self, user_id: int) -> Dict[str, Any]:
+        """T-NEW-044 (UI-1): fetch the authoritative
+        payout-eligibility dict from the server.
+
+        Calls ``GET /api/v1/referral/payout-eligibility/<user_id>``.
+        Returns the dict the server produces from
+        ``ReferralService.get_payout_eligibility`` (PAY-1):
+
+          eligible: bool
+          pending_total: float
+          threshold: float  ($25 = MIN_PAYOUT)
+          tier: str         ("free", "pro", "pro_data", "enterprise")
+          reason: str | None (None | "free_tier" | "below_threshold"
+                              | "cookie_expired" | "first_touch_existing")
+
+        Best-effort: returns ``{}`` on network failure or
+        non-200 response. The caller is expected to handle
+        the empty dict as "unknown" — the in-app panel will
+        fall back to a neutral state ("Checking eligibility...")
+        rather than rendering the wrong UI.
+
+        The desktop MUST use this server-side check rather
+        than computing eligibility locally: the server is
+        the only place that knows the referrer's tier
+        (which gates whether paid payouts are even allowed).
+        """
+        if not user_id:
+            return {}
+        url = f"{self.base_url}/referral/payout-eligibility/{user_id}"
+        try:
+            resp = requests.get(url, timeout=self.timeout)
+            if resp.status_code != 200:
+                logma.warning(
+                    f"[referral] fetch_payout_eligibility returned "
+                    f"{resp.status_code}: {resp.text[:200]}"
+                )
+                return {}
+            return resp.json() if resp.content else {}
+        except Exception as exc:
+            logma.warning(
+                f"[referral] fetch_payout_eligibility failed (non-blocking): "
+                f"{exc}"
+            )
+            return {}
+
     def record_app_open(self, referee_user_id: str) -> Dict[str, Any]:
         """Record one desktop app-open for `referee_user_id`.
 
