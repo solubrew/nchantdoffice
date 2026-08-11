@@ -951,3 +951,85 @@ def test_load_slots_canonical_order_extended():
         f"Expected tip < substack < pro_cta < affiliate < pro_internal. "
         f"Search for ``slots.append(<SlotType>`` in the source."
     )
+
+
+# ---------------------------------------------------------------------------
+# T-NEW-040 DESK-3 — affiliate_click_internal vs _external
+# telemetry split.
+# ---------------------------------------------------------------------------
+
+
+def test_make_open_url_handler_static_accepts_event_name():
+    """T-NEW-040 DESK-3: the static click-handler factory must
+    accept an event_name parameter so renderers can wire
+    distinct telemetry events (affiliate_click_internal vs
+    affiliate_click_external)."""
+    src = _read(AD_TAB)
+    fn = _ast_function(src, "_make_open_url_handler_static")
+    assert fn is not None
+    body = _function_source(src, "_make_open_url_handler_static")
+    assert "event_name" in body, (
+        "_make_open_url_handler_static must accept event_name kwarg "
+        "(T-NEW-040 DESK-3)"
+    )
+
+
+def test_emit_ad_telemetry_helper_exists():
+    """T-NEW-040 DESK-3: a small helper that fires ad-tab
+    telemetry events via app.store_event(...). Module-level
+    function so it works from slot renderers (no self)."""
+    src = _read(AD_TAB)
+    fn = _ast_function(src, "_emit_ad_telemetry")
+    assert fn is not None, (
+        "_emit_ad_telemetry helper must exist (T-NEW-040 DESK-3)"
+    )
+    body = _function_source(src, "_emit_ad_telemetry")
+    assert "event_name" in body, (
+        "_emit_ad_telemetry must take an event_name parameter"
+    )
+
+
+def test_affiliate_slot_render_fires_external_telemetry():
+    """T-NEW-040 DESK-3: AffiliateSlot.render() must wire the
+    CTA button click through _make_open_url_handler_static
+    with an external telemetry event (default source='external')."""
+    src = _read(AD_TAB)
+    body = _class_source(src, "AffiliateSlot")
+    assert "affiliate_click_external" in body, (
+        "AffiliateSlot.render must wire CTA click to "
+        "fire affiliate_click_external telemetry "
+        "(T-NEW-040 DESK-3)"
+    )
+
+
+def test_pro_internal_slot_render_fires_internal_telemetry():
+    """T-NEW-040 DESK-3: ProInternalSlot.render() must wire
+    the CTA button click to fire affiliate_click_internal
+    telemetry — in-house cross-promos get their own event
+    name so revshare reporting can distinguish them from
+    third-party affiliate clicks."""
+    src = _read(AD_TAB)
+    body = _class_source(src, "ProInternalSlot")
+    assert "affiliate_click_internal" in body, (
+        "ProInternalSlot.render must fire "
+        "affiliate_click_internal telemetry "
+        "(T-NEW-040 DESK-3)"
+    )
+
+
+def test_substack_slot_render_uses_substack_event_name():
+    """T-NEW-040 DESK-3 (consistency check): the existing
+    SubstackSlot.render() must continue to fire its own
+    distinct event name (``substack_recommendation_clicked``
+    or similar) so analytics can route Substack clicks to
+    the symbiosis report. Just assert it doesn't fire the
+    affiliate_* events — it should have its own."""
+    src = _read(AD_TAB)
+    body = _class_source(src, "SubstackSlot")
+    # Substack has its own event (not affiliate_*)
+    assert "affiliate_click_internal" not in body, (
+        "SubstackSlot must NOT fire affiliate_click_internal"
+    )
+    assert "affiliate_click_external" not in body, (
+        "SubstackSlot must NOT fire affiliate_click_external"
+    )

@@ -365,7 +365,15 @@ class AffiliateSlot(RotationSlot):
             cta.setText(banner["cta_text"])
             url = banner["cta_url"]
             cta.clicked.connect(
-                NchantdOfficeAdTab._make_open_url_handler_static(url)
+                NchantdOfficeAdTab._make_open_url_handler_static(
+                    url,
+                    event_name="affiliate_click_external",
+                    event_properties={
+                        "slot_kind": "affiliate",
+                        "source": banner.get("source", "external"),
+                        "destination_url": url,
+                    },
+                )
             )
             card.addWidget(cta)
         card.setStyleSheet(
@@ -430,7 +438,14 @@ class ProInternalSlot(RotationSlot):
             cta.setText(banner["cta_text"])
             url = banner["cta_url"]
             cta.clicked.connect(
-                NchantdOfficeAdTab._make_open_url_handler_static(url)
+                NchantdOfficeAdTab._make_open_url_handler_static(
+                    url,
+                    event_name="affiliate_click_internal",
+                    event_properties={
+                        "slot_kind": "pro_internal",
+                        "destination_url": url,
+                    },
+                )
             )
             card.addWidget(cta)
         card.setStyleSheet(
@@ -1169,18 +1184,39 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         return _handler
 
     @staticmethod
-    def _make_open_url_handler_static(url):
+    def _make_open_url_handler_static(
+        url,
+        event_name=None,
+        event_properties=None,
+    ):
         """T-DESK-066 — static counterpart of
         ``_make_open_url_handler``. The slot renderers
-        (``SubstackSlot.render``, ``AffiliateSlot.render``)
-        are unbound to ``self`` at construction time, so
-        they need a static factory to wire their CTA
-        buttons. The factory closes over ``url`` via the
-        default-arg trick (the same anti-pattern guard
-        that ``_make_open_url_handler`` uses).
-        """
+        (``SubstackSlot.render``, ``AffiliateSlot.render``,
+        ``ProInternalSlot.render``) are unbound to ``self``
+        at construction time, so they need a static factory
+        to wire their CTA buttons. The factory closes over
+        ``url`` via the default-arg trick (the same
+        anti-pattern guard that ``_make_open_url_handler``
+        uses).
 
+        T-NEW-040 DESK-3 — added optional ``event_name`` +
+        ``event_properties`` kwargs so the click handler can
+        fire a telemetry event BEFORE opening the URL. Used
+        by AffiliateSlot (affiliate_click_external) and
+        ProInternalSlot (affiliate_click_internal).
+        """
         def _handler(_checked=False, _url=url):
+            # T-NEW-040 DESK-3 — fire the telemetry event
+            # first so even no-op URL opens (e.g., blocked
+            # browser launch) still get attributed.
+            if event_name:
+                try:
+                    _emit_ad_telemetry(event_name, event_properties or {})
+                except Exception as e:
+                    logma.warning(
+                        f"[ad_tab] telemetry emit failed "
+                        f"({event_name}): {e}"
+                    )
             try:
                 pyqt.QDesktopServices.openUrl(pyqt.QUrl(_url))
             except Exception as e:
@@ -1190,6 +1226,36 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                 )
 
         return _handler
+
+
+def _emit_ad_telemetry(event_name: str, properties: dict | None = None) -> None:
+    """T-NEW-040 DESK-3 — fire an Ad tab telemetry event.
+
+    Module-level helper (no self) so slot renderers can
+    call it from inside ``_make_open_url_handler_static``.
+
+    Currently no-ops safely if no app context is wired;
+    future iterations can plumb this through to
+    ``self.app.store_event(...)`` once the analytics
+    pipeline (ATNRG T-NEW-029 telemetry events) is live.
+
+    Args:
+        event_name: one of the documented Ad tab events
+            (e.g., ``affiliate_click_internal``,
+            ``affiliate_click_external``).
+        properties: optional dict of properties
+            (slot_kind, destination_url, etc).
+    """
+    props = dict(properties or {})
+    props.setdefault("event", event_name)
+    props.setdefault("surface", "ad_tab")
+    # Logma info-level so the event is visible in dev logs
+    # without firing a real analytics call. The eventual
+    # GA4 / Plausible integration (T-NEW-029) will replace
+    # this with a real store_event() call.
+    logma.info(
+        f"[ad_tab] event={event_name} properties={props}"
+    )
 
 
 # Backwards-compat shim: old code referenced NchantdAdvertisementPane.
