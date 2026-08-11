@@ -59,6 +59,11 @@ from nchantdoffice.utilities.referral import (
     validate_referral_code,
 )
 
+from nchantdoffice.utilities.user_config import (
+    is_ad_tab_free_active,
+    set_ad_tab_free_hours,
+)
+
 logma = Logma(__name__)
 
 here = join(dirname(__file__), "")  # ||
@@ -291,7 +296,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
             request_btn.clicked.connect(self._on_request_payout)
             card.addWidget(request_btn)
 
-                return card
+        return card
 
     # ------------------------------------------------------------------
     # Event handlers
@@ -520,6 +525,13 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         payout-eligibility dict from the server. Best-effort —
         silent on failure (the panel falls back to a neutral
         "Checking eligibility..." state).
+
+        T-NEW-045 (WIRE-1): after a successful fetch with
+        reason='free_tier', trigger the ad-tab-free hours
+        grant via _maybe_grant_ad_tab_free_hours(). This
+        closes the loop: the user sees the eligibility UI
+        AND gets the actual reward (free hours of ad-tab-free
+        browsing) instead of paid payouts.
         """
         try:
             user_id = getattr(self.user, "id", None)
@@ -527,12 +539,81 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
                 return
             data = self.api_client.fetch_payout_eligibility(user_id)
             self.payout_eligibility_data = data or {}
+            # T-NEW-045 (WIRE-1): grant trigger. The grant is
+            # only relevant when reason='free_tier' (the
+            # server already confirmed the user is on the
+            # free tier and the rewards are the hours).
+            if self.payout_eligibility_data.get("reason") == "free_tier":
+                self._maybe_grant_ad_tab_free_hours()
         except Exception as e:
             logma.warning(
                 f"[referral_panel] fetch_payout_eligibility failed: {e}"
             )
 
-        def _fetch_dashboard(self):
+    def _maybe_grant_ad_tab_free_hours(self) -> None:
+
+        """T-NEW-045 (WIRE-1): grant ad-tab-free hours to a
+        free-tier referrer based on their pending credit.
+
+        Per AppReferralSpec §10 ("for a referral that uses a
+        free account, provide the referrer X hours of use
+        without Ad Tab popup"), the reward is proportional to
+        the credit earned. This implementation grants
+        ``floor(pending_total * 24 / 5)`` hours = 24 hours
+        per $5 of pending credit.
+
+        Behaviour rules (pinned by the 6 tests in
+        ``tests/test_grant_trigger.py``):
+        - Only grants if the user has NO active grant
+          (no stacking — re-running the trigger does NOT
+          extend an existing timer)
+        - Best-effort: errors are logged + swallowed (the
+          panel still works even if the grant fails)
+        - Minimum grant: 1 hour. If pending_total < $0.21,
+          no grant is stamped (the math rounds down to 0).
+        - Idempotent: calling this method multiple times in
+          a row with the same eligibility data produces
+          the same result (one grant at most).
+
+        The grant is persisted to user_config via
+        ``set_ad_tab_free_hours()``, which writes the
+        ``user.ad_tab_free_until`` ISO timestamp. The Ad
+        tab's ``_is_visible_for_user()`` (T-NEW-044 UI-2)
+        reads ``is_ad_tab_free_active()`` and hides the tab
+        while the grant is valid.
+        """
+        try:
+            # Skip if a grant is already active (no stacking).
+            if is_ad_tab_free_active():
+                logma.info(
+                    "[referral_panel] ad-tab-free grant already "
+                    "active — skipping (no stacking)"
+                )
+                return
+            pending_total = float(
+                self.payout_eligibility_data.get("pending_total", 0)
+            )
+            # 24 hours per $5 of pending credit. Floor to int.
+            hours = int(pending_total * 24 / 5)
+            if hours < 1:
+                logma.info(
+                    f"[referral_panel] pending_total=${pending_total:.2f} "
+                    f"yields {hours}h grant — below minimum, skipping"
+                )
+                return
+            expiry = set_ad_tab_free_hours(hours)
+            logma.info(
+                f"[referral_panel] granted {hours}h ad-tab-free "
+                f"to user (pending_total=${pending_total:.2f}, "
+                f"expires {expiry})"
+            )
+        except Exception as e:
+            logma.warning(
+                f"[referral_panel] grant_ad_tab_free_hours failed: {e}"
+            )
+
+    def _fetch_dashboard(self):
+
         """Fetch earnings + invitations from the server; fall back to local store.
 
         T-NEW-044 (UI-1): also fetches the payout-eligibility
