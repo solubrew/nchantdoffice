@@ -60,6 +60,13 @@ DEFAULTS: Dict[str, Any] = {
     # across launches.
     "user": {
         "uuid": "",
+        # T-NEW-044 (UI-2): timestamp (ISO 8601 UTC) until
+        # which the user has ad-tab-free hours granted
+        # (via the free-tier referral reward — see
+        # AppReferralSpec §10). None / empty when no grant
+        # is active. The Ad tab is hidden while this is
+        # in the future. Stamped via set_ad_tab_free_hours().
+        "ad_tab_free_until": "",
     },
 }
 
@@ -202,6 +209,95 @@ def set_user_uuid(uuid: str, path: Optional[Path] = None) -> None:
     with target.open("w", encoding="utf-8") as fh:
         yaml.safe_dump(config, fh, default_flow_style=False, sort_keys=True)
     logma.info(f"[user_config] persisted user.uuid to {target}")
+
+
+# -----------------------------------------------------------------------------
+# T-NEW-044 (UI-2): ad-tab-free-hours helpers (free-tier referral reward)
+# -----------------------------------------------------------------------------
+
+def get_ad_tab_free_until(
+    config: Optional[Dict[str, Any]] = None,
+) -> Optional[str]:
+    """T-NEW-044 (UI-2): return the ISO timestamp until which
+    the user has ad-tab-free hours, or None when no grant is
+    active (or the grant has already expired).
+
+    Used by ``NchantdOfficeAdTab._is_visible_for_user`` to
+    hide the Ad tab for free-tier referrers who have been
+    granted ad-tab-free hours as a referral reward
+    (AppReferralSpec §10).
+    """
+    if config is None:
+        config = load_config()
+    raw = (config.get("user") or {}).get("ad_tab_free_until") or ""
+    if not raw:
+        return None
+    return raw
+
+
+def set_ad_tab_free_hours(hours: int, path: Optional[Path] = None) -> str:
+    """T-NEW-044 (UI-2): grant N hours of ad-tab-free time
+    (free-tier referral reward).
+
+    Stamps ``user.ad_tab_free_until`` to ``now() + hours`` in
+    ISO 8601 UTC. Returns the new expiry timestamp (ISO string).
+
+    Called by the desktop when the server returns
+    ``reason='free_tier'`` from ``get_payout_eligibility``
+    (T-NEW-043 PAY-1 + AppReferralSpec §10) AND the user has
+    earned enough referral credit to qualify. (The actual
+    grant logic lives in the referral panel — this helper
+    just persists the timer.)
+    """
+    if hours <= 0:
+        raise ValueError(f"hours must be positive (got {hours})")
+    expiry = dt.datetime.utcnow() + dt.timedelta(hours=hours)
+    iso = expiry.isoformat() + "Z"
+    target_p = path or USER_CONFIG_PATH
+    config = load_config()
+    config.setdefault("user", {})["ad_tab_free_until"] = iso
+    target_p.parent.mkdir(parents=True, exist_ok=True)
+    with target_p.open("w", encoding="utf-8") as fh:
+        yaml.safe_dump(config, fh, default_flow_style=False, sort_keys=True)
+    logma.info(f"[user_config] persisted user.ad_tab_free_until={iso}")
+    return iso
+
+
+def clear_ad_tab_free_hours(path: Optional[Path] = None) -> None:
+    """T-NEW-044 (UI-2): clear any active ad-tab-free grant.
+
+    Useful when the user upgrades to Pro (their paid status
+    already hides the Ad tab, so the timer is redundant)
+    or when manually resetting for testing.
+    """
+    target_p = path or USER_CONFIG_PATH
+    config = load_config()
+    config.setdefault("user", {})["ad_tab_free_until"] = ""
+    target_p.parent.mkdir(parents=True, exist_ok=True)
+    with target_p.open("w", encoding="utf-8") as fh:
+        yaml.safe_dump(config, fh, default_flow_style=False, sort_keys=True)
+    logma.info(f"[user_config] cleared user.ad_tab_free_until")
+
+
+def is_ad_tab_free_active(
+    config: Optional[Dict[str, Any]] = None,
+    path: Optional[Path] = None,
+) -> bool:
+    """T-NEW-044 (UI-2): True when the user has active
+    ad-tab-free hours (granted + not yet expired).
+
+    Returns False when no grant is set, or when the grant
+    has already expired (the timestamp is in the past).
+    """
+    until = get_ad_tab_free_until(config=config)
+    if not until:
+        return False
+    try:
+        # Strip the trailing Z for parsing.
+        ts = dt.datetime.fromisoformat(until.rstrip("Z"))
+    except ValueError:
+        return False
+    return ts > dt.datetime.utcnow()
 
 
 def write_default_config(path: Optional[Path] = None) -> Path:

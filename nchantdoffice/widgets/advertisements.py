@@ -36,6 +36,7 @@ from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.groups import NchantdGridScrollGroupBox, NchantdVScrollGroupBox
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
+from nchantdoffice.utilities.user_config import is_ad_tab_free_active
 
 logma = Logma(__name__)
 
@@ -849,9 +850,23 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     def _is_visible_for_user(self) -> bool:
         """Whether this tab should be rendered for the current user.
 
-        Returns False for Pro users (they paid to remove ads).
-        Returns True for Free users / users without an account.
+        Returns False for:
+          - Pro users (they paid to remove ads)
+          - Users with active ad-tab-free hours (T-NEW-044 UI-2
+            — free-tier referral reward per AppReferralSpec §10).
+            The grant is persisted via
+            ``user_config.set_ad_tab_free_hours()`` and checked
+            via ``user_config.is_ad_tab_free_active()``.
+
+        Returns True for Free users / users without an account
+        AND no active ad-tab-free grant.
         """
+        # T-NEW-044 (UI-2): check ad-tab-free hours FIRST so
+        # the free-tier referral reward hides the tab even
+        # before the tier check (the user may be Pro tier
+        # OR free-tier, both should respect the grant).
+        if is_ad_tab_free_active():
+            return False
         user = self._user
         if user is None:
             return True
