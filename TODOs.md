@@ -8,6 +8,17 @@
 > closed-loop of Sprints 1-17 across nchantdoffice / nchantrs / pyffice /
 > pycurity / pyside6pandas.
 >
+> **T-NEW-NNN card numbering — per-repo convention.** This
+> repo's `T-NEW-NNN` numbers are local to nchantdoffice
+> (desktop) and do NOT match the numbering in the server
+> (nchantdoffice_com) or ATNRG repos. Example: `T-NEW-040`
+> means "Toolbar init tech debt" here but "Defensive Admin
+> role creation" in nchantdoffice_com and "Affiliate
+> rotation expansion" in ATNRG. When cross-referencing a
+> card from another repo, always prefix it: "DESK
+> T-NEW-NNN" / "COM T-NEW-NNN" / "ATNRG T-NEW-NNN" —
+> without the prefix the reference is ambiguous.
+
 > **Other top-level notes** (preserved as separate files):
 > - `README.md` — project overview
 > - `CHANGES.md` — Keep-a-Changelog history
