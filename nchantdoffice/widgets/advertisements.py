@@ -365,6 +365,127 @@ class AffiliateSlot(RotationSlot):
         return card
 
 
+# T-NEW-040 (DESK-1) — In-house cross-promo slot. Same render
+# shape as AffiliateSlot, but with ``kind: pro_internal`` so
+# the click handler in DESK-3 can fire
+# ``affiliate_click_internal`` (vs ``affiliate_click_external``
+# for third-party QuickLinks affiliates). The bundled
+# PRO_INTERNAL_PROMOS list below is the offline-first fallback
+# so the in-house cross-promo rotation works without a network.
+
+
+@dataclass
+class ProInternalSlot(RotationSlot):
+    """An in-house cross-promo (Pro tier, ProData, white-label).
+
+    Source: ``PRO_INTERNAL_PROMOS`` (bundled) or operator-curated
+    server-side feed in the future. Renders the same card shape
+    as AffiliateSlot so the rotation looks consistent — the
+    only difference is the ``kind`` tag for telemetry routing
+    (DESK-3).
+
+    T-NEW-040: until ≥500 Free MAU, in-house cross-promos are
+    the only fully-owned revenue surface in the Ad tab; we own
+    the creative, the conversion path, and the revshare
+    reporting (none flows to a third-party affiliate network).
+    """
+
+    kind: str = "pro_internal"
+
+    def render(self, parent):
+        banner = self.payload
+        card = NchantdGridScrollGroupBox(parent)
+        card.setTitle("")
+        bg = banner.get("background", "#0F172A")
+        fg = banner.get("foreground", "#FFFFFF")
+        title = NchantdLabel(card)
+        title.setText(
+            f"<b style='color: {fg};'>{banner.get('title', '')}</b>"
+        )
+        title.setStyleSheet(
+            f"color: {fg}; font-size: 14pt; "
+            f"background-color: {bg}; padding: 6px;"
+        )
+        title.setWordWrap(True)
+        card.addWidget(title)
+        if banner.get("subtitle"):
+            sub = NchantdLabel(card)
+            sub.setText(banner["subtitle"])
+            sub.setStyleSheet(
+                f"color: {fg}; background-color: {bg}; padding: 6px;"
+            )
+            sub.setWordWrap(True)
+            card.addWidget(sub)
+        if banner.get("cta_text") and banner.get("cta_url"):
+            cta = NchantdButton(card)
+            cta.setText(banner["cta_text"])
+            url = banner["cta_url"]
+            cta.clicked.connect(
+                NchantdOfficeAdTab._make_open_url_handler_static(url)
+            )
+            card.addWidget(cta)
+        card.setStyleSheet(
+            f"QGroupBox {{ background-color: {bg}; "
+            f"border-radius: 8px; padding: 6px; }}"
+        )
+        return card
+
+
+# T-NEW-040 (DESK-1) — Bundled in-house cross-promo catalog.
+# Mirrors the offline-first pattern of FALLBACK_BANNERS /
+# TIPS_FEED / SUBSTACK_FEED. The server-side quicklinks
+# endpoint (/api/v1/quicklinks/?ad_rotation_categories=
+# pro_internal) will eventually source from here; until the
+# server integration lands in DESK-2, this is the only
+# source.
+PRO_INTERNAL_PROMOS: list = [
+    {
+        "title": "nchantdoffice Pro — Remove ads + unlimited nodes",
+        "subtitle": (
+            "$20/mo or $200/yr. Unlock ProData (10K AI calls/mo) "
+            "for $50/mo."
+        ),
+        "cta_text": "Upgrade to Pro",
+        "cta_url": "https://nchantdoffice.com/compare",
+        "background": "#0F172A",
+        "foreground": "#FACC15",
+    },
+    {
+        "title": "ProData — 10K AI calls/mo + Sheets/Docs/Forms APIs",
+        "subtitle": (
+            "$50/mo or $500/yr. The data-services tier for "
+            "power users."
+        ),
+        "cta_text": "Upgrade to ProData",
+        "cta_url": "https://nchantdoffice.com/compare#prodata",
+        "background": "#1E3A8A",
+        "foreground": "#FFFFFF",
+    },
+    {
+        "title": "White-label nchantdoffice for your team",
+        "subtitle": (
+            "Custom branding, custom domain, your team's colors. "
+            "Talk to us about a B2B deal."
+        ),
+        "cta_text": "Talk to us",
+        "cta_url": "https://nchantdoffice.com/contact",
+        "background": "#7C3AED",
+        "foreground": "#FFFFFF",
+    },
+]
+
+
+def load_pro_internal_promos() -> list:
+    """Return the bundled in-house cross-promo catalog.
+
+    Returns a copy of ``PRO_INTERNAL_PROMOS`` so callers can't
+    mutate the module-level constant. Same offline-first
+    pattern as ``load_tip_feed`` / ``load_substack_feed`` /
+    ``load_fallback_banners``.
+    """
+    return list(PRO_INTERNAL_PROMOS)
+
+
 # T-DESK-057 — ``FALLBACK_BANNERS`` is now sourced from
 # ``nchantdoffice.utilities.affiliate_fallback`` (the bundled
 # mirror of ``nchantdofficeATNRG/ReferralLinks.yaml``'s

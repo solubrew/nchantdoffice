@@ -686,3 +686,132 @@ def test_release_checklist_documents_tips_mirror_steps():
         "Release checklist must name the ATNRG source path "
         "content/memes/tips.md."
     )
+
+
+# ---------------------------------------------------------------------------
+# T-NEW-040 DESK-1 — ProInternalSlot dataclass.
+# ---------------------------------------------------------------------------
+
+
+def test_pro_internal_slot_exists():
+    """T-NEW-040 DESK-1: ProInternalSlot class added to the rotation.
+
+    New slot type for in-house cross-promos (nchantdoffice Pro,
+    ProData, white-label). Same shape as AffiliateSlot but with
+    ``kind: str = "pro_internal"`` so telemetry can split
+    external vs internal affiliate clicks (DESK-3).
+    """
+    src = _read(AD_TAB)
+    cls = _ast_class(src, "ProInternalSlot")
+    assert cls is not None, (
+        "advertisements.py must declare ProInternalSlot "
+        "(T-NEW-040 — in-house cross-promos)"
+    )
+    bases = [ast.unparse(b) for b in cls.bases]
+    assert any("RotationSlot" in b for b in bases), (
+        "ProInternalSlot must subclass RotationSlot"
+    )
+    body = _class_source(src, "ProInternalSlot")
+    assert 'kind: str = "pro_internal"' in body, (
+        "ProInternalSlot.kind must be 'pro_internal'"
+    )
+    assert "def render(self" in body, (
+        "ProInternalSlot must implement render(parent)"
+    )
+
+
+def test_pro_internal_slot_render_uses_banner_card_shape():
+    """ProInternalSlot.render() must use the same card shape
+    as AffiliateSlot so the rotation looks consistent. The
+    simplest assertion: it uses NchantdGridScrollGroupBox
+    (the canonical banner card widget).
+    """
+    src = _read(AD_TAB)
+    body = _class_source(src, "ProInternalSlot")
+    assert "NchantdGridScrollGroupBox" in body, (
+        "ProInternalSlot.render must use NchantdGridScrollGroupBox"
+    )
+
+
+def test_pro_internal_promos_constant_exists():
+    """The bundled PRO_INTERNAL_PROMOS list must exist and
+    contain at least 3 entries (Pro, ProData, white-label)."""
+    src = _read(AD_TAB)
+    tree = ast.parse(src)
+    found = None
+    for node in tree.body:
+        if isinstance(node, ast.AnnAssign):
+            if (
+                isinstance(node.target, ast.Name)
+                and node.target.id == "PRO_INTERNAL_PROMOS"
+            ):
+                found = node
+                break
+        elif isinstance(node, ast.Assign):
+            for tgt in node.targets:
+                if (
+                    isinstance(tgt, ast.Name)
+                    and tgt.id == "PRO_INTERNAL_PROMOS"
+                ):
+                    found = node
+                    break
+            if found:
+                break
+    assert found is not None, (
+        "PRO_INTERNAL_PROMOS module-level constant must exist "
+        "(T-NEW-040 DESK-1)"
+    )
+    assert isinstance(found.value, ast.List), (
+        "PRO_INTERNAL_PROMOS must be a list literal"
+    )
+    assert len(found.value.elts) >= 3, (
+        f"PRO_INTERNAL_PROMOS must have ≥3 entries, got {len(found.value.elts)}"
+    )
+
+
+def test_load_pro_internal_promos_helper_exists():
+    """load_pro_internal_promos() returns a copy of PRO_INTERNAL_PROMOS
+    so callers can't mutate the module-level constant. Mirrors
+    the pattern of load_tip_feed() / load_substack_feed()."""
+    src = _read(AD_TAB)
+    fn = _ast_function(src, "load_pro_internal_promos")
+    assert fn is not None, (
+        "load_pro_internal_promos() helper must exist "
+        "(T-NEW-040 DESK-1)"
+    )
+    body = _function_source(src, "load_pro_internal_promos")
+    assert "PRO_INTERNAL_PROMOS" in body, (
+        "load_pro_internal_promos must return PRO_INTERNAL_PROMOS"
+    )
+
+
+def test_pro_internal_promos_have_required_keys():
+    """Each PRO_INTERNAL_PROMOS entry must have the keys
+    AffiliateSlot.render() expects: title, subtitle (optional),
+    cta_text + cta_url, background, foreground."""
+    src = _read(AD_TAB)
+    tree = ast.parse(src)
+    node = None
+    for n in tree.body:
+        if isinstance(n, ast.AnnAssign):
+            if (
+                isinstance(n.target, ast.Name)
+                and n.target.id == "PRO_INTERNAL_PROMOS"
+            ):
+                node = n
+                break
+    assert node is not None
+    assert isinstance(node.value, ast.List)
+    for elt in node.value.elts:
+        assert isinstance(elt, ast.Dict), (
+            "Each PRO_INTERNAL_PROMOS entry must be a dict literal"
+        )
+        keys = {
+            k.value for k in elt.keys
+            if isinstance(k, ast.Constant)
+        }
+        assert "title" in keys, "each entry must have 'title'"
+        assert "cta_text" in keys, "each entry must have 'cta_text'"
+        assert "cta_url" in keys, "each entry must have 'cta_url'"
+        assert "background" in keys, "each entry must have 'background'"
+        assert "foreground" in keys, "each entry must have 'foreground'"
