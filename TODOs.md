@@ -3323,3 +3323,80 @@ the server repo's TODOs.md, not here.
   server team's perspective on the same integration
 - `nchantdofficeATNRG/DesktopIntegration.md` — the marketing
   TL;DR
+
+---
+
+## T-DESK-066 — Config-file dev mode (HARD-BREAK: no env vars for anything)
+
+**Context:** Per user directive (2026-08-11): "there
+should never be env variables used for anything." This
+PR is a hard-break that:
+  - Adds `nchantdoffice/utilities/user_config.py` — XDG
+    config resolver (~/.config/nchantdoffice/config.yaml
+    with ./nchantdoffice.yaml cwd override)
+  - REMOVES `NCHANT_API_BASE` from `referral.py` + `base_layer.py`
+  - REMOVES `NCHANT_DATA_DIR` from `feature_gates.py` +
+    `updates/checker.py` + `sync/applier.py` + `base_layer.py`
+  - REMOVES `NCHANT_REFERRAL_SALT` from `referral.py` (now
+    a module constant `_DEFAULT_REFERRAL_SALT`)
+  - REMOVES `NCHANT_WEBENGINE_SOFTWARE` from
+    `cmds/runNchantdOffice.py`
+  - Adds `is_dev_mode()` + `[DEV]` badge in `ServerStatusWidget`
+
+The config file is the ONLY source of runtime config.
+All env-var reads are removed in this PR. Callers that
+were setting `NCHANT_API_BASE` etc. must migrate to the
+config file.
+
+**Affected sites:**
+- `nchantdoffice/utilities/user_config.py`: NEW (~140 lines)
+- `nchantdoffice/utilities/referral.py:50` — REMOVED env-var
+- `nchantdoffice/utilities/base_layer.py:39` — REMOVED env-var
+- `nchantdoffice/utilities/feature_gates.py:90` — REMOVED env-var
+- `nchantdoffice/updates/checker.py:111` — REMOVED env-var
+- `nchantdoffice/sync/applier.py:69` — REMOVED env-var
+- `nchantdoffice/utilities/server_status.py` — `is_dev_mode()`
+  + `[DEV]` badge in `state_display()`
+- `cmds/runNchantdOffice.py:39` — REMOVED env-var +
+  `write_default_config()` hook
+- `nchantdofficeATNRG/dev-setup.md`: NEW (quick-start guide)
+- `tests/test_user_config.py`: NEW (10 tests)
+- `tests/test_dev_mode_badge.py`: NEW (5 tests)
+- `tests/test_feature_gates.py` — updated 1 test
+  (`test_cache_path_uses_user_config_get_cache_dir`)
+
+**Migration plan (no priority / low priority — design decision first):**
+
+1. Add `user_config.py` — XDG + cwd override resolver.
+2. Remove `NCHANT_API_BASE` from `referral.py` + `base_layer.py`.
+3. Remove `NCHANT_DATA_DIR` from `feature_gates.py` +
+   `updates/checker.py` + `sync/applier.py`.
+4. Remove `NCHANT_WEBENGINE_SOFTWARE` from `runNchantdOffice.py`.
+5. Add `is_dev_mode()` + `[DEV]` badge in `ServerStatusWidget`.
+6. Document in `nchantdofficeATNRG/dev-setup.md` + this card.
+
+**Tasks:**
+- [x] DESK-1: `user_config.py` + `test_user_config.py` (10 tests)
+- [x] DESK-2: hard-break remove `NCHANT_API_BASE` from
+  `referral.py` + `base_layer.py` (also removed
+  `NCHANT_REFERRAL_SALT` from `referral.py`)
+- [x] DESK-3: hard-break remove `NCHANT_DATA_DIR` from
+  `feature_gates.py` + `updates/checker.py` + `sync/applier.py`
+- [x] DESK-4: hard-break remove `NCHANT_WEBENGINE_SOFTWARE`
+  from `runNchantdOffice.py` + `write_default_config()` hook
+- [x] DESK-5: `is_dev_mode()` + `[DEV]` badge in
+  `ServerStatusWidget` (5 tests in `test_dev_mode_badge.py`)
+- [x] DESK-6: docs (this card + `dev-setup.md`)
+
+**Refs:**
+- Plan: `.hermes/plans/2026-08-11_110302-implement-dev-mode-server-connection.md`
+- XDG spec: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+- nchantdoffice_com server launcher: `cmds/serve_detached.py`
+  (binds `0.0.0.0:5000`)
+- Commit chain (in order):
+  - DESK-1: `4d8c987` (user_config.py)
+  - DESK-2: `dfac9df` (NCHANT_API_BASE + NCHANT_REFERRAL_SALT removed)
+  - DESK-3: `4001765` (NCHANT_DATA_DIR removed)
+  - DESK-4: `cafca15` (NCHANT_WEBENGINE_SOFTWARE removed)
+  - DESK-5: `a271e9e` ([DEV] badge)
+  - DESK-6: this commit + `dev-setup.md`
