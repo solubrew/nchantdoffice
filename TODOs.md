@@ -3400,3 +3400,68 @@ config file.
   - DESK-4: `cafca15` (NCHANT_WEBENGINE_SOFTWARE removed)
   - DESK-5: `a271e9e` ([DEV] badge)
   - DESK-6: this commit + `dev-setup.md`
+
+---
+
+## T-NEW-044 / T-NEW-045 cross-repo work landed on the desktop (2026-08-11)
+
+**Context:** T-NEW-044 (UI gap closing) + T-NEW-045
+(wiring the referral program) are the ATNRG/card numbers
+for the cross-repo work that closed out the referral
+program. The desktop-side commits that landed as part of
+these chains:
+
+**T-NEW-044 UI-1** (commit `e8d10d1`):
+- `ReferralAPIClient.fetch_payout_eligibility(user_id)` —
+  calls `GET /api/v1/referral/payout-eligibility/<user_id>`
+- `NchantdOfficeReferralPanel._build_earnings_card` now
+  uses the server-side eligibility dict (replaces the
+  client-side `pending >= min_payout` shortcut that
+  ignored tier-gating)
+- 4 distinct states rendered: no data / free_tier /
+  below_threshold / eligible
+- 7 tests in `tests/test_referral_panel_eligibility_wiring.py`
+
+**T-NEW-044 UI-2** (commit `e4838f3`):
+- 4 new helpers in `nchantdoffice/utilities/user_config.py`:
+  `get_ad_tab_free_until`, `set_ad_tab_free_hours`,
+  `clear_ad_tab_free_hours`, `is_ad_tab_free_active`
+- `NchantdOfficeAdTab._is_visible_for_user()` checks
+  `is_ad_tab_free_active()` FIRST (hides the Ad tab
+  for free-tier referrers with an active grant, per
+  AppReferralSpec §10)
+- 6 tests in `tests/test_ad_tab_free_hours.py`
+
+**T-NEW-044 UI-3** (commit `ded73fc`):
+- New widget: `nchantdoffice/widgets/config/affiliate_panel.py`
+- `NchantdOfficeAffiliatePanel` extends
+  `NchantdOfficeDocument` (same pattern as the existing
+  referral_panel)
+- Renders "Connect Stripe Account" button + status label
+- On click → `POST /api/v1/affiliate/connect-stripe` →
+  opens the Stripe-hosted onboarding URL via
+  `webbrowser.open()`
+- 7 tests in `tests/test_affiliate_panel.py`
+
+**T-NEW-045 WIRE-1** (commit `b420a06`):
+- `NchantdOfficeReferralPanel._maybe_grant_ad_tab_free_hours`
+- Computes hours = `floor(pending_total * 24 / 5)` (24h
+  per $5 of pending credit)
+- Skips if `is_ad_tab_free_active()` is True (no stacking)
+- `_fetch_payout_eligibility` calls the grant method
+  when `reason='free_tier'`
+- 6 tests in `tests/test_grant_trigger.py`
+
+**Combined desktop tests:** 104/104 GREEN (was 78
+after T-NEW-070, +26 new T-NEW-044+045 tests).
+
+The canonical T-NEW card numbers live in the
+ATNRG repo:
+- `nchantdofficeATNRG/TODOS.md` — T-NEW-044 + T-NEW-045
+  (full card + migration plan + refs)
+- `nchantdofficeATNRG/cross-repo-changelog.md` —
+  current-reality log of every commit across all 3 repos
+
+The **per-repo T-NEW-NNN card numbering convention** is
+documented at the top of each repo's TODOs.md —
+desktop, server, ATNRG each have their own number space.
