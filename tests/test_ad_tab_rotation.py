@@ -1033,3 +1033,123 @@ def test_substack_slot_render_uses_substack_event_name():
     assert "affiliate_click_external" not in body, (
         "SubstackSlot must NOT fire affiliate_click_external"
     )
+
+
+# ============================================================================
+# Runtime bug fix 2026-08-11: NchantdVScrollGroupBox.count() missing
+# ============================================================================
+# The AdTab._render_current_slot() method tried to call
+# self._slot_container.count() to iterate over the container's
+# children. But NchantdVScrollGroupBox is a QWidget (extends
+# NchantdWidget) — it has no count() method. The count() lives
+# on the inner QVBoxLayout (self._slot_container.layout_box).
+#
+# Runtime symptom (4x in 2026-08-11 11:27 log):
+#   [ad_tab] _render_current_slot clear failed:
+#   'NchantdVScrollGroupBox' object has no attribute 'count'
+#
+# The exception was swallowed by the try/except so the AdTab
+# continued to render new slots on top of stale ones. Visual
+# symptom: ad slot doesn't actually rotate / clear, stack-up of
+# old widgets in the container.
+
+
+def test_render_current_slot_uses_layout_box_not_container():
+    """T-NEW-070 runtime bug fix: _render_current_slot must
+    call .count() on the container's LAYOUT (layout_box), not
+    on the container widget itself.
+
+    Bug history:
+    - Original: for i in reversed(range(self._slot_container.count()))
+    - Symptom: AttributeError on every slot rotation
+      (4x in 2026-08-11 11:27 log)
+    - Fix: use self._slot_container.layout_box.count() and
+      self._slot_container.layout_box.takeAt(i)
+    """
+    src = _read(AD_TAB)
+    # Find _render_current_slot method
+    tree = ast.parse(src)
+    method_node = None
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.FunctionDef)
+            and node.name == "_render_current_slot"
+        ):
+            method_node = node
+            break
+    assert method_node is not None, "_render_current_slot must exist"
+
+    # Build the method body WITHOUT the docstring (so comment
+    # mentions of the old pattern don't trip the check).
+    body_nodes = [n for n in method_node.body if not (
+        isinstance(n, ast.Expr)
+        and isinstance(n.value, ast.Constant)
+        and isinstance(n.value.value, str)
+    )]
+    body_src = ast.unparse(ast.Module(body_nodes, type_ignores=[]))
+
+    # Must NOT call .count() on self._slot_container directly
+    # (NchantdVScrollGroupBox has no count() method)
+    bad_pattern = re.compile(r"self\._slot_container\.count\s*\(")
+    assert not bad_pattern.search(body_src), (
+        f"_render_current_slot must not call "
+        f"'self._slot_container.count()' on the widget — "
+        f"NchantdVScrollGroupBox has no count() method. Use "
+        f"self._slot_container.layout_box.count() instead."
+    )
+
+    # Must call .count() on layout_box
+    assert "layout_box.count()" in body_src, (
+        "_render_current_slot must call .count() on the "
+        "container's layout_box (not the container widget)"
+    )
+
+    # Must also use layout_box for takeAt (the takeAt is what
+    # actually removes the items from the layout)
+    assert "layout_box.takeAt" in body_src, (
+        "_render_current_slot must call .takeAt() on layout_box "
+        "to actually remove the items"
+    )
+
+
+def test_nchantd_vscroll_group_box_has_no_count_method():
+    """Sanity check: NchantdVScrollGroupBox (in nchantrs) is a
+    QWidget, not a QLayout. The .count() method lives on the
+    inner layout_box, not on the widget itself.
+
+    If this test ever fails, the upstream nchantrs class has
+    been changed to expose .count() directly — in which case
+    the bug fix in _render_current_slot should be re-evaluated.
+    """
+    nchantrs_groups = Path(
+        "/home/solubrew/EDN/AGTs/morgbai/workspace/projects/nchantrs/"
+        "nchantrs/widgets/groups.py"
+    )
+    if not nchantrs_groups.exists():
+        # Skip if upstream isn't available in this env
+        return
+    src = nchantrs_groups.read_text()
+    # Find the class
+    tree = ast.parse(src)
+    cls = None
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.ClassDef)
+            and node.name == "NchantdVScrollGroupBox"
+        ):
+            cls = node
+            break
+    assert cls is not None, "NchantdVScrollGroupBox class must exist"
+    body = ast.unparse(cls)
+    # Class must NOT have a count() method (it's a QWidget, not QLayout)
+    has_count_def = re.search(r"def\s+count\s*\(", body) is not None
+    assert not has_count_def, (
+        "NchantdVScrollGroupBox.count() exists upstream — the "
+        "fix in _render_current_slot should be re-evaluated "
+        "(maybe we can call .count() directly now)"
+    )
+    # But it MUST have a layout_box attribute
+    assert "self.layout_box" in body, (
+        "NchantdVScrollGroupBox must have self.layout_box "
+        "(the QVBoxLayout where addWidget lands)"
+    )

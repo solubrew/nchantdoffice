@@ -754,14 +754,24 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         a stack).
 
         T-DESK-066 step 6.
+
+        Runtime bug fix (2026-08-11): ``NchantdVScrollGroupBox``
+        is a QWidget (extends NchantdWidget) — it has no
+        ``count()`` method. The ``count()`` and ``takeAt()``
+        live on its inner ``layout_box`` (a QVBoxLayout). The
+        previous code called ``self._slot_container.count()``
+        which raised ``AttributeError`` 4x in the 11:27 log.
+        Now we operate on the layout instead.
         """
         try:
             # Remove every child widget from the container.
-            # ``NchantdVScrollGroupBox`` is a QGroupBox — it
-            # owns its child widgets, so removing them via
-            # ``takeChild`` then ``deleteLater`` is safe.
-            for i in reversed(range(self._slot_container.count())):
-                item = self._slot_container.takeAt(i)
+            # The container's children are added via
+            # ``addWidget()`` (line 720) which delegates to
+            # ``self._slot_container.layout_box.addWidget()``.
+            # To remove them, iterate over the layout_box.
+            layout_box = self._slot_container.layout_box
+            for i in reversed(range(layout_box.count())):
+                item = layout_box.takeAt(i)
                 w = item.widget() if item is not None else None
                 if w is not None:
                     w.setParent(None)
