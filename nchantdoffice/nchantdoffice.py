@@ -61,6 +61,15 @@ class NchantdOfficeCloak(NchantdCloak):
         # honours the user's check_update_interval_hours override
         # (Interface Tab settings → "Update check interval (hours)").
         self.update_checker = UpdateChecker(cfg=self.config.dikt)
+        # T-NEW-042b: NchantdUser.__init__ (parent) reads
+        # self.parent.device.user at line 65. Set self.device
+        # BEFORE constructing NchantdOfficeUser(self) so the
+        # parent class has access to it. Real-world crash
+        # reported 2026-08-11 14:21:27:
+        #   AttributeError: 'NchantdOfficeCloak' object has no
+        #   attribute 'device'
+        from pycurity.pyvice import Device
+        self.device = Device()
         # T-NEW-042 (DESK-0): instantiate the user singleton so
         # self.user.uuid is the canonical per-install identifier
         # (replaces the previously-hardcoded application_NCD

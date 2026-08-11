@@ -133,3 +133,62 @@ def test_users_no_env_var_reads():
                         f"users.py must not use os.{func.attr} "
                         f"(line {node.lineno})"
                     )
+
+
+# ============================================================================
+# T-NEW-042b: NchantdUser parent.device requirement fix
+# ============================================================================
+# Original DESK-0 wired NchantdOfficeUser(self) into
+# NchantdOfficeCloak.__init__, but didn't satisfy the
+# parent's requirement that parent.device exist.
+# NchantdUser.__init__ reads `self.parent.device.user` at
+# line 65 — without setting self.device, the attribute
+# access raises AttributeError ("'NchantdOfficeCloak'
+# object has no attribute 'device'").
+#
+# Fix: set self.device = Device() BEFORE
+# NchantdOfficeUser(self) is constructed. The Device
+# class is from pycurity.pyvice and has a no-arg
+# constructor that sets `.user`, `.mac`, `.home`, etc.
+
+
+def test_cloak_sets_self_device_before_user_construction():
+    """NchantdOfficeCloak.__init__ must set self.device
+    BEFORE NchantdOfficeUser(self) is constructed.
+
+    Without this, the parent's NchantdUser.__init__ tries
+    to read `self.parent.device.user` and crashes with
+    AttributeError (real-world bug reported 2026-08-11 14:21).
+    """
+    src = _read(CLOAK)
+    tree = ast.parse(src)
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.ClassDef)
+            and node.name == "NchantdOfficeCloak"
+        ):
+            body = ast.unparse(node)
+            # Find the position of self.device = ... and of
+            # NchantdOfficeUser(self) — the device assignment
+            # must come first.
+            device_pos = body.find("self.device")
+            user_pos = body.find("NchantdOfficeUser(self)")
+            assert device_pos != -1, (
+                "NchantdOfficeCloak must set self.device "
+                "(T-NEW-042b — Device() instance for NchantdUser parent)"
+            )
+            assert user_pos != -1, (
+                "NchantdOfficeCloak must instantiate NchantdOfficeUser"
+            )
+            assert device_pos < user_pos, (
+                f"self.device must be set BEFORE NchantdOfficeUser(self) "
+                f"(device at position {device_pos}, user at {user_pos}). "
+                f"Otherwise parent NchantdUser.__init__ crashes on "
+                f"`self.parent.device.user`."
+            )
+            assert "Device" in body, (
+                "self.device must be set to a Device() instance "
+                "(from pycurity.pyvice)"
+            )
+            return
+    assert False, "NchantdOfficeCloak class must exist"
