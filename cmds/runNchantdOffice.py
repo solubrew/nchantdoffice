@@ -36,9 +36,25 @@ _WEBENGINE_ENV_KEYS = (
     "LIBGL_ALWAYS_SOFTWARE",
 )
 print("[runNchantdOffice] pre-Qt webengine env:", {k: os.environ.get(k) for k in _WEBENGINE_ENV_KEYS})
-if os.environ.get("NCHANTD_WEBENGINE_SOFTWARE") == "1":
+# T-NEW-070 (DESK-4 hard-break): NCHANT_WEBENGINE_SOFTWARE
+# env var removed. Software-render mode now comes from
+# the user config file via
+# nchantdoffice.utilities.user_config.get_webengine_software_render().
+#
+# Override via:
+#   ~/.config/nchantdoffice/config.yaml:
+#     webengine:
+#       software_render: true
+# OR via a project-local nchantdoffice.yaml.
+from nchantdoffice.utilities.user_config import (  # noqa: E402
+    get_webengine_software_render,
+    write_default_config,
+)
+write_default_config()  # idempotent — first-run setup
+
+if get_webengine_software_render():
     # Opt-in: rule out GPU/compositor blank-surface issues by forcing software
-    # rendering. Run with:  NCHANTD_WEBENGINE_SOFTWARE=1 python runNchantdOffice.py
+    # rendering. Set in user_config.yaml: webengine.software_render: true
     _flags = os.environ.get("QTWEBENGINE_CHROMIUM_FLAGS", "")
     os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = (
         _flags + " --disable-gpu --disable-gpu-compositing --disable-software-rasterizer --no-sandbox"
