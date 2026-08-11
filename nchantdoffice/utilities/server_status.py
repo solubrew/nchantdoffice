@@ -213,8 +213,35 @@ class ServerStatus:
     def state_display(self) -> str:
         """Return ``"<glyph> <label>"`` for one-shot status-bar
         updates. Combines ``state_glyph()`` + ``state_label()``.
+
+        T-NEW-070 (DESK-5): when is_dev_mode() is True, the
+        display is prefixed with ``[DEV]`` so the operator
+        can see at a glance that the desktop is hitting a
+        local test server (not production).
         """
-        return f"{self.state_glyph()} {self.state_label()}"
+        base = f"{self.state_glyph()} {self.state_label()}"
+        if self.is_dev_mode():
+            return f"[DEV] {base}"
+        return base
+
+    # ------------------------------------------------------------------
+    # T-NEW-070 (DESK-5): dev mode detection
+    # ------------------------------------------------------------------
+
+    def is_dev_mode(self) -> bool:
+        """True iff the desktop is configured to hit a local
+        test server (T-NEW-070 DESK-5).
+
+        The status-bar widget reads this to show a ``[DEV]``
+        badge. Implementation: lazy import of the user-config
+        resolver so the pure ``ServerStatus`` class can be
+        tested without ``user_config`` on the import path.
+        """
+        try:
+            from nchantdoffice.utilities.user_config import get_dev_mode
+            return get_dev_mode()
+        except Exception:
+            return False
 
     # ------------------------------------------------------------------
     # Diagnostics (for tests + the Settings panel)
