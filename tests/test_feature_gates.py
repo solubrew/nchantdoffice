@@ -470,21 +470,23 @@ def test_cache_file_has_mode_0600():
     )
 
 
-def test_cache_path_uses_nchant_data_dir():
-    """The cache path must live under NCHANT_DATA_DIR (defaults
-    to ``~/.nchantd/feature_flags_cache.json``). Pin the env
-    override so tests can redirect.
+def test_cache_path_uses_user_config_get_cache_dir():
+    """The cache path must live under the user-config
+    cache dir (T-NEW-070 DESK-3 hard-break).
+
+    Previously read NCHANT_DATA_DIR env var (deprecated).
+    Now uses get_cache_dir() from
+    nchantdoffice.utilities.user_config.
     """
     src = _read(FEATURE_GATES)
-    assert "NCHANT_DATA_DIR" in src, (
-        "feature_gates.py must read NCHANT_DATA_DIR from "
-        "the environment (same pattern as checker.py + "
-        "base_layer.py)."
+    assert "get_cache_dir" in src, (
+        "feature_gates.py must use get_cache_dir() from "
+        "user_config (T-NEW-070 DESK-3 hard-break — no env vars)"
     )
     # And must build the path under the data dir.
-    assert "~/.nchantd" in src or ".nchantd" in src, (
-        "feature_gates.py must default to ~/.nchantd/ when "
-        "NCHANT_DATA_DIR is unset."
+    assert "from nchantdoffice.utilities.user_config" in src, (
+        "feature_gates.py must import get_cache_dir from "
+        "nchantdoffice.utilities.user_config"
     )
 
 

@@ -66,13 +66,13 @@ UPDATE_TYPE_BINARY_DELTA: str = "binary_delta"
 # HTTP timeout for the poll call.
 _HTTP_TIMEOUT: float = 10.0
 
-# Where the last_update_date watermark lives.
-_STATE_DIR = Path(
-    os.environ.get(
-        "NCHANT_DATA_DIR",
-        os.path.join(os.path.expanduser("~"), ".nchantd"),
-    )
-)
+# T-NEW-070 (DESK-3 hard-break): NCHANT_DATA_DIR env var
+# removed. The state dir now comes from the user config
+# file via get_cache_dir(). Tests that need a custom state
+# dir should override via monkeypatch on
+# nchantdoffice.utilities.user_config.get_cache_dir.
+from nchantdoffice.utilities.user_config import get_cache_dir  # noqa: E402
+_STATE_DIR = get_cache_dir()
 _STATE_PATH = _STATE_DIR / "sync_state.json"
 
 

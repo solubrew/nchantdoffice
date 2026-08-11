@@ -87,13 +87,14 @@ _TIER_RANK: Dict[str, int] = {
     TIER_ENTERPRISE: 3,
 }
 
-# Where the cache lives. Override with NCHANT_DATA_DIR for tests.
-_CACHE_DIR = Path(
-    os.environ.get(
-        "NCHANT_DATA_DIR",
-        os.path.join(os.path.expanduser("~"), ".nchantd"),
-    )
-)
+# T-NEW-070 (DESK-3 hard-break): NCHANT_DATA_DIR env var
+# removed. The cache dir now comes from the user config
+# file (~/.config/nchantdoffice/config.yaml) via
+# get_cache_dir(). Tests that need a custom cache dir
+# should override via monkeypatch on
+# nchantdoffice.utilities.user_config.get_cache_dir.
+from nchantdoffice.utilities.user_config import get_cache_dir  # noqa: E402
+_CACHE_DIR = get_cache_dir()
 _CACHE_PATH = _CACHE_DIR / CACHE_FILENAME
 
 
