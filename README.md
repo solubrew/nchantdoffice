@@ -68,6 +68,61 @@ pip install -e .[internal]
 pytest tests/ --continue-on-collection-errors
 ```
 
+### Pointing at a local test server (T-NEW-070)
+
+As of 2026-08-11, **the desktop no longer reads env vars** for
+server URL / cache dir / referral salt / software-render mode
+(per the user's hard-break directive). All runtime config now
+comes from a single user config file:
+
+```yaml
+# ~/.config/nchantdoffice/config.yaml  (XDG — global default)
+dev_mode: true                          # points at http://localhost:5000
+server:
+  url: "http://localhost:5000"
+  timeout: 3
+cache:
+  dir: /tmp/nchantdoffice-test           # override cache for tests
+webengine:
+  software_render: true                 # only on Linux GPU issues
+user:
+  uuid: ...                              # auto-generated on first launch
+```
+
+A per-project override file `./nchantdoffice.yaml` (cwd) takes
+precedence over the XDG file. See `nchantdofficeATNRG/dev-setup.md`
+for the full quick-start and `tests/test_user_config.py` for the
+contract pin (10 tests).
+
+The status bar shows a `[DEV]` badge when `dev_mode: true` is
+active — operators can see at a glance whether they're hitting
+prod or a local server.
+
+## Recent changes (2026-08)
+
+Cross-repo work that landed 2026-08-11:
+
+- **T-NEW-070 hard-break**: removed env-var reads for
+  `NCHANT_API_BASE`, `NCHANT_DATA_DIR`, `NCHANT_REFERRAL_SALT`,
+  `NCHANT_WEBENGINE_SOFTWARE`. Replaced with config-file reads.
+  Added `nchantdoffice/utilities/user_config.py` (XDG resolver
+  with cwd override). Reorganized launcher imports so
+  `crow.crowLoad` runs first (sys.path setup before Qt).
+  See T-DESK-066 card in `TODOs.md` for the full commit trail.
+- **T-NEW-042 anti-abuse + attribution + NchantdOfficeUser**:
+  device-fingerprint anti-abuse check (30-day window),
+  first-touch attribution (30-day cookie), 3-opens-minimum
+  anti-abuse rule (MIN_APP_OPENS=3), `record_app_open()`
+  per-calendar-day idempotency. NchantdOfficeUser is now
+  properly integrated as the canonical user UUID source
+  (DESK-0 — replaces the hardcoded `application_NCD` string).
+  Real-world crash from 2026-08-11 14:21 (T-NEW-042b) fixed:
+  `self.device = Device()` set before user instantiation.
+- **T-NEW-070 DESK-5 [DEV] badge**: status bar shows `[DEV]`
+  badge whenever `dev_mode: true` is in the config — operators
+  can see at a glance whether they're hitting prod or a local
+  server.
+
 ### Code style
 
 - **Class naming**: All public widget / document / manager classes are named ``Nchantd<Document>`` (preserved per user direction — do not rename).
