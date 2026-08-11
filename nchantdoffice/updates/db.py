@@ -71,7 +71,7 @@ class NchantdOfficeDBUpdate(NchantdDBUpdate):
         self._upgrade_lock = True
         logma.info(f"Updating pyffice document")
         # self.parent.pyffice_document.update(self.versions.dikt)
-        updater = self.parent.codex.update()
+        updater = self.parent.model.codex.update()
         for document_type in updater.get_document_types():
             self.check_current_document_version(document_type)
         # need a schema that can be checked against each doc_media_content and app_media_content entry latest version
