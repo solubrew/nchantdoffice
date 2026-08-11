@@ -831,29 +831,26 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             49: "_insert_stretch",
             100: "_skip",  # PUSH to 0.0.3 Sketch not compatible to any outside protocol
         }
-        ffes_cfg = {"handler": self.cmd_on_file_search_method_change, "action": "select_file_method"}
-        self.flatten_files_enable_spin = NchantdEnableSpinBox(self, ffes_cfg)
-        cfg["buttons"][13] = {
-            "label": "Flatten Files",
-            "action": "flatten_files",
-            "handler": self.cmd_flatten_files,
-            "widget": self.flatten_files_enable_spin,
-        }
-        fsms_cfg = {"label": "Search Method", "options": self.get_file_search_methods(), "layout": "horizontal"}
-        self.file_search_method_select = NchantdComboEditor(self, fsms_cfg)
-        cfg["buttons"][14] = {
-            "action": "select_file_method",
-            "widget": self.file_search_method_select,
-            "handler": self.cmd_on_file_search_method_change,
-        }
+        # ffes_cfg = {"handler": self.cmd_on_file_search_method_change, "action": "select_file_method"}
+        # self.flatten_files_enable_spin = NchantdEnableSpinBox(self, ffes_cfg)
+        # cfg["buttons"][13] = {
+        #     "label": "Flatten Files",
+        #     "action": "flatten_files",
+        #     "handler": self.cmd_flatten_files,
+        #     "widget": self.flatten_files_enable_spin,
+        # }
+        # fsms_cfg = {"label": "Search Method", "options": self.get_file_search_methods(), "layout": "horizontal"}
+        # self.file_search_method_select = NchantdComboEditor(self, fsms_cfg)
+        # cfg["buttons"][14] = {
+        #     "action": "select_file_method",
+        #     "widget": self.file_search_method_select,
+        #     "handler": self.cmd_on_file_search_method_change,
+        # }
         self.table_layout = pyqt.QHBoxLayout()
         fs_cfg = {}
         logma.info(f"Initialize File System")
         self.fs_tree = NchantdFileSystem(self, fs_cfg).initWidget()
         super().initView(cfg)
-
-
-
         self.fs_tree.itemExpanded.connect(self.cmd_on_node_expansion)
         self.fs_tree.itemPressed.connect(self.cmd_on_node_selection)  # may need to move to the underlieing widget
         self.fs_tree.setFixedWidth(self.width() * 0.15)
@@ -1036,11 +1033,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         restoration.
         """
         last_root = self.config.dikt.get("last_root_path")
-        if (
-            last_root
-            and isinstance(last_root, str)
-            and last_root.strip()
-        ):
+        if last_root and isinstance(last_root, str) and last_root.strip():
             return last_root
         return getattr(self.document, "file_path", None)
 

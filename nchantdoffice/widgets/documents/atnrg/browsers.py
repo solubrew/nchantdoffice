@@ -77,6 +77,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.did = None
         self.browser = None
         self.pin = False
+        self.url_select_entry = None
 
     def initModel(self, cfg=None):
         """"""
@@ -311,6 +312,8 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         page = None
         self.document.set_page_active(page)
         url = self.document.active_page.active_url.active_url
+        if url is None:
+            return self
         logma.info(f"Goto {url}")
         self.populate_document(url)
         return self
@@ -1108,11 +1111,11 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         if self.pinned is False:
             self.browser.populate_document(url)
         # Refresh the URL inspection toolbox (no DB write).
-        if hasattr(self, "update_toolbox_url_inspection"):
-            try:
-                self.update_toolbox_url_inspection()
-            except Exception as e:
-                logma.error(f"[browsers] populate_document: update_toolbox_url_inspection failed: {e}", exc_info=True)
+        # if hasattr(self, "update_toolbox_url_inspection"):
+        #     try:
+        #         self.update_toolbox_url_inspection()
+        #     except Exception as e:
+        #         logma.error(f"[browsers] populate_document: update_toolbox_url_inspection failed: {e}", exc_info=True)
         return self
 
     def get_content(self):

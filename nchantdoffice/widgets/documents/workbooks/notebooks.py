@@ -46,7 +46,7 @@ from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
-log = False
+log = True
 logma = Logma(__name__)
 if not log:
     logma.off()
@@ -245,213 +245,10 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         #     raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def _make_reload_handler(self, last_path):
-        """Return a QTimer singleShot slot that reloads ``last_path``.
-
-        Replaces the previous ``lambda p=last_path:`` form with a
-        named factory; satisfies the lambda-antipattern auditor and
-        makes the slot testable in isolation.
-        """
-
-        def _handler(_p=last_path):
-            self.open_notebook(_p)
-
-        return _handler
-
     def initWidget(self):
         """"""
         self.initModel()
         self.initView()
-        return self
-
-    def get_url_history(self):
-        """Return the list of URLs the notebook has visited.
-
-        Combines the static default URL (the local Jupyter server) with
-        any URLs the user has navigated to since the notebook was
-        opened. Returns a list of URL strings, most recent first.
-        """
-        history = []
-        if getattr(self, "server_url", None):
-            history.append(self.server_url)
-        seen = set(history)
-        for url in getattr(self, "_url_history", []) or []:
-            if url and url not in seen:
-                history.append(url)
-                seen.add(url)
-        return history
-
-    def _looks_like_ipynb_path(self, path):
-        """Return True if ``path`` is a string ending in ``.ipynb``."""
-        return bool(path) and isinstance(path, str) and path.lower().endswith(".ipynb")
-
-    def open_notebook(self, path):
-        """Open a local .ipynb file in the embedded webview.
-
-        T-044 helper - resolves to an absolute path, validates the
-        file exists, then issues a webview.setUrl() to the Jupyter
-        server's ``/notebooks/<name>`` endpoint. Returns ``self``.
-        """
-        if not self._looks_like_ipynb_path(path):
-            logma.warning(f"[notebook] open_notebook: not a .ipynb path: {path}")
-            return self
-        import os
-
-        path = os.path.abspath(path)
-        if not os.path.isfile(path):
-            logma.warning(f"[notebook] open_notebook: file missing: {path}")
-            return self
-        try:
-            import urllib.parse
-
-            self.current_notebook_path = path
-            if hasattr(self, "config"):
-                self.config.dikt["last_notebook_path"] = path
-            target = f"{self.server_url}/notebooks/{urllib.parse.quote(os.path.basename(path))}"
-            if hasattr(self, "browser") and self.browser is not None and hasattr(self.browser, "setUrl"):
-                from PySide6 import QtCore
-
-                self.browser.setUrl(QtCore.QUrl(target))
-            logma.info(f"[notebook] open_notebook: navigated to {target}")
-        except Exception as e:
-            logma.error(f"[notebook] open_notebook failed: {e}", exc_info=True)
-        return self
-
-    def _sync_notebook_from_url(self, url):
-        """T-NEW-062: keep Nchantd state in sync with Jupyter-side navigation.
-
-        When the embedded Jupyter webview navigates (via the
-        filebrowser ``/tree`` page, a direct URL entry in the
-        toolbar, or a ``load_notebook_file`` call), this helper:
-
-          1. Parses the URL for a ``/notebooks/<name>`` path.
-          2. Resolves ``<name>`` against the Jupyter cwd
-             (``dirname(self.file_path)`` when known, else the
-             process cwd).
-          3. Sets ``self.file_path`` + ``self.current_notebook_path``
-             so the document model + URL dropdown stay consistent.
-          4. Refreshes the URL dropdown widget so the toolbar
-             shows the new URL.
-          5. Persists ``last_notebook_path`` so app restart can
-             reopen the user's currently-open notebook.
-
-        No-op for ``/tree`` (the Jupyter filebrowser root) and
-        any URL whose path doesn't match ``/notebooks/<name>``.
-        Defensive against malformed URLs (returns silently).
-
-        Parameters
-        ----------
-        url : str
-            The Jupyter URL the webview just navigated to
-            (typically ``http://localhost:8888/notebooks/foo.ipynb``
-            or ``http://localhost:8888/tree``).
-        """
-        try:
-            from urllib.parse import urlparse, unquote
-            import os
-
-            parsed = urlparse(url)
-            path = parsed.path or ""
-            # Match ``/notebooks/<name>`` — Jupyter's canonical URL
-            # for a single notebook. Note JupyterLab may use
-            # ``/lab/tree/<path>`` or other variants; we accept the
-            # plain ``/notebooks/`` form for now (matches the URLs
-            # this widget's ``open_notebook`` + ``load_notebook_file``
-            # already issue).
-            if not path.startswith("/notebooks/"):
-                # /tree, /lab, /api, /nbextensions, etc. — no sync.
-                return
-            name = unquote(path[len("/notebooks/"):].split("?", 1)[0].split("#", 1)[0])
-            if not name or not name.endswith(".ipynb"):
-                logma.info(
-                    f"[notebook] _sync_notebook_from_url: ignoring URL "
-                    f"without .ipynb basename: name={name!r}"
-                )
-                return
-            # Resolve against the Jupyter cwd. We prefer the
-            # directory of the current file_path (the cwd the
-            # Jupyter server was started with); fall back to the
-            # process cwd if file_path is unset.
-            cwd = (
-                os.path.dirname(self.file_path)
-                if getattr(self, "file_path", None)
-                else os.getcwd()
-            )
-            resolved = os.path.abspath(os.path.join(cwd, name))
-            if not os.path.isfile(resolved):
-                logma.warning(
-                    f"[notebook] _sync_notebook_from_url: file not found "
-                    f"at resolved path {resolved!r} (cwd={cwd!r}, name={name!r})"
-                )
-                return
-            self.file_path = resolved
-            self.current_notebook_path = resolved
-            # Persist so initModel / run_on_launch can reopen on
-            # next app launch.
-            if hasattr(self, "config"):
-                self.config.dikt["last_notebook_path"] = resolved
-            # Refresh the URL dropdown so the toolbar shows the
-            # current URL. ``update_options`` replaces the dropdown
-            # items in-place; ``set_option_selection`` sets the
-            # active selection. Both are defensive — the dropdown
-            # may be None during teardown (guard with hasattr).
-            if (
-                hasattr(self, "url_select_entry")
-                and self.url_select_entry is not None
-            ):
-                try:
-                    self.url_select_entry.update_options(
-                        self.get_url_history(), replace=True, sort=False
-                    )
-                    self.url_select_entry.set_option_selection(
-                        self.get_current_url()
-                    )
-                except Exception as e:
-                    logma.warning(
-                        f"[notebook] _sync_notebook_from_url: "
-                        f"url_select_entry update failed: {e}"
-                    )
-            logma.info(
-                f"[notebook] _sync_notebook_from_url: synced file_path={resolved!r}"
-            )
-        except Exception as e:
-            logma.warning(
-                f"[notebook] _sync_notebook_from_url failed for {url!r}: {e}",
-                exc_info=True,
-            )
-
-    def get_current_url(self):
-        """Return the URL the notebook is currently displaying.
-
-        Falls back to the local Jupyter server URL when no explicit
-        navigation has happened yet.
-        """
-        current = getattr(self, "_target_url", None)
-        if current:
-            return current
-        return getattr(self, "server_url", None) or ""
-
-    def cmd_goto_page(self, url=None, *args, **kwargs):
-        """Navigate the embedded browser to the given URL.
-
-        Validates that the URL is non-empty and remembers it for the
-        next ``get_current_url`` call. Returns ``self`` for chainable
-        call sites.
-        """
-        if not url:
-            return self
-        self._target_url = url
-        history = list(getattr(self, "_url_history", []) or [])
-        if url in history:
-            history.remove(url)
-        history.insert(0, url)
-        # Cap history at 50 entries to keep the dropdown manageable
-        self._url_history = history[:50]
-        if hasattr(self, "web_view") and self.web_view is not None:
-            try:
-                self.web_view.setUrl(pyqt.QUrl(url))
-            except Exception as e:
-                logma.error(f"[notebooks] cmd_goto_page failed: {e}", exc_info=True)
         return self
 
     def add_cell(self, cell):
@@ -493,43 +290,70 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.info(f"Cleared outputs of {len(self.cells)} cells")
         return self
 
+    def cmd_cell_type_change(self, event=None, *args, **kwargs):
+        """Update the active cell's cell_type based on the dropdown.
+
+        Reads the current selection from ``self.cell_type_select`` and
+        writes it into the currently selected cell's ``cell_type``
+        field. No-op if no cell is selected or the dropdown is empty.
+        """
+        if not hasattr(self, "cell_type_select") or self.cell_type_select is None:
+            return self
+        new_type = None
+        getter = getattr(self.cell_type_select, "currentText", None) or getattr(
+            self.cell_type_select, "get_value", None
+        )
+        if callable(getter):
+            new_type = getter()
+        if not new_type:
+            return self
+        # Find active cell
+        active_cell = None
+        if hasattr(self, "table") and self.table is not None:
+            try:
+                active_cell = self.table.currentItem()
+            except Exception:
+                active_cell = None
+        if active_cell is not None:
+            row = active_cell.row()
+            try:
+                if 0 <= row < len(self.cells):
+                    self.cells[row]["cell_type"] = new_type
+            except (TypeError, KeyError):
+                pass
+        self.config.dikt["cell_type"] = new_type
+        return self
+
     def cmd_check_is_pinned(self, event, *args, **kwargs):
         """"""
         return self
 
-    def cmd_pin_page(self, event, *args, **kwargs):
-        """"""
-        self.pin_page()
+    def cmd_goto_page(self, url=None, *args, **kwargs):
+        """Navigate the embedded browser to the given URL.
+
+        Validates that the URL is non-empty and remembers it for the
+        next ``get_current_url`` call. Returns ``self`` for chainable
+        call sites.
+        """
+        if not url:
+            return self
+        self._target_url = url
+        history = list(getattr(self, "_url_history", []) or [])
+        if url in history:
+            history.remove(url)
+        history.insert(0, url)
+        # Cap history at 50 entries to keep the dropdown manageable
+        self._url_history = history[:50]
+        if hasattr(self, "web_view") and self.web_view is not None:
+            try:
+                self.web_view.setUrl(pyqt.QUrl(url))
+            except Exception as e:
+                logma.error(f"[notebooks] cmd_goto_page failed: {e}", exc_info=True)
         return self
 
-    def cmd_unpin_page(self, event, *args, **kwargs):
-        """"""
-        super().unpin_page()
-        self.document.unpin_page()
-        return self
-
-    # ========== Command Handlers ==========
-
-    def cmd_start_server(self, event=None, *args, **kwargs):
-        """Start Jupyter notebook server"""
-        if not self.server_running:
-            self.start_jupyter_server()
-        else:
-            logma.info("Jupyter server is already running")
-        return self
-
-    def cmd_restart_server(self, event=None, *args, **kwargs):
-        """Restart Jupyter notebook server"""
-        self.stop_jupyter_server()
-        import time
-
-        time.sleep(1)  # Wait for server to fully stop
-        self.start_jupyter_server()
-        return self
-
-    def cmd_stop_server(self, event=None, *args, **kwargs):
-        """Stop Jupyter notebook server"""
-        self.stop_jupyter_server()
+    def cmd_interrupt_kernel(self, event=None, *args, **kwargs):
+        """Interrupt the running kernel"""
+        self.interrupt_kernel()
         return self
 
     def cmd_new_notebook(self, event=None, *args, **kwargs):
@@ -542,6 +366,20 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         super().cmd_open_local_file(event, *args, **kwargs)
         if self.local_file and exists(self.local_file):
             self.load_notebook_file(self.local_file)
+        return self
+
+    def cmd_pin_page(self, event, *args, **kwargs):
+        """"""
+        self.pin_page()
+        return self
+
+    def cmd_restart_server(self, event=None, *args, **kwargs):
+        """Restart Jupyter notebook server"""
+        self.stop_jupyter_server()
+        import time
+
+        time.sleep(1)  # Wait for server to fully stop
+        self.start_jupyter_server()
         return self
 
     def cmd_set_server_port(self, event=None, *args, **kwargs):
@@ -578,9 +416,17 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.info("Kernel is already running")
         return self
 
-    def cmd_interrupt_kernel(self, event=None, *args, **kwargs):
-        """Interrupt the running kernel"""
-        self.interrupt_kernel()
+    def cmd_start_server(self, event=None, *args, **kwargs):
+        """Start Jupyter notebook server"""
+        if not self.server_running:
+            self.start_jupyter_server()
+        else:
+            logma.info("Jupyter server is already running")
+        return self
+
+    def cmd_stop_server(self, event=None, *args, **kwargs):
+        """Stop Jupyter notebook server"""
+        self.stop_jupyter_server()
         return self
 
     def cmd_toggle_autostart(self, event=None, *args, **kwargs):
@@ -591,6 +437,12 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             # Save to config
             if self.config:
                 self.config.dikt["autostart_server"] = autostart
+        return self
+
+    def cmd_unpin_page(self, event, *args, **kwargs):
+        """"""
+        super().unpin_page()
+        self.document.unpin_page()
         return self
 
     def create_new_notebook(self, notebook_name=None):
@@ -859,39 +711,65 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         """
         return bool(self.config.dikt.get("autostart_server", False))
 
-    def cmd_cell_type_change(self, event=None, *args, **kwargs):
-        """Update the active cell's cell_type based on the dropdown.
+    def get_url_history(self):
+        """Return the list of URLs the notebook has visited.
 
-        Reads the current selection from ``self.cell_type_select`` and
-        writes it into the currently selected cell's ``cell_type``
-        field. No-op if no cell is selected or the dropdown is empty.
+        Combines the static default URL (the local Jupyter server) with
+        any URLs the user has navigated to since the notebook was
+        opened. Returns a list of URL strings, most recent first.
         """
-        if not hasattr(self, "cell_type_select") or self.cell_type_select is None:
+        history = []
+        if getattr(self, "server_url", None):
+            history.append(self.server_url)
+        seen = set(history)
+        for url in getattr(self, "_url_history", []) or []:
+            if url and url not in seen:
+                history.append(url)
+                seen.add(url)
+        return history
+
+    def open_notebook(self, path):
+        """Open a local .ipynb file in the embedded webview.
+
+        T-044 helper - resolves to an absolute path, validates the
+        file exists, then issues a webview.setUrl() to the Jupyter
+        server's ``/notebooks/<name>`` endpoint. Returns ``self``.
+        """
+        if not self._looks_like_ipynb_path(path):
+            logma.warning(f"[notebook] open_notebook: not a .ipynb path: {path}")
             return self
-        new_type = None
-        getter = getattr(self.cell_type_select, "currentText", None) or getattr(
-            self.cell_type_select, "get_value", None
-        )
-        if callable(getter):
-            new_type = getter()
-        if not new_type:
+        import os
+
+        path = os.path.abspath(path)
+        if not os.path.isfile(path):
+            logma.warning(f"[notebook] open_notebook: file missing: {path}")
             return self
-        # Find active cell
-        active_cell = None
-        if hasattr(self, "table") and self.table is not None:
-            try:
-                active_cell = self.table.currentItem()
-            except Exception:
-                active_cell = None
-        if active_cell is not None:
-            row = active_cell.row()
-            try:
-                if 0 <= row < len(self.cells):
-                    self.cells[row]["cell_type"] = new_type
-            except (TypeError, KeyError):
-                pass
-        self.config.dikt["cell_type"] = new_type
+        try:
+            import urllib.parse
+
+            self.current_notebook_path = path
+            if hasattr(self, "config"):
+                self.config.dikt["last_notebook_path"] = path
+            target = f"{self.server_url}/notebooks/{urllib.parse.quote(os.path.basename(path))}"
+            if hasattr(self, "browser") and self.browser is not None and hasattr(self.browser, "setUrl"):
+                from PySide6 import QtCore
+
+                self.browser.setUrl(QtCore.QUrl(target))
+            logma.info(f"[notebook] open_notebook: navigated to {target}")
+        except Exception as e:
+            logma.error(f"[notebook] open_notebook failed: {e}", exc_info=True)
         return self
+
+    def get_current_url(self):
+        """Return the URL the notebook is currently displaying.
+
+        Falls back to the local Jupyter server URL when no explicit
+        navigation has happened yet.
+        """
+        current = getattr(self, "_target_url", None)
+        if current:
+            return current
+        return getattr(self, "server_url", None) or ""
 
     def get_cell_type(self):
         """Return the cell type of the currently active cell.
@@ -1199,6 +1077,60 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] is_server_running check failed: {e}")
             return False
 
+    def load_internal(self):
+        """T-076: load the notebook state from the internal DB.
+
+        Reads ``ds_document_internal_state`` for the current
+        document's did, decodes the ``notebook_bytes`` field,
+        and feeds it back into the editor via setPlainText.
+        Returns ``True`` on success, ``False`` when no state
+        is found.
+        """
+        try:
+            if not hasattr(self, "document") or self.document is None:
+                return False
+            did = getattr(self.document, "did", None)
+            if did is None:
+                return False
+            store = getattr(self.app.model, "store", None) if hasattr(self, "app") else None
+            if store is None or not hasattr(store, "execute"):
+                return False
+            try:
+                cursor = store.execute(
+                    "SELECT payload FROM ds_document_internal_state WHERE did = ?",
+                    (did,),
+                )
+            except Exception:
+                return False
+            payload_text = None
+            try:
+                rows = cursor.fetchall() if cursor is not None else []
+                if not rows:
+                    return False
+                payload_text = rows[0][0]
+            except Exception:
+                return False
+            if not payload_text:
+                return False
+            import json as _json
+
+            payload = _json.loads(payload_text)
+            notebook_bytes = payload.get("notebook_bytes")
+            if not notebook_bytes:
+                return False
+            editor = getattr(self, "document_editor", None) or getattr(self, "editor", None)
+            if editor is None:
+                return False
+            if hasattr(editor, "setPlainText"):
+                editor.setPlainText(notebook_bytes)
+            elif hasattr(editor, "set_text"):
+                editor.set_text(notebook_bytes)
+            logma.info(f"[notebook] load_internal: restored state for did={did}")
+            return True
+        except Exception as e:
+            logma.error(f"[notebook] load_internal failed: {e}", exc_info=True)
+            return False
+
     def load_notebook_file(self, file_path):
         """Load a notebook file"""
         try:
@@ -1224,8 +1156,6 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error loading notebook file: {e}", exc_info=True)
 
         return self
-
-    # ========== Server Management Methods ==========
 
     def open_file(self, file=None):
         """"""
@@ -1293,99 +1223,43 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         Returns ``self``.
         """
         try:
-            if getattr(self, "file_path", None):
-                try:
-                    self.document.save(self.file_path)
-                except Exception as e:
-                    logma.error(f"[notebook] save: external write failed: {e}", exc_info=True)
-            save_mode = getattr(self, "save_mode", "file_path")
-            if save_mode in ("to_dict", "both"):
-                serialized = self.get_binary() if hasattr(self, "get_binary") else None
-                if serialized is not None and hasattr(self, "app"):
-                    store = getattr(self.app.model, "store", None) if hasattr(self, "app") else None
-                    if store is not None and hasattr(store, "execute"):
-                        try:
-                            did = getattr(self.document, "did", None) if hasattr(self, "document") else None
-                            if did is not None:
-                                import json as _json
-
-                                store.execute(
-                                    "INSERT OR REPLACE INTO ds_document_internal_state (did, payload, updated_at) VALUES (?, ?, ?)",
-                                    (
-                                        did,
-                                        _json.dumps(
-                                            {
-                                                "notebook_bytes": (
-                                                    serialized.decode("utf-8", errors="replace")
-                                                    if isinstance(serialized, (bytes, bytearray))
-                                                    else str(serialized)
-                                                ),
-                                            }
-                                        ),
-                                        __import__("datetime").datetime.utcnow().isoformat(),
-                                    ),
-                                )
-                        except Exception:
-                            # Table may not exist yet - silently ignore.
-                            pass
+            self.document.save(self.file_path)
         except Exception as e:
-            logma.error(f"[notebook] save failed: {e}", exc_info=True)
+            logma.error(f"[notebook] save: external write failed: {e}", exc_info=True)
+            save_mode = getattr(self, "save_mode", "file_path")
+            # if save_mode in ("to_dict", "both"):
+            #     serialized = self.get_binary() if hasattr(self, "get_binary") else None
+            #     if serialized is not None and hasattr(self, "app"):
+            #         store = getattr(self.app.model, "store", None) if hasattr(self, "app") else None
+            #         if store is not None and hasattr(store, "execute"):
+            # try:
+            #     did = getattr(self.document, "did", None) if hasattr(self, "document") else None
+            #     if did is not None:
+            #         # import json as _json
+            #         #
+            #         # store.execute(
+            #         #     "INSERT OR REPLACE INTO ds_document_internal_state (did, payload, updated_at) VALUES (?, ?, ?)",
+            #         #     (
+            #         #         did,
+            #         #         _json.dumps(
+            #         #             {
+            #         #                 "notebook_bytes": (
+            #         #                     serialized.decode("utf-8", errors="replace")
+            #         #                     if isinstance(serialized, (bytes, bytearray))
+            #         #                     else str(serialized)
+            #         #                 ),
+            #         #             }
+            #         #         ),
+            #         #         __import__("datetime").datetime.utcnow().isoformat(),
+            #         #     ),
+            #         # )
+            # except Exception:
+            #     # Table may not exist yet - silently ignore.
+            #     pass
+        # except Exception as e:
+        #     logma.error(f"[notebook] save failed: {e}", exc_info=True)
         super().save()
         return self
-
-    def load_internal(self):
-        """T-076: load the notebook state from the internal DB.
-
-        Reads ``ds_document_internal_state`` for the current
-        document's did, decodes the ``notebook_bytes`` field,
-        and feeds it back into the editor via setPlainText.
-        Returns ``True`` on success, ``False`` when no state
-        is found.
-        """
-        try:
-            if not hasattr(self, "document") or self.document is None:
-                return False
-            did = getattr(self.document, "did", None)
-            if did is None:
-                return False
-            store = getattr(self.app.model, "store", None) if hasattr(self, "app") else None
-            if store is None or not hasattr(store, "execute"):
-                return False
-            try:
-                cursor = store.execute(
-                    "SELECT payload FROM ds_document_internal_state WHERE did = ?",
-                    (did,),
-                )
-            except Exception:
-                return False
-            payload_text = None
-            try:
-                rows = cursor.fetchall() if cursor is not None else []
-                if not rows:
-                    return False
-                payload_text = rows[0][0]
-            except Exception:
-                return False
-            if not payload_text:
-                return False
-            import json as _json
-
-            payload = _json.loads(payload_text)
-            notebook_bytes = payload.get("notebook_bytes")
-            if not notebook_bytes:
-                return False
-            editor = getattr(self, "document_editor", None) or getattr(self, "editor", None)
-            if editor is None:
-                return False
-            if hasattr(editor, "setPlainText"):
-                editor.setPlainText(notebook_bytes)
-            elif hasattr(editor, "set_text"):
-                editor.set_text(notebook_bytes)
-            logma.info(f"[notebook] load_internal: restored state for did={did}")
-            return True
-        except Exception as e:
-            logma.error(f"[notebook] load_internal failed: {e}", exc_info=True)
-            return False
 
     def save_notebook(self, file_path=None):
         """Save the current notebook"""
@@ -2397,6 +2271,23 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] could not install error instrumentation: {e}", exc_info=True)
         return self
 
+    def _looks_like_ipynb_path(self, path):
+        """Return True if ``path`` is a string ending in ``.ipynb``."""
+        return bool(path) and isinstance(path, str) and path.lower().endswith(".ipynb")
+
+    def _make_reload_handler(self, last_path):
+        """Return a QTimer singleShot slot that reloads ``last_path``.
+
+        Replaces the previous ``lambda p=last_path:`` form with a
+        named factory; satisfies the lambda-antipattern auditor and
+        makes the slot testable in isolation.
+        """
+
+        def _handler(_p=last_path):
+            self.open_notebook(_p)
+
+        return _handler
+
     def _navigate_browser(self, url):
         """Point the embedded web viewer at ``url``.
 
@@ -2446,6 +2337,92 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[notebook] could not register atexit shutdown hook: {e}")
         return self
+
+    def _sync_notebook_from_url(self, url):
+        """T-NEW-062: keep Nchantd state in sync with Jupyter-side navigation.
+
+        When the embedded Jupyter webview navigates (via the
+        filebrowser ``/tree`` page, a direct URL entry in the
+        toolbar, or a ``load_notebook_file`` call), this helper:
+
+          1. Parses the URL for a ``/notebooks/<name>`` path.
+          2. Resolves ``<name>`` against the Jupyter cwd
+             (``dirname(self.file_path)`` when known, else the
+             process cwd).
+          3. Sets ``self.file_path`` + ``self.current_notebook_path``
+             so the document model + URL dropdown stay consistent.
+          4. Refreshes the URL dropdown widget so the toolbar
+             shows the new URL.
+          5. Persists ``last_notebook_path`` so app restart can
+             reopen the user's currently-open notebook.
+
+        No-op for ``/tree`` (the Jupyter filebrowser root) and
+        any URL whose path doesn't match ``/notebooks/<name>``.
+        Defensive against malformed URLs (returns silently).
+
+        Parameters
+        ----------
+        url : str
+            The Jupyter URL the webview just navigated to
+            (typically ``http://localhost:8888/notebooks/foo.ipynb``
+            or ``http://localhost:8888/tree``).
+        """
+        try:
+            from urllib.parse import urlparse, unquote
+            import os
+
+            parsed = urlparse(url)
+            path = parsed.path or ""
+            # Match ``/notebooks/<name>`` — Jupyter's canonical URL
+            # for a single notebook. Note JupyterLab may use
+            # ``/lab/tree/<path>`` or other variants; we accept the
+            # plain ``/notebooks/`` form for now (matches the URLs
+            # this widget's ``open_notebook`` + ``load_notebook_file``
+            # already issue).
+            if not path.startswith("/notebooks/"):
+                # /tree, /lab, /api, /nbextensions, etc. — no sync.
+                return
+            name = unquote(path[len("/notebooks/") :].split("?", 1)[0].split("#", 1)[0])
+            if not name or not name.endswith(".ipynb"):
+                logma.info(
+                    f"[notebook] _sync_notebook_from_url: ignoring URL " f"without .ipynb basename: name={name!r}"
+                )
+                return
+            # Resolve against the Jupyter cwd. We prefer the
+            # directory of the current file_path (the cwd the
+            # Jupyter server was started with); fall back to the
+            # process cwd if file_path is unset.
+            cwd = os.path.dirname(self.file_path) if getattr(self, "file_path", None) else os.getcwd()
+            resolved = os.path.abspath(os.path.join(cwd, name))
+            if not os.path.isfile(resolved):
+                logma.warning(
+                    f"[notebook] _sync_notebook_from_url: file not found "
+                    f"at resolved path {resolved!r} (cwd={cwd!r}, name={name!r})"
+                )
+                return
+            self.file_path = resolved
+            self.current_notebook_path = resolved
+            # Persist so initModel / run_on_launch can reopen on
+            # next app launch.
+            if hasattr(self, "config"):
+                self.config.dikt["last_notebook_path"] = resolved
+            # Refresh the URL dropdown so the toolbar shows the
+            # current URL. ``update_options`` replaces the dropdown
+            # items in-place; ``set_option_selection`` sets the
+            # active selection. Both are defensive — the dropdown
+            # may be None during teardown (guard with hasattr).
+            if hasattr(self, "url_select_entry") and self.url_select_entry is not None:
+                try:
+                    self.url_select_entry.update_options(self.get_url_history(), replace=True, sort=False)
+                    self.url_select_entry.set_option_selection(self.get_current_url())
+                except Exception as e:
+                    logma.warning(f"[notebook] _sync_notebook_from_url: " f"url_select_entry update failed: {e}")
+            logma.info(f"[notebook] _sync_notebook_from_url: synced file_path={resolved!r}")
+        except Exception as e:
+            logma.warning(
+                f"[notebook] _sync_notebook_from_url failed for {url!r}: {e}",
+                exc_info=True,
+            )
 
 
 # ====================================================================================================================||

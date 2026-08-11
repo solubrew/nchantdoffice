@@ -907,6 +907,60 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             self.config.dikt["image_height"] = height
         return self
 
+    def cmd_open_tool_drawer(self, tool_name=None, *args, **kwargs):
+        """Show only the named tool pane in the image drawer.
+
+        T-NEW-035 close-out: was the inline TODO at images.py:949
+        ("implement logic so that when a tool like
+        NchantdConvertSize button is clicked on the document
+        toolbar the drawer is opened and redrawn to show only
+        the config for that tool"). Hides the other 4 panes so
+        the user sees only the named tool's config.
+
+        Args:
+            tool_name: one of "format_conversion",
+                "size_conversion", "color_shift", "crop",
+                "generator". When None or empty, all panes
+                are hidden (no-op show). When the name doesn't
+                match any pane, all panes are hidden (defensive).
+
+        Returns ``self`` for chainable call sites.
+        """
+        # Map of tool_name -> attribute name on the pane.
+        # T-NEW-055 added "palette" so the Show Palette button
+        # (T-NEW-055) can open the palette drawer via the same
+        # mechanism.
+        panes = [
+            ("format_conversion", "image_format_conversion_pane"),
+            ("size_conversion", "image_size_conversion_pane"),
+            ("color_shift", "image_color_shift_pane"),
+            ("crop", "image_crop_pane"),
+            ("generator", "image_generator_pane"),
+            ("palette", "image_palette"),
+        ]
+        try:
+            for _, attr_name in panes:
+                widget = getattr(self, attr_name, None)
+                if widget is not None and hasattr(widget, "hide"):
+                    try:
+                        widget.hide()
+                    except Exception:
+                        pass
+            # Re-show the named pane (if it matches and exists)
+            if tool_name:
+                for tool_key, attr_name in panes:
+                    if tool_key == tool_name:
+                        widget = getattr(self, attr_name, None)
+                        if widget is not None and hasattr(widget, "show"):
+                            try:
+                                widget.show()
+                            except Exception:
+                                pass
+                        break
+        except Exception as e:
+            logma.warning(f"[images] cmd_open_tool_drawer failed: {e}")
+        return self
+
     def cmd_open_local_file(self, event=None, *args, **kwargs):
         """"""
         super().cmd_open_local_file(event, *args, **kwargs)
@@ -948,10 +1002,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
                 try:
                     self.cmd_run_palette_scan()
                 except Exception as exc:
-                    logma.warning(
-                        f"[images] cmd_show_palette_drawer: palette scan "
-                        f"failed: {exc}"
-                    )
+                    logma.warning(f"[images] cmd_show_palette_drawer: palette scan " f"failed: {exc}")
             # Refresh the palette table widget now that we have data.
             palette = self.config.dikt.get("palette_scan") or {}
             self._populate_palette_table(palette)
@@ -960,15 +1011,10 @@ class NchantdOfficeImage(NchantdOfficeDocument):
                 try:
                     self.cmd_open_tool_drawer("palette")
                 except Exception as exc:
-                    logma.warning(
-                        f"[images] cmd_show_palette_drawer: open drawer "
-                        f"failed: {exc}"
-                    )
+                    logma.warning(f"[images] cmd_show_palette_drawer: open drawer " f"failed: {exc}")
             logma.info("[images] cmd_show_palette_drawer: palette drawer opened")
         except Exception as e:
-            logma.error(
-                f"[images] cmd_show_palette_drawer failed: {e}", exc_info=True
-            )
+            logma.error(f"[images] cmd_show_palette_drawer failed: {e}", exc_info=True)
         return self
 
     def _populate_palette_table(self, palette):
@@ -992,24 +1038,30 @@ class NchantdOfficeImage(NchantdOfficeDocument):
                 # Flat list of (hex, count, percent) tuples
                 for entry in palette:
                     if isinstance(entry, dict):
-                        rows.append({
-                            "hex": entry.get("hex"),
-                            "usage": entry.get("percent", entry.get("usage", 0)),
-                            "count": entry.get("count", 0),
-                        })
+                        rows.append(
+                            {
+                                "hex": entry.get("hex"),
+                                "usage": entry.get("percent", entry.get("usage", 0)),
+                                "count": entry.get("count", 0),
+                            }
+                        )
                     elif isinstance(entry, (list, tuple)) and len(entry) >= 2:
-                        rows.append({
-                            "hex": entry[0],
-                            "usage": entry[2] if len(entry) >= 3 else 0,
-                            "count": entry[1],
-                        })
+                        rows.append(
+                            {
+                                "hex": entry[0],
+                                "usage": entry[2] if len(entry) >= 3 else 0,
+                                "count": entry[1],
+                            }
+                        )
             elif colors:
                 for entry in colors:
-                    rows.append({
-                        "hex": entry.get("hex") if isinstance(entry, dict) else None,
-                        "usage": entry.get("percent", 0) if isinstance(entry, dict) else 0,
-                        "count": entry.get("count", 0) if isinstance(entry, dict) else 0,
-                    })
+                    rows.append(
+                        {
+                            "hex": entry.get("hex") if isinstance(entry, dict) else None,
+                            "usage": entry.get("percent", 0) if isinstance(entry, dict) else 0,
+                            "count": entry.get("count", 0) if isinstance(entry, dict) else 0,
+                        }
+                    )
             # Delegate to the table's populator when available.
             if hasattr(table, "set_data"):
                 try:
@@ -1232,60 +1284,6 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         elif doc.location == "external":
             if self.file_path and hasattr(self.image, "load_image"):
                 self.image.load_image(self.file_path)
-        return self
-
-    def cmd_open_tool_drawer(self, tool_name=None, *args, **kwargs):
-        """Show only the named tool pane in the image drawer.
-
-        T-NEW-035 close-out: was the inline TODO at images.py:949
-        ("implement logic so that when a tool like
-        NchantdConvertSize button is clicked on the document
-        toolbar the drawer is opened and redrawn to show only
-        the config for that tool"). Hides the other 4 panes so
-        the user sees only the named tool's config.
-
-        Args:
-            tool_name: one of "format_conversion",
-                "size_conversion", "color_shift", "crop",
-                "generator". When None or empty, all panes
-                are hidden (no-op show). When the name doesn't
-                match any pane, all panes are hidden (defensive).
-
-        Returns ``self`` for chainable call sites.
-        """
-        # Map of tool_name -> attribute name on the pane.
-        # T-NEW-055 added "palette" so the Show Palette button
-        # (T-NEW-055) can open the palette drawer via the same
-        # mechanism.
-        panes = [
-            ("format_conversion", "image_format_conversion_pane"),
-            ("size_conversion", "image_size_conversion_pane"),
-            ("color_shift", "image_color_shift_pane"),
-            ("crop", "image_crop_pane"),
-            ("generator", "image_generator_pane"),
-            ("palette", "image_palette"),
-        ]
-        try:
-            for _, attr_name in panes:
-                widget = getattr(self, attr_name, None)
-                if widget is not None and hasattr(widget, "hide"):
-                    try:
-                        widget.hide()
-                    except Exception:
-                        pass
-            # Re-show the named pane (if it matches and exists)
-            if tool_name:
-                for tool_key, attr_name in panes:
-                    if tool_key == tool_name:
-                        widget = getattr(self, attr_name, None)
-                        if widget is not None and hasattr(widget, "show"):
-                            try:
-                                widget.show()
-                            except Exception:
-                                pass
-                        break
-        except Exception as e:
-            logma.warning(f"[images] cmd_open_tool_drawer failed: {e}")
         return self
 
     def save(self):
