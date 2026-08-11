@@ -46,10 +46,26 @@ print("[runNchantdOffice] pre-Qt webengine env:", {k: os.environ.get(k) for k in
 #     webengine:
 #       software_render: true
 # OR via a project-local nchantdoffice.yaml.
+
+
+# ======================================3rd Party Library Modules=====================================================||
+
+# ======================================Solutions Brewer Library Modules==============================================||
+
+sys.path.insert(0, "/home/solubrew/Documents/AIM")
+import crow  # Commented out - not needed for local system
+
+crow.crowLoad("NchantdOffice", "DELTA")
+from kahndor import kahndor
+from nchantrs.nchantrs import nchantment
+from nchantdoffice.nchantdoffice import NchantdOfficeCloak
+from nchantdoffice.wizards.wizards import NchantdOfficeApplicationStartupWizard
+from kahndor.logma import Logma
 from nchantdoffice.utilities.user_config import (  # noqa: E402
     get_webengine_software_render,
     write_default_config,
 )
+
 write_default_config()  # idempotent — first-run setup
 
 if get_webengine_software_render():
@@ -65,20 +81,6 @@ if get_webengine_software_render():
         "[runNchantdOffice] SOFTWARE RENDERING FORCED ->",
         {k: os.environ.get(k) for k in ("QTWEBENGINE_CHROMIUM_FLAGS", "QT_OPENGL", "LIBGL_ALWAYS_SOFTWARE")},
     )
-
-# ======================================3rd Party Library Modules=====================================================||
-
-# ======================================Solutions Brewer Library Modules==============================================||
-
-sys.path.insert(0, "/home/solubrew/Documents/AIM")
-import crow  # Commented out - not needed for local system
-
-crow.crowLoad("NchantdOffice", "DELTA")
-from kahndor import kahndor
-from nchantrs.nchantrs import nchantment
-from nchantdoffice.nchantdoffice import NchantdOfficeCloak
-from nchantdoffice.wizards.wizards import NchantdOfficeApplicationStartupWizard
-from kahndor.logma import Logma
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
