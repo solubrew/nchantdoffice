@@ -61,7 +61,16 @@ class NchantdOfficeCloak(NchantdCloak):
         # honours the user's check_update_interval_hours override
         # (Interface Tab settings → "Update check interval (hours)").
         self.update_checker = UpdateChecker(cfg=self.config.dikt)
-        self.application_NCD = "40c94efb-d374-437f-a48b-3c6b843fd110"
+        # T-NEW-042 (DESK-0): instantiate the user singleton so
+        # self.user.uuid is the canonical per-install identifier
+        # (replaces the previously-hardcoded application_NCD
+        # constant). The UUID is loaded from user_config if
+        # present, otherwise generated + persisted on first
+        # launch — guaranteeing stability across launches.
+        from nchantdoffice.utilities.users import NchantdOfficeUser
+        self.user = NchantdOfficeUser(self)
+        self.user.persist_uuid()
+        self.application_NCD = self.user.uuid
         self.install = True
         self.primary_focus = "office_platform"
         self.is_installable = True

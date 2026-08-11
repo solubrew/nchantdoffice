@@ -54,6 +54,13 @@ DEFAULTS: Dict[str, Any] = {
     "webengine": {
         "software_render": False,
     },
+    # T-NEW-042 (DESK-0): per-install user UUID. Empty by
+    # default — NchantdOfficeUser.persist_uuid() generates
+    # one on first launch and writes it here so it survives
+    # across launches.
+    "user": {
+        "uuid": "",
+    },
 }
 
 # XDG Base Directory Specification: ~/.config/<app>/config.yaml
@@ -166,6 +173,35 @@ def get_webengine_software_render(
     if config is None:
         config = load_config()
     return bool(config.get("webengine", {}).get("software_render", False))
+
+
+def get_user_uuid(config: Optional[Dict[str, Any]] = None) -> str:
+    """Return the per-install user UUID (T-NEW-042 DESK-0).
+
+    Empty string on first launch — caller is responsible for
+    generating + persisting via set_user_uuid(). After the
+    first launch, returns the persisted UUID so subsequent
+    launches reuse the same identifier.
+    """
+    if config is None:
+        config = load_config()
+    return str(config.get("user", {}).get("uuid", "") or "")
+
+
+def set_user_uuid(uuid: str, path: Optional[Path] = None) -> None:
+    """Persist the per-install user UUID to the user config file.
+
+    Called once on first launch after NchantdOfficeUser
+    generates self.uuid. Idempotent — overwrites if already
+    set (callers should check get_user_uuid() first).
+    """
+    target = path or USER_CONFIG_PATH
+    config = load_config()
+    config.setdefault("user", {})["uuid"] = uuid
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("w", encoding="utf-8") as fh:
+        yaml.safe_dump(config, fh, default_flow_style=False, sort_keys=True)
+    logma.info(f"[user_config] persisted user.uuid to {target}")
 
 
 def write_default_config(path: Optional[Path] = None) -> Path:
