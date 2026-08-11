@@ -122,6 +122,45 @@ Cross-repo work that landed 2026-08-11:
   badge whenever `dev_mode: true` is in the config — operators
   can see at a glance whether they're hitting prod or a local
   server.
+- **T-NEW-044 UI-1** (referral panel uses server-side eligibility):
+  `ReferralAPIClient.fetch_payout_eligibility(user_id)` calls
+  `GET /api/v1/referral/payout-eligibility/<user_id>`.
+  `NchantdOfficeReferralPanel._build_earnings_card` renders
+  4 distinct states (no data / free_tier / below_threshold /
+  eligible). Replaces the client-side `pending >= min_payout`
+  shortcut that ignored tier-gating — a free-tier user with
+  $30 pending would have been shown "Eligible for payout"
+  before this fix. Commit `e8d10d1`.
+- **T-NEW-044 UI-2** (ad-tab-free hours fallback): 4 new helpers
+  in `user_config.py` (`get_ad_tab_free_until`,
+  `set_ad_tab_free_hours`, `clear_ad_tab_free_hours`,
+  `is_ad_tab_free_active`). `NchantdOfficeAdTab
+  ._is_visible_for_user()` checks `is_ad_tab_free_active()`
+  FIRST — hides the Ad tab for free-tier referrers with an
+  active grant (per AppReferralSpec §10). Commit `e4838f3`.
+- **T-NEW-044 UI-3** (affiliate panel for Stripe Connect): new
+  `nchantdoffice/widgets/config/affiliate_panel.py` with
+  `NchantdOfficeAffiliatePanel` widget — "Connect Stripe
+  Account" button + status label. On click → POST
+  `/api/v1/affiliate/connect-stripe` → opens the Stripe-hosted
+  onboarding URL in the user's browser via `webbrowser.open()`.
+  Commit `ded73fc`. Server endpoint: `20673f4`.
+- **T-NEW-045 WIRE-1** (desktop grant trigger):
+  `NchantdOfficeReferralPanel._maybe_grant_ad_tab_free_hours()`
+  computes hours = floor(pending_total * 24 / 5) (24h per $5
+  of pending credit, AppReferralSpec §10), skips if
+  `is_ad_tab_free_active()` is True (no stacking), and is
+  called from `_fetch_payout_eligibility` when
+  `reason='free_tier'`. Commit `b420a06`.
+
+The full cross-repo log (every commit, every T-NEW card,
+every test total) lives at
+[`nchantdofficeATNRG/cross-repo-changelog.md`](
+https://gitlab.example.com/nchantdofficeATNRG/-/blob/gamma/cross-repo-changelog.md)
+— the canonical "current reality" anchor for all 3 repos.
+
+Latest commit on `gamma`:
+[`b420a06 feat(desktop): grant trigger for ad-tab-free hours (T-NEW-045 WIRE-1)`]
 
 ### Code style
 
