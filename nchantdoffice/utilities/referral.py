@@ -548,6 +548,54 @@ class ReferralAPIClient:
         """
         return self._request("GET", "affiliate/dashboard")
 
+    def record_app_open(self, referee_user_id: str) -> Dict[str, Any]:
+        """Record one desktop app-open for `referee_user_id`.
+
+        T-NEW-042 (DESK-1): called by the launcher on every
+        desktop startup so the server can track the
+        3-opens-minimum anti-abuse rule (a referee must
+        open the app ≥3 times before commission is credited).
+
+        The endpoint is best-effort — failures are logged
+        but never raise. Network errors are non-critical
+        (the anti-abuse telemetry has to be allowed to fail
+        in offline scenarios without blocking app launch).
+
+        Args:
+            referee_user_id: the desktop's user identifier.
+                Currently sourced from
+                ``NchantdOfficeUser.persist_uuid()`` (T-NEW-042
+                DESK-0).
+
+        Returns:
+            Dict from the server (empty dict on failure).
+            Server returns:
+              {success, app_opens (int),
+               already_recorded_today (bool)}
+        """
+        if not referee_user_id:
+            return {}
+        url = f"{self.base_url}/referral/record-app-open"
+        try:
+            resp = requests.post(
+                url,
+                json={"referee_user_id": referee_user_id},
+                timeout=5,
+            )
+            if resp.status_code != 200:
+                logma.warning(
+                    f"[referral] record_app_open returned "
+                    f"{resp.status_code}: {resp.text[:200]}"
+                )
+                return {}
+            return resp.json() if resp.content else {}
+        except Exception as exc:
+            logma.warning(
+                f"[referral] record_app_open failed (non-blocking): "
+                f"{exc}"
+            )
+            return {}
+
     # ---- Writes ----
 
     def request_payout(self, amount_cents: int) -> Optional[Dict[str, Any]]:
