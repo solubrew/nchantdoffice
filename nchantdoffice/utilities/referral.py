@@ -47,14 +47,26 @@ _ALPHABET = string.ascii_uppercase + string.digits
 _CODE_RE = re.compile(r"^[A-Z0-9]{10,12}$")
 _FORMAT_RE = re.compile(r"^([A-Z0-9]{2,4})-([A-Z0-9]{3,4})-([A-Z0-9]{2,4})$")
 
-# Default API base. The v1 namespaced endpoints live at
-# https://nchantdoffice.com/api/v1/{affiliate,referral,quicklinks}
+# T-NEW-070 (DESK-2): default salt for the referral code
+# generator. Previously read from NCHANT_REFERRAL_SALT env
+# var (removed per hard-break). Override via the explicit
+# `salt=` kwarg in ReferralCode.generate() if needed.
+_DEFAULT_REFERRAL_SALT = "default-salt"
+
+# T-NEW-070 (DESK-2 hard-break): NCHANT_API_BASE env var
+# removed. The API base URL now comes from the user config
+# file (~/.config/nchantdoffice/config.yaml) via
+# get_server_url(). When dev_mode is true, the server URL
+# defaults to http://localhost:5000 (the nchantdoffice_com
+# cmds/serve_detached.py port) so operators can run a local
+# test server without writing any env vars.
+#
+# The v1 namespaced endpoints live at:
+#   https://nchantdoffice.com/api/v1/{affiliate,referral,quicklinks}
 # (T-DESK-052 alignment, 2026-08-07). The previous
 # /api/affiliate/... paths no longer exist on the live server.
-DEFAULT_API_BASE = os.environ.get(
-    "NCHANT_API_BASE",
-    "https://nchantdoffice.com/api/v1",
-)
+from nchantdoffice.utilities.user_config import get_server_url  # noqa: E402
+DEFAULT_API_BASE = get_server_url() + "/api/v1"
 
 # Referral state machine (mirrors ATNRG spec §6)
 REFERRAL_STATE_ACTIVE = "active"
@@ -117,7 +129,15 @@ class ReferralCode:
     def generate(cls, user_id: str, *, salt: Optional[str] = None,
                  prefix: str = "NB", dashed: bool = True) -> "ReferralCode":
         """Deterministic code derived from user_id + salt."""
-        seed = f"{user_id}:{salt or os.environ.get('NCHANT_REFERRAL_SALT', 'default-salt')}"
+        # T-NEW-070 (DESK-2 hard-break): NCHANT_REFERRAL_SALT
+        # env var removed. Salt now defaults to a module
+        # constant. Operators who need a different salt
+        # should pass it via the explicit `salt=` kwarg
+        # (callers in nchantdoffice_com pass the per-user
+        # salt explicitly — see services/referral.py).
+        if salt is None:
+            salt = _DEFAULT_REFERRAL_SALT
+        seed = f"{user_id}:{salt}"
         digest = hashlib.sha256(seed.encode()).digest()
         raw = "".join(_ALPHABET[digest[i] % len(_ALPHABET)] for i in range(7))
         val = f"{prefix}-{raw[:3]}-{raw[3:7]}" if dashed else f"{prefix}{raw[:8]}"

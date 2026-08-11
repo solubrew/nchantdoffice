@@ -36,22 +36,26 @@ except ImportError:  # pragma: no cover
 # How often to re-fetch from the server (6 hours).
 REFRESH_INTERVAL_SECONDS = 6 * 60 * 60
 
-# Default API base for the server.
-_DEFAULT_API_BASE = os.environ.get(
-    "NCHANT_API_BASE",
-    "https://nchantdoffice.com",
+# T-NEW-070 (DESK-2 + DESK-3 hard-break): both
+# NCHANT_API_BASE and NCHANT_DATA_DIR env vars removed.
+# The API base URL + cache dir now come from the user
+# config file (~/.config/nchantdoffice/config.yaml).
+# When dev_mode is true, get_server_url() returns
+# http://localhost:5000 by default (the
+# nchantdoffice_com cmds/serve_detached.py port).
+from nchantdoffice.utilities.user_config import (  # noqa: E402
+    get_cache_dir,
+    get_server_timeout,
+    get_server_url,
 )
-
-# Cache path: ~/.nchantd/base_layer_cache.json
-_CACHE_DIR = Path(os.environ.get(
-    "NCHANT_DATA_DIR",
-    os.path.join(os.path.expanduser("~"), ".nchantd"),
-))
+_DEFAULT_API_BASE = get_server_url()
+_CACHE_DIR = get_cache_dir()
 _CACHE_PATH = _CACHE_DIR / "base_layer_cache.json"
 
 # Timeout for the HTTP call (short — desktop should not hang
-# on a slow server).
-_HTTP_TIMEOUT = 10  # seconds
+# on a slow server). Pulled from the user config (default 5s)
+# or the explicit 10s value below if config is unavailable.
+_HTTP_TIMEOUT = get_server_timeout() or 10  # seconds
 
 
 def _read_cache() -> Optional[Dict[str, Any]]:
