@@ -815,3 +815,139 @@ def test_pro_internal_promos_have_required_keys():
         assert "cta_url" in keys, "each entry must have 'cta_url'"
         assert "background" in keys, "each entry must have 'background'"
         assert "foreground" in keys, "each entry must have 'foreground'"
+
+
+# ---------------------------------------------------------------------------
+# T-NEW-040 DESK-2 — _load_affiliate_rotation() helper +
+# AffiliateSlot.source field + ProInternalSlot wiring in _load_slots.
+# ---------------------------------------------------------------------------
+
+
+def test_affiliate_slot_has_source_field():
+    """T-NEW-040 DESK-2: AffiliateSlot must carry a ``source``
+    field so the click handler in DESK-3 can fire the right
+    telemetry event. Allowed values: 'external' (default,
+    third-party QuickLinks) or 'internal' (in-house
+    ProInternalSlot passthrough).
+
+    The test pins the field as an annotated dataclass member
+    (``source: str = "external"``) — not just any occurrence
+    of the word 'source' in a docstring/comment.
+    """
+    src = _read(AD_TAB)
+    cls = _ast_class(src, "AffiliateSlot")
+    assert cls is not None
+    body_src = _class_source(src, "AffiliateSlot")
+    # Strip comments and docstrings to avoid false positives
+    tree = ast.parse(body_src)
+    cls_node = next(
+        n for n in tree.body
+        if isinstance(n, ast.ClassDef)
+    )
+    # Look for ``source: str = ...`` annotation in the class body
+    found_source_field = False
+    for stmt in cls_node.body:
+        if isinstance(stmt, ast.AnnAssign):
+            if (
+                isinstance(stmt.target, ast.Name)
+                and stmt.target.id == "source"
+            ):
+                found_source_field = True
+                break
+        elif isinstance(stmt, ast.Assign):
+            for tgt in stmt.targets:
+                if (
+                    isinstance(tgt, ast.Name)
+                    and tgt.id == "source"
+                ):
+                    found_source_field = True
+                    break
+            if found_source_field:
+                break
+    assert found_source_field, (
+        "AffiliateSlot must declare a ``source`` dataclass field "
+        "(T-NEW-040 DESK-2 — telemetry split). "
+        "Expected: ``source: str = 'external'`` (or 'internal')."
+    )
+
+
+def test_load_affiliate_rotation_helper_exists():
+    """T-NEW-040 DESK-2: new module-level helper that fetches
+    /api/v1/quicklinks/?ad_rotation_categories=... and returns
+    a curated list of banner dicts in the AffiliateSlot shape.
+    Falls back to FALLBACK_BANNERS on network failure (offline-first).
+    """
+    src = _read(AD_TAB)
+    fn = _ast_function(src, "_load_affiliate_rotation")
+    assert fn is not None, (
+        "_load_affiliate_rotation() helper must exist "
+        "(T-NEW-040 DESK-2)"
+    )
+    body = _function_source(src, "_load_affiliate_rotation")
+    # Must hit the quicklinks endpoint
+    assert "/api/v1/quicklinks" in body, (
+        "_load_affiliate_rotation() must call /api/v1/quicklinks"
+    )
+    # Must pass the new ad_rotation_categories filter
+    assert "ad_rotation_categories" in body, (
+        "_load_affiliate_rotation() must pass ad_rotation_categories "
+        "filter (creator_marketplace, affiliate_network, cross_promo)"
+    )
+    # Must fall back to FALLBACK_BANNERS on network failure
+    assert "FALLBACK_BANNERS" in body or "load_fallback_banners" in body, (
+        "_load_affiliate_rotation() must fall back to FALLBACK_BANNERS "
+        "on network failure (offline-first contract)"
+    )
+
+
+def test_load_slots_wires_pro_internal_promos():
+    """T-NEW-040 DESK-2: _load_slots() must append ProInternalSlot
+    entries (from load_pro_internal_promos()) after the AffiliateSlot
+    entries. This is the in-house cross-promo rotation slot — sits
+    at the end of the rotation, in the same place as the affiliate
+    slot tier but tagged kind='pro_internal' for telemetry."""
+    src = _read(AD_TAB)
+    fn = _ast_function(src, "_load_slots")
+    assert fn is not None
+    body = _function_source(src, "_load_slots")
+    assert "load_pro_internal_promos" in body, (
+        "_load_slots must call load_pro_internal_promos() "
+        "(T-NEW-040 DESK-2)"
+    )
+    assert "ProInternalSlot" in body, (
+        "_load_slots must append ProInternalSlot entries "
+        "(T-NEW-040 DESK-2)"
+    )
+
+
+def test_load_slots_canonical_order_extended():
+    """T-NEW-040 DESK-2: the canonical rotation order is now:
+      [tip] + [substack] + [pro_cta] + [affiliate] + [pro_internal]
+    The new pro_internal tier sits at the end (in-house cross-promos
+    rotate last so users see external affiliates first — that's the
+    revenue-producing tier).
+
+    Pinned by the position of each ``slots.append(...)`` call
+    (not the docstring mentions, which can appear anywhere in
+    the function).
+    """
+    src = _read(AD_TAB)
+    fn = _ast_function(src, "_load_slots")
+    assert fn is not None
+    body = _function_source(src, "_load_slots")
+    # Pin via the slot append positions (not the loader-call
+    # positions, since the loaders are called once but the
+    # appends happen in the documented order).
+    tip_pos = body.find("slots.append(TipSlot")
+    sub_pos = body.find("slots.append(SubstackSlot")
+    pro_cta_pos = body.find("slots.append(ProCtaSlot")
+    aff_pos = body.find("slots.append(AffiliateSlot")
+    pro_int_pos = body.find("slots.append(ProInternalSlot")
+    assert -1 < tip_pos < sub_pos < pro_cta_pos < aff_pos < pro_int_pos, (
+        f"Rotation order wrong: "
+        f"tip={tip_pos}, substack={sub_pos}, "
+        f"pro_cta={pro_cta_pos}, affiliate={aff_pos}, "
+        f"pro_internal={pro_int_pos}. "
+        f"Expected tip < substack < pro_cta < affiliate < pro_internal. "
+        f"Search for ``slots.append(<SlotType>`` in the source."
+    )

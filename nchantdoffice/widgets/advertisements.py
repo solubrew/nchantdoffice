@@ -321,9 +321,18 @@ class AffiliateSlot(RotationSlot):
     affiliate API → FALLBACK_BANNERS). Renders the same
     title/subtitle/CTA card shape as the static Ad tab used
     to show.
+
+    T-NEW-040 DESK-2: ``source`` field distinguishes
+    'external' (third-party QuickLinks from the server's
+    /api/v1/quicklinks endpoint) from 'internal' (in-house
+    ProInternalSlot passthrough — same shape, different
+    telemetry event). The default 'external' keeps the
+    pre-T-NEW-040 behavior for any caller that doesn't set
+    it.
     """
 
     kind: str = "affiliate"
+    source: str = "external"  # T-NEW-040 DESK-2: 'external' | 'internal'
 
     def render(self, parent):
         # Render an affiliate/team-pack banner card. The
@@ -484,6 +493,108 @@ def load_pro_internal_promos() -> list:
     ``load_fallback_banners``.
     """
     return list(PRO_INTERNAL_PROMOS)
+
+
+# T-NEW-040 (DESK-2) — Fetch the curated QuickLinks catalog
+# entries that belong in the Ad tab's affiliate rotation.
+# Returns a list of banner dicts in the AffiliateSlot shape
+# (title, subtitle, cta_text, cta_url, background, foreground,
+# source='external'). Falls back to FALLBACK_BANNERS if the
+# server is unreachable (offline-first).
+#
+# Until ≥500 Free MAU, this rotation IS the primary revenue
+# mechanism for the Ad tab. The bundled FALLBACK_BANNERS
+# keeps the rotation functional offline.
+_LOAD_AFFILIATE_TIMEOUT_SECS = 3
+
+
+def _load_affiliate_rotation(api_base_url: str = "") -> list:
+    """Fetch Ad tab affiliate rotation entries from the
+    QuickLinks catalog.
+
+    Hits ``GET /api/v1/quicklinks/?ad_rotation_categories=
+    creator_marketplace,affiliate_network,cross_promo`` and
+    converts each entry into the AffiliateSlot banner shape
+    (title, subtitle, cta_text, cta_url, background,
+    foreground, source='external'). Empty result + offline
+    fallback both flow through ``FALLBACK_BANNERS``.
+
+    Args:
+        api_base_url: base URL of the server (e.g.,
+            ``https://api.nchantdoffice.com``). Defaults to
+            an empty string which means ``urllib`` uses the
+            relative path. The desktop typically injects the
+            configured base from ``self.config``.
+
+    Returns:
+        List of banner dicts (each becomes one
+        ``AffiliateSlot`` in ``_load_slots``).
+
+    T-NEW-040 DESK-2.
+    """
+    import json
+    try:
+        from urllib.request import urlopen, Request
+        from urllib.parse import urlencode
+        base = api_base_url.rstrip("/") if api_base_url else ""
+        url = (
+            f"{base}/api/v1/quicklinks/?"
+            + urlencode({
+                "ad_rotation_categories":
+                    "creator_marketplace,"
+                    "affiliate_network,"
+                    "cross_promo",
+            })
+        )
+        with urlopen(
+            Request(url), timeout=_LOAD_AFFILIATE_TIMEOUT_SECS
+        ) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except Exception as e:
+        # Offline / API unreachable / timeout — fall back
+        # to bundled list. Same offline-first pattern as
+        # the base-layer / FALLBACK_BANNERS chain in
+        # _load_banners().
+        logma.warning(
+            f"[ad_tab] affiliate rotation fetch failed: {e}; "
+            f"using FALLBACK_BANNERS"
+        )
+        return [
+            {**banner, "source": "external"}
+            for banner in load_fallback_banners()
+        ]
+
+    # The /api/v1/quicklinks/ endpoint returns a bare list
+    # of link dicts (per its marshal_list_with(service_link_model)
+    # decorator). Handle both shapes (list, {"links": [...]})
+    # for forward-compat.
+    if isinstance(payload, dict):
+        entries = payload.get("links", [])
+    else:
+        entries = payload
+
+    out = []
+    for entry in entries or []:
+        out.append({
+            "title": entry.get("display_name", ""),
+            "subtitle": entry.get("description", ""),
+            "cta_text": "Try it",
+            "cta_url": (
+                entry.get("affiliate_url")
+                or entry.get("base_url", "")
+            ),
+            "background": "#2563eb",
+            "foreground": "#FFFFFF",
+            "source": "external",
+        })
+    if not out:
+        # Empty feed — fall back to bundled list so the
+        # rotation still has content.
+        return [
+            {**banner, "source": "external"}
+            for banner in load_fallback_banners()
+        ]
+    return out
 
 
 # T-DESK-057 — ``FALLBACK_BANNERS`` is now sourced from
@@ -724,18 +835,32 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     def _load_slots(self):
         """T-DESK-066 — populate ``self.slots`` in the canonical
         order documented in nchantdofficeATNRG/TODOS.md
-        T-NEW-029 step 4:
+        T-NEW-029 step 4, extended in T-NEW-040 to a 5-tier
+        rotation:
 
           [tip (1)] + [substack (≥ 3)] + [pro_cta (1)] +
-          [affiliate (≥ 1, the existing fallback chain)]
+          [affiliate (≥ 1, server quicklinks API or local
+          FALLBACK_BANNERS chain)] +
+          [pro_internal (3, bundled PRO_INTERNAL_PROMOS)]
 
-        The affiliate slot count is whatever
-        ``_load_banners()`` produced (the existing
-        base-layer / API / FALLBACK_BANNERS chain).
+        The affiliate tier is now drawn from the new
+        ``_load_affiliate_rotation()`` helper (T-NEW-040
+        DESK-2) which hits ``/api/v1/quicklinks/?
+        ad_rotation_categories=creator_marketplace,
+        affiliate_network,cross_promo`` and falls back to
+        ``FALLBACK_BANNERS`` on network failure. The
+        pro_internal tier is the new in-house cross-promo
+        slot (Pro/ProData/white-label) — its entries live
+        in the bundled ``PRO_INTERNAL_PROMOS`` list and use
+        the new ``ProInternalSlot`` class (DESK-1) so they
+        can be telemetry-split from external affiliate
+        clicks (DESK-3).
         """
         # First, populate ``self.banners`` via the existing
         # three-tier fallback chain so the affiliate count is
-        # correct.
+        # correct (and so callers/tests that assert on
+        # ``self.banners`` keep working — DESK-2 backwards
+        # compat).
         self._load_banners()
 
         slots: list = []
@@ -760,15 +885,60 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         # 3. Pro CTA — one slot, always present for Free users.
         slots.append(ProCtaSlot(payload={}))
 
-        # 4. Affiliate banners — whatever _load_banners() found.
-        for banner in self.banners:
+        # 4. Affiliate banners — T-NEW-040 DESK-2: now drawn
+        # from the curated QuickLinks catalog (via
+        # _load_affiliate_rotation) instead of just the
+        # base-layer / FALLBACK_BANNERS chain. _load_slots
+        # tries the new server endpoint first, then falls
+        # back to self.banners (which _load_banners already
+        # populated) for offline-first behavior.
+        try:
+            api_base = ""
+            try:
+                # The AdTab's config may carry the API base URL
+                # in models.yaml — try to read it. We use a
+                # permissive get() so this never crashes; an
+                # empty string means _load_affiliate_rotation
+                # uses the relative URL.
+                api_base = (self.config.get("api_base_url", "")
+                            if self.config else "")
+            except Exception:
+                api_base = ""
+            affiliate_banners = _load_affiliate_rotation(
+                api_base_url=api_base,
+            )
+        except Exception as e:
+            logma.warning(
+                f"[ad_tab] _load_affiliate_rotation failed: {e}; "
+                f"using self.banners"
+            )
+            affiliate_banners = [
+                {**b, "source": "external"} for b in self.banners
+            ]
+        for banner in affiliate_banners:
             slots.append(AffiliateSlot(payload=banner))
+
+        # 5. T-NEW-040 DESK-2 — ProInternalSlot entries (in-house
+        # cross-promos: Pro/ProData/white-label). Sourced from
+        # the bundled PRO_INTERNAL_PROMOS list so the rotation
+        # works offline. These entries fire
+        # ``affiliate_click_internal`` (DESK-3) so revshare
+        # reporting distinguishes in-house from third-party
+        # affiliate clicks.
+        try:
+            for promo in load_pro_internal_promos():
+                slots.append(ProInternalSlot(payload=promo))
+        except Exception as e:
+            logma.warning(
+                f"[ad_tab] load_pro_internal_promos failed: {e}"
+            )
 
         self.slots = slots
         logma.info(
             f"[ad_tab] loaded {len(self.slots)} slots "
-            f"(tip=1, substack={max(0, len(self.slots) - len(self.banners) - 2)}, "
-            f"pro=1, affiliate={len(self.banners)})"
+            f"(tip=1, substack=multiple, pro_cta=1, "
+            f"affiliate={len(affiliate_banners)}, "
+            f"pro_internal={len(slots) - len(affiliate_banners) - 1})"
         )
 
     def _load_banners(self):
