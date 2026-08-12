@@ -12,9 +12,11 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
+from typing import Self
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -42,31 +44,31 @@ PXCFG = join(HERE, "_data_", ".yaml")
 class NchantdOfficeTable(NchantdTable):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(PXCFG).select("Nchantd").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         return self
 
-    def initWidget(self, cfg=None):
+    def initWidget(self, cfg=None) -> Self:
         """"""
         self.initModel(cfg)
         self.initView(cfg)
         return self
 
-    def set_data(self, data):
+    def set_data(self, data) -> None:
         """"""
         super().set_data(data)
 
-    def assign_widget(self, column_name, x, y, d):
+    def assign_widget(self, column_name, x, y, d) -> None:
         """"""
         if self.config.dikt["column_widgets"][column_name] == "label":
             self.setCellWidget(y, x, NchantdLabel(self, d))
