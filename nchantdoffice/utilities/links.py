@@ -19,7 +19,7 @@ import json
 
 # ======================================3rd Party Library Modules=====================================================||
 import requests
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Set
 import time
 
 # ======================================Solutions Brewer Library Modules==============================================||
@@ -35,7 +35,7 @@ logma = Logma(__name__)
 pxcfg = join(here, "_data_", "links.yaml")
 
 
-def update_affiliate_links(model, last_affiliate_update_dttm: str = "2025-01-01 00:00:00", reload=False):
+def update_affiliate_links(model, last_affiliate_update_dttm: str = "2025-01-01 00:00:00", reload=False) -> Dict[str, int]:
     """T-070: fetch links from the API, split into affiliate / non-affiliate rows.
 
     Steps:
@@ -107,7 +107,7 @@ def update_affiliate_links(model, last_affiliate_update_dttm: str = "2025-01-01 
     return {"affiliate_count": affiliate_count, "non_affiliate_count": non_affiliate_count}
 
 
-def _collect_known_affiliate_ids(model):
+def _collect_known_affiliate_ids(model) -> Set[Any]:
     """Return the set of known affiliate ids from ``model``.
 
     T-070 helper. Reads from ``model.get_affiliate_ids()``
@@ -137,7 +137,7 @@ def _collect_known_affiliate_ids(model):
 class APIClient:
     """A reusable API client class"""
 
-    def __init__(self, base_url: str, api_key: Optional[str] = None):
+    def __init__(self, base_url: str, api_key: Optional[str] = None) -> None:
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
 
@@ -185,7 +185,7 @@ class APIClient:
 
 
 # Example usage of the API client
-def example_with_client():
+def example_with_client() -> None:
     """Example using the APIClient class"""
 
     # Initialize the client
