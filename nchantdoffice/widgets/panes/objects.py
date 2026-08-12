@@ -13,6 +13,8 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
 import datetime as dt
 
