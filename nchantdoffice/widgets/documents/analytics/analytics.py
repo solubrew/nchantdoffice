@@ -12,6 +12,7 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join, exists
 import datetime as dt
@@ -36,6 +37,7 @@ from nchantrs.widgets.tables.tables import NchantdTableWidget, NchantdTable
 from nchantdoffice.widgets.panes.sources import NchantdSourceEditPane, NchantdSourcesListPane
 from nchantrs.widgets.groups import NchantdGroup
 from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
+from typing import Any, Iterator, Self
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -51,12 +53,12 @@ pxcfg = join(here, "_data_", "charts.yaml")
 class NchantdWhereUsedListPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdWhereUsedListPane").override(cfg))
 
-    def _build_chart_data_cfg(self):
+    def _build_chart_data_cfg(self) -> dict[str, Any]:
         """Build the data-cfg used to populate a chart.
 
         T-040: pulls the active document's tabular data
@@ -85,7 +87,7 @@ class NchantdWhereUsedListPane(NchantdPane):
             logma.error(f"[analytics_charts] _build_chart_data_cfg failed: {e}", exc_info=True)
             return {}
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """Initialise the where-used model.
 
         T-039: queries the ``vw_chart_usage`` view (when the
@@ -110,7 +112,7 @@ class NchantdWhereUsedListPane(NchantdPane):
         #     logma.error(f"[analytics_charts] initModel view load failed: {e}", exc_info=True)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "Where Used:"}
@@ -123,7 +125,7 @@ class NchantdWhereUsedListPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -133,7 +135,7 @@ class NchantdWhereUsedListPane(NchantdPane):
 class NchantdOfficeChart(NchantdOfficeDocument):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__("Nchantd Chart", parent, cfg)
         self.parent = parent
@@ -145,7 +147,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         self.chart_types_df = None
         self.colors_df = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         cfg = cfg or {}
         super().initModel(cfg)
@@ -155,7 +157,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         self.context_menu.get_menu("document_chart_context")
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -234,13 +236,13 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
         return self
 
-    def initWidget(self, cfg=None):
+    def initWidget(self, cfg=None) -> Self:
         """"""
         self.initModel(cfg)
         self.initView(cfg)
         return self
 
-    def apply_chart_config(self):
+    def apply_chart_config(self) -> Self:
         """Apply document configuration to chart"""
         if self.document and self.chart:
             try:
@@ -255,7 +257,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
                 logma.error(f"Error applying chart config: {e}")
         return self
 
-    def cmd_add_data_view(self):
+    def cmd_add_data_view(self) -> Self:
         """Add a new data view to the chart.
 
         Creates a new data view entry in the data_views list and triggers
@@ -274,7 +276,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"cmd_add_data_view failed: {exc}")
         return self
 
-    def cmd_change_data_set(self, event=None, *args, **kwargs):
+    def cmd_change_data_set(self, event=None, *args, **kwargs) -> Self:
         """Handle data set selection change from the data set dropdown.
 
         Updates the chart's data source selection and reloads the chart
@@ -290,7 +292,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"cmd_change_data_set failed: {exc}")
         return self
 
-    def cmd_change_data_view(self, event=None, *args, **kwargs):
+    def cmd_change_data_view(self, event=None, *args, **kwargs) -> Self:
         """Handle data view selection change from the data view dropdown.
 
         Updates the chart's data view selection and triggers chart refresh.
@@ -305,7 +307,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"cmd_change_data_view failed: {exc}")
         return self
 
-    def cmd_insert_object(self, event, *args, **kwargs):
+    def cmd_insert_object(self, event, *args, **kwargs) -> Self:
         """Insert a new object into the chart.
 
         Opens the new object pane to allow the user to select an object type
@@ -321,7 +323,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"cmd_insert_object failed: {exc}")
         return self
 
-    def cmd_search_data_sources(self, event=None, *args, **kwargs):
+    def cmd_search_data_sources(self, event=None, *args, **kwargs) -> Self:
         """Search the registered data sources for matches.
 
         Reads a query from ``self.search_entry`` (when set),
@@ -352,7 +354,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"[analytics_charts] cmd_search_data_sources failed: {e}", exc_info=True)
         return self
 
-    def cmd_source_edit_changes(self, event=None, *args, **kwargs):
+    def cmd_source_edit_changes(self, event=None, *args, **kwargs) -> Self:
         """Record a source-edit change on the current data source.
 
         Reads the current value from the chart-source-edit pane and
@@ -379,22 +381,22 @@ class NchantdOfficeChart(NchantdOfficeDocument):
                 logma.error(f"[analytics_charts] source-edit refresh failed: {e}", exc_info=True)
         return self
 
-    def cmd_toggle_config_pane(self, event, *args, **kwargs):
+    def cmd_toggle_config_pane(self, event, *args, **kwargs) -> Self:
         """"""
         self.set_pane("config")
         return self
 
-    def cmd_toggle_data_pane(self, event, *args, **kwargs):
+    def cmd_toggle_data_pane(self, event, *args, **kwargs) -> Self:
         """"""
         self.set_pane("data")
         return self
 
-    def cmd_toggle_full_screen_pane(self, event, *args, **kwargs):
+    def cmd_toggle_full_screen_pane(self, event, *args, **kwargs) -> Self:
         """"""
         self.set_pane("full")
         return self
 
-    def cmd_set_compatibility(self, event, *args, **kwargs):
+    def cmd_set_compatibility(self, event, *args, **kwargs) -> Self:
         """Set chart compatibility mode"""
         if hasattr(self, "compatibility_select"):
             compatibility = self.compatibility_select.currentText()
@@ -403,7 +405,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
                 self.document.set_compatibility(compatibility)
         return self
 
-    def cmd_set_theme(self, event, *args, **kwargs):
+    def cmd_set_theme(self, event, *args, **kwargs) -> Self:
         """Set chart theme"""
         if hasattr(self, "default_theme_select"):
             theme = self.default_theme_select.currentText()
@@ -412,7 +414,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
                 self.chart.set_theme(theme)
         return self
 
-    def cmd_set_palette(self, event, *args, **kwargs):
+    def cmd_set_palette(self, event, *args, **kwargs) -> Self:
         """Set chart color palette"""
         if hasattr(self, "default_palette_select"):
             palette = self.default_palette_select.currentText()
@@ -421,7 +423,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
                 self.chart.set_palette(palette)
         return self
 
-    def cmd_set_chart_type(self, event, *args, **kwargs):
+    def cmd_set_chart_type(self, event, *args, **kwargs) -> Self:
         """Set chart type"""
         if hasattr(self, "default_type_select"):
             chart_type = self.default_type_select.currentText()
@@ -430,7 +432,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             self.set_type(chart_type)
         return self
 
-    def cmd_select_data_source(self, event, *args, **kwargs):
+    def cmd_select_data_source(self, event, *args, **kwargs) -> Self:
         """Select data source for chart"""
         if hasattr(self, "chart_data_sources_select"):
             data_source = self.chart_data_sources_select.currentText()
@@ -438,7 +440,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             self.load_data_from_source(data_source)
         return self
 
-    def convert_table_to_chart_data(self, table_data):
+    def convert_table_to_chart_data(self, table_data) -> dict[str, Any]:
         """Convert table data to chart data format"""
         # This is a basic implementation - can be enhanced based on chart type
         if not table_data or len(table_data) < 2:
@@ -463,7 +465,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
         return chart_data
 
-    def export_chart_data(self, file_path, format="csv"):
+    def export_chart_data(self, file_path, format="csv") -> Self:
         """Export chart data to file"""
         try:
             if self.document:
@@ -473,7 +475,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"Error exporting chart data: {e}")
         return self
 
-    def export_to_plotly(self, file_path):
+    def export_to_plotly(self, file_path) -> Self:
         """Export chart to Plotly HTML format"""
         try:
             if self.chart:
@@ -483,23 +485,23 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"Error exporting to Plotly: {e}")
         return self
 
-    def get_data_sources(self):
+    def get_data_sources(self) -> list[str]:
         """"""
         # NOTE: need to connect to a starter set of data sources...sample sets and non-key data sets
         # need to have a download function for datasets that have not been pulled in before
         #
         return ["Supermarket", "CoinGecko"]
 
-    def get_data_views(self):
+    def get_data_views(self) -> list[str]:
         """"""
         # NOTE: list out and define various views based on connected data sources
         return ["Supermarket", "CoinGecko"]
 
-    def get_data_source(self):
+    def get_data_source(self) -> str:
         """Return the stored value of get_data_source."""
         return self.config.dikt.get("data_source", "") or ""
 
-    def get_new_object_types(self):
+    def get_new_object_types(self) -> list[Any]:
         """Return the list of newly-added object types.
 
         Reads ``config.dikt["new_object_types"]`` and returns it as a
@@ -508,14 +510,14 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         types = self.config.dikt.get("new_object_types", [])
         return list(types) if types else []
 
-    def get_source_edit(self):
+    def get_source_edit(self) -> str:
         """Return the current source-edit value from the config.
 
         Defaults to the empty string when no edit has been recorded.
         """
         return self.config.dikt.get("source_edit_changes", "")
 
-    def get_sample_data(self, data_source):
+    def get_sample_data(self, data_source) -> list[Any]:
         """Return the configured sample data for the given source.
 
         Reads ``config.dikt["sample_data_by_source"]`` and returns
@@ -526,7 +528,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             return by_source.get(data_source, []) or []
         return []
 
-    def get_source_edit_changes(self):
+    def get_source_edit_changes(self) -> list[Any]:
         """Return the entire source-edit-changes history list.
 
         Returns a list of recorded edit values (newest first). Returns
@@ -535,7 +537,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         edits = self.config.dikt.get("source_edit_changes_history", [])
         return list(edits) if edits else []
 
-    def get_document_chart_type(self):
+    def get_document_chart_type(self) -> str:
         """Return the active chart type for the document.
 
         Reads ``config.dikt["chart_type"]`` and returns the value
@@ -543,7 +545,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """
         return self.config.dikt.get("chart_type", "") or ""
 
-    def get_document_capability(self):
+    def get_document_capability(self) -> str:
         """Return the active capability for the document.
 
         Reads ``config.dikt["capability"]`` and returns the value
@@ -551,34 +553,34 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """
         return self.config.dikt.get("capability", "") or ""
 
-    def get_document_palette(self):
+    def get_document_palette(self) -> str:
         """Return the stored value of get_document_palette."""
         return self.config.dikt.get("palette", "") or ""
 
-    def get_document_theme(self):
+    def get_document_theme(self) -> str:
         """Return the stored value of get_document_theme."""
         return self.config.dikt.get("theme", "") or ""
 
-    def get_themes(self):
+    def get_themes(self) -> list[str]:
         """"""
         return ["Light", "Dark"]
 
-    def get_palettes(self):
+    def get_palettes(self) -> list[str]:
         """"""
         return ["Default", "Dark"]
 
-    def get_border_styles(self):
+    def get_border_styles(self) -> list[str]:
         """"""
         return ["Solid", "Dashed", "Dotted", "Double"]
 
-    def get_types(self):
+    def get_types(self) -> list[str]:
         """"""
         if self.chart_types_df is None:
             self.load_types()
         self.chart_types = self.chart_types_df["value_txt"].tolist()
         return self.chart_types
 
-    def get_configuration_show_config_pane(self):
+    def get_configuration_show_config_pane(self) -> bool:
         """Get the current visibility state of the config pane.
 
         Returns:
@@ -586,7 +588,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """
         return self.config.dikt.get("show_config_pane", True)
 
-    def get_configuration_show_data_pane(self):
+    def get_configuration_show_data_pane(self) -> bool:
         """Get the current visibility state of the data pane.
 
         Returns:
@@ -594,7 +596,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """
         return self.config.dikt.get("show_data_pane", True)
 
-    def get_configuration_show_full_chart_pane(self):
+    def get_configuration_show_full_chart_pane(self) -> bool:
         """Get the current visibility state of the full chart pane.
 
         Returns:
@@ -602,11 +604,11 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         """
         return self.config.dikt.get("show_full_chart_pane", False)
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         """"""
         return self.config.dikt.get("content", {}) or self.config.dikt.get("data", {})
 
-    def init_drawer_chart_config(self):
+    def init_drawer_chart_config(self) -> dict[int, Any]:
         """"""
         items = self.toolbox_config[100].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -674,7 +676,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def init_drawer_data_sources(self):
+    def init_drawer_data_sources(self) -> dict[int, Any]:
         """"""
         items = self.toolbox_config[200].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -707,7 +709,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def init_drawer_connections(self):
+    def init_drawer_connections(self) -> dict[int, Any]:
         """"""
         items = self.toolbox_config[300].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -726,7 +728,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def init_drawer_quickstart(self):
+    def init_drawer_quickstart(self) -> dict[int, Any]:
         """"""
         items = self.toolbox_config[400].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -735,7 +737,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             items[cnt] = default_action.copy()
         return items
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_chart_config()
@@ -744,7 +746,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         # self.toolbox_config[300]["items"] = self.init_drawer_connections()
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
-    def load_chart_config(self, file_path):
+    def load_chart_config(self, file_path) -> Self:
         """Load chart configuration from file"""
         try:
             if self.document:
@@ -757,7 +759,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"Error loading chart config: {e}")
         return self
 
-    def load_data_from_source(self, source_name):
+    def load_data_from_source(self, source_name) -> Self:
         """Load data from a named source"""
         try:
             if self.app and hasattr(self.app, "model"):
@@ -772,20 +774,20 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"Error loading data from source {source_name}: {e}")
         return self
 
-    def load_types(self):
+    def load_types(self) -> Self:
         """"""
         table = "vw_chart_types"
         cfg = {}
         self.chart_types_df = self.app.model.store.get_table(table, cfg)
         return self
 
-    def refresh_chart(self):
+    def refresh_chart(self) -> Self:
         """Refresh the chart display"""
         if self.chart:
             self.chart.update_chart()
         return self
 
-    def set_type(self, chart_type=None):
+    def set_type(self, chart_type=None) -> None:
         """Switch between different chart types based on the selected option."""
         # # Remove the current chart
         # for i in reversed(range(self.chart_layout.count())):
@@ -806,7 +808,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         self.layout.insertWidget(1, self.chart)
         self.update()
 
-    def set_pane(self, pane=None):
+    def set_pane(self, pane=None) -> None:
         """"""
         if self.chart_config_pane is not None:
             widget = self.chart_config_pane
@@ -828,7 +830,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             self.layout.insertWidget(2, self.chart_config_pane)
         self.update()
 
-    def set_chart_data(self, data):
+    def set_chart_data(self, data) -> Self:
         """Set data for the chart"""
         if self.chart:
             try:
@@ -841,7 +843,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
 
     # ========== Export and Save Methods ==========
 
-    def save_chart_image(self, file_path, format="png", dpi=300):
+    def save_chart_image(self, file_path, format="png", dpi=300) -> Self:
         """Save chart as image file"""
         try:
             if self.chart:
@@ -853,7 +855,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"Error saving chart image: {e}")
         return self
 
-    def save_chart_config(self, file_path=None):
+    def save_chart_config(self, file_path=None) -> Self:
         """Save chart configuration"""
         try:
             if file_path is None:
@@ -867,7 +869,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
             logma.error(f"Error saving chart config: {e}")
         return self
 
-    def update_chart_from_table(self, table_data):
+    def update_chart_from_table(self, table_data) -> Self:
         """Update chart from table data"""
         if self.chart and table_data:
             try:
@@ -878,7 +880,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
                 logma.error(f"Error updating chart from table: {e}")
         return self
 
-    def _build_chart_data_cfg(self):
+    def _build_chart_data_cfg(self) -> dict[str, Any]:
         """Build the data-cfg used to populate a chart (T-NEW-037).
 
         T-NEW-037 close-out: was an empty stub carrying a
