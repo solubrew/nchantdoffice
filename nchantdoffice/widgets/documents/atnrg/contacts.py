@@ -12,6 +12,8 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
+from typing import Any, Self
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
@@ -45,7 +47,7 @@ pxcfg = join(here, "_data_", "contacts.yaml")
 class NchantdOfficeContact(NchantdWidget):
     """Represents a single contact with all their information"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdOfficeContact init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
@@ -71,7 +73,7 @@ class NchantdOfficeContact(NchantdWidget):
         self.created_date = dt.datetime.now()
         self.modified_date = dt.datetime.now()
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         # Load contact data from document if available
@@ -79,7 +81,7 @@ class NchantdOfficeContact(NchantdWidget):
             self.load_from_dict(self.document.data)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         # PUSH to 0.0.3 force external until
@@ -96,13 +98,13 @@ class NchantdOfficeContact(NchantdWidget):
             raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def load_from_dict(self, data):
+    def load_from_dict(self, data) -> Self:
         """Load contact data from dictionary"""
         self.contact_id = data.get("id")
         self.first_name = data.get("first_name", "")
@@ -123,7 +125,7 @@ class NchantdOfficeContact(NchantdWidget):
         self.avatar_path = data.get("avatar_path")
         return self
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         """Convert contact to dictionary"""
         return {
             "id": self.contact_id,
@@ -147,18 +149,18 @@ class NchantdOfficeContact(NchantdWidget):
             "modified_date": self.modified_date.isoformat() if self.modified_date else None,
         }
 
-    def get_full_name(self):
+    def get_full_name(self) -> str:
         """Get full name of contact"""
         return f"{self.first_name} {self.last_name}".strip()
 
-    def get_display_name(self):
+    def get_display_name(self) -> str:
         """Get display name with company if available"""
         name = self.get_full_name()
         if self.company:
             return f"{name} ({self.company})"
         return name
 
-    def update_modified_date(self):
+    def update_modified_date(self) -> Self:
         """Update the modified timestamp"""
         self.modified_date = dt.datetime.now()
         return self
@@ -167,7 +169,7 @@ class NchantdOfficeContact(NchantdWidget):
 class NchantdOfficeRolodex(NchantdOfficeDocument):
     """Manager for all contacts - provides CRUD, search, and import/export"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         icfg = {}
         super().__init__("Nchantd Rolodex", parent, icfg)
@@ -182,7 +184,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         self.import_button = None
         self.export_button = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         document = {"document": self.config.dikt.get("document", {})}
@@ -193,7 +195,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
             self.initialize_context_menu(self.context_menu_name)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         cfg = cfg or {}
         if "buttons" not in cfg:
@@ -247,45 +249,45 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
             raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def get_filter_option(self):
+    def get_filter_option(self) -> str:
         """Return the stored value of get_filter_option."""
         return self.config.dikt.get("filter_option", "") or ""
 
-    def init_drawer_document_config(self):
+    def init_drawer_document_config(self) -> None:
         """"""
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
 
-    def init_drawer_contact_group_config(self):
+    def init_drawer_contact_group_config(self) -> None:
         """"""
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
 
-    def init_drawer_contact_config(self):
+    def init_drawer_contact_config(self) -> None:
         """"""
         items = self.toolbox_config[300].get("items", {})
         cnt = 0
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
 
-    def init_drawer_quickstart(self):
+    def init_drawer_quickstart(self) -> None:
         """"""
         items = self.toolbox_config[400].get("items", {})
         cnt = 0
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> Self:
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
@@ -294,7 +296,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
         return self
 
-    def load_contacts(self):
+    def load_contacts(self) -> Self:
         """Load contacts from document/database"""
         try:
             if self.document and hasattr(self.document, "contacts") and self.document.contacts:
@@ -310,7 +312,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
             logma.error(f"Error loading contacts: {e}")
         return self
 
-    def add_contact_object(self, contact):
+    def add_contact_object(self, contact) -> Self:
         """Add a contact object to the rolodex"""
         if contact not in self.contacts:
             self.contacts.append(contact)
@@ -321,7 +323,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
             logma.info(f"Added contact: {contact.get_full_name()}")
         return self
 
-    def save_contact(self, contact):
+    def save_contact(self, contact) -> Self:
         """Save/update a contact"""
         if contact not in self.contacts:
             self.add_contact_object(contact)
@@ -333,7 +335,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         logma.info(f"Saved contact: {contact.get_full_name()}")
         return self
 
-    def delete_contact(self, contact):
+    def delete_contact(self, contact) -> Self:
         """Delete a contact"""
         if contact in self.contacts:
             self.contacts.remove(contact)
@@ -355,13 +357,13 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
         return self
 
-    def create_contact_pane(self, contact):
+    def create_contact_pane(self, contact) -> "NchantdOfficeContactPane":
         """Create a ContactPane widget for a contact"""
         cfg = {"contact": contact}
         contact_pane = NchantdOfficeContactPane(self, cfg).initWidget()
         return contact_pane
 
-    def display_contacts(self, contacts):
+    def display_contacts(self, contacts) -> Self:
         """Display a list of contacts in the UI"""
         # Clear existing
         self.clear_contact_display()
@@ -374,7 +376,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
         return self
 
-    def clear_contact_display(self):
+    def clear_contact_display(self) -> Self:
         """Clear all displayed contacts"""
         for contact_id, pane in self.contact_panes.items():
             self.contacts_group.layout.removeWidget(pane)
@@ -382,7 +384,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         self.contact_panes.clear()
         return self
 
-    def update_contact_count(self):
+    def update_contact_count(self) -> Self:
         """Update the contact count in the title"""
         if self.contacts_group:
             self.contacts_group.setTitle(f"All Contacts ({len(self.contacts)})")
@@ -390,7 +392,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
     # ========== Command Handlers ==========
 
-    def cmd_add_contact(self, event=None):
+    def cmd_add_contact(self, event=None) -> Self:
         """Create a new contact"""
         new_contact = NchantdOfficeContact(self)
         new_contact.first_name = "New"
@@ -398,7 +400,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         self.add_contact_object(new_contact)
         return self
 
-    def cmd_search_contacts(self, search_text=None):
+    def cmd_search_contacts(self, search_text=None) -> Self:
         """Search/filter contacts by text"""
         if search_text is None and hasattr(self.search_entry, "get_text"):
             search_text = self.search_entry.get_text()
@@ -426,7 +428,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         logma.info(f"Search '{search_text}' found {len(filtered)} contacts")
         return self
 
-    def cmd_filter_contacts(self, event=None):
+    def cmd_filter_contacts(self, event=None) -> Self:
         """Filter contacts by category"""
         if not hasattr(self.filter_dropdown, "currentText"):
             return self
@@ -450,7 +452,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
         return self
 
-    def cmd_import_contacts(self, event=None):
+    def cmd_import_contacts(self, event=None) -> Self:
         """Import contacts from file"""
         from os.path import exists
 
@@ -464,7 +466,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
         return self
 
-    def cmd_export_contacts(self, event=None):
+    def cmd_export_contacts(self, event=None) -> Self:
         """Export contacts to file"""
         file_dialog = pyqt.QFileDialog()
         file_path, _ = file_dialog.getSaveFileName(
@@ -478,7 +480,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
     # ========== Import/Export Methods ==========
 
-    def import_from_file(self, file_path):
+    def import_from_file(self, file_path) -> Self:
         """Import contacts from file based on extension"""
         ext = file_path.split(".")[-1].lower()
 
@@ -498,7 +500,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
         return self
 
-    def import_from_csv(self, file_path):
+    def import_from_csv(self, file_path) -> Self:
         """Import contacts from CSV file"""
         import csv
 
@@ -511,7 +513,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
         return self
 
-    def import_from_json(self, file_path):
+    def import_from_json(self, file_path) -> Self:
         """Import contacts from JSON file"""
         import json
 
@@ -525,13 +527,13 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
         return self
 
-    def import_from_vcard(self, file_path):
+    def import_from_vcard(self, file_path) -> Self:
         """Import contacts from vCard file"""
         # Basic vCard parsing - would need vobject library for full support
         logma.info("vCard import requires vobject library")
         return self
 
-    def export_to_file(self, file_path):
+    def export_to_file(self, file_path) -> Self:
         """Export contacts to file based on extension"""
         ext = file_path.split(".")[-1].lower()
 
@@ -551,7 +553,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
         return self
 
-    def export_to_csv(self, file_path):
+    def export_to_csv(self, file_path) -> Self:
         """Export contacts to CSV file"""
         import csv
 
@@ -568,7 +570,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
 
         return self
 
-    def export_to_json(self, file_path):
+    def export_to_json(self, file_path) -> Self:
         """Export contacts to JSON file"""
         import json
 
@@ -580,7 +582,7 @@ class NchantdOfficeRolodex(NchantdOfficeDocument):
         return self
 
 
-def _format_contact_as_vcard(contact):
+def _format_contact_as_vcard(contact) -> str:
     """Return the vCard 3.0 textual representation of one contact.
 
     Extracted from ``NchantdOfficeRolodex.export_to_vcard`` so the
@@ -609,13 +611,13 @@ def _format_contact_as_vcard(contact):
     return "\n".join(lines) + "\n"
 
 
-def _write_vcard_file(file_path, contacts):
+def _write_vcard_file(file_path, contacts) -> None:
     """Write a vCard 3.0 file containing one record per contact."""
     with open(file_path, "w", encoding="utf-8") as f:
         for contact in contacts:
             f.write(_format_contact_as_vcard(contact))
 
-    def export_to_vcard(self, file_path):
+    def export_to_vcard(self, file_path) -> Self:
         """Export contacts to vCard file"""
         _write_vcard_file(file_path, self.contacts)
         return self
@@ -624,7 +626,7 @@ def _write_vcard_file(file_path, contacts):
 class NchantdOfficeContactPane(NchantdWidget):
     """UI widget for displaying and editing a single contact"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         self.parent = parent
         self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeContactPane")
@@ -657,7 +659,7 @@ class NchantdOfficeContactPane(NchantdWidget):
         self.delete_button = None
         self.avatar_label = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         # Create or load contact
@@ -670,7 +672,7 @@ class NchantdOfficeContactPane(NchantdWidget):
             self.contact = NchantdOfficeContact(self)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -780,13 +782,13 @@ class NchantdOfficeContactPane(NchantdWidget):
 
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def set_fields_editable(self, editable):
+    def set_fields_editable(self, editable) -> Self:
         """Enable or disable editing of contact fields"""
         self.is_editing = editable
 
@@ -824,12 +826,12 @@ class NchantdOfficeContactPane(NchantdWidget):
 
         return self
 
-    def cmd_edit_contact(self, event=None):
+    def cmd_edit_contact(self, event=None) -> Self:
         """Enable editing mode"""
         self.set_fields_editable(True)
         return self
 
-    def cmd_save_contact(self, event=None):
+    def cmd_save_contact(self, event=None) -> Self:
         """Save contact changes"""
         # Update contact object from UI fields
         if hasattr(self.first_name_entry, "get_text"):
@@ -871,7 +873,7 @@ class NchantdOfficeContactPane(NchantdWidget):
         logma.info(f"Saved contact: {self.contact.get_full_name()}")
         return self
 
-    def cmd_delete_contact(self, event=None):
+    def cmd_delete_contact(self, event=None) -> Self:
         """Delete contact"""
         # Confirm deletion
         reply = pyqt.QMessageBox.question(
