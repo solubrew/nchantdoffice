@@ -13,8 +13,11 @@
 
 # -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
 import datetime as dt
+from typing import Any, Self
 
 # ======================================3rd Party Library Modules======================================================||
 
@@ -42,7 +45,7 @@ pxcfg = join(here, "_data_", "journal.yaml")
 class NchantdOfficeJournalSettings(NchantdSettingsWidget):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(
             f"[config_journal] NchantdOfficeJournalSettings.__init__ parent={type(parent).__name__ if parent else None}"
@@ -50,7 +53,7 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeJournalSettings").override(cfg))
 
-    def _resolve_user_is_pro(self):
+    def _resolve_user_is_pro(self) -> bool:
         """T-NEW-071 — whether the current user is on Pro tier.
 
         Pro users can ENABLE journal entry editing (the
@@ -76,8 +79,8 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
             )
             return False
 
-    def initModel(self):
-        """"""
+    def initModel(self) -> Self:
+        """ """
         logma.info(
             "[config_journal] initModel: initialising journal setting flags (all None - store calls commented out)"
         )
@@ -119,8 +122,8 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
 
         return self
 
-    def initView(self, cfg=None):
-        """"""
+    def initView(self, cfg=None) -> Self:
+        """ """
         logma.info("[config_journal] initView: building Today Settings group + label")
         try:
             layout = pyqt.QHBoxLayout()
@@ -331,8 +334,8 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
             raise
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         logma.info("[config_journal] initWidget")
         try:
             self.initModel()
@@ -342,8 +345,8 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
             raise
         return self
 
-    def get_settings(self):
-        """"""
+    def get_settings(self) -> Any:
+        """ """
         logma.info("[config_journal] get_settings: delegating to super (section=journal)")
         return super().get_settings("journal")
 
@@ -354,7 +357,7 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
     # won't normally be invoked by them, but the persistence
     # is unguarded in case a future code path flips the value.
 
-    def cmd_set_journal_edit_enable(self, event=None, *args, **kwargs):
+    def cmd_set_journal_edit_enable(self, event=None, *args, **kwargs) -> Self:
         """Persist the "Allow Editing on Entry" checkbox value."""
         try:
             value = bool(getattr(self, "journal_edit_enable", False))
@@ -372,7 +375,7 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
         )
         return self
 
-    def cmd_set_journal_reedit_enable(self, event=None, *args, **kwargs):
+    def cmd_set_journal_reedit_enable(self, event=None, *args, **kwargs) -> Self:
         """Persist the "Allow Editing on Re-Entry" checkbox value."""
         try:
             value = bool(getattr(self, "journal_reedit_enable", False))
@@ -390,8 +393,8 @@ class NchantdOfficeJournalSettings(NchantdSettingsWidget):
         )
         return self
 
-    def save(self):
-        """"""
+    def save(self) -> None:
+        """ """
         logma.info(
             "[config_journal] save: all change-detection blocks are commented out - delegating to super().save()"
         )
