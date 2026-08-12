@@ -11,10 +11,12 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
 from os.path import abspath, dirname, join
 import datetime as dt
+from typing import Self
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -37,19 +39,19 @@ pxcfg = join(here, "_data_", ".yaml")
 class NchantdOfficeNewDocumentAcceptButtons(NchantdWidget):
     """ """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOkButtons").override(cfg))
         self.ok_button = None
         self.cancel_button = None
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView({"layout": "horizontal"})
 
