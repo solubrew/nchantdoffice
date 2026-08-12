@@ -13,7 +13,10 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
+from typing import Any, Self
 import datetime as dt
 
 # ======================================3rd Party Library Modules=====================================================||
@@ -35,41 +38,41 @@ pxcfg = join(here, "_data_", "help.yaml")
 
 
 class NchantdOfficeFAQs(NchantdFAQs):
-    """"""
+    """ """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeFAQs").override(parent.config).override(cfg))
 
-    def initModel(self, cfg=None):
-        """"""
+    def initModel(self, cfg=None) -> Self:
+        """ """
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
-        """"""
+    def initView(self, cfg=None) -> Self:
+        """ """
         super().initView(cfg)
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         self.initModel()
         self.initView()
         return self
 
 
 class NchantdOfficeHelpDocs(NchantdHelpDocs):
-    """"""
+    """ """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeHelpDocs").override(cfg))
         self.index_tree = None
         self.reader = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """Initialise the help-docs model.
 
         T-020: locates the bundled help PDF directory
@@ -85,7 +88,7 @@ class NchantdOfficeHelpDocs(NchantdHelpDocs):
             logma.info("[help] no local help PDFs found; call update_help_docs to fetch")
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """Build the help-docs index + reader view.
 
         T-020: builds a two-pane layout with a ``NchantdTree``
@@ -118,7 +121,7 @@ class NchantdOfficeHelpDocs(NchantdHelpDocs):
             logma.error(f"[help] initView: reader build failed: {e}", exc_info=True)
         return self
 
-    def _discover_help_pdfs(self):
+    def _discover_help_pdfs(self) -> list[dict[str, str]]:
         """Walk the bundled help directory and return a list of PDF entries.
 
         Each entry is a dict ``{"path": ..., "title": ...}``. Returns
@@ -146,7 +149,7 @@ class NchantdOfficeHelpDocs(NchantdHelpDocs):
                 continue
         return results
 
-    def update_help_docs(self, url=None, dest=None):
+    def update_help_docs(self, url: str | None = None, dest: str | None = None) -> list[str]:
         """Download the latest help PDF bundle from ``url``.
 
         T-020: when network access is available, fetches the
@@ -206,34 +209,34 @@ class NchantdOfficeHelpDocs(NchantdHelpDocs):
             logma.error(f"[help] update_help_docs failed: {e}", exc_info=True)
             return []
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         self.initModel()
         self.initView()
         return self
 
 
 class NchantdOfficeHelpChatDex(NchantdHelpChatDex):
-    """"""
+    """ """
 
-    def __init__(self, parent=None, cfg=None):
-        """"""
+    def __init__(self, parent=None, cfg=None) -> None:
+        """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdHelpChatDex").override(cfg))
 
-    def initModel(self, cfg=None):
-        """"""
+    def initModel(self, cfg=None) -> Self:
+        """ """
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
-        """"""
+    def initView(self, cfg=None) -> Self:
+        """ """
         cfg = cfg or {}
         super().initView(cfg)
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         self.initModel()
         self.initView()
         return self
