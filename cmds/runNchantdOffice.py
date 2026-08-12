@@ -76,14 +76,12 @@ write_default_config()  # idempotent — first-run setup
 try:
     from nchantdoffice.utilities.referral import ReferralAPIClient
     from nchantdoffice.utilities.user_config import get_user_uuid
+
     _user_uuid = get_user_uuid()
     if _user_uuid:
         ReferralAPIClient().record_app_open(_user_uuid)
 except Exception as _app_open_err:
-    logma.info(
-        f"[launcher] record_app_open best-effort failed "
-        f"(non-blocking): {_app_open_err}"
-    )
+    logma.info(f"[launcher] record_app_open best-effort failed " f"(non-blocking): {_app_open_err}")
 
 if get_webengine_software_render():
     # Opt-in: rule out GPU/compositor blank-surface issues by forcing software
@@ -125,7 +123,7 @@ def run(args):
     python runNchantdOffice.py - use the wizard to setup
     """
     # if len(args) > 2:
-    restart()
+    # restart()
     app = NchantdOfficeCloak
     wizard = NchantdOfficeApplicationStartupWizard
     nchantment("NchantdOffice", args, app, None, wizard)

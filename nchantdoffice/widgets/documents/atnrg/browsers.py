@@ -13,6 +13,7 @@
 
 # -*- coding: utf-8 -*
 from __future__ import annotations
+
 # ======================================Standard Library Modules======================================================||
 from typing import Any, Dict, List, Optional, Self
 from os.path import dirname, join
@@ -28,17 +29,13 @@ from nchantdoffice.widgets.documents.atnrg.pages import NchantdOfficeSidePage, N
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantrs.widgets.controls.checkboxes import NchantdCheckboxWidget
-from nchantrs.widgets.controls.buttons import NchantdButton, NchantdButtonWidget
-from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons
-from nchantrs.widgets.annotations import NchantdLabel, NchantdBadgeBar
+from nchantrs.widgets.controls.buttons import NchantdButtonWidget
+from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
-from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.tables.lists import NchantdList, NchantdListWidget
 from nchantrs.widgets.browsers.profiles import NchantdWebProfile
-from nchantdoffice.widgets.panes.new import NchantdOfficeNewDocumentPane
-from nchantdoffice.widgets.panes.quickstart import NchantdOfficeBrowserQuickStartPane
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -52,17 +49,6 @@ pxcfg = join(here, "_data_", "browsers.yaml")
 
 
 class NchantdOfficeWebBrowser(NchantdOfficeDocument):
-
-    def _ensure_drawer_item(self, items, cnt) -> Dict[str, Any]:
-        """Lazily create a default drawer-item slot.
-
-        Centralises the ``if cnt not in items: items[cnt] = {...}`` pattern
-        used by every ``init_drawer_*`` method, removing the repeated
-        branch that the maintainability auditor flags as switch abuse.
-        """
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        return items[cnt]
 
     def __init__(self, parent=None, cfg=None) -> None:
         """ """
@@ -83,26 +69,26 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def initModel(self, cfg=None) -> Self:
         """"""
-        if cfg is None:
-            cfg = {}
+        cfg = cfg or {}
         if cfg.get("document", None) is None:
             cfg["document"] = {"data": {"unit": {}}}
         # cfg["url"] = self.config.dikt.get("url", self.get_current_page())
         self.config.override(cfg)
-        super().initModel(self.config.dikt)
+        super().initModel(self.config)
         # this translates url code from the web app tab catalog
-        if self.config.dikt.get("url_code", None) is not None:
-            cfg["document"]["data"]["unit"]["original_path"] = self.app.model.get_link(
-                name=self.config.dikt["url_code"]
-            )
+        if self.config.get("url_code", None) is not None:
+            cfg["document"]["data"]["unit"]["original_path"] = self.app.model.get_link(name=self.config.get("url_code"))
         self.config.override(cfg)
-        document = {"document": self.config.dikt["document"]}
+        document = {"document": self.config.get("document", {})}
         logma.json(document)
         self.document = self.app.model.codex.init_browser(document)
         self.document.load_document()
         self.initialize_context_menu("context.document.browser")
+        logma.json(self.document.to_dict())
         cfg = {}
         self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
+        cfg = {}
+        self.active_url.init_document(self.document.get_url(), cfg)
         # Plain-string URL mirror for reopen: same 4-tier fallback
         # pattern as NchantdOfficeImage.file_path. The URL is on
         # the document's nested active_page.active_url.active_url
@@ -180,19 +166,17 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # T-NEW-069 — restore URL history into the dropdown. The
         # viewer owns the helpers; we delegate to it so the
         # persisted state is the single source of truth.
-        if (
-            self.url_select_entry is not None
-            and hasattr(self.browser, "_get_url_history")
-        ):
+        if self.url_select_entry is not None and hasattr(self.browser, "_get_url_history"):
             try:
                 history = self.browser._get_url_history()
                 self.url_select_entry.update_options(
-                    history, replace=True, sort=False,
+                    history,
+                    replace=True,
+                    sort=False,
                 )
             except Exception as e:
                 logma.warning(
-                    f"[browsers] build_toolbar: URL history "
-                    f"restore failed: {e}",
+                    f"[browsers] build_toolbar: URL history " f"restore failed: {e}",
                     exc_info=True,
                 )
 
@@ -1588,6 +1572,17 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browsers] _delete_cookies failed: {e}", exc_info=True)
         return self
 
+    def _ensure_drawer_item(self, items, cnt) -> Dict[str, Any]:
+        """Lazily create a default drawer-item slot.
+
+        Centralises the ``if cnt not in items: items[cnt] = {...}`` pattern
+        used by every ``init_drawer_*`` method, removing the repeated
+        branch that the maintainability auditor flags as switch abuse.
+        """
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        return items[cnt]
+
 
 class NchantdOfficeSlimTabSearch(NchantdWidget):
     """"""
@@ -1718,7 +1713,9 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
             history = self._track_url(url)
             self.url_select_entry.combobox.setCurrentText(url)
             self.url_select_entry.update_options(
-                history, replace=True, sort=False,
+                history,
+                replace=True,
+                sort=False,
             )
         # self.save()
         # self.parent.document.add_page({"url": url})
