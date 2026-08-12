@@ -11,12 +11,14 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
+from typing import Self
 
-# ======================================3rd Party Library Modules=====================================================||
+# ======================================3rd Party Library Modules=====================================================|
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor.logma import Logma
@@ -44,7 +46,7 @@ pxcfg = join(here, "_data_", ".yaml")
 class NchantdCommunitiesSummary(NchantdWidget):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         self.parent = parent
         self.config = kahndor.Instruct(pxcfg).select("NchantdCommunitiesSummaryTab")
@@ -53,20 +55,20 @@ class NchantdCommunitiesSummary(NchantdWidget):
         self.config.override(cfg)
         super(NchantdCommunitiesSummary, self).__init__(self.parent, self.config)
 
-    def initModel(self):
-        """"""
+    def initModel(self) -> Self:
+        """ """
         return self
 
-    def initView(self):
-        """"""
+    def initView(self) -> Self:
+        """ """
         super().initView()
         group_box = NchantdVScrollGroupBox()
         group_box.setTitle("Communities")
         self.layout.addLayout(group_box.layout)
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         self.initModel()
         self.initView()
         return self
@@ -77,7 +79,7 @@ class NchantdNEWSDashboard:
     specific NEWS content is pulled from various sources using a pluggable
     algorythm"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the dashboard's empty state.
 
         Sets the default NEWS-source registry, sections list, and
@@ -94,7 +96,7 @@ class NchantdNEWSDashboard:
 class NchantdNEWSTab(tabs.NchantdTab):
     """ """
 
-    def __init__(self, parent=None, cfg={}):
+    def __init__(self, parent=None, cfg={}) -> None:
         """ """
         self.parent = parent
         self.config = kahndor.Instruct(pxcfg).select("NMBFTNEWSLTab")
@@ -103,7 +105,7 @@ class NchantdNEWSTab(tabs.NchantdTab):
             self.config.override(parent.config)
         super(NchantdNEWSTab, self).__init__(parent, self.config)
 
-    def buildPane(self):
+    def buildPane(self) -> Self:
         """ """
         layout = pyqt.QVBoxLayout()
         sections = [
