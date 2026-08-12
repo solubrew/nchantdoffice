@@ -11,9 +11,12 @@
     <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
+from __future__ import annotations
+
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
+from typing import Any, Iterator, Optional, Self
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -49,17 +52,17 @@ pxcfg = join(here, "_data_", "sketches.yaml")
 class NchantdLayersListPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdLayersListPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "Layers", "layout": "vertical", "collapsible": False}
@@ -72,7 +75,7 @@ class NchantdLayersListPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -82,19 +85,19 @@ class NchantdLayersListPane(NchantdPane):
 class NchantdEditLayerPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdEditLayerPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdEditorLayerPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
 
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": self.config.dikt.get("label", "Edit Layer: ")}
@@ -116,13 +119,13 @@ class NchantdEditLayerPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_on_layer_name_change(self):
+    def cmd_on_layer_name_change(self) -> Self:
         """Handle layer name change from the name entry field."""
         try:
             if hasattr(self, "name_entry") and self.name_entry:
@@ -133,7 +136,7 @@ class NchantdEditLayerPane(NchantdPane):
             pass
         return self
 
-    def cmd_on_transparency_change(self, *args, **kwargs):
+    def cmd_on_transparency_change(self, *args, **kwargs) -> Self:
         """Handle transparency change from the transparency entry field."""
         try:
             if hasattr(self, "transparency_entry") and self.transparency_entry:
@@ -149,7 +152,7 @@ class NchantdEditLayerPane(NchantdPane):
             pass
         return self
 
-    def cmd_on_size_change(self, *args, **kwargs):
+    def cmd_on_size_change(self, *args, **kwargs) -> Self:
         """Handle size change from the size spin box."""
         try:
             if hasattr(self, "size_set") and self.size_set:
@@ -164,17 +167,17 @@ class NchantdEditLayerPane(NchantdPane):
 class NchantdObjectsPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdObjectsPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"label": "Objects: "}
@@ -187,7 +190,7 @@ class NchantdObjectsPane(NchantdPane):
         self.layout.addWidget(self.group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -197,18 +200,18 @@ class NchantdObjectsPane(NchantdPane):
 class NchantdLineToolPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdLineToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         cfg = cfg or {}
         cfg["text"] = "Line Tool:"
@@ -259,13 +262,13 @@ class NchantdLineToolPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_change_color(self, event, *args, **kwargs):
+    def cmd_change_color(self, event, *args, **kwargs) -> Self:
         """Handle color change from the color dropdown."""
         try:
             if hasattr(self, "line_color_select"):
@@ -278,7 +281,7 @@ class NchantdLineToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_thickness(self, event, *args, **kwargs):
+    def cmd_change_thickness(self, event, *args, **kwargs) -> Self:
         """Handle thickness change from the thickness spin box."""
         try:
             if hasattr(self, "line_thickness_spin"):
@@ -289,7 +292,7 @@ class NchantdLineToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_style(self, event, *args, **kwargs):
+    def cmd_change_style(self, event, *args, **kwargs) -> Self:
         """Handle style change from the style dropdown."""
         try:
             if hasattr(self, "line_style_select"):
@@ -300,7 +303,7 @@ class NchantdLineToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_end_style(self, event, *args, **kwargs):
+    def cmd_change_end_style(self, event, *args, **kwargs) -> Self:
         """Handle end style change from the end style dropdowns."""
         try:
             if not hasattr(self.parent(), "current_tool_config"):
@@ -329,18 +332,18 @@ class NchantdLineToolPane(NchantdPane):
 class NchantdCurveToolPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdCurveToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -376,13 +379,13 @@ class NchantdCurveToolPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_change_color(self, event, *args, **kwargs):
+    def cmd_change_color(self, event, *args, **kwargs) -> Self:
         """Handle color change from the color dropdown."""
         try:
             if hasattr(self, "line_color_select"):
@@ -395,7 +398,7 @@ class NchantdCurveToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_thickness(self, event, *args, **kwargs):
+    def cmd_change_thickness(self, event, *args, **kwargs) -> Self:
         """Handle thickness change from the thickness spin box."""
         try:
             if hasattr(self, "line_thickness_spin"):
@@ -406,7 +409,7 @@ class NchantdCurveToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_style(self, event, *args, **kwargs):
+    def cmd_change_style(self, event, *args, **kwargs) -> Self:
         """Handle style change from the style dropdown."""
         try:
             if hasattr(self, "line_style_select"):
@@ -417,7 +420,7 @@ class NchantdCurveToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_end_style(self, event, *args, **kwargs):
+    def cmd_change_end_style(self, event, *args, **kwargs) -> Self:
         """Handle end style change from the end style dropdowns."""
         try:
             if not hasattr(self.parent(), "current_tool_config"):
@@ -446,18 +449,18 @@ class NchantdCurveToolPane(NchantdPane):
 class NchantdSplineToolPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdSplineToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdLineToolPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -488,13 +491,13 @@ class NchantdSplineToolPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_change_color(self, event, *args, **kwargs):
+    def cmd_change_color(self, event, *args, **kwargs) -> Self:
         """Handle color change from the color dropdown."""
         try:
             if hasattr(self, "line_color_select"):
@@ -507,7 +510,7 @@ class NchantdSplineToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_thickness(self, event, *args, **kwargs):
+    def cmd_change_thickness(self, event, *args, **kwargs) -> Self:
         """Handle thickness change from the thickness spin box."""
         try:
             if hasattr(self, "line_thickness_spin"):
@@ -518,7 +521,7 @@ class NchantdSplineToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_style(self, event, *args, **kwargs):
+    def cmd_change_style(self, event, *args, **kwargs) -> Self:
         """Handle style change from the style dropdown."""
         try:
             if hasattr(self, "line_style_select"):
@@ -529,7 +532,7 @@ class NchantdSplineToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_end_style(self, event, *args, **kwargs):
+    def cmd_change_end_style(self, event, *args, **kwargs) -> Self:
         """Handle end style change from the end style dropdowns."""
         try:
             if not hasattr(self.parent(), "current_tool_config"):
@@ -558,18 +561,18 @@ class NchantdSplineToolPane(NchantdPane):
 class NchantdPolygonToolPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdPolygonToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdPolygonToolPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -594,13 +597,13 @@ class NchantdPolygonToolPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_change_color(self, event, *args, **kwargs):
+    def cmd_change_color(self, event, *args, **kwargs) -> Self:
         """Handle color change from the color dropdown."""
         try:
             if hasattr(self, "line_color_select"):
@@ -613,7 +616,7 @@ class NchantdPolygonToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_thickness(self, event, *args, **kwargs):
+    def cmd_change_thickness(self, event, *args, **kwargs) -> Self:
         """Handle thickness change from the thickness spin box."""
         try:
             if hasattr(self, "line_thickness_spin"):
@@ -624,7 +627,7 @@ class NchantdPolygonToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_style(self, event, *args, **kwargs):
+    def cmd_change_style(self, event, *args, **kwargs) -> Self:
         """Handle style change from the style dropdown."""
         try:
             if hasattr(self, "line_style_select"):
@@ -635,7 +638,7 @@ class NchantdPolygonToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_end_style(self, event, *args, **kwargs):
+    def cmd_change_end_style(self, event, *args, **kwargs) -> Self:
         """Handle end style change from the end style dropdowns."""
         try:
             if not hasattr(self.parent(), "current_tool_config"):
@@ -664,18 +667,18 @@ class NchantdPolygonToolPane(NchantdPane):
 class NchantdCircleToolPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdCircleToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdCircleToolPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -700,13 +703,13 @@ class NchantdCircleToolPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_change_color(self, event, *args, **kwargs):
+    def cmd_change_color(self, event, *args, **kwargs) -> Self:
         """Handle color change from the color dropdown."""
         try:
             if hasattr(self, "line_color_select"):
@@ -719,7 +722,7 @@ class NchantdCircleToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_thickness(self, event, *args, **kwargs):
+    def cmd_change_thickness(self, event, *args, **kwargs) -> Self:
         """Handle thickness change from the thickness spin box."""
         try:
             if hasattr(self, "line_thickness_spin"):
@@ -730,7 +733,7 @@ class NchantdCircleToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_style(self, event, *args, **kwargs):
+    def cmd_change_style(self, event, *args, **kwargs) -> Self:
         """Handle style change from the style dropdown."""
         try:
             if hasattr(self, "line_style_select"):
@@ -741,7 +744,7 @@ class NchantdCircleToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_end_style(self, event, *args, **kwargs):
+    def cmd_change_end_style(self, event, *args, **kwargs) -> Self:
         """Handle end style change from the end style dropdowns."""
         try:
             if not hasattr(self.parent(), "current_tool_config"):
@@ -770,18 +773,18 @@ class NchantdCircleToolPane(NchantdPane):
 class NchantdObjectToolPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdObjectToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdObjectToolPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -800,13 +803,13 @@ class NchantdObjectToolPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_change_color(self, event, *args, **kwargs):
+    def cmd_change_color(self, event, *args, **kwargs) -> Self:
         """Handle color change from the color dropdown."""
         try:
             if hasattr(self, "line_color_select"):
@@ -819,7 +822,7 @@ class NchantdObjectToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_thickness(self, event, *args, **kwargs):
+    def cmd_change_thickness(self, event, *args, **kwargs) -> Self:
         """Handle thickness change from the thickness spin box."""
         try:
             if hasattr(self, "line_thickness_spin"):
@@ -830,7 +833,7 @@ class NchantdObjectToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_style(self, event, *args, **kwargs):
+    def cmd_change_style(self, event, *args, **kwargs) -> Self:
         """Handle style change from the style dropdown."""
         try:
             if hasattr(self, "line_style_select"):
@@ -841,7 +844,7 @@ class NchantdObjectToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_end_style(self, event, *args, **kwargs):
+    def cmd_change_end_style(self, event, *args, **kwargs) -> Self:
         """Handle end style change from the end style dropdowns."""
         try:
             if not hasattr(self.parent(), "current_tool_config"):
@@ -870,18 +873,18 @@ class NchantdObjectToolPane(NchantdPane):
 class NchantdFillToolPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdFillToolPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdFillToolPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         cfg = cfg or {}
         cfg["text"] = "Fill Tool:"
@@ -899,13 +902,13 @@ class NchantdFillToolPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_change_color(self, event, *args, **kwargs):
+    def cmd_change_color(self, event, *args, **kwargs) -> Self:
         """Handle color change from the color dropdown."""
         try:
             if hasattr(self, "line_color_select"):
@@ -918,7 +921,7 @@ class NchantdFillToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_thickness(self, event, *args, **kwargs):
+    def cmd_change_thickness(self, event, *args, **kwargs) -> Self:
         """Handle thickness change from the thickness spin box."""
         try:
             if hasattr(self, "line_thickness_spin"):
@@ -929,7 +932,7 @@ class NchantdFillToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_style(self, event, *args, **kwargs):
+    def cmd_change_style(self, event, *args, **kwargs) -> Self:
         """Handle style change from the style dropdown."""
         try:
             if hasattr(self, "line_style_select"):
@@ -940,7 +943,7 @@ class NchantdFillToolPane(NchantdPane):
             pass
         return self
 
-    def cmd_change_end_style(self, event, *args, **kwargs):
+    def cmd_change_end_style(self, event, *args, **kwargs) -> Self:
         """Handle end style change from the end style dropdowns."""
         try:
             if not hasattr(self.parent(), "current_tool_config"):
@@ -971,7 +974,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
     Diagram editor to create a directed graph with nodes and edges.
     """
 
-    def _ensure_drawer_item(self, items, cnt):
+    def _ensure_drawer_item(self, items, cnt) -> Any:
         """Lazily create a default drawer-item slot.
 
         Centralises the ``if cnt not in items: items[cnt] = {...}``
@@ -983,7 +986,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
         return items[cnt]
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """"""
         super().__init__("NchantdOfficeSketch", parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSketch").override(cfg))
@@ -995,7 +998,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.end_point = None
         self.drawing = False  # Flag to indicate whether drawing is in progress
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Initialize the sketch model with document, context menu, and layers."""
         super().initModel()
         document = {"document": self.config.get("document", {})}
@@ -1028,7 +1031,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self._updating_cursor = False  # Flag to prevent cursor update recursion
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """Initialize the sketch view with canvas and tool buttons."""
         cfg = cfg or {}
         cfg = {
@@ -1084,7 +1087,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def _restore_document_content(self):
+    def _restore_document_content(self) -> Self:
         """Restore persisted layers, shape geometry, and canvas settings."""
         content = getattr(self.document, "content", None) or {}
         if isinstance(content, dict) and isinstance(content.get("content"), dict):
@@ -1125,7 +1128,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self._restored_canvas_size = content.get("canvas_size") or {}
         return self
 
-    def populate_document(self):
+    def populate_document(self) -> Self:
         """Render the restored sketch content into the initialized canvas."""
         canvas_size = getattr(self, "_restored_canvas_size", {})
         if self.canvas is not None and isinstance(canvas_size, dict):
@@ -1136,13 +1139,13 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.render_on_canvas()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """Initialize the complete sketch widget."""
         self.initModel()
         self.initView()
         return self
 
-    def clear_canvas(self):
+    def clear_canvas(self) -> Self:
         """Clear all drawings from the canvas."""
         self.shapes = []
         self.start_point = None
@@ -1151,7 +1154,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.render_on_canvas()
         return self
 
-    def cmd_add_1d_line(self, checked=None, handler=None, params=None):
+    def cmd_add_1d_line(self, checked=None, handler=None, params=None) -> Self:
         """Activate line drawing tool with current settings from line tool pane."""
         self.current_tool = "line"
         self.drawing = False
@@ -1167,7 +1170,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         logma.info("Line drawing tool activated")
         return self
 
-    def cmd_add_1d_curve(self, checked=None, handler=None, params=None):
+    def cmd_add_1d_curve(self, checked=None, handler=None, params=None) -> Self:
         """Activate curve drawing tool with current settings."""
         self.current_tool = "curve"
         self.drawing = False
@@ -1183,7 +1186,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         logma.info("Curve drawing tool activated")
         return self
 
-    def cmd_add_1d_spline(self, checked=None, handler=None, params=None):
+    def cmd_add_1d_spline(self, checked=None, handler=None, params=None) -> Self:
         """Activate spline drawing tool with current settings."""
         self.current_tool = "spline"
         self.drawing = False
@@ -1199,7 +1202,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         logma.info("Spline drawing tool activated")
         return self
 
-    def cmd_add_2d_polygon(self, checked=None, handler=None, params=None):
+    def cmd_add_2d_polygon(self, checked=None, handler=None, params=None) -> Self:
         """Activate polygon drawing tool with current settings."""
         self.current_tool = "polygon"
         self.drawing = False
@@ -1215,7 +1218,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         logma.info("Polygon drawing tool activated")
         return self
 
-    def cmd_add_2d_ellipse(self, checked=None, handler=None, params=None):
+    def cmd_add_2d_ellipse(self, checked=None, handler=None, params=None) -> Self:
         """Activate ellipse/circle drawing tool with current settings."""
         self.current_tool = "ellipse"
         self.drawing = False
@@ -1231,7 +1234,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         logma.info("Ellipse/circle drawing tool activated")
         return self
 
-    def cmd_insert_object(self, checked=None, handler=None, params=None):
+    def cmd_insert_object(self, checked=None, handler=None, params=None) -> Self:
         """Activate object insertion tool."""
         self.current_tool = "object"
         # Update cursor based on tool
@@ -1239,7 +1242,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         logma.info("Object insertion tool activated")
         return self
 
-    def cmd_fill_color(self, checked=None, handler=None, params=None):
+    def cmd_fill_color(self, checked=None, handler=None, params=None) -> Self:
         """Activate fill color tool with current settings."""
         self.current_tool = "fill"
 
@@ -1252,12 +1255,12 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         logma.info("Fill color tool activated")
         return self
 
-    def cmd_launch_color_sigil(self, event, *args, **kwargs):
+    def cmd_launch_color_sigil(self, event, *args, **kwargs) -> Self:
         """Launch the color selection dialog."""
         self.color_sigil = NchantdColorSelectSigil(self, {}).initWidget()
         return self
 
-    def cmd_set_layer_name(self, name=None):
+    def cmd_set_layer_name(self, name=None) -> Self:
         """Set the name of the current layer."""
         if name and self.layers and 0 <= self.active_layer_index < len(self.layers):
             old_name = self.layers[self.active_layer_index]
@@ -1266,7 +1269,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
                 self.rename_layer(old_name, name)
         return self
 
-    def cmd_set_layer_transparency(self, transparency=None):
+    def cmd_set_layer_transparency(self, transparency=None) -> Self:
         """Set the transparency of the current layer."""
         if transparency is not None and 0 <= self.active_layer_index < len(self.layers):
             layer_name = self.layers[self.active_layer_index]
@@ -1276,7 +1279,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             self.render_on_canvas()
         return self
 
-    def cmd_set_layer_color(self, color=None):
+    def cmd_set_layer_color(self, color=None) -> Self:
         """Set the color of the current layer."""
         if color and 0 <= self.active_layer_index < len(self.layers):
             layer_name = self.layers[self.active_layer_index]
@@ -1286,7 +1289,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             self.render_on_canvas()
         return self
 
-    def cmd_set_layer_size(self, size=None):
+    def cmd_set_layer_size(self, size=None) -> Self:
         """Set the size/scale of the current layer."""
         if size is not None and 0 <= self.active_layer_index < len(self.layers):
             layer_name = self.layers[self.active_layer_index]
@@ -1296,7 +1299,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             self.render_on_canvas()
         return self
 
-    def cmd_canvas_size_change(self, *args, **kwargs):
+    def cmd_canvas_size_change(self, *args, **kwargs) -> Self:
         """Handle canvas size change from the canvas size spin boxes."""
         try:
             if hasattr(self, "canvas_size_set"):
@@ -1307,7 +1310,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             pass
         return self
 
-    def cmd_layer_change(self, *args, **kwargs):
+    def cmd_layer_change(self, *args, **kwargs) -> Self:
         """Handle layer selection change from the layer dropdown."""
         try:
             if hasattr(self, "canvas_layer_select"):
@@ -1320,13 +1323,13 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             pass
         return self
 
-    def delete_layer(self, layer_name):
+    def delete_layer(self, layer_name) -> Self:
         """Delete a layer by name."""
         if layer_name in self.layers and layer_name != "Layer 0 - Canvas Layer":
             self.layers.remove(layer_name)
         return self
 
-    def duplicate_layer(self, layer_name):
+    def duplicate_layer(self, layer_name) -> Self:
         """Duplicate a layer and its shapes."""
         if layer_name in self.layers and layer_name != "New Layer":
             new_layer_name = f"{layer_name} (Copy)"
@@ -1347,7 +1350,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             self.render_on_canvas()
         return self
 
-    def deactivate_tool(self):
+    def deactivate_tool(self) -> Self:
         """Deactivate the current drawing tool."""
         self.current_tool = None
         self.drawing = False
@@ -1358,7 +1361,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         logma.info("Tool deactivated")
         return self
 
-    def delete_shape_at_position(self, pos):
+    def delete_shape_at_position(self, pos) -> bool:
         """Delete a shape at the given position."""
         index, shape = self.get_shape_at_position(pos)
         if index is not None:
@@ -1382,7 +1385,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         (pyqt.QEvent.CursorChange, "_handle_canvas_cursor_change"),
     )
 
-    def eventFilter(self, obj, event):
+    def eventFilter(self, obj, event) -> Any:
         """Filter events from the canvas to handle drawing and cursor.
 
         Delegates to per-event-type handlers stored in
@@ -1413,20 +1416,20 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
     # --- per-event-type handlers used by ``eventFilter`` ---
 
-    def _handle_canvas_enter(self, event):
+    def _handle_canvas_enter(self, event) -> bool:
         """Handle ``QEvent.Enter``: refresh cursor when mouse enters canvas."""
         logma.info("Mouse entered canvas")
         self._update_canvas_cursor()
         return False  # Don't block the event
 
-    def _handle_canvas_cursor_change(self, event):
+    def _handle_canvas_cursor_change(self, event) -> Any:
         """Handle ``QEvent.CursorChange``: block cursor changes while drawing."""
         if self.current_tool and not self._updating_cursor:
             logma.warning("Canvas tried to change cursor - blocking")
             return True
         return None
 
-    def _handle_canvas_press(self, event):
+    def _handle_canvas_press(self, event) -> Any:
         """Handle ``QEvent.MouseButtonPress`` and ``MouseButtonDblClick``.
 
         Both treat double-click as a single press for drawing.
@@ -1438,14 +1441,14 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self._update_canvas_cursor()
         return True
 
-    def _handle_canvas_release(self, event):
+    def _handle_canvas_release(self, event) -> bool:
         """Handle ``QEvent.MouseButtonRelease``: stop drawing."""
         logma.info(f"eventFilter caught MouseButtonRelease, drawing={self.drawing}")
         self.mouseReleaseEvent(event)
         self._update_canvas_cursor()
         return True
 
-    def _handle_canvas_move(self, event):
+    def _handle_canvas_move(self, event) -> bool:
         """Handle ``QEvent.MouseMove``: track drawing + cursor."""
         if self.drawing:
             logma.debug("eventFilter caught MouseMove during drawing")
@@ -1457,7 +1460,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
                 self._update_canvas_cursor()
         return True
 
-    def export_sketch(self, file_path):
+    def export_sketch(self, file_path) -> Self:
         """Export the sketch to a file."""
         import json
 
@@ -1488,7 +1491,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             logma.error(f"Failed to export sketch: {e}")
         return self
 
-    def get_layers(self):
+    def get_layers(self) -> Any:
         """Get all available layers, creating default if none exist."""
         if self.layers is None:
             # Try to load from document store
@@ -1500,29 +1503,29 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
         return self.layers
 
-    def get_canvas_color(self):
+    def get_canvas_color(self) -> Any:
         """Get the current canvas background color."""
         if self.canvas:
             return self.canvas.palette().color(self.canvas.backgroundRole())
         return None
 
-    def get_canvas_colors(self):
+    def get_canvas_colors(self) -> list[Any]:
         """Get available canvas color options."""
         return ["Black", "Grey", "White", "Blue", "Red", "Green", "Yellow", "Magenta", "Cyan", "Orange", "Violet"]
 
-    def get_canvas_layer(self):
+    def get_canvas_layer(self) -> Any:
         """Get the currently selected canvas layer name."""
         if self.layers and 0 <= self.active_layer_index < len(self.layers):
             return self.layers[self.active_layer_index]
         return None
 
-    def get_canvas_size(self):
+    def get_canvas_size(self) -> Any:
         """Get the current canvas size."""
         if self.canvas:
             return self.canvas.size()
         return self.size()
 
-    def get_content(self):
+    def get_content(self) -> Any:
         """Return sketch content for serialization - file path, layers, shapes, canvas config."""
         content = {"file_path": self.file_path}
         content["layers"] = self.layers if self.layers else []
@@ -1549,17 +1552,17 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             content["canvas_size"] = {"width": self.canvas.width(), "height": self.canvas.height()}
         return content
 
-    def get_active_layer(self):
+    def get_active_layer(self) -> Any:
         """Get the currently active layer."""
         if self.layers and 0 <= self.active_layer_index < len(self.layers):
             return self.layers[self.active_layer_index]
         return None
 
-    def get_layer_properties(self, layer_name):
+    def get_layer_properties(self, layer_name) -> Any:
         """Get properties for a specific layer."""
         return self.layer_properties.get(layer_name, {})
 
-    def get_shape_at_position(self, pos):
+    def get_shape_at_position(self, pos) -> tuple[Any, ...]:
         """Get the shape at the given position (for selection)."""
         # Search in reverse order (top to bottom)
         for i in range(len(self.shapes) - 1, -1, -1):
@@ -1568,7 +1571,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
                 return i, shape
         return None, None
 
-    def import_sketch(self, file_path):
+    def import_sketch(self, file_path) -> Self:
         """Import a sketch from a file."""
         import json
 
@@ -1602,7 +1605,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             logma.error(f"Failed to import sketch: {e}")
         return self
 
-    def init_canvas_config(self):
+    def init_canvas_config(self) -> Any:
         """"""
         items = self.toolbox_config.get(100, {}).get("items", {})
         cnt = 0
@@ -1661,7 +1664,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         ("fill_tool_pane", "NchantdFillToolPane", "Fill Color: "),
     )
 
-    def _build_sketch_tool_pane(self, attr_name, pane_class_name, label):
+    def _build_sketch_tool_pane(self, attr_name, pane_class_name, label) -> Any:
         """Instantiate one sketch tool pane and store it on self."""
         pane_class = globals().get(pane_class_name) or globals().get(
             "Nchantd" + pane_class_name.removeprefix("Nchantd")
@@ -1685,7 +1688,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         setattr(self, attr_name, pane)
         return pane
 
-    def init_sketch_tools(self):
+    def init_sketch_tools(self) -> Any:
         """Build the sketch-tools drawer (line/curve/spline/polygon/circle/object/fill)."""
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
@@ -1695,7 +1698,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             cnt += 1
         return items
 
-    def init_object_config(self):
+    def init_object_config(self) -> Any:
         """"""
         items = self.toolbox_config[300].get("items", {})
         cnt = 0
@@ -1717,7 +1720,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
     #     items = self.toolbox_config[400].get("items", {})
     #     return items
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         logma.info(f"Toolbox Config {self.toolbox_config}")
@@ -1727,12 +1730,12 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.toolbox_config[300]["items"] = self.init_object_config()
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
-    def merge_layers(self, layer1, layer2):
+    def merge_layers(self, layer1, layer2) -> Self:
         """Merge two layers into one (placeholder for advanced functionality)."""
         logma.info(f"Merging layers: {layer1} and {layer2}")
         return self
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event) -> None:
         """Handle mouse press events for drawing."""
         if event.button() == pyqt.Qt.LeftButton and self.current_tool:
             logma.info(f"Mouse press with tool: {self.current_tool}")
@@ -1751,7 +1754,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
             self.render_on_canvas()
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event) -> None:
         """Handle mouse move events for dynamic drawing preview."""
         if self.drawing and (event.buttons() & pyqt.Qt.LeftButton):
             # Get position relative to canvas
@@ -1767,7 +1770,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
             self.render_on_canvas()
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event) -> None:
         """Handle mouse release events to finalize the drawn shape."""
         if event.button() == pyqt.Qt.LeftButton and self.drawing:
             logma.info(f"Mouse release, saving shape: {self.current_tool}")
@@ -1784,7 +1787,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             self.end_point = None
             self.render_on_canvas()
 
-    def new_layer(self, name=None):
+    def new_layer(self, name=None) -> Self:
         """Create a new layer with the specified name."""
         if self.layers is None:
             self.get_layers()
@@ -1798,12 +1801,12 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.layers.insert(-1, layer_name)
         return self
 
-    def paintEvent(self, event):
+    def paintEvent(self, event) -> None:
         """Paint event handler - delegate rendering to render_on_canvas."""
         super().paintEvent(event)
         self.render_on_canvas()
 
-    def render_on_canvas(self):
+    def render_on_canvas(self) -> None:
         """Render all shapes on the canvas using a pixmap for double buffering."""
         if not self.canvas:
             logma.warning("render_on_canvas: No canvas available")
@@ -1859,14 +1862,14 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"Error setting canvas pixmap: {e}", exc_info=True)
 
-    def rename_layer(self, old_name, new_name):
+    def rename_layer(self, old_name, new_name) -> Self:
         """Rename an existing layer."""
         if old_name in self.layers:
             index = self.layers.index(old_name)
             self.layers[index] = new_name
         return self
 
-    def redo_shape(self):
+    def redo_shape(self) -> Self:
         """Redo the last undone shape."""
         if self.redo_stack:
             action, shape = self.redo_stack.pop()
@@ -1876,7 +1879,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
                 self.render_on_canvas()
         return self
 
-    def select_shape_at_position(self, pos):
+    def select_shape_at_position(self, pos) -> Any:
         """Select a shape at the given position."""
         index, shape = self.get_shape_at_position(pos)
         if index is not None:
@@ -1885,7 +1888,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             return shape
         return None
 
-    def save(self):
+    def save(self) -> Self:
         """"""
         if self.document is None:
             self.new_document()
@@ -1895,7 +1898,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         super().save()
         return self
 
-    def save_shape(self):
+    def save_shape(self) -> Self:
         """Save the current shape to the shapes list and clear redo stack."""
         if self.start_point and self.end_point and self.current_tool:
             shape_data = {
@@ -1920,31 +1923,31 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             self.redo_stack.clear()
         return self
 
-    def set_active_layer(self, layer_name):
+    def set_active_layer(self, layer_name) -> Self:
         """Set the active layer by name."""
         if layer_name in self.layers:
             self.active_layer_index = self.layers.index(layer_name)
         return self
 
-    def set_active_layer_by_index(self, index):
+    def set_active_layer_by_index(self, index) -> Self:
         """Set the active layer by index."""
         if 0 <= index < len(self.layers):
             self.active_layer_index = index
         return self
 
-    def set_canvas_color(self, color):
+    def set_canvas_color(self, color) -> Self:
         """Set the canvas background color."""
         if self.canvas and color:
             self.canvas.setStyleSheet(f"background-color: {color};")
         return self
 
-    def set_canvas_size(self, width, height):
+    def set_canvas_size(self, width, height) -> Self:
         """Set the canvas size."""
         if self.canvas:
             self.canvas.resize(width, height)
         return self
 
-    def undo_last_shape(self):
+    def undo_last_shape(self) -> Self:
         """Remove the last drawn shape and add to redo stack."""
         if self.shapes:
             shape = self.shapes.pop()
@@ -1954,7 +1957,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             self.render_on_canvas()
         return self
 
-    def _setup_painter_for_shape(self, painter, shape_data):
+    def _setup_painter_for_shape(self, painter, shape_data) -> None:
         """Setup painter with the appropriate pen and brush for the shape."""
         config = shape_data.get("config", {})
 
@@ -1981,12 +1984,12 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             brush = pyqt.QBrush(color, pyqt.Qt.SolidPattern)
             painter.setBrush(brush)
 
-    def _draw_line_shape(self, painter, start, end, config):
+    def _draw_line_shape(self, painter, start, end, config) -> None:
         """Draw a straight line + any configured end decorations."""
         painter.drawLine(start, end)
         self._draw_line_ends(painter, start, end, config)
 
-    def _draw_curve_shape(self, painter, start, end, config):
+    def _draw_curve_shape(self, painter, start, end, config) -> None:
         """Draw a quadratic Bezier curve (control point above the midpoint)."""
         path = pyqt.QPainterPath(start)
         mid_x = (start.x() + end.x()) / 2
@@ -1996,7 +1999,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         path.quadTo(control, end)
         painter.drawPath(path)
 
-    def _draw_spline_shape(self, painter, start, end, config):
+    def _draw_spline_shape(self, painter, start, end, config) -> None:
         """Draw a smooth cubic Bezier spline between two points."""
         path = pyqt.QPainterPath(start)
         dx = end.x() - start.x()
@@ -2006,15 +2009,15 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         path.cubicTo(control1, control2, end)
         painter.drawPath(path)
 
-    def _draw_polygon_shape(self, painter, start, end, config):
+    def _draw_polygon_shape(self, painter, start, end, config) -> None:
         """Draw a rectangle. (Placeholder for n-sided polygon support.)"""
         painter.drawRect(pyqt.QRectF(start, end).normalized())
 
-    def _draw_ellipse_shape(self, painter, start, end, config):
+    def _draw_ellipse_shape(self, painter, start, end, config) -> None:
         """Draw an ellipse or circle inscribed in the start-end rect."""
         painter.drawEllipse(pyqt.QRectF(start, end).normalized())
 
-    def _draw_fill_shape(self, painter, start, end, config):
+    def _draw_fill_shape(self, painter, start, end, config) -> None:
         """Fill the start-end rect with the current brush colour."""
         painter.fillRect(pyqt.QRectF(start, end).normalized(), painter.brush().color())
 
@@ -2029,7 +2032,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         "fill": "_draw_fill_shape",
     }
 
-    def _draw_shape(self, painter, shape_data):
+    def _draw_shape(self, painter, shape_data) -> None:
         """Draw a shape based on its tool type via the ``_SHAPE_DRAWERS`` dispatch."""
         start = shape_data.get("start")
         end = shape_data.get("end")
@@ -2042,7 +2045,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             return
         getattr(self, method_name)(painter, start, end, config)
 
-    def _draw_line_ends(self, painter, start, end, config):
+    def _draw_line_ends(self, painter, start, end, config) -> None:
         """Draw decorative ends for lines (arrows, circles, etc.)."""
         end_type_1 = config.get("end_type_1")
         end_type_2 = config.get("end_type_2")
@@ -2053,7 +2056,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         if end_type_2 and end_type_2 != "None":
             self._draw_line_end_decoration(painter, start, end, end_type_2)
 
-    def _draw_line_end_decoration(self, painter, from_point, to_point, decoration_type):
+    def _draw_line_end_decoration(self, painter, from_point, to_point, decoration_type) -> None:
         """Draw a specific decoration at a line end."""
         import math
 
@@ -2089,7 +2092,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             rect = pyqt.QRectF(to_point.x() - size / 2, to_point.y() - size / 2, size, size)
             painter.drawRect(rect)
 
-    def _get_expected_cursor_shape(self):
+    def _get_expected_cursor_shape(self) -> Any:
         """Get the expected cursor shape based on current tool."""
         if self.current_tool in ["line", "curve", "spline", "polygon", "ellipse"]:
             return pyqt.Qt.CrossCursor
@@ -2098,7 +2101,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         else:
             return pyqt.Qt.ArrowCursor
 
-    def _get_qcolor_from_name(self, color_name):
+    def _get_qcolor_from_name(self, color_name) -> Any:
         """Convert color name to QColor."""
         color_map = {
             "Black": pyqt.Qt.black,
@@ -2115,7 +2118,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         }
         return pyqt.QColor(color_map.get(color_name, pyqt.Qt.black))
 
-    def _get_pen_style_from_string(self, style_string):
+    def _get_pen_style_from_string(self, style_string) -> Any:
         """Convert style string to Qt pen style."""
         style_map = {
             "Solid": pyqt.Qt.SolidLine,
@@ -2125,7 +2128,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         }
         return style_map.get(style_string, pyqt.Qt.SolidLine)
 
-    def _is_point_in_shape(self, pos, shape):
+    def _is_point_in_shape(self, pos, shape) -> Any:
         """Check if a point is within a shape's bounds."""
         start = shape.get("start")
         end = shape.get("end")
@@ -2150,7 +2153,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 
         return False
 
-    def _setup_canvas_mouse_handlers(self):
+    def _setup_canvas_mouse_handlers(self) -> None:
         """Override canvas mouse handlers to delegate to sketch widget."""
         # Save original handlers
         self._original_canvas_mouse_press = self.canvas.mousePressEvent
@@ -2158,20 +2161,20 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self._original_canvas_mouse_release = self.canvas.mouseReleaseEvent
 
         # Replace with our handlers
-        def canvas_mouse_press(event):
+        def canvas_mouse_press(event) -> None:
             if self.current_tool:
                 logma.info(f"Canvas mousePressEvent intercepted, tool={self.current_tool}")
                 self.mousePressEvent(event)
             else:
                 self._original_canvas_mouse_press(event)
 
-        def canvas_mouse_move(event):
+        def canvas_mouse_move(event) -> None:
             if self.current_tool:
                 self.mouseMoveEvent(event)
             else:
                 self._original_canvas_mouse_move(event)
 
-        def canvas_mouse_release(event):
+        def canvas_mouse_release(event) -> None:
             if self.current_tool:
                 logma.info(f"Canvas mouseReleaseEvent intercepted, tool={self.current_tool}")
                 self.mouseReleaseEvent(event)
@@ -2182,7 +2185,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         self.canvas.mouseMoveEvent = canvas_mouse_move
         self.canvas.mouseReleaseEvent = canvas_mouse_release
 
-    def _update_canvas_cursor(self):
+    def _update_canvas_cursor(self) -> None:
         """Update the canvas cursor based on the current tool."""
         if not self.canvas or self._updating_cursor:
             return
@@ -2220,7 +2223,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
             # Always reset flag
             self._updating_cursor = False
 
-    def _update_tool_config_from_pane(self, tool_pane):
+    def _update_tool_config_from_pane(self, tool_pane) -> None:
         """Update current tool configuration from the tool pane settings."""
         try:
             # Update line style
@@ -2272,7 +2275,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
 class NchantdOfficePalette(NchantdOfficeDocument):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdOfficePalette init: parent={type(parent).__name__}")
         super().__init__("Nchantd Palette", parent, cfg)
@@ -2282,12 +2285,12 @@ class NchantdOfficePalette(NchantdOfficeDocument):
         #     self.config.override(parent.config)
         self.config.override(cfg)
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         cfg = {}
@@ -2295,13 +2298,13 @@ class NchantdOfficePalette(NchantdOfficeDocument):
         self.layout.addWidget(self.palette)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def init_content_selection(self):
+    def init_content_selection(self) -> Any:
         """"""
         items = {}
         cnt = 0
@@ -2313,17 +2316,17 @@ class NchantdOfficePalette(NchantdOfficeDocument):
         items[cnt]["widget"] = self.canvas_color_select
         return items
 
-    def init_palette_tools(self):
+    def init_palette_tools(self) -> Any:
         """"""
         items = {}
         return items
 
-    def init_drawer_quickstart(self):
+    def init_drawer_quickstart(self) -> Any:
         """"""
         items = {}
         return items
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_content_selection()
