@@ -2628,7 +2628,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     logma.info(f"File Type {current_tab.document.doc_type}")
                     logma.info(f"Create New Tab for Document{file}")
                     document = self.codex.init_script(self._file_open_cfg(file))
-                    current_tab.open_file()
+                    current_tab.open_file(file)
                     # document.load_document()
                     self.add_document(document, self.get_current_node().nid, current_tab.pos + 1)
                 else:
