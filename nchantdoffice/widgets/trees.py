@@ -11,10 +11,13 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
 import datetime as dt
+from typing import Self
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -53,7 +56,7 @@ class NchantdOfficeApplicationTree(NchantdWidget):
     # Signal emitted when item is dropped on tabs (open document)
     item_dropped_on_tabs = pyqt.Signal(object)  # tree item
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"[trees] NchantdOfficeApplicationTree.__init__ parent={type(parent).__name__ if parent else None}")
         try:
@@ -67,13 +70,13 @@ class NchantdOfficeApplicationTree(NchantdWidget):
             logma.error(f"[trees] NchantdOfficeApplicationTree.__init__ failed: {e}", exc_info=True)
             raise
 
-    def _setup_drag_drop(self):
+    def _setup_drag_drop(self) -> None:
         """Setup tree drag and drop"""
         logma.debug("[trees] _setup_drag_drop: delegated to underlying NchantdApplicationTree")
         pass  # Handled by underlying NchantdApplicationTree
 
-    def initModel(self):
-        """"""
+    def initModel(self) -> Self:
+        """ """
         logma.info("[trees] initModel")
         try:
             super().initModel()
@@ -82,7 +85,7 @@ class NchantdOfficeApplicationTree(NchantdWidget):
             raise
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         logma.info("[trees] initView")
         try:
@@ -127,7 +130,7 @@ class NchantdOfficeApplicationTree(NchantdWidget):
             raise
         return self
 
-    def _on_tree_selection_changed(self, selected, deselected):
+    def _on_tree_selection_changed(self, selected, deselected) -> None:
         """Handle tree selection change - emit document_selected signal"""
         if not hasattr(self.tree, "selectedItems"):
             return
@@ -147,14 +150,14 @@ class NchantdOfficeApplicationTree(NchantdWidget):
             logma.info(f"[trees] _on_tree_selection_changed: emitting document_selected for {doc}")
             self.document_selected.emit(doc)
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event) -> None:
         """Start drag tracking"""
         if event.button() == pyqt.Qt.LeftButton:
             self._drag_start_pos = event.pos()
             logma.debug(f"[trees] mousePressEvent: drag_start pos={event.pos().x()},{event.pos().y()}")
         super().mousePressEvent(event)
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event) -> None:
         """Initiate tree item drag"""
         if event.buttons() & pyqt.Qt.LeftButton:
             if hasattr(self, "_drag_start_pos"):
@@ -164,7 +167,7 @@ class NchantdOfficeApplicationTree(NchantdWidget):
                     self._initiate_item_drag()
         super().mouseMoveEvent(event)
 
-    def _initiate_item_drag(self):
+    def _initiate_item_drag(self) -> None:
         """Start tree item drag"""
         selected_items = self.tree.selectedItems() if hasattr(self.tree, "selectedItems") else []
         if not selected_items:
@@ -197,7 +200,7 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         else:
             logma.warning("[trees] _initiate_item_drag: no nid_txt in selected items - drag aborted")
 
-    def dragEnterEvent(self, event):
+    def dragEnterEvent(self, event) -> None:
         """Accept drag enter"""
         mime_data = event.mimeData()
         logma.debug(f"[trees] dragEnterEvent: has_tab={mime_data.hasFormat('application/x-nchantd-tab')} has_tree_item={mime_data.hasFormat('application/x-nchantd-tree-item')}")
@@ -207,7 +210,7 @@ class NchantdOfficeApplicationTree(NchantdWidget):
             event.acceptProposedAction()
         super().dragEnterEvent(event)
 
-    def dropEvent(self, event):
+    def dropEvent(self, event) -> None:
         """Handle drops on tree
 
         T-NEW-030: when a tab is dropped on a tree node, persist
@@ -265,7 +268,7 @@ class NchantdOfficeApplicationTree(NchantdWidget):
 
         super().dropEvent(event)
 
-    def _handle_tab_dropped_on_node(self, source_tab_pos, target_nid):
+    def _handle_tab_dropped_on_node(self, source_tab_pos, target_nid) -> None:
         """T-NEW-030: persist the new parent for a tab dropped on
         a tree node. Resolves the source tab's ``tid_txt`` from
         the source position via the tab model, then calls
@@ -342,7 +345,7 @@ class NchantdOfficeApplicationTree(NchantdWidget):
                 exc_info=True,
             )
 
-    def initWidget(self, cfg=None):
+    def initWidget(self, cfg=None) -> Self:
         """"""
         logma.info("[trees] initWidget")
         try:
