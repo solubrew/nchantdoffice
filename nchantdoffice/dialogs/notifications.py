@@ -13,7 +13,9 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
 from os.path import abspath, dirname, join
+from typing import Any, Self
 import datetime as dt
 
 # ======================================3rd Party Library Modules=====================================================||
@@ -35,23 +37,23 @@ pxcfg = join(here, "_data_", ".yaml")
 class NchantdNotificationSigil(NchantdWidget):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent: Any = None, cfg: Any = None) -> None:
         """ """
         logma.info(f"NchantdNotificationSigil init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdNotificationSigil").override(cfg))
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
