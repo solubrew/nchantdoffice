@@ -22,7 +22,11 @@
 """
 
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 # ======================================Standard Library Modules======================================================||
+from typing import Any, Callable, Optional
+
 from dataclasses import dataclass, field
 from os.path import dirname, join
 
@@ -184,7 +188,7 @@ class RotationSlot:
     kind: str = "base"
     payload: dict = field(default_factory=dict)
 
-    def render(self, parent):  # pragma: no cover - abstract
+    def render(self, parent) -> Any:  # pragma: no cover - abstract
         """Return the QWidget to display for this slot."""
         raise NotImplementedError("subclasses must override render()")
 
@@ -198,7 +202,7 @@ class TipSlot(RotationSlot):
 
     kind: str = "tip"
 
-    def render(self, parent):
+    def render(self, parent) -> Any:
         card = NchantdGridScrollGroupBox(parent)
         card.setTitle("")
         tip = str(self.payload.get("text", "")).strip()
@@ -230,7 +234,7 @@ class SubstackSlot(RotationSlot):
 
     kind: str = "substack"
 
-    def render(self, parent):
+    def render(self, parent) -> Any:
         card = NchantdGridScrollGroupBox(parent)
         card.setTitle("")
         title = NchantdLabel(card)
@@ -278,7 +282,7 @@ class ProCtaSlot(RotationSlot):
 
     kind: str = "pro_cta"
 
-    def render(self, parent):
+    def render(self, parent) -> Any:
         card = NchantdGridScrollGroupBox(parent)
         card.setTitle("")
         title = NchantdLabel(card)
@@ -335,7 +339,7 @@ class AffiliateSlot(RotationSlot):
     kind: str = "affiliate"
     source: str = "external"  # T-NEW-040 DESK-2: 'external' | 'internal'
 
-    def render(self, parent):
+    def render(self, parent) -> Any:
         # Render an affiliate/team-pack banner card. The
         # visual language mirrors the pre-rotation
         # ``_build_banner_card`` helper (removed in T-DESK-066
@@ -410,7 +414,7 @@ class ProInternalSlot(RotationSlot):
 
     kind: str = "pro_internal"
 
-    def render(self, parent):
+    def render(self, parent) -> Any:
         banner = self.payload
         card = NchantdGridScrollGroupBox(parent)
         card.setTitle("")
@@ -636,7 +640,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     via ``nchantdoffice/_data_/models.yaml``).
     """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         super().__init__("NchantdOfficeAdTab", parent, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAdTab").override(cfg))
@@ -652,7 +656,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self.banners: list = []
         self._user = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> "NchantdOfficeAdTab":
         cfg = cfg or {}
         if cfg.get("document", None) is None:
             cfg["document"] = {"data": {"unit": {}}}
@@ -667,7 +671,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self._load_slots()
         return self
 
-    def show_referral_url(self, url):
+    def show_referral_url(self, url) -> Optional["NchantdOfficeAdTab"]:
         """Surface the user's referral URL in the ad tab (T-NEW-026 step 3).
 
         The Affiliate Manager tab calls this when the user
@@ -685,7 +689,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             logma.warning(f"[ad_tab] show_referral_url failed: {e}")
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Any:
         cfg = cfg or {}
         cfg["fill"] = True
         cfg["default_toolbar"] = False
@@ -748,7 +752,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self._start_rotation()
         return cfg
 
-    def _render_current_slot(self):
+    def _render_current_slot(self) -> None:
         """Render the slot at ``self.current_slot_index`` into
         the ``_slot_container``. Clears the container first so
         only one slot is visible at a time (the rotation, not
@@ -801,7 +805,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                 f"[ad_tab] render slot[{idx}] ({slot.kind}) failed: {e}"
             )
 
-    def _advance_slot(self):
+    def _advance_slot(self) -> None:
         """QTimer callback + manual advance handler.
 
         Increments ``current_slot_index`` and wraps to 0 after
@@ -820,7 +824,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         except Exception as e:
             logma.warning(f"[ad_tab] _advance_slot re-render failed: {e}")
 
-    def _start_rotation(self):
+    def _start_rotation(self) -> None:
         """Start the QTimer that drives the slot rotation.
 
         T-DESK-066 step 5. The interval is configurable via
@@ -872,7 +876,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             return True
         return not bool(getattr(user, "has_pro", False))
 
-    def _load_slots(self):
+    def _load_slots(self) -> None:
         """T-DESK-066 — populate ``self.slots`` in the canonical
         order documented in nchantdofficeATNRG/TODOS.md
         T-NEW-029 step 4, extended in T-NEW-040 to a 5-tier
@@ -981,7 +985,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             f"pro_internal={len(slots) - len(affiliate_banners) - 1})"
         )
 
-    def _load_banners(self):
+    def _load_banners(self) -> None:
         """Fetch banners from the base-layer feed, then the
         affiliate API, then fall back to the local list.
 
@@ -1041,7 +1045,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         logma.info("[ad_tab] using local fallback banners")
         self.banners = list(FALLBACK_BANNERS)
 
-    def _on_remove_ads_clicked(self):
+    def _on_remove_ads_clicked(self) -> None:
         """Redirect the user to the Get Pro page in an in-app tab.
 
         Sprint 28 (toolbar parity): the same navigation that
@@ -1061,7 +1065,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def redirect_to_get_pro(app):
+    def redirect_to_get_pro(app) -> bool:
         """Navigate the left-pane tree to the "Nchantd Account"
         tab (the embedded browser for the nchantdoffice_com
         account chain) so the user lands on the in-app Get Pro
@@ -1185,7 +1189,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             )
             return False
 
-    def _open_url(self, url):
+    def _open_url(self, url) -> None:
         """Open an arbitrary URL in the default browser."""
         if not url:
             return
@@ -1194,7 +1198,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[ad_tab] failed to open {url}: {e}", exc_info=True)
 
-    def _make_open_url_handler(self, url):
+    def _make_open_url_handler(self, url) -> Callable[[], None]:
         """Return a slot that opens ``url`` on click (default-arg trick).
 
         Replacing the previous ``lambda checked=False, u=url:`` form
@@ -1203,7 +1207,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         slot testable in isolation.
         """
 
-        def _handler(_checked=False, _url=url):
+        def _handler(_checked=False, _url=url) -> None:
             self._open_url(_url)
 
         return _handler
@@ -1213,7 +1217,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         url,
         event_name=None,
         event_properties=None,
-    ):
+    ) -> Callable[[], None]:
         """T-DESK-066 — static counterpart of
         ``_make_open_url_handler``. The slot renderers
         (``SubstackSlot.render``, ``AffiliateSlot.render``,
@@ -1230,7 +1234,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         by AffiliateSlot (affiliate_click_external) and
         ProInternalSlot (affiliate_click_internal).
         """
-        def _handler(_checked=False, _url=url):
+        def _handler(_checked=False, _url=url) -> None:
             # T-NEW-040 DESK-3 — fire the telemetry event
             # first so even no-op URL opens (e.g., blocked
             # browser launch) still get attributed.
