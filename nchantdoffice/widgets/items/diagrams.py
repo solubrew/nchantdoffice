@@ -13,8 +13,11 @@
 
 # -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
 import datetime as dt
+from typing import Self
 
 # ======================================3rd Party Library Modules======================================================||
 from PySide6.QtWidgets import (
@@ -53,7 +56,7 @@ class NchantdOfficeDiagramEdge(NchantdWidgetMixin, pyqt.QGraphicsLineItem):
     Represents a line connecting two nodes, with locking connection points.
     """
 
-    def __init__(self, source_node, target_node, source_connection="bottom", target_connection="top", cfg=None):
+    def __init__(self, source_node, target_node, source_connection="bottom", target_connection="top", cfg=None) -> None:
         logma.info(f"[diagrams] Edge.__init__: src={getattr(source_node, 'label', None) or type(source_node).__name__} tgt={getattr(target_node, 'label', None) or type(target_node).__name__} src_conn={source_connection} tgt_conn={target_connection}")
         try:
             self.config = kahndor.Instruct(pxcfg).select("Edge")
@@ -75,7 +78,7 @@ class NchantdOfficeDiagramEdge(NchantdWidgetMixin, pyqt.QGraphicsLineItem):
             logma.error(f"[diagrams] Edge.__init__ failed: {e}", exc_info=True)
             raise
 
-    def update_position(self):
+    def update_position(self) -> None:
         """
         Dynamically update the positions of the edge endpoints.
         """
@@ -93,7 +96,7 @@ class NchantdOfficeDiagramNode(NchantdWidgetMixin, pyqt.QGraphicsEllipseItem):
     A draggable node with connection points for edges.
     """
 
-    def __init__(self, x, y, radius=20, label=None, color=QColor(100, 150, 255), cfg=None):
+    def __init__(self, x, y, radius=20, label=None, color=QColor(100, 150, 255), cfg=None) -> None:
         """"""
         logma.info(f"[diagrams] Node.__init__: pos=({x},{y}) radius={radius} label={label!r}")
         try:
@@ -132,14 +135,14 @@ class NchantdOfficeDiagramNode(NchantdWidgetMixin, pyqt.QGraphicsEllipseItem):
             logma.error(f"[diagrams] Node.__init__ failed: {e}", exc_info=True)
             raise
 
-    def add_edge(self, edge):
+    def add_edge(self, edge) -> None:
         """
         Add an edge to the list of connected edges.
         """
         logma.debug(f"[diagrams] Node.add_edge: edge_count_before={len(self.edges)}")
         self.edges.append(edge)
 
-    def remove_edge(self, edge):
+    def remove_edge(self, edge) -> None:
         """
         Remove an edge from the list of connected edges.
         """
@@ -147,7 +150,7 @@ class NchantdOfficeDiagramNode(NchantdWidgetMixin, pyqt.QGraphicsEllipseItem):
         if edge in self.edges:
             self.edges.remove(edge)
 
-    def sceneEvent(self, event):
+    def sceneEvent(self, event) -> None:
         """
         Update attached edges automatically when the node is moved.
         """
@@ -159,14 +162,14 @@ class NchantdOfficeDiagramNode(NchantdWidgetMixin, pyqt.QGraphicsEllipseItem):
             logma.error(f"[diagrams] Node.sceneEvent failed: {e}", exc_info=True)
         return super().sceneEvent(event)
 
-    def lock_connection(self, target_connection):
+    def lock_connection(self, target_connection) -> None:
         """
         Lock into the nearest connection point.
         """
         logma.debug(f"[diagrams] Node.lock_connection: target={target_connection!r}")
         return self.connection_points[target_connection]
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         logma.info("[diagrams] Node.initView: building 9 text-box connection points")
         try:
@@ -185,7 +188,7 @@ class NchantdOfficeDiagramNode(NchantdWidgetMixin, pyqt.QGraphicsEllipseItem):
             raise
         return self
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Seed any per-instance model state for the diagram Node.
 
         Sprint 20: previously a no-op stub. The bulk of the
@@ -202,7 +205,7 @@ class NchantdOfficeDiagramNode(NchantdWidgetMixin, pyqt.QGraphicsEllipseItem):
         self.selected_connection = None
         return self
 
-    def initWidget(self, pos=0):
+    def initWidget(self, pos=0) -> Self:
         """"""
         logma.info(f"[diagrams] Node.initWidget: pos={pos}")
         return self
