@@ -11,7 +11,9 @@
     <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
+from __future__ import annotations
+from typing import Any, Self
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
 
@@ -40,7 +42,7 @@ pxcfg = join(here, "_data_", "nchantdoffice.yaml")
 class NchantdOfficeCloak(NchantdCloak):
     """"""
 
-    def __init__(self, name, instance=None, parent=None, cfg=None, args=None):
+    def __init__(self, name, instance=None, parent=None, cfg=None, args=None) -> None:
         """ """
         super().__init__(name, instance, parent, None, args)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCloak").override(cfg))
@@ -89,7 +91,7 @@ class NchantdOfficeCloak(NchantdCloak):
         self.library_optional = True
         self.toolbox = None
 
-    def run_on_launch(self):
+    def run_on_launch(self) -> Self:
         """Called on every application startup.
 
         T-NEW-058: in addition to the inherited base-class work,
@@ -129,7 +131,7 @@ class NchantdOfficeCloak(NchantdCloak):
         )
         return self
 
-    def select_initial_node(self):
+    def select_initial_node(self) -> None:
         """Restore last selected node on successive runs, fallback to Home."""
         # Get last selected node from preferences
         last_selected_id = self.config.dikt.get("preferences", {}).get("last_selected_node")
@@ -152,7 +154,7 @@ class NchantdOfficeCloak(NchantdCloak):
             if home_items:
                 tree.setCurrentItem(home_items[0])
 
-    def save_selected_node(self, node_id):
+    def save_selected_node(self, node_id) -> None:
         """Save selected node to preferences."""
         if "preferences" not in self.config.dikt:
             self.config.dikt["preferences"] = {}
@@ -161,7 +163,7 @@ class NchantdOfficeCloak(NchantdCloak):
         if hasattr(self.config, "save"):
             self.config.save()
 
-    def _on_tree_selection_changed(self, selected, deselected):
+    def _on_tree_selection_changed(self, selected, deselected) -> None:
         """Handle tree selection change - save to preferences."""
         # Get selected node ID from selection model
         indexes = selected.indexes() if selected else []
@@ -175,7 +177,7 @@ class NchantdOfficeCloak(NchantdCloak):
 class NchantdOfficeMainWindow(NchantdMainWindow):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdOfficeMainWindow init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
@@ -197,27 +199,27 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
                     f"[NchantdOfficeMainWindow] QSystemTrayIcon init failed: {e}"
                 )
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def hideEvent(self, event):
-        """ "" """
+    def hideEvent(self, event) -> None:
+        """ " """
         super().hideEvent(event)
 
-    def _populate_update_tray_menu(self, info):
+    def _populate_update_tray_menu(self, info) -> None:
         """T-NEW-060: populate the tray icon menu with the latest
         update notification + dismiss action.
 
@@ -296,7 +298,7 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
                 exc_info=True,
             )
 
-    def _open_url(self, url):
+    def _open_url(self, url) -> None:
         """Open ``url`` in the user's default browser (T-NEW-060).
 
         Uses ``QDesktopServices.openUrl`` when available; falls
@@ -322,7 +324,7 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
 # ====================================================================================================================||
 
 
-def run_update_process(dbupdate, update_checker, main_window=None):
+def run_update_process(dbupdate, update_checker, main_window=None) -> dict:
     """T-NEW-058: run the two update-process entry points at boot.
 
     Extracted from ``NchantdOfficeCloak.run_on_launch`` so that
