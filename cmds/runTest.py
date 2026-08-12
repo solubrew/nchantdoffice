@@ -39,7 +39,7 @@ log = True
 pxcfg = join(here, "_data_", ".yaml")
 
 
-def run(args):
+def run(args: list[str]) -> None:
     """"""
     if args[1] == "all":
         test = Test_NchantdOfficeCloak.setup_class()
