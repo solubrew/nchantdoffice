@@ -125,13 +125,13 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
         self.layout.addWidget(self.documents_label)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> "NchantdOfficeAccountOverview":
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def refresh_account_info(self):
+    def refresh_account_info(self) -> "NchantdOfficeAccountOverview":
         """Refresh account information from server"""
         try:
             # Update account name
@@ -154,7 +154,7 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
 
         return self
 
-    def get_account_summary(self):
+    def get_account_summary(self) -> dict:
         """Get account summary as dictionary"""
         return {
             "name": self.app.model.user.name,
@@ -168,7 +168,7 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
 class NchantdOfficeAccountSettings(NchantdAccountSettings):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAccountSettings").override(cfg))
@@ -183,13 +183,13 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         self.browser = None
         self.button = None
 
-    def initModel(self):
+    def initModel(self) -> "NchantdOfficeAccountSettings":
         """"""
         super().initModel()
         self.account = self.app.model.settings.account_settings
         return self
 
-    def initView(self):
+    def initView(self) -> "NchantdOfficeAccountSettings":
         """"""
         super().initView()
         # T-removed: a large block of commented-out account-UI scaffolding
@@ -226,13 +226,13 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         self.layout.addLayout(layout)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> "NchantdOfficeAccountSettings":
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def save_account_settings(self):
+    def save_account_settings(self) -> bool:
         """Save account settings to user model"""
         try:
             # Update user name if changed
@@ -253,7 +253,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             logma.error(f"Error saving account settings: {e}")
             return False
 
-    def load_account_settings(self):
+    def load_account_settings(self) -> bool:
         """Load account settings from the local user model + live API.
 
         Two-phase load:
@@ -296,7 +296,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             logma.error(f"Error loading account settings: {e}", exc_info=True)
             return False
 
-    def validate_account_settings(self):
+    def validate_account_settings(self) -> dict:
         """Validate account settings before saving"""
         errors = []
 
@@ -310,21 +310,21 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
 
         return {"valid": len(errors) == 0, "errors": errors}
 
-    def update_account_status(self, status):
+    def update_account_status(self, status: str) -> "NchantdOfficeAccountSettings":
         """Update account status display"""
         if self.account_status:
             self.account_status.setPlaceholderText(str(status))
             self.app.model.user.nchantrs_account_status = status
         return self
 
-    def update_credits(self, credits):
+    def update_credits(self, credits: str) -> "NchantdOfficeAccountSettings":
         """Update credits display"""
         if self.credits_status:
             self.credits_status.setPlaceholderText(str(credits))
             self.app.model.user.nchantrs_account_credits = credits
         return self
 
-    def refresh_browser(self):
+    def refresh_browser(self) -> "NchantdOfficeAccountSettings":
         """Refresh the embedded browser with appropriate URL"""
         try:
             if not self.browser:
@@ -351,7 +351,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
 
         return self
 
-    def get_account_data(self):
+    def get_account_data(self) -> dict:
         """Get current account data as dictionary"""
         return {
             "name": self.user_name.text() if self.user_name and self.user_name.text() else self.app.model.user.name,
@@ -363,7 +363,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             "apikey": self.app.model.user.apikey,
         }
 
-    def sync_with_server(self):
+    def sync_with_server(self) -> bool:
         """Synchronize account data with nchantrs.com server.
 
         Validates the API key, makes a GET request to the nchantrs
