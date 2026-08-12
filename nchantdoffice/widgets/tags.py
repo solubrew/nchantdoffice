@@ -11,17 +11,19 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
 
-# ======================================3rd Party Library Modules=====================================================||
+# ======================================3rd Party Library Modules=====================================================|
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
 from nchantrs.widgets.widgets import NchantdWidget
 from kahndor.logma import Logma
+from typing import Any, Self
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -35,7 +37,7 @@ pxcfg = join(here, "_data_", "tags.yaml")
 class NchantdQuickTagsWidget(NchantdWidget):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"[tags] NchantdQuickTagsWidget.__init__ parent={type(parent).__name__ if parent else None}")
         try:
@@ -45,18 +47,18 @@ class NchantdQuickTagsWidget(NchantdWidget):
             logma.error(f"[tags] NchantdQuickTagsWidget.__init__ failed: {e}", exc_info=True)
             raise
 
-    def initModel(self):
-        """"""
+    def initModel(self) -> Self:
+        """ """
         logma.info("[tags] NchantdQuickTagsWidget.initModel: (no-op, subclasses fill in)")
         return self
 
-    def initView(self):
-        """"""
+    def initView(self) -> Self:
+        """ """
         logma.info("[tags] NchantdQuickTagsWidget.initView: (no-op, subclasses fill in)")
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         logma.info("[tags] NchantdQuickTagsWidget.initWidget")
         try:
             self.initModel()
@@ -70,7 +72,7 @@ class NchantdQuickTagsWidget(NchantdWidget):
 class NchantdTagsSideBar(NchantdWidget):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"[tags] NchantdTagsSideBar.__init__ parent={type(parent).__name__ if parent else None}")
         try:
@@ -80,8 +82,8 @@ class NchantdTagsSideBar(NchantdWidget):
             logma.error(f"[tags] NchantdTagsSideBar.__init__ failed: {e}", exc_info=True)
             raise
 
-    def initModel(self):
-        """"""
+    def initModel(self) -> Self:
+        """ """
         logma.info("[tags] NchantdTagsSideBar.initModel")
         try:
             super().initModel()
@@ -90,8 +92,8 @@ class NchantdTagsSideBar(NchantdWidget):
             raise
         return self
 
-    def initView(self):
-        """"""
+    def initView(self) -> Self:
+        """ """
         logma.info("[tags] NchantdTagsSideBar.initView")
         try:
             super().initView()
@@ -101,8 +103,8 @@ class NchantdTagsSideBar(NchantdWidget):
 
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         logma.info("[tags] NchantdTagsSideBar.initWidget")
         try:
             self.initModel()
