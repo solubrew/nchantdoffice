@@ -27,3 +27,7 @@ class PyofImportContract:
         TableSpec("app_media",     "UUID"),
         TableSpec("doc_media",     "UUID"),
     )
+
+def count_rows_in_table(conn: sqlite3.Connection, table: str) -> int:
+    cur = conn.execute(f'SELECT COUNT(*) FROM "{table}"')
+    return int(cur.fetchone()[0])
