@@ -11,6 +11,8 @@
     <(WT)>: -32
 """
 
+from __future__ import annotations
+from typing import Any, Dict, Self, Tuple
 from copy import deepcopy
 
 # -*- coding: utf-8 -*
@@ -62,19 +64,19 @@ pxcfg = join(here, "_data_", "prompts.yaml")
 class NchantdContextListPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdContextListPane").override(cfg))
         self.contexts = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         self.contexts = ["Automotive", "Medical", "Dietary"]
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -101,7 +103,7 @@ class NchantdContextListPane(NchantdPane):
 
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -111,12 +113,12 @@ class NchantdContextListPane(NchantdPane):
 class NchantdOfficePromptManager(NchantdManager):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePromptManager").override(cfg))
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Initialise the prompt-registry model.
 
         T-023: the integration pattern is now:
@@ -162,7 +164,7 @@ class NchantdOfficePromptManager(NchantdManager):
             )
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """
         Need to store contexts and allow for users to select topic and style for prompts
         context for trouble shooting a car
@@ -204,7 +206,7 @@ class NchantdOfficePromptManager(NchantdManager):
             raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -221,7 +223,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         tayloring outputs
     """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__("NchantdOfficePrompt", parent=parent, cfg=cfg)
         cfg = cfg or {}
@@ -244,7 +246,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         self.url_two = None
         self.sessions = []
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         cfg = cfg or {}
         super().initModel(cfg)
@@ -262,7 +264,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
             self.url_two = self.config.dikt.get("default_model_two", "https://openai.com/")
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         self.app_layout = pyqt.QHBoxLayout()
@@ -296,14 +298,14 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
 
         return self
 
-    def initWidget(self, compare=False):
+    def initWidget(self, compare=False) -> Self:
         """"""
         # self.compare_models = compare
         self.initModel()
         self.initView()
         return self
 
-    def cmd_select_model_new(self, event=None, *args, **kwargs):
+    def cmd_select_model_new(self, event=None, *args, **kwargs) -> Self:
         """Select a new primary model for the prompt.
 
         Reads the chosen model name from the dropdown
@@ -326,7 +328,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
             logma.error(f"[prompts] cmd_select_model_new failed: {e}", exc_info=True)
         return self
 
-    def cmd_set_chat_history_expiry(self, event=None, *args, **kwargs):
+    def cmd_set_chat_history_expiry(self, event=None, *args, **kwargs) -> Self:
         """Record the chat-history-expiry value from the spinbox.
 
         Reads the current value (in days) from
@@ -350,7 +352,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
             logma.error(f"[prompts] cmd_set_chat_history_expiry failed: {e}", exc_info=True)
         return self
 
-    def cmd_toggle_dual_models(self, event=None, *args, **kwargs):
+    def cmd_toggle_dual_models(self, event=None, *args, **kwargs) -> Self:
         """Toggle the dual-model comparison mode.
 
         Stores ``self.compare_models = True`` (when toggled
@@ -371,7 +373,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
             logma.error(f"[prompts] cmd_toggle_dual_models failed: {e}", exc_info=True)
         return self
 
-    def get_prompt_max_length(self):
+    def get_prompt_max_length(self) -> tuple[int, int | None]:
         """"""
         self.model_one.get_max_prompt_length()
         if self.model_two is None:
@@ -379,7 +381,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         self.model_two.get_max_prompt_length()
         return self.model_one.service.max_prompt_length, self.model_two.service.max_prompt_length
 
-    def init_drawer_document_config(self):
+    def init_drawer_document_config(self) -> dict[Any, Any]:
         """"""
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
@@ -412,7 +414,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         # "days to keep chat history" pane. No further widget needed.
         return items
 
-    def init_drawer_models_config(self):
+    def init_drawer_models_config(self) -> dict[Any, Any]:
         """"""
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
@@ -440,7 +442,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def _build_model_connection_pane(self):
+    def _build_model_connection_pane(self) -> Any:
         """Build the model-API-connection status + button widget.
 
         T-025: a small inline pane with a label showing the current
@@ -475,7 +477,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
             placeholder = NchantdLabel(self, {"text": "Model connection pane unavailable", "layout": "horizontal"})
             return placeholder.initWidget()
 
-    def cmd_test_model_connection(self, event=None, *args, **kwargs):
+    def cmd_test_model_connection(self, event=None, *args, **kwargs) -> Self:
         """Test the configured model-API connection.
 
         T-025: reads the model endpoint from
@@ -520,7 +522,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
             logma.error(f"[prompts] cmd_test_model_connection outer failed: {e}", exc_info=True)
         return self
 
-    def init_drawer_context_inputs(self):
+    def init_drawer_context_inputs(self) -> dict[Any, Any]:
         """"""
         items = self.toolbox_config[300].get("items", {})
         cnt = 0
@@ -538,14 +540,14 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         # cnt += 1
         return items
 
-    def init_drawer_quickstart(self):
+    def init_drawer_quickstart(self) -> dict[Any, Any]:
         """"""
         items = self.toolbox_config[400].get("items", {})
         cnt = 0
         default_action = {"action": "insert_generic_action", "type": "custom"}
         return items
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
@@ -553,12 +555,12 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         self.toolbox_config[300]["items"] = self.init_drawer_context_inputs()
         self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
-    def inject_context(self, context):
+    def inject_context(self, context) -> str:
         """"""
         text = f"{self.prefix_context}{context}{self.suffix_context}"
         return text
 
-    def insert_input(self, text):
+    def insert_input(self, text) -> Self:
         """"""
         if self.active_session is not None:
             self.sessions.append(self.active_session)
@@ -572,7 +574,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         self.model_one.browser.page().runJavaScript(js_code)
         return self
 
-    def save(self):
+    def save(self) -> Self:
         """"""
         content = {"sessions": self.sessions}
         if content != self.document.content:
@@ -580,12 +582,12 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
             super().save()
         return self
 
-    def set_prefix_context(self, text):
+    def set_prefix_context(self, text) -> Self:
         """"""
         self.prefix_context = text
         return self
 
-    def set_suffix_context(self, text):
+    def set_suffix_context(self, text) -> Self:
         """"""
         self.suffix_context = text
         return self
@@ -594,7 +596,7 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
 class NchantdOfficeSuperPromptPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         self.config = kahndor.Instruct(pxcfg).select("NchantdOfficeSuperPromptPane")
         if parent:
@@ -611,7 +613,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
         self.models_cnt = self.config.dikt.get("model_cnt", 1)
         self.available_models = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         if cfg is not None:
             self.models_cnt = cfg.get("model_cnt", 1)
@@ -621,7 +623,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
 
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -631,13 +633,13 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
         self.set_size()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def add_model(self, name, source):
+    def add_model(self, name, source) -> Self:
         """Register a model in the available_models list.
 
         Avoids duplicates and stores the model as a ``(name, source)``
@@ -653,7 +655,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
             self.available_models.append((name, source))
         return self
 
-    def update_pane(self):
+    def update_pane(self) -> Self:
         """"""
         super().update_pane()
         self.comparison_toolbar_layout = pyqt.QHBoxLayout()
@@ -711,12 +713,12 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
         self.layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignBottom)
         return self
 
-    def context_handler(self):
+    def context_handler(self) -> Self:
         """"""
         self.show_radio_buttons()
         return self
 
-    def cmd_insert_image(self, event=None, *args, **kwargs):
+    def cmd_insert_image(self, event=None, *args, **kwargs) -> Self:
         """Insert an image reference into the prompt input.
 
         Appends the token ``[image]`` at the current cursor position
@@ -730,7 +732,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
             logma.error(f"[prompts] cmd_insert_image failed: {e}", exc_info=True)
         return self
 
-    def cmd_insert_context(self, event=None, *args, **kwargs):
+    def cmd_insert_context(self, event=None, *args, **kwargs) -> Self:
         """Insert a context reference into the prompt input.
 
         Appends the token ``[context]`` at the current cursor position.
@@ -742,7 +744,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
             logma.error(f"[prompts] cmd_insert_context failed: {e}", exc_info=True)
         return self
 
-    def cmd_insert_document(self, event=None, *args, **kwargs):
+    def cmd_insert_document(self, event=None, *args, **kwargs) -> Self:
         """Insert a document reference into the prompt input.
 
         Appends the token ``[document]`` at the current cursor position.
@@ -754,7 +756,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
             logma.error(f"[prompts] cmd_insert_document failed: {e}", exc_info=True)
         return self
 
-    def cmd_model_one_selected(self, event=None, *args, **kwargs):
+    def cmd_model_one_selected(self, event=None, *args, **kwargs) -> Self:
         """Record the model the user picked for comparison slot one.
 
         Reads the dropdown value and stores it on the config so
@@ -769,7 +771,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
             logma.error(f"[prompts] cmd_model_one_selected failed: {e}", exc_info=True)
         return self
 
-    def cmd_model_two_selected(self, event=None, *args, **kwargs):
+    def cmd_model_two_selected(self, event=None, *args, **kwargs) -> Self:
         """Record the model the user picked for comparison slot two."""
         try:
             if hasattr(self, "comparison_two") and self.comparison_two is not None:
@@ -780,7 +782,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
             logma.error(f"[prompts] cmd_model_two_selected failed: {e}", exc_info=True)
         return self
 
-    def cmd_set_track_conversation(self, event=None, *args, **kwargs):
+    def cmd_set_track_conversation(self, event=None, *args, **kwargs) -> Self:
         """Toggle the conversation-tracking flag on the config.
 
         Flips ``config.dikt["track_conversation"]`` between True and
@@ -791,14 +793,14 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
         self.config.dikt["track_conversation"] = not current
         return self
 
-    def cmd_submit(self, event, *args, **kwargs):
+    def cmd_submit(self, event, *args, **kwargs) -> Self:
         """"""
         text = self.prompt_input.get_text()
         logma.info(f"Text {text}")
         self.parent.insert_input(text)
         return self
 
-    def get_model_one_name(self):
+    def get_model_one_name(self) -> str:
         """Return the currently selected model name for comparison slot one.
 
         Reads the stored value from the config or falls back to the
@@ -813,7 +815,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
             return first[0] if isinstance(first, (list, tuple)) else first
         return ""
 
-    def get_model_two_name(self):
+    def get_model_two_name(self) -> str:
         """Return the currently selected model name for comparison slot two."""
         stored = self.config.dikt.get("model_two_name")
         if stored:
@@ -827,7 +829,7 @@ class NchantdOfficeSuperPromptPane(NchantdPane):
             return first[0] if isinstance(first, (list, tuple)) else first
         return ""
 
-    def show_radio_buttons(self):
+    def show_radio_buttons(self) -> Self:
         """"""
         if self.unique_options is not None:
             return self
