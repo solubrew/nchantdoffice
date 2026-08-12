@@ -12,6 +12,7 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, exists
 import os
@@ -43,6 +44,7 @@ from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.libraries.pyqt import QTimer
 from nchantrs.libraries import pyqt
 from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
+from typing import Any, Iterator, Self
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -54,7 +56,7 @@ if not log:
 pxcfg = join(here, "_data_", "notebooks.yaml")
 
 
-def _preexec_die_with_parent():
+def _preexec_die_with_parent() -> None:
     """Child preexec (Linux): request SIGTERM when the parent process dies.
 
     Ensures the Jupyter subprocess is reaped even if the app crashes or is killed
@@ -74,7 +76,7 @@ def _preexec_die_with_parent():
 class NchantdOfficeNotebook(NchantdOfficeDocument):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         icfg = {}
         super().__init__("Nchantd Notebook", parent, icfg)
@@ -117,7 +119,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self._click_replacements = []  # list of (selector, action)
         self._click_capture_enabled = False
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Load the notebook document and reload the .ipynb from disk.
 
         T-NEW-006 (T-NEW-005 followup): the previously-saved notebook
@@ -157,7 +159,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 logma.warning(f"[notebook] initModel: open_notebook failed: {e}")
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         cfg = cfg or {}
         if "buttons" not in cfg:
@@ -245,13 +247,13 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         #     raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def add_cell(self, cell):
+    def add_cell(self, cell) -> Self:
         """Append a cell to the notebook.
 
         Args:
@@ -263,13 +265,13 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         logma.info(f"Cell added; total: {len(self.cells)}")
         return self
 
-    def check_kernel_alive(self):
+    def check_kernel_alive(self) -> bool:
         """Check if kernel is alive and responsive"""
         if self.kernel_client:
             return self.kernel_client.is_alive()
         return False
 
-    def clear_cell(self, dex):
+    def clear_cell(self, dex) -> Self:
         """Clear outputs of cell at given index.
 
         Args:
@@ -282,7 +284,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         logma.info(f"Cell {dex} outputs cleared")
         return self
 
-    def clear_cells(self):
+    def clear_cells(self) -> Self:
         """Clear outputs of all cells."""
         if self.cells:
             for cell in self.cells:
@@ -290,7 +292,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.info(f"Cleared outputs of {len(self.cells)} cells")
         return self
 
-    def cmd_cell_type_change(self, event=None, *args, **kwargs):
+    def cmd_cell_type_change(self, event=None, *args, **kwargs) -> Self:
         """Update the active cell's cell_type based on the dropdown.
 
         Reads the current selection from ``self.cell_type_select`` and
@@ -324,11 +326,11 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.config.dikt["cell_type"] = new_type
         return self
 
-    def cmd_check_is_pinned(self, event, *args, **kwargs):
+    def cmd_check_is_pinned(self, event, *args, **kwargs) -> Self:
         """"""
         return self
 
-    def cmd_goto_page(self, url=None, *args, **kwargs):
+    def cmd_goto_page(self, url=None, *args, **kwargs) -> Self:
         """Navigate the embedded browser to the given URL.
 
         Validates that the URL is non-empty and remembers it for the
@@ -351,29 +353,29 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 logma.error(f"[notebooks] cmd_goto_page failed: {e}", exc_info=True)
         return self
 
-    def cmd_interrupt_kernel(self, event=None, *args, **kwargs):
+    def cmd_interrupt_kernel(self, event=None, *args, **kwargs) -> Self:
         """Interrupt the running kernel"""
         self.interrupt_kernel()
         return self
 
-    def cmd_new_notebook(self, event=None, *args, **kwargs):
+    def cmd_new_notebook(self, event=None, *args, **kwargs) -> Self:
         """Create a new notebook"""
         self.create_new_notebook()
         return self
 
-    def cmd_open_local_file(self, event=None, *args, **kwargs):
+    def cmd_open_local_file(self, event=None, *args, **kwargs) -> Self:
         """Open a local notebook file"""
         super().cmd_open_local_file(event, *args, **kwargs)
         if self.local_file and exists(self.local_file):
             self.load_notebook_file(self.local_file)
         return self
 
-    def cmd_pin_page(self, event, *args, **kwargs):
+    def cmd_pin_page(self, event, *args, **kwargs) -> Self:
         """"""
         self.pin_page()
         return self
 
-    def cmd_restart_server(self, event=None, *args, **kwargs):
+    def cmd_restart_server(self, event=None, *args, **kwargs) -> Self:
         """Restart Jupyter notebook server"""
         self.stop_jupyter_server()
         import time
@@ -382,7 +384,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.start_jupyter_server()
         return self
 
-    def cmd_set_server_port(self, event=None, *args, **kwargs):
+    def cmd_set_server_port(self, event=None, *args, **kwargs) -> Self:
         """Set server port number"""
         if hasattr(self, "port_spin"):
             new_port = self.port_spin.value()
@@ -396,7 +398,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                     self.cmd_restart_server()
         return self
 
-    def cmd_select_kernel(self, event=None, *args, **kwargs):
+    def cmd_select_kernel(self, event=None, *args, **kwargs) -> Self:
         """Select Jupyter kernel"""
         if hasattr(self, "kernel_select"):
             kernel = self.kernel_select.currentText()
@@ -408,7 +410,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 self.restart_kernel()
         return self
 
-    def cmd_start_kernel(self, event=None, *args, **kwargs):
+    def cmd_start_kernel(self, event=None, *args, **kwargs) -> Self:
         """Start the Jupyter kernel"""
         if not self.kernel_running:
             self.start_kernel()
@@ -416,7 +418,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.info("Kernel is already running")
         return self
 
-    def cmd_start_server(self, event=None, *args, **kwargs):
+    def cmd_start_server(self, event=None, *args, **kwargs) -> Self:
         """Start Jupyter notebook server"""
         if not self.server_running:
             self.start_jupyter_server()
@@ -424,12 +426,12 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.info("Jupyter server is already running")
         return self
 
-    def cmd_stop_server(self, event=None, *args, **kwargs):
+    def cmd_stop_server(self, event=None, *args, **kwargs) -> Self:
         """Stop Jupyter notebook server"""
         self.stop_jupyter_server()
         return self
 
-    def cmd_toggle_autostart(self, event=None, *args, **kwargs):
+    def cmd_toggle_autostart(self, event=None, *args, **kwargs) -> Self:
         """Toggle auto-start server setting"""
         if hasattr(self, "autostart_checkbox"):
             autostart = self.autostart_checkbox.isChecked()
@@ -439,13 +441,13 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 self.config.dikt["autostart_server"] = autostart
         return self
 
-    def cmd_unpin_page(self, event, *args, **kwargs):
+    def cmd_unpin_page(self, event, *args, **kwargs) -> Self:
         """"""
         super().unpin_page()
         self.document.unpin_page()
         return self
 
-    def create_new_notebook(self, notebook_name=None):
+    def create_new_notebook(self, notebook_name=None) -> Self:
         """Create a new Jupyter notebook"""
         try:
             import nbformat
@@ -485,7 +487,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         return self
 
-    def del_cell(self, dex):
+    def del_cell(self, dex) -> Self:
         """Delete cell at given index.
 
         Args:
@@ -501,7 +503,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Cell index {dex} out of range (size={len(self.cells)})")
         return self
 
-    def execute_cell(self, cell_code, timeout=60):
+    def execute_cell(self, cell_code, timeout=60) -> dict[str, Any]:
         """Execute a specific cell code in the kernel
 
         Args:
@@ -568,7 +570,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error executing cell: {e}")
             return {"output": "", "error": str(e), "status": "error"}
 
-    def execute_code_interactive(self, code):
+    def execute_code_interactive(self, code) -> str:
         """Execute code and return output for interactive use
 
         Args:
@@ -587,7 +589,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         return "\n".join(output_parts) if output_parts else "Execution completed (no output)"
 
-    def execute_all_cells(self, notebook_path=None):
+    def execute_all_cells(self, notebook_path=None) -> Self:
         """Execute all cells in the notebook
 
         Args:
@@ -643,7 +645,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         return self
 
-    def get_available_kernels(self):
+    def get_available_kernels(self) -> list[str]:
         """Get list of available Jupyter kernels"""
         try:
             import subprocess
@@ -664,7 +666,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error getting kernels: {e}")
             return ["python3"]
 
-    def get_kernel_info(self):
+    def get_kernel_info(self) -> dict[str, Any] | None:
         """Get information about the running kernel"""
         if not self.kernel_running or not self.kernel_client:
             return None
@@ -695,11 +697,11 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error getting kernel info: {e}")
             return None
 
-    def get_kernel(self):
+    def get_kernel(self) -> str:
         """Return the stored value of get_kernel."""
         return getattr(self, "kernel_name", "python3") or "python3"
 
-    def get_server_port(self):
+    def get_server_port(self) -> int:
         """Return the stored value of get_server_port."""
         return getattr(self, "server_port", 8888) or 8888
 

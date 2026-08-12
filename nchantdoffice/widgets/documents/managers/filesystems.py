@@ -12,6 +12,7 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, getsize, expanduser
 import datetime as dt
@@ -24,6 +25,7 @@ from pandas import DataFrame
 from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
+from typing import Any, Dict, List, Optional, Self
 from nchantrs.libraries import pyqt
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.trees import NchantdFileSystem
@@ -51,17 +53,17 @@ pxcfg = join(here, "_data_", "filesystems.yaml")
 class NchantdCompressPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdCompressPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "Compress Tool:"}
@@ -106,19 +108,19 @@ class NchantdCompressPane(NchantdPane):
         #    raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_automate_compress(self, event=None, *args, **kwargs):
+    def cmd_automate_compress(self, event=None, *args, **kwargs) -> Self:
         """Set up automated compression rules"""
         logma.info("Setting up compression automation...")
         # NOTE: Implement automation rules
         return self
 
-    def cmd_delete_files_on_compress(self, event=None, *args, **kwargs):
+    def cmd_delete_files_on_compress(self, event=None, *args, **kwargs) -> Self:
         """Toggle whether files are deleted after compression"""
         self.delete_on_compress_enabled = (
             self.delete_on_compress.isChecked() if hasattr(self, "delete_on_compress") else True
@@ -126,7 +128,7 @@ class NchantdCompressPane(NchantdPane):
         logma.info(f"Delete on compress: {self.delete_on_compress_enabled}")
         return self
 
-    def cmd_compress_files(self, event=None, *args, **kwargs):
+    def cmd_compress_files(self, event=None, *args, **kwargs) -> Self:
         """Compress selected files"""
         import zipfile
         from os.path import basename, exists
@@ -170,7 +172,7 @@ class NchantdCompressPane(NchantdPane):
 
         return self
 
-    def cmd_move_files_on_compress(self, event=None, *args, **kwargs):
+    def cmd_move_files_on_compress(self, event=None, *args, **kwargs) -> Self:
         """Move files to a new folder when compressing an archive.
 
         Real logic: reads the source folder from
@@ -205,7 +207,7 @@ class NchantdCompressPane(NchantdPane):
             logma.error(f"[filesystems] cmd_move_files_on_compress failed: {e}", exc_info=True)
         return self
 
-    def cmd_rename_on_compress(self, event, *args, **kwargs):
+    def cmd_rename_on_compress(self, event, *args, **kwargs) -> Self:
         """Toggle whether files are renamed after compression"""
         self.rename_on_compress_enabled = (
             self.rename_on_compress.isChecked() if hasattr(self, "rename_on_compress") else True
@@ -213,7 +215,7 @@ class NchantdCompressPane(NchantdPane):
         logma.info(f"Rename on compress: {self.rename_on_compress_enabled}")
         return self
 
-    def cmd_delete_files_on_selection(self, event, *args, **kwargs):
+    def cmd_delete_files_on_selection(self, event, *args, **kwargs) -> Self:
         """Delete files that are currently selected in the file table"""
         from os import remove
         from os.path import exists, join
@@ -245,7 +247,7 @@ class NchantdCompressPane(NchantdPane):
             logma.error(f"Error deleting files on selection: {e}")
         return self
 
-    def set_from_folder(self):
+    def set_from_folder(self) -> Self:
         """"""
         # if self.parent.fs_tree is None:
         #    self.parent.fs_tree =
@@ -267,17 +269,17 @@ class NchantdCompressPane(NchantdPane):
 class NchantdImportPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdImportPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "Import Tool:"}
@@ -304,13 +306,13 @@ class NchantdImportPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_automate_import(self, event=None, *args, **kwargs):
+    def cmd_automate_import(self, event=None, *args, **kwargs) -> Self:
         """Auto-import files matching the configured search pattern.
 
         Reads the file-search pattern from the config and runs an
@@ -329,7 +331,7 @@ class NchantdImportPane(NchantdPane):
             logma.error(f"[filesystems] cmd_automate_import failed: {e}", exc_info=True)
         return self
 
-    def cmd_file_change(self, event=None, *args, **kwargs):
+    def cmd_file_change(self, event=None, *args, **kwargs) -> Self:
         """Record the user-selected file from the file picker.
 
         Reads the current value from ``self.file_select`` and stores
@@ -345,7 +347,7 @@ class NchantdImportPane(NchantdPane):
                     self.config.dikt["file_path"] = value
         return self
 
-    def cmd_import_file(self, event=None, *args, **kwargs):
+    def cmd_import_file(self, event=None, *args, **kwargs) -> Self:
         """Import a file from disk into the active filesystem view.
 
         Accepts the path via ``path=`` keyword argument or falls back
@@ -373,15 +375,15 @@ class NchantdImportPane(NchantdPane):
             logma.error(f"[filesystems] cmd_import_file failed: {e}", exc_info=True)
         return self
 
-    def get_file(self):
+    def get_file(self) -> str:
         """Return the stored value of get_file."""
         return getattr(self, "file_path", None) or self.config.dikt.get("file_path", "")
 
-    def get_file_options(self):
+    def get_file_options(self) -> List[str]:
         """Return the stored value of get_file_options."""
         return self.config.dikt.get("file_options", []) or []
 
-    def set_file(self, path):
+    def set_file(self, path) -> Self:
         """Set the active file path (real implementation).
 
         Stores ``path`` on ``self.file_path`` and on
@@ -404,7 +406,7 @@ class NchantdImportPane(NchantdPane):
 class NchantdMovePane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
@@ -413,12 +415,12 @@ class NchantdMovePane(NchantdPane):
             self.config.override(parent.config)
         self.config.override(cfg)
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "Move Tool:"}
@@ -445,13 +447,13 @@ class NchantdMovePane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_automate_move(self, event=None, *args, **kwargs):
+    def cmd_automate_move(self, event=None, *args, **kwargs) -> Self:
         """Automate the file move flow.
 
         Reads the user's automation rules from
@@ -496,7 +498,7 @@ class NchantdMovePane(NchantdPane):
             logma.error(f"[filesystems] cmd_automate_move failed: {e}", exc_info=True)
         return self
 
-    def cmd_move_files(self, event=None, *args, **kwargs):
+    def cmd_move_files(self, event=None, *args, **kwargs) -> Self:
         """Move all files from from_folder to to_folder.
 
         Reads the source / destination paths (set by
@@ -530,7 +532,7 @@ class NchantdMovePane(NchantdPane):
             logma.error(f"[filesystems] cmd_move_files failed: {e}", exc_info=True)
         return self
 
-    def set_from_folder(self):
+    def set_from_folder(self) -> Self:
         """Prompt for a source / destination folder pair.
 
         Opens a NchantdFolderOpenSigil dialog for the source
@@ -554,18 +556,18 @@ class NchantdMovePane(NchantdPane):
 class NchantdRenamePane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "Rename Tool:"}
@@ -592,13 +594,13 @@ class NchantdRenamePane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_format_change(self, event=None, *args, **kwargs):
+    def cmd_format_change(self, event=None, *args, **kwargs) -> Self:
         """Update the file-format selection on the config.
 
         Reads the current value from the format-selector widget and
@@ -613,12 +615,12 @@ class NchantdRenamePane(NchantdPane):
                     self.config.dikt["file_format"] = value
         return self
 
-    def cmd_automate_rename(self, event=None, *args, **kwargs):
+    def cmd_automate_rename(self, event=None, *args, **kwargs) -> Self:
         """Set up automated file renaming rules"""
         logma.info("Setting up rename automation...")
         return self
 
-    def cmd_rename_files(self, event=None, *args, **kwargs):
+    def cmd_rename_files(self, event=None, *args, **kwargs) -> Self:
         """Rename files based on selected format"""
         from os import rename as os_rename
 
@@ -646,31 +648,31 @@ class NchantdRenamePane(NchantdPane):
 
         return self
 
-    def _rename_add_prefix(name, ext, filename, index):
+    def _rename_add_prefix(name, ext, filename, index) -> str:
         """Add a literal ``prefix_`` to the start of the filename."""
         return f"prefix_{filename}"
 
-    def _rename_add_suffix(name, ext, filename, index):
+    def _rename_add_suffix(name, ext, filename, index) -> str:
         """Add a literal ``_suffix`` between the basename and extension."""
         return f"{name}_suffix{ext}"
 
-    def _rename_sequential(name, ext, filename, index):
+    def _rename_sequential(name, ext, filename, index) -> str:
         """Rename the file to its 1-based index, padded to 3 digits."""
         return f"{index + 1:03d}{ext}"
 
-    def _rename_date_prefix(name, ext, filename, index):
+    def _rename_date_prefix(name, ext, filename, index) -> str:
         """Add ``YYYYMMDD_`` to the start of the filename."""
         return f"{dt.datetime.now().strftime('%Y%m%d')}_{filename}"
 
-    def _rename_lowercase(name, ext, filename, index):
+    def _rename_lowercase(name, ext, filename, index) -> str:
         """Lowercase the entire filename."""
         return filename.lower()
 
-    def _rename_uppercase(name, ext, filename, index):
+    def _rename_uppercase(name, ext, filename, index) -> str:
         """Uppercase the entire filename."""
         return filename.upper()
 
-    def _rename_remove_spaces(name, ext, filename, index):
+    def _rename_remove_spaces(name, ext, filename, index) -> str:
         """Replace spaces with underscores."""
         return filename.replace(" ", "_")
 
@@ -686,7 +688,7 @@ class NchantdRenamePane(NchantdPane):
         "Remove Spaces": _rename_remove_spaces,
     }
 
-    def apply_rename_format(self, filename, index, format_pattern):
+    def apply_rename_format(self, filename, index, format_pattern) -> str:
         """Apply rename format pattern to filename."""
         from os.path import splitext
 
@@ -696,15 +698,15 @@ class NchantdRenamePane(NchantdPane):
             return filename
         return formatter(name, ext, filename, index)
 
-    def get_file_rename_formats(self):
+    def get_file_rename_formats(self) -> List[str]:
         """Get available rename format patterns."""
         return list(self._RENAME_FORMATS.keys())
 
-    def get_file_rename_format(self):
+    def get_file_rename_format(self) -> str:
         """Return the stored value of get_file_rename_format."""
         return self.config.dikt.get("file_rename_format", "") or ""
 
-    def set_file(self, path):
+    def set_file(self, path) -> Self:
         """Set the active file path (real implementation).
 
         Stores ``path`` on ``self.file_path`` and on
@@ -727,17 +729,17 @@ class NchantdRenamePane(NchantdPane):
 class NchantdStorageEditPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdStorageEditPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "Sources List:"}
@@ -750,13 +752,13 @@ class NchantdStorageEditPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def set_file(self, path):
+    def set_file(self, path) -> Self:
         """Set the active file path (real implementation).
 
         Stores ``path`` on ``self.file_path`` and on
@@ -782,7 +784,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
     PYTYPE = "filesystem"
 
     @classmethod
-    def get_pyffice_tools(cls):
+    def get_pyffice_tools(cls) -> List[Dict[str, str]]:
         """Get toolbox tools for filesystem documents"""
         return [
             {"id": "browse", "icon": "folder", "label": "Browse", "method": "browse_files"},
@@ -793,7 +795,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             {"id": "export", "icon": "export", "label": "Export", "method": "export_files"},
         ]
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__("Nchantd Files", parent, cfg)
         self.parent = parent
@@ -808,7 +810,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.file_table_two_changed = True
         self.clouds = {}
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         document = {"document": self.config.dikt.get("document", {})}
@@ -819,7 +821,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             self.initialize_context_menu(self.context_menu_name)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -871,13 +873,13 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.cmd_on_node_selection()
         return self
 
-    def initWidget(self, cfg=None):
+    def initWidget(self, cfg=None) -> Self:
         """"""
         self.initModel(cfg)
         self.initView(cfg)
         return self
 
-    def cmd_display_file_info(self, event=None, *args, **kwargs):
+    def cmd_display_file_info(self, event=None, *args, **kwargs) -> Self:
         """"""
         logma.info(f"Command Display File Info")
         name = self.file_table_one.get_cell_value()
@@ -896,7 +898,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
         return self
 
-    def cmd_flatten_files(self, event=None, *args, **kwargs):
+    def cmd_flatten_files(self, event=None, *args, **kwargs) -> Self:
         """Flatten the directory tree of the current file root.
 
         Reads ``config.dikt["file_root"]`` and the active file list,
@@ -921,7 +923,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             logma.error(f"[filesystems] cmd_flatten_files failed: {e}", exc_info=True)
         return self
 
-    def cmd_on_file_search_method_change(self, event=None, *args, **kwargs):
+    def cmd_on_file_search_method_change(self, event=None, *args, **kwargs) -> Self:
         """Record the file-search method change on the config.
 
         Reads the selection from the search-method widget and stores
@@ -938,7 +940,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
                     self.config.dikt["file_search_method"] = value
         return self
 
-    def cmd_on_file_search_edit(self, event=None, *args, **kwargs):
+    def cmd_on_file_search_edit(self, event=None, *args, **kwargs) -> Self:
         """Run the file search with the current search pattern.
 
         Reads the configured search method (``glob``, ``regex``,
@@ -978,7 +980,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             logma.error(f"[filesystems] cmd_on_file_search_edit failed: {e}", exc_info=True)
         return self
 
-    def cmd_on_file_search_clear(self, event=None, *args, **kwargs):
+    def cmd_on_file_search_clear(self, event=None, *args, **kwargs) -> Self:
         """Clear the current file-search state.
 
         Resets ``file_search_pattern`` and ``file_search_results`` on
@@ -988,7 +990,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.config.dikt["file_search_results"] = []
         return self
 
-    def cmd_on_node_expansion(self, event=None, *args, **kwargs):
+    def cmd_on_node_expansion(self, event=None, *args, **kwargs) -> Self:
         """Handle a node expansion event in the file tree.
 
         Reads the expanded node's path from the event and writes it
@@ -1006,7 +1008,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             self.config.dikt["expanded_node"] = path
         return self
 
-    def cmd_on_node_selection(self, event=None, *args, **kwargs):
+    def cmd_on_node_selection(self, event=None, *args, **kwargs) -> Self:
         """"""
         if event is not None:
             self.fs_tree.on_item_expanded(event)
@@ -1019,7 +1021,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
                 self.populate_table_two()
         return self
 
-    def _resolve_restore_path(self):
+    def _resolve_restore_path(self) -> Any:
         """T-NEW-068 — pick the path ``initView`` should restore on re-open.
 
         Returns ``config.dikt["last_root_path"]`` when it is a
@@ -1037,7 +1039,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             return last_root
         return getattr(self.document, "file_path", None)
 
-    def cmd_go_home(self, event=None, path=None, *args, **kwargs):
+    def cmd_go_home(self, event=None, path=None, *args, **kwargs) -> Self:
         """T-NEW-068 — navigate to a "home" directory.
 
         Default ``path`` is ``expanduser("~")``. Accepts an
