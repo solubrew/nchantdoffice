@@ -24,6 +24,7 @@ from nchantdoffice.widgets.controls.toolbars import (
     NchantdNewDocumentToolBar,
 )
 from kahndor.logma import Logma
+from typing import Self
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -37,14 +38,14 @@ pxcfg = join(here, "_data_", "views.yaml")
 class NchantdOfficeCloakView(NchantdCloakView):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdOfficeCloakView init: parent={type(parent).__name__}")
         super().__init__(parent, None)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCloakView").override(cfg))
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().init_pre_view(cfg)
         cfg = {}
@@ -52,7 +53,7 @@ class NchantdOfficeCloakView(NchantdCloakView):
         super().initView(cfg)
         return self
 
-    def switch_to_account_tab(self):
+    def switch_to_account_tab(self) -> Self:
         """Switch the center tabset to the user's account tab.
 
         Sprint 20: previously a stub with a "PUSH to 0.0.3" marker
@@ -84,7 +85,7 @@ class NchantdOfficeCloakView(NchantdCloakView):
             )
         return self
 
-    def on_window_move(self, event):
+    def on_window_move(self, event) -> Self:
         """Propagate a window-move event to visible notes.
 
         Sprint 20: previously a stub with a "PUSH to 0.0.3" marker
