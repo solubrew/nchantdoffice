@@ -1,9 +1,17 @@
 """Regression tests for the T-NEW-074 .pyof content import contract."""
 
 import inspect
+import os
 import sqlite3
 import tempfile
 import uuid
+
+# T-NEW-074 Task 9: keep Qt on the headless offscreen platform before any
+# PySide6 import so the integration test does not need a real display and we
+# avoid the shiboken6 SIGSEGV seen earlier in this session on some hosts.
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+import pytest  # noqa: E402  (after QT_QPA_PLATFORM setdefault)
 
 from nchantdoffice.utilities.pyof_import import PyofImportContract, TableSpec, iter_table_rows
 
@@ -641,3 +649,132 @@ def test_import_pyof_idempotent() -> None:
             os.unlink(source_path)
         except OSError:
             pass
+
+
+def test_cmd_import_pyof_calls_orchestrator() -> None:
+    """T-NEW-074 Task 9: integration test for cmd_import_pyof.
+
+    Wires a bare ``NchantdOfficeApplicationToolBox`` instance (built with
+    ``__new__`` so we skip the heavy ``__init__``), injects a fresh
+    in-memory host ``sqlite3.Connection`` containing the six contract
+    tables, injects a mock ``parent()`` whose ``statusBar()`` returns a
+    mock with a callable ``showMessage``, and a stub
+    ``fake_dialog(parent, caption, dir, filters)`` returning a real
+    on-disk ``.pyof`` containing one row in ``app_tree_node``.
+
+    Calls ``instance.cmd_import_pyof(file_dialog_fn=fake_dialog)`` and
+    asserts the host gained one row in ``app_tree_node`` — proving the
+    orchestrator was actually invoked end-to-end (not just that the
+    method exists).
+    """
+    from unittest.mock import MagicMock
+
+    from PySide6.QtWidgets import QApplication
+    from nchantdoffice.widgets.controls.toolboxes import (
+        NchantdOfficeApplicationToolBox,
+    )
+
+    # Singleton QApplication — Qt refuses two instances in one process.
+    app = QApplication.instance() or QApplication([])
+
+    # Build a source .pyof on disk with one row in app_tree_node (the
+    # contract table we assert against). Same schema as the other
+    # round-trip tests above.
+    src_file = tempfile.NamedTemporaryFile(suffix=".pyof", delete=False)
+    source_path = src_file.name
+    src_file.close()
+    try:
+        src = sqlite3.connect(source_path)
+        try:
+            src.execute(
+                'CREATE TABLE "app_tree_node" '
+                "(nid_txt TEXT PRIMARY KEY, name_txt TEXT)"
+            )
+            synth = str(uuid.uuid4())
+            src.execute(
+                'INSERT INTO "app_tree_node" (nid_txt, name_txt) VALUES (?, ?)',
+                (synth, "imported-node"),
+            )
+            src.commit()
+        finally:
+            src.close()
+
+        # Bare instance — bypass __init__ (the real one constructs a Qt
+        # widget tree, which is overkill for a smoke test). We inject
+        # exactly the attributes cmd_import_pyof touches.
+        instance = NchantdOfficeApplicationToolBox.__new__(
+            NchantdOfficeApplicationToolBox
+        )
+
+        # Host DB connection in-memory with the 6 contract tables.
+        host_conn = sqlite3.connect(":memory:")
+        contract_ddl: dict[str, str] = {
+            "app_tree_node": (
+                'CREATE TABLE "app_tree_node" '
+                "(nid_txt TEXT PRIMARY KEY, name_txt TEXT)"
+            ),
+            "doc_tree_node": (
+                'CREATE TABLE "doc_tree_node" '
+                "(nid_txt TEXT PRIMARY KEY, pid_txt TEXT, name_txt TEXT)"
+            ),
+            "app_tab": (
+                'CREATE TABLE "app_tab" '
+                "(tid_txt TEXT PRIMARY KEY, pid_txt TEXT, name_txt TEXT)"
+            ),
+            "doc_tab": (
+                'CREATE TABLE "doc_tab" '
+                "(tid_txt TEXT PRIMARY KEY, pid_txt TEXT, name_txt TEXT)"
+            ),
+            "app_media": (
+                'CREATE TABLE "app_media" '
+                "(UUID TEXT PRIMARY KEY, name_txt TEXT)"
+            ),
+            "doc_media": (
+                'CREATE TABLE "doc_media" '
+                "(UUID TEXT PRIMARY KEY, name_txt TEXT)"
+            ),
+        }
+        for ddl in contract_ddl.values():
+            host_conn.execute(ddl)
+        host_conn.commit()
+
+        # The method's first preference is self._host_db_conn — inject it.
+        instance._host_db_conn = host_conn  # type: ignore[attr-defined]
+
+        # Mock parent() whose statusBar().showMessage is a MagicMock so
+        # the success branch can be exercised without a real QMainWindow.
+        parent_mock = MagicMock()
+        # ``statusBar`` itself is a MagicMock returning a MagicMock that
+        # exposes ``showMessage`` (already true for MagicMock auto-spec),
+        # but be explicit so the intent is obvious.
+        parent_mock.statusBar.return_value.showMessage = MagicMock()
+        instance.parent = MagicMock(return_value=parent_mock)  # type: ignore[method-assign]
+
+        # The fake dialog: returns the temp .pyof path, simulating a user
+        # picking the source file. Matches QFileDialog.getOpenFileName's
+        # (path, filter) return shape.
+        def fake_dialog(parent, caption, dir_, filters):  # noqa: ARG001
+            return (source_path, "")
+
+        # Exercise the method under test.
+        result = instance.cmd_import_pyof(file_dialog_fn=fake_dialog)
+        # The contract: defensive return-self on success.
+        assert result is instance
+
+        # The orchestrator actually ran: app_tree_node has one row on
+        # the host (from the source file).
+        row_count = host_conn.execute(
+            'SELECT COUNT(*) FROM "app_tree_node"'
+        ).fetchone()[0]
+        assert row_count == 1, (
+            f"expected 1 row in app_tree_node after import, got {row_count}"
+        )
+    finally:
+        try:
+            os.unlink(source_path)
+        except OSError:
+            pass
+
+    # Touch app so the unused-variable lint doesn't fire — the
+    # QApplication is needed for any future Qt work in this test.
+    assert app is not None

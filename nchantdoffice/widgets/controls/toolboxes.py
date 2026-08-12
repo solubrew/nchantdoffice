@@ -1010,7 +1010,12 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
     # working if the store layer is refactored.
 
     def cmd_import_pyof(self, event=None, *args, **kwargs):
-        """T-NEW-074: import content tables from a user-selected .pyof."""
+        """T-NEW-074: import content tables from a user-selected .pyof.
+
+        ``file_dialog_fn`` is overridable for testing — the integration
+        test in ``tests/test_pyof_import.py`` injects a stub returning a
+        temp ``.pyof`` path. Defaults to ``QFileDialog.getOpenFileName``.
+        """
         try:
             from PySide6.QtWidgets import QFileDialog  # type: ignore
         except Exception as e:
@@ -1030,7 +1035,10 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
             return self
         try:
-            path, _ = QFileDialog.getOpenFileName(
+            file_dialog_fn = kwargs.pop(
+                "file_dialog_fn", QFileDialog.getOpenFileName
+            )
+            path, _ = file_dialog_fn(
                 self, "Import .pyof", "",
                 "Pyof files (*.pyof);;SQLite DBs (*.sqlite *.db);;All files (*)",
             )
