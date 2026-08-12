@@ -13,6 +13,8 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
 import datetime as dt
 
@@ -42,7 +44,7 @@ pxcfg = join(here, "_data_", "accounts.yaml")
 class NchantdOfficeAccountOverview(NchantdAccountOverview):
     """Account overview widget showing account status and key metrics"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAccountOverview").override(cfg))
@@ -53,13 +55,13 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
         self.storage_label = None
         self.documents_label = None
 
-    def initModel(self):
+    def initModel(self) -> "NchantdOfficeAccountOverview":
         """"""
         super().initModel()
         self.account_settings = self.app.model.settings.account_settings
         return self
 
-    def initView(self):
+    def initView(self) -> "NchantdOfficeAccountOverview":
         """"""
         super().initView()
         # Account name
