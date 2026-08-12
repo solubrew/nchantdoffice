@@ -11,9 +11,11 @@
     <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
+from typing import Any, Iterator
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -21,6 +23,7 @@ from os.path import dirname, join
 from kahndor import kahndor
 from kahndor.logma import Logma
 from seaborn import palettes
+from typing_extensions import Self
 
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
 from nchantrs.libraries import pyqt
@@ -52,7 +55,7 @@ pxcfg = join(here, "_data_", ".yaml")
 class NchantdChartConfigPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartConfigPane").override(cfg))
@@ -90,7 +93,7 @@ class NchantdChartConfigPane(NchantdPane):
         self.axes = None
         self.trendlines = None
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         self.get_types()
@@ -104,7 +107,7 @@ class NchantdChartConfigPane(NchantdPane):
         self.data_series = self.config.dikt.get("data_series", {})
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         cfg = {"size": ["auto", "auto"]}
@@ -272,10 +275,10 @@ class NchantdChartConfigPane(NchantdPane):
         "radar": "_chart_radar_extras",
     }
 
-    def _build_border_style_editor(self):
+    def _build_border_style_editor(self) -> Any:
         """"""
 
-    def get_chart_specific_widget(self, chart_type):
+    def get_chart_specific_widget(self, chart_type) -> "QWidget | None":
         """Build the chart-type-specific extras widget (T-063).
 
         Returns a QWidget containing the per-chart controls
@@ -296,7 +299,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] get_chart_specific_widget failed for {chart_type}: {e}", exc_info=True)
         return None
 
-    def _build_chart_action_button_group(self):
+    def _build_chart_action_button_group(self) -> Any:
         """Build the chart-config action button group.
 
         T-NEW-037: DEFERRED. The caller at L184 is COMMENTED
@@ -307,7 +310,7 @@ class NchantdChartConfigPane(NchantdPane):
         when T-NEW-029 ships.
         """
 
-    def _chart_line_extras(self):
+    def _chart_line_extras(self) -> "QWidget | None":
         """Build the line-chart-specific extras widget (T-063).
 
         Includes a 'smoothing' checkbox and a 'line width' spinbox.
@@ -332,7 +335,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] _chart_line_extras failed: {e}", exc_info=True)
             return None
 
-    def _chart_bar_extras(self):
+    def _chart_bar_extras(self) -> "QWidget | None":
         """Build bar-chart-specific extras: stack mode + bar width spinbox (T-063)."""
         try:
             container = pyqt.QWidget()
@@ -354,7 +357,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] _chart_bar_extras failed: {e}", exc_info=True)
             return None
 
-    def _chart_pie_extras(self):
+    def _chart_pie_extras(self) -> "QWidget | None":
         """Build pie-chart-specific extras: hole size + start angle spinboxes (T-063)."""
         try:
             container = pyqt.QWidget()
@@ -373,7 +376,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] _chart_pie_extras failed: {e}", exc_info=True)
             return None
 
-    def _chart_scatter_extras(self):
+    def _chart_scatter_extras(self) -> "QWidget | None":
         """Build scatter-chart-specific extras: point size spinbox (T-063)."""
         try:
             container = pyqt.QWidget()
@@ -392,7 +395,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] _chart_scatter_extras failed: {e}", exc_info=True)
             return None
 
-    def _chart_area_extras(self):
+    def _chart_area_extras(self) -> "QWidget | None":
         """Stub for area-chart extras (T-063)."""
         try:
             container = pyqt.QWidget()
@@ -405,7 +408,7 @@ class NchantdChartConfigPane(NchantdPane):
         except Exception:
             return None
 
-    def _chart_radar_extras(self):
+    def _chart_radar_extras(self) -> "QWidget | None":
         """Stub for radar-chart extras (T-063)."""
         try:
             container = pyqt.QWidget()
@@ -418,7 +421,7 @@ class NchantdChartConfigPane(NchantdPane):
         except Exception:
             return None
 
-    def set_toolbar_locked(self, locked=True):
+    def set_toolbar_locked(self, locked=True) -> Self:
         """Lock or unlock the chart-config toolbar position.
 
         T-061: prevents the toolbar from being dragged by the
@@ -452,7 +455,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] set_toolbar_locked failed: {e}", exc_info=True)
         return self
 
-    def cmd_toggle_toolbar_lock(self, event=None, *args, **kwargs):
+    def cmd_toggle_toolbar_lock(self, event=None, *args, **kwargs) -> Self:
         """Toggle the chart-config toolbar lock state.
 
         T-061: listens for the toolbar lock button click and
@@ -466,45 +469,45 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] cmd_toggle_toolbar_lock failed: {e}", exc_info=True)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def add_axis(self):
+    def add_axis(self) -> Self:
         """"""
         return self
 
-    def add_data_series(self):
+    def add_data_series(self) -> Self:
         """"""
         return self
 
-    def add_legend(self, legend):
+    def add_legend(self, legend) -> Self:
         """"""
         return self
 
-    def configure_background(self):
+    def configure_background(self) -> Self:
         """"""
         return self
 
-    def configure_legend(self):
+    def configure_legend(self) -> Self:
         """"""
         return self
 
-    def configure_plotarea(self):
+    def configure_plotarea(self) -> Any:
         """"""
         return self
 
-    def cmd_add_data_series(self):
+    def cmd_add_data_series(self) -> Self:
         """"""
         return self
 
-    def cmd_add_legend(self):
+    def cmd_add_legend(self) -> Self:
         """"""
         return self
 
-    def cmd_connect_data_source(self):
+    def cmd_connect_data_source(self) -> Self:
         """Connect the legend to a configured data source.
 
         Reads the active source name from the model and updates
@@ -523,47 +526,47 @@ class NchantdChartConfigPane(NchantdPane):
             return self
         return self
 
-    def cmd_launch_color_sigil(self, event=None, *args, **kwargs):
+    def cmd_launch_color_sigil(self, event=None, *args, **kwargs) -> Self:
         """"""
         cfg = {}
         self.color_sigil = NchantdColorSelectSigil(self, cfg).initWidget()
         return self
 
-    def cmd_set_border_color(self):
+    def cmd_set_border_color(self) -> Self:
         """"""
         return self
 
-    def cmd_set_border_style(self):
+    def cmd_set_border_style(self) -> Self:
         """"""
         return self
 
-    def cmd_set_border_thickness(self):
+    def cmd_set_border_thickness(self) -> Self:
         """"""
         return self
 
-    def cmd_set_name(self):
+    def cmd_set_name(self) -> Self:
         """"""
         return self
 
-    def cmd_set_description(self):
+    def cmd_set_description(self) -> Self:
         """"""
         return self
 
-    def cmd_set_color_area(self):
+    def cmd_set_color_area(self) -> Self:
         """"""
         return self
 
-    def cmd_set_color(self):
+    def cmd_set_color(self) -> Self:
         """"""
         return self
 
-    def cmd_on_change_type(self, event, *args, **kwargs):
+    def cmd_on_change_type(self, event, *args, **kwargs) -> Self:
         """"""
         logma.info(f"Event {event} value {args} params {kwargs}")
         self.set_type(self.chart_type_select.get_value())
         return self
 
-    def cmd_on_name_change(self, event, *args, **kwargs):
+    def cmd_on_name_change(self, event, *args, **kwargs) -> Self:
         """Persist the chart-name change to the model.
 
         Reads the value from ``event`` and writes it via the model's
@@ -582,7 +585,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] cmd_on_name_change failed: {e}", exc_info=True)
             return self
 
-    def cmd_on_description_change(self, event, *args, **kwargs):
+    def cmd_on_description_change(self, event, *args, **kwargs) -> Self:
         """Persist the chart-description change to the model.
 
         Same pattern as ``cmd_on_name_change`` but writes to the
@@ -600,7 +603,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] cmd_on_description_change failed: {e}", exc_info=True)
             return self
 
-    def cmd_on_theme_change(self, event, *args, **kwargs):
+    def cmd_on_theme_change(self, event, *args, **kwargs) -> Self:
         """Persist the chart-theme change to the model.
 
         Returns ``self``.
@@ -617,7 +620,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] cmd_on_theme_change failed: {e}", exc_info=True)
             return self
 
-    def cmd_on_palette_change(self, event, *args, **kwargs):
+    def cmd_on_palette_change(self, event, *args, **kwargs) -> Self:
         """Persist the chart-palette change to the model.
 
         Returns ``self``.
@@ -634,88 +637,88 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] cmd_on_palette_change failed: {e}", exc_info=True)
             return self
 
-    def set_type(self, value):
+    def set_type(self, value) -> Self:
         """"""
         self.parent.chart_type = value
         self.update_chart()
         return self
 
-    def cmd_set_data_series_color(self):
+    def cmd_set_data_series_color(self) -> Self:
         """"""
         return self
 
-    def cmd_set_data_series_name(self):
+    def cmd_set_data_series_name(self) -> Self:
         """"""
         return self
 
-    def cmd_set_data_series_shape(self):
+    def cmd_set_data_series_shape(self) -> Self:
         """"""
         return self
 
-    def cmd_set_data_series_style(self):
+    def cmd_set_data_series_style(self) -> Self:
         """"""
         return self
 
-    def cmd_set_data_series_thickness(self):
+    def cmd_set_data_series_thickness(self) -> Self:
         """"""
         return self
 
-    def get_border_color(self):
+    def get_border_color(self) -> str:
         """"""
         self.border_color = self.config.dikt.get("border_color", "")
         return self.border_color
 
-    def get_border_colors(self):
+    def get_border_colors(self) -> list:
         """"""
         self.border_colors = self.config.dikt.get("border_colors", [])
         return self.border_colors
 
-    def get_border_style(self):
+    def get_border_style(self) -> Any:
         """"""
         return self.border_style
 
-    def get_border_styles(self):
+    def get_border_styles(self) -> list:
         """"""
         self.border_styles = self.config.dikt.get("border_styles", [])
         return self.border_styles
 
-    def get_border_thickness(self):
+    def get_border_thickness(self) -> int:
         """"""
         if self.border_thickness is None:
             self.border_thickness = self.config.dikt.get("border_thickness", 1)
         return self.border_thickness
 
-    def get_background_color(self):
+    def get_background_color(self) -> str:
         """"""
         self.chart_color = self.config.dikt.get("chart_color", "")
         return self.chart_color
 
-    def get_area_color(self):
+    def get_area_color(self) -> str:
         """"""
         self.chart_color = self.config.dikt.get("chart_color", "")
         return self.chart_color
 
-    def get_colors(self):
+    def get_colors(self) -> list:
         """"""
         if self.colors_df is None:
             self.load_colors()
         self.chart_colors = self.colors_df["value_txt"].tolist()
         return self.chart_colors
 
-    def get_area_colors(self):
+    def get_area_colors(self) -> list:
         """"""
         if self.colors_df is None:
             self.load_colors()
         self.chart_colors = self.colors_df["value_txt"].tolist()
         return self.chart_colors
 
-    def get_palette(self):
+    def get_palette(self) -> str:
         """"""
         if self.palette is None:
             self.palette = self.config.dikt.get("chart_palette", "Dark")
         return self.palette
 
-    def get_palettes(self):
+    def get_palettes(self) -> list:
         """"""
         if self.palettes is None:
             self.palettes = self.config.dikt.get(
@@ -723,54 +726,54 @@ class NchantdChartConfigPane(NchantdPane):
             )
         return self.palettes
 
-    def get_theme(self):
+    def get_theme(self) -> str:
         """"""
         if self.theme is None:
             self.theme = self.config.dikt.get("chart_theme", "DarkGrid")
         return self.theme
 
-    def get_themes(self):
+    def get_themes(self) -> list:
         """"""
         if self.themes is None:
             self.themes = self.config.dikt.get("themes", ["DarkGrid", "Dark", "White", "WhiteGrid"])
         return self.themes
 
-    def get_type(self):
+    def get_type(self) -> str:
         """"""
         if self.parent.chart_type is None:
             self.parent.chart_type = self.config.dikt.get("chart_type", "Line")
         return self.parent.chart_type
 
-    def get_types(self):
+    def get_types(self) -> list:
         """"""
         if self.chart_types_df is None:
             self.load_types()
         self.chart_types = self.chart_types_df["value_txt"].tolist()
         return self.chart_types
 
-    def get_legend(self):
+    def get_legend(self) -> Self:
         """"""
         return self
 
-    def get_legends(self):
+    def get_legends(self) -> Self:
         """"""
         return self
 
-    def load_types(self):
+    def load_types(self) -> Self:
         """"""
         table = "vw_chart_types"
         cfg = {}
         self.chart_types_df = self.app.model.store.get_table(table, cfg)
         return self
 
-    def load_colors(self):
+    def load_colors(self) -> Self:
         """"""
         table = "vw_colors"
         cfg = {}
         self.colors_df = self.app.model.store.get_table(table, cfg)
         return self
 
-    def update_chart(self):
+    def update_chart(self) -> Self:
         """"""
         logma.info(f"Update Chart to {self.get_type()}")
         self.parent.set_type(self.get_type())
@@ -780,17 +783,17 @@ class NchantdChartConfigPane(NchantdPane):
 class NchantdChartAxisPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartAxisPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -865,21 +868,21 @@ class NchantdChartAxisPane(NchantdPane):
         logma.info(f"Size {self.size().height()}")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def get_axsi(self):
+    def get_axsi(self) -> Self:
         """"""
         return self
 
-    def cmd_add_axis(self):
+    def cmd_add_axis(self) -> Self:
         """"""
         return self
 
-    def updateGeometry(self):
+    def updateGeometry(self) -> Self:
         """"""
         super().updateGeometry()
         self.parent.updateGeometry()
@@ -889,7 +892,7 @@ class NchantdChartAxisPane(NchantdPane):
 class NchantdChartDataSeriesPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartTrendlinePane").override(cfg))
@@ -907,12 +910,12 @@ class NchantdChartDataSeriesPane(NchantdPane):
         self.new_series_thickness_spin = None
         self.new_data_series_connect_data_button = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -970,13 +973,13 @@ class NchantdChartDataSeriesPane(NchantdPane):
         self.layout.addWidget(new_data_group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_connect_data_source(self):
+    def cmd_connect_data_source(self) -> Self:
         """Connect the chart series to a configured data source.
 
         Reads the selected source name from the model and rebuilds
@@ -1001,7 +1004,7 @@ class NchantdChartDataSeriesPane(NchantdPane):
 class NchantdChartLegendPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdChartTrendlinePane").override(cfg))
@@ -1013,12 +1016,12 @@ class NchantdChartLegendPane(NchantdPane):
         self.trendline_form = None
         self.trendline_forms = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -1082,13 +1085,13 @@ class NchantdChartLegendPane(NchantdPane):
         # trendline group is its own pane init path.
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_connect_data_source(self):
+    def cmd_connect_data_source(self) -> Self:
         """Connect the legend's trendline colour to the active data source.
 
         Reads the active source name from the model and updates
@@ -1106,46 +1109,46 @@ class NchantdChartLegendPane(NchantdPane):
             logma.error(f"[charts] cmd_connect_data_source (legend-pane) failed: {e}", exc_info=True)
             return self
 
-    def get_color(self):
+    def get_color(self) -> str:
         """"""
         if self.color is None:
             self.color = self.config.dikt.get("trendline_color", "red")
         return self.color
 
-    def get_colors(self):
+    def get_colors(self) -> list:
         """"""
         if self.colors is None:
             self.colors = self.config.dikt.get("trendline_colors", ["red", "blue", "green", "orange", "purple"])
         return self.colors
 
-    def get_line_marker(self):
+    def get_line_marker(self) -> Self:
         """"""
         return self
 
-    def get_line_markers(self):
+    def get_line_markers(self) -> list:
         """"""
         markers = []
         return markers
 
-    def get_thickness(self):
+    def get_thickness(self) -> int:
         """"""
         return 2
 
-    def get_thickness_range(self):
+    def get_thickness_range(self) -> tuple[int, int]:
         """"""
         return 0, 10
 
-    def get_data_series_all(self):
+    def get_data_series_all(self) -> dict:
         """"""
         self.data_series = {}
         return self.data_series
 
-    def get_data_series(self):
+    def get_data_series(self) -> list:
         """"""
         data_series = []
         return data_series
 
-    def get_data_series_color(self, series=None):
+    def get_data_series_color(self, series=None) -> Any:
         """"""
         if len(self.data_series) == 0:
             return None
@@ -1154,12 +1157,12 @@ class NchantdChartLegendPane(NchantdPane):
         color = self.data_series[series].color
         return color
 
-    def get_data_series_colors(self):
+    def get_data_series_colors(self) -> list:
         """"""
         self.data_series_colors = self.config.dikt.get("data_series_colors", [])
         return self.data_series_colors
 
-    def get_data_series_style(self, series=None):
+    def get_data_series_style(self, series=None) -> Any:
         """"""
         if len(self.data_series) == 0:
             return None
@@ -1168,12 +1171,12 @@ class NchantdChartLegendPane(NchantdPane):
         style = self.data_series[series].style
         return style
 
-    def get_data_series_styles(self):
+    def get_data_series_styles(self) -> list:
         """"""
         self.styles = self.config.dikt.get("data_series_styles", [])
         return self.styles
 
-    def get_data_series_shape(self, series=None):
+    def get_data_series_shape(self, series=None) -> Any:
         """"""
         if len(self.data_series) == 0:
             return None
@@ -1182,12 +1185,12 @@ class NchantdChartLegendPane(NchantdPane):
         shape = self.data_series[series].shape
         return shape
 
-    def get_data_series_shapes(self):
+    def get_data_series_shapes(self) -> list:
         """"""
         self.shapes = self.config.dikt.get("data_series_shapes", [])
         return self.shapes
 
-    def get_data_series_thickness(self, series=None):
+    def get_data_series_thickness(self, series=None) -> Any:
         """"""
         if series is None:
             series = 0
@@ -1206,7 +1209,7 @@ class NchantdChartTrendlinePane(NchantdPane):
     GUI; the public API is ``set_data(formula)`` / ``color()``.
     """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdChartTrendlinePane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
@@ -1218,12 +1221,12 @@ class NchantdChartTrendlinePane(NchantdPane):
         self.trendline_form = None
         self.trendline_forms = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -1304,60 +1307,60 @@ class NchantdChartTrendlinePane(NchantdPane):
         self.layout.addWidget(new_trendline_group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def get_color(self):
+    def get_color(self) -> str:
         """"""
         if self.color is None:
             self.color = self.config.dikt.get("trendline_color", "red")
         return self.color
 
-    def get_colors(self):
+    def get_colors(self) -> list:
         """"""
         if self.colors is None:
             self.colors = self.config.dikt.get("trendline_colors", ["red", "blue", "green", "orange", "purple"])
         return self.colors
 
-    def get_line_marker(self):
+    def get_line_marker(self) -> Self:
         """"""
         return self
 
-    def get_line_markers(self):
+    def get_line_markers(self) -> list:
         """"""
         markers = []
         return markers
 
-    def get_thickness(self):
+    def get_thickness(self) -> int:
         """"""
         return 2
 
-    def get_thickness_range(self):
+    def get_thickness_range(self) -> tuple[int, int]:
         """"""
         return 0, 10
 
-    def get_trendline_formulas(self):
+    def get_trendline_formulas(self) -> list:
         """"""
         if self.trendline_formulas is None:
             self.trendline_formulas = self.config.dikt.get("trendline_formulas", ["Best Fit", "Max", "Min", "Sigma"])
         return self.trendline_formulas
 
-    def get_trendline_formula(self):
+    def get_trendline_formula(self) -> str:
         """"""
         if self.trendline_formula is None:
             self.trendline_formula = self.config.dikt.get("trendline_formula", "Best Fit")
         return self.trendline_formula
 
-    def get_trendline_forms(self):
+    def get_trendline_forms(self) -> list:
         """"""
         if self.trendline_forms is None:
             self.trendline_forms = self.config.dikt.get("trendline_forms", ["Linear", "Log", "Exponential"])
         return self.trendline_forms
 
-    def get_trendline_form(self):
+    def get_trendline_form(self) -> str:
         """"""
         if self.trendline_form is None:
             self.trendline_form = self.config.dikt.get("trendline_form", "Linear")
