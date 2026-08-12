@@ -100,7 +100,7 @@ class Tier(Enum):
     BASE = ("base", 0.05)
     ELEVATED = ("elevated", 0.10)
 
-    def __init__(self, label: str, rate: float):
+    def __init__(self, label: str, rate: float) -> None:
         self.label = label
         self.rate = rate
 
@@ -120,7 +120,7 @@ class ReferralCode:
     """
     value: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not (_CODE_RE.match(self.value) or _FORMAT_RE.match(self.value)):
             raise ValueError(f"Invalid referral code: {self.value!r}")
         logma.info(f"ReferralCode created: value={self.value!r}")
@@ -243,7 +243,7 @@ class InMemoryReferralStore:
     successful ``fetch_dashboard()`` call.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         logma.info("InMemoryReferralStore init")
         self.codes: Dict[str, ReferralCode] = {}
         self.code_index: Dict[str, str] = {}  # normalised -> user_id
@@ -343,7 +343,7 @@ class ReferralAPIClient:
     def __init__(self, base_url: str = DEFAULT_API_BASE,
                  api_key: Optional[str] = None,
                  user_id: Optional[int] = None,
-                 timeout: float = 5.0):
+                 timeout: float = 5.0) -> None:
         """
         Args:
             base_url: API base URL. Defaults to DEFAULT_API_BASE
