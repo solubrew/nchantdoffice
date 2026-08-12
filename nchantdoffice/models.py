@@ -19,7 +19,7 @@ import json as j
 import datetime as dt
 from dateutil import parser
 from urllib.parse import urlsplit
-from typing import Any, Iterator, Self
+from typing import Any, Dict, Iterator, List, Optional, Self
 
 # ======================================3rd Party Library Modules=====================================================||
 from pandas import DataFrame, concat
@@ -3220,7 +3220,7 @@ class NchantdOfficeStore(NchantdStore):
     # embedding storage to ~1.5KB per row.
     VECTOR_DIMENSION = 384
 
-    def __init__(self, name, parent=None, cfg=None):
+    def __init__(self, name, parent=None, cfg=None) -> None:
         """NchantdOfficeStore constructor."""
         self.name = name.lower().replace(" ", "")  # "nchantdoffice"
         # this controls the location of the database storage on the local drive
@@ -3235,7 +3235,7 @@ class NchantdOfficeStore(NchantdStore):
         self._sqlite_connection = None
         self._sqlite_path = None
 
-    def open_sqlite(self, path):
+    def open_sqlite(self, path) -> Any:
         """T-NEW-007: register the SQLite DB at ``path`` as a
         SQuiRL sonql doc in the store. The store delegates to
         ``initDocument(name, "sonql", path)`` (the canonical
@@ -3274,7 +3274,7 @@ class NchantdOfficeStore(NchantdStore):
         self._sqlite_path = path
         return self.docs.get("pyof")
 
-    def refresh_from_sqlite(self, db="pyof"):
+    def refresh_from_sqlite(self, db="pyof") -> List[Dict[str, Any]]:
         """T-NEW-007 store-layer integration: surface the rows
         of the currently-open SQLite DB into a Python list so
         the model layer can restore its in-memory registry from
@@ -3330,7 +3330,7 @@ class NchantdOfficeStore(NchantdStore):
             logma.info(f"[store] refresh_from_sqlite: app_instance " f"unavailable ({exc}); returning []")
         return rows
 
-    def close_sqlite(self):
+    def close_sqlite(self) -> None:
         """T-NEW-007: detach the ``pyof`` SQuiRL doc if one is
         registered. The sonql doc owns its SQLite connection
         via SQuiRL's standard teardown path so we just pop the
@@ -3346,7 +3346,7 @@ class NchantdOfficeStore(NchantdStore):
         self._sqlite_connection = None
         self._sqlite_path = None
 
-    def create_vectorized_data_table(self, db="db", dimension=None):
+    def create_vectorized_data_table(self, db="db", dimension=None) -> bool:
         """Create the vec0 virtual table used for vector search.
 
         Migrated from the model layer (T-007) so the persistence
@@ -3393,7 +3393,7 @@ class NchantdOfficeStore(NchantdStore):
             logma.error(f"[store] create_vectorized_data_table failed: {e}", exc_info=True)
             return False
 
-    def drop_vectorized_data_table(self, db="db"):
+    def drop_vectorized_data_table(self, db="db") -> bool:
         """Drop the vec0 virtual table if it exists."""
         try:
             docs = self.docs if hasattr(self, "docs") else None
@@ -3407,13 +3407,13 @@ class NchantdOfficeStore(NchantdStore):
             logma.error(f"[store] drop_vectorized_data_table failed: {e}", exc_info=True)
             return False
 
-    def convert_database(self, version_from, version_to):
+    def convert_database(self, version_from, version_to) -> Self:
         """"""
         super().convert_database(version_from, version_to)
         # Handle structure differences and switching to different database engines
         return self
 
-    def create_virtual_table(self, db="db"):
+    def create_virtual_table(self, db="db") -> None:
         """Create the vectorized_data virtual table.
 
         Thin wrapper that delegates to ``self.store`` (T-007
@@ -3427,17 +3427,17 @@ class NchantdOfficeStore(NchantdStore):
             return
         self.docs[db].commit()
 
-    def get_application_documents(self):
+    def get_application_documents(self) -> Dict[str, Any]:
         """"""
         data = {"contacts": {}, "settings": {}}
         return data
 
-    def get_cache(self, key):
+    def get_cache(self, key) -> DataFrame:
         """"""
         df = DataFrame()
         return df
 
-    def get_view_browser_session(self, cfg, db="db"):
+    def get_view_browser_session(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_browser_session"
         if self.instance is not None:
@@ -3445,7 +3445,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_browser_session_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_contact(self, cfg, db="db"):
+    def get_view_contact(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_contact"
         if self.instance is not None:
@@ -3453,7 +3453,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_contact_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_document(self, cfg, db="db"):
+    def get_view_document(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_document"
         if self.instance is not None:
@@ -3461,7 +3461,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_document_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_document_app(self, cfg, db):
+    def get_view_document_app(self, cfg, db) -> DataFrame:
         """"""
         table = "vw_document_app"
         if self.instance is not None:
@@ -3469,7 +3469,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_document_app_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_document_note(self, cfg, db):
+    def get_view_document_note(self, cfg, db) -> DataFrame:
         """"""
         table = "vw_document_note"
         if self.instance is not None:
@@ -3477,12 +3477,12 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_document_note_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_journal(self, cfg=None):
+    def get_view_journal(self, cfg=None) -> DataFrame:
         """"""
         table = "vw_journal"
         return self.get_table(table, cfg, "db")
 
-    def get_view_chart_options(self, cfg, db="db"):
+    def get_view_chart_options(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_chart_options"
         if self.instance is not None:
@@ -3490,7 +3490,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_chart_options_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_chart_types(self, cfg, db="db"):
+    def get_view_chart_types(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_chart_types"
         if self.instance is not None:
@@ -3498,7 +3498,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_chart_types_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_documents_all(self, cfg=None):
+    def get_view_documents_all(self, cfg=None) -> DataFrame:
         """"""
         table = "vw_app_document_type"
         params = {"table": [table]}
@@ -3509,7 +3509,7 @@ class NchantdOfficeStore(NchantdStore):
             raise Exception("Documents Are Empty")
         return df
 
-    def get_view_link(self, name=None, description=None, type_=None, tag=None, url=None, db="db"):
+    def get_view_link(self, name=None, description=None, type_=None, tag=None, url=None, db="db") -> Optional[str]:
         """Retrieve a single link URL by filter criteria.
 
         T-NEW-050: now that ``get_links`` returns a DataFrame (not
@@ -3526,7 +3526,7 @@ class NchantdOfficeStore(NchantdStore):
                 link = records[0]["url_ltxt"]
         return link
 
-    def get_view_link_affiliates(self, url):
+    def get_view_link_affiliates(self, url) -> DataFrame:
         """"""
         table = "vw_link_affiliate"
         cfg = {}
@@ -3540,7 +3540,7 @@ class NchantdOfficeStore(NchantdStore):
         df = df.sort_values(by=["name_txt", "type_txt"])
         return df
 
-    def get_view_link_affiliate(self, cfg, db="db"):
+    def get_view_link_affiliate(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_link_affiliate"
         if self.instance is not None:
@@ -3548,7 +3548,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_link_affiliate_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_settings_document_browser(self, cfg, db="db"):
+    def get_view_settings_document_browser(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_settings_document_browser"
         if self.instance is not None:
@@ -3556,7 +3556,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_document_browser_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_settings_document_calendar(self, cfg, db="db"):
+    def get_view_settings_document_calendar(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_settings_document_calendar"
         if self.instance is not None:
@@ -3564,7 +3564,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_document_calendar_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_settings_document_chart(self, cfg, db="db"):
+    def get_view_settings_document_chart(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_settings_document_chart"
         if self.instance is not None:
@@ -3572,7 +3572,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_document_chart_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_settings_document_files(self, cfg, db="db"):
+    def get_view_settings_document_files(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_settings_document_files"
         if self.instance is not None:
@@ -3580,7 +3580,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_document_files_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_settings_document_form(self, cfg, db="db"):
+    def get_view_settings_document_form(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_settings_document_form"
         if self.instance is not None:
@@ -3588,7 +3588,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_document_form_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_settings_document_image(self, cfg, db="db"):
+    def get_view_settings_document_image(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_settings_document_image"
         if self.instance is not None:
@@ -3596,7 +3596,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_document_image_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_settings_document_matrix(self, cfg, db="db"):
+    def get_view_settings_document_matrix(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_settings_document_matrix"
         if self.instance is not None:
@@ -3604,7 +3604,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_document_matrix_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_settings_document_pdf(self, cfg, db="db"):
+    def get_view_settings_document_pdf(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_settings_document_pdf"
         if self.instance is not None:
@@ -3612,7 +3612,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_document_pdf_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_settings_document_prompt(self, cfg, db="db"):
+    def get_view_settings_document_prompt(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_settings_document_prompt"
         if self.instance is not None:
@@ -3620,7 +3620,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_document_prompt_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_settings_document_script(self, cfg, db="db"):
+    def get_view_settings_document_script(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_settings_document_script"
         if self.instance is not None:
@@ -3628,7 +3628,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_document_script_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_settings_document_sketch(self, cfg, db="db"):
+    def get_view_settings_document_sketch(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_settings_document_sketch"
         if self.instance is not None:
@@ -3636,7 +3636,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_document_sketch_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_settings_journal(self, cfg, db="db"):
+    def get_view_settings_journal(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_settings_journal"
         if self.instance is not None:
@@ -3644,7 +3644,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_settings_journal_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_sources(self, cfg=None, db="db"):
+    def get_view_sources(self, cfg=None, db="db") -> DataFrame:
         """"""
         table = "vw_sources"
         if self.instance is not None:
@@ -3652,7 +3652,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_sources_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_sources_available_(self, cfg, db="db"):
+    def get_view_sources_available_(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_sources_available"
         if self.instance is not None:
@@ -3660,7 +3660,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_sources_available_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def get_view_tab_document(self, cfg, db="db"):
+    def get_view_tab_document(self, cfg, db="db") -> DataFrame:
         """"""
         table = "vw_tab_document"
         if self.instance is not None:
@@ -3668,7 +3668,7 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_tab_document_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def _delete(self, table, cfg, db="db"):
+    def _delete(self, table, cfg, db="db") -> Self:
         """Delete rows matching ``cfg`` from ``table``.
 
         Thin wrapper around the parent class's delete path. Mirrors
@@ -3709,11 +3709,11 @@ class NchantdOfficeStore(NchantdStore):
             logma.error(f"[models] _delete({table}) failed: {e}", exc_info=True)
         return self
 
-    def store_app_instance(self, instance, db="db"):
+    def store_app_instance(self, instance, db="db") -> None:
         """Build payload from instance dict and dispatch. Delegates to the free function."""
         self._store("app_instance", [_build_app_instance_payload(instance)], db)
 
-    def store_doc_media(self, document, db="db", how="INSERT"):
+    def store_doc_media(self, document, db="db", how="INSERT") -> str:
         """
         Store document creates a new record in the database table doc_media representing a document.
 
@@ -3724,7 +3724,7 @@ class NchantdOfficeStore(NchantdStore):
         """
         return self.store_app_media(document, db, how, table="doc_media")
 
-    def update_doc_media_syntax(self, did, syntax, db="db"):
+    def update_doc_media_syntax(self, did, syntax, db="db") -> bool:
         """T-NEW-024 reload: UPDATE the doc_media row's ``syntax``
         column for a specific ``did``. The base ``add_document``
         helper writes ``syntax="html"`` for new script tabs; when
@@ -3798,7 +3798,7 @@ class NchantdOfficeStore(NchantdStore):
         {"name": "meta_data_enc64_dict", "type": "text"},
     ]
 
-    def store_app_media(self, document, db="db", how="INSERT", table="app_media"):
+    def store_app_media(self, document, db="db", how="INSERT", table="app_media") -> str:
         """
         Store application media creates a new record in the specified database table.
 
@@ -3892,7 +3892,7 @@ class NchantdOfficeStore(NchantdStore):
         {"name": "context_ltxt", "type": "text"},
     ]
 
-    def store_doc_media_content(self, content, db="db", how="INSERT"):
+    def store_doc_media_content(self, content, db="db", how="INSERT") -> str:
         """Persist a document-content row to the doc_media_content table.
 
         The payload uses the schema's actual column names
@@ -3948,7 +3948,7 @@ class NchantdOfficeStore(NchantdStore):
         {"name": "context_ltxt", "type": "text"},
     ]
 
-    def store_app_media_content(self, content, db="db", how="INSERT"):
+    def store_app_media_content(self, content, db="db", how="INSERT") -> Optional[str]:
         """Persist a document-content row to the app_media_content table.
 
         Same shape as ``store_doc_media_content``; explicit columns
@@ -3983,7 +3983,7 @@ class NchantdOfficeStore(NchantdStore):
         return content.get("uuid")
 
 
-def _content_to_app_media_row(content):
+def _content_to_app_media_row(content) -> List[Any]:
     """Build the single ``app_media_content`` row from a content dict.
 
     Extracted from ``NchantdOfficeStore.store_app_media_content`` so
@@ -4036,7 +4036,7 @@ def _coerce_doc_version(raw) -> int:  # noqa: ANN201
         return int(digest[:8], 16) & 0x7FFFFFFF  # keep it positive int32
 
 
-def _json_safe(value):
+def _json_safe(value) -> Any:
     """Recursively convert ``value`` into a JSON-serialisable form.
 
     Used by ``store_document`` so a payload that contains raw
@@ -4059,7 +4059,7 @@ def _json_safe(value):
     return value
 
 
-def _build_doc_media_payload(document):
+def _build_doc_media_payload(document) -> List[Dict[str, Any]]:
     """Build the row list for the ``doc_media`` table from a document.
 
     Mirrors the shape produced by ``NchantdOfficeStore.store_app_media``
@@ -4094,7 +4094,7 @@ def _build_doc_media_payload(document):
     ]
 
 
-def _build_app_instance_payload(instance):
+def _build_app_instance_payload(instance) -> Dict[str, Any]:
     """Build the row dict for the ``app_instance`` table.
 
     The instance may be a Pyffice instance object or a plain dict; the
@@ -4112,19 +4112,19 @@ def _build_app_instance_payload(instance):
     data.setdefault("mod_dttm", getattr(instance, "mod_dttm", None))
     return data
 
-    def update_document_entry(self, uuid, content, db="db"):
+    def update_document_entry(self, uuid, content, db="db") -> str:
         """"""
         media_PK, page, entry = self.archive_media_content(uuid, db)
         uuid = self.store_document_entry(media_PK, content, page, entry)
         return uuid
 
-    def update_document_entry_script(self, uuid, content):
+    def update_document_entry_script(self, uuid, content) -> str:
         """"""
         page_n, entry_n = self.remove_document_entry_script(uuid)
         uuid = self.store_document_entry(page_n, entry_n, content)
         return uuid
 
-    def _archive_versions(self, table, uuid, gcolumn="UUID", dcolumn="UUID", max_versions=3, db="db"):
+    def _archive_versions(self, table, uuid, gcolumn="UUID", dcolumn="UUID", max_versions=3, db="db") -> Self:
         """"""
         df = self.get_table(table, {"WHERE": {"EQUAL": {gcolumn: uuid}}}, db)
         if not df.empty:
@@ -4137,7 +4137,7 @@ def _build_app_instance_payload(instance):
 class NchantdOfficeTabSetModel(NchantdTabSetModel):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
@@ -4146,13 +4146,13 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         self.show_add_tab = self.config.dikt.get("show_add_tab", False)
         self.tabsdata = None
 
-    def initModel(self, create_objects=True):
+    def initModel(self, create_objects=True) -> Self:
         """"""
         self.tabsdata = []
         super().initModel(create_objects)
         return self
 
-    def buildTabSet(self, node, tabset="center", toolbox=None):
+    def buildTabSet(self, node, tabset="center", toolbox=None) -> Self:
         """"""
         if hasattr(self, "_building") and self._building:
             return self
@@ -4223,7 +4223,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             self._building = False
         return self
 
-    def convert_db_to_doc(self, document_):
+    def convert_db_to_doc(self, document_) -> Dict[str, Any]:
         """"""
         logma.info(f"\n\n{document_}\n\n")
         document = {}
@@ -4259,12 +4259,12 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         document["meta_data"] = {"creon": document_["doc_CREON_DTTM"], "modon": document_["doc_MODON_DTTM"]}
         return document
 
-    def defocus(self):
+    def defocus(self) -> Self:
         """"""
         super().defocus()
         return self
 
-    def get_documents(self, node, tabset):
+    def get_documents(self, node, tabset) -> DataFrame:
         """"""
         if isinstance(node, int):
             nid = node
@@ -4273,7 +4273,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         tab_docs = self.parent.app.model.get_tab_documents(nid, tabset)
         return tab_docs
 
-    def load_tab_set(self, tabset="center", active_tab_position=0):
+    def load_tab_set(self, tabset="center", active_tab_position=0) -> Self:
         """Lazily build the tab set.
 
         Fully loads only the active tab; every other tab gets a lightweight
@@ -4305,7 +4305,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         self.parent.setCurrentIndex(active_tab_position)
         return self
 
-    def open_web_tab(self, url, name=None):
+    def open_web_tab(self, url, name=None) -> Optional[Self]:
         """Open ``url`` as a browser tab in this (center) tabset — or focus the
         existing tab already showing it.
 
@@ -4390,7 +4390,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         self.parent.setCurrentIndex(tabn)
         return self
 
-    def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0):
+    def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0) -> Self:
         """"""
         # Workaround for bug in nchantrs.models.tabsetmodels.NchantdTabSetModel.load_tab
         # which uses 'tabn in self.tab_widgets' incorrectly for a list.
@@ -4406,7 +4406,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         super().load_tab(tab, tabn, tabset, active_tab_position)
         return self
 
-    def load_widget(self, cfg, tabset="center", document=None, tab_type="custom_widget"):
+    def load_widget(self, cfg, tabset="center", document=None, tab_type="custom_widget") -> Any:
         """ """
         logma.info(f"Load Widget {cfg}")
         logma.info(f"Tabset {tabset}")
@@ -4442,12 +4442,12 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             tabW.initWidget()
         return tabW
 
-    def set_focus(self):
+    def set_focus(self) -> Self:
         """"""
         super().set_focus()
         return self
 
-    def _widget_current_url(self, widget):
+    def _widget_current_url(self, widget) -> Optional[str]:
         """Best-effort current URL for a browser tab widget (live view first,
         then the persisted document URL)."""
         try:
@@ -4503,7 +4503,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         ("lock_screen_pin_entry", ""),
     )
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdSettingsModel").override(cfg))
@@ -4525,7 +4525,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         self.interface = {}
         self.nchantd_account = {}
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """Initialise settings from the active document payload.
 
         Settings are persisted on the document under
@@ -4550,7 +4550,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         else:
             settings_payload = {}
 
-        def _section(key):
+        def _section(key) -> Dict[str, Any]:
             return settings_payload.get(key) or settings_cfg.get(key) or {}
 
         self.set_interface_settings(_section("interface_settings"))
@@ -4563,7 +4563,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         self.set_theme_settings(_section("theme_settings"))
         return self
 
-    def change_user_password(self):
+    def change_user_password(self) -> bool:
         """Change the user password (stub for the password-change UI).
 
         Validates the old password against the stored hash, the new
@@ -4587,7 +4587,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
             logma.error("[models] change_user_password failed: " + str(e), exc_info=True)
             return False
 
-    def get_journal_focus_enable(self):
+    def get_journal_focus_enable(self) -> bool:
         """Return whether the journal-focus feature is enabled for this user.
 
         Reads from config.dikt["features"]["journal_focus"] when
@@ -4603,7 +4603,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
             logma.warning("[models] get_journal_focus_enable: " + str(e))
             return False
 
-    def get_show_settings_focus_enable(self):
+    def get_show_settings_focus_enable(self) -> bool:
         """Return whether the settings-focus feature is enabled.
 
         Reads from config.dikt["features"]["settings_focus"],
@@ -4618,7 +4618,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
             logma.warning("[models] get_show_settings_focus_enable: " + str(e))
             return False
 
-    def get_automation_enable(self):
+    def get_automation_enable(self) -> bool:
         """Return whether the automation feature is enabled.
 
         Reads from config.dikt["features"]["automation"],
@@ -4633,7 +4633,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
             logma.warning("[models] get_automation_enable: " + str(e))
             return False
 
-    def get_data_sources_enable(self):
+    def get_data_sources_enable(self) -> bool:
         """Return whether the data-sources feature is enabled.
 
         Reads from config.dikt["features"]["data_sources"],
@@ -4648,7 +4648,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
             logma.warning("[models] get_data_sources_enable: " + str(e))
             return False
 
-    def get_show_left_side_pane(self):
+    def get_show_left_side_pane(self) -> bool:
         """Return whether the left-side pane is shown.
 
         Reads from config.dikt["layout"]["left_pane_visible"],
@@ -4663,7 +4663,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
             logma.warning("[models] get_show_left_side_pane: " + str(e))
             return True
 
-    def get_show_quick_launch_toolbar(self):
+    def get_show_quick_launch_toolbar(self) -> bool:
         """Read the show_quick_launch_toolbar setting from ``self._settings``.
 
         Falls back to ``False`` if the setting has not been
@@ -4671,14 +4671,14 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("show_quick_launch_toolbar", False)
 
-    def get_quick_launch_documents(self):
+    def get_quick_launch_documents(self) -> List[str]:
         """Read the quick_launch_documents setting from ``self._settings``.
 
         Falls back to ``[]`` if the setting has not been initialised.
         """
         return self._settings.get("quick_launch_documents", [])
 
-    def get_show_document_launch_catalog(self):
+    def get_show_document_launch_catalog(self) -> bool:
         """Read the show_document_launch_catalog setting from ``self._settings``.
 
         Falls back to ``False`` if the setting has not been
@@ -4686,7 +4686,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("show_document_launch_catalog", False)
 
-    def get_default_tab_enable(self):
+    def get_default_tab_enable(self) -> bool:
         """Read the default_tab_enable setting from ``self._settings``.
 
         Falls back to ``False`` if the setting has not been
@@ -4694,14 +4694,14 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("default_tab_enable", False)
 
-    def get_default_tab_select(self):
+    def get_default_tab_select(self) -> str:
         """Read the default_tab_select setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been initialised.
         """
         return self._settings.get("default_tab_select", "")
 
-    def get_always_refocus_right_side_enable(self):
+    def get_always_refocus_right_side_enable(self) -> bool:
         """Read the always_refocus_right_side_enable setting from ``self._settings``.
 
         Falls back to ``False`` if the setting has not been
@@ -4709,35 +4709,35 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("always_refocus_right_side_enable", False)
 
-    def get_refocus_right_side_select(self):
+    def get_refocus_right_side_select(self) -> str:
         """Read the refocus_right_side_select setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been initialised.
         """
         return self._settings.get("refocus_right_side_select", "")
 
-    def get_document_storage_default(self):
+    def get_document_storage_default(self) -> str:
         """Read the document_storage_default setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been initialised.
         """
         return self._settings.get("document_storage_default", "")
 
-    def get_document_delete_policy(self):
+    def get_document_delete_policy(self) -> str:
         """Read the document_delete_policy setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been initialised.
         """
         return self._settings.get("document_delete_policy", "")
 
-    def get_document_name_convention_default(self):
+    def get_document_name_convention_default(self) -> str:
         """Read the document_name_convention_default setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been initialised.
         """
         return self._settings.get("document_name_convention_default", "")
 
-    def get_lock_screen_enable(self):
+    def get_lock_screen_enable(self) -> bool:
         """Read the lock_screen_enable setting from ``self._settings``.
 
         Falls back to ``False`` if the setting has not been
@@ -4745,7 +4745,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("lock_screen_enable", False)
 
-    def get_lock_screen_timeout(self, value):
+    def get_lock_screen_timeout(self, value) -> Self:
         """Set the lock-screen timeout (UI handler).
 
         Stores ``value`` into ``self._settings["lock_screen_timeout"]``
@@ -4757,7 +4757,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.info("[models] get_lock_screen_timeout: set to " + str(value))
         return self
 
-    def get_lock_screen_pin_enable(self):
+    def get_lock_screen_pin_enable(self) -> bool:
         """Read the lock_screen_pin_enable setting from ``self._settings``.
 
         Falls back to ``False`` if the setting has not been
@@ -4765,7 +4765,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("lock_screen_pin_enable", False)
 
-    def get_package_enable(self):
+    def get_package_enable(self) -> bool:
         """Read the package_enable setting from ``self._settings``.
 
         Falls back to ``True`` if the setting has not been
@@ -4773,7 +4773,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("package_enable", True)
 
-    def get_package_focus_enable(self):
+    def get_package_focus_enable(self) -> bool:
         """Read the package_focus_enable setting from ``self._settings``.
 
         Falls back to ``False`` if the setting has not been
@@ -4781,21 +4781,21 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("package_focus_enable", False)
 
-    def get_package_theme(self):
+    def get_package_theme(self) -> str:
         """Read the package_theme setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been initialised.
         """
         return self._settings.get("package_theme", "")
 
-    def get_theme(self):
+    def get_theme(self) -> str:
         """Read the theme setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been initialised.
         """
         return self._settings.get("theme", "")
 
-    def get_pro_edition(self):
+    def get_pro_edition(self) -> bool:
         """Return whether the user has the Pro edition enabled.
 
         Reads from ``self._settings["pro_edition"]`` (default False).
@@ -4806,7 +4806,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("pro_edition", False)
 
-    def get_password_new_entry(self):
+    def get_password_new_entry(self) -> str:
         """Read the password_new_entry setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been
@@ -4814,7 +4814,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("password_new_entry", "")
 
-    def get_password_new_confirm_entry(self):
+    def get_password_new_confirm_entry(self) -> str:
         """Read the password_new_confirm_entry setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been
@@ -4822,7 +4822,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("password_new_confirm_entry", "")
 
-    def get_password_old_entry(self):
+    def get_password_old_entry(self) -> str:
         """Read the password_old_entry setting from ``self._settings``.
 
         Falls back to ``''`` if the setting has not been
@@ -4830,7 +4830,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("password_old_entry", "")
 
-    def get_lock_screen_enable(self):
+    def get_lock_screen_enable(self) -> bool:
         """Read the lock_screen_enable setting from ``self._settings``.
 
         Falls back to ``True`` if the setting has not been
@@ -4838,7 +4838,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("lock_screen_enable", True)
 
-    def get_lock_screen_timeout_select(self):
+    def get_lock_screen_timeout_select(self) -> int:
         """Read the lock_screen_timeout setting from ``self._settings``.
 
         Falls back to ``0`` (seconds) if the setting has not been
@@ -4846,7 +4846,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("lock_screen_timeout", 0)
 
-    def get_lock_screen_pin_enable(self):
+    def get_lock_screen_pin_enable(self) -> bool:
         """Read the lock_screen_pin_enable setting from ``self._settings``.
 
         Falls back to ``True`` if the setting has not been
@@ -4854,7 +4854,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("lock_screen_pin_enable", True)
 
-    def get_lock_screen_pin_entry(self):
+    def get_lock_screen_pin_entry(self) -> int:
         """Read the lock_screen_pin_entry setting from ``self._settings``.
 
         Falls back to ``1111`` (the original hard-coded default)
@@ -4862,7 +4862,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         """
         return self._settings.get("lock_screen_pin_entry", 1111)
 
-    def load_settings(self):
+    def load_settings(self) -> Self:
         """Load settings from the model store into ``self._settings``.
 
         Reads the persisted settings row (one per key in
@@ -4892,7 +4892,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
             self.loaded = False
             return self
 
-    def set_journal_focus_enable(self):
+    def set_journal_focus_enable(self) -> Self:
         """Set the journal_focus_enable setting.
 
         Stores the new value in ``self._settings['journal_focus_enable']``.
@@ -4903,7 +4903,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_journal_focus_enable: set to {self._settings['journal_focus_enable']!r}")
         return self
 
-    def set_show_settings_focus_enable(self):
+    def set_show_settings_focus_enable(self) -> Self:
         """Set the show_settings_focus_enable setting.
 
         Stores the new value in ``self._settings['show_settings_focus_enable']``.
@@ -4914,7 +4914,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_show_settings_focus_enable: set to {self._settings['show_settings_focus_enable']!r}")
         return self
 
-    def set_automation_enable(self):
+    def set_automation_enable(self) -> Self:
         """Set the automation_enable setting.
 
         Stores the new value in ``self._settings['automation_enable']``.
@@ -4925,7 +4925,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_automation_enable: set to {self._settings['automation_enable']!r}")
         return self
 
-    def set_data_sources_enable(self):
+    def set_data_sources_enable(self) -> Self:
         """Set the data_sources_enable setting.
 
         Stores the new value in ``self._settings['data_sources_enable']``.
@@ -4936,7 +4936,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_data_sources_enable: set to {self._settings['data_sources_enable']!r}")
         return self
 
-    def set_show_left_side_pane(self):
+    def set_show_left_side_pane(self) -> Self:
         """Set the show_left_side_pane setting.
 
         Stores the new value in ``self._settings['show_left_side_pane']``.
@@ -4947,7 +4947,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_show_left_side_pane: set to {self._settings['show_left_side_pane']!r}")
         return self
 
-    def set_show_quick_launch_toolbar(self):
+    def set_show_quick_launch_toolbar(self) -> Self:
         """Set the show_quick_launch_toolbar setting.
 
         Stores the new value in ``self._settings['show_quick_launch_toolbar']``.
@@ -4958,7 +4958,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_show_quick_launch_toolbar: set to {self._settings['show_quick_launch_toolbar']!r}")
         return self
 
-    def set_quick_launch_documents(self):
+    def set_quick_launch_documents(self) -> Self:
         """Set the quick_launch_documents setting.
 
         Stores the new value in ``self._settings['quick_launch_documents']``.
@@ -4969,7 +4969,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_quick_launch_documents: set to {self._settings['quick_launch_documents']!r}")
         return self
 
-    def set_show_document_launch_catalog(self):
+    def set_show_document_launch_catalog(self) -> Self:
         """Set the show_document_launch_catalog setting.
 
         Stores the new value in ``self._settings['show_document_launch_catalog']``.
@@ -4984,7 +4984,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         )
         return self
 
-    def set_default_tab_enable(self):
+    def set_default_tab_enable(self) -> Self:
         """Set the default_tab_enable setting.
 
         Stores the new value in ``self._settings['default_tab_enable']``.
@@ -4995,7 +4995,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_default_tab_enable: set to {self._settings['default_tab_enable']!r}")
         return self
 
-    def set_default_tab_select(self):
+    def set_default_tab_select(self) -> Self:
         """Set the default_tab_select setting.
 
         Stores the new value in ``self._settings['default_tab_select']``.
@@ -5006,7 +5006,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_default_tab_select: set to {self._settings['default_tab_select']!r}")
         return self
 
-    def set_always_refocus_right_side_enable(self):
+    def set_always_refocus_right_side_enable(self) -> Self:
         """Set the always_refocus_right_side_enable setting.
 
         Stores the new value in ``self._settings['always_refocus_right_side_enable']``.
@@ -5021,7 +5021,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         )
         return self
 
-    def set_refocus_right_side_select(self):
+    def set_refocus_right_side_select(self) -> Self:
         """Set the refocus_right_side_select setting.
 
         Stores the new value in ``self._settings['refocus_right_side_select']``.
@@ -5032,7 +5032,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_refocus_right_side_select: set to {self._settings['refocus_right_side_select']!r}")
         return self
 
-    def set_document_storage_default(self):
+    def set_document_storage_default(self) -> Self:
         """Set the document_storage_default setting.
 
         Stores the new value in ``self._settings['document_storage_default']``.
@@ -5043,7 +5043,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_document_storage_default: set to {self._settings['document_storage_default']!r}")
         return self
 
-    def set_document_delete_policy(self):
+    def set_document_delete_policy(self) -> Self:
         """Set the document_delete_policy setting.
 
         Stores the new value in ``self._settings['document_delete_policy']``.
@@ -5054,7 +5054,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_document_delete_policy: set to {self._settings['document_delete_policy']!r}")
         return self
 
-    def set_document_name_convention_default(self):
+    def set_document_name_convention_default(self) -> Self:
         """Set the document_name_convention_default setting.
 
         Stores the new value in ``self._settings['document_name_convention_default']``.
@@ -5069,7 +5069,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         )
         return self
 
-    def set_lock_screen_enable(self):
+    def set_lock_screen_enable(self) -> Self:
         """Set the lock_screen_enable setting.
 
         Stores the new value in ``self._settings['lock_screen_enable']``.
@@ -5080,7 +5080,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_lock_screen_enable: set to {self._settings['lock_screen_enable']!r}")
         return self
 
-    def set_lock_screen_timeout(self, value=0):
+    def set_lock_screen_timeout(self, value=0) -> Self:
         """Set the lock-screen timeout (in seconds).
 
         Stores ``value`` into ``self._settings["lock_screen_timeout"]``
@@ -5094,7 +5094,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
             logma.error(f"[models] set_lock_screen_timeout failed: {e}", exc_info=True)
             return self
 
-    def set_lock_screen_pin_enable(self):
+    def set_lock_screen_pin_enable(self) -> Self:
         """Set the lock_screen_pin_enable setting.
 
         Stores the new value in ``self._settings['lock_screen_pin_enable']``.
@@ -5105,7 +5105,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_lock_screen_pin_enable: set to {self._settings['lock_screen_pin_enable']!r}")
         return self
 
-    def set_package_enable(self):
+    def set_package_enable(self) -> Self:
         """Set the package_enable setting.
 
         Stores the new value in ``self._settings['package_enable']``.
@@ -5116,7 +5116,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_package_enable: set to {self._settings['package_enable']!r}")
         return self
 
-    def set_package_focus_enable(self):
+    def set_package_focus_enable(self) -> Self:
         """Set the package_focus_enable setting.
 
         Stores the new value in ``self._settings['package_focus_enable']``.
@@ -5127,7 +5127,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_package_focus_enable: set to {self._settings['package_focus_enable']!r}")
         return self
 
-    def set_package_theme(self):
+    def set_package_theme(self) -> Self:
         """Set the package_theme setting.
 
         Stores the new value in ``self._settings['package_theme']``.
@@ -5138,7 +5138,7 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_package_theme: set to {self._settings['package_theme']!r}")
         return self
 
-    def set_theme(self):
+    def set_theme(self) -> Self:
         """Set the theme setting.
 
         Stores the new value in ``self._settings['theme']``.
@@ -5149,49 +5149,49 @@ class NchantdOfficeSettingsModel(NchantdModel):
         logma.debug(f"[models] set_theme: set to {self._settings['theme']!r}")
         return self
 
-    def set_interface_settings(self, settings):
+    def set_interface_settings(self, settings) -> Self:
         """"""
         if settings != self.interface_settings:
             self.add_change("interface_settings", self.interface_settings, settings)
             self.interface_settings = settings
         return self
 
-    def set_account_settings(self, settings):
+    def set_account_settings(self, settings) -> Self:
         """"""
         if settings != self.account_settings:
             self.add_change("account_settings", self.account_settings, settings)
             self.account_settings = settings
         return self
 
-    def set_security_settings(self, settings):
+    def set_security_settings(self, settings) -> Self:
         """"""
         if settings != self.security_settings:
             self.add_change("security_settings", self.security_settings, settings)
             self.security_settings = settings
         return self
 
-    def set_journal_settings(self, settings):
+    def set_journal_settings(self, settings) -> Self:
         """"""
         if settings != self.interface_settings:
             self.add_change("journal_settings", self.interface_settings, settings)
             self.interface_settings = settings
         return self
 
-    def set_storage_settings(self, settings):
+    def set_storage_settings(self, settings) -> Self:
         """"""
         if settings != self.storage_settings:
             self.add_change("storage_settings", self.storage_settings, settings)
             self.storage_settings = settings
         return self
 
-    def set_theme_settings(self, settings):
+    def set_theme_settings(self, settings) -> Self:
         """"""
         if settings != self.theme_settings:
             self.add_change("theme_settings", self.theme_settings, settings)
             self.theme_settings = settings
         return self
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """"""
         doc = {}
         return doc
@@ -5200,12 +5200,12 @@ class NchantdOfficeSettingsModel(NchantdModel):
 class NchantdOfficeImportModel(NchantdModel):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeImportModel").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
