@@ -12,6 +12,7 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
@@ -35,6 +36,7 @@ from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.controls.checkboxes import NchantdCheckbox
 from nchantrs.widgets.widgets import NchantdWidget
+from typing import Any, Iterator, Self
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -48,7 +50,7 @@ pxcfg = join(here, "_data_", "forms.yaml")
 class NchantdOfficeForm(NchantdForm):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdOfficeForm init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
@@ -58,7 +60,7 @@ class NchantdOfficeForm(NchantdForm):
             self.config.override(parent.config)
         self.config.override(cfg)
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         self.document = self.app.model.codex.init_form()
@@ -68,7 +70,7 @@ class NchantdOfficeForm(NchantdForm):
             self.initialize_context_menu(self.context_menu_name)
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         # PUSH to 0.0.3 force external until
@@ -85,33 +87,33 @@ class NchantdOfficeForm(NchantdForm):
             raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def init_drawer_document_config(self):
+    def init_drawer_document_config(self) -> dict[int, Any]:
         """"""
         items = {}
         return items
 
-    def init_drawer_selection_config(self):
+    def init_drawer_selection_config(self) -> dict[int, Any]:
         """"""
         items = {}
         return items
 
-    def init_drawer_object_config(self):
+    def init_drawer_object_config(self) -> dict[int, Any]:
         """"""
         items = {}
         return items
 
-    def init_drawer_quickstart(self):
+    def init_drawer_quickstart(self) -> dict[int, Any]:
         """"""
         items = {}
         return items
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         # if self.toolbox_config is None:
@@ -125,7 +127,7 @@ class NchantdOfficeForm(NchantdForm):
 class NchantdOfficeContactForm(NchantdForm):
     """Pre-configured contact information form"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
@@ -134,17 +136,17 @@ class NchantdOfficeContactForm(NchantdForm):
             self.config.override(parent.config)
         self.config.override(cfg)
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -169,7 +171,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
          the document store when the API is unreachable.
     """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
@@ -185,7 +187,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         self.form_view_group = None
         self.new_item_pane = None
 
-    def cmd_excel_to_form(self, event=None, *args, **kwargs):
+    def cmd_excel_to_form(self, event=None, *args, **kwargs) -> dict[str, Any] | None:
         """Read an uploaded Excel file and convert it to a form schema.
 
         T-030: opens the file at ``self.file_path`` (or the
@@ -230,7 +232,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         logma.info(f"[forms] cmd_excel_to_form: built schema with {len(schema['fields'])} fields")
         return schema
 
-    def cmd_deploy_as_google_form(self, schema=None, event=None, *args, **kwargs):
+    def cmd_deploy_as_google_form(self, schema=None, event=None, *args, **kwargs) -> dict[str, Any] | None:
         """Deploy a form schema as a Google Form via the Forms API.
 
         T-030: reads the API key from
@@ -289,7 +291,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             logma.error(f"[forms] cmd_deploy_as_google_form failed: {e}", exc_info=True)
         return self.cmd_save_form_schema_locally(schema=schema)
 
-    def cmd_save_form_schema_locally(self, schema=None, event=None, *args, **kwargs):
+    def cmd_save_form_schema_locally(self, schema=None, event=None, *args, **kwargs) -> Any | None:
         """Persist a form schema to the document store.
 
         T-030: when the Google Forms API is unreachable, fall back
@@ -335,7 +337,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             logma.error(f"[forms] cmd_save_form_schema_locally failed: {e}", exc_info=True)
             return None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         self.available_items = [
@@ -377,7 +379,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         self.document.load_document()
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -423,22 +425,22 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def add_form(self, form):
+    def add_form(self, form) -> None:
         """"""
         self.selected_form = form
         self.forms.append(form)
 
-    def add_form_item(self, item):
+    def add_form_item(self, item) -> None:
         """"""
         self.selected_form.add_item(item)
 
-    def build_form(self):
+    def build_form(self) -> Self:
         """Build the form view, including the survey-level ask-rate spinbox.
 
         T-058: the ask-rate spinbox now lives in the survey
@@ -470,7 +472,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         self.form_view_group.addWidget(new_item_pane_group, row, col)
         return self
 
-    def _build_survey_definition_row(self, row, col):
+    def _build_survey_definition_row(self, row, col) -> None:
         """Build the survey-definition row (ask rate + metadata).
 
         T-058: the row contains a 'Questions per Page' spinbox
@@ -507,7 +509,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         except Exception as e:
             logma.error(f"[forms] _build_survey_definition_row failed: {e}", exc_info=True)
 
-    def cmd_set_ask_rate(self, event=None, *args, **kwargs):
+    def cmd_set_ask_rate(self, event=None, *args, **kwargs) -> Self:
         """Set the ask-rate (questions per page) on the survey definition.
 
         T-058: stores the value on the survey definition dict
@@ -537,7 +539,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             logma.error(f"[forms] cmd_set_ask_rate failed: {e}", exc_info=True)
         return self
 
-    def build_form_blank(self, row, col):
+    def build_form_blank(self, row, col) -> None:
         """"""
         cfg = {
             "text": "This is a Blank Form that can be used to build a new form to be used in a survey or inside the Nchantd Office Application itself",
@@ -577,7 +579,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         row += 1
         self.form_view_group.addWidget(form_details_group, row, col)
 
-    def build_form_catalog(self):
+    def build_form_catalog(self) -> None:
         """"""
         row, col = 0, 0
         for item in self.available_items:
@@ -591,7 +593,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
 
     # ========== Command Handlers ==========
 
-    def cmd_select_form_compatibility(self, event=None):
+    def cmd_select_form_compatibility(self, event=None) -> Self:
         """Set form compatibility mode"""
         if hasattr(self, "form_compatibility_select"):
             compatibility = self.form_compatibility_select.currentText()
@@ -600,7 +602,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
                 self.selected_form.compatibility = compatibility
         return self
 
-    def cmd_add_form_blank(self, event=None):
+    def cmd_add_form_blank(self, event=None) -> Self:
         """Add a new blank form"""
         new_form = NchantdOfficeForm(self).initWidget()
         self.add_form(new_form)
@@ -608,7 +610,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         logma.info("Added new blank form")
         return self
 
-    def cmd_image_file_select(self, event=None):
+    def cmd_image_file_select(self, event=None) -> Self:
         """Select image file for form header"""
         file_dialog = pyqt.QFileDialog()
         file_path, _ = file_dialog.getOpenFileName(
@@ -619,7 +621,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             logma.info(f"Selected header image: {file_path}")
         return self
 
-    def cmd_on_change_form_title(self, event=None):
+    def cmd_on_change_form_title(self, event=None) -> Self:
         """Handle form title change"""
         if hasattr(self, "form_name_entry") and self.selected_form:
             title = self.form_name_entry.get_text()
@@ -627,7 +629,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             logma.info(f"Form title changed to: {title}")
         return self
 
-    def cmd_connect_to_service(self, event=None):
+    def cmd_connect_to_service(self, event=None) -> Self:
         """Connect to an external form service (Google Forms, Typeform, etc.).
 
         T-031: pulls service + account from the form_service_select
@@ -699,7 +701,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
 
     # ========== Form Management Methods ==========
 
-    def add_form_field(self, field_type, label, required=False):
+    def add_form_field(self, field_type, label, required=False) -> Self:
         """Add a new field to the current form
 
         Args:
@@ -724,7 +726,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         logma.info(f"Added {field_type} field: {label}")
         return self
 
-    def create_form_field_widget(self, field_config):
+    def create_form_field_widget(self, field_config) -> Any:
         """Create a form field widget from configuration"""
         field_type = field_config.get("type", "text")
         label = field_config.get("label", "")
@@ -752,7 +754,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
 
         return widget
 
-    def remove_form_field(self, field_id):
+    def remove_form_field(self, field_id) -> Self:
         """Remove a field from the current form"""
         if not self.selected_form:
             return self
@@ -767,7 +769,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
 
         return self
 
-    def validate_form(self):
+    def validate_form(self) -> dict[str, Any]:
         """Validate all required fields in the form
 
         Returns:
@@ -798,7 +800,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
 
         return {"valid": valid, "errors": errors}
 
-    def collect_form_data(self):
+    def collect_form_data(self) -> dict[str, Any]:
         """Collect all form data into a dictionary
 
         Returns:
@@ -829,7 +831,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
 
         return form_data
 
-    def submit_form(self):
+    def submit_form(self) -> bool:
         """Submit form data"""
         # Validate first
         validation = self.validate_form()
@@ -853,7 +855,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         logma.info("Form submitted successfully")
         return True
 
-    def submit_to_google_forms(self, form_data):
+    def submit_to_google_forms(self, form_data) -> bool:
         """Submit form data to a live Google Forms endpoint.
 
         T-032: pulls the configured form id from
@@ -908,14 +910,14 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             logma.error(f"[forms] submit_to_google_forms failed: {e}", exc_info=True)
         return self.submit_to_local_storage(form_data)
 
-    def submit_to_local_storage(self, form_data):
+    def submit_to_local_storage(self, form_data) -> bool:
         """Save form data locally"""
         if self.document:
             self.document.save_response(form_data)
             logma.info("Form data saved locally")
         return True
 
-    def submit_to_tracker(self, form_data, tracker_url=None, tracker_token=None):
+    def submit_to_tracker(self, form_data, tracker_url=None, tracker_token=None) -> bool:
         """Submit form data to a remote issue tracker.
 
         T-033: POSTs ``form_data`` to a tracker endpoint (Jira /
@@ -964,7 +966,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             logma.error(f"[forms] submit_to_tracker failed: {e}", exc_info=True)
         return self.submit_to_local_storage(form_data)
 
-    def create_data_table(self):
+    def create_data_table(self) -> "DataFrame":
         """"""
         df = super().create_data_table()
         columns = []
@@ -972,12 +974,12 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         df = DataFrame(data, columns=columns)
         return df
 
-    def get_form_compatibility_options(self):
+    def get_form_compatibility_options(self) -> list[str]:
         """"""
         options = ["Google Forms", "Nchantd Office", ""]
         return options
 
-    def init_drawer_document_config(self):
+    def init_drawer_document_config(self) -> dict[int, Any]:
         """Build the document-config drawer (compatibility / response defaults)."""
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
@@ -1050,7 +1052,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         cnt += 1
         return items
 
-    def _ensure_drawer_item(self, items, cnt):
+    def _ensure_drawer_item(self, items, cnt) -> dict[str, Any]:
         """Lazily create a default drawer-item slot.
 
         Centralises the ``if cnt not in items: items[cnt] = {...}`` pattern
@@ -1061,7 +1063,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}.copy()
         return items
 
-    def init_drawer_input_config(self):
+    def init_drawer_input_config(self) -> dict[int, Any]:
         """"""
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
@@ -1079,7 +1081,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         cnt += 1
         return items
 
-    def init_drawer_connections(self):
+    def init_drawer_connections(self) -> dict[int, Any]:
         """"""
         items = self.toolbox_config[300].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -1116,12 +1118,12 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         cnt += 1
         return items
 
-    def init_drawer_quickstart(self):
+    def init_drawer_quickstart(self) -> dict[int, Any]:
         """"""
         items = {}
         return items
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
@@ -1129,7 +1131,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
         self.toolbox_config[300]["items"] = self.init_drawer_connections()
         self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
-    def select_form(self, form_name):
+    def select_form(self, form_name) -> None:
         """"""
         self.selected_form = self.forms[form_name]
 
@@ -1137,7 +1139,7 @@ class NchantdOfficeFormManager(NchantdOfficeDocumentManager):
 class NchantdOfficeFeedback(NchantdWidget):
     """Feedback form widget for collecting user feedback"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
@@ -1161,12 +1163,12 @@ class NchantdOfficeFeedback(NchantdWidget):
         self.submit_button = None
         self.cancel_button = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -1266,13 +1268,13 @@ class NchantdOfficeFeedback(NchantdWidget):
 
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_attach_screenshot(self, event=None):
+    def cmd_attach_screenshot(self, event=None) -> Self:
         """Attach a screenshot to the feedback"""
         file_dialog = pyqt.QFileDialog()
         file_path, _ = file_dialog.getOpenFileName(
@@ -1283,7 +1285,7 @@ class NchantdOfficeFeedback(NchantdWidget):
             logma.info(f"Screenshot attached: {file_path}")
         return self
 
-    def cmd_submit_feedback(self, event=None):
+    def cmd_submit_feedback(self, event=None) -> Self:
         """Submit the feedback"""
         # Collect feedback data
         if hasattr(self, "type_select"):
@@ -1317,12 +1319,12 @@ class NchantdOfficeFeedback(NchantdWidget):
 
         return self
 
-    def cmd_cancel(self, event=None):
+    def cmd_cancel(self, event=None) -> Self:
         """Cancel and close the feedback form"""
         self.close()
         return self
 
-    def send_feedback(self, feedback_data):
+    def send_feedback(self, feedback_data) -> bool | Self:
         """Send feedback to server or save locally
 
         Args:
@@ -1350,7 +1352,7 @@ class NchantdOfficeFeedback(NchantdWidget):
             logma.error(f"Error sending feedback: {e}")
             return False
 
-    def send_to_server(self, feedback_data):
+    def send_to_server(self, feedback_data) -> bool:
         """T-084: send feedback to a remote issue tracker.
 
         Wraps ``submit_to_tracker`` so the success/failure log
@@ -1382,7 +1384,7 @@ class NchantdOfficeFeedback(NchantdWidget):
             logma.error(f"[forms] send_to_server failed: {e}", exc_info=True)
             return False
 
-    def save_feedback_locally(self, feedback_data):
+    def save_feedback_locally(self, feedback_data) -> Self:
         """Save feedback to local file"""
         import json
         from os.path import exists, join
