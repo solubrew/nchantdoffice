@@ -13,6 +13,8 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+from typing import Any, Self
 from os.path import abspath, dirname, join
 import datetime as dt
 
@@ -42,18 +44,18 @@ pxcfg = join(here, "_data_", "toolboxes.yaml")
 class NchantdApplicationSearchPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdApplicationSearchPane").override(cfg))
         self.handler = self.config.dikt.get("handler", None)
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -83,7 +85,7 @@ class NchantdApplicationSearchPane(NchantdPane):
         self.layout.addWidget(self.application_response_area)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -93,17 +95,17 @@ class NchantdApplicationSearchPane(NchantdPane):
 class NchantdLLMQueryPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdLLMQueryPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -126,7 +128,7 @@ class NchantdLLMQueryPane(NchantdPane):
         self.layout.addWidget(self.search_llm_button)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -136,17 +138,17 @@ class NchantdLLMQueryPane(NchantdPane):
 class NchantdWebSearchPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdWebSearchPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -169,7 +171,7 @@ class NchantdWebSearchPane(NchantdPane):
         self.layout.addWidget(self.search_web_button)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -192,17 +194,17 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
 
     _DEFAULT_PANE_RATIO = 0.5  # Node : Tab width split
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationToolBox").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         try:
@@ -211,7 +213,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             logma.error(f"[toolboxes] initView: balance_pane_widths failed: {e}", exc_info=True)
         return self
 
-    def balance_pane_widths(self):
+    def balance_pane_widths(self) -> Self:
         """T-061: rebalance the Node Pane + Tab Pane widths.
 
         Looks at the drawer's parent splitter (when one is
@@ -249,39 +251,39 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         super().initView()
         return self
 
-    def initWidget(self, cfg=None):
+    def initWidget(self, cfg=None) -> Self:
         """"""
         self.initModel(cfg)
         self.initView()
         return self
 
-    def add_documents_drawer(self):
+    def add_documents_drawer(self) -> Self:
         """"""
         return self
 
-    def add_node_drawer(self):
+    def add_node_drawer(self) -> Self:
         """"""
         cfg = {"action": "add_node"}
         # self.add_node = NchantdButton(self, cfg).initWidget()
         # self.add_drawer_item(self.add_node, 0, 0)
         return self
 
-    def add_settings_drawer(self):
+    def add_settings_drawer(self) -> Self:
         """"""
         return self
 
-    def add_tabs_drawer(self):
+    def add_tabs_drawer(self) -> Self:
         """"""
         cfg = {"action": "add_tab"}
         # self.add_tab = NchantdButton(self, cfg).initWidget()
         # self.add_drawer_item(self.add_tab, 0, 0)
         return self
 
-    def add_tools_drawer(self):
+    def add_tools_drawer(self) -> Self:
         """"""
         return self
 
-    def build_toolbox(self, cfg=None):
+    def build_toolbox(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -291,7 +293,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         super().build_toolbox(cfg)
         return self
 
-    def cmd_application_search_pane(self, event=None, *args, **kwargs):
+    def cmd_application_search_pane(self, event=None, *args, **kwargs) -> Self:
         """Build the application-search pane with tag tracking.
 
         T-060: the search results now show a tag column (and a
@@ -320,12 +322,12 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             self.application_search_pane = NchantdApplicationSearchPane(self, cfg).initWidget()
         return self
 
-    def cmd_create_new_instance(self, event, *args, **kwargs):
+    def cmd_create_new_instance(self, event, *args, **kwargs) -> Self:
         """"""
         self.app.model.create_new_instance()
         return self
 
-    def cmd_duplicate_instance(self, event, *args, **kwargs):
+    def cmd_duplicate_instance(self, event, *args, **kwargs) -> Self:
         """Duplicate the active instance by copying the current DB.
 
         Sprint 20: previously a comment-only stub. Now creates a
@@ -357,7 +359,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
         return self
 
-    def cmd_export_instance(self, event, *args, **kwargs):
+    def cmd_export_instance(self, event, *args, **kwargs) -> Self:
         """"""
         # restrict to selecting a folder
         if self.app.user.use_library:
@@ -368,7 +370,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         self.local_directory = self.open_file_sigil.file_selected
         return self
 
-    def cmd_import_instance(self, event, *args, **kwargs):
+    def cmd_import_instance(self, event, *args, **kwargs) -> Self:
         """Import a local file as the active instance.
 
         Sprint 20: previously a stub that opened the file dialog
@@ -402,7 +404,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
         return self
 
-    def cmd_web_search_pane(self, event, *args, **kwargs):
+    def cmd_web_search_pane(self, event, *args, **kwargs) -> Self:
         """Dispatch a global web search via the toolbox (T-NEW-033).
 
         The user-facing button calls this; it routes to
@@ -421,7 +423,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
             return self
 
-    def cmd_llm_query_pane(self, event, *args, **kwargs):
+    def cmd_llm_query_pane(self, event, *args, **kwargs) -> Self:
         """Dispatch an LLM-flavored search via the toolbox (T-NEW-033).
 
         Routes to ``cmd_search_global`` with the same default
@@ -439,7 +441,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
             return self
 
-    def cmd_search_global(self, event=None, *args, **kwargs):
+    def cmd_search_global(self, event=None, *args, **kwargs) -> Self:
         """Run a global search across all nodes + tabs (T-NEW-033).
 
         Reads ``event.config.dikt["query"]`` (or the kwarg
@@ -486,7 +488,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
         return self
 
-    def cmd_search_node(self, event=None, *args, **kwargs):
+    def cmd_search_node(self, event=None, *args, **kwargs) -> Self:
         """Run a node-scoped search (T-NEW-033).
 
         Reads ``event.config.dikt["query"]`` + the active
@@ -540,7 +542,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
         return self
 
-    def cmd_search_tab(self, event=None, *args, **kwargs):
+    def cmd_search_tab(self, event=None, *args, **kwargs) -> Self:
         """Run a tab-scoped search (T-NEW-033).
 
         Reads ``event.config.dikt["query"]`` + the active
@@ -594,7 +596,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
         return self
 
-    def cmd_import_local_file(self, event=None, *args, **kwargs):
+    def cmd_import_local_file(self, event=None, *args, **kwargs) -> Self:
         """"""
         cfg = {}
         self.import_file_sigil = NchantdFileOpenSigil("open_local_document", self, cfg).initWidget()
@@ -622,7 +624,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 # raise Exception(f"Unknown File {self.local_file}")
         return self
 
-    def cmd_open_instance(self, event=None, *args, **kwargs):
+    def cmd_open_instance(self, event=None, *args, **kwargs) -> Self:
         """Open a local ``.pyof`` (Nchantd Office DB file) instance.
 
         T-077: previously raised ``"File Type not yet implemented"``.
@@ -652,7 +654,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             logma.error(f"[toolboxes] cmd_open_instance failed: {e}", exc_info=True)
         return self
 
-    def cmd_browse_app_instances(self, event=None, *args, **kwargs):
+    def cmd_browse_app_instances(self, event=None, *args, **kwargs) -> Self:
         """T-NEW-005 (item 3): show the user the registered
         secondary app instances from the ``app_instance``
         table. The primary instance holds a registry of
@@ -728,7 +730,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
         return self
 
-    def _open_pyof_instance(self, path):
+    def _open_pyof_instance(self, path) -> Self:
         """Open a .pyof Nchantd Office instance (T-077, T-NEW-007).
 
         The .pyof format is the SQLite DB file produced by
@@ -767,7 +769,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             logma.error(f"[toolboxes] _open_pyof_instance failed: {e}", exc_info=True)
         return self
 
-    def cmd_open_local_file(self, event=None, *args, **kwargs):
+    def cmd_open_local_file(self, event=None, *args, **kwargs) -> Self:
         """Dispatch a local file to the right document class.
 
         Per user direction (Sprint 20): each file type routes
@@ -826,7 +828,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 self.app.model.import_text(self.local_file)
         return self
 
-    def cmd_save_instance(self, event, *args, **kwargs):
+    def cmd_save_instance(self, event, *args, **kwargs) -> Self:
         """Save the active instance to a user-chosen ``.pyof`` file.
 
         Sprint 20: previously a near-empty stub (all
@@ -880,17 +882,17 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
         return self
 
-    def get_llm_engines(self):
+    def get_llm_engines(self) -> list[str]:
         """Get the list of supported LLM engine names."""
         options = ["Open Ai", "Grok", "Gemini", "Claude"]
         return options
 
-    def get_search_engines(self):
+    def get_search_engines(self) -> list[str]:
         """"""
         options = ["Google", "DuckDuckGo", "Bing", "Yahoo", "Yandex", "PreSearch", "Shodan"]
         return options
 
-    def init_drawer_application(self):
+    def init_drawer_application(self) -> dict[str, Any]:
         """"""
         default_action = {"action": "insert_object", "type": "custom"}
         items = self.config.dikt["toolbox"][0].get("items", {})
@@ -947,7 +949,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         # cnt += 1
         return items
 
-    def refresh_for_document(self, document):
+    def refresh_for_document(self, document) -> Self:
         """Refresh toolbox drawer items for the active document/tab context.
 
         Called by NchantdOfficeTabSet.on_tab_focus() when the focused center
@@ -982,7 +984,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         super().build_toolbox({"toolbox": self.config.dikt.get("toolbox", {})})
         return self
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> Self:
         """"""
         super().init_toolbox()
         self.config.dikt["toolbox"][0]["items"] = self.init_drawer_application()
@@ -1009,7 +1011,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
     # isinstance walk over parent/app/model/store so the method keeps
     # working if the store layer is refactored.
 
-    def cmd_import_pyof(self, event=None, *args, **kwargs):
+    def cmd_import_pyof(self, event=None, *args, **kwargs) -> Self:
         """T-NEW-074: import content tables from a user-selected .pyof.
 
         ``file_dialog_fn`` is overridable for testing — the integration
@@ -1066,7 +1068,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             logma.error(f"[import_pyof] failed: {e}", exc_info=True)
         return self
 
-    def _resolve_host_db_conn(self):
+    def _resolve_host_db_conn(self) -> "sqlite3.Connection | None":
         """Return the live ``sqlite3.Connection`` for the host instance.
 
         T-NEW-074: defensive accessor for the live host DB connection. The
