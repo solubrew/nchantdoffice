@@ -1,4 +1,4 @@
-"""T-NEW-074 / T-NEW-075 — content-only .pyof → .pyof import.
+"""T-NEW-074 / T-NEW-075 / T-NEW-076 — content-only .pyof → .pyof import.
 
 Reads content tables from a source .pyof and INSERTs them into the host's
 open sqlite3 connection.
@@ -12,6 +12,15 @@ last-version-per-pUUID merge — source PK columns are dropped (host regenerates
 rowid), but source UUID and pUUID are carried (FK relationships preserved).
 For each pUUID only the highest-version row is kept. This is INSERT-with-
 dedupe, not INSERT-OR-IGNORE: host PKs are fresh so skipped is always 0.
+
+T-NEW-076 host-aware merge-by-version: for each surviving source row, query
+the host's MAX(version) for that pUUID. If the source's version is strictly
+greater, DELETE all host rows for that pUUID and INSERT the source's
+max-version row (one source row replaces N host rows if the host had
+older versions). If the source's version is <= host's MAX, skip — host
+wins, no insert, no delete. ``ImportResult.skipped`` for ``_content``
+tables now covers both "host had a newer version" and "INSERT didn't
+take" cases.
 """
 from __future__ import annotations
 import sqlite3
@@ -58,6 +67,18 @@ class ImportResult:
     inserted: int = 0
     skipped: int = 0
     errors: int = 0
+
+    # NOTE on ``skipped`` semantics:
+    #   * T-NEW-074 base-6 tables (INSERT-OR-IGNORE): ``skipped`` counts
+    #     PK-collision rows the host already had (host wins).
+    #   * T-NEW-075 ``_content`` tables, pre-076: ``skipped`` was always 0
+    #     (host rowids are fresh; only source-side last-version-per-pUUID
+    #     dedupe was applied).
+    #   * T-NEW-076 ``_content`` tables: ``skipped`` covers BOTH
+    #     "host had a newer-or-equal version for this pUUID" (host wins)
+    #     AND the defensive "INSERT didn't take" fallback (rowcount==0).
+    #     Use ``inserted`` to track successful replace / first-time
+    #     inserts and ``skipped`` to track host-wins / defensive no-ops.
 
 def _intersecting_columns(src: sqlite3.Connection, host: sqlite3.Connection, table: str) -> list[str]:
     src_cols = {r[1] for r in src.execute(f'PRAGMA table_info("{table}")')}
@@ -106,12 +127,23 @@ def _coerce_doc_version(raw: object) -> int:
 def _import_content_table(
     src: sqlite3.Connection, host: sqlite3.Connection, spec: TableSpec
 ) -> ImportResult:
-    """T-NEW-075 — last-version-wins import for ``_content`` tables.
+    """T-NEW-075 / T-NEW-076 — last-version-wins import for ``_content`` tables.
 
-    Source PK columns are dropped (host regenerates rowid). Source UUID and
-    pUUID are carried so doc↔content / node↔tab FK relationships survive.
-    For each pUUID only the highest-version row is kept. ``INSERT INTO``
-    (not OR-IGNORE): host PKs are fresh, so ``skipped`` is always 0.
+    T-NEW-075 source-side dedupe: source PK columns are dropped (host
+    regenerates rowid). Source UUID and pUUID are carried so doc↔content
+    / node↔tab FK relationships survive. For each pUUID only the
+    highest-version row is kept. ``INSERT INTO`` (not OR-IGNORE): host
+    PKs are fresh, so pre-076 ``skipped`` was always 0.
+
+    T-NEW-076 host-aware merge-by-version: for each surviving source row
+    (one max-version row per pUUID) we query the host's MAX(version) for
+    that pUUID. If the source's version is **strictly** greater, we
+    DELETE all host rows for that pUUID and INSERT the source's
+    max-version row — one source row replaces N host rows if the host
+    had older versions. If the source's version is <= the host's MAX,
+    we skip — host wins, no insert, no delete. ``skipped`` now covers
+    BOTH "host had a newer-or-equal version" AND the defensive
+    "INSERT didn't take" fallback (rowcount==0).
     """
     result = ImportResult(table=spec.name)
     cols = _intersecting_columns(src, host, spec.name)
@@ -151,15 +183,48 @@ def _import_content_table(
         ):
             best_by_puuid[puuid] = row
 
+    # T-NEW-076 host-aware merge-by-version: for each surviving source row,
+    # compare against the host's MAX(version) for that pUUID.
+    #   * src_version >  host_max → DELETE host rows for this pUUID, INSERT source row.
+    #   * src_version <= host_max → skip (host wins; no insert, no delete).
     for kept in best_by_puuid.values():
+        puuid = kept.get("pUUID")
+        src_version = _coerce_doc_version(kept.get("version"))
+        # Query host's MAX(version) for this pUUID. We already verified
+        # "version" is in cols above; the ``"version" in cols`` check is
+        # defensive in case the projection changes in the future.
+        if "version" in cols:
+            cur = host.execute(
+                f'SELECT MAX(version) FROM "{spec.name}" WHERE "pUUID" = ?',
+                (puuid,),
+            )
+            row = cur.fetchone()
+            host_max = (
+                _coerce_doc_version(row[0]) if row and row[0] is not None else -1
+            )
+        else:
+            host_max = -1
+        if src_version <= host_max:
+            # Host is at least as new as the source → host wins, skip.
+            result.skipped += 1
+            continue
+        # Source is strictly newer — drop host rows for this pUUID first,
+        # then INSERT the source's max-version row. One source row
+        # replaces N host rows if the host had multiple older versions.
+        if puuid is not None:
+            host.execute(
+                f'DELETE FROM "{spec.name}" WHERE "pUUID" = ?',
+                (puuid,),
+            )
         values = [kept.get(c) for c in insert_cols]
         cur = host.execute(insert_sql, values)
         if cur.rowcount == 1:
             result.inserted += 1
         else:
-            # rowcount==0 isn't expected here (no PK collision) but be
-            # defensive: count it as a skip rather than a hard error so a
-            # quirky SQLite build doesn't poison the whole transaction.
+            # rowcount==0 isn't expected here (host PKs were just
+            # cleared by the DELETE) but be defensive: count it as a
+            # skip rather than a hard error so a quirky SQLite build
+            # doesn't poison the whole transaction.
             result.skipped += 1
     return result
 

@@ -651,11 +651,12 @@ def test_import_pyof_silently_skips_missing_tables() -> None:
 
 
 def test_import_pyof_idempotent() -> None:
-    """T-NEW-074 Task 6 (bonus) / T-NEW-075: re-importing the same .pyof into
-    the same host is a no-op for the base 6 (host PKs block the second import,
-    skipped=1 per table). The 3 ``_content`` tables intentionally re-insert
-    on the second pass — host rowids are fresh each time and the
-    last-version-wins dedupe is keyed on the source rows."""
+    """T-NEW-074 Task 6 (bonus) / T-NEW-075 / T-NEW-076: re-importing the same
+    .pyof into the same host is a no-op for the base 6 (host PKs block the
+    second import, skipped=1 per table) AND for the 3 ``_content`` tables
+    (T-NEW-076 host-aware merge-by-version: source version equals host
+    version → host wins → skipped=1 per table). Re-import no longer
+    duplicates rows on the host."""
     from nchantdoffice.utilities.pyof_import import (
         ImportResult,
         import_pyof,
@@ -792,10 +793,10 @@ def test_import_pyof_idempotent() -> None:
                 assert r == ImportResult(table=r.table, inserted=1, skipped=0, errors=0)
 
             # Second import against the SAME host: base 6 skip (host PK
-            # collision); _content tables re-insert (host rowid is fresh
-            # each pass — the last-version-wins dedupe happens per-source,
-            # not per-host, so 1 row is selected from the source and a new
-            # rowid is assigned on the host).
+            # collision); _content tables also skip (T-NEW-076 host-aware
+            # merge-by-version: source version equals host version, so
+            # host wins — no insert, no delete). Re-import is now
+            # idempotent across ALL 9 tables.
             second_results = import_pyof(source_path, host)
             assert [r.table for r in second_results] == expected_tables
             for r in second_results:
@@ -806,8 +807,8 @@ def test_import_pyof_idempotent() -> None:
                 else:
                     assert r.table in content_tables
                     assert r == ImportResult(
-                        table=r.table, inserted=1, skipped=0, errors=0
-                    ), f"content {r.table}: expected re-insert, got {r}"
+                        table=r.table, inserted=0, skipped=1, errors=0
+                    ), f"content {r.table}: expected skip (host wins), got {r}"
         finally:
             host.close()
     finally:
@@ -1149,6 +1150,313 @@ def test_pyf_content_preserves_uuid_and_puuid_columns() -> None:
         # And the older UUIDs from versions 1 and 2 are NOT in the host.
         assert landed_uuid != uuid_v1
         assert landed_uuid != uuid_v2
+    finally:
+        src.close()
+        host.close()
+
+
+# ---------------------------------------------------------------------------
+# T-NEW-076: content-table merge-by-version dedupe (host-aware).
+#
+# T-NEW-075 dedupes IN-MEMORY from the source only — groups by pUUID and
+# keeps the max-version row per pUUID. Re-importing the same source into
+# the same host APPENDS rows because the host's rowid is fresh each time
+# (nothing collides on PK). The user-facing semantic the task spec
+# requires is: re-import must compare against the host and only insert
+# when the source's version per pUUID is strictly greater than the host's
+# MAX(version). Equal-or-older source rows are skipped (host wins).
+#
+# These tests pin the new merge-by-version behavior on the same
+# ``app_media_content`` schema as the T-NEW-075 tests above, exercising
+# the public ``import_one_table`` entry point.
+# ---------------------------------------------------------------------------
+
+
+def test_pyf_content_merge_by_version_replaces_lower_host_version() -> None:
+    """T-NEW-076: source v3 > host v1+v2 → DELETE host rows for pUUID, INSERT source v3.
+
+    Host has TWO older rows for the same pUUID (versions 1 and 2). Source has
+    ONE row for that pUUID at version 3. After import the host must have
+    exactly ONE row for that pUUID — the source's v3 — and the host's v1+v2
+    must be gone.
+    """
+    from nchantdoffice.utilities.pyof_import import import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        ddl = (
+            'CREATE TABLE "app_media_content" ('
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT'
+            ')'
+        )
+        src.execute(ddl)
+        host.execute(ddl)
+        src.commit()
+        host.commit()
+
+        puuid_a = "puuid-A"
+        host_uuid_v1 = str(uuid.uuid4())
+        host_uuid_v2 = str(uuid.uuid4())
+        host.executemany(
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            [
+                (host_uuid_v1, puuid_a, 1, "host-v1"),
+                (host_uuid_v2, puuid_a, 2, "host-v2"),
+            ],
+        )
+        host.commit()
+
+        # Source: v3 row (UUID + content differ from host — that's the
+        # whole point of replacing).
+        src_uuid_v3 = str(uuid.uuid4())
+        src.execute(
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            (src_uuid_v3, puuid_a, 3, "src-v3"),
+        )
+        src.commit()
+
+        result = import_one_table(
+            src,
+            host,
+            TableSpec("app_media_content", None, merge_strategy="last_version_per_puuid"),
+        )
+
+        # Source was strictly newer → INSERT took.
+        assert result.inserted == 1, f"expected inserted=1, got {result}"
+        assert result.skipped == 0, f"expected skipped=0, got {result}"
+        assert result.errors == 0
+
+        # Host now has EXACTLY one row for pUUID=A — host's v1+v2 are gone.
+        landed = host.execute(
+            'SELECT UUID, pUUID, version, content FROM "app_media_content"'
+        ).fetchall()
+        assert len(landed) == 1, f"expected 1 row on host, got {len(landed)}: {landed}"
+        landed_uuid, landed_puuid, landed_version, landed_content = landed[0]
+        assert landed_puuid == puuid_a
+        assert landed_version == 3
+        assert landed_uuid == src_uuid_v3
+        assert landed_content == "src-v3"
+    finally:
+        src.close()
+        host.close()
+
+
+def test_pyf_content_merge_by_version_skips_when_source_not_newer() -> None:
+    """T-NEW-076: source v1 < host v2 → skip (host wins, no insert, no delete)."""
+    from nchantdoffice.utilities.pyof_import import import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        ddl = (
+            'CREATE TABLE "app_media_content" ('
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT'
+            ')'
+        )
+        src.execute(ddl)
+        host.execute(ddl)
+        src.commit()
+        host.commit()
+
+        puuid_a = "puuid-A"
+        host_uuid_v2 = str(uuid.uuid4())
+        host.execute(
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            (host_uuid_v2, puuid_a, 2, "host-v2"),
+        )
+        host.commit()
+
+        # Source: v1 row — strictly older than the host's v2.
+        src_uuid_v1 = str(uuid.uuid4())
+        src.execute(
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            (src_uuid_v1, puuid_a, 1, "src-v1"),
+        )
+        src.commit()
+
+        result = import_one_table(
+            src,
+            host,
+            TableSpec("app_media_content", None, merge_strategy="last_version_per_puuid"),
+        )
+
+        # Source was NOT newer → no insert, no delete, count as skipped.
+        assert result.inserted == 0, f"expected inserted=0, got {result}"
+        assert result.skipped == 1, f"expected skipped=1, got {result}"
+        assert result.errors == 0
+
+        # Host is unchanged: still one row at version=2 (host wins).
+        landed = host.execute(
+            'SELECT UUID, pUUID, version, content FROM "app_media_content"'
+        ).fetchall()
+        assert len(landed) == 1
+        landed_uuid, landed_puuid, landed_version, landed_content = landed[0]
+        assert landed_uuid == host_uuid_v2
+        assert landed_puuid == puuid_a
+        assert landed_version == 2
+        assert landed_content == "host-v2"
+    finally:
+        src.close()
+        host.close()
+
+
+def test_pyf_content_merge_by_version_skips_when_source_equal() -> None:
+    """T-NEW-076: source v2 == host v2 → skip (host wins, equal versions are not 'newer')."""
+    from nchantdoffice.utilities.pyof_import import import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        ddl = (
+            'CREATE TABLE "app_media_content" ('
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT'
+            ')'
+        )
+        src.execute(ddl)
+        host.execute(ddl)
+        src.commit()
+        host.commit()
+
+        puuid_a = "puuid-A"
+        host_uuid = str(uuid.uuid4())
+        host.execute(
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            (host_uuid, puuid_a, 2, "host-v2"),
+        )
+        host.commit()
+
+        # Source: v2 row with a DIFFERENT UUID (simulating a sibling writer
+        # that produced the same version independently). Equal versions
+        # must NOT replace.
+        src_uuid = str(uuid.uuid4())
+        assert src_uuid != host_uuid
+        src.execute(
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            (src_uuid, puuid_a, 2, "src-v2"),
+        )
+        src.commit()
+
+        result = import_one_table(
+            src,
+            host,
+            TableSpec("app_media_content", None, merge_strategy="last_version_per_puuid"),
+        )
+
+        assert result.inserted == 0, f"expected inserted=0, got {result}"
+        assert result.skipped == 1, f"expected skipped=1, got {result}"
+        assert result.errors == 0
+
+        # Host is unchanged: still its original UUID + v2.
+        landed = host.execute(
+            'SELECT UUID, pUUID, version FROM "app_media_content"'
+        ).fetchall()
+        assert len(landed) == 1
+        landed_uuid, landed_puuid, landed_version = landed[0]
+        assert landed_uuid == host_uuid
+        assert landed_puuid == puuid_a
+        assert landed_version == 2
+    finally:
+        src.close()
+        host.close()
+
+
+def test_pyf_content_merge_by_version_handles_multiple_puuids_independently() -> None:
+    """T-NEW-076: 3 source pUUIDs (A,B,C) + 4 host pUUIDs (A,B,D) handled independently.
+
+    Per-pUUID outcomes:
+        A: source v3 > host v2  → DELETE host v2, INSERT source v3.
+        B: source v1 < host v3  → SKIP (host v3 wins).
+        C: source v5, no host row → INSERT source v5.
+        D: host v1 only, no source match → UNCHANGED.
+
+    Net effect: inserted=2 (A, C); host goes from 3 → 4 rows
+    (A=v3, B=v3 unchanged, C=v5, D=v1 unchanged).
+    """
+    from nchantdoffice.utilities.pyof_import import import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        ddl = (
+            'CREATE TABLE "app_media_content" ('
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT'
+            ')'
+        )
+        src.execute(ddl)
+        host.execute(ddl)
+        src.commit()
+        host.commit()
+
+        # Source: A v3, B v1, C v5.
+        src_uuid_A = str(uuid.uuid4())
+        src_uuid_B = str(uuid.uuid4())
+        src_uuid_C = str(uuid.uuid4())
+        src.executemany(
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            [
+                (src_uuid_A, "A", 3, "src-A-v3"),
+                (src_uuid_B, "B", 1, "src-B-v1"),
+                (src_uuid_C, "C", 5, "src-C-v5"),
+            ],
+        )
+        src.commit()
+
+        # Host: A v2 (lower), B v3 (higher), D v1 (no source match).
+        host_uuid_A = str(uuid.uuid4())
+        host_uuid_B = str(uuid.uuid4())
+        host_uuid_D = str(uuid.uuid4())
+        host.executemany(
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            [
+                (host_uuid_A, "A", 2, "host-A-v2"),
+                (host_uuid_B, "B", 3, "host-B-v3"),
+                (host_uuid_D, "D", 1, "host-D-v1"),
+            ],
+        )
+        host.commit()
+
+        result = import_one_table(
+            src,
+            host,
+            TableSpec("app_media_content", None, merge_strategy="last_version_per_puuid"),
+        )
+
+        # A inserted (replace), C inserted (new), B skipped (host newer).
+        assert result.inserted == 2, f"expected inserted=2, got {result}"
+        assert result.skipped == 1, f"expected skipped=1 (B), got {result}"
+        assert result.errors == 0
+
+        # Host state: 4 rows total — A replaced (v3 src), B unchanged (v3
+        # host), C new (v5 src), D unchanged (v1 host).
+        landed = {
+            r[0]: (r[1], r[2])
+            for r in host.execute(
+                'SELECT pUUID, UUID, version FROM "app_media_content"'
+            ).fetchall()
+        }
+        assert len(landed) == 4, f"expected 4 host rows, got {len(landed)}: {landed}"
+
+        # A: replaced by source v3 (host's v2 UUID is gone).
+        assert landed["A"] == (src_uuid_A, 3)
+        # B: untouched (host v3 wins; source's B v1 was skipped).
+        assert landed["B"] == (host_uuid_B, 3)
+        # C: new from source v5.
+        assert landed["C"] == (src_uuid_C, 5)
+        # D: untouched (no source row for D).
+        assert landed["D"] == (host_uuid_D, 1)
     finally:
         src.close()
         host.close()
