@@ -74,3 +74,26 @@ def import_one_table(src: sqlite3.Connection, host: sqlite3.Connection, spec: Ta
         else:
             result.skipped += 1
     return result
+
+def import_pyof(
+    source_path: str,
+    host_conn: sqlite3.Connection,
+    *,
+    contract: type[PyofImportContract] = PyofImportContract,
+) -> list[ImportResult]:
+    """Open the source .pyof read-only via ATTACH and copy the
+    contract tables into ``host_conn``. Single transaction."""
+    # Defensive: validate the file exists and is a sqlite DB
+    src = sqlite3.connect(f'file:{source_path}?mode=ro', uri=True)
+    try:
+        results: list[ImportResult] = []
+        try:
+            for spec in contract.TABLES:
+                results.append(import_one_table(src, host_conn, spec))
+            host_conn.commit()
+        except Exception:
+            host_conn.rollback()
+            raise
+        return results
+    finally:
+        src.close()

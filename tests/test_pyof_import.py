@@ -2,6 +2,8 @@
 
 import inspect
 import sqlite3
+import tempfile
+import uuid
 
 from nchantdoffice.utilities.pyof_import import PyofImportContract, TableSpec, iter_table_rows
 
@@ -163,3 +165,115 @@ def test_import_one_table_handles_missing_table_on_host() -> None:
     finally:
         src.close()
         host.close()
+
+
+def test_import_pyof_returns_summary_per_table() -> None:
+    """T-NEW-074: import_pyof orchestrates all six contract tables in one transaction."""
+    from nchantdoffice.utilities.pyof_import import (
+        ImportResult,
+        count_rows_in_table,
+        import_pyof,
+    )
+
+    # Minimal CREATE statements per the task spec — sufficient for the contract.
+    create_statements: dict[str, str] = {
+        "app_tree_node": (
+            'CREATE TABLE "app_tree_node" '
+            '(nid_txt TEXT PRIMARY KEY, name_txt TEXT)'
+        ),
+        "doc_tree_node": (
+            'CREATE TABLE "doc_tree_node" '
+            '(nid_txt TEXT PRIMARY KEY, pid_txt TEXT, name_txt TEXT)'
+        ),
+        "app_tab": (
+            'CREATE TABLE "app_tab" '
+            '(tid_txt TEXT PRIMARY KEY, pid_txt TEXT, name_txt TEXT)'
+        ),
+        "doc_tab": (
+            'CREATE TABLE "doc_tab" '
+            '(tid_txt TEXT PRIMARY KEY, pid_txt TEXT, name_txt TEXT)'
+        ),
+        "app_media": (
+            'CREATE TABLE "app_media" '
+            '(UUID TEXT PRIMARY KEY, name_txt TEXT)'
+        ),
+        "doc_media": (
+            'CREATE TABLE "doc_media" '
+            '(UUID TEXT PRIMARY KEY, name_txt TEXT)'
+        ),
+    }
+    # Per-table insert templates — (table_name, sql, params-template).
+    insert_specs: dict[str, tuple[str, tuple]] = {
+        "app_tree_node": (
+            'INSERT INTO "app_tree_node" (nid_txt, name_txt) VALUES (?, ?)',
+            ("nid_txt", "name_txt"),
+        ),
+        "doc_tree_node": (
+            'INSERT INTO "doc_tree_node" (nid_txt, pid_txt, name_txt) VALUES (?, ?, ?)',
+            ("nid_txt", "pid_txt", "name_txt"),
+        ),
+        "app_tab": (
+            'INSERT INTO "app_tab" (tid_txt, pid_txt, name_txt) VALUES (?, ?, ?)',
+            ("tid_txt", "pid_txt", "name_txt"),
+        ),
+        "doc_tab": (
+            'INSERT INTO "doc_tab" (tid_txt, pid_txt, name_txt) VALUES (?, ?, ?)',
+            ("tid_txt", "pid_txt", "name_txt"),
+        ),
+        "app_media": (
+            'INSERT INTO "app_media" (UUID, name_txt) VALUES (?, ?)',
+            ("UUID", "name_txt"),
+        ),
+        "doc_media": (
+            'INSERT INTO "doc_media" (UUID, name_txt) VALUES (?, ?)',
+            ("UUID", "name_txt"),
+        ),
+    }
+
+    # Build source DB on disk so import_pyof can open it via file: URI.
+    with tempfile.NamedTemporaryFile(suffix=".pyof", delete=False) as src_file:
+        source_path = src_file.name
+    src = sqlite3.connect(source_path)
+    try:
+        for table, ddl in create_statements.items():
+            src.execute(ddl)
+        # Populate one synthetic UUID row per table.
+        for table, (sql, cols) in insert_specs.items():
+            synth = str(uuid.uuid4())
+            values = [synth] + [f"{table}-row"] * (len(cols) - 1)
+            src.execute(sql, values)
+        src.commit()
+    finally:
+        src.close()
+
+    # In-memory host with the same six tables (empty) — avoids the defensive no-op.
+    host = sqlite3.connect(":memory:")
+    try:
+        for table, ddl in create_statements.items():
+            host.execute(ddl)
+        host.commit()
+
+        results = import_pyof(source_path, host)
+
+        assert len(results) == 6
+        expected_tables = [
+            "app_tree_node",
+            "doc_tree_node",
+            "app_tab",
+            "doc_tab",
+            "app_media",
+            "doc_media",
+        ]
+        assert [r.table for r in results] == expected_tables
+        for r in results:
+            assert r == ImportResult(table=r.table, inserted=1, skipped=0, errors=0)
+        for table in expected_tables:
+            assert count_rows_in_table(host, table) == 1
+    finally:
+        host.close()
+        # Clean up the on-disk source.
+        import os
+        try:
+            os.unlink(source_path)
+        except OSError:
+            pass
