@@ -81,6 +81,7 @@
 - **T-NEW-074** ✅ Content-only .pyof import from Application tab ToolBox (button), commit `6f5d28f` (2026-08-11, t-new-074).
 - **T-NEW-075** ✅ Content-table last-version-wins import — `app_doc_content`, `app_media_content`, `doc_media_content` added to `PyofImportContract.TABLES` with `merge_strategy='last_version_per_puuid'`. Host PKs regenerated; `UUID`/`pUUID` preserved. Commit `00ceea3` (2026-08-11, t-new-075).
 - **T-NEW-076** ✅ Content-table merge-by-version dedupe — `_import_content_table` is now host-aware: query MAX(version) for each source pUUID, DELETE host rows only when source is strictly newer, INSERT source's max-version row. Re-imports no longer duplicate. Commit `d49c0c3` (2026-08-11, t-new-076).
+- **T-NEW-077** ✅ Base-table UUID-lookup dedupe — `import_one_table` base path now drops the source PK and queries the host for UUID existence before inserting. Uniform with `_content` (host regenerates rowid everywhere). Re-imports dedupe base tables too. Commit `869f0ce` (2026-08-11, t-new-077).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1966,6 +1967,28 @@ Both are scoped for v0.2.0 because:
 - `python -m pytest tests/test_pyof_import.py --tb=no -q` → `20 passed` (16 prior + 4 new).
 - `wc -l nchantdoffice/utilities/pyof_import.py` → 287 lines.
 - Manual: import a source .pyof with one pUUID at v3 into a host that already has the same pUUID at v1 + v2; confirm the host now has exactly one row for that pUUID at v3 (host v1+v2 are gone). Re-import the same source again; confirm the host is unchanged (v3 still wins, source v3 == host v3 → skipped).
+
+### T-NEW-077 — Base-table UUID-lookup dedupe (uniform with _content) (2026-08-11)
+
+**Context.** T-NEW-074 brought the base 6 content tables (`app_tree_node`, `doc_tree_node`, `app_tab`, `doc_tab`, `app_media`, `doc_media`) into the host via INSERT-OR-IGNORE on the source UUIDs. The source UUID became the host PRIMARY KEY, which meant a re-import would silently skip on PK collision. But that contract diverged from the `_content` tables (T-NEW-075/076) where the host regenerates the rowid and dedupe is host-aware. After T-NEW-076 the project had two distinct dedupe shapes — INSERT-OR-IGNORE for base 6 and host-aware UUID/version lookup for `_content`. The user clarified that the contract should be uniform across all 9 tables: rowid regenerated everywhere, source UUID carried as data, dedupe by host UUID lookup. The only difference is whether `version` is queried too (for `_content`, to decide replace-vs-skip) or just UUID existence (for base 6, where `version` doesn't exist).
+
+**Affected sites:**
+- `nchantdoffice/utilities/pyof_import.py` — `import_one_table` base path refactor (host PRIMARY KEY dropped from projection, host UUID lookup, plain INSERT instead of INSERT-OR-IGNORE); module docstring (added T-NEW-077 paragraph); `PyofImportContract.TABLES` base-6 comment block (T-NEW-074 → T-NEW-074/077); `ImportResult.skipped` doc note (added base-6 entry describing the new host-wins + defensive-no-op semantics).
+- `tests/test_pyof_import.py` — 4 new tests (`test_base_table_drops_source_pk_on_insert`, `test_base_table_skips_when_uuid_already_on_host`, `test_base_table_inserts_when_uuid_not_on_host`, `test_base_table_idempotent_reimport`). All 20 pre-existing tests pass without modification — the host UUID lookup correctly distinguishes "host empty → insert" from "host has this UUID → skip", preserving the legacy semantics (the PK-collision test now resolves via the host UUID lookup rather than INSERT-OR-IGNORE, but the observable behavior is identical).
+
+**Migration plan:** the base 6 path in `import_one_table` now mirrors the `_content` shape: (1) compute `insert_cols = cols - host_pk_cols`, but always carry `spec.pk_column` (the UUID column) as data even if the host has it as PK; (2) for each source row, look up `SELECT 1 WHERE uuid_col = ? LIMIT 1` first — if present, increment `skipped` and continue; (3) otherwise plain `INSERT INTO ... VALUES (...)` — the host regenerates the rowid. The contract's `PyofImportContract.TABLES` tuple is unchanged. The `merge_strategy="insert_or_ignore"` enum value stays (it's the dispatch label for base 6); what changes is what it means — "host UUID lookup dedupe" rather than literal INSERT-OR-IGNORE on PK. `_import_content_table` and the `_content` strategy are untouched. `ImportResult.skipped` semantics for the base 6 now match `_content`: host-wins + defensive `rowcount==0` fallback.
+
+**Steps:**
+1. Tests first (TDD): write 4 failing base-6 dedupe tests using `app_tree_node` with `nid_txt` as the UUID column. Confirm 2 of the 4 fail under the old INSERT-OR-IGNORE code (the ones that need a host UUID lookup; the other 2 already pass because the host is empty).
+2. Refactor `import_one_table` base path: replace INSERT-OR-IGNORE with the host-UUID-lookup-then-INSERT pattern. Always carry the UUID column in the projection (even if the host has it as PK) so the source UUID value lands as data.
+3. Verify all 24 tests pass (20 prior + 4 new). The pre-existing base-6 tests pass without modification because the host UUID lookup produces the same observable behavior as INSERT-OR-IGNORE in those scenarios.
+4. Update TODOs.md (catalog row + this card body) and CHANGES.md.
+5. Commit source+tests as `feat(import): unify base-table dedupe via host UUID lookup (T-NEW-077)`; commit docs as `docs(import): T-NEW-077 card + CHANGES.md entry`.
+
+**Verification:**
+- `python -m pytest tests/test_pyof_import.py --tb=no -q` → `24 passed` (20 prior + 4 new).
+- `wc -l nchantdoffice/utilities/pyof_import.py` → 360 lines (up from 287).
+- Manual: import a source .pyof with one row in `app_tree_node` (`nid_txt="abc-123"`) into a host that already has a DIFFERENT row (`nid_txt="def-456"`). Confirm the host has 2 rows after import, the new one has `nid_txt="abc-123"` and a freshly-assigned rowid (NOT `"abc-123"`). Re-import the same source; confirm the host is unchanged (host UUID lookup finds `abc-123` and skips).
 
 ### T-NEW-072 — TODOs.md update-process consolidation (2026-08-10)
 

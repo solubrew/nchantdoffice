@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Content-only `.pyof` import from the Application tab in the ToolBox (`cmd_import_pyof`, T-NEW-074) — opens a file picker, copies `app_tree_node`, `doc_tree_node`, `app_tab`, `doc_tab`, `app_media`, `doc_media` from the source into the host instance using INSERT-OR-IGNORE on the source UUIDs (no remapping). Instances and config are NOT migrated.
 - Content-table last-version-wins merge (`T-NEW-075`) — extends the `.pyof` import contract with `app_doc_content`, `app_media_content`, `doc_media_content`. For each `pUUID`, only the highest-version row is kept; source PKs are dropped (host regenerates), but `UUID` and `pUUID` are preserved (FK relationships intact).
 - Content-table merge-by-version dedupe (`T-NEW-076`) — extends the `_content` import merge to query the host's MAX(version) per `pUUID` before inserting. Re-importing the same source no longer appends duplicate rows: the source's max-version row replaces host rows only when it's strictly newer; equal-or-older source rows are skipped.
+- Base-table UUID-lookup dedupe (`T-NEW-077`) — extends the base-6 merge to drop the source PK and query the host for UUID existence before inserting. Uniform contract across all 9 tables: rowid regenerated on insert, dedupe by UUID lookup (with version comparison for `_content`). Re-imports are idempotent everywhere.
 
 ### Changed
 - `nchantdoffice/__init__.py` - Added version and config exports
