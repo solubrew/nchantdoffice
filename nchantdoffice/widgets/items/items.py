@@ -12,6 +12,8 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
 import datetime as dt
 import json as j
@@ -32,7 +34,7 @@ from nchantrs.widgets.controls.radios import NchantdRadioButtonGroup
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
 
-def _slugify_text(text):
+def _slugify_text(text: str) -> str:
     """Convert a human-readable text into a URL/file slug.
 
     Lower-cases and strips spaces. Used as a DataFrame ``.apply``
@@ -56,7 +58,7 @@ pxcfg = join(here, "_data_", "items.yaml")
 class NchantdOfficeDocumentCatalogItem(NchantdCatalogItem):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentCatalogItem").override(cfg))
@@ -76,7 +78,7 @@ class NchantdOfficeDocumentCatalogItem(NchantdCatalogItem):
         self.file_path = None
         self.widget = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> "NchantdOfficeDocumentCatalogItem":
         """"""
         super().initModel(cfg)
         self.file_type = self.config.dikt.get("file_type", None)
@@ -112,14 +114,14 @@ class NchantdOfficeDocumentCatalogItem(NchantdCatalogItem):
 
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> "NchantdOfficeDocumentCatalogItem":
         """"""
         cfg = {"size": [128, 128]}
         super().initView(cfg)
         self.setStyleSheet("QWidget {background-color: #4F5665}")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> "NchantdOfficeDocumentCatalogItem":
         """"""
         self.initModel()
         self.initView()
@@ -129,7 +131,7 @@ class NchantdOfficeDocumentCatalogItem(NchantdCatalogItem):
 class NchantdOfficeLinkCatalogItem(NchantdCatalogItem):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeLinkCatalogItem").override(cfg))
@@ -141,7 +143,7 @@ class NchantdOfficeLinkCatalogItem(NchantdCatalogItem):
         self.params = None
         self.widget = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> "NchantdOfficeLinkCatalogItem":
         """"""
         super().initModel(cfg)
         self.file_type = self.config.dikt.get("file_type", None)
@@ -166,14 +168,14 @@ class NchantdOfficeLinkCatalogItem(NchantdCatalogItem):
 
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> "NchantdOfficeLinkCatalogItem":
         """"""
         cfg = {"size": [128, 128]}
         super().initView(cfg)
         self.setStyleSheet("QWidget {background-color: #4F5665}")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> "NchantdOfficeLinkCatalogItem":
         """"""
         self.initModel()
         self.initView()
@@ -183,7 +185,7 @@ class NchantdOfficeLinkCatalogItem(NchantdCatalogItem):
 class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdOfficeSourceCatalogItem init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
@@ -191,7 +193,7 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         self.requires_api_key = None
         self.is_data_source_available = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> "NchantdOfficeSourceCatalogItem":
         """"""
         super().initModel(cfg)
         self.requires_api_key = self.config.dikt.get("requires_api_key", True)
@@ -202,7 +204,7 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         self.action = NchantdAction(action, "base", self)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> "NchantdOfficeSourceCatalogItem":
         """"""
         super().initView(cfg)
         # add a checkbox to make the datasource available
@@ -217,13 +219,13 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
         self.apikey = NchantdLabeledEntry(self, cfg).initWidget()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> "NchantdOfficeSourceCatalogItem":
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_update_api_key_requirements(self, event, *args, **kwargs):
+    def cmd_update_api_key_requirements(self, event, *args, **kwargs) -> None:
         """Handle radio-button selection to update API key requirement mode.
 
         Maps radio-button index to requires_api_key values:
@@ -250,7 +252,7 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
             )
         return
 
-    def cmd_update_api_key_entry(self, event, *args, **kwargs):
+    def cmd_update_api_key_entry(self, event, *args, **kwargs) -> None:
         """Handle API key entry widget edits.
 
         Reads the current value from the NchantdLabeledEntry widget and
@@ -264,7 +266,7 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
             self.app.model.update_data_source(self.nid, {"api_key_txt": api_key})
         return
 
-    def get_api_key(self):
+    def get_api_key(self) -> str:
         """Return the stored API key for this data source.
 
         Pulls the api_key_txt value from the app model data-source config
@@ -280,24 +282,24 @@ class NchantdOfficeSourceCatalogItem(NchantdCatalogItem):
 class NchantdOfficeTreeNode(NchantdTreeNode):
     """"""
 
-    def __init__(self, parent, name, nid, node, children=DataFrame(), cfg=None):
+    def __init__(self, parent, name, nid, node, children=DataFrame(), cfg=None) -> None:
         """ """
         super().__init__(parent, name, nid, node, children, cfg)
         self.config.override(
             kahndor.Instruct(pxcfg).select("NchantdOfficeTreeNode").override(parent.config).override(cfg)
         )
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> "NchantdOfficeTreeNode":
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> "NchantdOfficeTreeNode":
         """"""
         super().initView(cfg)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> "NchantdOfficeTreeNode":
         """"""
         self.initModel()
         self.initView()
@@ -305,7 +307,7 @@ class NchantdOfficeTreeNode(NchantdTreeNode):
 
         return self
 
-    def set_as_current(self):
+    def set_as_current(self) -> "NchantdOfficeTreeNode":
         """Set this node as the current/focused node in the tree"""
         if hasattr(self, "app") and hasattr(self.app, "view") and hasattr(self.app.view.panes["left"], "tree"):
             tree = self.app.view.panes["left"].tree
@@ -315,7 +317,7 @@ class NchantdOfficeTreeNode(NchantdTreeNode):
             tree.scrollToItem(self)
         return self
 
-    def setText(self, column, text, store=True):
+    def setText(self, column, text, store=True) -> "NchantdOfficeTreeNode":
         """"""
         # logma.inspect_caller()
         super().setText(column, text)
