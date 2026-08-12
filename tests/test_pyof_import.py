@@ -71,3 +71,95 @@ def test_iter_table_rows_yields_dicts() -> None:
         assert list(iter_table_rows(conn, "empty_bar")) == []
     finally:
         conn.close()
+
+
+def test_import_one_table_inserts_new_rows() -> None:
+    """T-NEW-074: import_one_table inserts all source rows when host has none."""
+    from nchantdoffice.utilities.pyof_import import ImportResult, import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        for conn in (src, host):
+            conn.execute('CREATE TABLE "foo" (id INTEGER PRIMARY KEY, val TEXT)')
+            conn.commit()
+
+        src.executemany(
+            'INSERT INTO "foo" (id, val) VALUES (?, ?)',
+            [(1, "a"), (2, "b"), (3, "c")],
+        )
+        src.commit()
+
+        result = import_one_table(src, host, TableSpec("foo", "id"))
+
+        assert result == ImportResult(table="foo", inserted=3, skipped=0, errors=0)
+        assert host.execute('SELECT COUNT(*) FROM "foo"').fetchone()[0] == 3
+    finally:
+        src.close()
+        host.close()
+
+
+def test_import_one_table_skips_pk_collisions() -> None:
+    """T-NEW-074: import_one_table INSERT-OR-IGNOREs on PK collision; host wins."""
+    from nchantdoffice.utilities.pyof_import import ImportResult, import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        for conn in (src, host):
+            conn.execute('CREATE TABLE "foo" (id INTEGER PRIMARY KEY, val TEXT)')
+            conn.commit()
+
+        src.executemany(
+            'INSERT INTO "foo" (id, val) VALUES (?, ?)',
+            [(1, "src_a"), (2, "src_b"), (3, "src_c")],
+        )
+        src.commit()
+
+        # Pre-populate host with 2 of the 3 source rows but with DIFFERENT vals.
+        host.executemany(
+            'INSERT INTO "foo" (id, val) VALUES (?, ?)',
+            [(1, "host_a"), (2, "host_b")],
+        )
+        host.commit()
+
+        result = import_one_table(src, host, TableSpec("foo", "id"))
+
+        assert result.inserted == 1
+        assert result.skipped == 2
+        assert result.errors == 0
+
+        rows = {
+            r[0]: r[1]
+            for r in host.execute('SELECT id, val FROM "foo" ORDER BY id').fetchall()
+        }
+        assert rows == {1: "host_a", 2: "host_b", 3: "src_c"}
+    finally:
+        src.close()
+        host.close()
+
+
+def test_import_one_table_handles_missing_table_on_host() -> None:
+    """T-NEW-074: import_one_table is a defensive no-op when the host table is absent."""
+    from nchantdoffice.utilities.pyof_import import ImportResult, import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        # src has 'foo', host does not.
+        src.execute('CREATE TABLE "foo" (id INTEGER PRIMARY KEY, val TEXT)')
+        src.executemany(
+            'INSERT INTO "foo" (id, val) VALUES (?, ?)',
+            [(1, "a"), (2, "b")],
+        )
+        src.commit()
+
+        result = import_one_table(src, host, TableSpec("foo", "id"))
+
+        assert result.inserted == 0
+        assert result.skipped == 0
+        assert result.errors == 0
+        assert result.table == "foo"
+    finally:
+        src.close()
+        host.close()

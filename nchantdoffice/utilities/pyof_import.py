@@ -38,3 +38,39 @@ def iter_table_rows(conn: sqlite3.Connection, table: str) -> Iterable[dict]:
     cur = conn.execute(f'SELECT * FROM "{table}"')
     for row in cur:
         yield dict(row)
+
+@dataclass
+class ImportResult:
+    table: str
+    inserted: int = 0
+    skipped: int = 0
+    errors: int = 0
+
+def _intersecting_columns(src: sqlite3.Connection, host: sqlite3.Connection, table: str) -> list[str]:
+    src_cols = {r[1] for r in src.execute(f'PRAGMA table_info("{table}")')}
+    host_cols = {r[1] for r in host.execute(f'PRAGMA table_info("{table}")')}
+    return sorted(src_cols & host_cols)
+
+def import_one_table(src: sqlite3.Connection, host: sqlite3.Connection, spec: TableSpec) -> ImportResult:
+    """Copy rows from src[spec.name] into host[spec.name] preserving
+    source UUIDs as the new primary keys. INSERT-OR-IGNORE so existing
+    host rows win."""
+    result = ImportResult(table=spec.name)
+    cols = _intersecting_columns(src, host, spec.name)
+    if not cols:
+        return result  # missing on either side — silent no-op
+    placeholders = ",".join("?" for _ in cols)
+    col_list = ",".join(f'"{c}"' for c in cols)
+    sql = (
+        f'INSERT OR IGNORE INTO "{spec.name}" ({col_list}) '
+        f'VALUES ({placeholders})'
+    )
+    for row in iter_table_rows(src, spec.name):
+        values = [row.get(c) for c in cols]
+        cur = host.execute(sql, values)
+        # cur.rowcount is 1 for INSERT, 0 for OR-IGNORE-skip
+        if cur.rowcount == 1:
+            result.inserted += 1
+        else:
+            result.skipped += 1
+    return result
