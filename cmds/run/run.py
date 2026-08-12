@@ -11,11 +11,13 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
 from os.path import abspath, dirname, join
 import datetime as dt
 from sys import argv
+from typing import Self
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -39,12 +41,12 @@ pxcfg = join(here, "_data_", "run.yaml")
 class NchantdOfficeRun(Run):
     """"""
 
-    def __init__(self, cfg=None):
-        """"""
+    def __init__(self, cfg=None) -> None:
+        """ """
         super().__init__(cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeLaunch").override(cfg))
 
-    def run(self, args):
+    def run(self, args: list[str]) -> Self:
         """Run individual tabs with mock data for development purposes
 
         python runNchantdOffice.py scratch setup - create new file
