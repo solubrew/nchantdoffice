@@ -13,6 +13,8 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+from typing import Any, Dict, Self
 from os.path import dirname, join
 import datetime as dt
 from bs4 import BeautifulSoup
@@ -58,7 +60,7 @@ pxcfg = join(here, "_data_", "journal.yaml")
 class NchantdOfficeJournalEditor(NchantdOfficeDocument):
     """ """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__("Journal", parent, cfg)
         self.parent = parent
@@ -83,7 +85,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.document = None
         self.entries = {}
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """ "" """
         super().initModel()
         logma.info(f"initModel")
@@ -106,7 +108,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             self.initialize_context_menu("context.document.journal")
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """ """
         cfg = cfg or {}
         cfg["default_toolbar"] = False
@@ -131,13 +133,13 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         # TODO always scroll to bottom of document
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """ "" """
         self.initModel()
         self.initView()
         return self
 
-    def refresh_content(self):
+    def refresh_content(self) -> Self:
         """Re-fetch the journal document from the model and update the editor.
 
         T-NEW-036: ``initModel`` fetches the journal text once at
@@ -197,7 +199,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             )
         return self
 
-    def get_content(self):
+    def get_content(self) -> Dict[str, Any]:
         """Return the document content, normalizing the source syntax.
 
         T-034: the document syntax now comes from the toolbar
@@ -240,7 +242,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         logma.info(f"CONTENT {content}")
         return content
 
-    def get_content_text(self, cfg=None):
+    def get_content_text(self, cfg=None) -> str:
         """"""
         document = self.get_journal_document(cfg)
         self.document.set_version(document.get("content_version_int", None))
@@ -254,23 +256,23 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         logma.info(text)
         return text
 
-    def get_journal_document(self, cfg):
+    def get_journal_document(self, cfg) -> Dict[str, Any]:
         """"""
         document = self.app.model.get_view_journal(cfg)
         logma.info(f"Document {document}")
         return document
 
-    def get_journal_organization(self):
+    def get_journal_organization(self) -> None:
         """"""
         # value = self.settings.get_value()
         # return value
 
-    def focusOutEvent(self, event):
+    def focusOutEvent(self, event) -> None:
         """"""
         super().focusOutEvent(event)
         self.save()
 
-    def parse(self, content):
+    def parse(self, content) -> None:
         """parse text from journal to extract into each date time entry as an object for later retrieval
         also need to store what document was active in the center tabset during writing of note for context view
         """
@@ -279,7 +281,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         # for _date, entry in content.split("--|{date}|--"):
         #     self.entries[_date] = entry
 
-    def populate_document(self):
+    def populate_document(self) -> None:
         """"""
         # super().populate_document()
         # doc = getattr(self, "document", None)
@@ -298,7 +300,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         # elif doc.location == "external":
         #     raise ("External Journal Not Supported")
 
-    def save(self, path=None, format_=None, encrypt=False):
+    def save(self, path=None, format_=None, encrypt=False) -> None:
         """Persist the journal entry.
 
         T-NEW-XXX (always-save fix): the previous implementation only
@@ -343,7 +345,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
 class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdJournalAppendEditor").override(cfg))
@@ -354,25 +356,25 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         self.data = None
         self.text = None
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         self.text = self.get_journal_text()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         self.setText(self.text)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def add_entry(self, entry, page=0):
+    def add_entry(self, entry, page=0) -> Self:
         """"""
         logma.info(f"Add Entry {entry}")
         datetime = dt.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -386,7 +388,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         self.parent.pages[str(page)]["tags"] = {"nid": self.app.model.get_current_node().nid, "tid": tid}
         return self
 
-    def focusInEvent(self, event):
+    def focusInEvent(self, event) -> Self:
         """
         Append a timestamp whenever the editor gains focus.
         """
@@ -399,7 +401,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         super().focusInEvent(event)
         return self
 
-    def focusOutEvent(self, event):
+    def focusOutEvent(self, event) -> Self:
         """
         Remove the last timestamp if no user input was added after it.
         """
@@ -423,7 +425,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         super().focusOutEvent(event)
         return self
 
-    def get_journal_text(self):
+    def get_journal_text(self) -> str:
         """"""
         organization = self.parent.get_journal_organization()
         if organization == "Contextually":
@@ -439,7 +441,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         text = self.parent.get_content_text()
         return text
 
-    def save(self):
+    def save(self) -> Self:
         """"""
         super().save()
         if self.new_entry:
@@ -447,7 +449,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         self.parent.save()
         return self
 
-    def _parse_entry(self):
+    def _parse_entry(self) -> Self:
         """"""
         cursor = self.textCursor()
         cursor.setPosition(self.next_entry_position)
@@ -459,7 +461,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         self.add_entry(entry)
         return self
 
-    def _parse_keywords(self):
+    def _parse_keywords(self) -> Self:
         """"""
         text = self.toPlainText()
         # parse CREATE TASK:
@@ -472,7 +474,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
                 process = self.keywords[keyword]
         return self
 
-    def _set_keywords(self, keywords=None):
+    def _set_keywords(self, keywords=None) -> Self:
         """"""
         if keywords is None:
             keywords = self.config.dikt.get("keywords", {})
@@ -483,7 +485,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
 class NchantdOfficeJournalOverview(NchantdTab):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
@@ -492,12 +494,12 @@ class NchantdOfficeJournalOverview(NchantdTab):
             self.config.override(parent.config)
         self.config.override(cfg)
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         cfg = {"text": "Journal Overview\nThe Journal is integrated within the application", "size": ["auto", 300]}
@@ -519,7 +521,7 @@ class NchantdOfficeJournalOverview(NchantdTab):
         layout.addWidget(self.entry_reader)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
