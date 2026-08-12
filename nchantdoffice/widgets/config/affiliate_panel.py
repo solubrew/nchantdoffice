@@ -32,8 +32,11 @@
 
 # -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 import webbrowser
 from os.path import abspath, dirname, join
+from typing import Any, Self
 
 # ======================================3rd Party Library Modules=====================================================||
 from nchantrs.libraries import pyqt
@@ -63,7 +66,7 @@ class NchantdOfficeAffiliatePanel(NchantdOfficeDocument):
     runs in the user's browser (Stripe-hosted KYC).
     """
 
-    def __init__(self, parent=None, cfg=None, user=None):
+    def __init__(self, parent=None, cfg=None, user=None) -> None:
         """Initialize the affiliate panel.
 
         Args:
@@ -79,12 +82,12 @@ class NchantdOfficeAffiliatePanel(NchantdOfficeDocument):
         self.connect_button: NchantdButton = None
         self.status_label: NchantdLabel = None
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Initialize the model — minimal for now (panel renders
         on demand rather than via a complex data model)."""
         pass
 
-    def initView(self):
+    def initView(self) -> Any:
         """Build the panel UI."""
         card = NchantdGridScrollGroupBox(self)
         card.setTitle("Affiliate Program")
@@ -113,7 +116,7 @@ class NchantdOfficeAffiliatePanel(NchantdOfficeDocument):
 
         return card
 
-    def fetch_connect_status(self):
+    def fetch_connect_status(self) -> None:
         """T-NEW-044 (UI-3): fetch the user's current Stripe
         Connect status from the server (via
         ``GET /api/v1/affiliate/connect-status``).
@@ -139,7 +142,7 @@ class NchantdOfficeAffiliatePanel(NchantdOfficeDocument):
                 f"[affiliate_panel] fetch_connect_status failed: {exc}"
             )
 
-    def _refresh_status_label(self):
+    def _refresh_status_label(self) -> None:
         """Update the status label based on self.stripe_connect_status."""
         if not self.status_label:
             return
@@ -159,7 +162,7 @@ class NchantdOfficeAffiliatePanel(NchantdOfficeDocument):
             if self.connect_button:
                 self.connect_button.setText("Connect Stripe Account")
 
-    def _on_connect_stripe(self):
+    def _on_connect_stripe(self) -> None:
         """T-NEW-044 (UI-3): event handler for the Connect
         Stripe button click.
 
