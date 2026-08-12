@@ -13,9 +13,11 @@
 
 # -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
 from os.path import abspath, dirname, exists, join, getsize, getmtime, getatime, getctime, isfile
 import datetime as dt
 from pathlib import Path
+from typing import Any, Self
 
 # ======================================3rd Party Library Modules======================================================||
 
@@ -38,7 +40,7 @@ pxcfg = join(here, "_data_", "files.yaml")
 class NchantdFileDetailsPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdFileDetailsPane").override(cfg))
@@ -51,14 +53,14 @@ class NchantdFileDetailsPane(NchantdPane):
         self.modon_entry = None
         self.hash_entry = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         logma.info(f"[files] initModel cfg_provided={cfg is not None}")
         super().initModel(cfg)
         self.set_file_path(self.config.get("file_path"))
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         logma.info("[files] initView: building File Details pane with 7 labelled entries")
         cfg = cfg or {}
@@ -82,14 +84,14 @@ class NchantdFileDetailsPane(NchantdPane):
 
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         logma.info("[files] initWidget")
         self.initModel()
         self.initView()
         return self
 
-    def refresh(self):
+    def refresh(self) -> Self:
         """Re-read file details from disk and update the widget fields.
 
         T-NEW-038: ``FileDetailsPane is not updated on initial file
@@ -113,7 +115,7 @@ class NchantdFileDetailsPane(NchantdPane):
             logma.warning(f"[files] refresh failed: {e}")
         return self
 
-    def get_access_date(self, path=None):
+    def get_access_date(self, path=None) -> str:
         """"""
         logma.debug(f"[files] get_access_date: path={path!r}")
         path = path or self.file_path or Path("")
@@ -132,7 +134,7 @@ class NchantdFileDetailsPane(NchantdPane):
         self.accon_entry.setText(str(date))
         return date
 
-    def get_created_date(self, path=None):
+    def get_created_date(self, path=None) -> str:
         """"""
         path = path or self.file_path or Path("")
 
@@ -152,11 +154,11 @@ class NchantdFileDetailsPane(NchantdPane):
         self.creon_entry.setText(str(date))
         return date
 
-    def get_file_path(self):
+    def get_file_path(self) -> Path:
         """"""
         return self.file_path.parent
 
-    def get_file_size(self, path=None):
+    def get_file_size(self, path=None) -> str | int:
         """"""
         path = path or self.file_path or Path("")
         logma.debug(f"[files] get_file_size: path={path!r}")
@@ -174,7 +176,7 @@ class NchantdFileDetailsPane(NchantdPane):
         self.file_size_entry.setText(str(size))
         return size
 
-    def get_hash(self, path=None):
+    def get_hash(self, path=None) -> str:
         """"""
         hash_ = ""
         path = path or self.file_path
@@ -196,7 +198,7 @@ class NchantdFileDetailsPane(NchantdPane):
             self.hash_entry.setText(hash_)
         return hash_
 
-    def get_modified_date(self, path=None):
+    def get_modified_date(self, path=None) -> str:
         """"""
         path = path or self.file_path or Path("")
         logma.debug(f"[files] get_modified_date: path={path!r}")
@@ -215,7 +217,7 @@ class NchantdFileDetailsPane(NchantdPane):
         self.modon_entry.setText(str(date))
         return date
 
-    def get_name(self, path=None):
+    def get_name(self, path=None) -> str:
         """Read the file name (basename) and update the file-name widget.
 
         T-NEW-038: prior to this, ``get_name`` only returned the
@@ -230,7 +232,7 @@ class NchantdFileDetailsPane(NchantdPane):
             self.file_name_entry.setText(str(name))
         return name
 
-    def set_file_name(self, name):
+    def set_file_name(self, name) -> Self:
         """"""
         logma.debug(f"[files] set_file_name: name={name!r}")
         if self.file_name_entry is None:
@@ -238,7 +240,7 @@ class NchantdFileDetailsPane(NchantdPane):
         self.file_name_entry.setText(name)
         return self
 
-    def set_file_path(self, path):
+    def set_file_path(self, path) -> Self:
         """Set the file path and refresh all detail fields.
 
         T-NEW-038: ``FileDetailsPane is not updated on initial file
