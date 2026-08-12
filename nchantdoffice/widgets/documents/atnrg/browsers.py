@@ -12,7 +12,9 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
+from typing import Any, Dict, List, Optional, Self
 from os.path import dirname, join
 
 # ======================================3rd Party Library Modules=====================================================||
@@ -51,7 +53,7 @@ pxcfg = join(here, "_data_", "browsers.yaml")
 
 class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
-    def _ensure_drawer_item(self, items, cnt):
+    def _ensure_drawer_item(self, items, cnt) -> Dict[str, Any]:
         """Lazily create a default drawer-item slot.
 
         Centralises the ``if cnt not in items: items[cnt] = {...}`` pattern
@@ -62,7 +64,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         return items[cnt]
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__("Nchantd Browser", parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebBrowser").override(cfg))
@@ -79,7 +81,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.pin = False
         self.url_select_entry = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -118,7 +120,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.get_current_profile()
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -147,7 +149,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         #     raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -164,7 +166,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #     self.profiles.add_profile(profile, cfg)
     #     return self
 
-    def build_toolbar(self):
+    def build_toolbar(self) -> Dict[int, Any]:
         """T-NEW-069 — build the toolbar + restore URL dropdown history.
 
         Delegates the URL history restore to the inner
@@ -200,7 +202,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         buttons[200] = "_skip"
         return buttons
 
-    def cmd_check_is_pinned(self, event=None, *args, **kwargs):
+    def cmd_check_is_pinned(self, event=None, *args, **kwargs) -> Self:
         """Check whether the current browser tab is pinned.
 
         Reads the tab's pinned state from ``self.tab_widget`` and
@@ -214,26 +216,26 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
                 self.config.dikt["is_pinned"] = pinned
         return self
 
-    def cmd_clear_cookies(self, event, *args, **kwargs):
+    def cmd_clear_cookies(self, event, *args, **kwargs) -> Self:
         """"""
         self._delete_cookies()
         return self
 
-    def cmd_clear_cache(self, event, *args, **kwargs):
+    def cmd_clear_cache(self, event, *args, **kwargs) -> None:
         """"""
         self._delete_cache()
 
-    def cmd_clear_metadata(self, event, *args, **kwargs):
+    def cmd_clear_metadata(self, event, *args, **kwargs) -> Self:
         """"""
         self._delete_metadata()
         return self
 
-    def cmd_clear_browsing_history(self, event, *args, **kwargs):
+    def cmd_clear_browsing_history(self, event, *args, **kwargs) -> Self:
         """"""
         self._delete_browsing_history()
         return self
 
-    def cmd_edit_profile(self, event, *args, **kwargs):
+    def cmd_edit_profile(self, event, *args, **kwargs) -> None:
         """"""
         # FIX (high-severity): cmd_add_profile and cmd_get_pro are not defined on this class.
         # ORIGINAL (commented for traceability): both branches below raised AttributeError.
@@ -251,13 +253,13 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #     # STUB: open dialog / create a new browser profile
     #     return self
 
-    def cmd_get_pro(self, event, *args, **kwargs):
+    def cmd_get_pro(self, event, *args, **kwargs) -> Self:
         """"""
         if hasattr(self, "app") and hasattr(self.app, "view"):
             self.app.view.switch_to_account_tab()
         return self
 
-    def cmd_fill_in_forms(self, event=None, *args, **kwargs):
+    def cmd_fill_in_forms(self, event=None, *args, **kwargs) -> Self:
         """Submit the current form-fill data to the active form.
 
         Reads the configured form-field values from the config and
@@ -273,7 +275,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browsers] cmd_fill_in_forms failed: {e}", exc_info=True)
         return self
 
-    def cmd_fill_in_forms_clear(self, event=None, *args, **kwargs):
+    def cmd_fill_in_forms_clear(self, event=None, *args, **kwargs) -> Self:
         """Clear the form-fill data on the config.
 
         Resets ``config.dikt["form_fill_data"]`` to an empty dict and
@@ -290,7 +292,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browsers] cmd_fill_in_forms_clear failed: {e}", exc_info=True)
         return self
 
-    def cmd_fill_in_forms_edit(self, event=None, *args, **kwargs):
+    def cmd_fill_in_forms_edit(self, event=None, *args, **kwargs) -> Self:
         """Open the form editor for the current form.
 
         Switches the application to the form-editor view so the user
@@ -306,7 +308,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browsers] cmd_fill_in_forms_edit failed: {e}", exc_info=True)
         return self
 
-    def cmd_goto_page(self, event=None, *args, **kwargs):
+    def cmd_goto_page(self, event=None, *args, **kwargs) -> Self:
         """"""
         logma.info(f"Event {event}")
         page = None
@@ -318,31 +320,31 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.populate_document(url)
         return self
 
-    def cmd_launch_source_tab(self, event, *args, **kwargs):
+    def cmd_launch_source_tab(self, event, *args, **kwargs) -> Self:
         """"""
         widget = "Source"
         self.app.model.add_tab(self.document.pid, widget)
         return self
 
-    def cmd_make_version(self, event, *args, **kwargs):
+    def cmd_make_version(self, event, *args, **kwargs) -> Self:
         """"""
         version = event
         super().cmd_make_version(version)
         self.document.add_version(self.version)
         return self
 
-    def cmd_pin_page(self, event, *args, **kwargs):
+    def cmd_pin_page(self, event, *args, **kwargs) -> Self:
         """"""
         self.pin_page()
         return self
 
-    def cmd_next_page(self, url=None, *args, **kwargs):
+    def cmd_next_page(self, url=None, *args, **kwargs) -> Self:
         """"""
         self.browser.cmd_next_page(url, args, kwargs)
         self.document.set_refresh_time()
         return self
 
-    def cmd_on_resource_select(self, event=None, *args, **kwargs):
+    def cmd_on_resource_select(self, event=None, *args, **kwargs) -> Self:
         """Navigate to the resource URL selected from the dropdown.
 
         Reads the URL from the event payload and uses it as the
@@ -360,18 +362,18 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
                 logma.error(f"[browsers] cmd_on_resource_select failed: {e}", exc_info=True)
         return self
 
-    def cmd_previous_page(self, url=None, *args, **kwargs):
+    def cmd_previous_page(self, url=None, *args, **kwargs) -> Self:
         """"""
         self.browser.cmd_previous_page(url, args, kwargs)
         self.document.set_refresh_time()
         return self
 
-    def cmd_profile_change(self, event, *args, **kwargs):
+    def cmd_profile_change(self, event, *args, **kwargs) -> Self:
         """"""
         self.update_toolbox_form_control()
         return self
 
-    def cmd_refresh_page(self, url=None, *args, **kwargs):
+    def cmd_refresh_page(self, url=None, *args, **kwargs) -> Self:
         """"""
         self.populate_document()
         self.document.set_refresh_time()
@@ -382,17 +384,17 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #     """"""
     #     return self
 
-    def cmd_set_default_browser(self, event, *args, **kwargs):
+    def cmd_set_default_browser(self, event, *args, **kwargs) -> Self:
         """"""
         self.set_default_browser(event)
         return self
 
-    def cmd_set_home_page(self, event, *args, **kwargs):
+    def cmd_set_home_page(self, event, *args, **kwargs) -> Self:
         """"""
         self.home_page = event
         return self
 
-    def cmd_set_pin_browser_tab(self, event=None, *args, **kwargs):
+    def cmd_set_pin_browser_tab(self, event=None, *args, **kwargs) -> Self:
         """Pin the current browser tab to the top of the tab bar.
 
         Sets ``tabData`` to ``True`` on the current tab so the
@@ -404,7 +406,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
                 self.tab_widget.tabBar().setTabData(current, True)
         return self
 
-    def cmd_set_save_browser_tab(self, event=None, *args, **kwargs):
+    def cmd_set_save_browser_tab(self, event=None, *args, **kwargs) -> Self:
         """Mark the current browser tab as save-on-close.
 
         Sets ``tabData`` to ``{"save_on_close": True}`` so the close
@@ -416,7 +418,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
                 self.tab_widget.tabBar().setTabData(current, {"save_on_close": True})
         return self
 
-    def cmd_set_browsing_history_expiry(self, event=None, *args, **kwargs):
+    def cmd_set_browsing_history_expiry(self, event=None, *args, **kwargs) -> Self:
         """Update the browsing-history expiry policy (in days).
 
         Reads the value from the spinbox widget and stores it on
@@ -431,7 +433,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.config.dikt["browsing_history_expiry_days"] = days
         return self
 
-    def cmd_show_badge(self, event=None, *args, **kwargs):
+    def cmd_show_badge(self, event=None, *args, **kwargs) -> Self:
         """Update the security-badge display on the current page.
 
         Reads the badge-state from the event and triggers a re-render
@@ -446,19 +448,19 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browsers] cmd_show_badge failed: {e}", exc_info=True)
         return self
 
-    def cmd_take_screenshot(self, event, *args, **kwargs):
+    def cmd_take_screenshot(self, event, *args, **kwargs) -> Self:
         """"""
         super().take_screenshot()
         self.document.take_snapshot(self.snapshot)
         return self
 
-    def cmd_unpin_page(self, event, *args, **kwargs):
+    def cmd_unpin_page(self, event, *args, **kwargs) -> Self:
         """"""
         super().unpin_page()
         self.document.unpin_page()
         return self
 
-    def create_data_table(self):
+    def create_data_table(self) -> DataFrame:
         """"""
         df = super().create_data_table()
         # NOTE: need to connect to some basic web scrapping functions
@@ -467,20 +469,20 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         df = DataFrame(data, columns=columns)
         return df
 
-    def defocus(self):
+    def defocus(self) -> Self:
         """"""
         super().defocus()
         logma.debug(f"LifecycleState: {dir(pyqt.QWebEnginePage.LifecycleState)}")
         self.browser.page.setLifecycleState(pyqt.QWebEnginePage.LifecycleState.Frozen)
         return self
 
-    def focusOutEvent(self, event):
+    def focusOutEvent(self, event) -> Self:
         """"""
         super().focusOutEvent(event)
         self.save()
         return self
 
-    def get_active_url(self):
+    def get_active_url(self) -> Optional[str]:
         """"""
         if self.document.active_page.active_url.active_url is None:
             logma.info("No active url")
@@ -489,12 +491,12 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         logma.info(f"URL {url}")
         return url
 
-    def get_browsing_history_expiry(self):
+    def get_browsing_history_expiry(self) -> int:
         """"""
         expiry = self.config.get("browsing_history_expiry", 90)
         return expiry
 
-    def get_current_default_browser(self):
+    def get_current_default_browser(self) -> bool:
         """Return whether the current browser is the OS default.
 
         Looks up the per-instance configuration via
@@ -517,7 +519,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         except Exception:
             return True
 
-    def get_current_domain(self):
+    def get_current_domain(self) -> Optional[str]:
         """"""
         if self.document.active_page.active_url.active_url is None:
             logma.info("No active url")
@@ -526,7 +528,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         logma.info(f"Domain {domain}")
         return domain
 
-    def get_current_home_page(self, url=None):
+    def get_current_home_page(self, url=None) -> str:
         """"""
         if url is None:
             logma.info(f"Instance {self.app.model.instance}")
@@ -535,7 +537,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             url = self.config.dikt.get("default_home_page", "https://www.duckduckgo.com")
         return url
 
-    def get_current_page(self, url=None):
+    def get_current_page(self, url=None) -> str:
         """"""
         if self.document:
             url = self.document.get_active_url()
@@ -543,7 +545,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             url = self.get_current_home_page()
         return url
 
-    def get_current_profile(self, cfg=None):
+    def get_current_profile(self, cfg=None) -> NchantdOfficeWebProfile:
         """"""
         cfg = cfg or {}
         intercept = False
@@ -551,7 +553,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.current_profile = NchantdOfficeWebProfile(name, self.browser, intercept, self, cfg)
         return self.current_profile
 
-    def get_current_parameters(self):
+    def get_current_parameters(self) -> Optional[Any]:
         """"""
         if self.document.active_page.active_url.active_url is None:
             logma.info("No active url")
@@ -560,7 +562,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         logma.info(f"Parameters {parameters}")
         return parameters
 
-    def get_current_sub_domain(self):
+    def get_current_sub_domain(self) -> Optional[str]:
         """"""
         if self.document.active_page.active_url.active_url is None:
             logma.info("No active url")
@@ -569,7 +571,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         logma.info(f"Sub Domain {sub_domain}")
         return sub_domain
 
-    def get_current_whois(self):
+    def get_current_whois(self) -> Optional[Any]:
         """"""
         if self.document.active_page.active_url is None:
             logma.info("No active url")
@@ -578,12 +580,12 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         logma.info(f"WhoIs {whois}")
         return whois
 
-    def get_links_catalog(self):
+    def get_links_catalog(self) -> List[Any]:
         """"""
         links = []
         return links
 
-    def get_profile(self, profile):
+    def get_profile(self, profile) -> Any:
         """"""
         if profile not in self.profiles.profiles:
             self.app.model.get_profiles()
@@ -595,12 +597,12 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #     """"""
     #     return self.profiles
 
-    def get_search_engines(self):
+    def get_search_engines(self) -> List[Any]:
         """"""
         search_engines = self.app.model.get_search_engines()
         return search_engines
 
-    def init_drawer_browser_config(self):
+    def init_drawer_browser_config(self) -> Dict[int, Any]:
         """Build the browser-configuration drawer.
 
         Most slots are initially type ``"dropdown"`` so the default action
@@ -709,7 +711,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
         return items
 
-    def init_drawer_url_inspection(self):
+    def init_drawer_url_inspection(self) -> Dict[int, Any]:
         """Build the URL inspection drawer (current URL / domain / sub / params / whois)."""
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
@@ -1002,7 +1004,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #     items[cnt]["widget"] = self.page_resource_list
     #     cnt += 1
     #     return items
-    def init_drawer_quickstart(self):
+    def init_drawer_quickstart(self) -> Dict[int, Any]:
         """Build the quickstart drawer with bookmarks + quick-app links.
 
         Populates ``toolbox_config[500]["items"]`` with two panes:
@@ -1028,7 +1030,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
         return items
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_url_inspection()
@@ -1038,7 +1040,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # self.toolbox_config[400]["items"] = self.init_drawer_source_inspection()
         # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
-    def open_new_tab(self, url=None):
+    def open_new_tab(self, url=None) -> Self:
         """Open a new tab loading the current (or given) URL."""
         if url is None:
             url = self.get_active_url() if hasattr(self, "get_active_url") else None
@@ -1051,7 +1053,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browser] open_new_tab failed: {e}", exc_info=True)
             return self
 
-    def open_new_window(self, url):
+    def open_new_window(self, url) -> Self:
         """Handle a target="_blank" / window.open request from the page.
 
         Opens the URL as a browser tab in the center tabset, or focuses the tab
@@ -1083,7 +1085,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browser] open_new_window fallback populate_document failed: {e}", exc_info=True)
         return self
 
-    def pin_page(self):
+    def pin_page(self) -> Self:
         """"""
         if self.pinned is False:
             self.pinned = True
@@ -1092,7 +1094,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.document.set_pinned(self.pinned)
         return self
 
-    def populate_document(self, url=None):
+    def populate_document(self, url=None) -> Self:
         """Populate the embedded browser with ``url`` and refresh the toolbox.
 
         T-028-related: previously this method called self.save()
@@ -1118,11 +1120,11 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         #         logma.error(f"[browsers] populate_document: update_toolbox_url_inspection failed: {e}", exc_info=True)
         return self
 
-    def get_content(self):
+    def get_content(self) -> Dict[str, Any]:
         """Return the complete browser profile under the canonical content key."""
         return {"content": self.document.active_page.to_dict()}
 
-    def save(self):
+    def save(self) -> Self:
         """Save the browser document.
 
         Delegates to the parent ``save()`` (the line-843 form which
@@ -1143,7 +1145,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         super().save()
         return self
 
-    def set_current_domain(self):
+    def set_current_domain(self) -> Self:
         """"""
         # if self.document.active_page.active_url.domain is None:
         #     raise Exception("Domain is None")
@@ -1152,123 +1154,123 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.domain.setText(self.document.active_page.active_url.domain)
         return self
 
-    def set_current_sub_domain(self):
+    def set_current_sub_domain(self) -> Self:
         """"""
         self.sub_domain.setText(self.document.active_page.active_url.sub_domain)
         return self
 
-    def set_current_parameters(self):
+    def set_current_parameters(self) -> Self:
         """"""
         self.parameters.setText(self.document.active_page.active_url.parameters)
         return self
 
-    def set_current_url(self):
+    def set_current_url(self) -> Self:
         """"""
         logma.info(f"Set URL Label {self.document.active_page.active_url.active_url}")
         self.url_label.setText(self.document.active_page.active_url.active_url)
         return self
 
-    def set_current_whois(self):
+    def set_current_whois(self) -> Self:
         """"""
         self.whois.setText(self.document.active_page.active_url.whois)
         return self
 
-    def set_profile(self, profile):
+    def set_profile(self, profile) -> Self:
         """"""
         self.profile = profile
         return self
 
-    def set_profile_user_name_entry(self, name):
+    def set_profile_user_name_entry(self, name) -> Self:
         """Update the user_name_entry Qt widget from an external change."""
         if hasattr(self, "user_name_entry") and self.user_name_entry is not None:
             self.user_name_entry.setText(str(name))
         return self
 
-    def set_profile_first_name_entry(self, name):
+    def set_profile_first_name_entry(self, name) -> Self:
         """Update the first_name_entry Qt widget from an external change."""
         if hasattr(self, "first_name_entry") and self.first_name_entry is not None:
             self.first_name_entry.setText(str(name))
         return self
 
-    def set_profile_last_name_entry(self, name):
+    def set_profile_last_name_entry(self, name) -> Self:
         """Update the last_name_entry Qt widget from an external change."""
         if hasattr(self, "last_name_entry") and self.last_name_entry is not None:
             self.last_name_entry.setText(str(name))
         return self
 
-    def set_profile_middle_name_entry(self, name):
+    def set_profile_middle_name_entry(self, name) -> Self:
         """Update the middle_name_entry Qt widget from an external change."""
         if hasattr(self, "middle_name_entry") and self.middle_name_entry is not None:
             self.middle_name_entry.setText(str(name))
         return self
 
-    def set_profile_postal_address_entry(self, address):
+    def set_profile_postal_address_entry(self, address) -> Self:
         """Update the postal_address_entry Qt widget from an external change."""
         if hasattr(self, "postal_address_entry") and self.postal_address_entry is not None:
             self.postal_address_entry.setText(str(address))
         return self
 
-    def set_profile_city_address_entry(self, address):
+    def set_profile_city_address_entry(self, address) -> Self:
         """Update the city_address_entry Qt widget from an external change."""
         if hasattr(self, "city_address_entry") and self.city_address_entry is not None:
             self.city_address_entry.setText(str(address))
         return self
 
-    def set_profile_state_address_entry(self, address):
+    def set_profile_state_address_entry(self, address) -> Self:
         """Update the state_address_entry Qt widget from an external change."""
         if hasattr(self, "state_address_entry") and self.state_address_entry is not None:
             self.state_address_entry.setText(str(address))
         return self
 
-    def set_profile_email_entry(self, email):
+    def set_profile_email_entry(self, email) -> Self:
         """Update the email_entry Qt widget from an external change."""
         if hasattr(self, "email_entry") and self.email_entry is not None:
             self.email_entry.setText(str(email))
         return self
 
-    def set_profile_phone_entry(self, phone):
+    def set_profile_phone_entry(self, phone) -> Self:
         """Update the phone_entry Qt widget from an external change."""
         if hasattr(self, "phone_entry") and self.phone_entry is not None:
             self.phone_entry.setText(str(phone))
         return self
 
-    def set_profile_second_phone_entry(self, phone):
+    def set_profile_second_phone_entry(self, phone) -> Self:
         """Update the second_phone_entry Qt widget from an external change."""
         if hasattr(self, "second_phone_entry") and self.second_phone_entry is not None:
             self.second_phone_entry.setText(str(phone))
         return self
 
-    def set_profile_company_entry(self, entry):
+    def set_profile_company_entry(self, entry) -> Self:
         """Update the company_entry Qt widget from an external change."""
         if hasattr(self, "company_entry") and self.company_entry is not None:
             self.company_entry.setText(str(entry))
         return self
 
-    def set_profile_company_email_entry(self, email):
+    def set_profile_company_email_entry(self, email) -> Self:
         """Update the company_email_entry Qt widget from an external change."""
         if hasattr(self, "company_email_entry") and self.company_email_entry is not None:
             self.company_email_entry.setText(str(email))
         return self
 
-    def set_profile_company_phone_entry(self, phone):
+    def set_profile_company_phone_entry(self, phone) -> Self:
         """Update the company_phone_entry Qt widget from an external change."""
         if hasattr(self, "company_phone_entry") and self.company_phone_entry is not None:
             self.company_phone_entry.setText(str(phone))
         return self
 
-    def set_profile_company_address_entry(self, address):
+    def set_profile_company_address_entry(self, address) -> Self:
         """Update the company_address_entry Qt widget from an external change."""
         if hasattr(self, "company_address_entry") and self.company_address_entry is not None:
             self.company_address_entry.setText(str(address))
         return self
 
-    def set_profile_zip_code_entry(self, zipcode):
+    def set_profile_zip_code_entry(self, zipcode) -> Self:
         """Update the zip_code_entry Qt widget from an external change."""
         if hasattr(self, "zip_code_entry") and self.zip_code_entry is not None:
             self.zip_code_entry.setText(str(zipcode))
         return self
 
-    def store_profile(self):
+    def store_profile(self) -> Self:
         """Persist current profile fields to the profile manager."""
         if self.profile is None or self.profiles is None:
             logma.info("[browser] store_profile: no active profile to persist")
@@ -1278,7 +1280,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # Caller is responsible for calling document.save() afterward.
         return self
 
-    def update_profile(self, profile_name):
+    def update_profile(self, profile_name) -> Self:
         """Switch to the named profile and refresh all the entry widgets.
 
         Falls back to ``get_profile`` (existing lookup) and then
@@ -1314,7 +1316,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
                 getattr(self, setter)(getattr(profile, attr, ""))
         return self
 
-    def update_toolbox_form_control(self):
+    def update_toolbox_form_control(self) -> Self:
         """"""
         profile = self.get_profile(self.profile_select.combobox.lineEdit().text().strip())
         self.set_profile(profile)
@@ -1335,7 +1337,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.set_profile_company_address_entry(self.profile.company_address)
         return self
 
-    def update_toolbox_url_inspection(self):
+    def update_toolbox_url_inspection(self) -> Self:
         """"""
         self.set_current_url()
         self.set_current_domain()
@@ -1344,7 +1346,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.set_current_whois()
         return self
 
-    def _build_bookmarks_pane(self):
+    def _build_bookmarks_pane(self) -> Any:
         """Build a bookmark list pane from config.dikt["bookmarks"].
 
         Falls back to a single 'Add Bookmark' placeholder when no
@@ -1368,7 +1370,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma_local.warning("[browsers] NchantdList unavailable, falling back to label")
             return NchantdLabel(self, cfg).initWidget()
 
-    def _build_quick_app_links_pane(self):
+    def _build_quick_app_links_pane(self) -> Any:
         """Build a mini-catalog of quick-app links.
 
         Reads ``self.app.model.get_quick_apps()`` when the API is
@@ -1391,7 +1393,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
                 logma.error(f"[browsers] get_quick_apps failed: {e}", exc_info=True)
         return NchantdLabel(self, cfg).initWidget()
 
-    def _delete_browsing_history(self):
+    def _delete_browsing_history(self) -> Self:
         """Delete all browsing history for the current profile.
 
         Two parts:
@@ -1464,7 +1466,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
         return self
 
-    def _delete_all_browsing_tabs(self):
+    def _delete_all_browsing_tabs(self) -> Self:
         """Delete all browsing-history tabs for the current profile.
 
         Removes the tabs from the open tabset (not from disk)
@@ -1495,7 +1497,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browsers] _delete_all_browsing_tabs failed: {e}", exc_info=True)
         return self
 
-    def _delete_cache(self):
+    def _delete_cache(self) -> Self:
         """Delete the disk cache for the current profile.
 
         Walks the QWebEngine profile's cache directory and
@@ -1529,7 +1531,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browsers] _delete_cache failed: {e}", exc_info=True)
         return self
 
-    def _delete_metadata(self):
+    def _delete_metadata(self) -> Self:
         """Delete metadata (cookies, history, login data) for the current profile.
 
         Calls the underlying QWebEngineProfile to remove
@@ -1563,7 +1565,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browsers] _delete_metadata failed: {e}", exc_info=True)
         return self
 
-    def _delete_cookies(self):
+    def _delete_cookies(self) -> Self:
         """Delete cookies for the current profile."""
         try:
             profile = self.document.profile_manager.get_current_profile()
@@ -1590,18 +1592,18 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 class NchantdOfficeSlimTabSearch(NchantdWidget):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdOfficeSlimTabSearch init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSlimTabSearch").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"url_code": "duckduckgo", "page": NchantdOfficeSidePage}
@@ -1609,13 +1611,13 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
         self.layout.addWidget(self.search_viewer)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def get_content(self):
+    def get_content(self) -> Dict[str, Any]:
         """"""
         content = self.document.active_page.to_dict()
         return content
@@ -1624,7 +1626,7 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
 class NchantdOfficeWebViewer(NchantdWebViewer):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdOfficeWebViewer init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
@@ -1635,40 +1637,40 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
         # survives app restart.
         self._url_history_max = 50
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def get_content(self):
+    def get_content(self) -> Dict[str, Any]:
         """"""
         content = self.document.active_page.to_dict()
         return content
 
-    def populate_document(self, url):
+    def populate_document(self, url) -> Self:
         """"""
         super().populate_document(url)
         return self
 
-    def save(self):
+    def save(self) -> Self:
         """"""
         return self
 
     # T-NEW-069 — URL dropdown history helpers (live on the
     # WebViewer because that's where set_url_path lives).
 
-    def _track_url(self, url):
+    def _track_url(self, url) -> List[str]:
         """Add ``url`` to the persistent URL history.
 
         Maintains ``config.dikt["url_history"]`` as a
@@ -1686,15 +1688,15 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
         self.config.dikt["url_history"] = history
         return history
 
-    def _clear_url_history(self):
+    def _clear_url_history(self) -> None:
         """Wipe the URL history list (dropdown-only)."""
         self.config.dikt["url_history"] = []
 
-    def _get_url_history(self):
+    def _get_url_history(self) -> List[str]:
         """Return the URL history list (most-recent-first)."""
         return list(self.config.dikt.get("url_history", []) or [])
 
-    def set_url_path(self, url=None):
+    def set_url_path(self, url=None) -> Self:
         """T-NEW-069 — navigate to ``url`` and sync the dropdown.
 
         Tracks the URL in the persistent history (via
@@ -1726,7 +1728,7 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
 class NchantdOfficeAdTab(NchantdOfficeDocument):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__("NchantdOfficeAdTab", parent, cfg)
         self.parent = parent
@@ -1742,7 +1744,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self.browser = None
         self.pin = False
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -1771,7 +1773,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self.profiles = self.document.profile_manager
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         cfg = cfg or {}
         self.browser = NchantdOfficeWebViewer(self, {"url": self.active_url})
@@ -1790,13 +1792,13 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self.populate_document()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def get_active_url(self):
+    def get_active_url(self) -> Optional[str]:
         """"""
         if self.document.active_page.active_url.active_url is None:
             logma.info("No active url")
@@ -1805,12 +1807,12 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         logma.info(f"URL {url}")
         return url
 
-    def get_content(self):
+    def get_content(self) -> Dict[str, Any]:
         """"""
         content = self.document.active_page.to_dict()
         return content
 
-    def populate_document(self, url=None):
+    def populate_document(self, url=None) -> Self:
         """"""
         if url is None:
             url = self.get_active_url()
@@ -1825,12 +1827,12 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
 class NchantdOfficeWebProfile(NchantdWebProfile):
     """"""
 
-    def __init__(self, name, browser=None, intercept=False, parent=None, cfg=None):
+    def __init__(self, name, browser=None, intercept=False, parent=None, cfg=None) -> None:
         """"""
         super().__init__(name, browser, intercept, parent, cfg)
         self.setup_address()
 
-    def setup_address(self):
+    def setup_address(self) -> None:
         """"""
         document = {"document": self.config.get("document", {})}
         self.contact = self.app.model.codex.init_contact(document)
