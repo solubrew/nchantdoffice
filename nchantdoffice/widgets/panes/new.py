@@ -13,6 +13,9 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+from typing import Any, Optional, Self
+
 from os.path import abspath, dirname, join
 import datetime as dt
 import json as j
@@ -45,7 +48,7 @@ pxcfg = join(here, "_data_", "new.yaml")
 class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
@@ -58,13 +61,13 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         self.multiple_options = None
         self.file_path_label = None
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
 
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """
         :param file_type:
         :return:
@@ -75,7 +78,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         #     self.update_pane(self.active_item)
         return self
 
-    def accept(self, action=None, app=None, params=None):
+    def accept(self, action=None, app=None, params=None) -> Self:
         """
         :return:
         """
@@ -86,7 +89,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         self.update_pane()
         return self
 
-    def add_document(self, tabset, widgdata=None, db="db"):
+    def add_document(self, tabset, widgdata=None, db="db") -> Self:
         """"""
         logma.info(f"Widgdata {widgdata}")
         if widgdata is None:
@@ -139,12 +142,12 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.app.view.panes["left"].tree.model.current_node.updateTabs(tabset)
         return self
 
-    def add_node(self, tree="left", widgdata=None):
+    def add_node(self, tree="left", widgdata=None) -> Self:
         """"""
         super().add_node(tree, widgdata)
         return self
 
-    def add_note(self):
+    def add_note(self) -> None:
         """"""
         name = self.active_item.name
         pid = self.app.view.panes["left"].tree.model.current_node.nid
@@ -153,7 +156,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         self.app.model.add_note(name, pid, position, widgdata)
         return self
 
-    def add_subtree(self):
+    def add_subtree(self) -> Self:
         """"""
         super().add_subtree()
         # mass create one or more nodes and associated tabs
@@ -172,7 +175,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         }
         return self
 
-    def add_tab(self, tabset, widgdata=None):
+    def add_tab(self, tabset, widgdata=None) -> Self:
         """Add a new tab.
 
         Sprint 23 (P1 name-entry dialog): when the
@@ -235,7 +238,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
                 widgdata["widget_code"] = override
         return self
 
-    def add_research_subtree(self, topic):
+    def add_research_subtree(self, topic) -> None:
         """"""
         subtree = self.config.dikt["subtrees"]["research"]["dstruct"]["<topic>"]["nodes"]
         details = {"<[topic]>": topic}
@@ -245,7 +248,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
                 for tab in subtree[key]:
                     self.add_tab(tab)
 
-    def add_bulk_node(self, name=None):
+    def add_bulk_node(self, name=None) -> Optional[dict[str, Any]]:
         """Bulk-add a new node (from the multi-page-import workflow).
 
         Returns the new node dict, or ``None`` on failure.
@@ -260,7 +263,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             logma.error(f"[panes/new] add_bulk_node failed: {e}", exc_info=True)
             return None
 
-    def add_bulk_tab(self, node=None, name=None):
+    def add_bulk_tab(self, node=None, name=None) -> Optional[dict[str, Any]]:
         """Bulk-add a new tab to ``node`` (from the multi-page-import workflow).
 
         Returns the new tab dict, or ``None`` on failure.
@@ -279,12 +282,12 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             logma.error(f"[panes/new] add_bulk_tab failed: {e}", exc_info=True)
             return None
 
-    def load_document(self):
+    def load_document(self) -> Self:
         """"""
         self.document_obj = self.widget.open(self.active_item.file_path)
         return self
 
-    def open_file_sigil(self, name=None, app=None, cfg=None):
+    def open_file_sigil(self, name=None, app=None, cfg=None) -> Self:
         """"""
         file_sigil = NchantdFileOpenSigil("open", self.parent, self.config.override(cfg))
         self.file_path = file_sigil.initWidget()
@@ -293,7 +296,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.load_google = False
         return self
 
-    def open_google_drive_viewer(self, name=None, app=None, cfg=None):
+    def open_google_drive_viewer(self, name=None, app=None, cfg=None) -> Self:
         """"""
         gdrive_sigil = NchantdGoogleDriveSigil(self.parent, self.config.override(cfg))
         self.gdrive_path = gdrive_sigil.initWidget()
@@ -303,11 +306,11 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.load_google = True
         return self
 
-    def show_checkboxes(self):
+    def show_checkboxes(self) -> Self:
         """"""
         return self
 
-    def show_file_path(self):
+    def show_file_path(self) -> Self:
         """"""
         logma.info(f"File Path {self.file_path.file_selected}")
         cfg = {"text": self.file_path.file_selected, "readonly": True, "size": [600, 0]}
@@ -320,7 +323,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         self.new = False
         return self
 
-    def unshow_file_path(self):
+    def unshow_file_path(self) -> Self:
         """"""
         if self.file_path_label is not None:
             self.left_side_layout.removeWidget(self.file_path_label)
@@ -331,7 +334,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.new = True
         return self
 
-    def show_google_drive_button(self):
+    def show_google_drive_button(self) -> Self:
         """"""
         if self.connect_gfile is not None:
             return self
@@ -357,7 +360,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         self.document_buttons_layout.addWidget(self.connect_gfile)
         return self
 
-    def show_import_file_button(self):
+    def show_import_file_button(self) -> Self:
         """"""
         if self.import_file is not None:
             return self
@@ -371,7 +374,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.document_buttons_layout.addWidget(self.import_file)
         return self
 
-    def show_local_drive_button(self):
+    def show_local_drive_button(self) -> Self:
         """"""
         if self.open_file is not None:
             return self
@@ -382,7 +385,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         self.document_buttons_layout.addWidget(self.open_file)
         return self
 
-    def show_multiple_options(self):
+    def show_multiple_options(self) -> None:
         """"""
         if self.multiple_options is not None:
             return self
@@ -392,7 +395,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         self.multiple_options.initWidget()
         self.center_layout.addWidget(self.multiple_options)
 
-    def show_radio_buttons(self):
+    def show_radio_buttons(self) -> Self:
         """"""
         if self.unique_options is not None:
             return self
@@ -403,7 +406,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         self.center_layout.addWidget(self.unique_options)
         return self
 
-    def unshow_local_drive_button(self):
+    def unshow_local_drive_button(self) -> None:
         """"""
         if self.open_file is not None:
             self.document_buttons_layout.removeWidget(self.open_file)
@@ -411,7 +414,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.open_file.deleteLater()
             self.open_file = None
 
-    def unshow_google_drive_button(self):
+    def unshow_google_drive_button(self) -> Self:
         """
 
         :return:
@@ -423,7 +426,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.connect_gfile = None
         return self
 
-    def unshow_import_file_button(self):
+    def unshow_import_file_button(self) -> Self:
         """"""
         if self.import_file is not None:
             self.document_buttons_layout.removeWidget(self.import_file)
@@ -432,7 +435,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.import_file = None
         return self
 
-    def unshow_unique_options(self):
+    def unshow_unique_options(self) -> None:
         """"""
         if self.unique_options is not None:
             self.center_layout.removeWidget(self.unique_options)
@@ -440,7 +443,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.unique_options.deleteLater()
             self.unique_options = None
 
-    def unshow_muliple_options(self):
+    def unshow_muliple_options(self) -> None:
         """"""
         if self.multiple_options is not None:
             self.center_layout.removeWidget(self.multiple_options)
@@ -448,13 +451,13 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.multiple_options.deleteLater()
             self.multiple_options = None
 
-    def update_checkboxes(self):
+    def update_checkboxes(self) -> Self:
         """"""
         if self.active_item.has_multiple_options:
             self.show_checkboxes()
         return self
 
-    def update_file_buttons(self):
+    def update_file_buttons(self) -> Self:
         """"""
         logma.info(f"Update File Buttons {self.active_item.has_google_options}")
         # PUSH to 0.0.2.0.2.0
@@ -491,7 +494,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         "notion_db": {"widget_code": "web.notion.database", "load_strategy": "api"},
     }
 
-    def _resolve_widget_code(self, widgdata):
+    def _resolve_widget_code(self, widgdata) -> Optional[str]:
         """Resolve the widget_code for a ``widgdata`` dict via the routing table."""
         try:
             fmt = widgdata.get("format") or widgdata.get("file_format") or widgdata.get("document_type")
@@ -506,7 +509,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             logma.error(f"[panes.new] _resolve_widget_code failed: {e}", exc_info=True)
             return None
 
-    def _resolve_load_strategy(self, widgdata):
+    def _resolve_load_strategy(self, widgdata) -> Optional[str]:
         """Resolve the load strategy ("local" / "api" / "web") via the routing table."""
         try:
             fmt = widgdata.get("format") or widgdata.get("file_format") or widgdata.get("document_type")
@@ -521,7 +524,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             logma.error(f"[panes.new] _resolve_load_strategy failed: {e}", exc_info=True)
             return None
 
-    def show_google_drive_load_dialog(self):
+    def show_google_drive_load_dialog(self) -> Optional[dict[str, Any]]:
         """Open a Google Drive file picker.
 
         T-051: the real implementation requires a Google-Drive
@@ -606,7 +609,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             logma.error(f"[panes.new] show_google_drive_load_dialog failed: {e}", exc_info=True)
         return None
 
-    def update_pane(self):
+    def update_pane(self) -> None:
         """Refresh the new-document wizard pane with the active item's options.
 
         T-053: the default-pane handler set is wired up at
@@ -640,7 +643,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         self.unshow_unique_options()
         self.update_radio_buttons()
 
-    def _ensure_default_button_handlers(self, item):
+    def _ensure_default_button_handlers(self, item) -> Self:
         """Wire up the default Drive / local / import-file handlers.
 
         T-053: called on first launch (and on each update_pane) so
@@ -671,7 +674,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
 
     # Stubs for button handlers - real implementations will be
     # wired when the full wizard goes through UI sprint review.
-    def cmd_local_drive_select(self, *args, **kwargs):
+    def cmd_local_drive_select(self, *args, **kwargs) -> Self:
         """Open the local file picker when 'Local Drive' is clicked."""
         try:
             from nchantrs.widgets.editors.entries import NchantdFileOpenSigil
@@ -685,11 +688,11 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             logma.error(f"[panes.new] cmd_local_drive_select failed: {e}", exc_info=True)
         return self
 
-    def cmd_import_file(self, *args, **kwargs):
+    def cmd_import_file(self, *args, **kwargs) -> Self:
         """Open the file picker when 'Import File' is clicked."""
         return self.cmd_local_drive_select(*args, **kwargs)
 
-    def cmd_color_select(self, *args, **kwargs):
+    def cmd_color_select(self, *args, **kwargs) -> Self:
         """Stub: open a color picker for the tab icon."""
         try:
             cfg = {"title": "Pick Tab Color", "default": "#1f4e79"}
@@ -702,7 +705,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             logma.error(f"[panes.new] cmd_color_select failed: {e}", exc_info=True)
         return self
 
-    def cmd_icon_select(self, *args, **kwargs):
+    def cmd_icon_select(self, *args, **kwargs) -> Self:
         """Stub: open a file dialog to pick a tab icon."""
         try:
             cfg = {"filter": "Images (*.png *.svg *.ico)"}
@@ -720,7 +723,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         logma.info(f"Update Pane")
         return self
 
-    def update_radio_buttons(self):
+    def update_radio_buttons(self) -> Self:
         """"""
         if self.active_item.has_unique_options:
             logma.info(f"Has Unique Options")
@@ -733,17 +736,17 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
 class NchantdOfficeNewSubtreePane(NchantdOfficeNewDocumentPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNewSubtreePane").override(cfg))
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         # radio option group
@@ -759,7 +762,7 @@ class NchantdOfficeNewSubtreePane(NchantdOfficeNewDocumentPane):
 
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
