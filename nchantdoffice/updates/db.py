@@ -11,11 +11,14 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
+from __future__ import annotations
+
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
 from copy import deepcopy
+from typing import Any, Dict, Optional
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -38,7 +41,11 @@ pxcfg = join(here, "_data_", "db.yaml")
 class NchantdOfficeDBUpdate(NchantdDBUpdate):
     """"""
 
-    def __init__(self, parent, cfg=None):
+    def __init__(
+        self,
+        parent: Any,
+        cfg: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """"""
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDBUpdate").override(cfg))
@@ -52,7 +59,7 @@ class NchantdOfficeDBUpdate(NchantdDBUpdate):
         # no-ops. Logged at info level so the skip is visible.
         self._upgrade_lock: bool = False
 
-    def update_pyffice_document(self):
+    def update_pyffice_document(self) -> Any:
         """Upgrade stored Pyffice documents to the latest SERIALIZATION_VERSION.
 
         T-NEW-058: guarded by ``self._upgrade_lock`` so the migration
