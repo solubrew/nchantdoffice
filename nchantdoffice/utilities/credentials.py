@@ -36,7 +36,10 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Callable
+from typing import TYPE_CHECKING, Optional, Callable
+
+if TYPE_CHECKING:
+    from pycurity.pykey import PyKeyStore
 
 # The service name used in pykey.PYKEYSTORE. Hard-coded so
 # callers don't have to know about pykey.
@@ -97,7 +100,7 @@ class DesktopCredentials:
 # ── pykey import (lazy) ────────────────────────────────────
 
 
-def _keystore(passphrase: Optional[str] = None):
+def _keystore(passphrase: Optional[str] = None) -> Optional["PyKeyStore"]:
     """Return the pykey.PYKEYSTORE instance, or None if pykey
     isn't available (the pycurity project isn't on sys.path).
 
