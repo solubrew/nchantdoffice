@@ -705,7 +705,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         """Return the stored value of get_server_port."""
         return getattr(self, "server_port", 8888) or 8888
 
-    def get_config_autostart_server(self):
+    def get_config_autostart_server(self) -> bool:
         """Return the auto-start-server flag from the config.
 
         Reads ``config.dikt["autostart_server"]`` and returns it as a
@@ -713,7 +713,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         """
         return bool(self.config.dikt.get("autostart_server", False))
 
-    def get_url_history(self):
+    def get_url_history(self) -> list[str]:
         """Return the list of URLs the notebook has visited.
 
         Combines the static default URL (the local Jupyter server) with
@@ -730,7 +730,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 seen.add(url)
         return history
 
-    def open_notebook(self, path):
+    def open_notebook(self, path) -> Self:
         """Open a local .ipynb file in the embedded webview.
 
         T-044 helper - resolves to an absolute path, validates the
@@ -762,7 +762,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] open_notebook failed: {e}", exc_info=True)
         return self
 
-    def get_current_url(self):
+    def get_current_url(self) -> str:
         """Return the URL the notebook is currently displaying.
 
         Falls back to the local Jupyter server URL when no explicit
@@ -773,7 +773,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             return current
         return getattr(self, "server_url", None) or ""
 
-    def get_cell_type(self):
+    def get_cell_type(self) -> str:
         """Return the cell type of the currently active cell.
 
         Reads the active cell's ``cell_type`` (defaults to ``"code"``
@@ -792,7 +792,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                     pass
         return self.config.dikt.get("cell_type", "code")
 
-    def get_completions(self, code, cursor_pos):
+    def get_completions(self, code, cursor_pos) -> list[Any]:
         """Get code completions at cursor position
 
         Args:
@@ -829,7 +829,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error getting completions: {e}")
             return []
 
-    def get_binary(self):
+    def get_binary(self) -> bytes:
         """Serialize the notebook to the standard .ipynb JSON format.
 
         Builds the notebook dict from the in-memory cells and returns
@@ -852,7 +852,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebooks] get_binary failed: {e}", exc_info=True)
             return b""
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         """Return notebook location and (optionally) the serialized notebook.
 
         The default contract is: store only the file_path; reopen
@@ -871,7 +871,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             payload["notebook_bytes"] = self.get_binary()
         return {"content": payload}
 
-    def inspect_object(self, code, cursor_pos, detail_level=0):
+    def inspect_object(self, code, cursor_pos, detail_level=0) -> dict[str, Any] | None:
         """Get object inspection/documentation
 
         Args:
@@ -908,7 +908,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error inspecting object: {e}")
             return None
 
-    def init_drawer_document_config(self):
+    def init_drawer_document_config(self) -> dict[int, Any]:
         """"""
         items = self.toolbox_config[100].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -958,7 +958,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def init_drawer_selection_config(self):
+    def init_drawer_selection_config(self) -> dict[int, Any]:
         """"""
         items = self.toolbox_config[200].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -977,7 +977,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def init_drawer_object_config(self):
+    def init_drawer_object_config(self) -> dict[int, Any]:
         """"""
         items = self.toolbox_config[300].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -998,7 +998,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         return items
 
-    def init_drawer_quickstart(self):
+    def init_drawer_quickstart(self) -> dict[int, Any]:
         """"""
         items = self.toolbox_config[400].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -1034,7 +1034,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         return items
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
@@ -1043,7 +1043,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         # self.toolbox_config[300]["items"] = self.init_drawer_object_config()
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
-    def interrupt_kernel(self):
+    def interrupt_kernel(self) -> Self:
         """Interrupt the running kernel (like Ctrl+C)"""
         try:
             if self.kernel_manager and self.kernel_running:
@@ -1055,7 +1055,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error interrupting kernel: {e}")
         return self
 
-    def is_server_running(self):
+    def is_server_running(self) -> bool:
         """Check if a TCP listener is accepting connections on the server port.
 
         Note: this only confirms *something* is bound to the port, not that it is
@@ -1079,7 +1079,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] is_server_running check failed: {e}")
             return False
 
-    def load_internal(self):
+    def load_internal(self) -> bool:
         """T-076: load the notebook state from the internal DB.
 
         Reads ``ds_document_internal_state`` for the current
@@ -1133,7 +1133,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] load_internal failed: {e}", exc_info=True)
             return False
 
-    def load_notebook_file(self, file_path):
+    def load_notebook_file(self, file_path) -> Self:
         """Load a notebook file"""
         try:
             if not exists(file_path):
@@ -1159,7 +1159,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         return self
 
-    def open_file(self, file=None):
+    def open_file(self, file=None) -> Self:
         """"""
         logma.info(file)
         try:
@@ -1173,7 +1173,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.populate_document()
         return self
 
-    def pin_page(self):
+    def pin_page(self) -> Self:
         """"""
         if self.pinned is False:
             self.pinned = True
@@ -1182,12 +1182,12 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.document.set_pinned(self.pinned)
         return self
 
-    def populate_document(self):
+    def populate_document(self) -> Self:
         """"""
         self.browser.goto_page(self.file_path)
         return self
 
-    def restart_kernel(self):
+    def restart_kernel(self) -> Self:
         """Restart the notebook kernel"""
         try:
             if self.kernel_manager:
@@ -1204,7 +1204,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"Error restarting kernel: {e}")
         return self
 
-    def save(self):
+    def save(self) -> Self:
         """Save the notebook.
 
         Default contract (per T-NEW-003 / T-NEW-009 followup):
@@ -1263,7 +1263,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         super().save()
         return self
 
-    def save_notebook(self, file_path=None):
+    def save_notebook(self, file_path=None) -> Self:
         """Save the current notebook"""
         # Note: Jupyter handles saving internally through the web interface
         # This method is mainly for setting the file path
@@ -1272,7 +1272,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.info(f"Notebook file path set to: {file_path}")
         return self
 
-    def set_notebook(self, notebook=None):
+    def set_notebook(self, notebook=None) -> Self:
         """Initialize or set the notebook structure.
 
         Args:
@@ -1285,7 +1285,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.info("Notebook structure updated")
         return self
 
-    def set_cells(self, cells):
+    def set_cells(self, cells) -> Self:
         """Set the cells list.
 
         Args:
@@ -1297,7 +1297,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.info(f"Cells updated: {count} cells")
         return self
 
-    def set_cell_source(self, text, position=0):
+    def set_cell_source(self, text, position=0) -> Self:
         """Set source code for a cell at given position.
 
         Args:
@@ -1311,13 +1311,13 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         logma.info(f"Cell {position} source updated")
         return self
 
-    def shutdown(self):
+    def shutdown(self) -> Self:
         """Shutdown the notebook and clean up"""
         self.stop_kernel()
         self.stop_jupyter_server()
         return self
 
-    def start_jupyter_server(self, port=None):
+    def start_jupyter_server(self, port=None) -> Self:
         """Start the Jupyter notebook server"""
         import time
 
@@ -1462,7 +1462,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         return self
 
-    def stop_jupyter_server(self):
+    def stop_jupyter_server(self) -> Self:
         """Stop the Jupyter notebook server"""
         try:
             if self.jupyter_process:
@@ -1483,7 +1483,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         return self
 
-    def start_kernel(self, kernel_name=None):
+    def start_kernel(self, kernel_name=None) -> Self:
         """Start a Jupyter kernel for code execution
 
         Args:
@@ -1525,7 +1525,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         return self
 
-    def stop_kernel(self):
+    def stop_kernel(self) -> Self:
         """Stop the running kernel"""
         try:
             if self.kernel_client:
@@ -1545,7 +1545,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         return self
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         """Serialize notebook state to dict.
 
         Returns:
@@ -1561,7 +1561,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         doc["document"]["notebook"]["cells"] = cells_list
         return doc
 
-    def to_html(self):
+    def to_html(self) -> str:
         """Render notebook to basic HTML (fixed from infinite-recursion bug in pyffice).
 
         Returns:
@@ -1587,7 +1587,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         html_parts.append("</body></html>")
         return "\n".join(html_parts)
 
-    def update_status_labels(self):
+    def update_status_labels(self) -> Self:
         """Update server and kernel status labels"""
         if hasattr(self, "server_status_label"):
             status = "Running" if self.server_running else "Stopped"
@@ -1602,7 +1602,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         return self
 
-    def _kill_port(self, port):
+    def _kill_port(self, port) -> Self:
         """Best-effort kill of whatever process is listening on ``port``.
 
         Used to clear a stale Jupyter left by a previous run so a fresh server
@@ -1620,7 +1620,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 logma.warning(f"[notebook] _kill_port {port} via {cmd[0]} failed: {e}")
         return self
 
-    def _start_output_pump(self, process):
+    def _start_output_pump(self, process) -> "threading.Thread":
         """Stream a Jupyter subprocess's merged stdout/stderr into the log.
 
         Jupyter prints the exact URL it is serving (host, port, token) plus any
@@ -1628,7 +1628,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         being pointed at the same URL Jupyter actually bound to.
         """
 
-        def _pump():
+        def _pump() -> None:
             try:
                 for line in iter(process.stdout.readline, ""):
                     line = line.rstrip("\n")
@@ -1652,7 +1652,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         logma.info(f"[notebook] output pump started for pid={process.pid}")
         return thread
 
-    def _wire_browser_load_logging(self):
+    def _wire_browser_load_logging(self) -> Self:
         """Attach Qt load-signal logging to the embedded QWebEngineView.
 
         Reports whether QtWebEngine actually starts and finishes loading the
@@ -1697,7 +1697,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             view.loadStarted.connect(self._on_webview_load_started)
             view.loadProgress.connect(self._on_webview_load_progress)
 
-            def _on_url_changed(url):
+            def _on_url_changed(url) -> None:
                 # Keep the self-heal target in sync with user-initiated navigation
                 # (e.g. double-clicking a .ipynb in the tree -> /notebooks/<name>),
                 # so a later stray blank load doesn't yank us back to /tree.
@@ -1730,14 +1730,14 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
             view.urlChanged.connect(_on_url_changed)
 
-            def _fmt_size(w):
+            def _fmt_size(w) -> Any:
                 try:
                     s = w.size()
                     return f"{s.width()}x{s.height()} visible={w.isVisible()}"
                 except Exception:
                     return "?"
 
-            def _on_load_finished(ok):
+            def _on_load_finished(ok) -> None:
                 cur = view.url().toString()
                 logma.info(f"[notebook] webview loadFinished ok={ok} | current_url={cur} | target={self._target_url}")
                 # Geometry check: distinguishes a size-collapse (fill/size-policy
@@ -1783,7 +1783,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] failed to wire browser load logging: {e}", exc_info=True)
         return self
 
-    def _install_net_instrumentation(self, view):
+    def _install_net_instrumentation(self, view) -> Self:
         """Wrap window.fetch / window.WebSocket to log failures.
 
         Installed as a persistent QWebEngineScript at DocumentCreation (before
@@ -1850,7 +1850,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     # T-NEW-070 — click capture / redirect / replace.
 
-    def cmd_register_click_handler(self, handler=None, *args, **kwargs):
+    def cmd_register_click_handler(self, handler=None, *args, **kwargs) -> Self:
         """Register a Python callback to fire on every web-page click.
 
         ``handler`` is invoked with a dict payload describing
@@ -1875,7 +1875,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         )
         return self
 
-    def cmd_redirect_click(self, url_pattern, replacement_url, *args, **kwargs):
+    def cmd_redirect_click(self, url_pattern, replacement_url, *args, **kwargs) -> Self:
         """Add a click-redirect rule.
 
         When a user clicks an element whose ``href`` (or
@@ -1915,7 +1915,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         )
         return self
 
-    def cmd_replace_click_action(self, selector, action, *args, **kwargs):
+    def cmd_replace_click_action(self, selector, action, *args, **kwargs) -> Self:
         """Add a click-action replacement rule.
 
         When a user clicks an element matching ``selector``
@@ -1952,7 +1952,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         )
         return self
 
-    def _push_click_redirect_to_webview(self, url_pattern, replacement_url):
+    def _push_click_redirect_to_webview(self, url_pattern, replacement_url) -> None:
         """Push a single redirect rule into the live webview."""
         if not self._has_webview():
             return
@@ -1966,7 +1966,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         )
         self._run_js(js)
 
-    def _push_click_replacement_to_webview(self, selector, action):
+    def _push_click_replacement_to_webview(self, selector, action) -> None:
         """Push a single replacement rule into the live webview."""
         if not self._has_webview():
             return
@@ -1980,7 +1980,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         )
         self._run_js(js)
 
-    def _has_webview(self):
+    def _has_webview(self) -> bool:
         """Return True iff the embedded webview is constructed."""
         return (
             hasattr(self, "browser")
@@ -1989,7 +1989,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             and self.browser.page() is not None
         )
 
-    def _run_js(self, js):
+    def _run_js(self, js) -> None:
         """Run a JS snippet on the embedded webview page."""
         try:
             page = self.browser.page()
@@ -1999,7 +1999,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.warning(f"[notebook] _run_js failed: {e}")
 
     @staticmethod
-    def _js_quote(value):
+    def _js_quote(value) -> str:
         """Quote a Python string for safe inclusion in a JS literal.
 
         Uses ``JSON.stringify`` semantics so embedded quotes
@@ -2008,7 +2008,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         import json
         return json.dumps(value)
 
-    def cmd_drain_click_events(self, *args, **kwargs):
+    def cmd_drain_click_events(self, *args, **kwargs) -> list[dict[str, Any]]:
         """Drain all captured click events from the webview.
 
         Returns a list of dicts. Each dict has keys:
@@ -2062,7 +2062,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         except Exception:
             return []
 
-    def _install_click_instrumentation(self, view):
+    def _install_click_instrumentation(self, view) -> Self:
         """T-NEW-070 — install click-capture JS into the webview.
 
         Wraps ``document.addEventListener('click', ...)`` so
@@ -2199,7 +2199,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             )
         return self
 
-    def _install_error_instrumentation(self, view):
+    def _install_error_instrumentation(self, view) -> Self:
         """Capture uncaught JS errors and unhandled promise rejections.
 
         Installed as a persistent QWebEngineScript at DocumentCreation (before
@@ -2273,11 +2273,11 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] could not install error instrumentation: {e}", exc_info=True)
         return self
 
-    def _looks_like_ipynb_path(self, path):
+    def _looks_like_ipynb_path(self, path) -> bool:
         """Return True if ``path`` is a string ending in ``.ipynb``."""
         return bool(path) and isinstance(path, str) and path.lower().endswith(".ipynb")
 
-    def _make_reload_handler(self, last_path):
+    def _make_reload_handler(self, last_path) -> Any:
         """Return a QTimer singleShot slot that reloads ``last_path``.
 
         Replaces the previous ``lambda p=last_path:`` form with a
@@ -2285,12 +2285,12 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         makes the slot testable in isolation.
         """
 
-        def _handler(_p=last_path):
+        def _handler(_p=last_path) -> None:
             self.open_notebook(_p)
 
         return _handler
 
-    def _navigate_browser(self, url):
+    def _navigate_browser(self, url) -> Self:
         """Point the embedded web viewer at ``url``.
 
         NchantdWebViewer exposes navigation via ``goto_page`` (there is no
@@ -2313,7 +2313,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] browser navigation failed for {url}: {e}", exc_info=True)
         return self
 
-    def _setup_shutdown_hooks(self):
+    def _setup_shutdown_hooks(self) -> Self:
         """Guarantee the Jupyter server is stopped when the app exits.
 
         Registers, once: QApplication.aboutToQuit (clean Qt quit) and an atexit
@@ -2340,7 +2340,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] could not register atexit shutdown hook: {e}")
         return self
 
-    def _sync_notebook_from_url(self, url):
+    def _sync_notebook_from_url(self, url) -> None:
         """T-NEW-062: keep Nchantd state in sync with Jupyter-side navigation.
 
         When the embedded Jupyter webview navigates (via the
