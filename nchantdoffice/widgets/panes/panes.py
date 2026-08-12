@@ -13,8 +13,11 @@
 
 # -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
 import datetime as dt
+from typing import Any, Dict, List
 
 # ======================================3rd Party Library Modules=====================================================||
 # (none)
@@ -39,7 +42,7 @@ pxcfg = join(here, "_data_", ".yaml")
 # T-064: shared dropdown cfg-builder. Replaces the
 # per-pane ``cfg = {label, layout, size, combobox: {...}}``
 # duplication with a single helper that every pane can call.
-def build_dropdown_cfg(label, options, value=None, handler=None, layout="horizontal", size=None):
+def build_dropdown_cfg(label, options, value=None, handler=None, layout="horizontal", size=None) -> Dict[str, Any]:
     """Build a NchantdDropDown cfg dict for a labelled dropdown.
 
     T-064 helper. options may be a list of strings or a list
@@ -102,7 +105,7 @@ SHARED_DROPDOWN_PRESETS = {
 }
 
 
-def build_preset_dropdown(preset_name, value=None, layout="horizontal"):
+def build_preset_dropdown(preset_name, value=None, layout="horizontal") -> Dict[str, Any]:
     """Build a dropdown cfg from one of SHARED_DROPDOWN_PRESETS (T-064).
 
     Returns the cfg dict. Raises KeyError if preset_name is
@@ -120,7 +123,7 @@ def build_preset_dropdown(preset_name, value=None, layout="horizontal"):
 # unified toolbar from a list of button configs. Buttons
 # marked ``"advanced": True`` are collapsed into an overflow
 # menu when the pane is in 'light' mode.
-def build_converged_toolbar(buttons, light_mode=False, layout="horizontal"):
+def build_converged_toolbar(buttons, light_mode=False, layout="horizontal") -> List[Dict[str, Any]]:
     """Build a converged toolbar cfg from a list of button configs.
 
     T-067 helper. Each ``buttons`` entry is a dict with at
@@ -152,7 +155,7 @@ def build_converged_toolbar(buttons, light_mode=False, layout="horizontal"):
 TOOLBAR_PROFILE = "light"
 
 
-def set_toolbar_profile(profile):
+def set_toolbar_profile(profile) -> str:
     """Set the active toolbar profile (T-067).
 
     Stores the profile on the module-level TOOLBAR_PROFILE so
@@ -165,6 +168,6 @@ def set_toolbar_profile(profile):
     return profile
 
 
-def is_light_mode():
+def is_light_mode() -> bool:
     """Return True when the active toolbar profile is 'light' (T-067)."""
     return TOOLBAR_PROFILE == "light"
