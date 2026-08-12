@@ -31,7 +31,10 @@
 
 # -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
+from typing import Any, Self
 import datetime as dt
 
 # ======================================3rd Party Library Modules=====================================================||
@@ -79,7 +82,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
     referral code, share targets, and earnings.
     """
 
-    def __init__(self, parent=None, cfg=None, user=None):
+    def __init__(self, parent=None, cfg=None, user=None) -> None:
         """T-NEW-019 (live crash): ``_load_or_generate_code``
         read ``self.user.id`` which raised ``AttributeError`` on
         the Referral tab init chain. The init signature now
@@ -103,7 +106,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         # ignores the tier gate.
         self.payout_eligibility_data: dict = {}
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         document = {"document": self.config.get("document", {})}
@@ -115,7 +118,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         self._fetch_dashboard()
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Any:
         """"""
         cfg = cfg or {}
         super().initView(cfg)
@@ -139,7 +142,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
     # Card builders
     # ------------------------------------------------------------------
 
-    def _build_code_card(self):
+    def _build_code_card(self) -> Any:
         """Card: shows the referral code + invitations remaining."""
         card = NchantdGroup(self)
         layout = pyqt.QVBoxLayout()
@@ -176,7 +179,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
 
         return card
 
-    def _build_share_card(self):
+    def _build_share_card(self) -> Any:
         """Card: share targets (Twitter / LinkedIn / Email / etc.)."""
         card = NchantdGridScrollGroupBox(self)
         card.setTitle("Share & Invite")
@@ -206,7 +209,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
 
         return card
 
-    def _build_earnings_card(self):
+    def _build_earnings_card(self) -> Any:
         """Card: earnings dashboard (counts, tier, this month, etc.)."""
         card = NchantdGridScrollGroupBox(self)
         card.setTitle("Earnings")
@@ -302,21 +305,21 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
     # Event handlers
     # ------------------------------------------------------------------
 
-    def _on_copy_code(self):
+    def _on_copy_code(self) -> None:
         """Copy the referral code to the system clipboard."""
         if not self.referral_code:
             return
         pyqt.QApplication.clipboard().setText(str(self.referral_code))
         logma.info(f"[referral_panel] copied code {self.referral_code} to clipboard")
 
-    def _on_copy_share_link(self):
+    def _on_copy_share_link(self) -> None:
         """Copy the share link to the system clipboard."""
         url = self.share_urls.get("link") if self.share_urls else ""
         if url:
             pyqt.QApplication.clipboard().setText(url)
             logma.info(f"[referral_panel] copied share link to clipboard")
 
-    def _on_request_payout(self):
+    def _on_request_payout(self) -> None:
         """Send payout request to nchantdoffice_com."""
         pending = self.earnings_data.get("pending_cents", 0)
         result = self.api_client.request_payout(amount_cents=pending)
@@ -326,7 +329,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         else:
             logma.warning("[referral_panel] payout request failed (offline or server error)")
 
-    def _open_url(self, url):
+    def _open_url(self, url) -> None:
         """Open a share URL in the default browser."""
         if not url:
             return
@@ -335,7 +338,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[referral_panel] failed to open {url}: {e}", exc_info=True)
 
-    def _make_open_url_handler(self, url):
+    def _make_open_url_handler(self, url) -> Any:
         """Return a slot that opens ``url`` on click (default-arg trick).
 
         Replaces the previous ``lambda checked=False, u=url:`` form
@@ -343,7 +346,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         auditor and makes the slot testable in isolation.
         """
 
-        def _handler(_checked=False, _url=url):
+        def _handler(_checked=False, _url=url) -> None:
             self._open_url(_url)
 
         return _handler
@@ -352,7 +355,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
     # Data loading
     # ------------------------------------------------------------------
 
-    def _load_or_generate_code(self):
+    def _load_or_generate_code(self) -> None:
         """Pull the existing code from user config or generate one.
 
         Stores in ``self.user.config.dikt['referral_code']`` so the
@@ -447,7 +450,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         except Exception as e:
             logma.warning(f"[referral_panel] could not persist code: {e}")
 
-    def _qt_passphrase_prompt(self):
+    def _qt_passphrase_prompt(self) -> str:
         """Return the master passphrase via a Qt masked-entry dialog.
 
         The desktop must never trigger the CLI ``getpass.getpass``
