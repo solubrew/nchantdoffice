@@ -31,3 +31,10 @@ class PyofImportContract:
 def count_rows_in_table(conn: sqlite3.Connection, table: str) -> int:
     cur = conn.execute(f'SELECT COUNT(*) FROM "{table}"')
     return int(cur.fetchone()[0])
+
+
+def iter_table_rows(conn: sqlite3.Connection, table: str) -> Iterable[dict]:
+    conn.row_factory = sqlite3.Row
+    cur = conn.execute(f'SELECT * FROM "{table}"')
+    for row in cur:
+        yield dict(row)
