@@ -12,6 +12,7 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
 from copy import deepcopy
@@ -37,6 +38,7 @@ from nchantdoffice.widgets.tabs import NchantdOfficeTab
 from pyffice.document import PyfficeDocument
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.controls.buttons import NchantdButton
+from typing import Any, Iterator, Self
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -54,7 +56,7 @@ class NchantdOfficeDocumentMixin:
     """Nchantd Office Document contains elements to create virtual documents to be stored. This is primarily to handle
     storage and generally will equate to what is shown in a tab"""
 
-    def init_variables(self, name=None):
+    def init_variables(self, name=None) -> Self:
         """ """
         super().init_variables()
         # self.app = pyqt.QApplication.instance()
@@ -85,7 +87,7 @@ class NchantdOfficeDocumentMixin:
             else False
         )
 
-    def initModel(self, cfg=None, objects=None):
+    def initModel(self, cfg=None, objects=None) -> Self:
         """ """
         super().initModel(cfg)  # Pass through usage even though the Mixin has no permeate parent class
         self.toolbox_config = self.config.dikt.get("toolbox", None)
@@ -123,7 +125,7 @@ class NchantdOfficeDocumentMixin:
         self.customContextMenuRequested.connect(self._show_context_menu)
         return self
 
-    def _show_context_menu(self, pos):
+    def _show_context_menu(self, pos) -> Self:
         """"""
         # Re-initialize context menu to ensure it's fresh
         if self.context_menu is None:
@@ -133,7 +135,7 @@ class NchantdOfficeDocumentMixin:
             self.context_menu.exec(global_pos)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         if self.config.dikt.get("default_toolbar", True):
@@ -141,13 +143,13 @@ class NchantdOfficeDocumentMixin:
         self.init_toolbox()
         return self
 
-    def initWidget(self, pos=0):
+    def initWidget(self, pos=0) -> Self:
         """ """
         self.initModel()
         self.initView()
         return self
 
-    def align_left(self, selection=""):
+    def align_left(self, selection="") -> Self:
         """Align text selection to the left within the document editor."""
         if self.document_editor is not None:
             cursor = self.document_editor.textCursor()
@@ -157,7 +159,7 @@ class NchantdOfficeDocumentMixin:
             self.on_document_changed()
         return self
 
-    def align_center(self, selection=""):
+    def align_center(self, selection="") -> Self:
         """Align text selection to the center within the document editor."""
         if self.document_editor is not None:
             cursor = self.document_editor.textCursor()
@@ -167,7 +169,7 @@ class NchantdOfficeDocumentMixin:
             self.on_document_changed()
         return self
 
-    def align_right(self, selection=""):
+    def align_right(self, selection="") -> Self:
         """Align text selection to the right within the document editor."""
         if self.document_editor is not None:
             cursor = self.document_editor.textCursor()
@@ -177,7 +179,7 @@ class NchantdOfficeDocumentMixin:
             self.on_document_changed()
         return self
 
-    def cmd_cancel(self):
+    def cmd_cancel(self) -> Self:
         """Cancel current document operation and revert unsaved changes."""
         if hasattr(self, "document_editor") and self.document_editor is not None:
             self.document_editor.setText("")
@@ -185,11 +187,11 @@ class NchantdOfficeDocumentMixin:
             self.app.model.has_changed = False
         return self
 
-    def cmd_delete_tab(self, event, *args, **kwargs):
+    def cmd_delete_tab(self, event, *args, **kwargs) -> None:
         """"""
         self.app.model.delete_tab(self)
 
-    def cmd_open_local_file(self, event=None, *args, **kwargs):
+    def cmd_open_local_file(self, event=None, *args, **kwargs) -> Self:
         """"""
         cfg = {}
         self.open_file_sigil = NchantdFileOpenSigil("open_local_document", self, cfg).initWidget()
@@ -199,7 +201,7 @@ class NchantdOfficeDocumentMixin:
                 self.app.model.import_cherrytree(self.local_file)
         return self
 
-    def cmd_node_edit(self, event=None, *args, **kwargs):
+    def cmd_node_edit(self, event=None, *args, **kwargs) -> Self:
         """Open the node editor for the current document's tree node."""
         if hasattr(self, "app") and self.app:
             if hasattr(self.app.view, "panes") and "left" in self.app.view.panes:
@@ -211,7 +213,7 @@ class NchantdOfficeDocumentMixin:
                     editor.initWidget()
         return self
 
-    def cmd_redo(self, event=None, *args, **kwargs):
+    def cmd_redo(self, event=None, *args, **kwargs) -> Self:
         """Redo the last undone action in the document editor."""
         if self.document_editor is not None:
             doc = self.document_editor.document()
@@ -219,7 +221,7 @@ class NchantdOfficeDocumentMixin:
                 doc.redo()
         return self
 
-    def cmd_show_pane_left(self, event=None, *args, **kwargs):
+    def cmd_show_pane_left(self, event=None, *args, **kwargs) -> Self:
         """"""
         if self.app.view.panes["left"].isHidden():
             self.app.view.panes["left"].show()
@@ -227,7 +229,7 @@ class NchantdOfficeDocumentMixin:
             self.app.view.panes["left"].hide()
         return self
 
-    def cmd_show_pane_right(self, event=None, *args, **kwargs):
+    def cmd_show_pane_right(self, event=None, *args, **kwargs) -> Self:
         """"""
         if self.app.view.panes["right"].isHidden():
             self.app.view.panes["right"].show()
@@ -235,7 +237,7 @@ class NchantdOfficeDocumentMixin:
             self.app.view.panes["right"].hide()
         return self
 
-    def cmd_tag_edit(self, event=None, *args, **kwargs):
+    def cmd_tag_edit(self, event=None, *args, **kwargs) -> Self:
         """Open tag editor for the current document."""
         if hasattr(self, "app") and self.app and hasattr(self.app, "model"):
             tags = getattr(self.document, "tags", []) if self.document else []
@@ -245,7 +247,7 @@ class NchantdOfficeDocumentMixin:
             self.on_document_changed()
         return self
 
-    def cmd_undo(self, event=None, *args, **kwargs):
+    def cmd_undo(self, event=None, *args, **kwargs) -> Self:
         """Undo the last action in the document editor."""
         if self.document_editor is not None:
             doc = self.document_editor.document()
@@ -253,12 +255,12 @@ class NchantdOfficeDocumentMixin:
                 doc.undo()
         return self
 
-    def cmd_save_tab(self, event=None, *args, **kwargs):
+    def cmd_save_tab(self, event=None, *args, **kwargs) -> None:
         """ "" """
         self.save()
 
     @staticmethod
-    def _save_action(document):
+    def _save_action(document) -> str:
         """Return the save action name for a document (T-NEW-038).
 
         When the document's location is ``"internal"`` (stored
@@ -294,19 +296,19 @@ class NchantdOfficeDocumentMixin:
             return "save_database"
         return "save"
 
-    def create_data_table(self):
+    def create_data_table(self) -> "DataFrame":
         """"""
         df = DataFrame()
         return df
 
-    def defocus(self):
+    def defocus(self) -> Self:
         """Remove focus from the document widget and trigger save if needed."""
         if self.document_editor is not None:
             self.document_editor.clearFocus()
         self.on_lost_focus()
         return self
 
-    def export_document(self):
+    def export_document(self) -> Self:
         """Export a single selected document to an external file of the selected format."""
         if self.document is None:
             logma.warning("No document to export")
@@ -321,7 +323,7 @@ class NchantdOfficeDocumentMixin:
             logma.info(f"Exported document to {file_path}")
         return self
 
-    def get_bytes(self):
+    def get_bytes(self) -> bytes:
         """Return document content as bytes for storage or transmission."""
         if self.document is None:
             return bytes()
@@ -332,12 +334,12 @@ class NchantdOfficeDocumentMixin:
             return content.encode("utf-8")
         return j.dumps(content, default=str).encode("utf-8")
 
-    def get_primary_key(self):
+    def get_primary_key(self) -> Self:
         """"""
         self.primary_key = self.app.model.get_primary_key(self.uuid)
         return self.primary_key
 
-    def import_document(self):
+    def import_document(self) -> Self:
         """Import a document from an external file."""
         file_path, _ = pyqt.QFileDialog.getOpenFileName(
             self, "Import Document", "", "JSON Files (*.json);;Text Files (*.txt);;All Files (*)"
@@ -355,7 +357,7 @@ class NchantdOfficeDocumentMixin:
             logma.info(f"Imported document from {file_path}")
         return self
 
-    def init_drawer(self, name):
+    def init_drawer(self, name) -> dict[str, Any]:
         """Initialize a named drawer section in the toolbox."""
         if self.toolbox_config is None:
             self.toolbox_config = {}
@@ -372,7 +374,7 @@ class NchantdOfficeDocumentMixin:
             drawer["items"] = {}
         return drawer
 
-    def init_toolbar(self, cfg=None):
+    def init_toolbar(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -449,7 +451,7 @@ class NchantdOfficeDocumentMixin:
         self.layout.addWidget(self.document_toolbar)
         return self
 
-    def init_toolbox(self, cfg=None):
+    def init_toolbox(self, cfg=None) -> Self:
         """"""
         self.config.override(cfg)
         if self.toolbox_config is None:
@@ -461,7 +463,7 @@ class NchantdOfficeDocumentMixin:
         self.toolbox_config[50]["items"] = self.init_drawer_file_config()
         return self
 
-    def init_drawer_file_config(self):
+    def init_drawer_file_config(self) -> dict[str, Any]:
         """"""
         default_action = {"action": "insert_object", "type": "custom"}
         items = self.toolbox_config[50].get("items", {})
@@ -487,7 +489,7 @@ class NchantdOfficeDocumentMixin:
         # cnt += 1
         return items
 
-    def lock_page(self):
+    def lock_page(self) -> Self:
         """Lock the current document page to prevent editing."""
         if self.document_editor is not None:
             self.document_editor.setReadOnly(True)
@@ -495,7 +497,7 @@ class NchantdOfficeDocumentMixin:
             self.document.locked = True
         return self
 
-    def on_document_changed(self):
+    def on_document_changed(self) -> Self:
         """
 
         when there is a change to the document but the changes into the local cache for easier undo/redo logic
@@ -506,7 +508,7 @@ class NchantdOfficeDocumentMixin:
         self.app.model.has_changed = True
         return self
 
-    def on_gain_focus(self):
+    def on_gain_focus(self) -> Self:
         """Update document when it gains focus to reflect any edits made elsewhere."""
         if self.document is not None and hasattr(self.app, "model"):
             stored = self.app.model.get_document(self.document.did) if hasattr(self.app.model, "get_document") else None
@@ -516,7 +518,7 @@ class NchantdOfficeDocumentMixin:
         self.setFocus()
         return self
 
-    def on_lost_focus(self):
+    def on_lost_focus(self) -> Self:
         """Save document when focus is lost, based on user settings."""
         auto_save = self.config.dikt.get("auto_save_on_blur", True) if hasattr(self, "config") else True
         if auto_save and self.document is not None:
@@ -525,12 +527,12 @@ class NchantdOfficeDocumentMixin:
             self.save_internal()
         return self
 
-    def register(self):
+    def register(self) -> Self:
         """"""
         self.app.model.store.register_document(self.document)
         return self
 
-    def save(self, path=None, format_=None, encrypt=False):
+    def save(self, path=None, format_=None, encrypt=False) -> Self:
         """
         Save method saves the current document in its most recent format ie internal or external file saving
         this can be different than a store_document command
@@ -620,7 +622,7 @@ class NchantdOfficeDocumentMixin:
         self.app.model.store_document(self.document)
         return self
 
-    def save_app(self, path=None, format_=None, encrypt=False):
+    def save_app(self, path=None, format_=None, encrypt=False) -> Self:
         """
         Save method saves the current document in its most recent format ie internal or external file saving
         this can be different than a store_document command
@@ -683,7 +685,7 @@ class NchantdOfficeDocumentMixin:
         self.app.model.store_document(self.document, True)  # True stors to app_doc
         return self
 
-    def set_save_mode(self, mode):
+    def set_save_mode(self, mode) -> Self:
         """Update ``self.save_mode`` and persist it on the document config.
 
         Called by the TabEdit Pane checkbox handler. Returns ``self``
@@ -715,7 +717,7 @@ class NchantdOfficeDocumentMixin:
         logma.info(f"[documents] save_mode set to {mode!r}")
         return self
 
-    def save_external(self):
+    def save_external(self) -> Self:
         """Save document to an external file path."""
         if self.document is None:
             return self
@@ -734,12 +736,12 @@ class NchantdOfficeDocumentMixin:
         logma.info(f"Saved external document to {self.file_path}")
         return self
 
-    def save_internal(self):
+    def save_internal(self) -> Self:
         """Persist the active Pyffice document through the model API."""
         self.app.model.store_document(self.document)
         return self
 
-    def save_as(self, name, path=None):
+    def save_as(self, name, path=None) -> Self:
         """Create a copy of the document under a new name and optional path."""
         if self.document is None:
             logma.warning("save_as called with no document")
@@ -755,7 +757,7 @@ class NchantdOfficeDocumentMixin:
         self.path = target_path
         return self
 
-    def save_copy_as(self, name, path=None):
+    def save_copy_as(self, name, path=None) -> Self:
         """Create a copy of the document without changing the current document state."""
         if self.document is None:
             logma.warning("save_copy_as called with no document")
@@ -772,7 +774,7 @@ class NchantdOfficeDocumentMixin:
         logma.info(f"Document copy saved as {target_path}")
         return self
 
-    def set_file_path(self, path):
+    def set_file_path(self, path) -> Self:
         """ """
         self.file_path = path
         return self
@@ -782,7 +784,7 @@ class NchantdOfficeDocumentMixin:
     #     self.app.model.store.store_document(self.document)
     #     return self
 
-    def take_snapshot(self):
+    def take_snapshot(self) -> str | None:
         """Capture a PNG snapshot of the current document widget.
 
         T-038: grabs the document_editor's pixmap via QWidget.grab()
@@ -818,7 +820,7 @@ class NchantdOfficeDocumentMixin:
             logma.error(f"[documents] take_snapshot failed: {e}", exc_info=True)
             return None
 
-    def unlock_page(self):
+    def unlock_page(self) -> Self:
         """Unlock the current document page to allow editing."""
         if self.document_editor is not None:
             self.document_editor.setReadOnly(False)
@@ -826,7 +828,7 @@ class NchantdOfficeDocumentMixin:
             self.document.locked = False
         return self
 
-    def update_document(self):
+    def update_document(self) -> Self:
         """Refresh the current document state from the underlying store."""
         if self.document is None or not hasattr(self.document, "did"):
             return self
@@ -843,7 +845,7 @@ class NchantdOfficeDocumentMixin:
                     setattr(self.document, key, value)
         return self
 
-    def update_document_page(self, page_num):
+    def update_document_page(self, page_num) -> Self:
         """Update display/state for a specific document page.
         NOTE: this codebase currently uses a single-page editor; multi-page support
         is a future feature. For page_num == 0 (current), we refresh from store; for
@@ -854,7 +856,7 @@ class NchantdOfficeDocumentMixin:
         logma.warning(f"update_document_page({page_num}) called but multi-page support is not implemented")
         return self
 
-    def _store_document(self):
+    def _store_document(self) -> Self:
         """"""
         document = self.document.to_dict()
         self.app.model.store_document(document)
@@ -866,7 +868,7 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
 
     PYTYPE = "document"  # Default Pyffice type
 
-    def __init__(self, name, parent=None, cfg=None):
+    def __init__(self, name, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
@@ -876,11 +878,11 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         self.notes = None
 
     @classmethod
-    def get_pyffice_tools(cls):
+    def get_pyffice_tools(cls) -> list[Any]:
         """Get toolbox tools based on Pyffice document type"""
         return []  # Override in subclasses
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         self.init_variables(self.name)
         self.config.override(
@@ -890,11 +892,11 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         logma.json({"document": self.config.dikt.get("document", {})})
         return self
 
-    def get_default_settings(self):
+    def get_default_settings(self) -> dict[str, Any]:
         """"""
         return {}
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         self.set_notes(self.config.dikt.get("notes", []))
@@ -909,42 +911,42 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
             raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def add_automation(self):
+    def add_automation(self) -> Self:
         """"""
         super().add_automation()
         return self
 
-    def append_note(self, note):
+    def append_note(self, note) -> Self:
         """"""
         note.set_sequence(len(self.notes))
         self.notes.append(note)
         return self
 
-    def close_tab(self, tab=None):
+    def close_tab(self, tab=None) -> Self:
         """"""
         super().close_tab(tab)
         return self
 
-    def export_file(self):
+    def export_file(self) -> None:
         """"""
         super().export_file()
 
-    def focusOutEvent(self, event):
+    def focusOutEvent(self, event) -> None:
         """"""
         super().focusOutEvent(event)
         self.save()
 
-    def get_content_internal(self):
+    def get_content_internal(self) -> dict[str, Any]:
         """"""
         return {}
 
-    def get_content(self, content=None, location="external"):
+    def get_content(self, content=None, location="external") -> dict[str, Any]:
         """"""
         content = content or {}
         content["file_path"] = self.document.file_path
@@ -953,30 +955,30 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
             content["internal"] = self.get_content_internal()
         return content
 
-    def get_version(self):
+    def get_version(self) -> int:
         """returns the current version of the document"""
         return self.config.dikt.get("version", 1)
 
-    def get_supports_versions(self):
+    def get_supports_versions(self) -> dict[str, Any]:
         """returns true if the document supports versions"""
         response = {"pyffice": self.config.dikt.get("supports_pyffice_versions", False)}
         return response
 
-    def import_file(self):
+    def import_file(self) -> None:
         """"""
         super().import_file()
 
-    def init_toolbar(self, cfg=None):
+    def init_toolbar(self, cfg=None) -> Self:
         """"""
         super().init_toolbar(cfg)
         return self
 
-    def init_toolbox(self, cfg=None):
+    def init_toolbox(self, cfg=None) -> Self:
         """"""
         super().init_toolbox(cfg)
         return self
 
-    def jump_to_account_tab(self):
+    def jump_to_account_tab(self) -> Self:
         """Switch the central tab area to the Account/Settings tab.
 
         Delegates to ``self.app.view.switch_to_account_tab`` which holds
@@ -990,12 +992,12 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
                 return account_switch()
         return self
 
-    def lock_view(self):
+    def lock_view(self) -> Self:
         """"""
         super().lock_view()
         return self
 
-    def open(self):
+    def open(self) -> Self:
         """Open the document for editing. If no document is set, attempt to load from the current node."""
         if self.document is None and hasattr(self, "app") and hasattr(self.app, "view"):
             tree = getattr(self.app.view.panes.get("left", {}), "tree", None)
@@ -1007,11 +1009,11 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
                         self.document_editor.setPlainText(str(self.document.content))
         return self
 
-    def open_cloud(self, path):
+    def open_cloud(self, path) -> None:
         """"""
         # PUSH to 0.0.3 - implement opening of cloud based documents like .gsheet, etc
 
-    def open_file(self, file, _populate_document=True, _save=True):
+    def open_file(self, file, _populate_document=True, _save=True) -> None:
         """"""
         if file is None:
             file = self.file_path
@@ -1025,11 +1027,11 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         if _save:
             self.save()
 
-    def open_local(self):
+    def open_local(self) -> Self:
         """Trigger the local file open dialog."""
         return self.cmd_open_local_file()
 
-    def open_remote(self):
+    def open_remote(self) -> Self:
         """Open a document from a remote source URL."""
         if not hasattr(self.app, "model") or not hasattr(self.app.model, "open_remote"):
             logma.warning("open_remote not available on this model")
@@ -1045,18 +1047,18 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
             logma.error(f"Failed to open remote document: {e}")
         return self
 
-    def populate_data(self, data=None):
+    def populate_data(self, data=None) -> None:
         """"""
         # TODO implement method
         self.document.set_location("internal")
         self.save()
 
-    def populate_document(self, file=None):
+    def populate_document(self, file=None) -> Self:
         """"""
         self.save()
         return self
 
-    def save(self):
+    def save(self) -> Self:
         """"""
         self.document = self.document or PyfficeDocument({})
         if self.document.location is None:
@@ -1067,12 +1069,12 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         super().save()
         return self
 
-    def set_document(self, document):
+    def set_document(self, document) -> Self:
         """"""
         self.document = document
         return self
 
-    def set_notes(self, notes):
+    def set_notes(self, notes) -> Self:
         """"""
         # T-NEW-XXX: deferred import to break a circular import
         # with notes.py (which imports from documents.py).
@@ -1083,7 +1085,7 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         self.notes = [NchantdOfficeNote(self, note).initWidget() for note in notes]
         return self
 
-    def unlock_view(self):
+    def unlock_view(self) -> Self:
         """"""
         super().unlock_view()
         return self
@@ -1092,7 +1094,7 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
 class NchantdOfficeDocumentManager(NchantdOfficeDocumentMixin, NchantdManager):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
@@ -1101,20 +1103,20 @@ class NchantdOfficeDocumentManager(NchantdOfficeDocumentMixin, NchantdManager):
         )
         self.name = "NchantdOfficeDocumentManager"
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         self.init_variables(self.name)
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(0)
         return self
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
 
