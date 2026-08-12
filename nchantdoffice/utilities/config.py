@@ -13,10 +13,11 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Self
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -85,14 +86,14 @@ pxcfg = join(here, "_data_", "config.yaml")
 class NchantdOfficeBrowserConfig(PyfficeConfig):
     """"""
 
-    def __init__(self, cfg=None, parent=None):
+    def __init__(self, cfg=None, parent=None) -> None:
         """"""
         super().__init__(cfg, parent)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeBrowserConfig").override(cfg))
         self.home_page = self.config.get("home_page", "https://www.nchantdoffice.com")
         logma.info(f"[config] NchantdOfficeBrowserConfig.__init__: home_page={self.home_page!r}")
 
-    def get_home_page(self):
+    def get_home_page(self) -> Optional[str]:
         """"""
         logma.info(f"[config] NchantdOfficeBrowserConfig.get_home_page: returning {getattr(self, 'home_page', None)!r}")
         return getattr(self, "home_page", None)
@@ -101,7 +102,7 @@ class NchantdOfficeBrowserConfig(PyfficeConfig):
 class PyfficeApplicationConfig(PyfficeConfig):
     """Define and control Pyffice Codex and ohter Pyffice Document Settings"""
 
-    def __init__(self, cfg=None, parent=None):
+    def __init__(self, cfg=None, parent=None) -> None:
         """"""
         super().__init__(cfg, parent)
         try:
@@ -118,7 +119,7 @@ class PyfficeApplicationConfig(PyfficeConfig):
         self.theme_settings = {}
         logma.info("[config] PyfficeApplicationConfig.__init__: section dicts initialised")
 
-    def load_document(self, document=None):
+    def load_document(self, document=None) -> Self:
         """"""
         logma.info(f"[config] PyfficeApplicationConfig.load_document: document_provided={document is not None}")
         try:
@@ -134,7 +135,7 @@ class PyfficeApplicationConfig(PyfficeConfig):
             raise
         return self
 
-    def set_settings_journal(self, settings):
+    def set_settings_journal(self, settings) -> Self:
         """"""
         logma.info("[config] PyfficeApplicationConfig.set_settings_journal: enabling all journal flags")
         self.today_tabled_enable = True
@@ -150,7 +151,7 @@ class PyfficeApplicationConfig(PyfficeConfig):
         logma.debug(f"[config] set_settings_journal: applied settings={settings!r}")
         return self
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """"""
         logma.debug("[config] PyfficeApplicationConfig.to_dict: serialising all settings sections")
         doc = super().to_dict()
