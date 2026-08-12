@@ -80,7 +80,7 @@
 - **T-NEW-073** ✅ P1 bug sweep — `NchantdOfficeJournalEditor.refresh_content` un-commented (T-NEW-036 step 3) + T-NEW-058 `_make_dbupdate` mock fixture aligned with production `parent.model.codex` call shape. Qt batched suite: 159/159 pass (was 153/165). No source-of-truth change in `updates/db.py` — the fixture was the drift.
 - **T-NEW-074** ✅ Content-only .pyof import from Application tab ToolBox (button), commit `6f5d28f` (2026-08-11, t-new-074).
 - **T-NEW-075** ✅ Content-table last-version-wins import — `app_doc_content`, `app_media_content`, `doc_media_content` added to `PyofImportContract.TABLES` with `merge_strategy='last_version_per_puuid'`. Host PKs regenerated; `UUID`/`pUUID` preserved. Commit `00ceea3` (2026-08-11, t-new-075).
-- **T-NEW-076** ✅ Content-table merge-by-version dedupe — `_import_content_table` is now host-aware: query MAX(version) for each source pUUID, DELETE host rows only when source is strictly newer, INSERT source's max-version row. Re-imports no longer duplicate. Commit `<hash>` (2026-08-11, t-new-076).
+- **T-NEW-076** ✅ Content-table merge-by-version dedupe — `_import_content_table` is now host-aware: query MAX(version) for each source pUUID, DELETE host rows only when source is strictly newer, INSERT source's max-version row. Re-imports no longer duplicate. Commit `d49c0c3` (2026-08-11, t-new-076).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
