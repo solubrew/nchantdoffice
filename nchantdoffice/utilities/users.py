@@ -60,7 +60,7 @@ class NchantdOfficeUser(NchantdUser):
     the secure-store API key flow that they duplicated.
     """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         super().__init__(parent, cfg)
         self.config.override(
             kahndor.Instruct(pxcfg).select("NchantdOfficeUser").override(cfg)

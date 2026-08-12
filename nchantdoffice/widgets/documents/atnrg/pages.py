@@ -247,7 +247,7 @@ class NchantdOfficeURL(NchantdURL):
         self.set_url(self.config.get("url", self.config.get("homepage", "https://www.nchantdoffice.com/")))
         self.document = None
 
-    def init_document(self, document=None, cfg=None):
+    def init_document(self, document=None, cfg=None) -> None:
         """"""
         cfg = cfg or {}
         self.config.get(cfg)
