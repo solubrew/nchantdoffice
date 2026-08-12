@@ -12,6 +12,8 @@
 	<(WT)>: -32
 """
 # -*- coding: utf-8 -*
+from __future__ import annotations
+
 import click
 import os
 import sys
@@ -20,6 +22,7 @@ import shutil
 import hashlib
 from pathlib import Path
 from datetime import datetime
+from typing import Any, Optional
 
 from kahndor.logma import Logma
 
@@ -31,7 +34,7 @@ logma = Logma(__name__)
 
 @click.group()
 @click.version_option(version="0.0.1")
-def cli():
+def cli() -> None:
     """NchantdOffice - Document Management System"""
     logma.info("[cli] cli group invoked")
     pass
@@ -60,7 +63,7 @@ DOCUMENT_TYPES = {
 }
 
 
-def get_documents_dir():
+def get_documents_dir() -> Path:
     """Get the documents directory path."""
     home = Path.home()
     docs_dir = home / ".nchantdoffice" / "documents"
@@ -69,7 +72,7 @@ def get_documents_dir():
     return docs_dir
 
 
-def get_recent_files_path():
+def get_recent_files_path() -> Path:
     """Get the recent files list path."""
     config_dir = Path.home() / ".nchantdoffice"
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -78,7 +81,7 @@ def get_recent_files_path():
     return path
 
 
-def load_recent_files():
+def load_recent_files() -> list[dict[str, Any]]:
     """Load recent files list."""
     path = get_recent_files_path()
     if path.exists():
@@ -94,7 +97,7 @@ def load_recent_files():
     return []
 
 
-def save_recent_file(filepath):
+def save_recent_file(filepath: str) -> None:
     """Add a file to the recent files list."""
     recent = load_recent_files()
     
@@ -117,7 +120,7 @@ def save_recent_file(filepath):
         json.dump(recent, f, indent=2)
 
 
-def calculate_hash(filepath):
+def calculate_hash(filepath: str) -> Optional[str]:
     """Calculate SHA256 hash of a file."""
     sha256 = hashlib.sha256()
     try:
@@ -135,7 +138,7 @@ def calculate_hash(filepath):
         return None
 
 
-def create_document_file(filepath, doc_type):
+def create_document_file(filepath: Path, doc_type: str) -> dict[str, Any]:
     """Create a new .pyof document file."""
     doc_type_key = doc_type.lower()
     doc_type_value = DOCUMENT_TYPES.get(doc_type_key, 'note')
@@ -162,7 +165,7 @@ def create_document_file(filepath, doc_type):
 @click.argument('filepath', required=False)
 @click.option('--type', '-t', 'doc_type', default='text', help='Document type: text, spreadsheet, notebook, calendar, chart, pdf, image, video, audio, contact, form, survey, presentation, table, matrix, script, webbrowser, webpage')
 @click.option('--template', help='Use a template')
-def new(filepath, doc_type, template):
+def new(filepath: Optional[str], doc_type: str, template: Optional[str]) -> None:
     """Create a new document"""
     if not filepath:
         # Generate a default name
@@ -215,7 +218,7 @@ def new(filepath, doc_type, template):
 @cli.command()
 @click.argument('filepath')
 @click.option('--readonly', is_flag=True, help='Open in read-only mode')
-def open(filepath, readonly):
+def open(filepath: str, readonly: bool) -> None:
     """Open an existing document"""
     # Resolve path
     path = Path(filepath)
@@ -280,7 +283,7 @@ def open(filepath, readonly):
 @click.argument('filepath')
 @click.option('--format', '-f', 'export_format', default='pdf', help='Export format: pdf, html, docx, txt, md, json')
 @click.option('--output', '-o', help='Output file path')
-def export(filepath, export_format, output):
+def export(filepath: str, export_format: str, output: Optional[str]) -> None:
     """Export document to different format"""
     # Resolve path
     path = Path(filepath)
@@ -370,7 +373,7 @@ def export(filepath, export_format, output):
 @cli.command()
 @click.argument('filepath')
 @click.option('--backup', is_flag=True, help='Create backup before saving')
-def save(filepath, backup):
+def save(filepath: str, backup: bool) -> None:
     """Save the document"""
     path = Path(filepath)
     
@@ -432,7 +435,7 @@ def save(filepath, backup):
 
 @cli.command()
 @click.option('--limit', '-n', default=10, help='Maximum number of documents to show')
-def list(limit):
+def list(limit: int) -> None:
     """List recent documents"""
     """List recent documents"""
     click.echo("Recent documents:")
@@ -478,7 +481,7 @@ def list(limit):
 
 @cli.command()
 @click.option("--quiet", "-q", is_flag=True, help="Suppress output")
-def models(quiet):
+def models(quiet: bool) -> int:
     """Inspect the data models (NchantdOfficeCloakModel, NchantdOfficeSettingsModel, etc.)."""
     if not quiet:
         click.echo("Loading NchantdOffice data models...")
@@ -500,7 +503,7 @@ def models(quiet):
 
 @cli.command()
 @click.option("--quiet", "-q", is_flag=True, help="Suppress output")
-def views(quiet):
+def views(quiet: bool) -> int:
     """Inspect the view layer (Qt windows, panes, dialogs)."""
     if not quiet:
         click.echo("Loading NchantdOffice views...")
@@ -516,7 +519,7 @@ def views(quiet):
 
 @cli.command(name="nchantdoffice")
 @click.option("--quiet", "-q", is_flag=True, help="Suppress output")
-def nchantdoffice_cmd(quiet):
+def nchantdoffice_cmd(quiet: bool) -> int:
     """Inspect the main NchantdOffice application module."""
     if not quiet:
         click.echo("Loading NchantdOffice application module...")
@@ -532,7 +535,7 @@ def nchantdoffice_cmd(quiet):
 
 @cli.command(name="__main__")
 @click.option("--quiet", "-q", is_flag=True, help="Suppress output")
-def main_module_cmd(quiet):
+def main_module_cmd(quiet: bool) -> int:
     """Inspect the __main__ entry point (python -m nchantdoffice)."""
     if not quiet:
         click.echo("__main__ entry point information")
