@@ -35,17 +35,17 @@ pxcfg = join(here, "_data_", "launch.yaml")
 class NchantdOfficeLaunch(Launch):
     """"""
 
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None) -> None:
         """"""
         super().__init__(cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeLaunch").override(cfg))
 
-    def launch_app(self):
+    def launch_app(self) -> "NchantdOfficeLaunch":
         """"""
         super().launch_app()
         return self
 
-    def set_scripts(self):
+    def set_scripts(self) -> "NchantdOfficeLaunch":
         """"""
         self.scripts = self.config.dikt.get("scripts", [])
         return self
