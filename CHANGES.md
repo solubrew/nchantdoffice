@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 1 cross-repo drift detector (`TIPS_FEED` ≥ ATNRG `tips.md` count)
   - 1 release-checklist pin (R-1 section present with all required markers)
 - Content-only `.pyof` import from the Application tab in the ToolBox (`cmd_import_pyof`, T-NEW-074) — opens a file picker, copies `app_tree_node`, `doc_tree_node`, `app_tab`, `doc_tab`, `app_media`, `doc_media` from the source into the host instance using INSERT-OR-IGNORE on the source UUIDs (no remapping). Instances and config are NOT migrated.
+- Content-table last-version-wins merge (`T-NEW-075`) — extends the `.pyof` import contract with `app_doc_content`, `app_media_content`, `doc_media_content`. For each `pUUID`, only the highest-version row is kept; source PKs are dropped (host regenerates), but `UUID` and `pUUID` are preserved (FK relationships intact).
 
 ### Changed
 - `nchantdoffice/__init__.py` - Added version and config exports

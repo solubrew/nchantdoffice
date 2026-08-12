@@ -79,6 +79,7 @@
 - **T-NEW-072** ✅ TODOs.md update-process consolidation — added "Update Process Overview" section + T-NEW-061 deferred card body.
 - **T-NEW-073** ✅ P1 bug sweep — `NchantdOfficeJournalEditor.refresh_content` un-commented (T-NEW-036 step 3) + T-NEW-058 `_make_dbupdate` mock fixture aligned with production `parent.model.codex` call shape. Qt batched suite: 159/159 pass (was 153/165). No source-of-truth change in `updates/db.py` — the fixture was the drift.
 - **T-NEW-074** ✅ Content-only .pyof import from Application tab ToolBox (button), commit `6f5d28f` (2026-08-11, t-new-074).
+- **T-NEW-075** ✅ Content-table last-version-wins import — `app_doc_content`, `app_media_content`, `doc_media_content` added to `PyofImportContract.TABLES` with `merge_strategy='last_version_per_puuid'`. Host PKs regenerated; `UUID`/`pUUID` preserved. Commit `<hash>` (2026-08-11, t-new-075).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1917,6 +1918,30 @@ Both are scoped for v0.2.0 because:
 **Verification:**
 - `python -m pytest tests/test_pyof_import.py --tb=no -q` → all green
 - Manual: open the GUI, navigate to the Application tab in the ToolBox, click the new "Import from .pyof…" button, pick a test .pyof, confirm rows landed on the host.
+
+### T-NEW-075 — Content-table last-version-wins import (2026-08-11)
+
+**Context.** T-NEW-074 brought the base 6 content tables into the host via INSERT-OR-IGNORE on the source UUIDs. But the 3 ``_content`` tables (``app_doc_content``, ``app_media_content``, ``doc_media_content``) carry versioned rows: every save of a doc/media produces a new row keyed on ``(pUUID, version)``, with the rowid as the autoincrement PK. A user re-importing a .pyof into a host that already has older versions should end up with the highest-version row per parent, not a pile of duplicates or an OR-IGNORE-skip that throws away the latest write. The semantics must differ from the base 6: source PKs are dropped (host regenerates rowid), ``UUID`` and ``pUUID`` are carried (doc↔content + node↔tab FK relationships survive), and for each ``pUUID`` only the highest-version row is inserted.
+
+**Affected sites:**
+- `nchantdoffice/utilities/pyof_import.py` — `TableSpec.merge_strategy` field (Literal), `_import_content_table` helper, `_coerce_doc_version` defensive caster, `_host_primary_key_columns` helper, `import_one_table` dispatch, `PyofImportContract.TABLES` (3 new entries)
+- `tests/test_pyof_import.py` — 3 new contract tests + 5 updated fixtures (base 6 → 9 tables)
+
+**Migration plan** (no priority / low priority — additive): the existing INSERT-OR-IGNORE path is unchanged; only the dispatch table and one new helper were added. ``TableSpec.pk_column`` became ``Optional[str]`` (None = "no PK collision dedupe — use merge_strategy"). The 3 ``_content`` entries default to ``merge_strategy='last_version_per_puuid'``; the base 6 entries default to ``'insert_or_ignore'`` (the original behaviour). Backward-compatible: any caller using positional ``TableSpec(name, pk)`` keeps working.
+
+**Steps:**
+1. Extend `TableSpec` with `merge_strategy: Literal['insert_or_ignore', 'last_version_per_puuid']` (default `'insert_or_ignore'`); make `pk_column` Optional.
+2. Add `_import_content_table` helper: intersect cols → drop host PK cols from projection → group source rows by `pUUID` (highest-version wins, ties broken last-seen) → `INSERT INTO` (not OR-IGNORE).
+3. Add `_coerce_doc_version` (defensive int cast for INTEGER/REAL/TEXT/bytes) and `_host_primary_key_columns` (PRAGMA-based PK lookup).
+4. Dispatch in `import_one_table` on `spec.merge_strategy`.
+5. Update `PyofImportContract.TABLES` with 3 new `TableSpec(..., None, merge_strategy='last_version_per_puuid')` entries.
+6. Tests first (TDD): 3 new contract tests; 5 existing fixtures extended to 9 tables.
+7. This card + CHANGES.md entry.
+
+**Verification:**
+- `python -m pytest tests/test_pyof_import.py --tb=no -q` → `16 passed` (13 prior + 3 new).
+- `wc -l nchantdoffice/utilities/pyof_import.py` → 222 lines.
+- Manual: re-import a source .pyof containing multiple versions of the same doc content; confirm the host gains exactly one row per pUUID with the highest-version content.
 
 ### T-NEW-072 — TODOs.md update-process consolidation (2026-08-10)
 
