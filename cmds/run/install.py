@@ -11,10 +11,13 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
 import datetime as dt
+from typing import Any, Optional, Self
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -35,7 +38,7 @@ pxcfg = join(here, "_data_", "install.yaml")
 class NchantdOfficeInstall(Package):
     """"""
 
-    def __init__(self, cfg=None):
+    def __init__(self, cfg: Optional[dict[str, Any]] = None) -> None:
         """Initialise the NchantdOffice installer and log the start.
 
         Records the config keys we actually consume (vs. the full
@@ -49,7 +52,7 @@ class NchantdOfficeInstall(Package):
         cfg_keys = sorted((cfg or {}).keys()) if isinstance(cfg, dict) else []
         logma.info(f"NchantdOfficeInstall init: cfg_keys={cfg_keys}")
 
-    def get_manifest(self):
+    def get_manifest(self) -> Self:
         """"""
         # Here is where the service to NchantdOffice.com is connected for all users
         # could offload this to Ethereum or another blockchain
