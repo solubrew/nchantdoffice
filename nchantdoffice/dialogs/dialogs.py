@@ -13,7 +13,9 @@
 
 # -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
 from os.path import abspath, dirname, join
+from typing import Any, Self
 import datetime as dt
 
 # ======================================3rd Party Library Modules======================================================||
@@ -36,7 +38,7 @@ pxcfg = join(here, "_data_", "dialogs.yaml")
 class NchantdOfficeDocumentCape(NchantdCape):
     """"""
 
-    def __init__(self, name, instance=None, parent=None, cfg=None, args=None):
+    def __init__(self, name, instance=None, parent=None, cfg=None, args=None) -> None:
         """ """
         logma.info(f"[dialogs] NchantdOfficeDocumentCape.__init__ name={name!r} parent={type(parent).__name__ if parent else None}")
         try:
@@ -48,8 +50,8 @@ class NchantdOfficeDocumentCape(NchantdCape):
             logma.error(f"[dialogs] NchantdOfficeDocumentCape.__init__ failed: name={name!r} err={e}", exc_info=True)
             raise
 
-    def initModel(self):
-        """"""
+    def initModel(self) -> Self:
+        """ """
         logma.info("[dialogs] NchantdOfficeDocumentCape.initModel: installing PyfficeCodex on model")
         try:
             super().initModel()
@@ -60,8 +62,8 @@ class NchantdOfficeDocumentCape(NchantdCape):
             raise
         return self
 
-    def initView(self, cfg=None):
-        """"""
+    def initView(self, cfg=None) -> Self:
+        """ """
         logma.info(f"[dialogs] NchantdOfficeDocumentCape.initView cfg_provided={cfg is not None}")
         try:
             super().initView(cfg)
@@ -70,8 +72,8 @@ class NchantdOfficeDocumentCape(NchantdCape):
             raise
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         logma.info("[dialogs] NchantdOfficeDocumentCape.initWidget")
         try:
             self.initModel()
@@ -83,9 +85,9 @@ class NchantdOfficeDocumentCape(NchantdCape):
 
 
 class NchantdNodeNameEditSigil(NchantdSigil):
-    """"""
+    """ """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"[dialogs] NchantdNodeNameEditSigil.__init__ parent={type(parent).__name__ if parent else None}")
         try:
@@ -95,8 +97,8 @@ class NchantdNodeNameEditSigil(NchantdSigil):
             logma.error(f"[dialogs] NchantdNodeNameEditSigil.__init__ failed: {e}", exc_info=True)
             raise
 
-    def initModel(self, cfg=None):
-        """"""
+    def initModel(self, cfg=None) -> Self:
+        """ """
         logma.info(f"[dialogs] NchantdNodeNameEditSigil.initModel cfg_provided={cfg is not None}")
         try:
             super().initModel(cfg)
@@ -105,8 +107,8 @@ class NchantdNodeNameEditSigil(NchantdSigil):
             raise
         return self
 
-    def initView(self, cfg=None):
-        """"""
+    def initView(self, cfg=None) -> Self:
+        """ """
         logma.info(f"[dialogs] NchantdNodeNameEditSigil.initView cfg_provided={cfg is not None}")
         try:
             super().initView(cfg)
@@ -115,8 +117,8 @@ class NchantdNodeNameEditSigil(NchantdSigil):
             raise
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         logma.info("[dialogs] NchantdNodeNameEditSigil.initWidget")
         try:
             self.initModel()
@@ -128,9 +130,9 @@ class NchantdNodeNameEditSigil(NchantdSigil):
 
 
 class NchantdTabNameEditSigil(NchantdSigil):
-    """"""
+    """ """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"[dialogs] NchantdTabNameEditSigil.__init__ parent={type(parent).__name__ if parent else None}")
         try:
@@ -140,8 +142,8 @@ class NchantdTabNameEditSigil(NchantdSigil):
             logma.error(f"[dialogs] NchantdTabNameEditSigil.__init__ failed: {e}", exc_info=True)
             raise
 
-    def initModel(self, cfg=None):
-        """"""
+    def initModel(self, cfg=None) -> Self:
+        """ """
         logma.info(f"[dialogs] NchantdTabNameEditSigil.initModel cfg_provided={cfg is not None}")
         try:
             super().initModel(cfg)
@@ -150,8 +152,8 @@ class NchantdTabNameEditSigil(NchantdSigil):
             raise
         return self
 
-    def initView(self, cfg=None):
-        """"""
+    def initView(self, cfg=None) -> Self:
+        """ """
         logma.info(f"[dialogs] NchantdTabNameEditSigil.initView cfg_provided={cfg is not None}")
         try:
             super().initView(cfg)
@@ -160,8 +162,8 @@ class NchantdTabNameEditSigil(NchantdSigil):
             raise
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         logma.info("[dialogs] NchantdTabNameEditSigil.initWidget")
         try:
             self.initModel()
