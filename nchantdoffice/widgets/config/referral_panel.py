@@ -484,7 +484,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
             return ""
         return text or ""
 
-    def set_ad_pane(self, ad_pane):
+    def set_ad_pane(self, ad_pane) -> Self:
         """Register the NchantdOfficeAdTab pane so the panel
         can surface the user's referral URL there (T-NEW-026
         close-out step 3).
@@ -499,7 +499,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
             self._ad_pane = None
         return self
 
-    def _surface_referral_url_to_ad_pane(self):
+    def _surface_referral_url_to_ad_pane(self) -> None:
         """Build the referral URL from the code and push it to
         the registered ad pane (T-NEW-026 close-out step 3).
 
@@ -523,7 +523,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         except Exception as e:
             logma.warning(f"[referral_panel] _surface_referral_url_to_ad_pane failed: {e}")
 
-    def _fetch_payout_eligibility(self):
+    def _fetch_payout_eligibility(self) -> None:
         """T-NEW-044 (UI-1): fetch the authoritative
         payout-eligibility dict from the server. Best-effort —
         silent on failure (the panel falls back to a neutral
@@ -615,7 +615,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
                 f"[referral_panel] grant_ad_tab_free_hours failed: {e}"
             )
 
-    def _fetch_dashboard(self):
+    def _fetch_dashboard(self) -> None:
 
         """Fetch earnings + invitations from the server; fall back to local store.
 
