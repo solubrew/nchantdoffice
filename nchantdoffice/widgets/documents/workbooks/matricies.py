@@ -12,6 +12,7 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join, exists
 
@@ -32,6 +33,7 @@ from kahndor.logma import Logma
 from nchantrs.widgets.controls.button_groups import NchantdFontConfigBar
 from nchantdoffice.widgets.tables import NchantdOfficeTable
 from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
+from typing import Any, Iterator, Self
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -46,18 +48,18 @@ pxcfg = join(here, "_data_", "matricies.yaml")
 class NchantdOfficeCellBorderFormats(NchantdWidget):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdOfficeCellBorderFormats init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCellBorderFormats").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -176,13 +178,13 @@ class NchantdOfficeCellBorderFormats(NchantdWidget):
 
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def get_border_styles(self):
+    def get_border_styles(self) -> list[str]:
         """"""
         options = ["Solid", "Dashed", "Dotted", "Double"]
         return options
@@ -195,7 +197,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
     dataChanged = pyqt.Signal(dict)
     cellSelected = pyqt.Signal(str, object)
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__("Nchantd Matrix", parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeMatrix").override(cfg))
@@ -227,7 +229,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.setup_toolbar()
         self.connect_signals()
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         document = {"document": self.config.get("document", {})}
@@ -244,7 +246,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.initialize_context_menu(self.context_menu_name)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         cfg = {
             "icon": "function-3-svgrepo-com",
@@ -285,13 +287,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.formula_input = pyqt.QLineEdit()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def apply_cell_background_color(self, color):
+    def apply_cell_background_color(self, color) -> Self:
         """Apply background color to selected cells"""
         if self.table and color:
             selected_ranges = self.table.selectedRanges()
@@ -306,7 +308,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                             item.setBackground(pyqt.QColor(color))
         return self
 
-    def apply_font_color(self, color):
+    def apply_font_color(self, color) -> Self:
         """Apply font color to selected cells"""
         if self.table and color:
             selected_ranges = self.table.selectedRanges()
@@ -321,7 +323,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                             item.setForeground(pyqt.QColor(color))
         return self
 
-    def apply_default_background_color(self, color):
+    def apply_default_background_color(self, color) -> Self:
         """Apply background color to all cells"""
         if self.table and color:
             for row in range(self.table.rowCount()):
@@ -333,7 +335,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                     item.setBackground(pyqt.QColor(color))
         return self
 
-    def apply_font_style(self, font_family=None, font_size=None, bold=None, italic=None, underline=None):
+    def apply_font_style(self, font_family=None, font_size=None, bold=None, italic=None, underline=None) -> Self:
         """Apply font styling to selected cells"""
         if self.table:
             selected_ranges = self.table.selectedRanges()
@@ -359,7 +361,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                             item.setFont(font)
         return self
 
-    def apply_cell_border(self, side, style, thickness, color):
+    def apply_cell_border(self, side, style, thickness, color) -> Self:
         """Apply border to selected cells
 
         Args:
@@ -374,21 +376,21 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         logma.info(f"Apply border: {side} {style} {thickness} {color}")
         return self
 
-    def auto_resize_columns(self):
+    def auto_resize_columns(self) -> Self:
         """Auto-resize all columns to fit content"""
         if self.table:
             for col in range(self.table.columnCount()):
                 self.table.resizeColumnToContents(col)
         return self
 
-    def auto_resize_rows(self):
+    def auto_resize_rows(self) -> Self:
         """Auto-resize all rows to fit content"""
         if self.table:
             for row in range(self.table.rowCount()):
                 self.table.resizeRowToContents(row)
         return self
 
-    def calculate_formula(self, formula):
+    def calculate_formula(self, formula) -> Any:
         """Calculate the result of a formula string
 
         Supports:
@@ -414,14 +416,14 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         except Exception as e:
             raise ValueError(f"Invalid formula: {e}")
 
-    def column_letter_to_index(self, letter):
+    def column_letter_to_index(self, letter) -> int:
         """Convert column letter (A, B, AA, etc.) to 0-based index"""
         index = 0
         for char in letter:
             index = index * 26 + (ord(char.upper()) - ord("A") + 1)
         return index - 1
 
-    def column_index_to_letter(self, index):
+    def column_index_to_letter(self, index) -> str:
         """Convert 0-based column index to letter (A, B, AA, etc.)"""
         letter = ""
         index += 1  # Convert to 1-based
@@ -431,7 +433,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             index //= 26
         return letter
 
-    def clear_selection(self):
+    def clear_selection(self) -> None:
         """Clear the contents of selected cells"""
         selected = self.table.selectedIndexes()
         for index in selected:
@@ -439,7 +441,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             if item:
                 item.setText("")
 
-    def cmd_auto_calculate(self, event, *args, **kwargs):
+    def cmd_auto_calculate(self, event, *args, **kwargs) -> Self:
         """Enable or disable automatic formula calculation"""
         if hasattr(self, "autocalculate_checkbox"):
             auto_calc = self.autocalculate_checkbox.isChecked()
@@ -449,13 +451,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                     self.recalculate_all_formulas()
         return self
 
-    def cmd_cell_background_color_select(self, event, *args, **kwargs):
+    def cmd_cell_background_color_select(self, event, *args, **kwargs) -> Self:
         """Select background color for selected cells"""
         cfg = {"callback": self.apply_cell_background_color}
         self.color_select_sigil = NchantdColorSelectSigil(self, cfg).initWidget()
         return self
 
-    def cmd_compatibility_select(self, event, *args, **kwargs):
+    def cmd_compatibility_select(self, event, *args, **kwargs) -> Self:
         """Handle compatibility format selection from the document drawer dropdown.
 
         Reads the selected format (xlsx, ods, csv, tsv) and updates the current
@@ -472,7 +474,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 logma.info(f"Compatibility format set to: {ext}")
         return self
 
-    def cmd_font_style_select(self, event, *args, **kwargs):
+    def cmd_font_style_select(self, event, *args, **kwargs) -> Self:
         """Apply font style selection from the font config bar to selected cells.
 
         Reads the font family and size from the document-level font config bar
@@ -506,7 +508,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.apply_font_style(font_family=font_family, font_size=font_size)
         return self
 
-    def cmd_formula_bar_change(self, event=None, *args, **kwargs):
+    def cmd_formula_bar_change(self, event=None, *args, **kwargs) -> Self:
         """Apply the text from the formula bar to the active cell.
 
         Reads the formula bar text and writes it into the currently
@@ -534,7 +536,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                     self.evaluate_cell_formula(selected)
         return self
 
-    def cmd_formula_entry(self, event, *args, **kwargs):
+    def cmd_formula_entry(self, event, *args, **kwargs) -> Self:
         """Insert the currently selected formula from the formula dropdown into
         the active cell's formula bar.
 
@@ -557,13 +559,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.formula_input.setText(formula_text)
         return self
 
-    def cmd_font_color_select(self, event, *args, **kwargs):
+    def cmd_font_color_select(self, event, *args, **kwargs) -> Self:
         """Select font color for selected cells"""
         cfg = {"callback": self.apply_font_color}
         self.color_select_sigil = NchantdColorSelectSigil(self, cfg).initWidget()
         return self
 
-    def cmd_row_spinbox(self, event, *args, **kwargs):
+    def cmd_row_spinbox(self, event, *args, **kwargs) -> Self:
         """Handle row count change"""
         if hasattr(self, "rows_count_entry"):
             new_row_count = self.rows_count_entry.value()
@@ -572,7 +574,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 self.num_rows = new_row_count
         return self
 
-    def cmd_row_height_spinbox(self, event, *args, **kwargs):
+    def cmd_row_height_spinbox(self, event, *args, **kwargs) -> Self:
         """Handle row height change"""
         if hasattr(self, "row_height_entry"):
             new_height = self.row_height_entry.value()
@@ -587,7 +589,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                         self.table.setRowHeight(row, new_height)
         return self
 
-    def cmd_column_spinbox(self, event, *args, **kwargs):
+    def cmd_column_spinbox(self, event, *args, **kwargs) -> Self:
         """Handle column count change"""
         if hasattr(self, "columns_count_entry"):
             new_col_count = self.columns_count_entry.value()
@@ -596,7 +598,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 self.num_cols = new_col_count
         return self
 
-    def cmd_column_width_spinbox(self, event, *args, **kwargs):
+    def cmd_column_width_spinbox(self, event, *args, **kwargs) -> Self:
         """Handle column width change"""
         if hasattr(self, "cell_width"):
             new_width = self.cell_width.value()
@@ -611,7 +613,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                         self.table.setColumnWidth(col, new_width)
         return self
 
-    def cmd_formula_entrybox(self, event, *args, **kwargs):
+    def cmd_formula_entrybox(self, event, *args, **kwargs) -> Self:
         """Handle formula entry"""
         if hasattr(self, "formula_bar"):
             formula_text = self.formula_bar.get_text()
@@ -624,7 +626,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                     self.evaluate_cell_formula(selected_cell)
         return self
 
-    def cmd_merge_cells(self, event, *args, **kwargs):
+    def cmd_merge_cells(self, event, *args, **kwargs) -> Self:
         """Merge selected cells"""
         if self.table:
             selected_ranges = self.table.selectedRanges()
@@ -637,7 +639,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                     self.table.setSpan(top_row, left_col, row_count, col_count)
         return self
 
-    def cmd_data_source_select(self, event, *args, **kwargs):
+    def cmd_data_source_select(self, event, *args, **kwargs) -> Self:
         """Handle data source selection"""
         if hasattr(self, "dataset_select"):
             dataset_name = self.dataset_select.currentText()
@@ -646,7 +648,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 self.load_dataset(dataset_name)
         return self
 
-    def cmd_data_filters_select(self, event, *args, **kwargs):
+    def cmd_data_filters_select(self, event, *args, **kwargs) -> Self:
         """Apply a data filter to the table based on the selected filter option.
 
         Hides rows whose value in the active column does not match the filter
@@ -668,13 +670,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 self.table.hideRow(row)
         return self
 
-    def cmd_on_click_default_cell_background_color_button(self, event, *args, **kwargs):
+    def cmd_on_click_default_cell_background_color_button(self, event, *args, **kwargs) -> Self:
         """Set default background color for all cells"""
         cfg = {"callback": self.apply_default_background_color}
         self.color_select_sigil = NchantdColorSelectSigil(self, cfg).initWidget()
         return self
 
-    def cmd_open_local_file(self, event=None, *args, **kwargs):
+    def cmd_open_local_file(self, event=None, *args, **kwargs) -> Self:
         """Open a local spreadsheet file and load it into the matrix table."""
         super().cmd_open_local_file(event, *args, **kwargs)
         if self.local_file is not None:
@@ -689,7 +691,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 logma.warning("cmd_open_local_file called with local_file=None")
         return self
 
-    def cmd_run_eda(self, event=None, *args, **kwargs):
+    def cmd_run_eda(self, event=None, *args, **kwargs) -> Self:
         """Run exploratory data analysis on the current table contents.
 
         Computes per-column summary statistics (count, mean, min, max, std)
@@ -736,7 +738,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         pyqt.QMessageBox.information(self, "Exploratory Data Analysis", "\n".join(report_lines))
         return self
 
-    def cmd_template_select(self, event, *args, **kwargs):
+    def cmd_template_select(self, event, *args, **kwargs) -> Self:
         """Apply the selected template to the spreadsheet.
 
         Currently supports:
@@ -754,7 +756,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self._apply_loan_calculator_template()
         return self
 
-    def cmd_document_font_config_change(self, event=None, *args, **kwargs):
+    def cmd_document_font_config_change(self, event=None, *args, **kwargs) -> Self:
         """Apply the document-level font selection to the entire table.
 
         Reads the font family and size from ``self.font_config_bar`` and
@@ -775,7 +777,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.apply_font_style(font_family=font_family, font_size=font_size)
         return self
 
-    def cmd_formula_entry_change(self, event=None, *args, **kwargs):
+    def cmd_formula_entry_change(self, event=None, *args, **kwargs) -> Self:
         """Validate a formula entry and auto-calculate if enabled.
 
         Reads the formula bar text and runs it through the formula
@@ -806,7 +808,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 self.evaluate_cell_formula(current)
         return self
 
-    def cmd_formula_select_change(self, event=None, *args, **kwargs):
+    def cmd_formula_select_change(self, event=None, *args, **kwargs) -> Self:
         """Show the description of the currently selected formula.
 
         Reads the formula dropdown's current text and writes its
@@ -827,7 +829,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.config.dikt["formula_select_description"] = description
         return self
 
-    def cmd_selected_cell_change(self, event=None, *args, **kwargs):
+    def cmd_selected_cell_change(self, event=None, *args, **kwargs) -> Self:
         """Update the active-cells display when the user clicks a new cell.
 
         Reads the current cell address from the table and writes it
@@ -844,7 +846,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.config.dikt["selected_cell_address"] = address
         return self
 
-    def cmd_selected_cell_text_change(self, event=None, *args, **kwargs):
+    def cmd_selected_cell_text_change(self, event=None, *args, **kwargs) -> Self:
         """Update the active-cell text display when cell content changes.
 
         Reads the currently selected cell's text and stores it on
@@ -858,7 +860,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.config.dikt["selected_cell_text"] = current.text() or ""
         return self
 
-    def cmd_cell_font_change(self, event=None, *args, **kwargs):
+    def cmd_cell_font_change(self, event=None, *args, **kwargs) -> Self:
         """Apply the font picker selection to the selected cells.
 
         Reads font family and size from the cell-level font config bar
@@ -879,7 +881,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.apply_font_style(font_family=font_family, font_size=font_size)
         return self
 
-    def cmd_cell_border_change(self, event=None, *args, **kwargs):
+    def cmd_cell_border_change(self, event=None, *args, **kwargs) -> Self:
         """Apply the selected border format to the selected cells.
 
         Reads the current border selection from the border-format
@@ -897,7 +899,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.apply_cell_border(border_format)
         return self
 
-    def cmd_cell_change(self, event=None, *args, **kwargs):
+    def cmd_cell_change(self, event=None, *args, **kwargs) -> Self:
         """React to a cell value change.
 
         Reads the current cell's text and stores it on the model.
@@ -924,7 +926,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 self.evaluate_cell_formula(current)
         return self
 
-    def copy_cells(self):
+    def copy_cells(self) -> Self:
         """Copy selected cells to clipboard"""
         if self.table:
             selected_ranges = self.table.selectedRanges()
@@ -940,7 +942,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 pyqt.QApplication.clipboard().setText("\n".join(clipboard_data))
         return self
 
-    def cut_cells(self):
+    def cut_cells(self) -> Self:
         """Cut selected cells to clipboard"""
         self.copy_cells()
         if self.table:
@@ -954,7 +956,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                                 item.setText("")
         return self
 
-    def create_formula_bar(self):
+    def create_formula_bar(self) -> "QWidget":
         """Create the formula bar widget"""
         bar = pyqt.QWidget()
         layout = pyqt.QHBoxLayout(bar)
@@ -981,12 +983,12 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         layout.addStretch()
         return bar
 
-    def cut(self):
+    def cut(self) -> None:
         """Cut selected cells"""
         self.copy()
         self.clear_selection()
 
-    def copy(self):
+    def copy(self) -> None:
         """Copy selected cells"""
         selected = self.table.selectedIndexes()
         if not selected:
@@ -1009,13 +1011,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         clipboard = pyqt.QApplication.clipboard()
         clipboard.setText(self.clipboard)
 
-    def connect_signals(self):
+    def connect_signals(self) -> None:
         """Connect UI signals to handlers"""
         if self.table:
             self.table.itemChanged.connect(self.on_cell_changed)
             self.table.itemSelectionChanged.connect(self.on_selection_changed)
 
-    def delete_cells(self):
+    def delete_cells(self) -> Self:
         """Delete content of selected cells"""
         if self.table:
             selected_ranges = self.table.selectedRanges()
@@ -1028,7 +1030,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                                 item.setText("")
         return self
 
-    def delete_column(self, col_index=None):
+    def delete_column(self, col_index=None) -> Self:
         """Delete a column at the specified index or current selection"""
         if self.table:
             if col_index is None:
@@ -1038,7 +1040,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.num_cols = self.table.columnCount()
         return self
 
-    def delete_selected_columns(self):
+    def delete_selected_columns(self) -> Self:
         """Delete all selected columns"""
         if self.table:
             selected_cols = self.get_selected_columns()
@@ -1048,7 +1050,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.num_cols = self.table.columnCount()
         return self
 
-    def delete_row(self, row_index=None):
+    def delete_row(self, row_index=None) -> Self:
         """Delete a row at the specified index or current selection"""
         if self.table:
             if row_index is None:
@@ -1058,7 +1060,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.num_rows = self.table.rowCount()
         return self
 
-    def delete_selected_rows(self):
+    def delete_selected_rows(self) -> Self:
         """Delete all selected rows"""
         if self.table:
             selected_rows = self.get_selected_rows()
@@ -1068,7 +1070,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.num_rows = self.table.rowCount()
         return self
 
-    def export_to_format(self, format_type, file_path=None):
+    def export_to_format(self, format_type, file_path=None) -> Self:
         """Export spreadsheet to specified format
 
         Args:
@@ -1084,7 +1086,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.save_document(file_path)
         return self
 
-    def extract_table_data(self):
+    def extract_table_data(self) -> list[list[str]]:
         """Extract all data from table"""
         data = []
         if self.table:
@@ -1096,7 +1098,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 data.append(row_data)
         return data
 
-    def evaluate_cell_formula(self, cell_item):
+    def evaluate_cell_formula(self, cell_item) -> Self:
         """Evaluate formula in a cell and update its display value"""
         if not cell_item:
             return self
@@ -1116,7 +1118,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 cell_item.setData(pyqt.Qt.ItemDataRole.DisplayRole, f"#ERROR: {e}")
         return self
 
-    def fullscreen_mode(self):
+    def fullscreen_mode(self) -> Self:
         """Toggle fullscreen mode for the parent window"""
         window = self.window()
         if window:
@@ -1128,7 +1130,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 logma.info("Entered fullscreen mode")
         return self
 
-    def find_replace(self):
+    def find_replace(self) -> Self:
         """Open a find and replace dialog"""
         dialog = pyqt.QDialog(self)
         dialog.setWindowTitle("Find and Replace")
@@ -1147,7 +1149,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         status_label = pyqt.QLabel("")
         layout.addRow(status_label)
 
-        def do_replace_all():
+        def do_replace_all() -> None:
             find_text = find_input.text()
             replace_text = replace_input.text()
             if not find_text:
@@ -1180,7 +1182,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                                 count += 1
             status_label.setText(f"Replaced in {count} cell(s).")
 
-        def do_find_next():
+        def do_find_next() -> None:
             find_text = find_input.text()
             if not find_text:
                 status_label.setText("Enter text to find.")
@@ -1231,7 +1233,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         dialog.exec()
         return self
 
-    def get_cell_value(self, address):
+    def get_cell_value(self, address) -> str | None:
         """Get value from specified cell address"""
         if not address or len(address) < 2:
             return None
@@ -1244,11 +1246,11 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             return item.text() if item else ""
         return None
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         """"""
         return {"content": {"file_path": self.file_path}, "data": self.document.data}
 
-    def get_current_address(self):
+    def get_current_address(self) -> str:
         """Get the currently selected cell address"""
         selected = self.table.selectedIndexes()
         if selected:
@@ -1257,7 +1259,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             return f"{chr(65 + col)}{row + 1}"
         return "A1"
 
-    def get_datasets(self):
+    def get_datasets(self) -> list[str]:
         """Return the list of available datasets from the application codex.
 
         Falls back to a single placeholder entry when no codex is available.
@@ -1278,7 +1280,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 logma.warning(f"Unable to enumerate datasets from codex: {e}")
         return datasets
 
-    def get_formula_description(self, formula=None):
+    def get_formula_description(self, formula=None) -> str:
         """"""
         if formula is None:
             formula = self.formula_select.get_value()
@@ -1286,12 +1288,12 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             formula = self.formulas[0]
         return self.document.formulas_library.get_formula(formula).description or f"{formula} Description not Found"
 
-    def get_formulas(self):
+    def get_formulas(self) -> list[str]:
         """"""
         self.formulas = self.document.formulas_library.get_formulas_list()
         return self.formulas
 
-    def get_range_values(self, range_str):
+    def get_range_values(self, range_str) -> list[float]:
         """Get values from a cell range like 'A1:A10'"""
         parts = range_str.split(":")
         if len(parts) != 2:
@@ -1323,7 +1325,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                             pass  # Skip non-numeric values
         return values
 
-    def get_selection_range(self):
+    def get_selection_range(self) -> tuple[str | None, str | None]:
         """Get the selected cell range"""
         selected = self.table.selectedIndexes()
         if not selected:
@@ -1340,7 +1342,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
         return start_cell, end_cell
 
-    def get_selected_rows(self):
+    def get_selected_rows(self) -> list[int]:
         """Get list of selected row indices"""
         if self.table:
             selected_ranges = self.table.selectedRanges()
@@ -1351,7 +1353,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             return sorted(list(rows))
         return []
 
-    def get_selected_columns(self):
+    def get_selected_columns(self) -> list[int]:
         """Get list of selected column indices"""
         if self.table:
             selected_ranges = self.table.selectedRanges()
@@ -1362,15 +1364,15 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             return sorted(list(cols))
         return []
 
-    def get_document_compatability_options(self):
+    def get_document_compatability_options(self) -> list[Any]:
         """"""
         return self.config.get("compatability_options", [])
 
-    def get_template_options(self):
+    def get_template_options(self) -> list[Any]:
         """"""
         return self.config.get("template_options", [])
 
-    def init_drawer_document_config(self):
+    def init_drawer_document_config(self) -> dict[int, Any]:
         """Build the workbook document-config drawer.
 
         Eight configuration widgets share the ``items[cnt]["widget"] = self.X = W(...)`` pattern.
@@ -1468,7 +1470,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def init_drawer_formula(self):
+    def init_drawer_formula(self) -> dict[int, Any]:
         """"""
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
@@ -1518,7 +1520,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def init_drawer_cell_config(self):
+    def init_drawer_cell_config(self) -> dict[int, Any]:
         """Build the cell-config drawer.
 
         Six widgets, six distinct shapes — we still share the slot-creation
@@ -1632,7 +1634,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
     #     cnt += 1
     #     return items
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
@@ -1641,7 +1643,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # PUSH to 0.0.3
         # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
-    def insert_chart(self):
+    def insert_chart(self) -> Self:
         """Insert a chart (placeholder - opens info dialog)"""
         pyqt.QMessageBox.information(
             self,
@@ -1651,7 +1653,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         )
         return self
 
-    def insert_column(self, position=None):
+    def insert_column(self, position=None) -> Self:
         """Insert a new column at the specified position or at current selection"""
         if self.table:
             if position is None:
@@ -1661,13 +1663,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.num_cols = self.table.columnCount()
         return self
 
-    def insert_columns(self, count, position=None):
+    def insert_columns(self, count, position=None) -> Self:
         """Insert multiple columns at the specified position"""
         for i in range(count):
             self.insert_column(position)
         return self
 
-    def insert_row(self, position=None):
+    def insert_row(self, position=None) -> Self:
         """Insert a new row at the specified position or at current selection"""
         if self.table:
             if position is None:
@@ -1677,13 +1679,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.num_rows = self.table.rowCount()
         return self
 
-    def insert_rows(self, count, position=None):
+    def insert_rows(self, count, position=None) -> Self:
         """Insert multiple rows at the specified position"""
         for i in range(count):
             self.insert_row(position)
         return self
 
-    def move_cell(self, addrow, addcol):
+    def move_cell(self, addrow, addcol) -> Self:
         """Move the active cell within the worksheet"""
         if self.table:
             current_item = self.table.currentItem()
@@ -1703,12 +1705,12 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 self.table.setCurrentItem(target_item)
         return self
 
-    def new_sheet(self):
+    def new_sheet(self) -> None:
         """Create a new spreadsheet"""
         self.table.clearContents()
         self.dataChanged.emit({"action": "new"})
 
-    def on_cell_changed(self, item):
+    def on_cell_changed(self, item) -> None:
         """Handle cell value change.
 
         T-NEW-017 (live crash): ``item.column()`` returned ``None``
@@ -1738,7 +1740,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # Emit signal
         self.dataChanged.emit({"address": address, "value": value})
 
-    def on_selection_changed(self):
+    def on_selection_changed(self) -> None:
         """Handle selection change"""
         address = self.get_current_address()
         value = self.get_cell_value(address)
@@ -1757,14 +1759,14 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # Emit signal
         self.cellSelected.emit(address, value)
 
-    def on_formula_entered(self):
+    def on_formula_entered(self) -> None:
         """Handle formula input submission"""
         address = self.get_current_address()
         formula = self.formula_input.text()
 
         self.set_cell_value(address, formula)
 
-    def open_file(self, file=None):
+    def open_file(self, file=None) -> Self:
         """Open a spreadsheet using the Pyffice matrix importer."""
         if file is None:
             file = self.file_path
@@ -1778,7 +1780,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.save()
         return self
 
-    def recalculate_all_formulas(self):
+    def recalculate_all_formulas(self) -> Self:
         """Recalculate all formulas in the spreadsheet"""
         if self.table:
             for row in range(self.table.rowCount()):
@@ -1788,14 +1790,14 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                         self.evaluate_cell_formula(item)
         return self
 
-    def replace_cell_references(self, formula):
+    def replace_cell_references(self, formula) -> str:
         """Replace cell references (like A1, B2) with their actual values"""
         import re
 
         # Match cell references like A1, AB12, etc.
         pattern = r"\b([A-Z]+)(\d+)\b"
 
-        def replace_ref(match):
+        def replace_ref(match) -> str:
             col_letter = match.group(1)
             row_num = int(match.group(2)) - 1  # Convert to 0-based index
             col_num = self.column_letter_to_index(col_letter)
@@ -1813,37 +1815,37 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
         return re.sub(pattern, replace_ref, formula)
 
-    def replace_spreadsheet_functions(self, formula):
+    def replace_spreadsheet_functions(self, formula) -> str:
         """Replace spreadsheet functions with Python equivalents"""
         import re
 
         # SUM(A1:A10) -> sum([...])
-        def replace_sum(match):
+        def replace_sum(match) -> str:
             range_str = match.group(1)
             values = self.get_range_values(range_str)
             return f"sum([{','.join(map(str, values))}])"
 
         # AVG(A1:A10) -> sum([...])/len([...])
-        def replace_avg(match):
+        def replace_avg(match) -> str:
             range_str = match.group(1)
             values = self.get_range_values(range_str)
             values_str = ",".join(map(str, values))
             return f"(sum([{values_str}])/len([{values_str}]) if len([{values_str}]) > 0 else 0)"
 
         # COUNT(A1:A10) -> len([...])
-        def replace_count(match):
+        def replace_count(match) -> str:
             range_str = match.group(1)
             values = self.get_range_values(range_str)
             return f"len([{','.join(map(str, values))}])"
 
         # MIN(A1:A10) -> min([...])
-        def replace_min(match):
+        def replace_min(match) -> str:
             range_str = match.group(1)
             values = self.get_range_values(range_str)
             return f"min([{','.join(map(str, values))}])"
 
         # MAX(A1:A10) -> max([...])
-        def replace_max(match):
+        def replace_max(match) -> str:
             range_str = match.group(1)
             values = self.get_range_values(range_str)
             return f"max([{','.join(map(str, values))}])"
@@ -1856,19 +1858,19 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
         return formula
 
-    def resize_row(self, row_index, height):
+    def resize_row(self, row_index, height) -> Self:
         """Resize a specific row to the given height"""
         if self.table and 0 <= row_index < self.table.rowCount():
             self.table.setRowHeight(row_index, height)
         return self
 
-    def resize_column(self, col_index, width):
+    def resize_column(self, col_index, width) -> Self:
         """Resize a specific column to the given width"""
         if self.table and 0 <= col_index < self.table.columnCount():
             self.table.setColumnWidth(col_index, width)
         return self
 
-    def paste_cells(self):
+    def paste_cells(self) -> Self:
         """Paste cells from clipboard"""
         if self.table:
             clipboard_text = pyqt.QApplication.clipboard().text()
@@ -1891,7 +1893,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                                 item.setText(cell_text)
         return self
 
-    def populate_document(self):
+    def populate_document(self) -> Self:
         """Populate the spreadsheet widget with the document data.
 
         T-075: applies the row + cell size formatting stored on
@@ -1918,7 +1920,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.connect_signals()
         return self
 
-    def save(self):
+    def save(self) -> Self:
         """Save the spreadsheet document.
 
         T-083: previously left a "TODO get current content from
@@ -1947,13 +1949,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         super().save()
         return self
 
-    def save_auto(self):
+    def save_auto(self) -> Self:
         """Auto-save the current document"""
         if self.file_path and exists(dirname(self.file_path)):
             self.save_document()
         return self
 
-    def save_to_file(self, file_path):
+    def save_to_file(self, file_path) -> None:
         """Save spreadsheet to file"""
         try:
             if file_path.endswith(".csv") or not file_path.endswith(".xlsx"):
@@ -1965,7 +1967,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         except Exception as e:
             pyqt.QMessageBox.warning(self, "Error", f"Failed to save file: {e}")
 
-    def set_cell_value(self, address, value):
+    def set_cell_value(self, address, value) -> None:
         """Set value at specified cell address (e.g., 'A1')"""
         if not address or len(address) < 2:
             return
@@ -1985,7 +1987,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             else:
                 item.setText(str(value))
 
-    def setup_toolbar(self):
+    def setup_toolbar(self) -> None:
         """Create the toolbar"""
         self.toolbar = pyqt.QToolBar("Spreadsheet Tools")
 
@@ -2027,7 +2029,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # Chart insertion
         self.toolbar.addAction("Insert Chart", self.insert_chart)
 
-    def set_table(self):
+    def set_table(self) -> Self:
         """Turn the spreadsheet into a table where there is a corresponding database table for it"""
         if self.document and self.table:
             # Extract table data
@@ -2037,7 +2039,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 self.app.model.codex.store_matrix_data(self.file_path, table_data)
         return self
 
-    def show_function_dialog(self):
+    def show_function_dialog(self) -> Self:
         """Show a function selection dialog and insert the chosen function into
         the formula bar.
         """
@@ -2077,7 +2079,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                         self.formula_bar.setText(snippet)
         return self
 
-    def paste(self):
+    def paste(self) -> None:
         """Paste from clipboard"""
         clipboard = pyqt.QApplication.clipboard()
         text = clipboard.text()
@@ -2120,7 +2122,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 else:
                     item.setText(value)
 
-    def print_document(self):
+    def print_document(self) -> Self:
         """Print the spreadsheet using QPrinter"""
         try:
             printer = pyqt.QPrinter(pyqt.QPrinter.PrinterMode.HighResolution)
@@ -2170,7 +2172,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             pyqt.QMessageBox.warning(self, "Print Error", f"Failed to print: {e}")
         return self
 
-    def toggle_gridlines(self):
+    def toggle_gridlines(self) -> Self:
         """Toggle grid lines on/off in the spreadsheet table"""
         if self.table:
             current = self.table.showGrid()
@@ -2178,7 +2180,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             logma.info(f"Gridlines toggled: {not current}")
         return self
 
-    def toggle_headers(self):
+    def toggle_headers(self) -> Self:
         """Toggle row/column headers on/off"""
         if self.table:
             h_header = self.table.horizontalHeader()
@@ -2188,7 +2190,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             logma.info(f"Headers toggled: h={h_header.isVisible()}, v={v_header.isVisible()}")
         return self
 
-    def toggle_bold(self):
+    def toggle_bold(self) -> Self:
         """Toggle bold font on selected cells"""
         if self.table:
             selected = self.table.selectedIndexes()
@@ -2203,7 +2205,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.apply_font_style(bold=not is_bold)
         return self
 
-    def toggle_italic(self):
+    def toggle_italic(self) -> Self:
         """Toggle italic font on selected cells"""
         if self.table:
             selected = self.table.selectedIndexes()
@@ -2217,7 +2219,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.apply_font_style(italic=not is_italic)
         return self
 
-    def _apply_template(self):
+    def _apply_template(self) -> Self:
         """Apply the template selected via ``document_template`` to the table.
 
         Reads the current selection from the document-template dropdown
@@ -2239,7 +2241,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             method()
         return self
 
-    def _apply_loan_calculator_template(self):
+    def _apply_loan_calculator_template(self) -> None:
         """Populate the table with a loan amortisation schedule template."""
         if not self.table:
             return
@@ -2258,7 +2260,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.table.setItem(1, idx, pyqt.QTableWidgetItem(value))
         self.table.resizeColumnsToContents()
 
-    def _apply_cell_sizes(self):
+    def _apply_cell_sizes(self) -> None:
         """T-075: apply per-column / per-row sizes from the document.
 
         Reads ``self.document.column_sizes`` / ``document.row_sizes``
@@ -2302,7 +2304,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[matricies] _apply_cell_sizes failed: {e}", exc_info=True)
 
-    def _ensure_drawer_item(self, items, cnt):
+    def _ensure_drawer_item(self, items, cnt) -> dict[str, Any]:
         """Lazily create a default drawer-item slot.
 
         Centralises the ``if cnt not in items: items[cnt] = {...}``
@@ -2314,7 +2316,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         return items[cnt]
 
-    def _open_file(self, path):
+    def _open_file(self, path) -> Self:
         """Load a spreadsheet file from disk into the table.
 
         Uses ``pyffice`` (the Excel-equivalent backing library) when
@@ -2348,7 +2350,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             logma.error(f"[matricies] _open_file failed: {e}", exc_info=True)
         return self
 
-    def _read_table_to_grid(self):
+    def _read_table_to_grid(self) -> tuple[list[list[str]], list[list[str]]]:
         """T-083 helper - walk the table and return (grid, formulas).
 
         Returns a tuple of:
@@ -2389,7 +2391,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             logma.error(f"[matricies] _read_table_to_grid failed: {e}", exc_info=True)
         return grid, formulas
 
-    def _resolve_file_type_handler(self, file_path):
+    def _resolve_file_type_handler(self, file_path) -> str:
         """T-074: resolve the open-file handler for ``file_path``.
 
         Reads the extension first (.xlsx -> open_xlsx, .ods ->
@@ -2416,7 +2418,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         except Exception:
             return "document.open_file"
 
-    def _show_unsupported_feature_message(self):
+    def _show_unsupported_feature_message(self) -> None:
         """T-073: record an informational message about Excel-feature coverage.
 
         Stored on ``self.user_messages`` and on
