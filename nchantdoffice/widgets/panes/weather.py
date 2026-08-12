@@ -12,6 +12,7 @@
 """
 
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
@@ -24,6 +25,7 @@ import json
 from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantrs.widgets.panes.panes import NchantdPane
+from typing import Any, Self
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -61,14 +63,14 @@ class NchantdWeatherPane(NchantdPane):
     OWM_BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
     OWM_TIMEOUT = 6  # seconds
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdWeatherPane").override(cfg))
         self.html = self.config.dikt.get("html")
         self.weather = dict(_FALLBACK_WEATHER)
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Load the live weather data.
 
         T-065: previously inlined an f-string with literal
@@ -96,7 +98,7 @@ class NchantdWeatherPane(NchantdPane):
             )
         return self
 
-    def fetch_weather(self, city=None, api_key=None):
+    def fetch_weather(self, city=None, api_key=None) -> dict[str, Any]:
         """Fetch the live weather for ``city`` using OpenWeatherMap.
 
         T-065: a real GET request to the OpenWeatherMap API
@@ -159,7 +161,7 @@ class NchantdWeatherPane(NchantdPane):
             logma.error(f"[weather] fetch_weather outer failed: {e}", exc_info=True)
             return dict(_FALLBACK_WEATHER)
 
-    def initView(self):
+    def initView(self) -> Self:
         """Render the weather pane view.
 
         T-065: the view now reads self.weather (set by
@@ -169,7 +171,7 @@ class NchantdWeatherPane(NchantdPane):
         super().initView()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """Wire initModel + initView (T-065)."""
         self.initModel()
         self.initView()
