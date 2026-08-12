@@ -293,7 +293,7 @@ def test_tabs_drop_event_opens_in_right_scratch_when_target_is_right_pane():
         "widgets/tabs.py"
     ).read_text()
     m = re.search(
-        r"def dropEvent\(self[^\)]*\):.*?(?=\n    def |\Z)",
+        r"def dropEvent\(self[^)]*\)\s*(?:->[^:]+)?\s*:.*?(?=\n    def |\Z)",
         tabs_py,
         re.S,
     )

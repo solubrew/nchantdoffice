@@ -13,6 +13,8 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
 import datetime as dt
 
@@ -37,7 +39,7 @@ pxcfg = join(here, "_data_", "tabs.yaml")
 class NchantdOfficeTab(NchantdTab):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"[tabs] NchantdOfficeTab.__init__ parent={type(parent).__name__ if parent else None}")
         try:
@@ -47,7 +49,7 @@ class NchantdOfficeTab(NchantdTab):
             logma.error(f"[tabs] NchantdOfficeTab.__init__ failed: {e}", exc_info=True)
             raise
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> "NchantdOfficeTab":
         """"""
         logma.info(f"[tabs] NchantdOfficeTab.initModel cfg_provided={cfg is not None}")
         try:
@@ -57,8 +59,8 @@ class NchantdOfficeTab(NchantdTab):
             raise
         return self
 
-    def initView(self, cfg=None):
-        """"""
+    def initView(self, cfg=None) -> "NchantdOfficeTab":
+        """ """
         logma.info(f"[tabs] NchantdOfficeTab.initView cfg_provided={cfg is not None}")
         try:
             super().initView(cfg)
@@ -67,7 +69,7 @@ class NchantdOfficeTab(NchantdTab):
             raise
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> "NchantdOfficeTab":
         """"""
         logma.info("[tabs] NchantdOfficeTab.initWidget")
         try:
@@ -94,7 +96,7 @@ class NchantdOfficeTabs(NchantdTabSet):
     # Signal emitted when tab is dropped (from external source)
     tab_dropped = Signal(str, object)  # source, data
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"[tabs] NchantdOfficeTabs.__init__ parent={type(parent).__name__ if parent else None}")
         try:
@@ -107,7 +109,7 @@ class NchantdOfficeTabs(NchantdTabSet):
             logma.error(f"[tabs] NchantdOfficeTabs.__init__ failed: {e}", exc_info=True)
             raise
 
-    def _setup_drag_drop(self):
+    def _setup_drag_drop(self) -> None:
         """Setup drag and drop for tabs.
 
         T-NEW-029 (named sub-widget approach): the tab bar's
@@ -151,7 +153,7 @@ class NchantdOfficeTabs(NchantdTabSet):
                     f"[tabs] tab_bar.setDragable(False) failed: {e}"
                 )
 
-    def _is_in_tab_name_area(self, index, rect):
+    def _is_in_tab_name_area(self, index, rect) -> bool:
         """Return True when ``rect`` is inside the tab-name
         area of the tab at ``index`` (T-NEW-029).
 
@@ -200,7 +202,7 @@ class NchantdOfficeTabs(NchantdTabSet):
             )
             return False
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event) -> None:
         """Start drag tracking only when the press lands in the
         tab-name area (T-NEW-029 named sub-widget approach).
 
@@ -256,7 +258,7 @@ class NchantdOfficeTabs(NchantdTabSet):
                 f"[tabs] super().mousePressEvent skipped: {e}"
             )
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event) -> None:
         """Initiate drag if moved beyond threshold"""
         if event.buttons() & pyqt.Qt.LeftButton:
             if hasattr(self, "_drag_start_pos"):
@@ -266,7 +268,7 @@ class NchantdOfficeTabs(NchantdTabSet):
                     self._initiate_tab_drag()
         super().mouseMoveEvent(event)
 
-    def _initiate_tab_drag(self):
+    def _initiate_tab_drag(self) -> None:
         """Start tab drag operation"""
         index = self._drag_start_index
         logma.info(f"[tabs] _initiate_tab_drag: index={index} tab_count={self.count()}")
@@ -287,7 +289,7 @@ class NchantdOfficeTabs(NchantdTabSet):
         else:
             logma.warning(f"[tabs] _initiate_tab_drag: invalid index {index} (count={self.count()})")
 
-    def dragEnterEvent(self, event):
+    def dragEnterEvent(self, event) -> None:
         """Accept drag enter from tabs and tree"""
         mime_data = event.mimeData()
         logma.debug(f"[tabs] dragEnterEvent: has_tab={mime_data.hasFormat('application/x-nchantd-tab')} has_tree={mime_data.hasFormat('application/x-nchantd-tree-item')}")
@@ -297,13 +299,13 @@ class NchantdOfficeTabs(NchantdTabSet):
             event.acceptProposedAction()
         super().dragEnterEvent(event)
 
-    def dragMoveEvent(self, event):
+    def dragMoveEvent(self, event) -> None:
         """Track drag move"""
         if event.mimeData().hasFormat("application/x-nchantd-tab"):
             event.acceptProposedAction()
         super().dragMoveEvent(event)
 
-    def dropEvent(self, event):
+    def dropEvent(self, event) -> None:
         """Handle tab/tree drops
 
         T-NEW-031: when a tab is dropped onto the right-pane tabset
@@ -350,7 +352,7 @@ class NchantdOfficeTabs(NchantdTabSet):
 
         super().dropEvent(event)
 
-    def _handle_tab_dropped_in_right_scratch(self, source_tab_pos):
+    def _handle_tab_dropped_in_right_scratch(self, source_tab_pos) -> None:
         """T-NEW-031: open a tab in the right pane as a scratch
         view. Resolves the source tab's dict from the source
         position via the tab model, then calls
@@ -409,14 +411,14 @@ class NchantdOfficeTabs(NchantdTabSet):
                 exc_info=True,
             )
 
-    def setCurrentWidget(self, widget):
+    def setCurrentWidget(self, widget) -> None:
         """Override to emit signal when current document changes"""
         super().setCurrentWidget(widget)
         if widget:
             logma.debug(f"[tabs] setCurrentWidget: current_document_changed emitted for {type(widget).__name__}")
             self.current_document_changed.emit(widget)
 
-    def setCurrentIndex(self, index):
+    def setCurrentIndex(self, index) -> None:
         """Override to emit signal when current index changes"""
         super().setCurrentIndex(index)
         widget = self.widget(index) if 0 <= index < self.count() else None
