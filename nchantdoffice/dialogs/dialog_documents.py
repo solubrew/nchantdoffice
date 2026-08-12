@@ -13,7 +13,9 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
 from os.path import abspath, dirname, join
+from typing import Any, Self
 import datetime as dt
 import json as j
 
@@ -48,7 +50,7 @@ pxcfg = join(here, "_data_", "documents.yaml")
 class NchantdNewDocumentSigil(NchantdSigil):
     """"""
 
-    def __init__(self, name, parent=None, cfg=None):
+    def __init__(self, name, parent=None, cfg=None) -> None:
         """ """
         super().__init__(name, parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NewNchantdDocumentSigil").override(cfg))
@@ -73,7 +75,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
         self.connect_gfile = None
         self.launch_button_layout = None
 
-    def finalizeView(self):
+    def finalizeView(self) -> None:
         """"""
         logma.info(f"Finalize View")
         cfg = {
@@ -89,7 +91,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
         layout.setAlignment(self.getAlignment("right"))
         self.layout.addLayout(layout)
 
-    def import_file(self):
+    def import_file(self) -> Self:
         """Import the selected file via the dialog's import action.
 
         Triggers the underlying ``add_document_app`` workflow on the
@@ -107,7 +109,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
             logma.error(f"[dialog_documents] import_file failed: {e}", exc_info=True)
             return self
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -131,7 +133,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
         #     self.local_available_bit = True
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """
 
         :param file_type:
@@ -155,7 +157,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
         #     self.init_multi_page_import()
         return self
 
-    def init_multi_page_import(self):
+    def init_multi_page_import(self) -> Self:
         """Initialise the multi-page-import workflow (when enabled).
 
         Multi-page import lets the user combine several source files
@@ -176,7 +178,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
             logma.error(f"[dialog_documents] init_multi_page_import failed: {e}", exc_info=True)
             return self
 
-    def init_google_drive_button(self):
+    def init_google_drive_button(self) -> None:
         """"""
         if log:
             logma.info(f"Initialize Google Drive Button")
@@ -190,7 +192,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
         self.connect_gfile.set_handler(self.open_google_drive_viewer, self.config.dikt)
         self.launch_button_layout.addWidget(self.connect_gfile)
 
-    def init_local_drive_button(self):
+    def init_local_drive_button(self) -> None:
         """"""
         if log:
             logma.info(f"Initialize Local Drive Button")
@@ -214,11 +216,11 @@ class NchantdNewDocumentSigil(NchantdSigil):
             self.open_book.set_handler()
             self.launch_button_layout.addWidget(self.open_book)
 
-    def load_document(self):
+    def load_document(self) -> None:
         """"""
         self.document_obj = PyfficeDocument.open(self.file_path)
 
-    def open_google_drive_viewer(self, name=None, app=None, cfg=None):
+    def open_google_drive_viewer(self, name=None, app=None, cfg=None) -> None:
         """"""
         gdrive_sigil = NchantdGoogleDriveSigil(self.parent, self.config.override(cfg))
         self.gdrive_path = gdrive_sigil.initWidget()
@@ -227,7 +229,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
             self.show_file_path()
             self.load_google = True
 
-    def show_file_path(self):
+    def show_file_path(self) -> Self:
         """"""
         logma.info(f"File Path {self.file_path.file_selected}")
         cfg = {"text": self.file_path.file_selected, "readonly": True}
@@ -245,7 +247,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
         self.new = False
         return self
 
-    def open_file_sigil(self, name=None, app=None, cfg=None):
+    def open_file_sigil(self, name=None, app=None, cfg=None) -> None:
         """"""
         logma.info(f"Launch Open Dialog")
         file_sigil = NchantdFileOpenSigil("open", self.parent, self.config.override(cfg))
@@ -256,7 +258,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
             self.show_file_path()
             self.load_google = False
 
-    def accept(self, action=None, app=None, params=None):
+    def accept(self, action=None, app=None, params=None) -> None:
         """
         :return:
         """
@@ -264,7 +266,7 @@ class NchantdNewDocumentSigil(NchantdSigil):
         super().accept_()
         self.add_tab("center")
 
-    def add_tab(self, tabset):
+    def add_tab(self, tabset) -> None:
         """"""
         widgdata = {}
         widgdata["doc_type"] = self.document_nm
