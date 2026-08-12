@@ -21,10 +21,12 @@
 """
 
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 from os.path import abspath, dirname, join
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Type
 from types import SimpleNamespace
+from typing_extensions import Self
 
 from kahndor import kahndor
 from kahndor.logma import Logma
@@ -82,7 +84,7 @@ class NchantdOfficeDocumentConfigPane(NchantdPane):
     #: common tuple to build ``self._fields``.
     _type_specific_fields: tuple = ()
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         # Skip the broken ``kahndor.Instruct(PXCFG)`` chain -- the
         # referenced ``_data_/document_settings.yaml`` doesn't exist
         # yet (the file was never created when the stub was first
@@ -99,7 +101,7 @@ class NchantdOfficeDocumentConfigPane(NchantdPane):
         self._init_super_safe(parent, cfg)
         self._fields: Dict[str, Any] = {}
 
-    def _init_super_safe(self, parent, cfg):
+    def _init_super_safe(self, parent, cfg) -> None:
         """Call ``NchantdPane.__init__`` only when ``parent`` looks like
         a live Qt widget. Otherwise skip and initialise the attributes
         the off-screen tests need (``self.parent`` for the parent
@@ -120,7 +122,7 @@ class NchantdOfficeDocumentConfigPane(NchantdPane):
         if cfg:
             self.config.override(cfg)
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """Initialise model-level state.
 
         Guards the ``super().initModel`` call -- the base
@@ -144,7 +146,7 @@ class NchantdOfficeDocumentConfigPane(NchantdPane):
                 )
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """Render the common 5 fields plus any subclass-specific fields.
 
         The actual widget rendering is delegated to ``_render_field``
@@ -169,13 +171,13 @@ class NchantdOfficeDocumentConfigPane(NchantdPane):
         )
         return self
 
-    def initWidget(self, cfg=None):
+    def initWidget(self, cfg=None) -> Self:
         """Run initModel + initView in sequence."""
         self.initModel(cfg)
         self.initView(cfg)
         return self
 
-    def _render_field(self, field_key: str):
+    def _render_field(self, field_key: str) -> Dict[str, Any]:
         """Stub field renderer -- returns a sentinel mapping for the
         off-screen test path. Subclasses or future commits can override
         this to produce real ``NchantdCheckbox`` / ``NchantdDropDown``
