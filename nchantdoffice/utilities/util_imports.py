@@ -12,9 +12,11 @@
 """
 
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
+from typing import Any
 
 # ======================================3rd Party Library Modules======================================================||
 
@@ -36,7 +38,7 @@ pxcfg = join(here, "_data_", ".yaml")
 class NchantdImport(object):
     """"""
 
-    def __init__(self, path, cfg=None):
+    def __init__(self, path, cfg=None) -> None:
         """"""
         logma.info(f"[util_imports] NchantdImport.__init__: path={path!r}")
         self.path = path
@@ -47,7 +49,7 @@ class NchantdImport(object):
             logma.error(f"[util_imports] NchantdImport.__init__ failed: path={path!r} err={e}", exc_info=True)
             raise
 
-    def run(self):
+    def run(self) -> None:
         """"""
         logma.info(f"[util_imports] NchantdImport.run: path={getattr(self, 'path', None)!r}")
         # Base class is a no-op; subclasses override with actual conversion logic.
@@ -57,7 +59,7 @@ class NchantdImport(object):
 class NchantdCherrytreeImport(NchantdImport):
     """"""
 
-    def __init__(self, path, cfg=None):
+    def __init__(self, path, cfg=None) -> None:
         """"""
         logma.info(f"[util_imports] NchantdCherrytreeImport.__init__: path={path!r}")
         try:
@@ -69,7 +71,7 @@ class NchantdCherrytreeImport(NchantdImport):
             logma.error(f"[util_imports] NchantdCherrytreeImport.__init__ failed: path={path!r} err={e}", exc_info=True)
             raise
 
-    def run(self):
+    def run(self) -> Any:
         """"""
         logma.info(f"[util_imports] NchantdCherrytreeImport.run: starting conversion of path={getattr(self, 'path', None)!r}")
         try:
@@ -103,7 +105,7 @@ class NchantdCherrytreeImport(NchantdImport):
             raise
 
 
-def convert_yaml_to_nchantdoffice(notebook, parent_node):
+def convert_yaml_to_nchantdoffice(notebook, parent_node) -> None:
     """"""
     logma.info(f"[util_imports] convert_yaml_to_nchantdoffice: nodes={len(notebook) if hasattr(notebook, '__len__') else 'n/a'}")
     try:
