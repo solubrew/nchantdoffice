@@ -13,6 +13,7 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
 from os.path import abspath, dirname, join
 import datetime as dt
 import json as j
@@ -48,7 +49,7 @@ pxcfg = join(here, "_data_", "catalogs.yaml")
 class NchantdOfficeDocumentsCatalog(NchantdCatalog):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocumentsCatalog").override(cfg))
@@ -63,7 +64,7 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
         self.position = None
         self.dummy = False
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> "NchantdOfficeDocumentsCatalog":
         """"""
         cfg = cfg or {}
         cfg["size"] = None
@@ -83,7 +84,7 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
         logma.info(f"Toolbox Config {self.toolbox_config}")
         return self
 
-    def initView(self):
+    def initView(self) -> "NchantdOfficeDocumentsCatalog":
         """"""
         self.init_pre_view()
         logma.info(f"Toolbox Config {self.toolbox_config}")
@@ -129,33 +130,33 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
         self.init_toolbox()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> "NchantdOfficeDocumentsCatalog":
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def append_note(self, note):
+    def append_note(self, note) -> None:
         """"""
         self.notes.append(note)
 
-    def cmd_node_edit(self, event=None, *args, **kwargs):
+    def cmd_node_edit(self, event=None, *args, **kwargs) -> "NchantdOfficeDocumentsCatalog":
         """"""
         return self
 
-    def cmd_tab_edit(self, event=None, *args, **kwargs):
+    def cmd_tab_edit(self, event=None, *args, **kwargs) -> "NchantdOfficeDocumentsCatalog":
         """"""
         return self
 
-    def cmd_tag_edit(self, event=None, *args, **kwargs):
+    def cmd_tag_edit(self, event=None, *args, **kwargs) -> "NchantdOfficeDocumentsCatalog":
         """"""
         return self
 
-    def defocus(self):
+    def defocus(self) -> "NchantdOfficeDocumentsCatalog":
         """"""
         return self
 
-    def init_drawer_file_config(self):
+    def init_drawer_file_config(self) -> dict:
         """"""
         default_action = {"action": "insert_object", "type": "custom"}
         items = self.toolbox_config[50].get("items", {})
@@ -181,7 +182,7 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
         # cnt += 1
         return items
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> "NchantdOfficeDocumentsCatalog":
         """"""
         # if self.toolbox_config is not None:
         logma.info(f"Toolbox Config {self.toolbox_config.keys()}")
@@ -192,17 +193,17 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
 class NchantdOfficeExtensionsCatalog(NchantdCatalog):
     """"""
 
-    def __init__(self, parent, cfg=None):
+    def __init__(self, parent, cfg=None) -> None:
         """"""
         super().__init__(parent, cfg)
         self.config.override(kahndor.instruct(pxcfg).select("NchantdDataSourcesSettingsTab").override(cfg))
         self.data_sources = self.config.dikt["default_sources"]
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> None:
         """"""
         super().initModel(cfg)
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> None:
         """"""
         super().initView(cfg)
         layout = pyqt.QVBoxLayout()
@@ -212,7 +213,7 @@ class NchantdOfficeExtensionsCatalog(NchantdCatalog):
                 layout.addWidget(button)
         self.setLayout(layout)
 
-    def initWidget(self):
+    def initWidget(self) -> "NchantdOfficeExtensionsCatalog":
         """"""
         self.initModel()
         self.initView()
@@ -222,12 +223,12 @@ class NchantdOfficeExtensionsCatalog(NchantdCatalog):
 class NchantdOfficeServicesCatalog(NchantdCatalog):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.instruct(pxcfg).select("NchantdServiceCatalog").override(cfg))
 
-    def initModel(self):
+    def initModel(self) -> "NchantdOfficeServicesCatalog":
         """"""
         super().initModel()
         table = "app_integrations"
@@ -242,12 +243,12 @@ class NchantdOfficeServicesCatalog(NchantdCatalog):
         self.services_available.drop_duplicates(subset=["name_txt", "service_nm_txt"], inplace=True)
         return self
 
-    def initView(self):
+    def initView(self) -> "NchantdOfficeServicesCatalog":
         """"""
         super().initView()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> "NchantdOfficeServicesCatalog":
         """"""
         self.initModel()
         self.initView()
@@ -257,14 +258,14 @@ class NchantdOfficeServicesCatalog(NchantdCatalog):
 class NchantdDataSourcesCatalog(NchantdCatalog):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSourceCatalog").override(cfg))
         self.bridge = None
         self.search_bar = None
 
-    def initModel(self):
+    def initModel(self) -> "NchantdDataSourcesCatalog":
         """"""
         super().initModel()
         items = self.app.model.get_sources()
@@ -272,7 +273,7 @@ class NchantdDataSourcesCatalog(NchantdCatalog):
         self.display_items = self.all_items
         return self
 
-    def initView(self):
+    def initView(self) -> "NchantdDataSourcesCatalog":
         """Build the data-sources catalog view.
 
         T-067: adds a filter-capable search bar to the layout
@@ -294,7 +295,7 @@ class NchantdDataSourcesCatalog(NchantdCatalog):
         super().initView(NchantdOfficeSourceCatalogItem, NchantdSourcePane)
         return self
 
-    def _apply_catalog_filter(self, query=None, *args, **kwargs):
+    def _apply_catalog_filter(self, query=None, *args, **kwargs) -> "NchantdDataSourcesCatalog":
         """T-067: filter the catalog items by ``query``.
 
         Iterates ``self.catalog_items`` (or whatever the parent
@@ -323,7 +324,7 @@ class NchantdDataSourcesCatalog(NchantdCatalog):
             logma.error(f"[catalogs] _apply_catalog_filter failed: {e}", exc_info=True)
         return self
 
-    def _show_all_catalog_items(self):
+    def _show_all_catalog_items(self) -> "NchantdDataSourcesCatalog":
         """T-067 helper - make all catalog items visible."""
         try:
             items = getattr(self, "catalog_items", None) or []
@@ -334,7 +335,7 @@ class NchantdDataSourcesCatalog(NchantdCatalog):
             logma.error(f"[catalogs] _show_all_catalog_items failed: {e}", exc_info=True)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> "NchantdDataSourcesCatalog":
         """"""
         self.initModel()
         self.initView()
