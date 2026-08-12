@@ -13,6 +13,9 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+from typing import Any, Optional, Self
+
 from os.path import abspath, dirname, join
 import datetime as dt
 
@@ -132,7 +135,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         self.tab_entry_change = False
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         # PUSH 0.0.3: long_method >150 audit false-positive.
         # The body is over the 150-line threshold because it holds
         # the legacy commented-out blocks for the checkbox list
@@ -164,13 +167,13 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         self.layout.addWidget(self.primary_settings_group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_on_change_journal_focus(self, event=None, *args, **kwargs):
+    def cmd_on_change_journal_focus(self, event=None, *args, **kwargs) -> Self:
         """Toggle the enable_journal_focus flag.
 
         Reads the checkbox state (or falls back to the existing
@@ -193,7 +196,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return self
 
-    def cmd_on_change_settings_focus(self, event=None, *args, **kwargs):
+    def cmd_on_change_settings_focus(self, event=None, *args, **kwargs) -> Self:
         """Toggle the enable_settings_focus flag.
 
         Reads the checkbox state (or falls back to the existing
@@ -216,7 +219,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return self
 
-    def cmd_on_change_automation(self, event=None, *args, **kwargs):
+    def cmd_on_change_automation(self, event=None, *args, **kwargs) -> Self:
         """Toggle the enable_automation flag.
 
         Reads the checkbox state and persists ``enable_automation``
@@ -238,7 +241,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return self
 
-    def cmd_on_change_data_source(self, event=None, *args, **kwargs):
+    def cmd_on_change_data_source(self, event=None, *args, **kwargs) -> Self:
         """Record the active data source on config.
 
         Reads the current selection from ``data_source_select`` (when
@@ -261,7 +264,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return self
 
-    def cmd_on_change_show_left_side_pane(self, event=None, *args, **kwargs):
+    def cmd_on_change_show_left_side_pane(self, event=None, *args, **kwargs) -> Self:
         """Toggle the show_left_pane flag.
 
         Reads the checkbox state and persists ``show_left_pane`` on
@@ -283,7 +286,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return self
 
-    def cmd_on_change_show_right_side_pane(self, event=None, *args, **kwargs):
+    def cmd_on_change_show_right_side_pane(self, event=None, *args, **kwargs) -> Self:
         """Toggle the show_right_pane flag.
 
         Reads the checkbox state and persists ``show_right_pane`` on
@@ -305,7 +308,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return self
 
-    def cmd_on_change_quicklaunch(self, event=None, *args, **kwargs):
+    def cmd_on_change_quicklaunch(self, event=None, *args, **kwargs) -> Self:
         """Toggle the show_quick_toolbar flag.
 
         Reads the checkbox state and persists ``show_quick_toolbar``
@@ -327,7 +330,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return self
 
-    def cmd_on_change_document_catalog(self, event=None, *args, **kwargs):
+    def cmd_on_change_document_catalog(self, event=None, *args, **kwargs) -> Self:
         """Toggle the show-document-launch-catalog flag.
 
         Reads the current checkbox state and stores it on the config
@@ -346,7 +349,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             logma.error(f"[settings] cmd_on_change_document_catalog failed: {e}", exc_info=True)
         return self
 
-    def cmd_on_change_default_tab_bit(self, event=None, *args, **kwargs):
+    def cmd_on_change_default_tab_bit(self, event=None, *args, **kwargs) -> Self:
         """Toggle the create-default-tab-on-startup flag.
 
         Reads the current checkbox state and stores it on the config
@@ -365,7 +368,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             logma.error(f"[settings] cmd_on_change_default_tab_bit failed: {e}", exc_info=True)
         return self
 
-    def cmd_on_change_default_tab_select(self, event=None, *args, **kwargs):
+    def cmd_on_change_default_tab_select(self, event=None, *args, **kwargs) -> Self:
         """Record the user's chosen default tab on startup.
 
         Reads the current selection from ``default_tab_switch``
@@ -384,7 +387,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             logma.error(f"[settings] cmd_on_change_default_tab_select failed: {e}", exc_info=True)
         return self
 
-    def cmd_set_pro_edition(self, event=None, *args, **kwargs):
+    def cmd_set_pro_edition(self, event=None, *args, **kwargs) -> Self:
         """Toggle the pro-edition flag, gated by the actual user capability.
 
         Reads the checkbox state (or kwargs value) and stores the
@@ -415,7 +418,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             logma.error(f"[settings] cmd_set_pro_edition failed: {e}", exc_info=True)
         return self
 
-    def cmd_on_change_right_side_focus(self, event=None, *args, **kwargs):
+    def cmd_on_change_right_side_focus(self, event=None, *args, **kwargs) -> Self:
         """Toggle the refocus-right-side-tabs-on-document-change flag.
 
         Reads the current checkbox state (or falls back to the
@@ -436,7 +439,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             logma.error(f"[settings] cmd_on_change_right_side_focus failed: {e}", exc_info=True)
         return self
 
-    def cmd_on_change_right_side_tab_select(self, event=None, *args, **kwargs):
+    def cmd_on_change_right_side_tab_select(self, event=None, *args, **kwargs) -> Self:
         """Record the user's chosen right-side default tab.
 
         Reads the current value from ``self.default_tab_switch``
@@ -462,7 +465,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             logma.error(f"[settings] cmd_on_change_right_side_tab_select failed: {e}", exc_info=True)
         return self
 
-    def cmd_on_change_prompt_for_new_node_name(self, event=None, *args, **kwargs):
+    def cmd_on_change_prompt_for_new_node_name(self, event=None, *args, **kwargs) -> Self:
         """Toggle the prompt_for_new_node_name flag.
 
         Reads the checkbox state and persists
@@ -490,7 +493,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return self
 
-    def cmd_on_change_prompt_for_new_tab_name(self, event=None, *args, **kwargs):
+    def cmd_on_change_prompt_for_new_tab_name(self, event=None, *args, **kwargs) -> Self:
         """Toggle the prompt_for_new_tab_name flag.
 
         Reads the checkbox state and persists
@@ -525,7 +528,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
     # T-NEW-054 — Max tabs per node
     # ------------------------------------------------------------------
 
-    def cmd_on_change_max_tabs_per_node(self, event=None, *args, **kwargs):
+    def cmd_on_change_max_tabs_per_node(self, event=None, *args, **kwargs) -> Self:
         """Set the ``max_tabs_per_node`` config value (T-NEW-054).
 
         Reads the SpinBox value and persists
@@ -554,7 +557,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
     # T-NEW-056 — Max total nodes per non-pro user
     # ------------------------------------------------------------------
 
-    def cmd_on_change_max_nodes_per_user(self, event=None, *args, **kwargs):
+    def cmd_on_change_max_nodes_per_user(self, event=None, *args, **kwargs) -> Self:
         """Set the ``max_nodes_per_user`` config value (T-NEW-056).
 
         Reads the SpinBox value and persists
@@ -585,7 +588,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
     # T-NEW-059 — Update check interval (hours)
     # ------------------------------------------------------------------
 
-    def cmd_on_change_check_update_interval_hours(self, event=None, *args, **kwargs):
+    def cmd_on_change_check_update_interval_hours(self, event=None, *args, **kwargs) -> Self:
         """Set the ``check_update_interval_hours`` config value (T-NEW-059).
 
         Reads the SpinBox value and persists
@@ -628,7 +631,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return self
 
-    def cmd_on_change_update_tab_name_to_file_name(self, event=None, *args, **kwargs):
+    def cmd_on_change_update_tab_name_to_file_name(self, event=None, *args, **kwargs) -> Self:
         """Toggle the ``update_tab_name_to_file_name`` flag (T-NEW-032).
 
         When True, opening a local file via
@@ -668,7 +671,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
     # T-NEW-027 — Doc-type selector (per-document-type settings pane)
     # ------------------------------------------------------------------
 
-    def cmd_on_change_doc_type_select(self, event=None, *args, **kwargs):
+    def cmd_on_change_doc_type_select(self, event=None, *args, **kwargs) -> Self:
         """Persist the user's chosen doc type on the Interface tab.
 
         Reads the dropdown's ``currentText()`` and writes it to
@@ -699,7 +702,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return self
 
-    def get_doc_type_settings_pane(self, doc_type: str):
+    def get_doc_type_settings_pane(self, doc_type: str) -> Any:
         """Resolve the per-doc-type settings pane class for ``doc_type``.
 
         Thin wrapper around ``get_settings_pane_for_doc_type`` so the
@@ -709,7 +712,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         """
         return get_settings_pane_for_doc_type(doc_type)
 
-    def get_right_pane_tab_options(self=None):
+    def get_right_pane_tab_options(self=None) -> list[str]:
         """Enumerate the available right-side tabs as dropdown options.
 
         T-NEW-028: queries the ``vw_tab`` view (a UNION over
@@ -785,7 +788,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
             return list(RIGHT_PANE_TAB_FALLBACK)
 
-    def cmd_on_change_visible_right_tab(settings, tid, app_data_type, visible):
+    def cmd_on_change_visible_right_tab(settings, tid, app_data_type, visible) -> "NchantdOfficeInterfaceSettings" | None:
         """Toggle ``visible_bit`` for a right-side tab row.
 
         T-NEW-028 handler wired into the Interface Tab right-side
@@ -851,11 +854,11 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
         return settings
 
-    def get_settings(self):
+    def get_settings(self) -> Any:
         """"""
         return super().get_settings("interface")
 
-    def on_data_changed(self):
+    def on_data_changed(self) -> Self:
         """Mark the settings document as dirty when the user edits a field.
 
         Sets ``self.has_changed = True`` and stores the change
@@ -875,7 +878,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             logma.error(f"[config/settings] on_data_changed failed: {e}", exc_info=True)
             return self
 
-    def save(self):
+    def save(self) -> Self:
         """"""
         super().save()
         data = []
@@ -900,7 +903,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         #     data.append([self.default_tab_switch.currentText()])
         return self
 
-    def _build_right_pane_visibility_checks(self):
+    def _build_right_pane_visibility_checks(self) -> "QGroupBox":
         """Build the right-pane tab visibility checklist widget
         (T-NEW-028). One checkbox per row in ``vw_tab`` filtered by
         ``tabset_type_txt = "right"`` -- checking/unchecking flips
@@ -948,7 +951,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
                 )
         return group
 
-    def _get_right_pane_settings_arg():
+    def _get_right_pane_settings_arg() -> None:
         """Module-level shim for ``get_right_pane_tab_options`` callers that
         pass the settings instance directly (rather than calling the
         instance method). Returns ``None`` -- callers must supply the
@@ -956,7 +959,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         """
         return None
 
-    def _initialize_center(self, primary_layout):
+    def _initialize_center(self, primary_layout) -> None:
         """"""
         # Center Settings Group
         center_settings_group = NchantdGridScrollGroupBox()
@@ -1097,7 +1100,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
 
         primary_layout.addLayout(center_settings_group.layout)
 
-    def _initialize_left_side(self, primary_layout):
+    def _initialize_left_side(self, primary_layout) -> None:
         """"""
         # Left Side Settings Group
         left_side_settings_group = NchantdGridScrollGroupBox()
@@ -1186,7 +1189,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             document_group_layout.addWidget(self.quick_launch_document_types[document["name_txt"]])
         left_side_settings_group.addWidget(document_group, cnt, 0)
 
-    def _initialize_right_side(self, primary_layout):
+    def _initialize_right_side(self, primary_layout) -> None:
         """"""
         # Right Side Settings Group
         right_side_settings_group = NchantdGridScrollGroupBox()
@@ -1224,7 +1227,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         self.right_pane_tab_visibility_checks = self._build_right_pane_visibility_checks()
         right_side_settings_group.addWidget(self.right_pane_tab_visibility_checks, 2, 0)
 
-    def _initialize_doc_type_selector(self, parent_layout):
+    def _initialize_doc_type_selector(self, parent_layout) -> None:
         """Wire the doc-type dropdown + per-type settings pane slot
         (T-NEW-027). The dropdown's options come from the registry's
         ``known_types()`` (which mirrors the document_types_df rows
@@ -1267,7 +1270,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
                 exc_info=True,
             )
 
-    def _query_right_pane_tab_rows(self):
+    def _query_right_pane_tab_rows(self) -> Optional[list[dict[str, Any]]]:
         """Run the right-side tab query and return rows as a list of
         dicts (off-screen-test-friendly shape). Returns ``None`` when
         the store is unavailable.
@@ -1305,7 +1308,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         except Exception:
             return []
 
-    def _render_doc_type_pane(self, doc_type: str):
+    def _render_doc_type_pane(self, doc_type: str) -> None:
         """Resolve ``doc_type`` via the registry and render its fields
         into ``self.doc_type_pane_layout``. Called by
         ``_initialize_doc_type_selector`` on first display and by
@@ -1366,22 +1369,22 @@ _get_right_pane_settings_arg = NchantdOfficeInterfaceSettings._get_right_pane_se
 class NchantdOfficeThemeSettings(NchantdThemeSettings):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeThemeSettings").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -1408,18 +1411,18 @@ except ImportError:
         module has an import error.
         """
 
-        def __init__(self, parent=None, cfg=None):
+        def __init__(self, parent=None, cfg=None) -> None:
             super().__init__(parent, cfg)
             self.name = "NchantdOffice Affiliate Manager (fallback)"
             self.user = pyqt.QApplication.instance().model.user
             self.canvas = None
             self.data_series = None
 
-        def initModel(self):
+        def initModel(self) -> Self:
             super().initModel()
             return self
 
-        def initView(self, cfg=None):
+        def initView(self, cfg=None) -> Any:
             super().initView(cfg or {})
             layout = pyqt.QHBoxLayout()
             url_cfg = {
@@ -1432,7 +1435,7 @@ except ImportError:
             self.layout.addLayout(layout)
             return cfg
 
-        def initWidget(self):
+        def initWidget(self) -> Self:
             self.initModel()
             self.initView()
             return self
