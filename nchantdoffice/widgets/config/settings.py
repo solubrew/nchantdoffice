@@ -55,41 +55,41 @@ pxcfg = join(here, "_data_", "settings.yaml")
 
 
 class NchantdOfficeSettingsWidget(NchantdSettingsWidget):
-    """"""
+    """ """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSettingsWidget").override(cfg))
 
-    def initModel(self, cfg=None):
-        """"""
+    def initModel(self, cfg=None) -> Self:
+        """ """
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
-        """"""
+    def initView(self, cfg=None) -> Self:
+        """ """
         super().initView(cfg)
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         self.initModel()
         self.initView()
         return self
 
 
 class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
-    """"""
+    """ """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeInterfaceSettings").override(cfg))
         self.primary_settings_group = None
 
-    def initModel(self, cfg=None):
-        """"""
+    def initModel(self, cfg=None) -> Self:
+        """ """
         super().initModel(cfg)
         self.document_types_df = self.app.model.get_document_types()
         settings = self.document.get_settings()
