@@ -12,6 +12,7 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
@@ -37,6 +38,7 @@ from nchantrs.widgets.groups import NchantdGroup
 from nchantrs.widgets.groups import NchantdVScrollGroupBox
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
 from nchantrs.widgets.widgets import NchantdWidget
+from typing import Any, Iterator, Self
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -50,17 +52,17 @@ pxcfg = join(here, "_data_", "sources.yaml")
 class NchantdSourceEditPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourceEditPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """T-NEW-034: per-source config card.
 
         Renders the canonical 4 slots: tracked-by-NchantdOffice
@@ -121,7 +123,7 @@ class NchantdSourceEditPane(NchantdPane):
         # self.layout.addItem(self.spacer)
         return self
 
-    def cmd_on_change_source_tracked(self, event=None, *args, **kwargs):
+    def cmd_on_change_source_tracked(self, event=None, *args, **kwargs) -> Self:
         """T-NEW-034: track / un-track the active source."""
         try:
             checked = bool(event) if event is not None else False
@@ -131,7 +133,7 @@ class NchantdSourceEditPane(NchantdPane):
             logma.warning(f"[sources] cmd_on_change_source_tracked: {e}")
         return self
 
-    def cmd_on_change_source_retention(self, event=None, *args, **kwargs):
+    def cmd_on_change_source_retention(self, event=None, *args, **kwargs) -> Self:
         """T-NEW-034: read the retention spinbox value."""
         try:
             value = None
@@ -146,7 +148,7 @@ class NchantdSourceEditPane(NchantdPane):
             logma.warning(f"[sources] cmd_on_change_source_retention: {e}")
         return self
 
-    def cmd_save_source_settings(self, event=None, *args, **kwargs):
+    def cmd_save_source_settings(self, event=None, *args, **kwargs) -> Self:
         """T-NEW-034: persist the per-source config to config.dikt."""
         try:
             # Pull the current values from the widget attributes and
@@ -164,13 +166,13 @@ class NchantdSourceEditPane(NchantdPane):
             logma.warning(f"[sources] cmd_save_source_settings: {e}")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -180,12 +182,12 @@ class NchantdSourceEditPane(NchantdPane):
 class NchantdSourcesListPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourcesListPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """Initialise the sources-list model.
 
         T-054: previously returned a hard-coded stub. Now queries
@@ -216,7 +218,7 @@ class NchantdSourcesListPane(NchantdPane):
             logma.error(f"[sources] initModel outer failed: {e}", exc_info=True)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "Sources List:"}
@@ -229,7 +231,7 @@ class NchantdSourcesListPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -239,17 +241,17 @@ class NchantdSourcesListPane(NchantdPane):
 class NchantdWhereUsedListPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdAlarmsListPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "Where Used:"}
@@ -262,7 +264,7 @@ class NchantdWhereUsedListPane(NchantdPane):
         self.layout.addLayout(layout)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -272,20 +274,20 @@ class NchantdWhereUsedListPane(NchantdPane):
 class NchantdOfficeEDA(NchantdWidget):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdOfficeEDA init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeEDA").override(cfg))
         self.slim_tab = True
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         self.slim_tab = self.config.dikt.get("slim_tab", True)
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """
         Have a slim version to show on the right side and a full version to show in the center tabset
         """
@@ -296,13 +298,13 @@ class NchantdOfficeEDA(NchantdWidget):
             pass
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def set_slim_tab(self, slim_tab=False):
+    def set_slim_tab(self, slim_tab=False) -> Self:
         """"""
         self.slim_tab = slim_tab
         return self
@@ -311,7 +313,7 @@ class NchantdOfficeEDA(NchantdWidget):
 class NchantdSourcePane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourcePane").override(cfg))
@@ -321,13 +323,13 @@ class NchantdSourcePane(NchantdPane):
         self.data_source_entry = None
         self.active_item = None
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         self.active_item = self.catalog.selected_item
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {
@@ -399,13 +401,13 @@ class NchantdSourcePane(NchantdPane):
         self.layout.addLayout(self.accept_buttons_layout)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_launch_data_source(self):
+    def cmd_launch_data_source(self) -> Self:
         """Launch the data-source picker dialog.
 
         Opens a NchantdSourcePickerDialog (or fallback to a message
@@ -423,7 +425,7 @@ class NchantdSourcePane(NchantdPane):
             logma.error(f"[sources] cmd_launch_data_source failed: {e}", exc_info=True)
             return self
 
-    def cmd_on_change_data_source_availability(self, event=None, *args, **kwargs):
+    def cmd_on_change_data_source_availability(self, event=None, *args, **kwargs) -> Self:
         """Toggle the availability of the active data source.
 
         Writes the new availability to the model store and refreshes
@@ -440,7 +442,7 @@ class NchantdSourcePane(NchantdPane):
             logma.error(f"[sources] cmd_on_change_data_source_availability failed: {e}", exc_info=True)
             return self
 
-    def cmd_show_api_key(self):
+    def cmd_show_api_key(self) -> Self:
         """Show the API key for the current data source.
 
         Reads the API key from the config (stored under
@@ -463,11 +465,11 @@ class NchantdSourcePane(NchantdPane):
             logma.error(f"[sources] cmd_show_api_key failed: {e}", exc_info=True)
             return self
 
-    def get_data_source_availability(self):
+    def get_data_source_availability(self) -> Any:
         """"""
         return self.active_item.is_data_source_available
 
-    def store_active_source(self):
+    def store_active_source(self) -> Self:
         """
         :return:
         """
@@ -480,7 +482,7 @@ class NchantdSourcePane(NchantdPane):
         self.app.model.store.store_app_option(data)
         return self
 
-    def update_pane(self):
+    def update_pane(self) -> Self:
         """"""
         super().update_pane()
         return self
@@ -489,18 +491,18 @@ class NchantdSourcePane(NchantdPane):
 class NchantdDataSetPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdDataSetPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdDataSetPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "Data Set", "size": [100, 200]}
@@ -516,13 +518,13 @@ class NchantdDataSetPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def get_data_view_fields(self):
+    def get_data_view_fields(self) -> Any:
         """"""
         fields = self.parent.get_data_view_fields()
         return fields
@@ -531,17 +533,17 @@ class NchantdDataSetPane(NchantdPane):
 class NchantdViewPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdViewPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"collapsible": False, "collapsed": False, "text": "View"}
@@ -559,7 +561,7 @@ class NchantdViewPane(NchantdPane):
         # self.layout.addStretch()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -569,18 +571,18 @@ class NchantdViewPane(NchantdPane):
 class NchantdViewEditPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdViewEditPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdViewEditGroup").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -683,13 +685,13 @@ class NchantdViewEditPane(NchantdPane):
         self.layout.addItem(self.spacer)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def get_fields(self):
+    def get_fields(self) -> Any:
         """"""
         fields = self.parent.parent.get_data_view_fields()
         return fields
@@ -698,7 +700,7 @@ class NchantdViewEditPane(NchantdPane):
 class NchantdDataSetConfigPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdDataSetConfigPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
@@ -718,7 +720,7 @@ class NchantdDataSetConfigPane(NchantdPane):
         self.center_group = None
         self.new_view_config_pane = None
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         self.data_series = []
@@ -727,7 +729,7 @@ class NchantdDataSetConfigPane(NchantdPane):
         self.data_series = self.config.dikt.get("data_series", {})
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         self.source_width = self.config.dikt.get("source_width", 350)
@@ -773,23 +775,23 @@ class NchantdDataSetConfigPane(NchantdPane):
         self.layout.addLayout(self.center_group.layout)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_connect_source(self, event=None, *args, **kwargs):
+    def cmd_connect_source(self, event=None, *args, **kwargs) -> Self:
         """"""
 
         return self
 
-    def cmd_on_description_change(self):
+    def cmd_on_description_change(self) -> Self:
         """"""
 
         return self
 
-    def cmd_on_name_change(self):
+    def cmd_on_name_change(self) -> Self:
         """"""
 
         return self
@@ -798,17 +800,17 @@ class NchantdDataSetConfigPane(NchantdPane):
 class NchantdSourceDefaultPane(NchantdWidget):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdSourceDefaultPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "Source Details:"}
@@ -844,13 +846,13 @@ class NchantdSourceDefaultPane(NchantdWidget):
         self.layout.addLayout(layout)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_on_data_table_change(self, event):
+    def cmd_on_data_table_change(self, event) -> Self:
         """Handle a change in the selected data table.
 
         Updates the active table on the source and refreshes the
@@ -867,7 +869,7 @@ class NchantdSourceDefaultPane(NchantdWidget):
             logma.error(f"[sources] cmd_on_data_table_change failed: {e}", exc_info=True)
             return self
 
-    def cmd_on_source_change(self, event=None, *args, **kwargs):
+    def cmd_on_source_change(self, event=None, *args, **kwargs) -> Self:
         """Handle a change in the selected source.
 
         Updates the active source on the model and refreshes the
@@ -884,20 +886,20 @@ class NchantdSourceDefaultPane(NchantdWidget):
             logma.error(f"[sources] cmd_on_source_change failed: {e}", exc_info=True)
             return self
 
-    def get_source(self, event=None, *args, **kwargs):
+    def get_source(self, event=None, *args, **kwargs) -> Any:
         """"""
         return self.app.active_tab.get_source()
 
-    def get_sources(self):
+    def get_sources(self) -> Any:
         """"""
         return self.app.active_tab.get_sources()
 
-    def get_source_table(self):
+    def get_source_table(self) -> str:
         """"""
         table = ""  # self.app.active_tab.get_source_table(source)
         return table
 
-    def get_source_tables(self, source):
+    def get_source_tables(self, source) -> list[Any]:
         """"""
         # tables = self.app.active_tab.get_source_tables()
         tables = []
