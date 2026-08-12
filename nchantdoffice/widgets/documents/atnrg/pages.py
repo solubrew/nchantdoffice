@@ -11,8 +11,11 @@
     <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+from typing import Any, Dict, Self
+
 from os.path import abspath, dirname, join
 import datetime as dt
 
@@ -67,35 +70,35 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
         console.log("Form Cleared!");
     """
 
-    def __init__(self, parent=None, profile=None, intercept=False, cfg=None):
+    def __init__(self, parent=None, profile=None, intercept=False, cfg=None) -> None:
         """Initialize the NchantdOfficeWebPage."""
         super().__init__(parent, profile, intercept, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebPage").override(cfg))
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Initialize the model and return self for method chaining."""
         super().initModel()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """Initialize the view and return self for method chaining."""
         super().initView()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """Initialize the widget by setting up model and view."""
         self.initModel()
         self.initView()
         return self
 
-    def acceptNavigationRequest(self, url, request_type, is_main_frame):
+    def acceptNavigationRequest(self, url, request_type, is_main_frame) -> bool:
         """Handle navigation requests."""
         # self.load_url(url)
         # self.parent.update_toolbox_url_inspection()
         return super().acceptNavigationRequest(url, request_type, is_main_frame)
 
-    def _execute_javascript(self, script, success_message=None):
+    def _execute_javascript(self, script, success_message=None) -> None:
         """Execute JavaScript code in the web page.
 
         Args:
@@ -106,22 +109,22 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
         if success_message:
             logma.info(f"JS success: {success_message}")
 
-    def autofill_form(self):
+    def autofill_form(self) -> None:
         """Inject JavaScript to autofill HTML form fields with predefined data."""
         self._execute_javascript(self.AUTOFILL_SCRIPT, "Form autofilled successfully")
 
-    def clear_form(self):
+    def clear_form(self) -> None:
         """Inject JavaScript to clear all form input fields."""
         self._execute_javascript(self.CLEAR_FORM_SCRIPT, "Form cleared successfully")
 
-    def open_new_tab(self):
+    def open_new_tab(self) -> Self:
         """Open a new browser tab."""
         super().open_new_tab()
         cfg = {}
         self.parent.app.model.codex.init_browser(cfg).load_document()
         return self
 
-    def submit_text_to_webpage(self, element_name: str = "input"):
+    def submit_text_to_webpage(self, element_name: str = "input") -> None:
         """Submit text from QLineEdit to a specific webpage element.
 
         Args:
@@ -140,28 +143,28 @@ class NchantdOfficeDevPage(NchantdOfficeWebPage):
     LOCAL_IP_PREFIXES = ("192.168.", "10.", "172.")
     LOCAL_DOMAIN_SUFFIXES = (".local", ".localhost")
 
-    def __init__(self, parent=None, profile=None, intercept=False, cfg=None):
+    def __init__(self, parent=None, profile=None, intercept=False, cfg=None) -> None:
         """Initialize development page with local security overrides."""
         super().__init__(parent, profile, intercept, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDevPage").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """Initialize the model component."""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """Initialize the view component."""
         super().initView(cfg)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """Initialize the complete widget by setting up model and view."""
         self.initModel()
         self.initView()
         return self
 
-    def certificateError(self, error):
+    def certificateError(self, error) -> bool:
         """Accept certificate errors for local development hosts."""
         url = pyqt.QUrl(error.url())
         host = url.host()
@@ -171,7 +174,7 @@ class NchantdOfficeDevPage(NchantdOfficeWebPage):
             return True
         return super().certificateError(error)
 
-    def _is_local_host(self, host):
+    def _is_local_host(self, host) -> bool:
         """Check if host is a local development address."""
         if host in self.LOCAL_HOSTS:
             return True
@@ -184,7 +187,7 @@ class NchantdOfficeDevPage(NchantdOfficeWebPage):
 
         return False
 
-    def acceptNavigationRequest(self, url, nav_type, is_main_frame):
+    def acceptNavigationRequest(self, url, nav_type, is_main_frame) -> bool:
         """Handle navigation requests with debugging information."""
         logma.info(f"Navigation to: {url.toString()}")
         return super().acceptNavigationRequest(url, nav_type, is_main_frame)
@@ -193,18 +196,18 @@ class NchantdOfficeDevPage(NchantdOfficeWebPage):
 class NchantdOfficeSidePage(NchantdWebEnginePage):
     """"""
 
-    def __init__(self, parent=None, profile=None, intercept=None, cfg=None):
+    def __init__(self, parent=None, profile=None, intercept=None, cfg=None) -> None:
         """ """
         super().__init__(parent, profile, intercept, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSidePage").override(cfg))
         self.form_factor_script = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         self.form_factor_script = """
@@ -217,17 +220,17 @@ class NchantdOfficeSidePage(NchantdWebEnginePage):
          """
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def javaScriptConsoleMessage(self, level, message, line_number, source_id):
+    def javaScriptConsoleMessage(self, level, message, line_number, source_id) -> None:
         # Print JavaScript console messages to Python console for debugging
         logma.info(f"JS Message: {message} (Line: {line_number}, Source: {source_id})")
 
-    def on_load_finished(self):
+    def on_load_finished(self) -> None:
         if self.form_factor_script is not None:
             # Inject the form factor simulation script into the web page
             self.runJavaScript(self.form_factor_script)
@@ -237,7 +240,7 @@ class NchantdOfficeSidePage(NchantdWebEnginePage):
 class NchantdOfficeURL(NchantdURL):
     """"""
 
-    def __init__(self, url, parent=None, cfg=None):
+    def __init__(self, url, parent=None, cfg=None) -> None:
         """ """
         super().__init__(url, parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeURL").override(cfg))

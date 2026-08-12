@@ -13,8 +13,11 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
 import datetime as dt
+from typing import Self
 from bs4 import BeautifulSoup
 
 # ======================================3rd Party Library Modules=====================================================||
@@ -39,7 +42,7 @@ pxcfg = join(here, "_data_", "notes.yaml")
 class NchantdOfficeNote(NchantdSigil):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__("NchantdNote", parent, cfg)
         self.parent = parent
@@ -52,7 +55,7 @@ class NchantdOfficeNote(NchantdSigil):
         self.drag_start_position = pyqt.QPoint()
         self.sequence = None
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         document = {"document": self.config.dikt.get("document", {})}
@@ -65,7 +68,7 @@ class NchantdOfficeNote(NchantdSigil):
         self.sequence = 0
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         self.setWindowFlags(
@@ -85,19 +88,19 @@ class NchantdOfficeNote(NchantdSigil):
         # self.setMinimumedHeight(350)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         self.show()
         return self
 
-    def close(self, event=None, *args, **kwargs):
+    def close(self, event=None, *args, **kwargs) -> Self:
         """"""
         super().close()
         return self
 
-    def launch_position(self):
+    def launch_position(self) -> Self:
         """"""
         parent_geometry = self.parent.frameGeometry()  # Get the position and size of the parent
         x = parent_geometry.center().x() * 1.5
@@ -105,14 +108,14 @@ class NchantdOfficeNote(NchantdSigil):
         self.move(x, y)
         return self
 
-    def mousePressEvent(self, event: pyqt.QMouseEvent):
+    def mousePressEvent(self, event: pyqt.QMouseEvent) -> None:
         # Check if it's the left mouse button
         if event.button() == pyqt.Qt.LeftButton:
             self.is_dragging = True
             self.drag_start_position = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             event.accept()
 
-    def mouseMoveEvent(self, event: pyqt.QMouseEvent):
+    def mouseMoveEvent(self, event: pyqt.QMouseEvent) -> None:
         # If dragging, update the position of the dialog
         if self.is_dragging and event.buttons() == pyqt.Qt.LeftButton:
             pos = event.globalPosition().toPoint() - self.drag_start_position
@@ -120,13 +123,13 @@ class NchantdOfficeNote(NchantdSigil):
             self.move(pos)
             event.accept()
 
-    def mouseReleaseEvent(self, event: pyqt.QMouseEvent):
+    def mouseReleaseEvent(self, event: pyqt.QMouseEvent) -> None:
         # Stop dragging when the left mouse button is released
         if event.button() == pyqt.Qt.LeftButton:
             self.is_dragging = False
             event.accept()
 
-    def move(self, x, y=None):
+    def move(self, x, y=None) -> Self:
         """"""
         if y is None:
             y = x.y()
@@ -134,7 +137,7 @@ class NchantdOfficeNote(NchantdSigil):
         super().move(x, y)
         return self
 
-    def save(self):
+    def save(self) -> Self:
         """"""
         super().save()
         # self.document.set_content(self.document_editor.toHtml())
@@ -142,17 +145,17 @@ class NchantdOfficeNote(NchantdSigil):
         self.editor.save()
         return self
 
-    def set_note_name(self, name):
+    def set_note_name(self, name) -> Self:
         """"""
         self.setWindowTitle(name)
         return self
 
-    def set_sequence(self, sequence):
+    def set_sequence(self, sequence) -> Self:
         """"""
         self.sequence = sequence
         return self
 
-    def store_note(self):
+    def store_note(self) -> Self:
         """Persist the current note to the underlying storage.
 
         Writes the current note content via ``self.save`` which pushes
@@ -165,18 +168,18 @@ class NchantdOfficeNote(NchantdSigil):
 class NchantdOfficeNoteDocument(NchantdOfficeDocument):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__("Note", parent, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNoteDocument").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         cfg = {
             "buttons": {
@@ -195,30 +198,30 @@ class NchantdOfficeNoteDocument(NchantdOfficeDocument):
         self.layout.addWidget(self.document_editor)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_close_note(self, event=None, *args, **kwargs):
+    def cmd_close_note(self, event=None, *args, **kwargs) -> Self:
         """"""
         self.close()
         self.parent.closeEvent()
         return self
 
-    def cmd_delete_note(self, event, *args, **kwargs):
+    def cmd_delete_note(self, event, *args, **kwargs) -> Self:
         """"""
         self.delete_note(self.app.active_tab.active_note)
         return self
 
-    def delete_note(self, note):
+    def delete_note(self, note) -> Self:
         """"""
         self.app.model.delete_note(note)
         self.parent.set_focus(note.position - 1)
         return self
 
-    def save(self):
+    def save(self) -> Self:
         """"""
         logma.info(f"HTML {self.document_editor.toHtml()}")
 
@@ -243,7 +246,7 @@ class NchantdOfficeNoteDocument(NchantdOfficeDocument):
 class NchantdOfficeScratchEditor(NchantdOfficeDocument):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__("Scratch", parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeScratchEditor").override(cfg))
@@ -266,7 +269,7 @@ class NchantdOfficeScratchEditor(NchantdOfficeDocument):
         self.document = None
         self.full_text = None
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         logma.info(f"initModel")
@@ -278,7 +281,7 @@ class NchantdOfficeScratchEditor(NchantdOfficeDocument):
         logma.info(f"Full Text {self.full_text}")
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """ """
         cfg = {"default_toolbar": False}
         super().initView(cfg)
@@ -294,7 +297,7 @@ class NchantdOfficeScratchEditor(NchantdOfficeDocument):
         self.layout.addWidget(self.editor)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
