@@ -12,10 +12,12 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
 import json as j
+from typing import Any, Self
 # ======================================3rd Party Library Modules=====================================================||
 from pandas import DataFrame
 # ======================================Solutions Brewer Library Modules==============================================||
@@ -46,7 +48,7 @@ class NchantdOfficeBrowserQuickStartPane(NchantdCatalog):
     this way the user gets the help but only what they ask for easier revisiting
     """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdQuickStartPane").override(cfg))
@@ -57,7 +59,7 @@ class NchantdOfficeBrowserQuickStartPane(NchantdCatalog):
         self.position = None
         self.dummy = False
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """Initialise the quickstart model.
 
         T-062: now also loads the controller / app-launcher
@@ -74,7 +76,7 @@ class NchantdOfficeBrowserQuickStartPane(NchantdCatalog):
         self.app_launcher_items = self._load_app_launcher_items()
         return self
 
-    def _load_app_launcher_items(self):
+    def _load_app_launcher_items(self) -> list[dict[str, str]]:
         """Return the list of in-app launchers (controller + apps).
 
         T-062 helper. Queries ``self.app.model.get_quick_apps()``
@@ -102,7 +104,7 @@ class NchantdOfficeBrowserQuickStartPane(NchantdCatalog):
             {"name": "Help",       "widget_class": "nchantdoffice.widgets.config.help.NchantdOfficeHelpDocs", "icon": "help"},
         ]
 
-    def cmd_launch_app(self, app_item=None, event=None, *args, **kwargs):
+    def cmd_launch_app(self, app_item=None, event=None, *args, **kwargs) -> Self:
         """Launch an in-app controller / sub-app (T-062).
 
         Instantiates the ``widget_class`` from the launcher item
@@ -163,7 +165,7 @@ class NchantdOfficeBrowserQuickStartPane(NchantdCatalog):
             logma.error(f"[quickstart] cmd_launch_app failed: {e}", exc_info=True)
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         self.init_pre_view()
         logma.info(f"Toolbox Config {self.toolbox_config}")
@@ -206,13 +208,13 @@ class NchantdOfficeBrowserQuickStartPane(NchantdCatalog):
         self.layout.addWidget(self.links)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def get_quick_links(self):
+    def get_quick_links(self) -> DataFrame:
         """Return the quick-start links DataFrame from the database.
 
         T-059: previously returned a hard-coded 2-row stub. Now:
