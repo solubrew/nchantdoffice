@@ -19,7 +19,7 @@ import json as j
 import datetime as dt
 from dateutil import parser
 from urllib.parse import urlsplit
-from typing import Any, Self
+from typing import Any, Iterator, Self
 
 # ======================================3rd Party Library Modules=====================================================||
 from pandas import DataFrame, concat
@@ -2159,12 +2159,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         cfg = {"WHERE": {"EQUAL": {"tag_txt": tag}}}
         return self.get_table(table, cfg)
 
-    def get_today_node(self):
+    def get_today_node(self) -> Any:
         """"""
         self.today_nid = "067ce332-8864-7d0b-8000-bfd314a580cc"
         return self.get_node(self.today_nid)
 
-    def get_view_document_content(self, document_type, uuid=None, db="db"):
+    def get_view_document_content(self, document_type, uuid=None, db="db") -> Any:
         """"""
         table = "vw_document"
         filters = {"WHERE": {"EQUAL": {"file_type_txt": document_type}}}
@@ -2175,7 +2175,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         document_data = self.get_table(table, filters, db)
         return document_data
 
-    def get_view_journal(self, cfg):
+    def get_view_journal(self, cfg) -> dict[str, Any] | None:
         """Return the journal row for ``cfg``, creating one if missing.
 
         The journal widget reads a dict (text + did) from this
@@ -2228,7 +2228,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             return None
         return dict(row)
 
-    def get_view_options_faqs(self):
+    def get_view_options_faqs(self) -> list[Any]:
         """Return the FAQ entries from the ``vw_options`` view.
 
         T-006: the view now drives the data. Reads from
@@ -2250,7 +2250,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             return []
         return []
 
-    def initialize_application(self):
+    def initialize_application(self) -> Self:
         """Initialize the application on first launch.
 
         T-DESK: also generates a referral code (ATNRG spec §3, NB-X7K2-PQ
@@ -2267,7 +2267,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # vec0 schema.
         return self
 
-    def _ensure_referral_code(self):
+    def _ensure_referral_code(self) -> None:
         """Generate and persist a referral code for the current user.
 
         T-DESK: idempotent — only generates a code if the user doesn't
@@ -2321,7 +2321,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         except Exception as e:
             logma.error(f"[models] _ensure_referral_code failed: {e}", exc_info=True)
 
-    def _ensure_device_id(self):
+    def _ensure_device_id(self) -> None:
         """Persist the device fingerprint in user config (ATNRG spec §8).
 
         Best-effort — if the device_id module isn't importable or the
@@ -2340,13 +2340,13 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         except Exception as e:
             logma.warning(f"[models] _ensure_device_id failed: {e}")
 
-    def initialize_instance(self, instance_object=None):
+    def initialize_instance(self, instance_object=None) -> None:
         """"""
         if instance_object is None:
             instance_object = NchantdOfficeInstance
         super().initialize_instance(instance_object)
 
-    def import_cherrytree(self, file_path):
+    def import_cherrytree(self, file_path) -> None:
         """Pyffice doesnt' have a native direct overlay document for cherrytree as it is distributed Scripts, etc within
         NchantdOffice"""
         pid = self.get_current_node().nid
@@ -2359,7 +2359,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             pos += 1
         self.app.view.panes["left"].tree.refresh()
 
-    def import_cherrytree_node(self, node, pid=None, pos=0):
+    def import_cherrytree_node(self, node, pid=None, pos=0) -> Any:
         """"""
         if pid is None:
             pid = "0"
@@ -2369,7 +2369,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         pid = self.add_node(name, ntype, pid, pos, parameters, "center")
         return pid
 
-    def import_cherrytree_nodes(self, node, pid, pos):
+    def import_cherrytree_nodes(self, node, pid, pos) -> None:
         """"""
         pid = self.import_cherrytree_node(node, pid, pos)
         self.import_cherrytree_tabs(node, pid)
@@ -2377,7 +2377,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             self.import_cherrytree_nodes(child, pid, pos)
             pos += 1
 
-    def import_cherrytree_tabs(self, node, pid, pos=0):
+    def import_cherrytree_tabs(self, node, pid, pos=0) -> Self:
         """"""
         logma.info(f"Tabs {node['tabs']}")
         for tab in node["tabs"]:
@@ -2404,7 +2404,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             self.add_document(tab, tab["did"], pid, pos)
         return self
 
-    def import_nchantdoffice(self, file_path):
+    def import_nchantdoffice(self, file_path) -> Self:
         """Import a NchantdOffice .pyof instance from disk.
 
         The .pyof format is the SQLite DB file produced by
@@ -2465,7 +2465,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] import_nchantdoffice failed: {e}", exc_info=True)
             return self
 
-    def import_filetree(self, file):
+    def import_filetree(self, file) -> Self:
         """"""
         # PUSH 0.0.3
         # each directory becomes a node
@@ -2494,7 +2494,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     current_tab.save()
         return self
 
-    def import_pdf(self, file):
+    def import_pdf(self, file) -> Self:
         """"""
         if file is not None:
             if exists(file):
@@ -2513,7 +2513,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     # current_tab.save()
         return self
 
-    def import_sessions(self, file):
+    def import_sessions(self, file) -> Self:
         """"""
         # PUSH 0.0.3
         if file is not None:
@@ -2521,7 +2521,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 pass
         return self
 
-    def import_web_sessions(self, file):
+    def import_web_sessions(self, file) -> Any:
         """Import web browser sessions from a JSON / SQL file.
 
         T-008: session parsing is needed for the rolling-summary
@@ -2573,7 +2573,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] import_web_sessions failed: {e}", exc_info=True)
             return None
 
-    def _roll_up_sessions(self, sessions):
+    def _roll_up_sessions(self, sessions) -> dict[str, dict[str, int]]:
         """Build a per-day activity summary from parsed sessions.
 
         For each session, walks the window/tab list and counts
@@ -2601,7 +2601,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] _roll_up_sessions failed: {e}", exc_info=True)
         return rolled
 
-    def get_rolling_summary(self, days=30, db="db"):
+    def get_rolling_summary(self, days=30, db="db") -> list[dict[str, Any]]:
         """Return the rolling activity summary for the last ``days`` days.
 
         Wraps ``_roll_up_sessions`` output with a date-ordered list
@@ -2618,7 +2618,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] get_rolling_summary failed: {e}", exc_info=True)
             return []
 
-    def import_text(self, file):
+    def import_text(self, file) -> Self:
         """"""
         if file is not None:
             if exists(file):
@@ -2640,7 +2640,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     # current_tab.populate_document()
         return self
 
-    def import_csv(self, file):
+    def import_csv(self, file) -> Any:
         """Import a CSV file as a new document tab.
 
         Sprint 20: previously raised "File Type not yet implemented"
@@ -2655,7 +2655,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             return matrix_importer(file)
         return self.import_text(file)
 
-    def import_docx(self, file):
+    def import_docx(self, file) -> Any:
         """Import a DOCX file as a new document tab.
 
         Sprint 20: previously raised "File Type not yet
@@ -2689,7 +2689,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     current_tab.save()
         return self
 
-    def _file_open_cfg(self, file):
+    def _file_open_cfg(self, file) -> dict[str, Any]:
         """Build the cfg dict for ``codex.init_*`` from a local file path
         (T-NEW-032). Always passes ``file_path``; passes ``name`` from
         ``os.path.basename(file)`` only when the
@@ -2714,7 +2714,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             cfg["name"] = os.path.basename(file)
         return cfg
 
-    def import_matrix(self, file):
+    def import_matrix(self, file) -> Self:
         """Import a spreadsheet file as a new Matrix tab.
 
         Sprint 20: wires the ``.csv``/``.xlsx``/``.xls``/``.ods``
@@ -2754,7 +2754,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
     # direction these are NOT connected to a real connector yet -
     # they document the planned shape so a future PR with API
     # credentials can fill in the body.
-    def import_notion(self, file_path=None, token=None, database_id=None):
+    def import_notion(self, file_path=None, token=None, database_id=None) -> None:
         """Import a Notion export (zip of Markdown + CSV) or live database.
 
         Stub. Real implementation requires either:
@@ -2767,7 +2767,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         logma.info("[models] import_notion: stub - not yet wired")
         return None
 
-    def import_evernote(self, file_path=None, token=None, notebook_guid=None):
+    def import_evernote(self, file_path=None, token=None, notebook_guid=None) -> None:
         """Import an Evernote export (.enex) or live notebook.
 
         Stub. Real implementation requires either:
@@ -2779,7 +2779,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         logma.info("[models] import_evernote: stub - not yet wired")
         return None
 
-    def register_document(self, document_type, actions):
+    def register_document(self, document_type, actions) -> None:
         """"""
         # Store action using proper store method
         if isinstance(actions, list):
@@ -2794,19 +2794,19 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # Refresh registered documents list
         self.parent.model.registered_documents = self.get_document_types(registered=True)
 
-    def remove_document(self, uuid):
+    def remove_document(self, uuid) -> bool:
         """"""
         document = self.get_document(uuid)
         self._delete("doc_media", {"UUID": uuid})
         self._delete("doc_media_content", {"parent_FK": document["doc_media_FK"][0]})
         return True
 
-    def remove_document_entry(self, uuid):
+    def remove_document_entry(self, uuid) -> tuple[Any, Any]:
         """"""
         page_n, entry_n = self.archive_document_entry(uuid)
         return page_n, entry_n
 
-    def save_config_document_types(self):
+    def save_config_document_types(self) -> Self:
         """Save the per-instance document-type configuration.
 
         T-079: writes the in-memory ``self.document_types_df``
@@ -2847,7 +2847,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] save_config_document_types failed: {e}", exc_info=True)
         return self
 
-    def save_config_document(self):
+    def save_config_document(self) -> Self:
         """Save the per-document configuration (T-080).
 
         Persists:
@@ -2889,7 +2889,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] save_config_document failed: {e}", exc_info=True)
         return self
 
-    def send_notification(self):
+    def send_notification(self) -> bool:
         """T-088: send a crash / health notification to the configured endpoint.
 
         Reads ``config.dikt["notify_url"]`` and the API key
@@ -2942,13 +2942,13 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] send_notification outer failed: {e}", exc_info=True)
             return False
 
-    def set_instance(self, instance):
+    def set_instance(self, instance) -> Self:
         """"""
         self.active_instance = instance
         self.has_changed = True
         return self
 
-    def set_today(self):
+    def set_today(self) -> Self:
         """
         Sets the current date as today and updates the action node if necessary.
 
@@ -2963,7 +2963,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             self.has_changed = True
         return self
 
-    def split_document(self, data, format_=None, formula=None):
+    def split_document(self, data, format_=None, formula=None) -> Iterator[Any]:
         """Split
 
         how to parse "DOCUMENT" into doc_media and doc_media_content
@@ -2989,7 +2989,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             raise Exception(f"data object not recognized {type(data)}")
         yield None, None
 
-    def store_document(self, pydoc, app_doc=False):
+    def store_document(self, pydoc, app_doc=False) -> "PyfficeDocument":
         """
         :param document:
         :return:
@@ -3026,7 +3026,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.add_document_content(doc_payload, version=pydoc.version)
         return pydoc
 
-    def store_event(self, state, action, cfg=None, db="db"):
+    def store_event(self, state, action, cfg=None, db="db") -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -3034,7 +3034,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.store.store_app_event(state, action, cfg, db)
         return self
 
-    def store_instance(self, instance):
+    def store_instance(self, instance) -> Self:
         """"""
         self.instance = instance
         instance = instance.to_dict()
@@ -3042,13 +3042,13 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.store.store_app_instance(instance)
         return self
 
-    def store_instances(self):
+    def store_instances(self) -> Self:
         """"""
         for instance in self.instances:
             self.store_instance(instance)
         return self
 
-    def _resolve_widget_from_registry(self, lookup_code, fallback=None):
+    def _resolve_widget_from_registry(self, lookup_code, fallback=None) -> Any:
         """Resolve a widget class path from the app_document_type registry.
 
         T-063 (helper): queries ``self.store.get_table("app_document_type", ...)``
@@ -3078,7 +3078,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] _resolve_widget_from_registry failed: {e}", exc_info=True)
         return fallback
 
-    def store_node(self):
+    def store_node(self) -> Self:
         """Persist the current node tree to the database.
 
         Iterates ``self.nodes`` (the in-memory DataFrame) and writes each row
@@ -3117,12 +3117,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] store_node failed: {e}", exc_info=True)
         return self
 
-    def store_rss_feeds(self, df, how=None):
+    def store_rss_feeds(self, df, how=None) -> None:
         """"""
         # need to convert df to document format for rss feed storage
         self.store.store_link(df["url"].values.tolist())
 
-    def store_rss_entries(self, df, how="append"):
+    def store_rss_entries(self, df, how="append") -> bool:
         """"""
         if how == "append":
             self.append_cache("ds_recent_rss_entries", df)
@@ -3132,7 +3132,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             raise Exception(f"how {how} not recognized")
         return True
 
-    def store_settings(self):
+    def store_settings(self) -> Self:
         """T-087: persist the in-memory settings to the database.
 
         Reads ``self.config.dikt`` (when available) and writes
@@ -3162,7 +3162,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] store_settings failed: {e}", exc_info=True)
         return self
 
-    def store_tab(self):
+    def store_tab(self) -> Self:
         """T-087: persist the current tab metadata to the database.
 
         Reads the active tab's name / position / type / pid
@@ -3196,15 +3196,15 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] store_tab failed: {e}", exc_info=True)
         return self
 
-    def _import_nchantdoffice_node(self, node, pid=None, pos=0):
+    def _import_nchantdoffice_node(self, node, pid=None, pos=0) -> None:
         """"""
         # PUSH 0.0.3
 
-    def _import_nchantdoffice_nodes(self, node, pid, pos):
+    def _import_nchantdoffice_nodes(self, node, pid, pos) -> None:
         """"""
         # PUSH 0.0.3
 
-    def _import_nchantdoffice_tabs(self, node, pid, pos=0):
+    def _import_nchantdoffice_tabs(self, node, pid, pos=0) -> None:
         """"""
         # PUSH 0.0.3
 
