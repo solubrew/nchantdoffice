@@ -12,6 +12,8 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
+from typing import Any, Self
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, exists
 
@@ -45,17 +47,17 @@ pxcfg = join(here, "_data_", "pdfs.yaml")
 class NchantdPageAddToolPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdPageAddToolPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         group = pyqt.QGroupBox("Page Sequence Control Tool: ")
@@ -83,7 +85,7 @@ class NchantdPageAddToolPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def cmd_page_number_change(self, event=None, *args, **kwargs):
+    def cmd_page_number_change(self, event=None, *args, **kwargs) -> Self:
         """Update the current page based on the page-number spinbox.
 
         Reads the new page number from the spinbox widget and
@@ -105,7 +107,7 @@ class NchantdPageAddToolPane(NchantdPane):
             logma.error(f"[pdfs] cmd_page_number_change failed: {e}", exc_info=True)
         return self
 
-    def cmd_open_file(self, event=None, *args, **kwargs):
+    def cmd_open_file(self, event=None, *args, **kwargs) -> Self:
         """Open a PDF file selected via the file dialog.
 
         Reads ``self.file_path`` (or accepts a path argument), loads
@@ -128,7 +130,7 @@ class NchantdPageAddToolPane(NchantdPane):
             logma.error(f"[pdfs] cmd_open_file failed: {e}", exc_info=True)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
@@ -138,7 +140,7 @@ class NchantdPageAddToolPane(NchantdPane):
 class NchantdOfficePDF(NchantdOfficeDocument):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """"""
         super().__init__("Nchantd PDF", parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficePDF").override(cfg))
@@ -157,7 +159,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         self.selection_start = None
         self.selection_end = None
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         # T-NEW-020 (live crash): self.config.dikt["document"]
@@ -171,7 +173,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         self.initialize_context_menu("context.document.pdf")
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> None:
         """
         need a navigation bar at the top
         ideally an expandable index pane
@@ -207,13 +209,13 @@ class NchantdOfficePDF(NchantdOfficeDocument):
 
         self.layout.addWidget(self.view)
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_open_local_file(self, event=None, *args, **kwargs):
+    def cmd_open_local_file(self, event=None, *args, **kwargs) -> Self:
         """"""
         super().cmd_open_local_file(event, *args, **kwargs)
         if self.local_file is not None:
@@ -221,7 +223,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
                 self.open_file(self.local_file)
         return self
 
-    def cmd_page_count_change(self, event=None, *args, **kwargs):
+    def cmd_page_count_change(self, event=None, *args, **kwargs) -> Self:
         """Update the document page count from the current PDF.
 
         Refreshes ``self.page_count`` from the loaded PDF document and
@@ -238,11 +240,11 @@ class NchantdOfficePDF(NchantdOfficeDocument):
             logma.error(f"[pdfs] cmd_page_count_change failed: {e}", exc_info=True)
         return self
 
-    def get_page_count(self):
+    def get_page_count(self) -> int:
         """Return the stored value of get_page_count."""
         return getattr(self, "page_count", 0) or self.config.dikt.get("page_count", 0)
 
-    def init_drawer_document_config(self):
+    def init_drawer_document_config(self) -> dict[str, Any]:
         """"""
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
@@ -265,7 +267,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         items[cnt]["widget"] = self.label_entry
         return items
 
-    def init_drawer_document_tools(self):
+    def init_drawer_document_tools(self) -> dict[str, Any]:
         """"""
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
@@ -301,12 +303,12 @@ class NchantdOfficePDF(NchantdOfficeDocument):
 
         return items
 
-    def init_drawer_quickstart(self):
+    def init_drawer_quickstart(self) -> dict[str, Any]:
         """"""
         items = {}
         return items
 
-    def init_pen(self, color=None, width=None, style=None, alpha=255, pen=None, *args, **kwargs):
+    def init_pen(self, color=None, width=None, style=None, alpha=255, pen=None, *args, **kwargs) -> Self:
         """"""
         # Pen properties for drawing
         if color is None:
@@ -317,7 +319,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         self.pen.setWidth(width)
         return self
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
@@ -325,7 +327,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         # self.toolbox_config[200]["items"] = self.init_drawer_document_tools()
         # self.toolbox_config[300]["items"] = self.init_drawer_quickstart()
 
-    def cmd_image_format_change(self, event=None, *args, **kwargs):
+    def cmd_image_format_change(self, event=None, *args, **kwargs) -> Self:
         """Record the selected image-output format on the config.
 
         Reads the format selection from the format-select widget and
@@ -342,7 +344,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
                     self.config.dikt["image_format"] = value
         return self
 
-    def cmd_image_convert_change(self, event=None, *args, **kwargs):
+    def cmd_image_convert_change(self, event=None, *args, **kwargs) -> Self:
         """Convert the current page to an image using the configured format.
 
         Reads the current page plus the configured image format and
@@ -369,19 +371,19 @@ class NchantdOfficePDF(NchantdOfficeDocument):
             logma.error(f"[pdfs] cmd_image_convert_change failed: {e}", exc_info=True)
         return self
 
-    def get_content(self):
+    def get_content(self) -> Any:
         """"""
         return super().get_content()
 
-    def get_file_convert(self):
+    def get_file_convert(self) -> str:
         """Return the stored value of get_file_convert."""
         return self.config.dikt.get("file_convert", "") or ""
 
-    def get_file_format(self):
+    def get_file_format(self) -> str:
         """Return the stored value of get_file_format."""
         return self.config.dikt.get("file_format", "") or ""
 
-    def get_text_at_position(self, pos):
+    def get_text_at_position(self, pos) -> Any:
         """Find text at a given position"""
         for block in self.text_instances["blocks"]:
             if "lines" not in block:
@@ -401,7 +403,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
                         return span["text"], rect, span
         return None, None, None
 
-    def load_page(self):
+    def load_page(self) -> None:
         """Load and display the current page with text extraction"""
         # page = self.document.extract_text(self.current_page)
         page = self.pdf_document[self.current_page]
@@ -416,17 +418,17 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         self.pdf_label.setPixmap(pixmap)
         self.pdf_label.resize(pixmap.size())
 
-    def mouse_press_event(self, event: pyqt.QMouseEvent):
+    def mouse_press_event(self, event: pyqt.QMouseEvent) -> None:
         if event.button() == pyqt.Qt.MouseButton.LeftButton:
             self.selection_start = event.pos()
             self.selection_end = event.pos()
 
-    def mouse_move_event(self, event: pyqt.QMouseEvent):
+    def mouse_move_event(self, event: pyqt.QMouseEvent) -> None:
         if self.selection_start:
             self.selection_end = event.pos()
             self.update_selection_display()
 
-    def mouse_release_event(self, event: pyqt.QMouseEvent):
+    def mouse_release_event(self, event: pyqt.QMouseEvent) -> None:
         if self.selection_start and self.selection_end:
             selected_text, rects = self.select_text_in_area(self.selection_start, self.selection_end)
 
@@ -441,12 +443,12 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         self.selection_start = None
         self.selection_end = None
 
-    def open_file(self, file=None):
+    def open_file(self, file=None) -> Self:
         """"""
         super().open_file(file)
         return self
 
-    def populate_document(self):
+    def populate_document(self) -> Self:
         """"""
         if self.document.file_path is None:
             return
@@ -454,12 +456,12 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         self.view.setDocument(self.pdf)
         return self
 
-    def save(self):
+    def save(self) -> Self:
         """"""
         super().save()
         return self
 
-    def select_text_in_area(self, start_pos, end_pos):
+    def select_text_in_area(self, start_pos, end_pos) -> tuple[str, list[Any]]:
         """Select all text within the defined area"""
         selected_text = ""
         selection_rects = []
@@ -492,7 +494,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
 
         return selected_text, selection_rects
 
-    def update_selection_display(self):
+    def update_selection_display(self) -> None:
         """Update the display to show current selection"""
         if not self.selection_start or not self.selection_end:
             return
@@ -526,7 +528,7 @@ class NchantdOfficePDF(NchantdOfficeDocument):
 
 
 class NchantdOfficePDFMarkup(pyqt.QGraphicsView):
-    def __init__(self, pdf_document, parent=None):
+    def __init__(self, pdf_document, parent=None) -> None:
         logma.info(f"NchantdOfficePDFMarkup init: parent={type(parent).__name__}")
         super().__init__(parent)
 
@@ -549,7 +551,7 @@ class NchantdOfficePDFMarkup(pyqt.QGraphicsView):
         self.setTransformationAnchor(pyqt.QGraphicsView.AnchorUnderMouse)
         self.setDragMode(pyqt.QGraphicsView.ScrollHandDrag)
 
-    def initView(self):
+    def initView(self) -> Self:
         """(Re-)initialize the PDF viewer widget to a clean state.
 
         Resets the drawing state, scene, and rendering hints used by
@@ -570,7 +572,7 @@ class NchantdOfficePDFMarkup(pyqt.QGraphicsView):
         self.setDragMode(pyqt.QGraphicsView.ScrollHandDrag)
         return self
 
-    def load_page(self):
+    def load_page(self) -> None:
         """Render the current PDF page onto the QGraphicsScene."""
         if not self.pdf_document:
             return
@@ -595,19 +597,19 @@ class NchantdOfficePDFMarkup(pyqt.QGraphicsView):
         # Reapply all previous annotations
         self.render_annotations()
 
-    def render_annotations(self):
+    def render_annotations(self) -> None:
         """Reapply all previously drawn annotations."""
         for start_point, end_point in self.annotations:
             self.scene.addLine(start_point.x(), start_point.y(), end_point.x(), end_point.y(), self.pen)
 
-    def mousePressEvent(self, event: pyqt.QMouseEvent):
+    def mousePressEvent(self, event: pyqt.QMouseEvent) -> None:
         """Begin drawing when the user presses the left mouse button."""
         if event.button() == pyqt.Qt.LeftButton:
             self.drawing = True
             # Map the mouse position to the scene coordinates
             self.previous_point = self.mapToScene(event.pos())
 
-    def mouseMoveEvent(self, event: pyqt.QMouseEvent):
+    def mouseMoveEvent(self, event: pyqt.QMouseEvent) -> None:
         """Draw lines as the user moves the mouse."""
         if self.drawing:
             current_point = self.mapToScene(event.pos())  # Map the mouse position to the scene
@@ -624,29 +626,29 @@ class NchantdOfficePDFMarkup(pyqt.QGraphicsView):
             # Update the previous point
             self.previous_point = current_point
 
-    def mouseReleaseEvent(self, event: pyqt.QMouseEvent):
+    def mouseReleaseEvent(self, event: pyqt.QMouseEvent) -> None:
         """Stop drawing when the user releases the mouse button."""
         if event.button() == pyqt.Qt.LeftButton:
             self.drawing = False
 
-    def next_page(self):
+    def next_page(self) -> None:
         """Navigate to the next page of the PDF."""
         if self.current_page < self.pdf_document.pageCount() - 1:
             self.current_page += 1
             self.load_page()
 
-    def previous_page(self):
+    def previous_page(self) -> None:
         """Navigate to the previous page of the PDF."""
         if self.current_page > 0:
             self.current_page -= 1
             self.load_page()
 
-    def clear_drawings(self):
+    def clear_drawings(self) -> None:
         """Clear all drawing annotations on the current page."""
         self.pdf_viewer.annotations.clear()
         self.pdf_viewer.load_page()
 
-    def cmd_set_markup_edit(self, event=None, *args, **kwargs):
+    def cmd_set_markup_edit(self, event=None, *args, **kwargs) -> None:
         """"""
         # need to switch viewers should this be an single class or a swap tab initialization?
         # what happens when you switch back...print image to pdf?
