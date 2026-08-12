@@ -134,7 +134,7 @@ class ContentUpdateSync:
         store=None,
         base_url: str = "https://nchantdoffice.com",
         timeout: float = _HTTP_TIMEOUT,
-    ):
+    ) -> None:
         self.store = store
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
