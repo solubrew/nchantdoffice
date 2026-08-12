@@ -70,7 +70,7 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 
-def _cleanup():
+def _cleanup() -> None:
     """Remove the tempdir on exit."""
     try:
         shutil.rmtree(_TMPDIR, ignore_errors=True)
