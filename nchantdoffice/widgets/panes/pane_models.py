@@ -13,8 +13,11 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
 import datetime as dt
+from typing import Any, Dict, Optional
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -40,19 +43,19 @@ pxcfg = join(here, "_data_", "models.yaml")
 class NchantdNewModelPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg: Optional[Dict[str, Any]] = None) -> None:
         """ """
         logma.info(f"NchantdNewModelPane init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewModelPane").override(cfg))
 
-    def initModel(self, cfg=None):
-        """"""
+    def initModel(self, cfg: Optional[Dict[str, Any]] = None) -> NchantdNewModelPane:
+        """ """
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
-        """"""
+    def initView(self, cfg: Optional[Dict[str, Any]] = None) -> NchantdNewModelPane:
+        """ """
         super().initView(cfg)
         cfg = {"text": "New Model: "}
         group = NchantdGroup(self, cfg)
@@ -75,8 +78,8 @@ class NchantdNewModelPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> NchantdNewModelPane:
+        """ """
         self.initModel()
         self.initView()
         return self
