@@ -13,9 +13,12 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
+
 from os.path import abspath, dirname, join
 import datetime as dt
 import json as j
+from typing import Any, Self
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -54,22 +57,22 @@ pxcfg = join(here, "_data_", "toolbars.yaml")
 class NchantdOfficeApplicationToolBar(NchantdApplicationToolBar):
     """Office application toolbar."""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """Initialize the toolbar."""
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationToolBar").override(cfg))
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Initialize the model."""
         super().initModel()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """Initialize the view."""
         super().initView()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """Initialize the widget."""
         self.initModel()
         self.initView()
@@ -79,17 +82,17 @@ class NchantdOfficeApplicationToolBar(NchantdApplicationToolBar):
 class NchantdOfficeNotificationButtonBar(NchantdButtonBar):
     """Office notification button bar."""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """Initialize the notification bar."""
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationNotificationButtonBar").override(cfg))
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Initialize the model."""
         super().initModel()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """Initialize the view."""
         super().initView()
         # setup a drop down that shows up only when there are application wide notifications
@@ -99,7 +102,7 @@ class NchantdOfficeNotificationButtonBar(NchantdButtonBar):
 
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """Initialize the widget."""
         self.initModel()
         self.initView()
@@ -113,14 +116,14 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
     document_created = Signal(str)  # Emitted when new document created (doc_type string)
     document_opened = Signal(object)  # Emitted when document opened (NchantdOfficeDocument instance)
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """Initialize the toolbar."""
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewDocumentToolBar").override(cfg))
         self.actions = None
         self.document_types = None
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Initialize the model."""
         # T-NEW-040: removed the stale "this is redundant but
         # for now we need the app attribute to be set before
@@ -140,19 +143,19 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         super().initModel(self.document_types)
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """Initialize the view."""
         cfg = {"layout": "vertical"}
         super().initView(cfg)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """Initialize the widget."""
         self.initModel()
         self.initView()
         return self
 
-    def add_document(self, signal=None, *args, **kwargs):
+    def add_document(self, signal=None, *args, **kwargs) -> Self:
         """Add a new document."""
         cfg = args[0]["action"].action
         if isinstance(cfg["parameters_dict"], str):
@@ -214,7 +217,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         self.document_created.emit(doc_type)
         return self
 
-    def add_node(self, signal=None, *args, **kwargs):
+    def add_node(self, signal=None, *args, **kwargs) -> Self:
         """Add a new node.
 
         Sprint 23 (P1 name-entry dialog): when the
@@ -276,7 +279,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         self.app.model.add_node(name, ntype, pid, pos, parameters, None, True)
         return self
 
-    def _resolve_db_alias(self):
+    def _resolve_db_alias(self) -> str:
         """Resolve the DB alias for store calls (T-NEW-040).
 
         Single-instance mode (the current default): returns
@@ -317,7 +320,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
             )
             return "db"
 
-    def _compute_note_position(self, existing_count, base_x, base_y, step):
+    def _compute_note_position(self, existing_count, base_x, base_y, step) -> dict[str, Any]:
         """Compute the screen position for a new note, offset by
         the number of existing notes (T-NEW-042).
 
@@ -344,7 +347,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
             count = 0
         return {"x": base_x, "y": base_y + count * step}
 
-    def _count_existing_notes(self):
+    def _count_existing_notes(self) -> int:
         """Count the existing notes for the active node +
         tabset. Returns 0 on any error (defensive: the caller
         uses 0 as the default Y offset).
@@ -390,7 +393,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
             )
             return 0
 
-    def add_note(self, signal=None, *args, **kwargs):
+    def add_note(self, signal=None, *args, **kwargs) -> Self:
         """Add a new note.
 
         Sprint 23 (P1 name-entry dialog): when
@@ -434,7 +437,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         self.app.view.panes["center"].launch_note(cfg)
         return self
 
-    def launch_new_document_sigil(self, signal=None, *args, **kwargs):
+    def launch_new_document_sigil(self, signal=None, *args, **kwargs) -> Self:
         """Launch the sigil dialog."""
         logma.info(f"Launch the Sigil")
         # cfg = {"documents": self.document_types}
@@ -442,7 +445,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         sigil = NchantdNewDocumentSigil("Test", self, cfg).initWidget()
         return self
 
-    def set_active_item(self):
+    def set_active_item(self) -> Self:
         """Set the active item in ``self.document_types``.
 
         T-NEW-037 close-out: was an empty stub carrying a
@@ -486,7 +489,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
             )
         return self
 
-    def set_actions(self, actions=None):
+    def set_actions(self, actions=None) -> Self:
         """Set the actions."""
         if actions is None:
             actions = self.actions
@@ -496,13 +499,13 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         }
         return self
 
-    def set_handlers(self):
+    def set_handlers(self) -> Self:
         """Set the handlers."""
         self.set_active_item()
         self.document_types["handler"] = self.document_types["action_txt"].apply(self.set_handler)
         return self
 
-    def set_handler(self, value):
+    def set_handler(self, value) -> Any:
         """Set the handler for a given action value."""
         match value:
             case "add_node_top_app_rootnode":
@@ -525,17 +528,17 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
 class NchantdCellFormattingToolBar(NchantdButtonBar):
     """Cell formatting toolbar."""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """Initialize the toolbar."""
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdCellFormattingToolBar").override(cfg))
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Initialize the model."""
         super().initModel()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """Initialize the view."""
         super().initView()
         for seq, action in self.config.dikt.get("actions", {}).items():
@@ -543,7 +546,7 @@ class NchantdCellFormattingToolBar(NchantdButtonBar):
             self.layout.addWidget(self.buttons[action])
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """Initialize the widget."""
         self.initModel()
         self.initView()
@@ -553,22 +556,22 @@ class NchantdCellFormattingToolBar(NchantdButtonBar):
 class NchantdDataFormattingToolBar(NchantdButtonBar):
     """Data formatting toolbar."""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """Initialize the toolbar."""
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdTextFormattingToolBar").override(cfg))
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Initialize the model."""
         super().initModel()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """Initialize the view."""
         super().initView()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """Initialize the widget."""
         self.initModel()
         self.initView()
@@ -578,22 +581,22 @@ class NchantdDataFormattingToolBar(NchantdButtonBar):
 class NchantdTextFormattingToolBar(NchantdButtonBar):
     """Text formatting toolbar."""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """Initialize the toolbar."""
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdTextFormattingToolBar").override(cfg))
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Initialize the model."""
         super().initModel()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """Initialize the view."""
         super().initView()
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """Initialize the widget."""
         self.initModel()
         self.initView()
