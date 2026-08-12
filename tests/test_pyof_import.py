@@ -1460,3 +1460,255 @@ def test_pyf_content_merge_by_version_handles_multiple_puuids_independently() ->
     finally:
         src.close()
         host.close()
+
+
+# ---------------------------------------------------------------------------
+# T-NEW-077: base-table UUID-lookup dedupe (uniform with _content).
+#
+# T-NEW-074 used INSERT-OR-IGNORE on the source UUID/PK for the base 6
+# tables (app_tree_node, doc_tree_node, app_tab, doc_tab, app_media,
+# doc_media). That meant the source's UUID became the host's PRIMARY KEY
+# — a re-import would skip on PK collision. The user-facing semantic now
+# matches _content: rowid is regenerated on insert (host regenerates),
+# source UUID is carried as data, dedupe is by host UUID-lookup (if the
+# host already has that UUID → skip; otherwise → INSERT).
+#
+# These 4 tests pin the new base-6 contract via the public
+# ``import_one_table`` entry point using a ``TableSpec(name, pk_column)``
+# (the default ``merge_strategy="insert_or_ignore"`` dispatch — but the
+# dispatch itself now means "UUID-lookup dedupe", not literal
+# INSERT-OR-IGNORE on PK).
+# ---------------------------------------------------------------------------
+
+
+def test_base_table_drops_source_pk_on_insert() -> None:
+    """T-NEW-077: source `nid_txt` is dropped from the projection (host regenerates rowid),
+    but the source UUID value is carried as data. After import, the host's rowid is
+    a fresh integer — not the source UUID string — and `nid_txt` is the source UUID.
+    """
+    from nchantdoffice.utilities.pyof_import import import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        # Host schema: nid_txt is a plain TEXT column (no PRIMARY KEY) — host
+        # regenerates rowid. The source's nid_txt will be carried as data, not
+        # promoted to PK. This mirrors the _content contract.
+        src_ddl = (
+            'CREATE TABLE "app_tree_node" '
+            '(nid_txt TEXT, name_txt TEXT)'
+        )
+        host_ddl = (
+            'CREATE TABLE "app_tree_node" '
+            '(nid_txt TEXT, name_txt TEXT)'
+        )
+        src.execute(src_ddl)
+        host.execute(host_ddl)
+        src.commit()
+        host.commit()
+
+        src.execute(
+            'INSERT INTO "app_tree_node" (nid_txt, name_txt) VALUES (?, ?)',
+            ("abc-123", "source-node"),
+        )
+        src.commit()
+
+        result = import_one_table(
+            src, host, TableSpec("app_tree_node", "nid_txt")
+        )
+
+        # One row landed; nothing skipped (host was empty).
+        assert result.inserted == 1, f"expected inserted=1, got {result}"
+        assert result.skipped == 0, f"expected skipped=0, got {result}"
+        assert result.errors == 0
+
+        # Inspect rowid + nid_txt separately — the rowid must be a FRESH
+        # integer (NOT "abc-123"), and nid_txt must equal the source value.
+        landed = host.execute(
+            'SELECT rowid, nid_txt FROM "app_tree_node"'
+        ).fetchall()
+        assert len(landed) == 1
+        rowid_value, nid_txt_value = landed[0]
+        assert isinstance(rowid_value, int), (
+            f"host rowid must be a freshly-assigned int, got {rowid_value!r}"
+        )
+        assert rowid_value != "abc-123", (
+            "host rowid must NOT equal the source UUID (PK dropped)"
+        )
+        assert nid_txt_value == "abc-123", (
+            f"source UUID must be carried as data, got {nid_txt_value!r}"
+        )
+    finally:
+        src.close()
+        host.close()
+
+
+def test_base_table_skips_when_uuid_already_on_host() -> None:
+    """T-NEW-077: source UUID == host UUID → host wins (skip; host row unchanged)."""
+    from nchantdoffice.utilities.pyof_import import import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        for conn in (src, host):
+            conn.execute(
+                'CREATE TABLE "app_tree_node" (nid_txt TEXT, name_txt TEXT)'
+            )
+        src.commit()
+        host.commit()
+
+        # Host already has the UUID, but with DIFFERENT name_txt.
+        host.execute(
+            'INSERT INTO "app_tree_node" (nid_txt, name_txt) VALUES (?, ?)',
+            ("abc-123", "host-node"),
+        )
+        host.commit()
+
+        # Source wants to overwrite with a different name_txt.
+        src.execute(
+            'INSERT INTO "app_tree_node" (nid_txt, name_txt) VALUES (?, ?)',
+            ("abc-123", "source-node"),
+        )
+        src.commit()
+
+        result = import_one_table(
+            src, host, TableSpec("app_tree_node", "nid_txt")
+        )
+
+        # Host UUID lookup found it → skipped; host wins.
+        assert result.inserted == 0, f"expected inserted=0, got {result}"
+        assert result.skipped == 1, f"expected skipped=1, got {result}"
+        assert result.errors == 0
+
+        # Host row is UNCHANGED: still has "host-node" (source did NOT overwrite).
+        landed = host.execute(
+            'SELECT nid_txt, name_txt FROM "app_tree_node"'
+        ).fetchall()
+        assert len(landed) == 1, f"expected 1 host row, got {len(landed)}"
+        nid, name = landed[0]
+        assert nid == "abc-123"
+        assert name == "host-node", (
+            f"host row must be unchanged; expected 'host-node', got {name!r}"
+        )
+    finally:
+        src.close()
+        host.close()
+
+
+def test_base_table_inserts_when_uuid_not_on_host() -> None:
+    """T-NEW-077: source UUID is NEW to host → INSERT (host regenerates rowid)."""
+    from nchantdoffice.utilities.pyof_import import import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        for conn in (src, host):
+            conn.execute(
+                'CREATE TABLE "app_tree_node" (nid_txt TEXT, name_txt TEXT)'
+            )
+        src.commit()
+        host.commit()
+
+        # Host has an unrelated UUID.
+        host.execute(
+            'INSERT INTO "app_tree_node" (nid_txt, name_txt) VALUES (?, ?)',
+            ("def-456", "host-existing-node"),
+        )
+        host.commit()
+
+        # Source has a DIFFERENT UUID.
+        src.execute(
+            'INSERT INTO "app_tree_node" (nid_txt, name_txt) VALUES (?, ?)',
+            ("abc-123", "source-new-node"),
+        )
+        src.commit()
+
+        result = import_one_table(
+            src, host, TableSpec("app_tree_node", "nid_txt")
+        )
+
+        # Host UUID lookup did NOT find the source UUID → INSERT.
+        assert result.inserted == 1, f"expected inserted=1, got {result}"
+        assert result.skipped == 0, f"expected skipped=0, got {result}"
+        assert result.errors == 0
+
+        # Host now has BOTH rows.
+        landed = {
+            r[0]: r[1]
+            for r in host.execute(
+                'SELECT nid_txt, name_txt FROM "app_tree_node"'
+            ).fetchall()
+        }
+        assert len(landed) == 2, f"expected 2 host rows, got {len(landed)}: {landed}"
+        assert landed["def-456"] == "host-existing-node"
+        assert landed["abc-123"] == "source-new-node"
+    finally:
+        src.close()
+        host.close()
+
+
+def test_base_table_idempotent_reimport() -> None:
+    """T-NEW-077: importing the same source twice → first time inserts, second time skips.
+
+    Re-imports are idempotent: the host UUID lookup finds the source's UUID on
+    the second pass and skips. The host still has exactly one row after both
+    imports (the first import's row, with the host-generated rowid).
+    """
+    from nchantdoffice.utilities.pyof_import import import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        for conn in (src, host):
+            conn.execute(
+                'CREATE TABLE "app_tree_node" (nid_txt TEXT, name_txt TEXT)'
+            )
+        src.commit()
+        host.commit()
+
+        src.execute(
+            'INSERT INTO "app_tree_node" (nid_txt, name_txt) VALUES (?, ?)',
+            ("abc-123", "first-import-node"),
+        )
+        src.commit()
+
+        # First import: host is empty → all inserted.
+        first_result = import_one_table(
+            src, host, TableSpec("app_tree_node", "nid_txt")
+        )
+        assert first_result.inserted == 1, f"first import: expected inserted=1, got {first_result}"
+        assert first_result.skipped == 0, f"first import: expected skipped=0, got {first_result}"
+        assert first_result.errors == 0
+
+        first_host_count = host.execute(
+            'SELECT COUNT(*) FROM "app_tree_node"'
+        ).fetchone()[0]
+        assert first_host_count == 1
+
+        # Second import against the SAME host: source UUID is now on the
+        # host → host UUID lookup finds it → skipped.
+        second_result = import_one_table(
+            src, host, TableSpec("app_tree_node", "nid_txt")
+        )
+        assert second_result.inserted == 0, f"second import: expected inserted=0, got {second_result}"
+        assert second_result.skipped == 1, f"second import: expected skipped=1, got {second_result}"
+        assert second_result.errors == 0
+
+        # Host STILL has exactly one row — idempotent.
+        final_host_count = host.execute(
+            'SELECT COUNT(*) FROM "app_tree_node"'
+        ).fetchone()[0]
+        assert final_host_count == 1, (
+            f"re-import must be idempotent; expected 1 host row, got {final_host_count}"
+        )
+
+        # And the row content is the first-import's content (host won;
+        # source's "first-import-node" was the value originally inserted).
+        landed = host.execute(
+            'SELECT nid_txt, name_txt FROM "app_tree_node"'
+        ).fetchall()
+        assert len(landed) == 1
+        assert landed[0] == ("abc-123", "first-import-node")
+    finally:
+        src.close()
+        host.close()

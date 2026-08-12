@@ -1,4 +1,4 @@
-"""T-NEW-074 / T-NEW-075 / T-NEW-076 — content-only .pyof → .pyof import.
+"""T-NEW-074 / T-NEW-075 / T-NEW-076 / T-NEW-077 — content-only .pyof → .pyof import.
 
 Reads content tables from a source .pyof and INSERTs them into the host's
 open sqlite3 connection.
@@ -21,6 +21,16 @@ older versions). If the source's version is <= host's MAX, skip — host
 wins, no insert, no delete. ``ImportResult.skipped`` for ``_content``
 tables now covers both "host had a newer version" and "INSERT didn't
 take" cases.
+
+T-NEW-077 uniform base-6 contract: the base 6 tables now follow the same
+shape as ``_content`` — source PK columns are dropped from the projection
+(host regenerates rowid), source UUID is carried as data, and dedupe is
+by host UUID-lookup: if the host already has that UUID, skip (host
+wins); otherwise INSERT. Re-imports dedupe base tables too. ``INSERT``
+is now plain (no OR-IGNORE) — safe because the host UUID lookup
+guarantees no duplicate. ``ImportResult.skipped`` for the base 6 now
+covers both "host had this UUID" (host wins) AND the defensive
+"INSERT didn't take" fallback (rowcount==0).
 """
 from __future__ import annotations
 import sqlite3
@@ -37,7 +47,9 @@ class TableSpec:
 
 class PyofImportContract:
     TABLES: tuple[TableSpec, ...] = (
-        # T-NEW-074 — base 6: INSERT-OR-IGNORE on the source UUID/PK.
+        # T-NEW-074 / T-NEW-077 — base 6: source PK columns are dropped,
+        # host regenerates rowid. Dedupe by host UUID lookup (the
+        # pk_column points at the UUID column). Uniform with _content.
         TableSpec("app_tree_node", "nid_txt"),
         TableSpec("doc_tree_node", "nid_txt"),
         TableSpec("app_tab",       "tid_txt"),
@@ -69,8 +81,10 @@ class ImportResult:
     errors: int = 0
 
     # NOTE on ``skipped`` semantics:
-    #   * T-NEW-074 base-6 tables (INSERT-OR-IGNORE): ``skipped`` counts
-    #     PK-collision rows the host already had (host wins).
+    #   * T-NEW-074 base-6 tables (INSERT-OR-IGNORE): ``skipped`` counted
+    #     PK-collision rows the host already had (host wins). T-NEW-077
+    #     replaced this with a host UUID lookup, so the shape is uniform
+    #     with ``_content`` below — but the meaning is still "host wins".
     #   * T-NEW-075 ``_content`` tables, pre-076: ``skipped`` was always 0
     #     (host rowids are fresh; only source-side last-version-per-pUUID
     #     dedupe was applied).
@@ -79,6 +93,11 @@ class ImportResult:
     #     AND the defensive "INSERT didn't take" fallback (rowcount==0).
     #     Use ``inserted`` to track successful replace / first-time
     #     inserts and ``skipped`` to track host-wins / defensive no-ops.
+    #   * T-NEW-077 base 6 (uniform with ``_content``): ``skipped``
+    #     covers BOTH "host already had this UUID" (host wins) AND the
+    #     defensive "INSERT didn't take" fallback (rowcount==0). The
+    #     host-regenerated-rowid guarantee makes the latter defensive
+    #     only, but it's kept for parity with the ``_content`` path.
 
 def _intersecting_columns(src: sqlite3.Connection, host: sqlite3.Connection, table: str) -> list[str]:
     src_cols = {r[1] for r in src.execute(f'PRAGMA table_info("{table}")')}
@@ -234,29 +253,83 @@ def import_one_table(src: sqlite3.Connection, host: sqlite3.Connection, spec: Ta
 
     Dispatch is controlled by ``spec.merge_strategy``:
 
-    * ``"insert_or_ignore"`` (default — T-NEW-074 base 6): source UUIDs /
-      PKs become the new host primary keys; collisions skip (host wins).
-    * ``"last_version_per_puuid"`` (T-NEW-075 _content tables): source PKs
-      are dropped, UUID + pUUID are carried, only the highest-version row
-      per pUUID is inserted.
+    * ``"insert_or_ignore"`` (default — T-NEW-074 / T-NEW-077 base 6):
+      source PK columns are dropped (host regenerates rowid), the source
+      UUID is carried as data, and dedupe is by host UUID-lookup: if the
+      host already has the source's UUID, skip (host wins); otherwise
+      INSERT. Uniform contract with ``_content`` below.
+
+    * ``"last_version_per_puuid"`` (T-NEW-075 / T-NEW-076 _content
+      tables): source PKs are dropped, UUID + pUUID are carried, only
+      the highest-version row per pUUID is inserted. T-NEW-076 then
+      compares the source's version against the host's MAX(version) for
+      that pUUID — strictly newer source rows replace host rows;
+      equal-or-older source rows are skipped (host wins).
     """
     if spec.merge_strategy == "last_version_per_puuid":
         return _import_content_table(src, host, spec)
 
+    # T-NEW-077 base 6 — uniform with _content: drop source PK columns
+    # (host regenerates rowid), carry source UUID as data, dedupe by
+    # host UUID lookup. Plain INSERT (no OR-IGNORE) — safe because the
+    # host UUID lookup guarantees no duplicate. The host's own PK
+    # column(s) are excluded from the projection so the freshly
+    # generated rowid doesn't collide with a host-side autoincrement
+    # PK that happens to equal the source UUID string — EXCEPT for the
+    # UUID column itself, which must be carried as data (it identifies
+    # the row across imports; if the host has it as PK we want the
+    # source value to land there, not NULL).
     result = ImportResult(table=spec.name)
     cols = _intersecting_columns(src, host, spec.name)
     if not cols:
         return result  # missing on either side — silent no-op
-    placeholders = ",".join("?" for _ in cols)
-    col_list = ",".join(f'"{c}"' for c in cols)
-    sql = (
-        f'INSERT OR IGNORE INTO "{spec.name}" ({col_list}) '
-        f'VALUES ({placeholders})'
+    # The UUID column is ``spec.pk_column`` for the base 6. If the
+    # contract forgot to set it, we have no dedupe key — defensive
+    # silent no-op rather than risk duplicate rows on re-import.
+    uuid_col = spec.pk_column
+    if uuid_col is None or uuid_col not in cols:
+        return result
+    # Drop the host's PRIMARY KEY column(s) from the projection — host
+    # regenerates the rowid (matches the _content path from T-NEW-075).
+    # BUT always carry the UUID column itself so the source's UUID
+    # value lands as data on the host. If the host has the UUID column
+    # as a PK, this means we INSERT into the PK column (the UUID lookup
+    # above already confirmed the value isn't there yet); if it's a
+    # plain column, the source UUID just becomes data.
+    host_pk_cols = _host_primary_key_columns(host, spec.name)
+    insert_cols = [c for c in cols if c not in host_pk_cols or c == uuid_col]
+    if not insert_cols:
+        return result  # nothing to insert once host PK is excluded
+    placeholders = ",".join("?" for _ in insert_cols)
+    col_list = ",".join(f'"{c}"' for c in insert_cols)
+    insert_sql = (
+        f'INSERT INTO "{spec.name}" ({col_list}) VALUES ({placeholders})'
     )
     for row in iter_table_rows(src, spec.name):
-        values = [row.get(c) for c in cols]
-        cur = host.execute(sql, values)
-        # cur.rowcount is 1 for INSERT, 0 for OR-IGNORE-skip
+        uuid_val = row.get(uuid_col)
+        if uuid_val is None:
+            # Can't dedupe without a UUID — silently skip rather than
+            # risk a duplicate on re-import. Matches the defensive
+            # treatment of pUUID=None in _import_content_table.
+            continue
+        # Host UUID lookup first. If the host already has this UUID,
+        # skip (host wins). The host may have additional columns the
+        # source doesn't (e.g. host-side metadata); we only care about
+        # UUID existence here.
+        cur = host.execute(
+            f'SELECT 1 FROM "{spec.name}" WHERE "{uuid_col}" = ? LIMIT 1',
+            (uuid_val,),
+        )
+        if cur.fetchone() is not None:
+            result.skipped += 1
+            continue
+        # Host doesn't have this UUID — INSERT (host regenerates rowid).
+        values = [row.get(c) for c in insert_cols]
+        cur = host.execute(insert_sql, values)
+        # cur.rowcount is 1 on a successful INSERT. rowcount==0 isn't
+        # expected here (host UUID lookup just confirmed absence) but
+        # be defensive: count it as a skip rather than a hard error so
+        # a quirky SQLite build doesn't poison the whole transaction.
         if cur.rowcount == 1:
             result.inserted += 1
         else:
