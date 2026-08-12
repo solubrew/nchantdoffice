@@ -76,7 +76,7 @@ DISMISS_DURATION_DAYS: int = 7
 HTTP_TIMEOUT: float = 5.0
 
 
-def refresh_interval_seconds(cfg=None):
+def refresh_interval_seconds(cfg: Optional[Dict[str, Any]] = None) -> int:
     """Return the configured update-check interval in seconds (T-NEW-059).
 
     Reads ``cfg.get("check_update_interval_hours", DEFAULT_CHECK_UPDATE_INTERVAL_HOURS)``
@@ -210,8 +210,8 @@ class UpdateChecker:
         base_url: str = "https://nchantdoffice.com",
         check_path: str = DEFAULT_CHECK_UPDATE_PATH,
         timeout: float = HTTP_TIMEOUT,
-        cfg=None,
-    ):
+        cfg: Optional[Dict[str, Any]] = None,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self.check_path = check_path.lstrip("/")
         self.timeout = timeout
