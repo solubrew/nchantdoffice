@@ -78,6 +78,7 @@
 - **T-NEW-071** ✅ NchantdOfficeJournalSettings pro-tier editor, commit `a9c1f6f` (2026-08-10, t-new-071).
 - **T-NEW-072** ✅ TODOs.md update-process consolidation — added "Update Process Overview" section + T-NEW-061 deferred card body.
 - **T-NEW-073** ✅ P1 bug sweep — `NchantdOfficeJournalEditor.refresh_content` un-commented (T-NEW-036 step 3) + T-NEW-058 `_make_dbupdate` mock fixture aligned with production `parent.model.codex` call shape. Qt batched suite: 159/159 pass (was 153/165). No source-of-truth change in `updates/db.py` — the fixture was the drift.
+- **T-NEW-074** ✅ Content-only .pyof import from Application tab ToolBox (button), commit `6f5d28f` (2026-08-11, t-new-074).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1893,6 +1894,29 @@ Both are scoped for v0.2.0 because:
 - `python -m pytest tests/test_journal_restore.py --tb=no -q` → `7 passed`
 - `python -m pytest tests/test_update_checker_boot_hook.py --tb=no -q` → `3 passed`
 - `QT_QPA_PLATFORM=offscreen python -m pytest <20 Qt files> --tb=no -q` → `159 passed, 6 skipped, 0 failed` (was 153 passed, 6 failed, 6 skipped before this commit)
+
+### T-NEW-074 — Content-only .pyof import (2026-08-11)
+
+**Context.** Operators need to bring content (nodes, tabs, media) from one .pyof instance into another without merging instances or config. The Application tab in the ToolBox is the canonical place for app-wide actions (mirrors `cmd_open_local_file`); a new `cmd_import_pyof` method opens a QFileDialog, copies the six content tables into the host's open sqlite3 connection, and reports counts via status bar.
+
+**Affected sites:**
+- `nchantdoffice/utilities/pyof_import.py` (new ETL module)
+- `nchantdoffice/_data_/models.yaml` (new `app_action` row)
+- `nchantdoffice/widgets/controls/toolboxes.py` (new `cmd_import_pyof` method on `NchantdOfficeApplicationToolBox`)
+- `tests/test_pyof_import.py` (new TDD suite)
+
+**Migration plan** (no priority / low priority — design decision first): scope is content-only by user direction (no `app_doc_content`, no `_media_content`, no instances, no config). UUID strategy is INSERT-OR-IGNORE: source UUIDs become host primary keys; collisions are silent skips (host row wins). Orphan FKs are logged but not enforced — users are expected to inspect the host tree after a large import.
+
+**Steps:**
+1. ETL module (`PyofImportContract.TABLES`, `count_rows_in_table`, `iter_table_rows`, `import_one_table`, `import_pyof` orchestrator). Tasks 1-6.
+2. Wire `app_action` row in `models.yaml`. Task 7.
+3. Wire `cmd_import_pyof` on the ToolBox. Task 8.
+4. Integration test. Task 9.
+5. This card. Task 10.
+
+**Verification:**
+- `python -m pytest tests/test_pyof_import.py --tb=no -q` → all green
+- Manual: open the GUI, navigate to the Application tab in the ToolBox, click the new "Import from .pyof…" button, pick a test .pyof, confirm rows landed on the host.
 
 ### T-NEW-072 — TODOs.md update-process consolidation (2026-08-10)
 
