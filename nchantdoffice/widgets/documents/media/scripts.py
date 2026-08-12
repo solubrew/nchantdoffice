@@ -12,6 +12,7 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, exists
 import json as j
@@ -44,6 +45,7 @@ from nchantdoffice.widgets.panes.objects import NchantdNewObjectPane, NchantdHea
 from pycurity.pyhash import decode64
 from pycurity.pysan import Sanitized
 from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
+from typing import Self, Any
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -62,7 +64,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
     PYTYPE = "script"  # Pyffice script type
 
     @classmethod
-    def get_pyffice_tools(cls):
+    def get_pyffice_tools(cls) -> list[dict[str, str]]:
         """Get toolbox tools for script documents"""
         return [
             {"id": "run", "icon": "play", "label": "Run Script", "method": "run_script"},
@@ -73,7 +75,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             {"id": "spellcheck", "icon": "spell", "label": "Spell Check", "method": "spell_check"},
         ]
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """Document editor widget built on top of QsciScintilla widget
         I believe this requires PyQt5, not sure what is available as a
         substitute for PySide2"""
@@ -98,7 +100,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self.view_type = None
         self.scene = None
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """Initialise the script-document model (T-082).
 
         T-082: previously left a TODO about documents being
@@ -123,7 +125,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self.view_type = self.config.dikt.get("view_type", "note_view")
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         cfg = cfg or {}
         fcbcfg = {
@@ -227,7 +229,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         #     raise Exception("Internal and Cloud locations not supported yet")
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """ """
         self.initModel()
         self.initView()
@@ -241,7 +243,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
     # The label is the visible string the user sees; the marker
     # is the load/reload token that ``_read_placeholder`` keys on.
 
-    def cmd_add_chart(self, event=None, *args, **kwargs):
+    def cmd_add_chart(self, event=None, *args, **kwargs) -> Self:
         """Insert a chart placeholder at the current cursor position.
 
         Uses the QTextCursor API so the placeholder is a real,
@@ -250,11 +252,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """
         return self._insert_object_placeholder("[chart]", "chart")
 
-    def cmd_add_code(self, event=None, *args, **kwargs):
+    def cmd_add_code(self, event=None, *args, **kwargs) -> Self:
         """Insert a code-block placeholder at the current cursor position."""
         return self._insert_object_placeholder("[code]", "code_block")
 
-    def cmd_add_date(self, event=None, *args, **kwargs):
+    def cmd_add_date(self, event=None, *args, **kwargs) -> Self:
         """Insert today's date at the current cursor position."""
         from datetime import date
 
@@ -262,23 +264,23 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             self.document_editor.insert(date.today().isoformat())
         return self
 
-    def cmd_add_image(self, event=None, *args, **kwargs):
+    def cmd_add_image(self, event=None, *args, **kwargs) -> Self:
         """Insert an image placeholder at the current cursor position."""
         return self._insert_object_placeholder("[image]", "image")
 
-    def cmd_add_shape(self, event=None, *args, **kwargs):
+    def cmd_add_shape(self, event=None, *args, **kwargs) -> Self:
         """Insert a shape placeholder at the current cursor position."""
         return self._insert_object_placeholder("[shape]", "shape")
 
-    def cmd_add_table(self, event=None, *args, **kwargs):
+    def cmd_add_table(self, event=None, *args, **kwargs) -> Self:
         """Insert a table placeholder at the current cursor position."""
         return self._insert_object_placeholder("[table]", "table")
 
-    def cmd_add_textbox(self, event=None, *args, **kwargs):
+    def cmd_add_textbox(self, event=None, *args, **kwargs) -> Self:
         """Insert a text-box placeholder at the current cursor position."""
         return self._insert_object_placeholder("[textbox]", "textbox")
 
-    def cmd_add_time(self, event=None, *args, **kwargs):
+    def cmd_add_time(self, event=None, *args, **kwargs) -> Self:
         """Insert the current time at the current cursor position."""
         from datetime import datetime
 
@@ -286,7 +288,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             self.document_editor.insert(datetime.now().strftime("%H:%M:%S"))
         return self
 
-    def cmd_on_compatability_changed(self, event=None, *args, **kwargs):
+    def cmd_on_compatability_changed(self, event=None, *args, **kwargs) -> Self:
         """Record the user-selected compatibility level on the config.
 
         Reads the selection from ``document_compatability`` (if any)
@@ -302,7 +304,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                     self.config.dikt["compatability"] = value
         return self
 
-    def cmd_on_change_document_format(self, event=None, *args, **kwargs):
+    def cmd_on_change_document_format(self, event=None, *args, **kwargs) -> Self:
         """Record the user-selected document format on the config.
 
         Reads the format-select dropdown value and stores it on
@@ -318,7 +320,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                     self.config.dikt["document_format"] = value
         return self
 
-    def cmd_on_change_document_syntax(self, event=None, *args, **kwargs):
+    def cmd_on_change_document_syntax(self, event=None, *args, **kwargs) -> Self:
         """Record the user-selected document syntax on the config.
 
         Reads the syntax-select dropdown value and stores it on
@@ -334,7 +336,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                     self.config.dikt["document_syntax"] = value
         return self
 
-    def cmd_open_local_file(self, event=None, *args, **kwargs):
+    def cmd_open_local_file(self, event=None, *args, **kwargs) -> Self:
         """"""
         super().cmd_open_local_file(event, *args, **kwargs)
         if self.local_file is not None:
@@ -345,12 +347,12 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 raise Exception(f"local_file is None: {self.local_file}")
         return self
 
-    def cmd_pretty_print_selected_text(self, event, *args, **kwargs):
+    def cmd_pretty_print_selected_text(self, event, *args, **kwargs) -> Self:
         """"""
         self.document_editor.setPlainText(j.dumps(j.loads(self.get_text_selected()), indent=4, ensure_ascii=False))
         return self
 
-    def cmd_set_margin_top(self, event=None, *args, **kwargs):
+    def cmd_set_margin_top(self, event=None, *args, **kwargs) -> Self:
         """Update the top-margin spinbox value into the config.
 
         Reads the current value from ``top_margin_select`` and stores
@@ -363,7 +365,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 self.config.dikt["margin_top"] = value
         return self
 
-    def cmd_set_margin_bottom(self, event=None, *args, **kwargs):
+    def cmd_set_margin_bottom(self, event=None, *args, **kwargs) -> Self:
         """Update the bottom-margin spinbox value into the config."""
         if hasattr(self, "bottom_margin_select") and self.bottom_margin_select is not None:
             getter = getattr(self.bottom_margin_select, "value", None)
@@ -372,7 +374,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 self.config.dikt["margin_bottom"] = value
         return self
 
-    def cmd_set_margin_left(self, event=None, *args, **kwargs):
+    def cmd_set_margin_left(self, event=None, *args, **kwargs) -> Self:
         """Update the left-margin spinbox value into the config."""
         if hasattr(self, "left_margin_select") and self.left_margin_select is not None:
             getter = getattr(self.left_margin_select, "value", None)
@@ -381,7 +383,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 self.config.dikt["margin_left"] = value
         return self
 
-    def cmd_set_margin_right(self, event=None, *args, **kwargs):
+    def cmd_set_margin_right(self, event=None, *args, **kwargs) -> Self:
         """Update the right-margin spinbox value into the config."""
         if hasattr(self, "right_margin_select") and self.right_margin_select is not None:
             getter = getattr(self.right_margin_select, "value", None)
@@ -390,7 +392,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 self.config.dikt["margin_right"] = value
         return self
 
-    def cmd_top_margin_change(self, event, *args, **kwargs):
+    def cmd_top_margin_change(self, event, *args, **kwargs) -> Self:
         """Update top margin from spinbox and refresh page view."""
         if hasattr(self, "top_margin_select") and self.top_margin_select is not None:
             value = self.top_margin_select.value() if hasattr(self.top_margin_select, "value") else 72
@@ -399,7 +401,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 self.set_page_view()
         return self
 
-    def cmd_left_margin_change(self, event, *args, **kwargs):
+    def cmd_left_margin_change(self, event, *args, **kwargs) -> Self:
         """Update left margin from spinbox and refresh page view."""
         if hasattr(self, "left_margin_select") and self.left_margin_select is not None:
             value = self.left_margin_select.value() if hasattr(self.left_margin_select, "value") else 72
@@ -408,7 +410,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 self.set_page_view()
         return self
 
-    def cmd_right_margin_change(self, event, *args, **kwargs):
+    def cmd_right_margin_change(self, event, *args, **kwargs) -> Self:
         """Update right margin from spinbox and refresh page view."""
         if hasattr(self, "right_margin_select") and self.right_margin_select is not None:
             value = self.right_margin_select.value() if hasattr(self.right_margin_select, "value") else 72
@@ -417,7 +419,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 self.set_page_view()
         return self
 
-    def cmd_bottom_margin_change(self, event, *args, **kwargs):
+    def cmd_bottom_margin_change(self, event, *args, **kwargs) -> Self:
         """Update bottom margin from spinbox and refresh page view."""
         if hasattr(self, "bottom_margin_select") and self.bottom_margin_select is not None:
             value = self.bottom_margin_select.value() if hasattr(self.bottom_margin_select, "value") else 72
@@ -426,7 +428,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 self.set_page_view()
         return self
 
-    def cmd_toggle_selection_bold(self, event=None, *args, **kwargs):
+    def cmd_toggle_selection_bold(self, event=None, *args, **kwargs) -> Self:
         """Toggle bold weight on the current editor selection.
 
         Reads the current font weight and flips it between Normal and
@@ -443,7 +445,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             editor.setFontWeight(new_weight)
         return self
 
-    def cmd_toggle_selection_italic(self, event=None, *args, **kwargs):
+    def cmd_toggle_selection_italic(self, event=None, *args, **kwargs) -> Self:
         """Toggle italic style on the current editor selection."""
         if not (hasattr(self, "document_editor") and self.document_editor is not None):
             return self
@@ -453,7 +455,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             editor.setFontItalic(not is_italic)
         return self
 
-    def cmd_toggle_selection_underline(self, event=None, *args, **kwargs):
+    def cmd_toggle_selection_underline(self, event=None, *args, **kwargs) -> Self:
         """Toggle underline style on the current editor selection."""
         if not (hasattr(self, "document_editor") and self.document_editor is not None):
             return self
@@ -463,16 +465,16 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             editor.setFontUnderline(not is_underline)
         return self
 
-    def cmd_toggle_page_view(self, event, *args, **kwargs):
+    def cmd_toggle_page_view(self, event, *args, **kwargs) -> Self:
         """"""
         # NOTE: Change between a full screen and a standard 8.5x11/whatever the current page size is set to
         # view port change
         return self
 
-    def connect_to_file(self):
+    def connect_to_file(self) -> None:
         """"""
 
-    def extract_images(self):
+    def extract_images(self) -> None:
         """Extract all images from the QTextEdit's HTML content."""
         # Get the HTML representation of the QTextEdit content
         html_content = self.document_editor.toHtml()
@@ -493,7 +495,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         else:
             logma.info(f"Total images extracted: {image_count}")
 
-    def get_text_background_color_options(self, event=None, *args, **kwargs):
+    def get_text_background_color_options(self, event=None, *args, **kwargs) -> list[str]:
         """Return the list of available text-background colours.
 
         Reads ``config.dikt["text_background_color_options"]`` and
@@ -501,12 +503,12 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """
         return self.config.dikt.get("text_background_color_options", []) or []
 
-    def get_compatability_selected(self):
+    def get_compatability_selected(self) -> str:
         """"""
         compat = "Word"
         return compat
 
-    def get_compatibility_options(self):
+    def get_compatibility_options(self) -> list[str]:
         """"""
         options = [
             ".docx - Word",
@@ -521,7 +523,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         ]
         return options
 
-    def get_content(self):
+    def get_content(self) -> dict[str, Any]:
         """Return the document content, normalizing the source syntax.
 
         T-034: the document syntax now comes from the toolbar
@@ -564,12 +566,12 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         logma.info(f"CONTENT {content}")
         return content
 
-    def get_bottom_margin_selected(self):
+    def get_bottom_margin_selected(self) -> int:
         """"""
         bottom_margin = 1
         return bottom_margin
 
-    def get_document_syntax(self):
+    def get_document_syntax(self) -> str:
         """Return the document syntax, falling back to the saved payload
         when ``PyfficeDocument.load_document`` hasn't restored ``syntax``.
 
@@ -589,7 +591,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             or "plaintext"
         )
 
-    def get_document_syntaxs(self):
+    def get_document_syntaxs(self) -> list[str]:
         """"""
         if self.document is None:
             return []
@@ -597,22 +599,22 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             self.document.set_file_format_options()
         return list(set(self.document.file_formats.values()))
 
-    def get_font_color_selected(self):
+    def get_font_color_selected(self) -> str:
         """"""
         color = "Black"
         return color
 
-    def get_font_size_selected(self):
+    def get_font_size_selected(self) -> str:
         """"""
         size = "12"
         return size
 
-    def get_font_style_selected(self):
+    def get_font_style_selected(self) -> str:
         """"""
         style = "Arial"
         return style
 
-    def get_font_style_options(self):
+    def get_font_style_options(self) -> list[str]:
         """
 
         :return:
@@ -620,47 +622,47 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         styles = ["Arial", "San Serif"]
         return styles
 
-    def get_margin_options(self):
+    def get_margin_options(self) -> list[Any]:
         """"""
         margins = [1, "2 inches", "3 inches", "4 inches"]
         return margins
 
-    def get_left_margin_selected(self):
+    def get_left_margin_selected(self) -> int:
         """"""
         left_margin = 1
         return left_margin
 
-    def get_right_margin_selected(self):
+    def get_right_margin_selected(self) -> int:
         """"""
         right_margin = 1
         return right_margin
 
-    def get_page_view_selected(self):
+    def get_page_view_selected(self) -> str:
         """"""
         page_view = "Print View"
         return page_view
 
-    def get_page_view_options(self):
+    def get_page_view_options(self) -> list[str]:
         """"""
         options = ["Print View", "Page View", "Note View"]
         return options
 
-    def get_text_selected(self):
+    def get_text_selected(self) -> str:
         """"""
         text = self.document_editor.toPlainText()
         return text
 
-    def get_text_background_color_selected(self):
+    def get_text_background_color_selected(self) -> str:
         """"""
         color = "White"
         return color
 
-    def get_top_margin_selected(self):
+    def get_top_margin_selected(self) -> int:
         """"""
         top_margin = 1
         return top_margin
 
-    def init_drawer_document_config(self):
+    def init_drawer_document_config(self) -> dict[int, Any]:
         """Build the script document-config drawer."""
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
@@ -679,7 +681,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
 
         return items
 
-    def init_drawer_object_config(self):
+    def init_drawer_object_config(self) -> dict[int, Any]:
         """Build the object-config drawer (pretty print / compat / margins / page view / headers / footers / inserts / tools).
 
         T-NEW-035 close-outs:
@@ -807,14 +809,14 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             cnt += 1
         return items
 
-    def init_drawer_quickstart(self):
+    def init_drawer_quickstart(self) -> dict[Any, Any]:
         """"""
         items = {}
         # NOTE: add template selection/management
         #
         return items
 
-    def init_drawer_selection_config(self):
+    def init_drawer_selection_config(self) -> dict[Any, Any]:
         """Build the script selection/inserts drawer (image / table / date / time).
 
         T-NEW-035 close-out: insert_specs moved to
@@ -823,7 +825,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """
         return {}
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
@@ -832,7 +834,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # self.toolbox_config[300]["items"] = self.init_drawer_object_config()
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
-    def insert_chart(self):
+    def insert_chart(self) -> Self:
         """Insert a chart at the cursor position.
 
         Opens a chart-type selector (line / bar / pie / scatter),
@@ -872,7 +874,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             logma.error(f"[scripts] insert_chart failed: {e}", exc_info=True)
         return self
 
-    def insert_shape(self):
+    def insert_shape(self) -> Self:
         """Insert a shape (rectangle / circle / line) at the cursor position.
 
         Opens a shape picker, then inserts the shape as a
@@ -912,7 +914,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             logma.error(f"[scripts] insert_shape failed: {e}", exc_info=True)
         return self
 
-    def insert_symbol(self):
+    def insert_symbol(self) -> Self:
         """Insert a unicode symbol at the cursor position.
 
         Opens a symbol picker, then inserts the chosen symbol
@@ -947,7 +949,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             logma.error(f"[scripts] insert_symbol failed: {e}", exc_info=True)
         return self
 
-    def insert_table(self):
+    def insert_table(self) -> Self:
         """Insert a table at the cursor position.
 
         Prompts the user for the row/column counts, then inserts
@@ -995,7 +997,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             logma.error(f"[scripts] insert_table failed: {e}", exc_info=True)
         return self
 
-    def insert_code(self):
+    def insert_code(self) -> Self:
         """Insert a code block at the cursor position.
 
         Prompts for the code language (Python / JavaScript / HTML /
@@ -1035,7 +1037,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             logma.error(f"[scripts] insert_code failed: {e}", exc_info=True)
         return self
 
-    def insert_document(self):
+    def insert_document(self) -> Self:
         """Insert an existing document at the cursor position.
 
         Prompts the user for the document type, then inserts a
@@ -1075,7 +1077,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             logma.error(f"[scripts] insert_document failed: {e}", exc_info=True)
         return self
 
-    def insert_image(self):
+    def insert_image(self) -> Self:
         """Insert an image at the cursor's current position."""
         # Open a file dialog to select an image file
         # image_path, _ = QFileDialog.getOpenFileName(
@@ -1091,11 +1093,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             cursor.insertImage(image_format)
         return self
 
-    def onEnterEvent(self):
+    def onEnterEvent(self) -> Self:
         """Run a save of the doc editor data to the database"""
         return self
 
-    def open_file(self, file=None, _populate_document=False, _save=True):
+    def open_file(self, file=None, _populate_document=False, _save=True) -> Self:
         """Open a script file from disk and update the widget state.
 
         T-NEW-024 (live "NchantdScript breaks initial format
@@ -1177,10 +1179,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # self._initial_load = False
         return self
 
-    def populate_data(self):
+    def populate_data(self) -> None:
         """"""
 
-    def populate_document(self):
+    def populate_document(self) -> Self:
         """T-scripts-populate: route a freshly-opened script document.
 
         Splits the work into three smaller helpers that are each
@@ -1270,7 +1272,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self._apply_syntax_highlighting(text)
         return self
 
-    def restore_formatting_from_metadata(self):
+    def restore_formatting_from_metadata(self) -> Self:
         """T-082: re-apply bold / italic / underline / colour metadata.
 
         Walks ``self.document.meta_data["formatting"]`` (when
@@ -1327,7 +1329,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self.view_type = self.config.dikt.get("view_type", "note_view")
         return self
 
-    def save(self):
+    def save(self) -> Self:
         """Capture the current editor contents before persistence."""
         if self.document is None:
             self.new_document()
@@ -1337,7 +1339,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         super().save()
         return self
 
-    def set_page_view(self):
+    def set_page_view(self) -> None:
         """"""
         self.layout.setContentsMargins(0, 0, 0, 0)
         # Define page size for "Letter" (8.5 x 11 inches in pixels at 96 DPI)
@@ -1384,19 +1386,19 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self.margin_left = 72  # 1 inch
         self.margin_right = 72  # 1 inch
 
-    def set_note_view(self):
+    def set_note_view(self) -> None:
         """"""
         self.layout.setContentsMargins(0, 0, 0, 0)
         # self.document_editor = NchantdDocEditor(self, self.config).initWidget()
         self.document_editor.setFont(pyqt.QFont("Arial", 12))  # Default font and size
         self.layout.addWidget(self.document_editor)
 
-    def update_toolbar(self):
+    def update_toolbar(self) -> Self:
         """"""
         # add/remove buttons baseed on syntax selection
         return self
 
-    def _apply_extension_syntax(self, path):
+    def _apply_extension_syntax(self, path) -> str:
         """T-NEW-024: derive ``self.format_type`` + ``config.dikt``
         from the file extension so a freshly-opened file routes
         through the correct ``_apply_syntax_highlighting`` branch.
@@ -1456,7 +1458,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 meta["syntax"] = syntax
         return syntax
 
-    def _apply_syntax_highlighting(self, text):
+    def _apply_syntax_highlighting(self, text) -> None:
         """Dispatch to the right editor API based on the script syntax.
 
         The ``_SYNTAX_DISPATCH`` table maps a syntax name to a
@@ -1550,7 +1552,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
 
         raise Exception(f"unknown syntax {self.document.syntax}")
 
-    def _ensure_drawer_item(self, items, cnt):
+    def _ensure_drawer_item(self, items, cnt) -> dict[str, str]:
         """Lazily create a default drawer-item slot.
 
         Centralises the ``if cnt not in items: items[cnt] = {...}``
@@ -1562,7 +1564,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         return items[cnt]
 
-    def _insert_object_placeholder(self, label, marker, html=None):
+    def _insert_object_placeholder(self, label, marker, html=None) -> Self:
         """Insert a real object placeholder at the current cursor.
 
         The placeholder is a QTextCharFormat-stamped fragment that
@@ -1600,7 +1602,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             inserts.append({"label": label, "marker": marker, "html": html})
         return self
 
-    def _load_external_file(self):
+    def _load_external_file(self) -> bool:
         """Load an external script file into the document editor.
 
         Reads ``self.file_path`` (or ``self.current_notebook_path``
@@ -1662,7 +1664,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             logma.error(f"[scripts] _load_external_file failed: {e}", exc_info=True)
             return False
 
-    def _preserved_unit_html(self):
+    def _preserved_unit_html(self) -> str | None:
         """Return the saved PyfficeText unit HTML if non-empty, else None.
 
         The PyfficeScript unit stores rich text under
@@ -1706,7 +1708,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                     return html
         return None
 
-    def _resolve_document_text(self):
+    def _resolve_document_text(self) -> str:
         """Pull the script text from ``self.document`` through every shape.
 
         The PyfficeScript surface area exposes the text payload in
