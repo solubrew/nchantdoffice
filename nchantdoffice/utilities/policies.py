@@ -12,10 +12,13 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
+
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
 import json as j
+from typing import Any, Dict, Optional
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -39,7 +42,11 @@ pxcfg = join(here, "_data_", ".yaml")
 class NchantdOfficeDataPolicy(NchantdDataPolicy):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(
+        self,
+        parent: Any,
+        cfg: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """ """
         logma.info(f"NchantdOfficeDataPolicy init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
