@@ -115,7 +115,7 @@ def restart() -> None:
         logma.info(f"Removal Failed")
 
 
-def run(args):
+def run(args: list[str]) -> None:
     """Run individual tabs with mock data for development purposes
 
     python runNchantdOffice.py scratch setup - create new file
