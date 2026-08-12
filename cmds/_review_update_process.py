@@ -83,7 +83,7 @@ def _cleanup() -> None:
 # ---------------------------------------------------------------------------
 
 
-def scenario_fresh_server():
+def scenario_fresh_server() -> bool:
     """No cache, server returns valid payload, checker parses + caches."""
     from nchantdoffice.updates.checker import UpdateChecker, UpdateInfo
     from datetime import datetime, timezone
@@ -123,7 +123,7 @@ def scenario_fresh_server():
     return True
 
 
-def scenario_stale_cache():
+def scenario_stale_cache() -> bool:
     """Pre-write a stale cache, then server returns fresh."""
     from nchantdoffice.updates.checker import UpdateChecker, _CACHE_PATH
     from datetime import datetime, timedelta, timezone
@@ -170,7 +170,7 @@ def scenario_stale_cache():
     return True
 
 
-def scenario_server_down():
+def scenario_server_down() -> bool:
     """Server raises RequestException, fallback to stale cache."""
     import requests as _requests
     from nchantdoffice.updates.checker import UpdateChecker, _CACHE_PATH
@@ -205,7 +205,7 @@ def scenario_server_down():
     return True
 
 
-def scenario_upgrade_lock():
+def scenario_upgrade_lock() -> bool:
     """Call NchantdOfficeDBUpdate.update_pyffice_document() twice.
 
     Pre-T-NEW-058: the second call will likely run the migration
@@ -264,7 +264,7 @@ SCENARIOS = {
 }
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(
         description="Smoke-test the NchantdOffice update process (T-NEW-057 step 2)."
     )
