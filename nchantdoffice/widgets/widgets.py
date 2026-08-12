@@ -11,7 +11,8 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
@@ -25,6 +26,7 @@ from nchantrs.widgets.tabsets import NchantdTabSet
 from nchantrs.libraries.pyqt import QTimer
 from nchantdoffice.models import NchantdOfficeTabSetModel
 from nchantdoffice.widgets.controls.toolboxes import NchantdOfficeApplicationToolBox
+from typing import Any, Self
 
 # from nchantdoffice.widgets.documents.media.notes import NchantdOfficeNote
 
@@ -41,24 +43,24 @@ pxcfg = join(here, "_data_", "widgets.yaml")
 class NchantdOfficeTabSet(NchantdTabSet):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTabSet").override(cfg))
         self.model = NchantdOfficeTabSetModel(self, self.config)
 
-    def initModel(self, create_objects=True):
-        """"""
+    def initModel(self, create_objects=True) -> Self:
+        """ """
         super().initModel(create_objects)
         return self
 
-    def initView(self):
-        """"""
+    def initView(self) -> Self:
+        """ """
         super().initView()
         return self
 
-    def initWidget(self, cfg=None):
-        """"""
+    def initWidget(self, cfg=None) -> Self:
+        """ """
         if cfg is None:
             cfg = {}
         self.initModel(cfg.get("create_objects", True))
@@ -77,13 +79,13 @@ class NchantdOfficeTabSet(NchantdTabSet):
     #     self.app.view.panes["center"].model.current_tab.append_note(note)
     #     return self
 
-    def create_toolbox(self, parent=None, cfg=None):
-        """"""
+    def create_toolbox(self, parent=None, cfg=None) -> NchantdOfficeApplicationToolBox:
+        """ """
         toolbox = NchantdOfficeApplicationToolBox(parent, cfg)
         toolbox.initWidget()
         return toolbox
 
-    def _find_right_toolbox(self):
+    def _find_right_toolbox(self) -> NchantdOfficeApplicationToolBox | None:
         """Return the live (materialized) toolbox widget in the right pane, or None.
 
         The visible toolbox is a right-pane tab whose widget is a
@@ -106,18 +108,18 @@ class NchantdOfficeTabSet(NchantdTabSet):
                 return candidate
         return None
 
-    def go_to_previous_tab(self):
-        """"""
+    def go_to_previous_tab(self) -> None:
+        """ """
         # TODO implement method
 
-    def setTabText(self, position, text, store=True):
-        """"""
+    def setTabText(self, position, text, store=True) -> None:
+        """ """
         super().setTabText(position, text)
         if store:
             cfg = {"name_txt": text}
             self.app.model.update_tab(self.app.model.get_current_tab(), cfg)
 
-    def on_tab_focus(self, tabn=None):
+    def on_tab_focus(self, tabn=None) -> Self:
         """"""
         # logma.inspect_caller()
         if tabn is None:
