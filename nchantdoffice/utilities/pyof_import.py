@@ -1,31 +1,44 @@
-"""T-NEW-074 — content-only .pyof → .pyof import.
+"""T-NEW-074 / T-NEW-075 — content-only .pyof → .pyof import.
 
-Reads content tables from a source .pyof and INSERT-OR-IGNOREs
-them into the host's open sqlite3 connection. Source UUIDs are
-preserved as the new primary keys on the host; collisions skip
-the source row (host wins).
+Reads content tables from a source .pyof and INSERTs them into the host's
+open sqlite3 connection.
 
-Tables in scope: app_tree_node, doc_tree_node, app_tab, doc_tab,
-app_media, doc_media. No instance/config migration.
+T-NEW-074 base 6 tables (app_tree_node, doc_tree_node, app_tab, doc_tab,
+app_media, doc_media): INSERT-OR-IGNORE — source UUIDs become host primary
+keys; collisions skip (host wins).
+
+T-NEW-075 content tables (app_doc_content, app_media_content, doc_media_content):
+last-version-per-pUUID merge — source PK columns are dropped (host regenerates
+rowid), but source UUID and pUUID are carried (FK relationships preserved).
+For each pUUID only the highest-version row is kept. This is INSERT-with-
+dedupe, not INSERT-OR-IGNORE: host PKs are fresh so skipped is always 0.
 """
 from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
-from typing import Iterable, Optional
+from typing import Iterable, Literal, Optional
+
+MergeStrategy = Literal["insert_or_ignore", "last_version_per_puuid"]
 
 @dataclass(frozen=True)
 class TableSpec:
     name: str
-    pk_column: str
+    pk_column: Optional[str]
+    merge_strategy: MergeStrategy = "insert_or_ignore"
 
 class PyofImportContract:
     TABLES: tuple[TableSpec, ...] = (
+        # T-NEW-074 — base 6: INSERT-OR-IGNORE on the source UUID/PK.
         TableSpec("app_tree_node", "nid_txt"),
         TableSpec("doc_tree_node", "nid_txt"),
         TableSpec("app_tab",       "tid_txt"),
         TableSpec("doc_tab",       "tid_txt"),
         TableSpec("app_media",     "UUID"),
         TableSpec("doc_media",     "UUID"),
+        # T-NEW-075 — _content tables: last-version-wins per pUUID.
+        TableSpec("app_doc_content",    None, merge_strategy="last_version_per_puuid"),
+        TableSpec("app_media_content",  None, merge_strategy="last_version_per_puuid"),
+        TableSpec("doc_media_content",  None, merge_strategy="last_version_per_puuid"),
     )
 
 def count_rows_in_table(conn: sqlite3.Connection, table: str) -> int:
@@ -51,10 +64,120 @@ def _intersecting_columns(src: sqlite3.Connection, host: sqlite3.Connection, tab
     host_cols = {r[1] for r in host.execute(f'PRAGMA table_info("{table}")')}
     return sorted(src_cols & host_cols)
 
+
+def _host_primary_key_columns(conn: sqlite3.Connection, table: str) -> set[str]:
+    """T-NEW-075 — return the set of PRIMARY KEY column names on the host table.
+
+    Used by ``_import_content_table`` to drop the host PK from the insert
+    projection (host regenerates the rowid). Empty set if the table doesn't
+    exist or has no explicit PK columns (relies on rowid).
+    """
+    try:
+        rows = list(conn.execute(f'PRAGMA table_info("{table}")'))
+    except sqlite3.DatabaseError:
+        return set()
+    return {r[1] for r in rows if r[5] > 0}  # pk column index > 0 == part of PK
+
+
+def _coerce_doc_version(raw: object) -> int:
+    """T-NEW-075 — defensively cast a ``version`` cell to ``int``.
+
+    The source ``.pyof`` may store the column as INTEGER, REAL, or TEXT
+    depending on how the row was written. We tolerate all three shapes so
+    the last-version-wins comparison doesn't crash on a stray ``"3"`` or
+    ``3.0`` from an older writer.
+    """
+    if raw is None:
+        return -1
+    if isinstance(raw, bool):  # bool is a subclass of int — guard explicitly.
+        return int(raw)
+    if isinstance(raw, int):
+        return raw
+    if isinstance(raw, float):
+        return int(raw)
+    if isinstance(raw, (bytes, bytearray)):
+        raw = raw.decode("utf-8", errors="replace")
+    try:
+        return int(str(raw).strip())
+    except (TypeError, ValueError):
+        return -1
+
+
+def _import_content_table(
+    src: sqlite3.Connection, host: sqlite3.Connection, spec: TableSpec
+) -> ImportResult:
+    """T-NEW-075 — last-version-wins import for ``_content`` tables.
+
+    Source PK columns are dropped (host regenerates rowid). Source UUID and
+    pUUID are carried so doc↔content / node↔tab FK relationships survive.
+    For each pUUID only the highest-version row is kept. ``INSERT INTO``
+    (not OR-IGNORE): host PKs are fresh, so ``skipped`` is always 0.
+    """
+    result = ImportResult(table=spec.name)
+    cols = _intersecting_columns(src, host, spec.name)
+    if not cols:
+        return result  # missing on either side — silent no-op
+    if "pUUID" not in cols or "version" not in cols:
+        # Defensive: a _content table missing the dedupe keys can't be
+        # safely merged with last-version-wins semantics. Treat as a
+        # silent no-op rather than crash mid-import.
+        return result
+    # Drop the host's PRIMARY KEY column from the projection — host
+    # regenerates the rowid. Carrying the source's id would collide on
+    # the second import (idempotent re-import would crash on UNIQUE).
+    host_pk_cols = _host_primary_key_columns(host, spec.name)
+    insert_cols = [c for c in cols if c not in host_pk_cols]
+    if not insert_cols:
+        return result  # nothing to insert once host PK is excluded
+    # Project only the intersecting columns (drop source PKs by virtue of
+    # not selecting them; the host PK is freshly assigned on INSERT).
+    placeholders = ",".join("?" for _ in insert_cols)
+    col_list = ",".join(f'"{c}"' for c in insert_cols)
+    insert_sql = (
+        f'INSERT INTO "{spec.name}" ({col_list}) VALUES ({placeholders})'
+    )
+
+    # Group by pUUID, keep the row with the highest version. Ties broken
+    # by last-seen-wins (later SELECT iteration wins — preserves the
+    # "latest write" intent).
+    best_by_puuid: dict[object, dict] = {}
+    for row in iter_table_rows(src, spec.name):
+        puuid = row.get("pUUID")
+        if puuid is None:
+            continue  # can't dedupe a row without a pUUID
+        candidate = best_by_puuid.get(puuid)
+        if candidate is None or _coerce_doc_version(row.get("version")) >= _coerce_doc_version(
+            candidate.get("version")
+        ):
+            best_by_puuid[puuid] = row
+
+    for kept in best_by_puuid.values():
+        values = [kept.get(c) for c in insert_cols]
+        cur = host.execute(insert_sql, values)
+        if cur.rowcount == 1:
+            result.inserted += 1
+        else:
+            # rowcount==0 isn't expected here (no PK collision) but be
+            # defensive: count it as a skip rather than a hard error so a
+            # quirky SQLite build doesn't poison the whole transaction.
+            result.skipped += 1
+    return result
+
+
 def import_one_table(src: sqlite3.Connection, host: sqlite3.Connection, spec: TableSpec) -> ImportResult:
-    """Copy rows from src[spec.name] into host[spec.name] preserving
-    source UUIDs as the new primary keys. INSERT-OR-IGNORE so existing
-    host rows win."""
+    """Copy rows from src[spec.name] into host[spec.name].
+
+    Dispatch is controlled by ``spec.merge_strategy``:
+
+    * ``"insert_or_ignore"`` (default — T-NEW-074 base 6): source UUIDs /
+      PKs become the new host primary keys; collisions skip (host wins).
+    * ``"last_version_per_puuid"`` (T-NEW-075 _content tables): source PKs
+      are dropped, UUID + pUUID are carried, only the highest-version row
+      per pUUID is inserted.
+    """
+    if spec.merge_strategy == "last_version_per_puuid":
+        return _import_content_table(src, host, spec)
+
     result = ImportResult(table=spec.name)
     cols = _intersecting_columns(src, host, spec.name)
     if not cols:

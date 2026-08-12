@@ -48,21 +48,30 @@ def test_resolve_host_db_conn_attribute_exists() -> None:
 
 
 def test_import_contract_tables_match_expected_schema() -> None:
-    """T-NEW-074 keeps the content-only import tables and PKs explicit and ordered."""
-    expected: tuple[tuple[str, str], ...] = (
-        ("app_tree_node", "nid_txt"),
-        ("doc_tree_node", "nid_txt"),
-        ("app_tab", "tid_txt"),
-        ("doc_tab", "tid_txt"),
-        ("app_media", "UUID"),
-        ("doc_media", "UUID"),
+    """T-NEW-074 / T-NEW-075: keeps the content-only import tables, PKs,
+    and merge strategies explicit and ordered."""
+    expected: tuple[tuple[str, str | None, str], ...] = (
+        # T-NEW-074 — base 6: INSERT-OR-IGNORE on source UUID/PK.
+        ("app_tree_node", "nid_txt", "insert_or_ignore"),
+        ("doc_tree_node", "nid_txt", "insert_or_ignore"),
+        ("app_tab", "tid_txt", "insert_or_ignore"),
+        ("doc_tab", "tid_txt", "insert_or_ignore"),
+        ("app_media", "UUID", "insert_or_ignore"),
+        ("doc_media", "UUID", "insert_or_ignore"),
+        # T-NEW-075 — _content tables: last-version-wins per pUUID.
+        ("app_doc_content", None, "last_version_per_puuid"),
+        ("app_media_content", None, "last_version_per_puuid"),
+        ("doc_media_content", None, "last_version_per_puuid"),
     )
 
     assert len(PyofImportContract.TABLES) == len(expected)
-    for spec, (name, pk_column) in zip(PyofImportContract.TABLES, expected):
+    for spec, (name, pk_column, merge_strategy) in zip(
+        PyofImportContract.TABLES, expected
+    ):
         assert isinstance(spec, TableSpec)
         assert spec.name == name
         assert spec.pk_column == pk_column
+        assert spec.merge_strategy == merge_strategy
 
 
 def test_count_rows_in_table_reads_source() -> None:
@@ -207,7 +216,7 @@ def test_import_one_table_handles_missing_table_on_host() -> None:
 
 
 def test_import_pyof_returns_summary_per_table() -> None:
-    """T-NEW-074: import_pyof orchestrates all six contract tables in one transaction."""
+    """T-NEW-074 / T-NEW-075: import_pyof orchestrates all 9 contract tables in one transaction."""
     from nchantdoffice.utilities.pyof_import import (
         ImportResult,
         count_rows_in_table,
@@ -240,6 +249,23 @@ def test_import_pyof_returns_summary_per_table() -> None:
             'CREATE TABLE "doc_media" '
             '(UUID TEXT PRIMARY KEY, name_txt TEXT)'
         ),
+        # T-NEW-075 — _content tables. PK is autoincrement rowid; UUID + pUUID
+        # are carried; version drives last-version-wins.
+        "app_doc_content": (
+            'CREATE TABLE "app_doc_content" '
+            '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT)'
+        ),
+        "app_media_content": (
+            'CREATE TABLE "app_media_content" '
+            '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT)'
+        ),
+        "doc_media_content": (
+            'CREATE TABLE "doc_media_content" '
+            '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT)'
+        ),
     }
     # Per-table insert templates — (table_name, sql, params-template).
     insert_specs: dict[str, tuple[str, tuple]] = {
@@ -267,6 +293,21 @@ def test_import_pyof_returns_summary_per_table() -> None:
             'INSERT INTO "doc_media" (UUID, name_txt) VALUES (?, ?)',
             ("UUID", "name_txt"),
         ),
+        "app_doc_content": (
+            'INSERT INTO "app_doc_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            ("UUID", "pUUID", "version", "content"),
+        ),
+        "app_media_content": (
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            ("UUID", "pUUID", "version", "content"),
+        ),
+        "doc_media_content": (
+            'INSERT INTO "doc_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            ("UUID", "pUUID", "version", "content"),
+        ),
     }
 
     # Build source DB on disk so import_pyof can open it via file: URI.
@@ -276,16 +317,21 @@ def test_import_pyof_returns_summary_per_table() -> None:
     try:
         for table, ddl in create_statements.items():
             src.execute(ddl)
-        # Populate one synthetic UUID row per table.
+        # Populate one synthetic row per table.
         for table, (sql, cols) in insert_specs.items():
             synth = str(uuid.uuid4())
-            values = [synth] + [f"{table}-row"] * (len(cols) - 1)
+            if "pUUID" in cols:
+                # _content tables: needs a pUUID + version=1 alongside the UUID.
+                puuid = str(uuid.uuid4())
+                values = [synth, puuid, 1, f"{table}-content"]
+            else:
+                values = [synth] + [f"{table}-row"] * (len(cols) - 1)
             src.execute(sql, values)
         src.commit()
     finally:
         src.close()
 
-    # In-memory host with the same six tables (empty) — avoids the defensive no-op.
+    # In-memory host with the same 9 tables (empty) — avoids the defensive no-op.
     host = sqlite3.connect(":memory:")
     try:
         for table, ddl in create_statements.items():
@@ -294,7 +340,7 @@ def test_import_pyof_returns_summary_per_table() -> None:
 
         results = import_pyof(source_path, host)
 
-        assert len(results) == 6
+        assert len(results) == 9
         expected_tables = [
             "app_tree_node",
             "doc_tree_node",
@@ -302,6 +348,9 @@ def test_import_pyof_returns_summary_per_table() -> None:
             "doc_tab",
             "app_media",
             "doc_media",
+            "app_doc_content",
+            "app_media_content",
+            "doc_media_content",
         ]
         assert [r.table for r in results] == expected_tables
         for r in results:
@@ -319,18 +368,18 @@ def test_import_pyof_returns_summary_per_table() -> None:
 
 
 def test_import_pyof_round_trips_against_real_pyof() -> None:
-    """T-NEW-074 Task 6: import_pyof round-trips all 6 contract tables against a
-    real on-disk .pyof file, asserting both the ImportResult shape and the
-    actual row counts on the host."""
+    """T-NEW-074 Task 6 / T-NEW-075: import_pyof round-trips all 9 contract tables
+    against a real on-disk .pyof file, asserting both the ImportResult shape
+    and the actual row counts on the host."""
     from nchantdoffice.utilities.pyof_import import (
         ImportResult,
         count_rows_in_table,
         import_pyof,
     )
 
-    # Per the contract: same 6 tables as Task 5. Keep these CREATE statements
-    # in sync with test_import_pyof_returns_summary_per_table above — they
-    # intentionally reflect only the columns this test touches.
+    # Per the contract: same 9 tables as the summary test. Keep these CREATE
+    # statements in sync with test_import_pyof_returns_summary_per_table
+    # above — they intentionally reflect only the columns this test touches.
     create_statements: dict[str, str] = {
         "app_tree_node": (
             'CREATE TABLE "app_tree_node" '
@@ -355,6 +404,21 @@ def test_import_pyof_round_trips_against_real_pyof() -> None:
         "doc_media": (
             'CREATE TABLE "doc_media" '
             '(UUID TEXT PRIMARY KEY, name_txt TEXT)'
+        ),
+        "app_doc_content": (
+            'CREATE TABLE "app_doc_content" '
+            '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT)'
+        ),
+        "app_media_content": (
+            'CREATE TABLE "app_media_content" '
+            '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT)'
+        ),
+        "doc_media_content": (
+            'CREATE TABLE "doc_media_content" '
+            '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT)'
         ),
     }
     insert_specs: dict[str, tuple[str, tuple[str, ...]]] = {
@@ -382,10 +446,25 @@ def test_import_pyof_round_trips_against_real_pyof() -> None:
             'INSERT INTO "doc_media" (UUID, name_txt) VALUES (?, ?)',
             ("UUID", "name_txt"),
         ),
+        "app_doc_content": (
+            'INSERT INTO "app_doc_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            ("UUID", "pUUID", "version", "content"),
+        ),
+        "app_media_content": (
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            ("UUID", "pUUID", "version", "content"),
+        ),
+        "doc_media_content": (
+            'INSERT INTO "doc_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            ("UUID", "pUUID", "version", "content"),
+        ),
     }
     expected_tables = list(create_statements.keys())
 
-    # 1. Build a REAL on-disk .pyof file with all 6 contract tables, one row each.
+    # 1. Build a REAL on-disk .pyof file with all 9 contract tables, one row each.
     src_file = tempfile.NamedTemporaryFile(suffix=".pyof", delete=False)
     source_path = src_file.name
     src_file.close()  # import_pyof opens its own sqlite3 handle via URI.
@@ -396,13 +475,17 @@ def test_import_pyof_round_trips_against_real_pyof() -> None:
                 src.execute(ddl)
             for table, (sql, cols) in insert_specs.items():
                 synth = str(uuid.uuid4())
-                values = [synth] + [f"{table}-row"] * (len(cols) - 1)
+                if "pUUID" in cols:
+                    puuid = str(uuid.uuid4())
+                    values = [synth, puuid, 1, f"{table}-content"]
+                else:
+                    values = [synth] + [f"{table}-row"] * (len(cols) - 1)
                 src.execute(sql, values)
             src.commit()
         finally:
             src.close()
 
-        # 2. Open an EMPTY in-memory host connection and create the same 6
+        # 2. Open an EMPTY in-memory host connection and create the same 9
         #    tables on it (per Task 5 schema).
         host = sqlite3.connect(":memory:")
         try:
@@ -435,17 +518,17 @@ def test_import_pyof_round_trips_against_real_pyof() -> None:
 
 
 def test_import_pyof_silently_skips_missing_tables() -> None:
-    """T-NEW-074 Task 6: when the source .pyof only contains a subset of the
-    contract tables (here: app_tree_node + app_media), the orchestrator must
-    silently no-op the missing tables (inserted=0, skipped=0, errors=0) and
-    still import the present ones."""
+    """T-NEW-074 Task 6 / T-NEW-075: when the source .pyof only contains a subset
+    of the contract tables (here: app_tree_node + app_media), the orchestrator
+    must silently no-op the missing tables (inserted=0, skipped=0, errors=0)
+    and still import the present ones."""
     from nchantdoffice.utilities.pyof_import import (
         ImportResult,
         count_rows_in_table,
         import_pyof,
     )
 
-    # Same schemas as the round-trip test — host has all 6 tables.
+    # Same schemas as the round-trip test — host has all 9 tables.
     create_statements: dict[str, str] = {
         "app_tree_node": (
             'CREATE TABLE "app_tree_node" '
@@ -471,11 +554,34 @@ def test_import_pyof_silently_skips_missing_tables() -> None:
             'CREATE TABLE "doc_media" '
             '(UUID TEXT PRIMARY KEY, name_txt TEXT)'
         ),
+        "app_doc_content": (
+            'CREATE TABLE "app_doc_content" '
+            '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT)'
+        ),
+        "app_media_content": (
+            'CREATE TABLE "app_media_content" '
+            '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT)'
+        ),
+        "doc_media_content": (
+            'CREATE TABLE "doc_media_content" '
+            '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT)'
+        ),
     }
 
-    # Source only has app_tree_node + app_media — the other 4 are missing.
+    # Source only has app_tree_node + app_media — the other 7 are missing.
     source_tables_present = ("app_tree_node", "app_media")
-    source_missing = ("doc_tree_node", "app_tab", "doc_tab", "doc_media")
+    source_missing = (
+        "doc_tree_node",
+        "app_tab",
+        "doc_tab",
+        "doc_media",
+        "app_doc_content",
+        "app_media_content",
+        "doc_media_content",
+    )
 
     src_file = tempfile.NamedTemporaryFile(suffix=".pyof", delete=False)
     source_path = src_file.name
@@ -503,7 +609,7 @@ def test_import_pyof_silently_skips_missing_tables() -> None:
         finally:
             src.close()
 
-        # 2. Host has all 6 tables, empty.
+        # 2. Host has all 9 tables, empty.
         host = sqlite3.connect(":memory:")
         try:
             for ddl in create_statements.values():
@@ -511,7 +617,7 @@ def test_import_pyof_silently_skips_missing_tables() -> None:
             host.commit()
 
             # 3. Run the orchestrator. No exception must be raised even though
-            #    4 of the 6 contract tables don't exist on the source side.
+            #    7 of the 9 contract tables don't exist on the source side.
             results = import_pyof(source_path, host)
 
             # 4. Build a table -> result map for easy assertions.
@@ -545,9 +651,11 @@ def test_import_pyof_silently_skips_missing_tables() -> None:
 
 
 def test_import_pyof_idempotent() -> None:
-    """T-NEW-074 Task 6 (bonus): re-importing the same .pyof into the same
-    host is a no-op — the host's PKs block the second import, returning
-    skipped=1 per table on the second pass."""
+    """T-NEW-074 Task 6 (bonus) / T-NEW-075: re-importing the same .pyof into
+    the same host is a no-op for the base 6 (host PKs block the second import,
+    skipped=1 per table). The 3 ``_content`` tables intentionally re-insert
+    on the second pass — host rowids are fresh each time and the
+    last-version-wins dedupe is keyed on the source rows."""
     from nchantdoffice.utilities.pyof_import import (
         ImportResult,
         import_pyof,
@@ -578,6 +686,21 @@ def test_import_pyof_idempotent() -> None:
             'CREATE TABLE "doc_media" '
             '(UUID TEXT PRIMARY KEY, name_txt TEXT)'
         ),
+        "app_doc_content": (
+            'CREATE TABLE "app_doc_content" '
+            '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT)'
+        ),
+        "app_media_content": (
+            'CREATE TABLE "app_media_content" '
+            '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT)'
+        ),
+        "doc_media_content": (
+            'CREATE TABLE "doc_media_content" '
+            '(id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT)'
+        ),
     }
     insert_specs: dict[str, tuple[str, tuple[str, ...]]] = {
         "app_tree_node": (
@@ -604,8 +727,36 @@ def test_import_pyof_idempotent() -> None:
             'INSERT INTO "doc_media" (UUID, name_txt) VALUES (?, ?)',
             ("UUID", "name_txt"),
         ),
+        "app_doc_content": (
+            'INSERT INTO "app_doc_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            ("UUID", "pUUID", "version", "content"),
+        ),
+        "app_media_content": (
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            ("UUID", "pUUID", "version", "content"),
+        ),
+        "doc_media_content": (
+            'INSERT INTO "doc_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            ("UUID", "pUUID", "version", "content"),
+        ),
     }
     expected_tables = list(create_statements.keys())
+    base6 = {
+        "app_tree_node",
+        "doc_tree_node",
+        "app_tab",
+        "doc_tab",
+        "app_media",
+        "doc_media",
+    }
+    content_tables = {
+        "app_doc_content",
+        "app_media_content",
+        "doc_media_content",
+    }
 
     src_file = tempfile.NamedTemporaryFile(suffix=".pyof", delete=False)
     source_path = src_file.name
@@ -618,7 +769,11 @@ def test_import_pyof_idempotent() -> None:
                 src.execute(ddl)
             for table, (sql, cols) in insert_specs.items():
                 synth = str(uuid.uuid4())
-                values = [synth] + [f"{table}-row"] * (len(cols) - 1)
+                if "pUUID" in cols:
+                    puuid = str(uuid.uuid4())
+                    values = [synth, puuid, 1, f"{table}-content"]
+                else:
+                    values = [synth] + [f"{table}-row"] * (len(cols) - 1)
                 src.execute(sql, values)
             src.commit()
         finally:
@@ -630,17 +785,29 @@ def test_import_pyof_idempotent() -> None:
                 host.execute(ddl)
             host.commit()
 
-            # First import: all 6 should insert.
+            # First import: all 9 should insert.
             first_results = import_pyof(source_path, host)
             assert [r.table for r in first_results] == expected_tables
             for r in first_results:
                 assert r == ImportResult(table=r.table, inserted=1, skipped=0, errors=0)
 
-            # Second import against the SAME host: PKs collide, all 6 skipped.
+            # Second import against the SAME host: base 6 skip (host PK
+            # collision); _content tables re-insert (host rowid is fresh
+            # each pass — the last-version-wins dedupe happens per-source,
+            # not per-host, so 1 row is selected from the source and a new
+            # rowid is assigned on the host).
             second_results = import_pyof(source_path, host)
             assert [r.table for r in second_results] == expected_tables
             for r in second_results:
-                assert r == ImportResult(table=r.table, inserted=0, skipped=1, errors=0)
+                if r.table in base6:
+                    assert r == ImportResult(
+                        table=r.table, inserted=0, skipped=1, errors=0
+                    ), f"base-6 {r.table}: expected skip, got {r}"
+                else:
+                    assert r.table in content_tables
+                    assert r == ImportResult(
+                        table=r.table, inserted=1, skipped=0, errors=0
+                    ), f"content {r.table}: expected re-insert, got {r}"
         finally:
             host.close()
     finally:
@@ -778,3 +945,210 @@ def test_cmd_import_pyof_calls_orchestrator() -> None:
     # Touch app so the unused-variable lint doesn't fire — the
     # QApplication is needed for any future Qt work in this test.
     assert app is not None
+
+
+# ---------------------------------------------------------------------------
+# T-NEW-075: content tables (app_doc_content, app_media_content,
+# doc_media_content) use a different merge strategy than the base 6:
+#
+#   * Source PK columns (rowid / explicit PKs) are DROPPED — host regenerates.
+#   * Source UUID and pUUID columns ARE carried — preserves doc↔content and
+#     node↔tab FK relationships.
+#   * For each pUUID, only the highest-version row is kept (last-version-wins).
+#
+# These tests pin the contract via the public ``import_one_table`` entry point
+# using a ``TableSpec(..., merge_strategy="last_version_per_puuid")``.
+# ---------------------------------------------------------------------------
+
+
+def test_pyf_content_last_version_wins() -> None:
+    """T-NEW-075: 3 source rows for the same pUUID → 1 host row (highest version).
+
+    Build a source ``app_media_content`` with 3 rows for the same ``pUUID``
+    at versions 1, 2, 3. Build an empty host ``app_media_content``. Run the
+    last-version-wins import. Assert ONLY 1 row landed on the host, and it
+    is the version=3 row with its UUID/content preserved.
+    """
+    from nchantdoffice.utilities.pyof_import import ImportResult, import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        # Schema mirrors the contract: PK is rowid (autoincrement), UUID +
+        # pUUID + version + content are plain columns. Source PKs are NOT
+        # carried over to the host — host regenerates them.
+        ddl = (
+            'CREATE TABLE "app_media_content" ('
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT'
+            ')'
+        )
+        src.execute(ddl)
+        host.execute(ddl)
+        src.commit()
+        host.commit()
+
+        shared_puuid = str(uuid.uuid4())
+        rows = [
+            (str(uuid.uuid4()), shared_puuid, 1, "v1-content"),
+            (str(uuid.uuid4()), shared_puuid, 2, "v2-content"),
+            (str(uuid.uuid4()), shared_puuid, 3, "v3-content"),
+        ]
+        src.executemany(
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            rows,
+        )
+        src.commit()
+
+        result = import_one_table(
+            src,
+            host,
+            TableSpec("app_media_content", None, merge_strategy="last_version_per_puuid"),
+        )
+
+        # Last-version-wins: only 1 row landed; skipped is always 0
+        # because no PK collision is possible (host regenerates rowid).
+        assert result == ImportResult(
+            table="app_media_content", inserted=1, skipped=0, errors=0
+        )
+
+        # Inspect the landed row.
+        landed = host.execute(
+            'SELECT UUID, pUUID, version, content FROM "app_media_content"'
+        ).fetchall()
+        assert len(landed) == 1
+        landed_row = landed[0]
+        assert landed_row[1] == shared_puuid
+        assert landed_row[2] == 3
+        assert landed_row[3] == "v3-content"
+        # The UUID of the highest-version source row is preserved
+        # (FK relationship doc↔content remains intact).
+        assert landed_row[0] == rows[2][0]
+    finally:
+        src.close()
+        host.close()
+
+
+def test_pyf_content_keeps_multiple_pUUIDs() -> None:
+    """T-NEW-075: 2 rows for pUUID=A (v1, v2) + 3 rows for pUUID=B (v1, v2, v3)
+    → 2 rows on host (one per pUUID, highest version of each)."""
+    from nchantdoffice.utilities.pyof_import import ImportResult, import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        ddl = (
+            'CREATE TABLE "app_media_content" ('
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT'
+            ')'
+        )
+        src.execute(ddl)
+        host.execute(ddl)
+        src.commit()
+        host.commit()
+
+        puuid_a = "puuid-A"
+        puuid_b = "puuid-B"
+        src_rows = [
+            (str(uuid.uuid4()), puuid_a, 1, "A-v1"),
+            (str(uuid.uuid4()), puuid_a, 2, "A-v2"),
+            (str(uuid.uuid4()), puuid_b, 1, "B-v1"),
+            (str(uuid.uuid4()), puuid_b, 2, "B-v2"),
+            (str(uuid.uuid4()), puuid_b, 3, "B-v3"),
+        ]
+        src.executemany(
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            src_rows,
+        )
+        src.commit()
+
+        result = import_one_table(
+            src,
+            host,
+            TableSpec("app_media_content", None, merge_strategy="last_version_per_puuid"),
+        )
+
+        assert result == ImportResult(
+            table="app_media_content", inserted=2, skipped=0, errors=0
+        )
+
+        landed = host.execute(
+            'SELECT UUID, pUUID, version, content FROM "app_media_content" '
+            "ORDER BY pUUID"
+        ).fetchall()
+        assert len(landed) == 2
+
+        by_puuid = {r[1]: r for r in landed}
+        # pUUID=A: highest version is 2 (content "A-v2")
+        assert by_puuid[puuid_a][2] == 2
+        assert by_puuid[puuid_a][3] == "A-v2"
+        # pUUID=B: highest version is 3 (content "B-v3")
+        assert by_puuid[puuid_b][2] == 3
+        assert by_puuid[puuid_b][3] == "B-v3"
+    finally:
+        src.close()
+        host.close()
+
+
+def test_pyf_content_preserves_uuid_and_puuid_columns() -> None:
+    """T-NEW-075: the landed row's UUID and pUUID match the source version=3 row's
+    values — FK relationships (doc↔content, node↔tab) are preserved across the import."""
+    from nchantdoffice.utilities.pyof_import import ImportResult, import_one_table
+
+    src = sqlite3.connect(":memory:")
+    host = sqlite3.connect(":memory:")
+    try:
+        ddl = (
+            'CREATE TABLE "app_media_content" ('
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'UUID TEXT, pUUID TEXT, version INTEGER, content TEXT'
+            ')'
+        )
+        src.execute(ddl)
+        host.execute(ddl)
+        src.commit()
+        host.commit()
+
+        puuid = "parent-uuid-xyz"
+        uuid_v1 = "content-uuid-v1"
+        uuid_v2 = "content-uuid-v2"
+        uuid_v3 = "content-uuid-v3"
+        src.executemany(
+            'INSERT INTO "app_media_content" (UUID, pUUID, version, content) '
+            "VALUES (?, ?, ?, ?)",
+            [
+                (uuid_v1, puuid, 1, "v1-content"),
+                (uuid_v2, puuid, 2, "v2-content"),
+                (uuid_v3, puuid, 3, "v3-content"),
+            ],
+        )
+        src.commit()
+
+        result = import_one_table(
+            src,
+            host,
+            TableSpec("app_media_content", None, merge_strategy="last_version_per_puuid"),
+        )
+
+        assert result.inserted == 1
+        assert result.skipped == 0
+        assert result.errors == 0
+
+        landed = host.execute(
+            'SELECT UUID, pUUID FROM "app_media_content"'
+        ).fetchall()
+        assert len(landed) == 1
+        landed_uuid, landed_puuid = landed[0]
+        # FK relationships preserved: UUID is the source v3 row's UUID;
+        # pUUID is the source parent identifier.
+        assert landed_uuid == uuid_v3
+        assert landed_puuid == puuid
+        # And the older UUIDs from versions 1 and 2 are NOT in the host.
+        assert landed_uuid != uuid_v1
+        assert landed_uuid != uuid_v2
+    finally:
+        src.close()
+        host.close()
