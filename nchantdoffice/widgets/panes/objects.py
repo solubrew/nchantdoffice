@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from os.path import abspath, dirname, join
 import datetime as dt
+from typing import Any, Self
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -67,12 +68,12 @@ class NchantdNewObjectPane(NchantdPane):
         "Notebook": "init_notebook",
     }
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewObjectPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """Load the list of launchable object types (T-066).
 
         Reads ``config.dikt['object_types']`` when set, falls
@@ -86,7 +87,7 @@ class NchantdNewObjectPane(NchantdPane):
         self.config.dikt["object_options"] = options
         return self
 
-    def cmd_launch_object(self, object_type=None, name=None, position=None, size=None, event=None, *args, **kwargs):
+    def cmd_launch_object(self, object_type=None, name=None, position=None, size=None, event=None, *args, **kwargs) -> Any:
         """Launch a fresh in-app object via the application codex (T-066).
 
         Steps:
@@ -144,7 +145,7 @@ class NchantdNewObjectPane(NchantdPane):
             logma.error(f"[objects] cmd_launch_object failed: {e}", exc_info=True)
             return None
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "New Object: "}
@@ -180,27 +181,27 @@ class NchantdNewObjectPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         self.initModel()
         self.initView()
         return self
 
 
 class NchantdHeaderPane(NchantdPane):
-    """"""
+    """ """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewObjectPane").override(cfg))
 
-    def initModel(self, cfg=None):
-        """"""
+    def initModel(self, cfg=None) -> Self:
+        """ """
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": self.config.dikt.get("label", "Header: ")}
@@ -224,27 +225,27 @@ class NchantdHeaderPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         self.initModel()
         self.initView()
         return self
 
 
 class NchantdFooterPane(NchantdPane):
-    """"""
+    """ """
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdNewObjectPane").override(cfg))
 
-    def initModel(self, cfg=None):
-        """"""
+    def initModel(self, cfg=None) -> Self:
+        """ """
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": self.config.dikt.get("label", "Footer: ")}
@@ -268,8 +269,8 @@ class NchantdFooterPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
-        """"""
+    def initWidget(self) -> Self:
+        """ """
         self.initModel()
         self.initView()
         return self
