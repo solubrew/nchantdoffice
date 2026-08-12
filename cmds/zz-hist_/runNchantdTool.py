@@ -41,7 +41,7 @@ log = True
 pxcfg = join(here, "_data_", "runMain.yaml")
 
 
-def run(args):
+def run(args: list[str]) -> None:
     """Run individual tabs with mock data for development purposes"""
     if args[1] == "calculator":
         """"""
