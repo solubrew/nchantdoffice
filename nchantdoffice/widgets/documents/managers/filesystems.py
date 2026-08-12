@@ -1055,7 +1055,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.fs_tree.current_level_path = path
         return self.cmd_set_root(path=path)
 
-    def cmd_set_root(self, event=None, path=None, *args, **kwargs):
+    def cmd_set_root(self, event=None, path=None, *args, **kwargs) -> Self:
         """T-NEW-068 — navigate to ``path`` (or the current
         ``fs_tree.current_level_path`` when None).
 
@@ -1076,12 +1076,12 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             self.config.dikt["last_root_path"] = path
         return self.show_tree(path)
 
-    def cmd_toggle_compare_directory(self, event=None, *args, **kwargs):
+    def cmd_toggle_compare_directory(self, event=None, *args, **kwargs) -> Self:
         """"""
         self.compare_fs = not self.compare_fs
         return self
 
-    def cmd_add_storage(self, event=None, *args, **kwargs):
+    def cmd_add_storage(self, event=None, *args, **kwargs) -> Self:
         """Add cloud storage configuration"""
         try:
             # Get storage configuration from storage_edit_pane
@@ -1116,12 +1116,12 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
         return self
 
-    def create_data_source(self):
+    def create_data_source(self) -> Self:
         """"""
         self.app.model.add_datasource(self.name, self.create_data_table())
         return self
 
-    def create_data_table(self):
+    def create_data_table(self) -> DataFrame:
         """"""
         df = super().create_data_table()
         columns = ["path", "type", "name", "size", "last_access"]
@@ -1149,12 +1149,12 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         df = DataFrame(ndata, columns=columns)
         return df
 
-    def get_file_search_methods(self):
+    def get_file_search_methods(self) -> List[str]:
         """"""
         methods = ["Search", "Filter"]
         return methods
 
-    def get_children_google_drive(self):
+    def get_children_google_drive(self) -> Self:
         """Get files from Google Drive"""
         try:
             # Check if Google Drive is configured
@@ -1180,7 +1180,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
         return self
 
-    def get_children_dropbox(self):
+    def get_children_dropbox(self) -> Self:
         """Get files from Dropbox"""
         try:
             # Check if Dropbox is configured
@@ -1205,7 +1205,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
         return self
 
-    def get_content(self):
+    def get_content(self) -> Dict[str, Any]:
         """Return the file-system payload for persistence.
 
         Carries:
@@ -1231,11 +1231,11 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             }
         }
 
-    def get_current_path(self):
+    def get_current_path(self) -> str:
         """"""
         return self.fs_tree.current_level_path
 
-    def get_table_one(self):
+    def get_table_one(self) -> Self:
         """"""
         if self.file_table_one is not None:
             self.table_layout.removeWidget(self.file_table_one)
@@ -1253,7 +1253,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.table_layout.addWidget(self.file_table_one)
         return self
 
-    def get_table_two(self):
+    def get_table_two(self) -> Self:
         """"""
         if self.file_table_two is not None:
             self.table_layout.removeWidget(self.file_table_two)
@@ -1264,7 +1264,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.table_layout.addWidget(self.file_table_two)
         return self
 
-    def init_drawer_document_config(self):
+    def init_drawer_document_config(self) -> Dict[int, Any]:
         """"""
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
@@ -1277,7 +1277,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def init_drawer_storage_config(self):
+    def init_drawer_storage_config(self) -> Dict[int, Any]:
         """"""
         items = self.toolbox_config[300].get("items", {})
         cnt = 0
@@ -1302,7 +1302,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def init_drawer_tools_config(self):
+    def init_drawer_tools_config(self) -> Dict[int, Any]:
         """"""
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
@@ -1333,12 +1333,12 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    def init_drawer_quickstart(self):
+    def init_drawer_quickstart(self) -> Dict[Any, Any]:
         """"""
         items = {}
         return items
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
@@ -1347,7 +1347,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         # self.toolbox_config[300]["items"] = self.init_drawer_storage_config()
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
-    def open_file(self, file=None):
+    def open_file(self, file=None) -> Self:
         """Open a file-system path inside the file-nav document.
 
         T-041: this is intentionally a navigation-only operation
@@ -1372,14 +1372,14 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.populate_document()
         return self
 
-    def populate_document(self):
+    def populate_document(self) -> Self:
         """"""
         self.populate_table_one()
         if self.compare_fs:
             self.populate_table_two()
         return self
 
-    def populate_table_one(self):
+    def populate_table_one(self) -> Self:
         """"""
         self.get_table_one()
         data = []
@@ -1392,7 +1392,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.file_table_one.update_data(data)
         return self
 
-    def populate_table_two(self):
+    def populate_table_two(self) -> None:
         """"""
         self.get_table_two()
         data = []
@@ -1406,7 +1406,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             data.append([item.name, "-", last_access])
         self.file_table_two.update_data(data)
 
-    def save(self):
+    def save(self) -> Self:
         """Persist the file-nav document's current state.
 
         T-042: branches on the document's location:
@@ -1443,7 +1443,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             logma.error(f"[filesystems] save: super().save() failed: {e}", exc_info=True)
         return self
 
-    def clear_table_views(self):
+    def clear_table_views(self) -> Self:
         """Clear both file-table widgets (used when navigating to a new path).
 
         T-041 helper - resets the table contents without rebuilding
@@ -1469,11 +1469,11 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         super().save()
         return self
 
-    def get_binary(self):
+    def get_binary(self) -> bytes:
         """Return the stored value of get_binary."""
         return self.config.dikt.get("file_binary", b"") or b""
 
-    def show_tree(self, file=None):
+    def show_tree(self, file=None) -> Self:
         """T-NEW-068 — show the file tree at ``file``.
 
         Persists the resolved path to
