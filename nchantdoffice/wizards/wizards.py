@@ -13,7 +13,9 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
 from os.path import abspath, dirname, join
+from typing import Any, Self
 from os import environ
 from pathlib import Path
 import datetime as dt
@@ -47,7 +49,7 @@ pxcfg = join(here, "_data_", "wizards.yaml")
 class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
     """Startup Wizard for Nchantd Office Application"""
 
-    def __init__(self, app=None, cfg=None):
+    def __init__(self, app=None, cfg=None) -> None:
         """ """
         super().__init__(app, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationStartupWizard")).override(cfg)
@@ -56,7 +58,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         self.download_codec = None
         self.h264_codec = None
 
-    def initView(self, args=None):
+    def initView(self, args=None) -> Self:
         """"""
         super().initView(args)
         # NOTE: add_journal_document() intentionally NOT called here. The journal
@@ -66,7 +68,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         # Keep this dormant; resurrect only with a clear UX reason.
         return self
 
-    def add_journal_document(self):
+    def add_journal_document(self) -> Self:
         """"""
         did = uuid()
         widget = "journal"
@@ -89,7 +91,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         self.app.model.add_document_app(document, did, "0", 0, widget, widgdata, doc_type, "center", "db", False)
         return self
 
-    def add_settings_document(self):
+    def add_settings_document(self) -> None:
         """"""
         did = uuid()
         widget = "config"
@@ -110,7 +112,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         logma.info(f"Settings Document Created: {document}")
         self.app.model.add_document_app(document, did, "0", 0, widget, widgdata, doc_type, "center", "db", False)
 
-    def create_config_file(self):
+    def create_config_file(self) -> None:
         """Initialize the pycurity vault during first-time setup, then create config file."""
         # Initialize the nchantdoffice pycurity vault if it doesn't exist
         from nchantdoffice.utilities.credentials import vault_exists, init_vault
@@ -126,12 +128,12 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
                 logma.warning(f"[wizards] Vault init skipped: {e}")
         super().create_config_file()
 
-    def create_database_application(self):
+    def create_database_application(self) -> Self:
         """"""
         super().create_database_application()
         return self
 
-    def on_download_progress(self, event, *args, **kwargs):
+    def on_download_progress(self, event, *args, **kwargs) -> Self:
         """Progress callback for the install download (slot).
 
         Updates ``self.download_progress`` from the event payload
@@ -147,16 +149,16 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
             logma.error(f"[wizards] on_download_progress failed: {e}", exc_info=True)
             return self
 
-    def on_download_finished(self, event, *args, **kwargs):
+    def on_download_finished(self, event, *args, **kwargs) -> None:
         """"""
         self.downloaded = 1
 
-    def run_application_install(self, paths):
+    def run_application_install(self, paths) -> Self:
         """"""
         super().run_application_install(paths)
         return self
 
-    def run_application_update(self):
+    def run_application_update(self) -> Self:
         """"""
         self.downloaded = 0
         # self.download_codec = CodecDownloadThread(OpenH264Downloader)
@@ -179,20 +181,20 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
 
         return self
 
-    def run_model_update(self):
+    def run_model_update(self) -> Self:
         """"""
         # Deactivate the Default Nchantrs Browser Type - this isn't really an update but a part of building on top of Nchantrs
         self.app.model.deactivate("app_document_type", uuid="066fae58-be2f-7095-8000-11dd4a720555")
         return self
 
-    def run_install_complete(self):
+    def run_install_complete(self) -> Self:
         """Override to select Home node after install completes"""
         super().run_install_complete()
         # Find and select the Home node after new installation
         self.select_home_node()
         return self
 
-    def run_application(self):
+    def run_application(self) -> Self:
         """
         Override to restore last selected node on regular (non-install) startup
         """
@@ -201,7 +203,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         self.restore_last_node()
         return self
 
-    def restore_last_node(self):
+    def restore_last_node(self) -> Self:
         """
         Restore the last selected node on app startup, or default to Home node
         """
@@ -210,7 +212,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         pyqt.QTimer.singleShot(500, self._delayed_restore_last_node)
         return self
 
-    def _delayed_restore_last_node(self):
+    def _delayed_restore_last_node(self) -> Self:
         """
         Delayed version of restore_last_node to ensure tree is populated
         """
@@ -298,7 +300,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
             logma.warning(f"Could not restore last node: {e}")
         return self
 
-    def _select_node_by_nid(self, tree, target_nid):
+    def _select_node_by_nid(self, tree, target_nid) -> bool:
         """
         Helper to find and select a node by its nid
         """
@@ -333,7 +335,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
             logma.warning(f"Error selecting node {target_nid}: {e}")
         return False
 
-    def _find_node_in_tree(self, item, target_nid):
+    def _find_node_in_tree(self, item, target_nid) -> Any:
         """
         Recursively find a node in the tree by nid
         """
@@ -363,7 +365,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
                 return found
         return None
 
-    def select_home_node(self):
+    def select_home_node(self) -> Self:
         """
         Find and select the Home node in the tree (for new installs)
         """
@@ -372,7 +374,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         pyqt.QTimer.singleShot(500, self._delayed_select_home_node)
         return self
 
-    def _delayed_select_home_node(self):
+    def _delayed_select_home_node(self) -> Self:
         """
         Delayed version of select_home_node
         """
