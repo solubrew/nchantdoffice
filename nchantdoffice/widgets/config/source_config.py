@@ -10,9 +10,11 @@
     security: seclvl2
     <(WT)>: -32
 """
+from __future__ import annotations
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
+from typing import Any, Self
 from os.path import abspath, dirname, join
 import datetime as dt
 import json
@@ -50,20 +52,20 @@ pxcfg = join(here, "_data_", "sources.yaml")
 class NchantdOfficeDataSourcesSettings(NchantdWidget):
     """"""
 
-    def __init__(self, parent, cfg=None):
+    def __init__(self, parent, cfg=None) -> None:
         """"""
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDataSourcesSettings").override(cfg))
         self.data_sources = self.config.get("default_sources", {}) or {}
         self.apikeys = {}
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         self.data_sources = self.get_sources()
         return self
 
-    def initView(self):
+    def initView(self) -> Self:
         """"""
         super().initView()
         # need to a scroll
@@ -106,13 +108,13 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
             self.build_data_source_pane(source)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_change_data_source_pane_size(self, event=None, *args, **kwargs):
+    def cmd_change_data_source_pane_size(self, event=None, *args, **kwargs) -> Self:
         """Resize the data-source list pane based on the dropdown selection.
 
         Reads ``self.data_source_size_combo.currentText()`` (one of
@@ -157,7 +159,7 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
             )
         return self
 
-    def build_data_source_pane(self, source):
+    def build_data_source_pane(self, source) -> None:
         """"""
         logma.info(f"Source {source}")
         cfg = {"text": source["value_txt"]}
@@ -199,7 +201,7 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         source_group.layout.addLayout(full_layout)
         self.layout.addWidget(source_group)
 
-    def cmd_toggle_apikey_visibility(self, event=None, *args, **kwargs):
+    def cmd_toggle_apikey_visibility(self, event=None, *args, **kwargs) -> Self:
         """Toggle the echo mode of the API key entry for the
         source identified by ``event.config.dikt["apikey_id"]``.
 
@@ -254,7 +256,7 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
             )
         return self
 
-    def cmd_launch_site(self, event=None, *args, **kwargs):
+    def cmd_launch_site(self, event=None, *args, **kwargs) -> Self:
         """Open the source's API-key URL in a new WebBrowser document.
 
         Reads the URL from the sender widget's config, creates a new
@@ -308,19 +310,19 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
             logma.error(f"[config_sources] cmd_launch_site failed: {e}", exc_info=True)
         return self
 
-    def get_sources(self):
+    def get_sources(self) -> Any:
         """"""
         return self.app.model.get_sources()
 
-    def _load_api_key(self, source=None):
+    def _load_api_key(self, source=None) -> Any:
         """"""
         # TODO implement method
 
-    def obscure_key(self, key):
+    def obscure_key(self, key) -> str:
         """"""
         return key[:3] + "..." + key[-3:]
 
-    def show_key(self, event=None, *args, **kwargs):
+    def show_key(self, event=None, *args, **kwargs) -> Self:
         """Show all API keys in plain text by iterating the apikeys dict.
 
         For each entry that has a ``key`` config attribute, replaces
@@ -339,7 +341,7 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
 class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.name = "Nchantd Data Source Manager"
@@ -351,7 +353,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         self.data_pane = None
         self.source_config_pane = None
 
-    def initModel(self):
+    def initModel(self) -> Self:
         """"""
         super().initModel()
         self.document = self.app.model.codex.init_source_manager()
@@ -359,7 +361,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         self.context_menu.get_menu("document_data_context")
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
@@ -407,13 +409,13 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         self.layout.setContentsMargins(0, 0, 0, 0)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def add_dataset(self):
+    def add_dataset(self) -> None:
         """"""
         source = self.get_source()
         table = self.get_source_table()
@@ -426,40 +428,40 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         self.data_pane = NchantdDataSetPane(self, cfg).initWidget()
         self.canvas.add_item(self.data_pane, [50, 50])
 
-    def cmd_add_dataset(self, event=None, *args, **kwargs):
+    def cmd_add_dataset(self, event=None, *args, **kwargs) -> Self:
         """"""
         self.add_dataset()
         return self
 
-    def cmd_on_source_change(self, event=None, *args, **kwargs):
+    def cmd_on_source_change(self, event=None, *args, **kwargs) -> Self:
         """"""
         return self
 
-    def cmd_on_data_table_change(self, event=None, *args, **kwargs):
+    def cmd_on_data_table_change(self, event=None, *args, **kwargs) -> Self:
         """"""
         return self
 
-    def cmd_toggle_config_pane(self, event=None, *args, **kwargs):
+    def cmd_toggle_config_pane(self, event=None, *args, **kwargs) -> Self:
         """"""
         self.set_pane("config")
         return self
 
-    def cmd_toggle_full_screen_pane(self, event=None, *args, **kwargs):
+    def cmd_toggle_full_screen_pane(self, event=None, *args, **kwargs) -> Self:
         """"""
         self.set_pane("full")
         return self
 
-    def cmd_toggle_data_pane(self, event=None, *args, **kwargs):
+    def cmd_toggle_data_pane(self, event=None, *args, **kwargs) -> Self:
         """"""
         self.set_pane("data")
         return self
 
-    def get_source(self):
+    def get_source(self) -> str:
         """"""
         self.source = "DictionaryAPI"
         return self.source
 
-    def get_sources(self, full=False):
+    def get_sources(self, full=False) -> list[str]:
         """"""
         try:
             self.sources = self.app.model.get_sources()
@@ -478,7 +480,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         #     logma.error(f"[config_sources] get_sources coercion failed: {e}", exc_info=True)
         return self.sources["value_txt"].tolist()
 
-    def get_source_table(self):
+    def get_source_table(self) -> str:
         """Return the source-table widget (T-092).
 
         Returns ``self.source_table`` (set up by initView
@@ -491,7 +493,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
             logma.error(f"[config_sources] get_source_table failed: {e}", exc_info=True)
             return ""
 
-    def get_source_tables(self, source):
+    def get_source_tables(self, source) -> list[str]:
         """Return the source-tables list for ``source`` (T-092).
 
         T-092: previous version returned a hard-coded stub
@@ -516,17 +518,17 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
             logma.error(f"[config_sources] get_source_tables failed: {e}", exc_info=True)
         return ["Supermarket", "CoinGecko"]
 
-    def get_data_view(self):
+    def get_data_view(self) -> str:
         """"""
         self.data_view = ""
         return self.data_view
 
-    def get_data_view_fields(self):
+    def get_data_view_fields(self) -> list[str]:
         """"""
         fields = ["UUID", "Name", "Description", "Value", "CREON_DTTM", "MODON_DTTM", "CREBY_INT", "MODBY_INT"]
         return fields
 
-    def init_drawer_source_config(self):
+    def init_drawer_source_config(self) -> dict[Any, Any]:
         """"""
         items = self.toolbox_config[100].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -557,7 +559,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         # cnt += 1
         return items
 
-    def init_drawer_sources(self):
+    def init_drawer_sources(self) -> dict[Any, Any]:
         """"""
         items = self.toolbox_config[200].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -565,7 +567,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         # add a list of available sources with information on the api status of the source
         return items
 
-    def init_drawer_connections(self):
+    def init_drawer_connections(self) -> dict[Any, Any]:
         """"""
         items = self.toolbox_config[300].get("items", {})
         default_action = {"action": "insert_generic_action", "type": "custom"}
@@ -594,7 +596,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         # cnt += 1
         return items
 
-    def _ensure_drawer_item(self, items, cnt):
+    def _ensure_drawer_item(self, items, cnt) -> dict[str, str]:
         """Return items[cnt], lazily creating the default slot.
 
         Centralises the "if cnt not in items: items[cnt] = {...}`` pattern
@@ -605,7 +607,7 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         return items[cnt]
 
-    def init_drawer_exploratory_data_analysis(self):
+    def init_drawer_exploratory_data_analysis(self) -> dict[Any, Any]:
         """Build the Exploratory Data Analysis (EDA) drawer."""
         items = self.toolbox_config[400].get("items", {})
         cnt = 0
@@ -662,12 +664,12 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         cnt += 1
         return items
 
-    def init_drawer_quickstart(self):
+    def init_drawer_quickstart(self) -> dict[Any, Any]:
         """"""
         items = {}
         return items
 
-    def init_toolbox(self):
+    def init_toolbox(self) -> None:
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_source_config()
