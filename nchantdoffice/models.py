@@ -2477,7 +2477,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 pass
         return self
 
-    def import_image(self, file):
+    def import_image(self, file) -> Self:
         """"""
         if file is not None:
             if exists(file):
