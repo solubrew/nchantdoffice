@@ -8,6 +8,37 @@ import uuid
 from nchantdoffice.utilities.pyof_import import PyofImportContract, TableSpec, iter_table_rows
 
 
+def test_cmd_import_pyof_attribute_exists() -> None:
+    """T-NEW-074 Task 8: NchantdOfficeApplicationToolBox must expose a
+    callable ``cmd_import_pyof`` method so the YAML's app_action handler
+    string resolves at runtime. The method is intentionally defensive
+    (try/except, returns self), so we only assert presence + callable
+    here; behavioural coverage lives in the Task 9 integration test.
+    """
+    from nchantdoffice.widgets.controls.toolboxes import (
+        NchantdOfficeApplicationToolBox,
+    )
+
+    assert hasattr(NchantdOfficeApplicationToolBox, "cmd_import_pyof")
+    assert callable(getattr(NchantdOfficeApplicationToolBox, "cmd_import_pyof"))
+
+
+def test_resolve_host_db_conn_attribute_exists() -> None:
+    """T-NEW-074 Task 8: the defensive helper that walks
+    ``self.app.model.store._sqlite_connection`` (and falls back to an
+    isinstance scan over parent/app/model/store) must exist as a
+    private method on the toolbox.
+    """
+    from nchantdoffice.widgets.controls.toolboxes import (
+        NchantdOfficeApplicationToolBox,
+    )
+
+    assert hasattr(NchantdOfficeApplicationToolBox, "_resolve_host_db_conn")
+    assert callable(
+        getattr(NchantdOfficeApplicationToolBox, "_resolve_host_db_conn")
+    )
+
+
 def test_import_contract_tables_match_expected_schema() -> None:
     """T-NEW-074 keeps the content-only import tables and PKs explicit and ordered."""
     expected: tuple[tuple[str, str], ...] = (

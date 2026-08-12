@@ -988,6 +988,164 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         self.config.dikt["toolbox"][0]["items"] = self.init_drawer_application()
         return self
 
+    # ----------------------------------------------------------------------
+    # T-NEW-074: .pyof content-import wiring
+    # ----------------------------------------------------------------------
+    #
+    # The Application ToolBox is the canonical home for app-wide actions
+    # (``cmd_open_local_file``, ``cmd_create_new_instance``, etc.). T-NEW-074
+    # adds a content-only importer here: the user picks a source ``.pyof``
+    # via QFileDialog, and we copy six content tables (app/doc tree + tabs +
+    # media) into the host's live sqlite3 connection via
+    # ``import_pyof``. Primary-key collisions are INSERT-OR-IGNORE so the
+    # user's host rows win. Orphan FKs (e.g. ``doc_tree_node.pid_txt``
+    # pointing at a UUID not present on the host) are NOT enforced; the
+    # user is expected to inspect the host tree after a large import.
+    #
+    # The host connection accessor is project-specific — see
+    # ``_resolve_host_db_conn`` below. We prefer the canonical store
+    # attribute (``self.app.model.store._sqlite_connection``, mirroring
+    # the ``models.get_app_instances`` path) and fall back to an
+    # isinstance walk over parent/app/model/store so the method keeps
+    # working if the store layer is refactored.
+
+    def cmd_import_pyof(self, event=None, *args, **kwargs):
+        """T-NEW-074: import content tables from a user-selected .pyof."""
+        try:
+            from PySide6.QtWidgets import QFileDialog  # type: ignore
+        except Exception as e:
+            # Rare — Qt not installed in the headless test env. Log and
+            # bail; the rest of the app still works without this action.
+            logma.error(
+                f"[import_pyof] QFileDialog unavailable: {e}",
+                exc_info=True,
+            )
+            return self
+        try:
+            from nchantdoffice.utilities.pyof_import import import_pyof
+        except Exception as e:
+            logma.error(
+                f"[import_pyof] import_pyof orchestrator unavailable: {e}",
+                exc_info=True,
+            )
+            return self
+        try:
+            path, _ = QFileDialog.getOpenFileName(
+                self, "Import .pyof", "",
+                "Pyof files (*.pyof);;SQLite DBs (*.sqlite *.db);;All files (*)",
+            )
+            if not path:
+                return self
+            # Locate the host DB connection via the model / store
+            host_conn = getattr(self, "_host_db_conn", None)
+            if host_conn is None:
+                logma.warning(
+                    "[import_pyof] no host DB connection available on toolbox; "
+                    "fall back to opening instance .pyof via the app model."
+                )
+                host_conn = self._resolve_host_db_conn()
+            results = import_pyof(path, host_conn)
+            total_in = sum(r.inserted for r in results)
+            total_skip = sum(r.skipped for r in results)
+            logma.info(
+                f"[import_pyof] {path}: inserted={total_in}, skipped={total_skip}"
+            )
+            if hasattr(self.parent(), "statusBar"):
+                self.parent().statusBar().showMessage(
+                    f"Imported {total_in} rows ({total_skip} skipped)", 5000
+                )
+        except Exception as e:
+            logma.error(f"[import_pyof] failed: {e}", exc_info=True)
+        return self
+
+    def _resolve_host_db_conn(self):
+        """Return the live ``sqlite3.Connection`` for the host instance.
+
+        T-NEW-074: defensive accessor for the live host DB connection. The
+        Application ToolBox doesn't own the connection itself — it lives
+        on the store layer (``self.app.model.store._sqlite_connection``,
+        mirroring the ``models.get_app_instances`` path). We:
+
+          1. Try the canonical path first (``self.app.model.store.
+             _sqlite_connection``). This is the path ``models.py`` uses
+             for direct SQLite reads.
+          2. Walk ``self.parent() -> self.app -> self.app.model ->
+             self.app.model.store`` and return the first attribute that
+             passes ``isinstance(..., sqlite3.Connection)``. This keeps
+             the method working if the store layer is refactored to
+             expose a differently-named connection attribute.
+          3. Raise a clear ``RuntimeError`` so the outer ``try/except``
+             in ``cmd_import_pyof`` logs it.
+
+        The helper is intentionally permissive on the fallback walk: any
+        attribute on any of the candidate nodes that IS a
+        ``sqlite3.Connection`` wins. This is safer than guessing
+        attribute names because the live codebase can change underneath
+        us without breaking the wiring.
+        """
+        import sqlite3 as _sqlite3
+
+        # 1. Canonical fast path — matches ``models.get_app_instances``.
+        try:
+            store = getattr(getattr(self, "app", None), "model", None)
+            store = getattr(store, "store", store) if store is not None else None
+            conn = getattr(store, "_sqlite_connection", None)
+            if isinstance(conn, _sqlite3.Connection):
+                return conn
+        except Exception:
+            # Fall through to the isinstance walk.
+            pass
+
+        # 2. Defensive isinstance walk over candidate nodes.
+        candidates = []
+        try:
+            candidates.append(self)
+            if self.parent() is not None:
+                candidates.append(self.parent())
+        except Exception:
+            pass
+        try:
+            app = getattr(self, "app", None)
+            if app is not None:
+                candidates.append(app)
+                model = getattr(app, "model", None)
+                if model is not None:
+                    candidates.append(model)
+                    store = getattr(model, "store", None)
+                    if store is not None:
+                        candidates.append(store)
+        except Exception:
+            pass
+
+        seen: set[int] = set()
+        for node in candidates:
+            if node is None or id(node) in seen:
+                continue
+            seen.add(id(node))
+            # Direct check first.
+            if isinstance(node, _sqlite3.Connection):
+                return node
+            # Then scan attributes (only public-ish, no dunder spam).
+            try:
+                attrs = list(vars(node).items())
+            except Exception:
+                continue
+            for name, value in attrs:
+                if name.startswith("__"):
+                    continue
+                if isinstance(value, _sqlite3.Connection):
+                    return value
+
+        # 3. Nothing matched — surface a clear error for the outer
+        # try/except in cmd_import_pyof to log.
+        raise RuntimeError(
+            "NchantdOfficeApplicationToolBox._resolve_host_db_conn: "
+            "no sqlite3.Connection found on self / parent / app / "
+            "app.model / app.model.store. Wire a `_host_db_conn` "
+            "attribute on the toolbox instance or expose the live "
+            "connection on the store layer."
+        )
+
 
 # ====================================================================================================================||
 
