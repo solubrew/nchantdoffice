@@ -11,7 +11,9 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
+from __future__ import annotations
+
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
@@ -22,6 +24,7 @@ import datetime as dt
 from kahndor import kahndor
 from kahndor.logma import Logma
 from nchants.widgets.controls.menus import NchantdContextMenu
+from typing import Self
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -35,23 +38,23 @@ pxcfg = join(here, "_data_", "menus.yaml")
 class NchantdOfficeContextMenu(NchantdContextMenu):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"NchantdOfficeContextMenu init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdContextMenu").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
