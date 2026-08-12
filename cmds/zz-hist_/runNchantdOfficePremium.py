@@ -36,8 +36,17 @@ log = True
 pxcfg = join(here, "_data_", "runMain.yaml")
 
 
-def run(args):
-    """Run individual tabs with mock data for development purposes"""
+def run(args: list[str]) -> None:
+    """Run individual tabs with mock data for development purposes.
+
+    Args:
+        args: Command-line arguments passed from `sys.argv` (script path at index 0,
+            followed by tab identifiers or runtime flags for the NchantdFund entrypoint).
+
+    Returns:
+        None. Side effects: constructs and runs an `NchantdFund` instance against the
+        supplied arguments.
+    """
     NchantdFund(args)
 
 
