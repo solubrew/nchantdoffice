@@ -83,7 +83,7 @@ pxcfg = join(here, "_data_", "utilities.yaml")
 #     return widget
 
 
-def document_lookup(app, action, cfg=None, deep=False, refresh=False):
+def document_lookup(app, action, cfg=None, deep=False, refresh=False) -> None:
     """Lookup document types."""
     pxcfg = kahndor.Instruct(join(here, "../actions", "_data_", "actions.yaml")).override(cfg).dikt
     table = "app_document_type"
