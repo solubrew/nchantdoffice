@@ -80,6 +80,7 @@
 - **T-NEW-073** ✅ P1 bug sweep — `NchantdOfficeJournalEditor.refresh_content` un-commented (T-NEW-036 step 3) + T-NEW-058 `_make_dbupdate` mock fixture aligned with production `parent.model.codex` call shape. Qt batched suite: 159/159 pass (was 153/165). No source-of-truth change in `updates/db.py` — the fixture was the drift.
 - **T-NEW-074** ✅ Content-only .pyof import from Application tab ToolBox (button), commit `6f5d28f` (2026-08-11, t-new-074).
 - **T-NEW-075** ✅ Content-table last-version-wins import — `app_doc_content`, `app_media_content`, `doc_media_content` added to `PyofImportContract.TABLES` with `merge_strategy='last_version_per_puuid'`. Host PKs regenerated; `UUID`/`pUUID` preserved. Commit `00ceea3` (2026-08-11, t-new-075).
+- **T-NEW-076** ✅ Content-table merge-by-version dedupe — `_import_content_table` is now host-aware: query MAX(version) for each source pUUID, DELETE host rows only when source is strictly newer, INSERT source's max-version row. Re-imports no longer duplicate. Commit `<hash>` (2026-08-11, t-new-076).
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1942,6 +1943,29 @@ Both are scoped for v0.2.0 because:
 - `python -m pytest tests/test_pyof_import.py --tb=no -q` → `16 passed` (13 prior + 3 new).
 - `wc -l nchantdoffice/utilities/pyof_import.py` → 222 lines.
 - Manual: re-import a source .pyof containing multiple versions of the same doc content; confirm the host gains exactly one row per pUUID with the highest-version content.
+
+### T-NEW-076 — Content-table merge-by-version dedupe (host-aware) (2026-08-11)
+
+**Context.** T-NEW-075 added last-version-per-pUUID dedupe for the 3 ``_content`` tables, but the dedupe was purely source-side: it grouped source rows by ``pUUID`` and kept the max-version row, then unconditionally INSERTed that row into the host. Because the host's rowid is freshly assigned each time (T-NEW-075 dropped source PKs from the projection), re-importing the same source into the same host APPENDED rows — the host's previous row for that ``pUUID`` was untouched and a duplicate sibling was added. The user-facing failure mode is that any user who runs "Import from .pyof…" twice on the same file accumulates duplicate content rows, with the older ones still pointing at older versions. The required semantic is: for each source pUUID, compare against the host's MAX(version); if the source is strictly newer, DELETE all host rows for that pUUID and INSERT the source's max-version row (one source row replaces N host rows); if the source is <= the host's MAX, skip (host wins). Equal versions must NOT replace.
+
+**Affected sites:**
+- `nchantdoffice/utilities/pyof_import.py` — `_import_content_table` body (host-aware MAX(version) query, DELETE-then-INSERT replace, host-wins skip); module docstring (added T-NEW-076 paragraph); `ImportResult.skipped` doc note (covers both host-wins and defensive no-op).
+- `tests/test_pyof_import.py` — 4 new merge-by-version tests (`replaces_lower_host_version`, `skips_when_source_not_newer`, `skips_when_source_equal`, `handles_multiple_puuids_independently`); 1 updated test (`test_import_pyof_idempotent` — content tables now skip on second import, matching the new contract).
+
+**Migration plan:** the source-side last-version-wins dedupe from T-NEW-075 is preserved as the FIRST pass (still groups by pUUID, keeps max-version per source). The new behavior wraps that pass with a host-comparison loop. ``ImportResult.skipped`` for ``_content`` tables now means "host was at least as new as the source" OR "INSERT didn't take" — both cases count. The base-6 INSERT-OR-IGNORE path is untouched. The contract's `PyofImportContract.TABLES` tuple is unchanged.
+
+**Steps:**
+1. Tests first (TDD): write 4 failing merge-by-version tests + flip `test_import_pyof_idempotent`'s content-table second-pass expectation from `inserted=1` to `skipped=1`.
+2. Update `_import_content_table` body: after the source-side ``best_by_puuid`` grouping, query host's ``MAX(version)`` for each pUUID. If source version > host max: DELETE host rows for that pUUID, then INSERT source row. Else: count as skipped, continue.
+3. Update module docstring + `ImportResult.skipped` semantic note.
+4. Verify all 20 tests pass.
+5. Update TODOs.md (catalog row + this card body) and CHANGES.md.
+6. Commit source+tests as `feat(import): host-aware merge-by-version dedupe for _content tables (T-NEW-076)`; commit docs as `docs(import): T-NEW-076 card + CHANGES.md entry`.
+
+**Verification:**
+- `python -m pytest tests/test_pyof_import.py --tb=no -q` → `20 passed` (16 prior + 4 new).
+- `wc -l nchantdoffice/utilities/pyof_import.py` → 287 lines.
+- Manual: import a source .pyof with one pUUID at v3 into a host that already has the same pUUID at v1 + v2; confirm the host now has exactly one row for that pUUID at v3 (host v1+v2 are gone). Re-import the same source again; confirm the host is unchanged (v3 still wins, source v3 == host v3 → skipped).
 
 ### T-NEW-072 — TODOs.md update-process consolidation (2026-08-10)
 
