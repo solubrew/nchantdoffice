@@ -12,6 +12,7 @@
 """
 
 # -*- coding: utf-8 -*
+from __future__ import annotations
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
@@ -39,6 +40,7 @@ from nchantrs.dialogs.colors import NchantdColorSelectSigil
 from nchantrs.dialogs.files import NchantdFileOpenSigil
 from nchantrs.widgets.controls.button_groups import NchantdFontConfigBar
 from nchantrs.widgets.tables.lists import NchantdList
+from typing import Any, Self
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -52,17 +54,17 @@ pxcfg = join(here, "_data_", "documents.yaml")
 class NchantdOfficeNodeEditPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeNodeEditPane").override(cfg))
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> None:
         """"""
         super().initView(cfg)
         cfg = {"text": "Node: "}
@@ -118,13 +120,13 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         # get_tags() / NchantdList that aren't wired in). Removed.
         self.layout.addWidget(group)
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_delete_node(self, event=None, *args, **kwargs):
+    def cmd_delete_node(self, event=None, *args, **kwargs) -> Self:
         """Delete the current node (T-NEW-004).
 
         Refuses to delete locked app nodes (Home, Journal,
@@ -158,17 +160,17 @@ class NchantdOfficeNodeEditPane(NchantdPane):
 
         return self
 
-    def cmd_duplicate_document(self, event=None, *args, **kwargs):
+    def cmd_duplicate_document(self, event=None, *args, **kwargs) -> Self:
         """"""
         self.app.model.duplicate_node(self.get_node())
         return self
 
-    def cmd_export_file(self, event=None, *args, **kwargs):
+    def cmd_export_file(self, event=None, *args, **kwargs) -> Self:
         """"""
         self.app.model.export_node(self.get_node())
         return self
 
-    def cmd_import_file(self, event=None, *args, **kwargs):
+    def cmd_import_file(self, event=None, *args, **kwargs) -> Self:
         """"""
         cfg = {}
         self.open_file_sigil = NchantdFileOpenSigil("open_local_document", self, cfg).initWidget()
@@ -178,13 +180,13 @@ class NchantdOfficeNodeEditPane(NchantdPane):
                 self.app.model.import_cherrytree(self.local_file)
         return self
 
-    def cmd_launch_color_sigil(self, event, *args, **kwargs):
+    def cmd_launch_color_sigil(self, event, *args, **kwargs) -> Self:
         """"""
         cfg = {}
         self.color_sigil = NchantdColorSelectSigil(self, cfg).initWidget()
         return self
 
-    def cmd_set_node_name(self, event, *args, **kwargs):
+    def cmd_set_node_name(self, event, *args, **kwargs) -> Self:
         """Update the node's display name AND persist it to the DB.
 
         Sprint 21 (T-NEW-024 followup): previously the method
@@ -243,52 +245,52 @@ class NchantdOfficeNodeEditPane(NchantdPane):
             )
         return self
 
-    def cmd_set_text_bold(self):
+    def cmd_set_text_bold(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_italic(self):
+    def cmd_set_text_italic(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_underline(self):
+    def cmd_set_text_underline(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_underline_double(self):
+    def cmd_set_text_underline_double(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_strike(self):
+    def cmd_set_text_strike(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_subscript(self):
+    def cmd_set_text_subscript(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_superscript(self):
+    def cmd_set_text_superscript(self) -> Self:
         """"""
         return self
 
-    def cmd_sort_children(self, event=None, *args, **kwargs):
+    def cmd_sort_children(self, event=None, *args, **kwargs) -> Self:
         """"""
         node = self.get_node()
         node.sortChildren()
         return self
 
-    def cmd_take_snapshot(self):
+    def cmd_take_snapshot(self) -> Self:
         """"""
         return self
 
-    def get_node(self):
+    def get_node(self) -> Any:
         """"""
         logma.info(f"Get Node")
         node = self.app.model.get_current_node()
         logma.info(f"Node {node}")
         return node
 
-    def get_tags(self):
+    def get_tags(self) -> list[str]:
         """Return the list of tags for the active document / node.
 
         T-055: pulls tags from ``self.app.model.get_tags()``
@@ -319,18 +321,18 @@ class NchantdOfficeNodeEditPane(NchantdPane):
 class NchantdOfficeNoteEditPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTagEditPane").override(cfg))
         self.lock_page = False
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
         cfg = {"text": "Note: "}
@@ -362,18 +364,18 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         self.layout.addWidget(group)
         return self
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_close_tab(self, event=None, *args, **kwargs):
+    def cmd_close_tab(self, event=None, *args, **kwargs) -> Self:
         """"""
         self.app.model.close_tab()
         return self
 
-    def cmd_create_dataset(self, event=None, *args, **kwargs):
+    def cmd_create_dataset(self, event=None, *args, **kwargs) -> Self:
         """Create an addressable dataset from the most prominent data within the currently selected tab
         such as a File System will create a dataset of the files/directories in the active directory
         """
@@ -383,19 +385,19 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         self.add_dataset()
         return self
 
-    def cmd_delete_notes(self):
+    def cmd_delete_notes(self) -> Self:
         """"""
         return self
 
-    def cmd_duplicate_document(self, event=None, *args, **kwargs):
+    def cmd_duplicate_document(self, event=None, *args, **kwargs) -> Self:
         """"""
         return self
 
-    def cmd_export_document(self, event=None, *args, **kwargs):
+    def cmd_export_document(self, event=None, *args, **kwargs) -> Self:
         """"""
         return self
 
-    def cmd_import_file(self, event=None, *args, **kwargs):
+    def cmd_import_file(self, event=None, *args, **kwargs) -> Self:
         """"""
         cfg = {}
         self.open_file_sigil = NchantdFileOpenSigil("open_local_document", self, cfg).initWidget()
@@ -405,54 +407,54 @@ class NchantdOfficeNoteEditPane(NchantdPane):
                 self.app.model.import_cherrytree(self.local_file)
         return self
 
-    def cmd_launch_color_sigil(self, event, *args, **kwargs):
+    def cmd_launch_color_sigil(self, event, *args, **kwargs) -> Self:
         """"""
         cfg = {}
         self.color_sigil = NchantdColorSelectSigil(self, cfg).initWidget()
         return self
 
-    def cmd_set_text_bold(self):
+    def cmd_set_text_bold(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_italic(self):
+    def cmd_set_text_italic(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_underline(self):
+    def cmd_set_text_underline(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_underline_double(self):
+    def cmd_set_text_underline_double(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_strike(self):
+    def cmd_set_text_strike(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_subscript(self):
+    def cmd_set_text_subscript(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_superscript(self):
+    def cmd_set_text_superscript(self) -> Self:
         """"""
         return self
 
-    def get_tab(self):
+    def get_tab(self) -> Any:
         """"""
         tab = self.app.model.get_current_tab()
         return tab
 
-    def cmd_take_snapshot(self, event=None, *args, **kwargs):
+    def cmd_take_snapshot(self, event=None, *args, **kwargs) -> Self:
         """"""
         return self
 
-    def cmd_toggle_page_lock(self, event=None, *args, **kwargs):
+    def cmd_toggle_page_lock(self, event=None, *args, **kwargs) -> Self:
         """"""
         return self
 
-    def decode64(self):
+    def decode64(self) -> Self:
         """"""
         # PUSH 0.0.3 - T-NEW-013 cipher selector for decrypt path.
         # Currently this method (and encode64 below) do the base64
@@ -462,7 +464,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         self.content = decode64(self.content).decode("utf-8")
         return self
 
-    def decrypt(self):
+    def decrypt(self) -> Self:
         """"""
         # PUSH 0.0.3 - T-NEW-013: real cipher integration deferred.
         # Was pycrypt.decrypt(self.content) (referenced an
@@ -472,7 +474,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         logma.warning("[documents] decrypt: pycurity cipher not yet wired (PUSH 0.0.3)")
         return self
 
-    def encode64(self):
+    def encode64(self) -> Self:
         """"""
         # PUSH 0.0.3 - T-NEW-013: see decrypt() above. The base64
         # round-trip is the canonical format the panel currently
@@ -480,7 +482,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         self.content = encode64(self.content.encode("utf-8"))
         return self
 
-    def encrypt(self):
+    def encrypt(self) -> Self:
         """"""
         # PUSH 0.0.3 - T-NEW-013: see decrypt() - actual cipher
         # integration deferred. Base64 round-trip is the format the
@@ -488,7 +490,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         logma.warning("[documents] encrypt: pycurity cipher not yet wired (PUSH 0.0.3)")
         return self
 
-    def get_finger_print(self):
+    def get_finger_print(self) -> Any:
         """hash the whole image, as well as sub sections like corners
         a center cross and a center square
         need some way of scalling the hashses so that the image is recognized at all scales
@@ -496,16 +498,16 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         """
         return self
 
-    def get_note(self, note_id):
+    def get_note(self, note_id) -> Any:
         """"""
         note = None
         return note
 
-    def get_notes(self):
+    def get_notes(self) -> list[str]:
         """"""
         return self
 
-    def get_tags(self):
+    def get_tags(self) -> list[str]:
         """Return the list of tags for the active document / node.
 
         T-055: pulls tags from ``self.app.model.get_tags()``
@@ -532,7 +534,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
             tags = ["journal", "library"]
         return sorted({t for t in tags if t})
 
-    def parse_document(self):
+    def parse_document(self) -> tuple[list[Any], list[list[Any]]]:
         """Parse the active document into a ``doc_media`` row + content rows.
 
         The previous version referenced undefined names (``document``,
@@ -596,14 +598,14 @@ class NchantdOfficeNoteEditPane(NchantdPane):
             )
         return doc_media, doc_media_content
 
-    def store_document(self, doctype, name, description, meta_data, data, format_, formula):
+    def store_document(self, doctype, name, description, meta_data, data, format_, formula) -> None:
         """"""
         app_document_types_FK = 0
         data = [[uuid(), name, description, meta_data, app_document_types_FK]]
         app_documents_FK = self.app.model._store("document", data)
         self.store_document_data(data, format_, formula, app_documents_FK)
 
-    def store_document_data(self, data, format_, formula, app_documents_FK, version_num=0):
+    def store_document_data(self, data, format_, formula, app_documents_FK, version_num=0) -> None:
         """"""
         while True:
             page_num, page = next(self.split_document(data, format_, formula))
@@ -615,7 +617,7 @@ class NchantdOfficeNoteEditPane(NchantdPane):
             ]
             self._store("documents_data", data_)
 
-    def read(self):
+    def read(self) -> Self:
         """"""
         with open(self.path, "r") as file:
             self.file = file
@@ -627,18 +629,18 @@ class NchantdOfficeNoteEditPane(NchantdPane):
 class NchantdOfficeTabEditPane(NchantdPane):
     """"""
 
-    def __init__(self, parent=None, cfg=None):
+    def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTabEditPane").override(cfg))
         self.lock_page = False
 
-    def initModel(self, cfg=None):
+    def initModel(self, cfg=None) -> Self:
         """"""
         super().initModel(cfg)
         return self
 
-    def initView(self, cfg=None):
+    def initView(self, cfg=None) -> None:
         """"""
         super().initView(cfg)
         cfg = {"text": "Tab:"}
@@ -728,13 +730,13 @@ class NchantdOfficeTabEditPane(NchantdPane):
         # group.set_height(layout.sizeHint().height() * 1.2)
         self.layout.addWidget(group)
 
-    def initWidget(self):
+    def initWidget(self) -> Self:
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def cmd_create_dataset(self, event=None, *args, **kwargs):
+    def cmd_create_dataset(self, event=None, *args, **kwargs) -> Self:
         """Create an addressable dataset from the most prominent data within the currently selected tab
         such as a File System will create a dataset of the files/directories in the active directory
         """
@@ -744,22 +746,22 @@ class NchantdOfficeTabEditPane(NchantdPane):
         self.add_dataset()
         return self
 
-    def cmd_delete_tab(self, event=None, *args, **kwargs):
+    def cmd_delete_tab(self, event=None, *args, **kwargs) -> Self:
         """"""
         self.app.model.delete_tab(self.get_tab())
         tabset = self.app.view.panes["center"]
         tabset.go_to_previous_tab()
         return self
 
-    def cmd_duplicate_document(self, event=None, *args, **kwargs):
+    def cmd_duplicate_document(self, event=None, *args, **kwargs) -> Self:
         """"""
         return self
 
-    def cmd_export_document(self, event=None, *args, **kwargs):
+    def cmd_export_document(self, event=None, *args, **kwargs) -> Self:
         """"""
         return self
 
-    def cmd_import_file(self, event=None, *args, **kwargs):
+    def cmd_import_file(self, event=None, *args, **kwargs) -> Self:
         """"""
         cfg = {}
         self.open_file_sigil = NchantdFileOpenSigil("open_local_document", self, cfg).initWidget()
@@ -769,13 +771,13 @@ class NchantdOfficeTabEditPane(NchantdPane):
                 self.app.model.import_cherrytree(self.local_file)
         return self
 
-    def cmd_launch_color_sigil(self, event, *args, **kwargs):
+    def cmd_launch_color_sigil(self, event, *args, **kwargs) -> Self:
         """"""
         cfg = {}
         self.color_sigil = NchantdColorSelectSigil(self, cfg).initWidget()
         return self
 
-    def cmd_set_tab_name(self, event, *args, **kwargs):
+    def cmd_set_tab_name(self, event, *args, **kwargs) -> Self:
         """Update the tab's display name AND persist it to the DB.
 
         Sprint 21 (T-NEW-024 followup): previously the method
@@ -827,45 +829,45 @@ class NchantdOfficeTabEditPane(NchantdPane):
             )
         return self
 
-    def cmd_set_text_bold(self):
+    def cmd_set_text_bold(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_italic(self):
+    def cmd_set_text_italic(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_underline(self):
+    def cmd_set_text_underline(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_underline_double(self):
+    def cmd_set_text_underline_double(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_strike(self):
+    def cmd_set_text_strike(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_subscript(self):
+    def cmd_set_text_subscript(self) -> Self:
         """"""
         return self
 
-    def cmd_set_text_superscript(self):
+    def cmd_set_text_superscript(self) -> Self:
         """"""
         return self
 
-    def cmd_take_snapshot(self, event=None, *args, **kwargs):
+    def cmd_take_snapshot(self, event=None, *args, **kwargs) -> Self:
         """"""
         return self
 
-    def cmd_toggle_page_lock(self, event=None, *args, **kwargs):
+    def cmd_toggle_page_lock(self, event=None, *args, **kwargs) -> Self:
         """"""
         tab = self.get_tab()
         tab.lock_page = not tab.lock_page
         return self
 
-    def get_finger_print(self):
+    def get_finger_print(self) -> Any:
         """hash the whole image, as well as sub sections like corners
         a center cross and a center square
         need some way of scalling the hashses so that the image is recognized at all scales
@@ -873,30 +875,30 @@ class NchantdOfficeTabEditPane(NchantdPane):
         """
         return self
 
-    def get_notes(self):
+    def get_notes(self) -> list[str]:
         """"""
         # notes = self.app.model.get_notes()
         notes = ["note1", "note2", "note3"]
         return notes
 
-    def get_save_options(self):
+    def get_save_options(self) -> list[str]:
         """"""
         # PUSH to 0.0.3 - createion options in database app_options - in-sync maintains copies in all places and syncronizes them
         return [
             "Local File System"
         ]  # , "NchantdOffice Primary", "NchantdOffice Instance", "Cloud File System", "In-Sync"]
 
-    def get_save_value(self):
+    def get_save_value(self) -> str:
         """"""
         # PUSHT to 0.0.3 need to pull current config for the document/tab from the database
         return "Local File System"
 
-    def get_tab(self):
+    def get_tab(self) -> Any:
         """"""
         tab = self.app.model.get_current_tab()
         return tab
 
-    def get_tags(self):
+    def get_tags(self) -> list[str]:
         """Return the list of tags for the active document / node.
 
         T-055: pulls tags from ``self.app.model.get_tags()``
@@ -923,7 +925,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
             tags = ["journal", "library"]
         return sorted({t for t in tags if t})
 
-    def parse_document(self):
+    def parse_document(self) -> tuple[list[Any], list[list[Any]]]:
         """Parse the active document into a ``doc_media`` row + content rows.
 
         The previous version referenced undefined names (``document``,
@@ -987,14 +989,14 @@ class NchantdOfficeTabEditPane(NchantdPane):
             )
         return doc_media, doc_media_content
 
-    def store_document(self, doctype, name, description, meta_data, data, format_, formula):
+    def store_document(self, doctype, name, description, meta_data, data, format_, formula) -> None:
         """"""
         app_document_types_FK = 0
         data = [[uuid(), name, description, meta_data, app_document_types_FK]]
         app_documents_FK = self.app.model._store("document", data)
         self.store_document_data(data, format_, formula, app_documents_FK)
 
-    def get_last_accessed(self, document=None):
+    def get_last_accessed(self, document=None) -> str | None:
         """Return the last-accessed ISO string for ``document``.
 
         T-055: used by the documents-pane tag-tracking column.
@@ -1021,7 +1023,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
             pass
         return None
 
-    def update_last_accessed(self, document=None):
+    def update_last_accessed(self, document=None) -> str:
         """Stamp the current UTC time on ``document`` and persist it.
 
         T-055 helper. Updates ``document.meta_data["last_accessed"]``
@@ -1053,7 +1055,7 @@ class NchantdOfficeTabEditPane(NchantdPane):
             logma.error(f"[documents] update_last_accessed model write failed: {e}", exc_info=True)
         return ts
 
-    def store_document_data(self, data, format_, formula, app_documents_FK, version_num=0):
+    def store_document_data(self, data, format_, formula, app_documents_FK, version_num=0) -> None:
         """"""
         while True:
             page_num, page = next(self.split_document(data, format_, formula))
