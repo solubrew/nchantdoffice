@@ -11,13 +11,15 @@
     <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
 # ======================================Standard Library Modules======================================================||
+from __future__ import annotations
 from os.path import dirname, join, exists
 import json as j
 import datetime as dt
 from dateutil import parser
 from urllib.parse import urlsplit
+from typing import Any, Self
 
 # ======================================3rd Party Library Modules=====================================================||
 from pandas import DataFrame, concat
@@ -194,7 +196,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # original tabset without any DB write.
         self._right_scratch_tabs = {}
 
-    def initModel(self, reset=None):
+    def initModel(self, reset=None) -> Self:
         """"""
         super().initModel(reset)
         self.codex.load_document()
@@ -465,7 +467,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             self.add_tab(name, pid, pos, widget, widgdata, document["did"], tab["type"], tabset, True, db)
         self.has_changed = True
 
-    def add_document_content(self, document, media_fk=None, page_n=0, entry_n=0, version=0.0, hash_=None, policy=None):
+    def add_document_content(self, document, media_fk=None, page_n=0, entry_n=0, version=0.0, hash_=None, policy=None) -> Self:
         """"""
         context = ""
         logma.info(f"document {document}")
@@ -561,7 +563,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.store.store_app_media_content(payload)
         return self
 
-    def add_node(self, name, ntype, pid, pos, parameters=None, tabset=None, return_node=False):
+    def add_node(self, name, ntype, pid, pos, parameters=None, tabset=None, return_node=False) -> Any:
         """Add a node (T-NEW-056: gated by max_nodes_per_user).
 
         Non-pro users can create at most
@@ -580,7 +582,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return node
 
-    def add_node_app(self, name, ntype, pid, pos, parameters=None, tabset=None, return_node=False):
+    def add_node_app(self, name, ntype, pid, pos, parameters=None, tabset=None, return_node=False) -> Any:
         """Add an app-schema node (T-NEW-056: same gating as add_node)."""
         if not self._check_max_nodes_for_user():
             logma.warning(
@@ -592,7 +594,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return node
 
-    def add_note(self, document, pid, pos, tabset="center", db="db"):
+    def add_note(self, document, pid, pos, tabset="center", db="db") -> Self:
         """"""
         # add document
         if isinstance(document, PyfficeDocument):
@@ -656,7 +658,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # self.add_document_content(document, media_fk, page_n, entry_n, version, hash_, policy)
         return self
 
-    def add_note_app(self, document, pid, pos, tabset="center"):
+    def add_note_app(self, document, pid, pos, tabset="center") -> Self:
         """"""
         # add document
         if isinstance(document, PyfficeDocument):
@@ -781,7 +783,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self._apply_tab_style(tab)
         return tab
 
-    def _resolve_pid_for_max_tabs(self, pid, tabset=None):
+    def _resolve_pid_for_max_tabs(self, pid, tabset=None) -> Any:
         """Return the pid to use for a new tab (T-NEW-054).
 
         Reads ``self.config.dikt["max_tabs_per_node"]`` (default 35).
@@ -816,7 +818,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning(f"[models] _resolve_pid_for_max_tabs failed: {e}")
             return pid
 
-    def _create_child_node(self, pid):
+    def _create_child_node(self, pid) -> Any:
         """Create a generic child node under ``pid`` and return its nid.
 
         T-NEW-054: auto-creates a child node when the tab limit for
@@ -846,7 +848,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning(f"[models] _create_child_node failed for pid={pid}: {e}")
             return None
 
-    def _get_node_name(self, pid):
+    def _get_node_name(self, pid) -> Any:
         """Best-effort lookup of a node's name by nid (T-NEW-054 helper)."""
         try:
             store = getattr(self, "store", None)
@@ -865,7 +867,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning(f"[models] _get_node_name failed for pid={pid}: {e}")
         return None
 
-    def _count_children_of(self, pid):
+    def _count_children_of(self, pid) -> Any:
         """Count the direct children of ``pid`` (T-NEW-054 helper)."""
         try:
             df = self.get_nodes()
@@ -876,7 +878,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning(f"[models] _count_children_of failed for pid={pid}: {e}")
             return 0
 
-    def _check_max_nodes_for_user(self, user=None):
+    def _check_max_nodes_for_user(self, user=None) -> bool:
         """Whether the user can create another node (T-NEW-056).
 
         Reads ``self.config.dikt["max_nodes_per_user"]`` (default 100).
@@ -912,7 +914,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning(f"[models] _check_max_nodes_for_user failed: {e}")
             return True
 
-    def _apply_tab_style(self, tab):
+    def _apply_tab_style(self, tab) -> Any:
         """Apply the user-selected tab color / icon (T-NEW-001).
 
         Reads ``self.config.dikt["tab_color"]`` and
@@ -965,7 +967,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning(f"[models] _apply_tab_style failed: {e}")
         return tab
 
-    def add_day_node(self, day, month, year, pid=None):
+    def add_day_node(self, day, month, year, pid=None) -> Any:
         """"""
         self.get_today_node()
         year_df = self.nodes[self.nodes["name_txt"] == year]
@@ -993,7 +995,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             self.has_changed = True
             return pid
 
-    def add_week_tabs(self, pid):
+    def add_week_tabs(self, pid) -> Self:
         """
         Add week tabs to a month node.
 
@@ -1009,7 +1011,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return self
 
-    def add_day_tabs(self, pid):
+    def add_day_tabs(self, pid) -> Self:
         """
         Add day tab to a week/month node.
 
@@ -1022,24 +1024,24 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return self
 
-    def backup(self):
+    def backup(self) -> Self:
         """Backup the application database."""
         self.store.backup_database()
         return self
 
-    def change_node_parent(self, pid):
+    def change_node_parent(self, pid) -> Self:
         """"""
         data = {"table": {"doc_tree_node": {"data": {"pid_txt": pid}}}}
         self.store.update_record(data, "nid_txt", self.get_current_node().nid)
         return self
 
-    def change_node_position(self, position):
+    def change_node_position(self, position) -> Self:
         """"""
         data = {"table": {"doc_tree_node": {"data": {"position_int": position}}}}
         self.store.update_record(data, "nid_txt", self.get_current_node().nid)
         return self
 
-    def change_tab_parent(self, pid):
+    def change_tab_parent(self, pid) -> Any:
         """Legacy tab-parent setter (T-NEW-030). Kept as a thin
         wrapper around the canonical ``cmd_set_tab_parent`` for
         backward compatibility -- zero callers as of Sprint 29
@@ -1060,7 +1062,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             {"nid_txt": pid or getattr(current_node, "nid", None)},
         )
 
-    def cmd_set_tab_parent(self, tab, new_parent_node):
+    def cmd_set_tab_parent(self, tab, new_parent_node) -> Self:
         """Persist the new parent for a tab (T-NEW-030).
 
         Writes ``pid_txt = new_parent_node.nid_txt`` on the
@@ -1120,7 +1122,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             )
         return self
 
-    def cmd_open_tab_in_right_scratch(self, tab):
+    def cmd_open_tab_in_right_scratch(self, tab) -> Self:
         """Open a tab in the right pane as a "scratch view" (T-NEW-031).
 
         Adds the tab to the right pane's in-memory ``tabsdata``
@@ -1206,13 +1208,13 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             )
         return self
 
-    def change_tab_position(self, position):
+    def change_tab_position(self, position) -> Self:
         """"""
         data = {"table": {"doc_tab": {"data": {"position_int": position}}}}
         self.store.update_record(data, "nid_txt", self.get_current_node().nid)
         return self
 
-    def close_application(self):
+    def close_application(self) -> "NchantdOfficeCloakModel":
         """"""
         if self.has_changed is True:
             self.auto_save()
@@ -1351,14 +1353,14 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             )
         return (rows_scanned, rows_deleted)
 
-    def convert_database(self, version_from, version_to):
+    def convert_database(self, version_from, version_to) -> "NchantdOfficeCloakModel":
         """"""
         super().convert_database(version_from, version_to)
         self.has_changed = True
         # handle data updates
         return self
 
-    def convert_db_to_tab_doc(self):
+    def convert_db_to_tab_doc(self) -> dict[str, Any] | None:
         """Convert a raw DB row dict to the tab-document shape.
 
         Returns the canonical tab-document keys (did, name,
@@ -1383,7 +1385,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             "meta_data": self.get("metadata_ltxt", {}),
         }
 
-    def convert_encoding(self, entry):
+    def convert_encoding(self, entry) -> Any:
         """"""
         if isinstance(entry, bytes):
             entry = decode64(entry)
@@ -1391,7 +1393,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             entry = j.loads(entry)
         return entry
 
-    def create_doc_media(self, document):
+    def create_doc_media(self, document) -> "NchantdOfficeCloakModel":
         """Build payload from document and dispatch to store. Delegates to the free function."""
         _build_doc_media_payload(document)
         self.store.store_doc_media(_build_doc_media_payload(document))
@@ -1399,7 +1401,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return self
 
-    def create_doc_media_content(self, document=None):
+    def create_doc_media_content(self, document=None) -> "NchantdOfficeCloakModel":
         """Create content records for a document media item."""
         if document is None:
             return self
@@ -1419,12 +1421,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return self
 
-    def create_new_instance(self):
+    def create_new_instance(self) -> "NchantdOfficeCloakModel":
         """"""
         super().create_new_instance()
         return self
 
-    def create_nodeset_month(self, month, year, pid=None):
+    def create_nodeset_month(self, month, year, pid=None) -> Any:
         """"""
         year_df = self.nodes[self.nodes["name_txt"] == year]
         if year_df.empty:
@@ -1443,7 +1445,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return pid
 
-    def create_nodeset_year(self, year, pid=None):
+    def create_nodeset_year(self, year, pid=None) -> Any:
         """"""
         if pid is None:
             pid = self.today_nid
@@ -1456,7 +1458,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return pid
 
-    def create_tabset_day(self, pid, day=None):
+    def create_tabset_day(self, pid, day=None) -> "NchantdOfficeCloakModel":
         """"""
         if day is None:
             day = self.store.time.get_day(None, "%d - %A")
@@ -1469,7 +1471,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return self
 
-    def create_month_tabset(self, pid, month=None):
+    def create_month_tabset(self, pid, month=None) -> "NchantdOfficeCloakModel":
         """
         Create a set of tabs for the Month
         List of Major Events/Sechedule Events for the month
@@ -1489,7 +1491,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return self
 
-    def create_tabset_year(self, pid, year=None):
+    def create_tabset_year(self, pid, year=None) -> "NchantdOfficeCloakModel":
         """
         Create a set of tabs for the Year:
           - Major Events/Scheduled Events for the year
@@ -1525,7 +1527,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return self
 
-    def _register_widget_in_app_type_registry(self, widget, doc_type=None, db="db"):
+    def _register_widget_in_app_type_registry(self, widget, doc_type=None, db="db") -> bool:
         """Register a widget class in the app_document_type registry.
 
         T-002: inserts a single row per unique widget class so
@@ -1567,7 +1569,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] _register_widget_in_app_type_registry failed: {e}", exc_info=True)
             return False
 
-    def delete_document(self, did):
+    def delete_document(self, did) -> "NchantdOfficeCloakModel":
         """"""
         logma.info(f"Document {did} will be deleted")
         pk = self.store.delete_record("doc_media", uuid=did, column="did")
@@ -1578,7 +1580,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return self
 
-    def delete_node(self, node):
+    def delete_node(self, node) -> "NchantdOfficeCloakModel":
         """Delete a tree node.
 
         T-NEW-004: refuses to delete locked app nodes (Home,
@@ -1597,12 +1599,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.store_event("CloseNode", cfg)
         return self
 
-    def delete_note(self, note):
+    def delete_note(self, note) -> "NchantdOfficeCloakModel":
         """"""
         self.delete_document(note.document.did)
         return self
 
-    def delete_tab(self, tab):
+    def delete_tab(self, tab) -> "NchantdOfficeCloakModel":
         """"""
         logma.info(f"Tab will be deleted {tab.tid}")
         cfg = {}
@@ -1612,7 +1614,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         super().delete_tab(uuid=tab.tid)
         return self
 
-    def duplicate_node(self):
+    def duplicate_node(self) -> dict[str, Any] | None:
         """Duplicate a tree node and return the new node dict.
 
         Creates a copy of source_node (defaulting to the current
@@ -1639,7 +1641,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error("[models] duplicate_node failed: " + str(e), exc_info=True)
             return None
 
-    def duplicate_tab(self):
+    def duplicate_tab(self) -> dict[str, Any] | None:
         """Duplicate a tab and return the new tab dict.
 
         Creates a copy of source_tab (defaulting to the current
@@ -1667,19 +1669,19 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error("[models] duplicate_tab failed: " + str(e), exc_info=True)
             return None
 
-    def get_available_services(self):
+    def get_available_services(self) -> Any:
         """"""
         cfg = {"WHERE": {"IN": {"file_type_txt": ["api"]}}}
         df = self.store.get_view_documents_all(cfg)
         return df
 
-    def get_browse_history(self, limit=100, db="db"):
+    def get_browse_history(self, limit=100, db="db") -> Any:
         """"""
         table = "vw_media"
         filters = {"WHERE": {"EQUAL": {"file_type_txt": "browse_history"}}, "LIMIT": limit}
         return self.get_table(table, filters, db)
 
-    def get_app_instances(self, db="db"):
+    def get_app_instances(self, db="db") -> list[dict[str, Any]]:
         """T-NEW-005 (item 3): return the list of registered
         secondary app instances from the ``app_instance``
         table. Per user direction (2026-07-29), the primary
@@ -1727,7 +1729,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             return rows
         return []
 
-    def get_document(self, doc_action=None, did=None, db="db"):
+    def get_document(self, doc_action=None, did=None, db="db") -> Any:
         """Return the document matching the action or the document id.
 
         T-004: when the lookup returns an empty DataFrame, defer
@@ -1755,7 +1757,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 return recovered
         return df
 
-    def _handle_document_not_found(self, doc_action=None, did=None, db="db"):
+    def _handle_document_not_found(self, doc_action=None, did=None, db="db") -> Any:
         """Recover a missing document via the loader, if possible.
 
         T-004: instead of returning an empty DataFrame, asks the
@@ -1809,7 +1811,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] _handle_document_not_found failed: {e}", exc_info=True)
         return None
 
-    def get_documents(self, node, tabset):
+    def get_documents(self, node, tabset) -> "DataFrame":
         """Get documents for a node + tabset."""
         if node is None:
             return DataFrame()
@@ -1822,7 +1824,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning(f"Error getting documents for node {node}: {e}")
             return DataFrame()
 
-    def search_documents(self, query, scope="global", active_nid=None, active_tid=None):
+    def search_documents(self, query, scope="global", active_nid=None, active_tid=None) -> "DataFrame":
         """Search documents (T-NEW-033).
 
         SQLite-backed search across the document catalog.
@@ -1920,7 +1922,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             )
             return DataFrame()
 
-    def get_document_type(self, action_code):
+    def get_document_type(self, action_code) -> "Any":
         """"""
         if action_code is None:
             return None
@@ -1928,7 +1930,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         df = self.store.get_view_documents_all(cfg)
         return df.iloc[0] if not df.empty else None
 
-    def get_document_types(self, registered=False, quick_launch=False):
+    def get_document_types(self, registered=False, quick_launch=False) -> "DataFrame":
         """"""
         cfg = {"WHERE": {"NOT IN": {"document_txt": ["api"]}}}
         if quick_launch is True:
@@ -1938,18 +1940,18 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         df = self.store.get_view_documents_all(cfg)
         return df
 
-    def get_document_all(self, doc_action):
+    def get_document_all(self, doc_action) -> "DataFrame":
         """"""
         cfg = {"WHERE": {"EQUAL": {"document_txt": doc_action}}}
         df = self.store.get_view_documents_all(cfg)
         return df
 
-    def get_link(self, name):
+    def get_link(self, name) -> "Any":
         """"""
         link = self.store.get_view_link(name)
         return link
 
-    def get_link_last_affiliate_update(self):
+    def get_link_last_affiliate_update(self) -> "Any":
         """"""
         cfg = {"WHERE": {"EQUAL": {"eventtype_txt": "affiliate_update"}}}
         df = self.store.get_app_event(cfg)
@@ -1959,7 +1961,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         record = df.to_dict("records")[0]
         return record
 
-    def get_links(self, name=None, description=None, type_=None, tag=None, url=None, db="db"):
+    def get_links(self, name=None, description=None, type_=None, tag=None, url=None, db="db") -> "DataFrame":
         """Retrieve link records from the store.
 
         T-NEW-050: was a PUSH 0.0.3 stub returning ``self``, which caused
@@ -1972,12 +1974,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning(f"[models] get_links delegation failed: {e}")
             return DataFrame()
 
-    def get_node_name(self):
+    def get_node_name(self) -> "Self":
         """"""
         # PUSH 0.0.3
         return self
 
-    def get_node(self, nid):
+    def get_node(self, nid) -> "Any":
         """ "
         Retrieve a node by its ID.
 
@@ -1998,13 +2000,13 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning(f"Error getting node {nid}: {e}")
             return None
 
-    def get_profiles(self):
+    def get_profiles(self) -> list:
         """"""
         profiles = self.store.get_app_profile()["profile_txt"].values.tolist()
         logma.info(f"Profiles {profiles}")
         return profiles
 
-    def get_recent_files(self, recent_files_n=50, db="db"):
+    def get_recent_files(self, recent_files_n=50, db="db") -> list:
         """Return the list of recent files for this instance.
 
         Reads from the configured recent_files JSON file
@@ -2040,11 +2042,11 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning("[models] get_recent_files: read failed: " + str(e))
             return []
 
-    def get_rss_feeds(self):
+    def get_rss_feeds(self) -> "DataFrame":
         """"""
         return self.store.get_links(type_="rss_feed")
 
-    def get_rss_entries(self):
+    def get_rss_entries(self) -> "Any":
         """"""
         #        self.mole.collect("rss")
         df = self.store.get_cache("ds_recent_rss_entries")
@@ -2059,7 +2061,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.store_rss_entries(df)
         return df
 
-    def _filter_recent_rss_entries(self, df, days_back=None):
+    def _filter_recent_rss_entries(self, df, days_back=None) -> "DataFrame":
         """Filter an RSS-entries DataFrame to recent published dates.
 
         Uses ``days_back`` (defaults to 3) to compute the cutoff. The
@@ -2084,13 +2086,13 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] _filter_recent_rss_entries failed: {e}", exc_info=True)
             return df
 
-    def get_search_engines(self, db="db"):
+    def get_search_engines(self, db="db") -> "Any":
         """"""
         cfg = {"WHERE": {"EQUAL": {"table_txt": "search", "key": "external", "label": "web"}}}
         engines = self.store.get_table("vw_options", cfg, db)
         return engines
 
-    def get_settings(self, filter=None, db="db"):
+    def get_settings(self, filter=None, db="db") -> "DataFrame":
         """"""
         table = "vw_settings"
         cfg = {"WHERE": {"EQUAL": {"key_txt": f"{filter}"}}}
@@ -2099,13 +2101,13 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         df = df.sort_values(by=["table_txt", "key_txt", "label_txt", "value_txt", "is_default_bit", "MODON_DTTM"])
         return df
 
-    def get_service(self, doc_action):
+    def get_service(self, doc_action) -> "DataFrame":
         """"""
         cfg = {"WHERE": {"EQUAL": {"document_txt": doc_action}, "IN": {"file_type_txt": ["api"]}}}
         df = self.store.get_view_documents_all(cfg)
         return df
 
-    def get_sources(self):
+    def get_sources(self) -> "DataFrame":
         """"""
         sources = self.store.get_view_sources()
         logma.info(f"Sources {sources}")
@@ -2116,7 +2118,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # sources = concat([sources, df])
         return sources
 
-    def get_supported_os(self):
+    def get_supported_os(self) -> "Self":
         """"""
         table = "vw_supported_os"
         params = {"table": [table]}
@@ -2129,12 +2131,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 self.supported_os.append(slug)
         return self
 
-    def get_urls(self, tag=None):
+    def get_urls(self, tag=None) -> list:
         """return a simple list of urls using the given criteria"""
         # PUSH 0.0.3
         return []
 
-    def get_tab_documents(self, node, tabset="center"):
+    def get_tab_documents(self, node, tabset="center") -> "Any":
         """"""
         table = "vw_tab_document"
         if node is None:
@@ -2146,12 +2148,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         filters["ORDER"] = [5]
         return self.store.get_table(table, filters)
 
-    def get_tab_name(self):
+    def get_tab_name(self) -> "Self":
         """"""
         # PUSH 0.0.3
         return self
 
-    def get_tab_set(self, tag):
+    def get_tab_set(self, tag) -> "Any":
         """"""
         table = "app_tab_set"
         cfg = {"WHERE": {"EQUAL": {"tag_txt": tag}}}
