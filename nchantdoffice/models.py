@@ -63,7 +63,7 @@ pxcfg = join(here, "_data_", "models.yaml")
 OFFICE_WEB_BROWSER_WIDGET = "nchantdoffice.widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser"
 
 
-def same_web_url(a, b):
+def same_web_url(a, b) -> bool:
     """True if two URLs point at the same destination (scheme+host+path, ignoring
     trailing slash / query / fragment). Used to avoid opening duplicate tabs."""
     try:
@@ -77,7 +77,7 @@ def same_web_url(a, b):
         return a == b
 
 
-def web_url_label(url):
+def web_url_label(url) -> str:
     """Short human label for a browser tab derived from the URL host."""
     try:
         host = urlsplit(url).netloc.lower()
@@ -91,20 +91,20 @@ def web_url_label(url):
 class NchantdOfficeInstance(NchantdInstance):
     """"""
 
-    def __init__(self, parent, cfg=None):
+    def __init__(self, parent, cfg=None) -> None:
         """"""
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeInstance").override(cfg))
         self.browser = None
         self.config_browser()
 
-    def config_browser(self, cfg=None):
+    def config_browser(self, cfg=None) -> None:
         """"""
         cfg = cfg or {}
         self.browser = NchantdOfficeBrowserConfig(self, cfg)
 
 
-def _safe_json_default(obj):
+def _safe_json_default(obj) -> Any:
     """JSON serialisation fallback for non-standard objects found in
     document content payloads.
 
@@ -148,7 +148,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
     # deletion when the node is locked.
     LOCKED_NODE_NAMES = frozenset({"home", "journal", "settings"})
 
-    def is_locked_node(self, node):
+    def is_locked_node(self, node) -> bool:
         """Return True when ``node`` is one of the app-locked
         nodes (T-NEW-004). Case-insensitive comparison against
         ``LOCKED_NODE_NAMES``.
