@@ -189,11 +189,8 @@ class FeatureGate:
     """
 
     def __init__(
-        self,
-        base_url: str = "https://nchantdoffice.com",
-        config_path: str = DEFAULT_VERSION_CONFIG_PATH,
-        timeout: float = HTTP_TIMEOUT,
-    ):
+        self, base_url: str = "https://nchantdoffice.com", config_path: str = DEFAULT_VERSION_CONFIG_PATH, timeout: float = HTTP_TIMEOUT,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self.config_path = config_path.lstrip("/")
         self.timeout = timeout

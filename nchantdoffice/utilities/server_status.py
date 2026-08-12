@@ -39,7 +39,7 @@
 # ======================================Standard Library Modules======================================================||
 import contextlib
 import datetime as dt
-from typing import Optional
+from typing import Any, Iterator, Optional
 
 # ======================================3rd Party Library Modules=====================================================||
 # (none — Qt import is gated below)
@@ -270,9 +270,8 @@ class ServerStatus:
 
 @contextlib.contextmanager
 def timed_call(
-    status: ServerStatus,
-    when: Optional[dt.datetime] = None,
-):
+    status: ServerStatus, when: Optional[dt.datetime] = None
+) -> Iterator[Any]:
     """Wrap a server call so success/failure is recorded
     automatically.
 
