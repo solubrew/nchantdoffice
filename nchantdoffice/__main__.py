@@ -11,7 +11,9 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
+from __future__ import annotations
+
 # ======================================Standard Library Modules======================================================||
 import os
 import platform
@@ -44,7 +46,7 @@ log = True
 pxcfg = join(here, "_data_", "runMain.yaml")
 
 
-def run(args):
+def run(args: list[str]) -> None:
     """Run individual tabs with mock data for development purposes
     python runNchantdOffice.py scratch setup - create new file
     python runNchantdOffice.py scratch - continue file
@@ -61,7 +63,7 @@ def run(args):
     nchantment("NchantdOffice", args, app, cfg, wizard, profile)
 
 
-def main():
+def main() -> None:
     run(argv)
 
 
