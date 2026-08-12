@@ -77,6 +77,7 @@
 - **T-NEW-070** ✅ NchantdOfficeNotebook click capture/redirect/replace, commit `264df18` (2026-08-10, t-new-070).
 - **T-NEW-071** ✅ NchantdOfficeJournalSettings pro-tier editor, commit `a9c1f6f` (2026-08-10, t-new-071).
 - **T-NEW-072** ✅ TODOs.md update-process consolidation — added "Update Process Overview" section + T-NEW-061 deferred card body.
+- **T-NEW-073** ✅ P1 bug sweep — `NchantdOfficeJournalEditor.refresh_content` un-commented (T-NEW-036 step 3) + T-NEW-058 `_make_dbupdate` mock fixture aligned with production `parent.model.codex` call shape. Qt batched suite: 159/159 pass (was 153/165). No source-of-truth change in `updates/db.py` — the fixture was the drift.
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
 
@@ -1869,6 +1870,29 @@ Both are scoped for v0.2.0 because:
   umbrella review's "auto-install + signature verification"
   gap.
 - T-NEW-057 — the review card.
+
+### T-NEW-073 — P1 bug sweep from 2026-08-11 review (2026-08-11)
+
+**Context.** The 2026-08-11 production-readiness review surfaced 3 P1 bugs while running the full test suite: (1) `NchantdOfficeJournalEditor.refresh_content` was authored as a fully-formed docstring-only block (commented out in `widgets/documents/journal.py:140`); (2) `tests/test_update_checker_boot_hook.py::_make_dbupdate` mocked `mock_parent.codex` but the production call path is `self.parent.model.codex.update()` (the cloak has `.model`, not `.codex`); (3) the `NchantdDataFrameTable` metaclass "conflict" at `nchantrs/widgets/tables/tables.py:479` was a stale `__pycache__` artifact — the lazy-import wrapper `nchantrs/libraries/qpandas.py` had been masking it by falling back to a stub class, and once `pyside6pandas -e` was installed the cached bytecode disagreed with the live module.
+
+**Affected sites:**
+- `nchantdoffice/widgets/documents/journal.py:140-198` (was commented-out `refresh_content`)
+- `tests/test_update_checker_boot_hook.py:68-86` (`_make_dbupdate` fixture)
+- `tests/test_journal_restore.py:7` (T-NEW-036 docstring already referenced the method)
+- `tests/test_update_checker_boot_hook.py:1-37` (module docstring already asserted the boot-hook invariants)
+
+**Migration plan** (no priority / low priority — design decision first): the journal restore was already the correct design (T-NEW-036); the boot-hook test was already the correct contract (T-NEW-058); this commit unblocks both. The metaclass "conflict" was a non-issue once `__pycache__` was cleared — recorded here so a future agent who reinstalls `pyside6pandas` from scratch knows to `find . -name __pycache__ -exec rm -rf {} +` (or `pytest --cache-clear`) before re-running the suite.
+
+**Steps:**
+1. Un-comment `NchantdOfficeJournalEditor.refresh_content` (`nchantdoffice/widgets/documents/journal.py:140`) — the body was already correct, only the `#` prefixes needed removing.
+2. Update `_make_dbupdate` fixture to mock `mock_parent.model.codex` (mirrors the production `self.parent.model.codex.update()` call shape) with a `mock_parent.codex` belt-and-braces for any codex.readers consumer.
+3. Add a docstring note explaining the wiring so a future agent doesn't re-introduce the fixture drift.
+4. Add the T-NEW-073 ✅ row to the live-catalog block at the top of this file.
+
+**Verification:**
+- `python -m pytest tests/test_journal_restore.py --tb=no -q` → `7 passed`
+- `python -m pytest tests/test_update_checker_boot_hook.py --tb=no -q` → `3 passed`
+- `QT_QPA_PLATFORM=offscreen python -m pytest <20 Qt files> --tb=no -q` → `159 passed, 6 skipped, 0 failed` (was 153 passed, 6 failed, 6 skipped before this commit)
 
 ### T-NEW-072 — TODOs.md update-process consolidation (2026-08-10)
 

@@ -68,7 +68,15 @@ atexit.register(_cleanup)
 
 def _make_dbupdate():
     """Return a real NchantdOfficeDBUpdate with a mocked parent
-    so update_pyffice_document() runs without crashing."""
+    so update_pyffice_document() runs without crashing.
+
+    Production wiring (nchantdoffice/nchantdoffice.py:55):
+      self.dbupdate = NchantdOfficeDBUpdate(self)   # self = NchantdOfficeCloak
+    Then nchantdoffice/updates/db.py:74 reads:
+      updater = self.parent.model.codex.update()
+    So the mock must place the codex under ``mock_parent.model.codex``
+    to mirror the real call shape.
+    """
     from nchantdoffice.updates.db import NchantdOfficeDBUpdate
 
     mock_codex = MagicMock()
@@ -76,7 +84,8 @@ def _make_dbupdate():
     updateer.get_document_types.return_value = ["script"]
     mock_codex.update.return_value = updateer
     mock_parent = MagicMock()
-    mock_parent.codex = mock_codex
+    mock_parent.model.codex = mock_codex
+    mock_parent.codex = mock_codex  # belt-and-braces for any codex.readers
     mock_parent.config = MagicMock()
     mock_parent.config.dikt = {"versions": {}}
     dbupdate = NchantdOfficeDBUpdate(mock_parent)

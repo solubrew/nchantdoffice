@@ -137,65 +137,65 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.initView()
         return self
 
-    # def refresh_content(self):
-    #     """Re-fetch the journal document from the model and update the editor.
-    #
-    #     T-NEW-036: ``initModel`` fetches the journal text once at
-    #     ``initWidget`` time. On subsequent tab-focus changes,
-    #     ``initModel`` is never re-called, so the editor showed
-    #     stale content. This method re-fetches the current journal
-    #     text (same path as ``initModel``: get_view_journal ->
-    #     codex.init_script -> load_document -> text.to_dict) and
-    #     pushes the result into ``self.full_text`` + the editor
-    #     widget.
-    #
-    #     Called from ``NchantdOfficeTabSet.on_tab_focus`` when the
-    #     focused tab's widget has a ``refresh_content`` method.
-    #
-    #     Defensive: missing ``self.app``, missing model, or a
-    #     raised exception is logged + swallowed (returns self)
-    #     rather than crashing the UI.
-    #
-    #     Returns ``self`` for chainable call sites.
-    #     """
-    #     try:
-    #         app = getattr(self, "app", None)
-    #         if app is None:
-    #             return self
-    #         model = getattr(app, "model", None)
-    #         if model is None:
-    #             return self
-    #         scope = self.config.dikt.get("scope", "TODAY")
-    #         datetime = dt.datetime.now()
-    #         tid = None
-    #         try:
-    #             tab = model.get_current_tab()
-    #             tid = getattr(tab, "tid", None)
-    #         except Exception:
-    #             pass
-    #         try:
-    #             node = model.get_current_node()
-    #             nid = getattr(node, "nid", None)
-    #         except Exception:
-    #             nid = None
-    #         tags = {"nid": nid, "tid": tid}
-    #         cfg = {"tags": tags, "scope": scope, "datetime": datetime}
-    #         document = {"document": model.get_view_journal(cfg)}
-    #         doc = model.codex.init_script(document)
-    #         doc.load_document()
-    #         text = doc.text.to_dict()["unit"].get("value", "")
-    #         self.full_text = text
-    #         self.document = doc
-    #         self.pages = doc.pages
-    #         if self.editor is not None and hasattr(self.editor, "setPlainText"):
-    #             self.editor.setPlainText(text)
-    #         logma.info(f"[journal] refresh_content: restored {len(text)} chars")
-    #     except Exception as e:
-    #         logma.error(
-    #             f"[journal] refresh_content failed: {e}",
-    #             exc_info=True,
-    #         )
-    #     return self
+    def refresh_content(self):
+        """Re-fetch the journal document from the model and update the editor.
+
+        T-NEW-036: ``initModel`` fetches the journal text once at
+        ``initWidget`` time. On subsequent tab-focus changes,
+        ``initModel`` is never re-called, so the editor showed
+        stale content. This method re-fetches the current journal
+        text (same path as ``initModel``: get_view_journal ->
+        codex.init_script -> load_document -> text.to_dict) and
+        pushes the result into ``self.full_text`` + the editor
+        widget.
+
+        Called from ``NchantdOfficeTabSet.on_tab_focus`` when the
+        focused tab's widget has a ``refresh_content`` method.
+
+        Defensive: missing ``self.app``, missing model, or a
+        raised exception is logged + swallowed (returns self)
+        rather than crashing the UI.
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            app = getattr(self, "app", None)
+            if app is None:
+                return self
+            model = getattr(app, "model", None)
+            if model is None:
+                return self
+            scope = self.config.dikt.get("scope", "TODAY")
+            datetime = dt.datetime.now()
+            tid = None
+            try:
+                tab = model.get_current_tab()
+                tid = getattr(tab, "tid", None)
+            except Exception:
+                pass
+            try:
+                node = model.get_current_node()
+                nid = getattr(node, "nid", None)
+            except Exception:
+                nid = None
+            tags = {"nid": nid, "tid": tid}
+            cfg = {"tags": tags, "scope": scope, "datetime": datetime}
+            document = {"document": model.get_view_journal(cfg)}
+            doc = model.codex.init_script(document)
+            doc.load_document()
+            text = doc.text.to_dict()["unit"].get("value", "")
+            self.full_text = text
+            self.document = doc
+            self.pages = doc.pages
+            if self.editor is not None and hasattr(self.editor, "setPlainText"):
+                self.editor.setPlainText(text)
+            logma.info(f"[journal] refresh_content: restored {len(text)} chars")
+        except Exception as e:
+            logma.error(
+                f"[journal] refresh_content failed: {e}",
+                exc_info=True,
+            )
+        return self
 
     def get_content(self):
         """Return the document content, normalizing the source syntax.
