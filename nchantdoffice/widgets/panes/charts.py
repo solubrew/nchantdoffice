@@ -278,7 +278,7 @@ class NchantdChartConfigPane(NchantdPane):
     def _build_border_style_editor(self) -> Any:
         """"""
 
-    def get_chart_specific_widget(self, chart_type) -> "QWidget | None":
+    def get_chart_specific_widget(self, chart_type) -> "pyqt.QWidget | None":
         """Build the chart-type-specific extras widget (T-063).
 
         Returns a QWidget containing the per-chart controls
@@ -310,7 +310,7 @@ class NchantdChartConfigPane(NchantdPane):
         when T-NEW-029 ships.
         """
 
-    def _chart_line_extras(self) -> "QWidget | None":
+    def _chart_line_extras(self) -> "pyqt.QWidget | None":
         """Build the line-chart-specific extras widget (T-063).
 
         Includes a 'smoothing' checkbox and a 'line width' spinbox.
@@ -335,7 +335,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] _chart_line_extras failed: {e}", exc_info=True)
             return None
 
-    def _chart_bar_extras(self) -> "QWidget | None":
+    def _chart_bar_extras(self) -> "pyqt.QWidget | None":
         """Build bar-chart-specific extras: stack mode + bar width spinbox (T-063)."""
         try:
             container = pyqt.QWidget()
@@ -357,7 +357,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] _chart_bar_extras failed: {e}", exc_info=True)
             return None
 
-    def _chart_pie_extras(self) -> "QWidget | None":
+    def _chart_pie_extras(self) -> "pyqt.QWidget | None":
         """Build pie-chart-specific extras: hole size + start angle spinboxes (T-063)."""
         try:
             container = pyqt.QWidget()
@@ -376,7 +376,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] _chart_pie_extras failed: {e}", exc_info=True)
             return None
 
-    def _chart_scatter_extras(self) -> "QWidget | None":
+    def _chart_scatter_extras(self) -> "pyqt.QWidget | None":
         """Build scatter-chart-specific extras: point size spinbox (T-063)."""
         try:
             container = pyqt.QWidget()
@@ -395,7 +395,7 @@ class NchantdChartConfigPane(NchantdPane):
             logma.error(f"[charts] _chart_scatter_extras failed: {e}", exc_info=True)
             return None
 
-    def _chart_area_extras(self) -> "QWidget | None":
+    def _chart_area_extras(self) -> "pyqt.QWidget | None":
         """Stub for area-chart extras (T-063)."""
         try:
             container = pyqt.QWidget()
@@ -408,7 +408,7 @@ class NchantdChartConfigPane(NchantdPane):
         except Exception:
             return None
 
-    def _chart_radar_extras(self) -> "QWidget | None":
+    def _chart_radar_extras(self) -> "pyqt.QWidget | None":
         """Stub for radar-chart extras (T-063)."""
         try:
             container = pyqt.QWidget()

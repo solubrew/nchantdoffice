@@ -903,7 +903,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         #     data.append([self.default_tab_switch.currentText()])
         return self
 
-    def _build_right_pane_visibility_checks(self) -> "QGroupBox":
+    def _build_right_pane_visibility_checks(self) -> "pyqt.QGroupBox":
         """Build the right-pane tab visibility checklist widget
         (T-NEW-028). One checkbox per row in ``vw_tab`` filtered by
         ``tabset_type_txt = "right"`` -- checking/unchecking flips

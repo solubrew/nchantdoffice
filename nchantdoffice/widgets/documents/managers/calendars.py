@@ -515,7 +515,7 @@ class NchantdEventRecursionEditPane(NchantdPane):
         if hasattr(self, "scope_select"):
             self.config.dikt["recur"] = self.scope_select.get_value()
 
-    def get_end_datetime(self) -> datetime:
+    def get_end_datetime(self) -> "dt.datetime":
         """Get the recurrence end datetime."""
         return self.config.dikt.get("end_datetime", dt.datetime.now())
 
@@ -763,7 +763,7 @@ class NchantdOfficeCalendar(NchantdOfficeDocument):
         """"""
         return {"content": {"file_path": self.file_path}}
 
-    def get_event_datetime_select_value(self) -> datetime:
+    def get_event_datetime_select_value(self) -> "dt.datetime":
         """"""
         datetime_ = dt.datetime.now()
         return datetime_

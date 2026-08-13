@@ -956,7 +956,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                                 item.setText("")
         return self
 
-    def create_formula_bar(self) -> "QWidget":
+    def create_formula_bar(self) -> "pyqt.QWidget":
         """Create the formula bar widget"""
         bar = pyqt.QWidget()
         layout = pyqt.QHBoxLayout(bar)

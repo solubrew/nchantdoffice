@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import Any, Self
 from os.path import abspath, dirname, join
 import datetime as dt
+import sqlite3
 
 # ======================================3rd Party Library Modules=====================================================||
 from shutil import copyfile
