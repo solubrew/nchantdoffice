@@ -275,22 +275,31 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         """Parse the full journal text into a dict keyed by the
         ``--|YYYY-MM-DD HH:MM:SS|--`` marker that delimits each block.
 
-        Returns ``{timestamp: block_text}`` (a flat dict, NOT the
-        ``{full, blocks}`` payload shape -- that serialization is
-        handled separately by the date-navigation widgets, NOT by
-        this parse method). The save() flow calls this for the
-        in-memory ``self.entries`` cache; the outer save() persists
-        the full text via ``save_app()`` (the app_media path).
+        The save() flow calls ``self.parse(self.get_content())``;
+        ``get_content()`` returns a ``{"text": ..., "content": ...}``
+        dict, so we unpack the ``text`` field before regex-splitting.
+        Test mocks pass a string directly, so the str branch is
+        also supported. Empty / non-text input returns ``{}``.
 
-        Tolerant to malformed markers (an opening --| with no
-        matching close is skipped). Empty input returns ``{}``.
+        Returns ``{timestamp: block_text}`` -- the in-memory cache
+        for date-navigation widgets. The outer save() persists the
+        full text via ``save_app()`` (the app_media path); the
+        parse result is NOT serialized into the save payload.
         """
-        if not content:
+        # Normalize: get_content() returns a dict with a "text" key;
+        # test mocks pass a string directly.
+        if isinstance(content, dict):
+            text = content.get("text", "") or ""
+        elif isinstance(content, str):
+            text = content
+        else:
+            text = "" if content is None else str(content)
+        if not text:
             return {}
         marker_re = re.compile(
             r"--\|(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|--"
         )
-        for match in marker_re.finditer(content):
+        for match in marker_re.finditer(text):
             ts = match.group(1)
             # Each block runs from the end of its marker to the
             # next marker (or end of text). Store entry in the
