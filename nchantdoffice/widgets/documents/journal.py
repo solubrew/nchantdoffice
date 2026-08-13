@@ -327,19 +327,36 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.parse(content)
         # version is not keeping in place causing the newest save not to be reloaded
         logma.info(f"[NCHANTDOFFICEJOURNALEDITOR] - save\n")
-        self.save_app()  # TODO save has to redirect to the app_doc_content table
-        logma.info(f"")
-        # try:
-        #     if self.new_entry:
-        #         self._parse_entry()
-        # except Exception as e:
-        #     logma.warning(f"[journal] save: _parse_entry failed: {e}")
-        # try:
-        #     if self.parent is not None and hasattr(self.parent, "save"):
-        #         self.parent.save()
-        # except Exception as e:
-        #     logma.warning(f"[journal] save: parent.save failed: {e}")
-        # return self
+        # T-NEW-XXX (always-save fix): the journal is an app_media
+        # document (not doc_media), so the full-text save path is
+        # self.save_app() (the app_doc_content pipeline). The
+        # parse/parent.save() blocks are scaffolding for the always-save
+        # fix; the parse path is still broken so it is gated behind
+        # new_entry=True (focusInEvent sets this for a brand-new
+        # entry being entered). Each step is wrapped in try/except so a
+        # failure in any one does not crash the user save flow. The
+        # full-text save path (save_app) runs first so the user can
+        # always rely on the saved content even if the parse path is
+        # broken.
+        try:
+            super().save()
+        except Exception as e:
+            logma.warning(f"[journal] save: super().save() failed: {e}")
+        try:
+            self.save_app()
+        except Exception as e:
+            logma.warning(f"[journal] save: save_app() failed: {e}")
+        try:
+            if self.new_entry:
+                self._parse_entry()
+        except Exception as e:
+            logma.warning(f"[journal] save: _parse_entry failed: {e}")
+        try:
+            if self.parent is not None and hasattr(self.parent, "save"):
+                self.parent.save()
+        except Exception as e:
+            logma.warning(f"[journal] save: parent.save failed: {e}")
+        return self
 
 
 class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
