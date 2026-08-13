@@ -94,8 +94,12 @@ def test_T_NEW_020_pdf_init_model_uses_get_with_default():
     # in initModel-style code (the literal text inside a string is
     # OK; the assignment must be the safe form).
     import re
+    # The signature includes a return annotation (-> Self) so the
+    # regex needs to skip the annotation between ) and the body's
+    # opening statement. Use a non-greedy match that consumes up
+    # to the next class/def boundary.
     init_model_blocks = re.findall(
-        r"def initModel\([^)]*\):.*?(?=\n    def |\nclass |\Z)",
+        r"def initModel\(.*?\):\n.*?(?=\n    def |\nclass |\Z)",
         text,
         flags=re.DOTALL,
     )
