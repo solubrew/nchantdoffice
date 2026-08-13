@@ -306,9 +306,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             return {"full": "", "blocks": {}}
         # finditer each --|YYYY-MM-DD HH:MM:SS|-- marker, split the
         # text by occurrences, key each block on the marker timestamp.
-        marker_re = re.compile(
-            r"--\|(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|--"
-        )
+        marker_re = re.compile(r"--\|(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|--")
         blocks: Dict[str, str] = {}
         matches = list(marker_re.finditer(content))
         if not matches:
@@ -408,10 +406,6 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         # full-text save path (save_app) runs first so the user can
         # always rely on the saved content even if the parse path is
         # broken.
-        try:
-            super().save()
-        except Exception as e:
-            logma.warning(f"[journal] save: super().save() failed: {e}")
         try:
             self.save_app()
         except Exception as e:
