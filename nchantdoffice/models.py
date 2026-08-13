@@ -134,6 +134,29 @@ def _safe_json_default(obj) -> Any:
     raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
 
 
+# T-NEW-079: type-keyed fallback widget strings for the .pyof import path.
+# Used by NchantdOfficeCloakModel.add_document when the host's
+# vw_app_document_type view is empty (no registered document types) or
+# when the lookup otherwise fails. Keeps the import path from crashing
+# with AttributeError on ``None.get('widget_txt', None)``.
+_DEFAULT_WIDGET_TXT = {
+    "browser": "nchantdoffice.widgets.documents.atnrg.browsers.NchantdOfficeWebBrowser",
+    "script": "nchantdoffice.widgets.documents.media.scripts.NchantdOfficeScript",
+    "image": "nchantdoffice.widgets.documents.media.images.NchantdOfficeImage",
+    "matrix": "nchantdoffice.widgets.documents.workbooks.NchantdOfficeMatrix",
+    "notebook": "nchantdoffice.widgets.documents.workbooks.notebooks.NchantdOfficeNotebook",
+    "pdf": "nchantdoffice.widgets.documents.media.pdfs.NchantdOfficePDF",
+    "notes": "nchantdoffice.widgets.documents.media.notes.NchantdOfficeNote",
+    "sketch": "nchantdoffice.widgets.documents.media.sketches.NchantdOfficeSketch",
+    "focus": "nchantdoffice.widgets.documents.atnrg.attentioneering.NchantdOfficeFocus",
+    "journal": "nchantdoffice.widgets.documents.journal.NchantdOfficeJournalEditor",
+    "page": "nchantdoffice.widgets.documents.atnrg.pages.NchantdOfficePage",
+    "contact": "nchantdoffice.widgets.documents.atnrg.contacts.NchantdOfficeContact",
+    "news": "nchantdoffice.widgets.documents.atnrg.news.NchantdOfficeNews",
+    "prompt": "nchantdoffice.widgets.documents.atnrg.prompts.NchantdOfficePrompt",
+}
+
+
 class NchantdOfficeCloakModel(NchantdCloakModel):
     """"""
 
@@ -227,7 +250,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             tab = document.to_dict()
             logma.info(f"Pyffice Document Provided {tab}")
             _type = tab.get("type", tab.get("document_type", "script")) or "script"
-            tab["widget"] = self.app.model.get_document_type(_type).get("widget_txt", None)
             tab["type"] = document.doc_type
             tab["pid"] = pid
             tab["position"] = pos
@@ -238,14 +260,40 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             tab["policy_fk"] = None
             if tab.get("content", None) is None:
                 tab["content"] = tab["data"]
+            # T-NEW-079: when the host's vw_app_document_type view is
+            # empty (or the store lookup otherwise fails), get_document_type
+            # returns None. Fall back to a type-keyed default widget string
+            # so the .pyof import path survives without a registry lookup.
+            _document_type = self.app.model.get_document_type(_type)
+            if _document_type is None:
+                tab["widget"] = _DEFAULT_WIDGET_TXT.get(
+                    _type, "nchantdoffice.widgets.documents.documents.NchantdOfficeDocument"
+                )
+                logma.warning(
+                    f"[models] add_document: no document_type row for "
+                    f"action={_type!r}; falling back to default widget"
+                )
+            else:
+                tab["widget"] = _document_type.get("widget_txt", None)
             tab_new = False
         else:
             tab = document
         if widget is None:  # or widget == "":
             document_type = self.get_document_type(tab["type"])
             if document_type is None:
-                raise LookupError(f"Document type {tab['type']} is not registered")
-            tab["widget"] = document_type.get("widget_txt", None)
+                # T-NEW-079: older call sites (non-PyfficeDocument branch)
+                # used to raise LookupError here. Soften to a fallback so
+                # the import path completes even when the view is empty.
+                tab["widget"] = _DEFAULT_WIDGET_TXT.get(
+                    tab["type"],
+                    "nchantdoffice.widgets.documents.documents.NchantdOfficeDocument",
+                )
+                logma.warning(
+                    f"[models] add_document: no document_type row for "
+                    f"action={tab['type']!r}; falling back to default widget"
+                )
+            else:
+                tab["widget"] = document_type.get("widget_txt", None)
         widget = tab["widget"]
         name = tab["name"]
         if widgdata is None:
@@ -1923,12 +1971,30 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             return DataFrame()
 
     def get_document_type(self, action_code) -> "Any":
-        """"""
+        """Return the document-type row for ``action_code`` or None.
+
+        T-NEW-079: previously this method let the underlying
+        ``get_view_documents_all`` ``Documents Are Empty`` exception
+        propagate (when the host's ``vw_app_document_type`` view had
+        no rows), which crashed the .pyof import path at line 230 with
+        an opaque traceback. Now it catches the empty-view case and any
+        underlying store failure and returns ``None`` so callers
+        (``add_document``) can fall back to a default widget string.
+        """
         if action_code is None:
             return None
         cfg = {"WHERE": {"EQUAL": {"action_txt": action_code}}}
-        df = self.store.get_view_documents_all(cfg)
-        return df.iloc[0] if not df.empty else None
+        try:
+            df = self.store.get_view_documents_all(cfg)
+        except Exception as e:
+            logma.warning(
+                f"[models] get_document_type: store lookup failed "
+                f"for action_code={action_code!r}: {e}"
+            )
+            return None
+        if df is None or df.empty:
+            return None
+        return df.iloc[0]
 
     def get_document_types(self, registered=False, quick_launch=False) -> "DataFrame":
         """"""
