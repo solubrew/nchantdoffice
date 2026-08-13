@@ -314,13 +314,17 @@ def test_insert_specs_moved_from_selection_to_object_drawer():
     # Find each method's body by looking for the def line and
     # the next def line. We don't import -- just regex on
     # the text.
+    # The signatures have return annotations
+    # (def init_drawer_*_config(self) -> dict[int, Any]:) so the
+    # regex cannot anchor on ')'. Anchor on the literal return
+    # annotation suffix.
     sel_match = re.search(
-        r"def init_drawer_selection_config\(self.*?\):(.*?)(?=\n    def |\nclass |\Z)",
+        r"def init_drawer_selection_config\(self\) -> dict\[Any, Any\]:(.*?)(?=\n    def |\nclass |\Z)",
         txt,
         re.S,
     )
     obj_match = re.search(
-        r"def init_drawer_object_config\(self.*?\):(.*?)(?=\n    def |\nclass |\Z)",
+        r"def init_drawer_object_config\(self\) -> dict\[int, Any\]:(.*?)(?=\n    def |\nclass |\Z)",
         txt,
         re.S,
     )
