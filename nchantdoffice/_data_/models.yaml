@@ -20,9 +20,10 @@ NchantdOfficeCloakModel:
                       {'name': 'UUID', 'type': 'text'}, {'name': 'icon_txt', 'type': 'text'},
                       {'name': 'short_cut_txt', 'type': 'text'}, {'name': 'tip_txt', 'type': 'text'},
                       {'name': 'advanced_tip_txt', 'type': 'text'}, {'name': 'widget_txt', 'type': 'text'},
-                      {'name': 'parameters_dict', 'type': 'text'}]
+                      {'name': 'parameters_dict', 'type': 'text'},
+                      {'name': 'position_int', 'type': 'integer'}]  # T-NEW-051: matches nchantrs schema
             records:
-              - ['base', 'import_pyof', 'Import .pyof', 'Import content tables from a source .pyof into this instance.', 'c6ea4006-2ad2-4600-b109-23791eea20c8', 'import', '', 'Import from .pyof…', 'Open a file picker, choose a .pyof, and copy its content tables (nodes, tabs, media) into this instance. Source UUIDs are preserved.', '', '{}']
+              - ['base', 'import_pyof', 'Import .pyof', 'Import content tables from a source .pyof into this instance.', 'c6ea4006-2ad2-4600-b109-23791eea20c8', 'import', '', 'Import from .pyof…', 'Open a file picker, choose a .pyof, and copy its content tables (nodes, tabs, media) into this instance. Source UUIDs are preserved.', '', '{}', 0]
           app_document_type:
             columns: [{"name": 'UUID', "type": "text"}, {"name": 'document_txt', "type": "text"},
                       {"name": 'file_type_txt', "type": "text"}, {"name": 'name_txt', "type": "text"},
