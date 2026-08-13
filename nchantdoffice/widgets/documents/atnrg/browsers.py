@@ -1122,95 +1122,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.profile = profile
         return self
 
-    def set_profile_user_name_entry(self, name) -> Self:
-        """Update the user_name_entry Qt widget from an external change."""
-        if hasattr(self, "user_name_entry") and self.user_name_entry is not None:
-            self.user_name_entry.setText(str(name))
-        return self
 
-    def set_profile_first_name_entry(self, name) -> Self:
-        """Update the first_name_entry Qt widget from an external change."""
-        if hasattr(self, "first_name_entry") and self.first_name_entry is not None:
-            self.first_name_entry.setText(str(name))
-        return self
-
-    def set_profile_last_name_entry(self, name) -> Self:
-        """Update the last_name_entry Qt widget from an external change."""
-        if hasattr(self, "last_name_entry") and self.last_name_entry is not None:
-            self.last_name_entry.setText(str(name))
-        return self
-
-    def set_profile_middle_name_entry(self, name) -> Self:
-        """Update the middle_name_entry Qt widget from an external change."""
-        if hasattr(self, "middle_name_entry") and self.middle_name_entry is not None:
-            self.middle_name_entry.setText(str(name))
-        return self
-
-    def set_profile_postal_address_entry(self, address) -> Self:
-        """Update the postal_address_entry Qt widget from an external change."""
-        if hasattr(self, "postal_address_entry") and self.postal_address_entry is not None:
-            self.postal_address_entry.setText(str(address))
-        return self
-
-    def set_profile_city_address_entry(self, address) -> Self:
-        """Update the city_address_entry Qt widget from an external change."""
-        if hasattr(self, "city_address_entry") and self.city_address_entry is not None:
-            self.city_address_entry.setText(str(address))
-        return self
-
-    def set_profile_state_address_entry(self, address) -> Self:
-        """Update the state_address_entry Qt widget from an external change."""
-        if hasattr(self, "state_address_entry") and self.state_address_entry is not None:
-            self.state_address_entry.setText(str(address))
-        return self
-
-    def set_profile_email_entry(self, email) -> Self:
-        """Update the email_entry Qt widget from an external change."""
-        if hasattr(self, "email_entry") and self.email_entry is not None:
-            self.email_entry.setText(str(email))
-        return self
-
-    def set_profile_phone_entry(self, phone) -> Self:
-        """Update the phone_entry Qt widget from an external change."""
-        if hasattr(self, "phone_entry") and self.phone_entry is not None:
-            self.phone_entry.setText(str(phone))
-        return self
-
-    def set_profile_second_phone_entry(self, phone) -> Self:
-        """Update the second_phone_entry Qt widget from an external change."""
-        if hasattr(self, "second_phone_entry") and self.second_phone_entry is not None:
-            self.second_phone_entry.setText(str(phone))
-        return self
-
-    def set_profile_company_entry(self, entry) -> Self:
-        """Update the company_entry Qt widget from an external change."""
-        if hasattr(self, "company_entry") and self.company_entry is not None:
-            self.company_entry.setText(str(entry))
-        return self
-
-    def set_profile_company_email_entry(self, email) -> Self:
-        """Update the company_email_entry Qt widget from an external change."""
-        if hasattr(self, "company_email_entry") and self.company_email_entry is not None:
-            self.company_email_entry.setText(str(email))
-        return self
-
-    def set_profile_company_phone_entry(self, phone) -> Self:
-        """Update the company_phone_entry Qt widget from an external change."""
-        if hasattr(self, "company_phone_entry") and self.company_phone_entry is not None:
-            self.company_phone_entry.setText(str(phone))
-        return self
-
-    def set_profile_company_address_entry(self, address) -> Self:
-        """Update the company_address_entry Qt widget from an external change."""
-        if hasattr(self, "company_address_entry") and self.company_address_entry is not None:
-            self.company_address_entry.setText(str(address))
-        return self
-
-    def set_profile_zip_code_entry(self, zipcode) -> Self:
-        """Update the zip_code_entry Qt widget from an external change."""
-        if hasattr(self, "zip_code_entry") and self.zip_code_entry is not None:
-            self.zip_code_entry.setText(str(zipcode))
-        return self
 
     def store_profile(self) -> Self:
         """Persist current profile fields to the profile manager."""
@@ -1819,7 +1731,95 @@ class NchantdOfficeWebProfile(NchantdWebProfile):
         except Exception as e:
             logma.error(f"[browsers] emergency_phone data sourcing failed: {e}", exc_info=True)
         self.contact.emergency_phone = emergency
+    def set_profile_user_name_entry(self, name) -> Self:
+        """Update the user_name_entry Qt widget from an external change."""
+        if hasattr(self, "user_name_entry") and self.user_name_entry is not None:
+            self.user_name_entry.setText(str(name))
+        return self
 
+    def set_profile_first_name_entry(self, name) -> Self:
+        """Update the first_name_entry Qt widget from an external change."""
+        if hasattr(self, "first_name_entry") and self.first_name_entry is not None:
+            self.first_name_entry.setText(str(name))
+        return self
+
+    def set_profile_last_name_entry(self, name) -> Self:
+        """Update the last_name_entry Qt widget from an external change."""
+        if hasattr(self, "last_name_entry") and self.last_name_entry is not None:
+            self.last_name_entry.setText(str(name))
+        return self
+
+    def set_profile_middle_name_entry(self, name) -> Self:
+        """Update the middle_name_entry Qt widget from an external change."""
+        if hasattr(self, "middle_name_entry") and self.middle_name_entry is not None:
+            self.middle_name_entry.setText(str(name))
+        return self
+
+    def set_profile_postal_address_entry(self, address) -> Self:
+        """Update the postal_address_entry Qt widget from an external change."""
+        if hasattr(self, "postal_address_entry") and self.postal_address_entry is not None:
+            self.postal_address_entry.setText(str(address))
+        return self
+
+    def set_profile_city_address_entry(self, address) -> Self:
+        """Update the city_address_entry Qt widget from an external change."""
+        if hasattr(self, "city_address_entry") and self.city_address_entry is not None:
+            self.city_address_entry.setText(str(address))
+        return self
+
+    def set_profile_state_address_entry(self, address) -> Self:
+        """Update the state_address_entry Qt widget from an external change."""
+        if hasattr(self, "state_address_entry") and self.state_address_entry is not None:
+            self.state_address_entry.setText(str(address))
+        return self
+
+    def set_profile_email_entry(self, email) -> Self:
+        """Update the email_entry Qt widget from an external change."""
+        if hasattr(self, "email_entry") and self.email_entry is not None:
+            self.email_entry.setText(str(email))
+        return self
+
+    def set_profile_phone_entry(self, phone) -> Self:
+        """Update the phone_entry Qt widget from an external change."""
+        if hasattr(self, "phone_entry") and self.phone_entry is not None:
+            self.phone_entry.setText(str(phone))
+        return self
+
+    def set_profile_second_phone_entry(self, phone) -> Self:
+        """Update the second_phone_entry Qt widget from an external change."""
+        if hasattr(self, "second_phone_entry") and self.second_phone_entry is not None:
+            self.second_phone_entry.setText(str(phone))
+        return self
+
+    def set_profile_company_entry(self, entry) -> Self:
+        """Update the company_entry Qt widget from an external change."""
+        if hasattr(self, "company_entry") and self.company_entry is not None:
+            self.company_entry.setText(str(entry))
+        return self
+
+    def set_profile_company_email_entry(self, email) -> Self:
+        """Update the company_email_entry Qt widget from an external change."""
+        if hasattr(self, "company_email_entry") and self.company_email_entry is not None:
+            self.company_email_entry.setText(str(email))
+        return self
+
+    def set_profile_company_phone_entry(self, phone) -> Self:
+        """Update the company_phone_entry Qt widget from an external change."""
+        if hasattr(self, "company_phone_entry") and self.company_phone_entry is not None:
+            self.company_phone_entry.setText(str(phone))
+        return self
+
+    def set_profile_company_address_entry(self, address) -> Self:
+        """Update the company_address_entry Qt widget from an external change."""
+        if hasattr(self, "company_address_entry") and self.company_address_entry is not None:
+            self.company_address_entry.setText(str(address))
+        return self
+
+    def set_profile_zip_code_entry(self, zipcode) -> Self:
+        """Update the zip_code_entry Qt widget from an external change."""
+        if hasattr(self, "zip_code_entry") and self.zip_code_entry is not None:
+            self.zip_code_entry.setText(str(zipcode))
+        return self
 
 # ====================================================================================================================||
 
