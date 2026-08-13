@@ -24,17 +24,21 @@ from types import SimpleNamespace
 
 def test_journal_outer_save_calls_parent():
     """The outer ``NchantdOfficeJournalEditor.save(path, format_, encrypt)``
-    must call super().save(), self._parse_entry() (when new_entry),
-    and self.parent.save()."""
+    must call self.save_app() (the app_media path -- the journal is
+    NOT a doc_media document), and self.parent.save().
+
+    T-NEW-XXX + 9e74486: the prior contract required super().save()
+    but the user removed it because it put erroneous data into the
+    doc_media_content table. The journal is an app_media document,
+    so the only correct save path is save_app() + parent.save()
+    + the parse-scaffold always-save blocks.
+    """
     from nchantdoffice.widgets.documents.journal import (
         NchantdOfficeJournalEditor,
     )
     src = inspect.getsource(NchantdOfficeJournalEditor.save)
-    assert "super().save()" in src, (
-        "outer save() must call super().save() (T-NEW-XXX)"
-    )
-    assert "self._parse_entry()" in src, (
-        "outer save() must call _parse_entry() (T-NEW-XXX)"
+    assert "self.save_app()" in src, (
+        "outer save() must call self.save_app() (T-NEW-XXX: app_media path)"
     )
     assert "self.parent.save()" in src, (
         "outer save() must call parent.save() (T-NEW-XXX)"
@@ -42,7 +46,11 @@ def test_journal_outer_save_calls_parent():
 
 
 def test_journal_outer_save_persists_via_parent():
-    """The outer save() must call parent.save() and super().save() in order."""
+    """The outer save() must call parent.save() (and save_app -- the
+    app_media path). The journal is an app_media document so
+    super().save() is intentionally NOT called (it would put erroneous
+    data into doc_media_content -- 9e74486).
+    """
     from nchantdoffice.widgets.documents.journal import (
         NchantdOfficeJournalEditor,
     )
@@ -60,21 +68,27 @@ def test_journal_outer_save_persists_via_parent():
     editor.document = SimpleNamespace(content="", set_content=lambda c: None)
     editor.get_content = lambda: "test-content"
 
-    # Stub super().save() via direct method substitution
-    def fake_super_save(*args, **kwargs):
-        calls.append("super-saved")
-
-    # Use the class itself for __bases__[0] (NchantdOfficeDocument)
+    editor.save()
+    assert "parent-saved" in calls
+    # Negative contract: super().save() must NOT be called on the
+    # journal save path (it persists to doc_media_content, which is
+    # the wrong table for a journal entry -- 9e74486).
     base = NchantdOfficeJournalEditor.__mro__[1]
+    super_save_calls = []
+
+    def fake_super_save(*args, **kwargs):
+        super_save_calls.append("super-saved")
+
     orig_save = base.save
     base.save = fake_super_save
     try:
         editor.save()
     finally:
         base.save = orig_save
-
-    assert "super-saved" in calls
-    assert "parent-saved" in calls
+    assert super_save_calls == [], (
+        "save() must NOT call super().save() on the journal path -- "
+        "the journal is app_media, not doc_media (9e74486)"
+    )
 
 
 def test_journal_outer_save_with_new_entry_parses():
