@@ -1783,6 +1783,14 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] failed to wire browser load logging: {e}", exc_info=True)
         return self
 
+    def _on_webview_load_started(self):
+        """"""
+        #TODO: implement method
+
+    def _on_webview_load_progrss(self):
+        """"""
+        #TODO: implement method
+
     def _install_net_instrumentation(self, view) -> Self:
         """Wrap window.fetch / window.WebSocket to log failures.
 
