@@ -226,8 +226,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         if isinstance(document, PyfficeDocument):
             tab = document.to_dict()
             logma.info(f"Pyffice Document Provided {tab}")
-            # tab["widget"] = lookup_widget(tab["type"])
-            tab["widget"] = self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
+            _type = tab.get("type", tab.get("document_type", "script")) or "script"
+            tab["widget"] = self.app.model.get_document_type(_type).get("widget_txt", None)
             tab["type"] = document.doc_type
             tab["pid"] = pid
             tab["position"] = pos
@@ -2630,7 +2630,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     document = self.codex.init_script(self._file_open_cfg(file))
                     current_tab.open_file(file)
                     # document.load_document()
-                    self.add_document(document, self.get_current_node().nid, current_tab.pos + 1)
+                    try:
+                        pos = current_tab.pos + 1
+                    except Exception as e:
+                        logma.warning(e)
+                        pos = 0 #TODO: need to find correction position
+                    self.add_document(document, document.did, self.get_current_node().nid, pos)
                 else:
                     logma.info(f"Load Document to existing tab {file}")
                     # current_tab.document.load_document()
