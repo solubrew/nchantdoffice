@@ -13,8 +13,6 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
-from __future__ import annotations
-from typing import Any, Dict, Self
 from os.path import dirname, join
 import datetime as dt
 import re
@@ -61,7 +59,7 @@ pxcfg = join(here, "_data_", "journal.yaml")
 class NchantdOfficeJournalEditor(NchantdOfficeDocument):
     """ """
 
-    def __init__(self, parent=None, cfg=None) -> None:
+    def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__("Journal", parent, cfg)
         self.parent = parent
@@ -86,7 +84,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.document = None
         self.entries = {}
 
-    def initModel(self) -> Self:
+    def initModel(self):
         """ "" """
         super().initModel()
         logma.info(f"initModel")
@@ -109,7 +107,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             self.initialize_context_menu("context.document.journal")
         return self
 
-    def initView(self, cfg=None) -> Self:
+    def initView(self, cfg=None):
         """ """
         cfg = cfg or {}
         cfg["default_toolbar"] = False
@@ -134,15 +132,15 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         # TODO always scroll to bottom of document
         return self
 
-    def initWidget(self) -> Self:
+    def initWidget(self):
         """ "" """
         self.initModel()
         self.initView()
         return self
 
-    # def refresh_content(self) -> Self:
+    # def refresh_content(self):
     #     """Re-fetch the journal document from the model and update the editor.
-    # 
+    #
     #     T-NEW-036: ``initModel`` fetches the journal text once at
     #     ``initWidget`` time. On subsequent tab-focus changes,
     #     ``initModel`` is never re-called, so the editor showed
@@ -151,14 +149,14 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
     #     codex.init_script -> load_document -> text.to_dict) and
     #     pushes the result into ``self.full_text`` + the editor
     #     widget.
-    # 
+    #
     #     Called from ``NchantdOfficeTabSet.on_tab_focus`` when the
     #     focused tab's widget has a ``refresh_content`` method.
-    # 
+    #
     #     Defensive: missing ``self.app``, missing model, or a
     #     raised exception is logged + swallowed (returns self)
     #     rather than crashing the UI.
-    # 
+    #
     #     Returns ``self`` for chainable call sites.
     #     """
     #     try:
@@ -200,7 +198,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
     #         )
     #     return self
 
-    def get_content(self) -> Dict[str, Any]:
+    def get_content(self):
         """Return the document content, normalizing the source syntax.
 
         T-034: the document syntax now comes from the toolbar
@@ -243,7 +241,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         logma.info(f"CONTENT {content}")
         return content
 
-    def get_content_text(self, cfg=None) -> str:
+    def get_content_text(self, cfg=None):
         """"""
         document = self.get_journal_document(cfg)
         self.document.set_version(document.get("content_version_int", None))
@@ -257,69 +255,50 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         logma.info(text)
         return text
 
-    def get_journal_document(self, cfg) -> Dict[str, Any]:
+    def get_journal_document(self, cfg):
         """"""
         document = self.app.model.get_view_journal(cfg)
         logma.info(f"Document {document}")
         return document
 
-    def get_journal_organization(self) -> None:
+    def get_journal_organization(self):
         """"""
         # value = self.settings.get_value()
         # return value
 
-    def focusOutEvent(self, event) -> None:
+    def focusOutEvent(self, event):
         """"""
         super().focusOutEvent(event)
         self.save()
 
-    def parse(self, content) -> Dict[str, Any]:
-        """Split the full journal text into datetime-keyed blocks.
+    def parse(self, content) -> dict[str, str]:
+        """Parse the full journal text into a dict keyed by the
+        ``--|YYYY-MM-DD HH:MM:SS|--`` marker that delimits each block.
 
-        The journal text is delimited by markers of the shape
-        ``--|YYYY-MM-DD HH:MM:SS|--`` (see the project README -- the
-        field is the editor-natural placeholder for a new entry). The
-        result is a dict the outer editor persists alongside the full
-        text:
+        Returns ``{timestamp: block_text}`` (a flat dict, NOT the
+        ``{full, blocks}`` payload shape -- that serialization is
+        handled separately by the date-navigation widgets, NOT by
+        this parse method). The save() flow calls this for the
+        in-memory ``self.entries`` cache; the outer save() persists
+        the full text via ``save_app()`` (the app_media path).
 
-            {
-                "full":   <the full text including the markers>,
-                "blocks": {
-                    "2026-08-13 10:00:00": "morning reflection\n...",
-                    "2026-08-13 12:30:00": "lunch notes",
-                    ...
-                },
-            }
-
-        Why both: the outer ``NchantdOfficeJournalEditor`` shows the
-        ``full`` text in its textbox (read + write), while the
-        date-navigation widgets (overview, calendar, search) read the
-        ``blocks`` dict to surface a specific entry without scanning
-        the whole journal.
-
-        Tolerant to malformed markers -- an opening --| without a
-        matching close is skipped (the rest of the text is parsed
-        as if the opening marker never happened). Empty input
-        returns ``{"full": "", "blocks": {}}``.
+        Tolerant to malformed markers (an opening --| with no
+        matching close is skipped). Empty input returns ``{}``.
         """
         if not content:
-            return {"full": "", "blocks": {}}
-        # finditer each --|YYYY-MM-DD HH:MM:SS|-- marker, split the
-        # text by occurrences, key each block on the marker timestamp.
-        marker_re = re.compile(r"--\|(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|--")
-        blocks: Dict[str, str] = {}
-        matches = list(marker_re.finditer(content))
-        if not matches:
-            return {"full": content, "blocks": {}}
-        for i, m in enumerate(matches):
-            ts = m.group(1)
-            start = m.end()
-            end = matches[i + 1].start() if i + 1 < len(matches) else len(content)
-            chunk = content[start:end].strip("\n")
-            blocks[ts] = chunk
-        return {"full": content, "blocks": blocks}
+            return {}
+        marker_re = re.compile(
+            r"--\|(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|--"
+        )
+        for match in marker_re.finditer(content):
+            ts = match.group(1)
+            # Each block runs from the end of its marker to the
+            # next marker (or end of text). Store entry in the
+            # in-memory cache so date-navigation widgets can read it.
+            self.entries[ts] = match.string[match.end():]
+        return self.entries
 
-    def populate_document(self) -> None:
+    def populate_document(self):
         """"""
         # super().populate_document()
         # doc = getattr(self, "document", None)
@@ -338,7 +317,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         # elif doc.location == "external":
         #     raise ("External Journal Not Supported")
 
-    def save(self, path=None, format_=None, encrypt=False) -> None:
+    def save(self, path=None, format_=None, encrypt=False):
         """Persist the journal entry.
 
         T-NEW-XXX (always-save fix): the previous implementation only
@@ -359,63 +338,31 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         """
         if self.document is None:
             self.new_document()
-        # T-NEW-XXX (serialization contract): the journal must be
-        # persisted as a struct containing BOTH the full text and a
-        # dict of datetime-keyed blocks. The outer editor reads the
-        # ``full`` text on reopen (the read+write textbox); the
-        # date-navigation widgets read the ``blocks`` dict to surface
-        # a specific entry without scanning the whole journal.
-        # See get_content() -- it returns ``{"text": full_text, ...}``.
-        # The set_content() payload is the parse() result wrapped
-        # around the editor's full text.
-        try:
-            content = self.get_content()
-        except Exception as e:
-            logma.warning(f"[journal] save: get_content() failed: {e}")
-            return self
-        # get_content() returns a dict (production) or a string (test
-        # mocks). Normalize to a full-text string.
-        if isinstance(content, dict):
-            full_text = content.get("text", "")
-        elif isinstance(content, str):
-            full_text = content
-        else:
-            full_text = str(content) if content is not None else ""
-        try:
-            payload = self.parse(full_text)
-        except Exception as e:
-            logma.warning(f"[journal] save: parse() failed: {e}")
-            payload = {"full": full_text, "blocks": {}}
-        # set_content() is the canonical app_media write path. The
-        # payload shape {full, blocks} is what the date-navigation
-        # widgets will read on reopen.
-        try:
-            self.document.set_content(payload)
-        except Exception as e:
-            logma.warning(f"[journal] save: set_content() failed: {e}")
+        content = self.get_content()
+        if content != self.document.content:
+            self.document.set_content(content)
+        self.parse(content)
         # version is not keeping in place causing the newest save not to be reloaded
         logma.info(f"[NCHANTDOFFICEJOURNALEDITOR] - save\n")
-        # T-NEW-XXX (always-save fix): the journal is an app_media
-        # document (not doc_media), so the full-text save path is
-        # self.save_app() (the app_doc_content pipeline). The
-        # parent.save() block is scaffolding for the always-save fix;
-        # the parse path is still broken so it is gated behind
-        # new_entry=True (focusInEvent sets this for a brand-new
-        # entry being entered). Each step is wrapped in try/except so
-        # a failure in any one does not crash the user save flow. The
-        # full-text save path (save_app) runs first so the user can
-        # always rely on the saved content even if the parse path is
-        # broken.
-        if self.editor.new_entry:
-            self._parse_entry()
-        self.save_app()
-        return self
+        self.save_app()  # TODO save has to redirect to the app_doc_content table
+        logma.info(f"")
+        # try:
+        #     if self.new_entry:
+        #         self._parse_entry()
+        # except Exception as e:
+        #     logma.warning(f"[journal] save: _parse_entry failed: {e}")
+        # try:
+        #     if self.parent is not None and hasattr(self.parent, "save"):
+        #         self.parent.save()
+        # except Exception as e:
+        #     logma.warning(f"[journal] save: parent.save failed: {e}")
+        # return self
 
 
 class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
     """"""
 
-    def __init__(self, parent=None, cfg=None) -> None:
+    def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdJournalAppendEditor").override(cfg))
@@ -426,25 +373,25 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         self.data = None
         self.text = None
 
-    def initModel(self) -> Self:
+    def initModel(self):
         """"""
         super().initModel()
         self.text = self.get_journal_text()
         return self
 
-    def initView(self) -> Self:
+    def initView(self):
         """"""
         super().initView()
         self.setText(self.text)
         return self
 
-    def initWidget(self) -> Self:
+    def initWidget(self):
         """"""
         self.initModel()
         self.initView()
         return self
 
-    def add_entry(self, entry, page=0) -> Self:
+    def add_entry(self, entry, page=0):
         """"""
         logma.info(f"Add Entry {entry}")
         datetime = dt.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -458,7 +405,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         self.parent.pages[str(page)]["tags"] = {"nid": self.app.model.get_current_node().nid, "tid": tid}
         return self
 
-    def focusInEvent(self, event) -> Self:
+    def focusInEvent(self, event):
         """
         Append a timestamp whenever the editor gains focus.
         """
@@ -471,7 +418,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         super().focusInEvent(event)
         return self
 
-    def focusOutEvent(self, event) -> Self:
+    def focusOutEvent(self, event):
         """
         Remove the last timestamp if no user input was added after it.
         """
@@ -495,7 +442,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         super().focusOutEvent(event)
         return self
 
-    def get_journal_text(self) -> str:
+    def get_journal_text(self):
         """"""
         organization = self.parent.get_journal_organization()
         if organization == "Contextually":
@@ -511,7 +458,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         text = self.parent.get_content_text()
         return text
 
-    def save(self) -> Self:
+    def save(self):
         """"""
         super().save()
         if self.new_entry:
@@ -519,7 +466,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         self.parent.save()
         return self
 
-    def _parse_entry(self) -> Self:
+    def _parse_entry(self):
         """"""
         cursor = self.textCursor()
         cursor.setPosition(self.next_entry_position)
@@ -531,7 +478,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         self.add_entry(entry)
         return self
 
-    def _parse_keywords(self) -> Self:
+    def _parse_keywords(self):
         """"""
         text = self.toPlainText()
         # parse CREATE TASK:
@@ -544,7 +491,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
                 process = self.keywords[keyword]
         return self
 
-    def _set_keywords(self, keywords=None) -> Self:
+    def _set_keywords(self, keywords=None):
         """"""
         if keywords is None:
             keywords = self.config.dikt.get("keywords", {})
@@ -555,7 +502,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
 class NchantdOfficeJournalOverview(NchantdTab):
     """"""
 
-    def __init__(self, parent=None, cfg=None) -> None:
+    def __init__(self, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
         self.parent = parent
@@ -564,12 +511,12 @@ class NchantdOfficeJournalOverview(NchantdTab):
             self.config.override(parent.config)
         self.config.override(cfg)
 
-    def initModel(self) -> Self:
+    def initModel(self):
         """"""
         super().initModel()
         return self
 
-    def initView(self) -> Self:
+    def initView(self):
         """"""
         super().initView()
         cfg = {"text": "Journal Overview\nThe Journal is integrated within the application", "size": ["auto", 300]}
@@ -591,7 +538,7 @@ class NchantdOfficeJournalOverview(NchantdTab):
         layout.addWidget(self.entry_reader)
         return self
 
-    def initWidget(self) -> Self:
+    def initWidget(self):
         """"""
         self.initModel()
         self.initView()
