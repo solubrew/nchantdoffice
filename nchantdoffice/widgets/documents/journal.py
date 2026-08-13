@@ -406,15 +406,9 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         # full-text save path (save_app) runs first so the user can
         # always rely on the saved content even if the parse path is
         # broken.
-        try:
-            self.save_app()
-        except Exception as e:
-            logma.warning(f"[journal] save: save_app() failed: {e}")
-        try:
-            if self.new_entry:
-                self._parse_entry()
-        except Exception as e:
-            logma.warning(f"[journal] save: _parse_entry failed: {e}")
+        self.save_app()
+        if self.new_entry:
+            self._parse_entry()
         try:
             if self.parent is not None and hasattr(self.parent, "save"):
                 self.parent.save()
