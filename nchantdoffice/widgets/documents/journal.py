@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import Any, Dict, Self
 from os.path import dirname, join
 import datetime as dt
+import re
 from bs4 import BeautifulSoup
 import json
 
@@ -272,14 +273,53 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         super().focusOutEvent(event)
         self.save()
 
-    def parse(self, content) -> None:
-        """parse text from journal to extract into each date time entry as an object for later retrieval
-        also need to store what document was active in the center tabset during writing of note for context view
+    def parse(self, content) -> Dict[str, Any]:
+        """Split the full journal text into datetime-keyed blocks.
+
+        The journal text is delimited by markers of the shape
+        ``--|YYYY-MM-DD HH:MM:SS|--`` (see the project README -- the
+        field is the editor-natural placeholder for a new entry). The
+        result is a dict the outer editor persists alongside the full
+        text:
+
+            {
+                "full":   <the full text including the markers>,
+                "blocks": {
+                    "2026-08-13 10:00:00": "morning reflection\n...",
+                    "2026-08-13 12:30:00": "lunch notes",
+                    ...
+                },
+            }
+
+        Why both: the outer ``NchantdOfficeJournalEditor`` shows the
+        ``full`` text in its textbox (read + write), while the
+        date-navigation widgets (overview, calendar, search) read the
+        ``blocks`` dict to surface a specific entry without scanning
+        the whole journal.
+
+        Tolerant to malformed markers -- an opening --| without a
+        matching close is skipped (the rest of the text is parsed
+        as if the opening marker never happened). Empty input
+        returns ``{"full": "", "blocks": {}}``.
         """
-        # TODO implement extraction and storage schema input
-        logma.info(content)
-        # for _date, entry in content.split("--|{date}|--"):
-        #     self.entries[_date] = entry
+        if not content:
+            return {"full": "", "blocks": {}}
+        # finditer each --|YYYY-MM-DD HH:MM:SS|-- marker, split the
+        # text by occurrences, key each block on the marker timestamp.
+        marker_re = re.compile(
+            r"--\|(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|--"
+        )
+        blocks: Dict[str, str] = {}
+        matches = list(marker_re.finditer(content))
+        if not matches:
+            return {"full": content, "blocks": {}}
+        for i, m in enumerate(matches):
+            ts = m.group(1)
+            start = m.end()
+            end = matches[i + 1].start() if i + 1 < len(matches) else len(content)
+            chunk = content[start:end].strip("\n")
+            blocks[ts] = chunk
+        return {"full": content, "blocks": blocks}
 
     def populate_document(self) -> None:
         """"""
@@ -321,20 +361,50 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         """
         if self.document is None:
             self.new_document()
-        content = self.get_content()
-        if content != self.document.content:
-            self.document.set_content(content)
-        self.parse(content)
+        # T-NEW-XXX (serialization contract): the journal must be
+        # persisted as a struct containing BOTH the full text and a
+        # dict of datetime-keyed blocks. The outer editor reads the
+        # ``full`` text on reopen (the read+write textbox); the
+        # date-navigation widgets read the ``blocks`` dict to surface
+        # a specific entry without scanning the whole journal.
+        # See get_content() -- it returns ``{"text": full_text, ...}``.
+        # The set_content() payload is the parse() result wrapped
+        # around the editor's full text.
+        try:
+            content = self.get_content()
+        except Exception as e:
+            logma.warning(f"[journal] save: get_content() failed: {e}")
+            return self
+        # get_content() returns a dict (production) or a string (test
+        # mocks). Normalize to a full-text string.
+        if isinstance(content, dict):
+            full_text = content.get("text", "")
+        elif isinstance(content, str):
+            full_text = content
+        else:
+            full_text = str(content) if content is not None else ""
+        try:
+            payload = self.parse(full_text)
+        except Exception as e:
+            logma.warning(f"[journal] save: parse() failed: {e}")
+            payload = {"full": full_text, "blocks": {}}
+        # set_content() is the canonical app_media write path. The
+        # payload shape {full, blocks} is what the date-navigation
+        # widgets will read on reopen.
+        try:
+            self.document.set_content(payload)
+        except Exception as e:
+            logma.warning(f"[journal] save: set_content() failed: {e}")
         # version is not keeping in place causing the newest save not to be reloaded
         logma.info(f"[NCHANTDOFFICEJOURNALEDITOR] - save\n")
         # T-NEW-XXX (always-save fix): the journal is an app_media
         # document (not doc_media), so the full-text save path is
         # self.save_app() (the app_doc_content pipeline). The
-        # parse/parent.save() blocks are scaffolding for the always-save
-        # fix; the parse path is still broken so it is gated behind
+        # parent.save() block is scaffolding for the always-save fix;
+        # the parse path is still broken so it is gated behind
         # new_entry=True (focusInEvent sets this for a brand-new
-        # entry being entered). Each step is wrapped in try/except so a
-        # failure in any one does not crash the user save flow. The
+        # entry being entered). Each step is wrapped in try/except so
+        # a failure in any one does not crash the user save flow. The
         # full-text save path (save_app) runs first so the user can
         # always rely on the saved content even if the parse path is
         # broken.
