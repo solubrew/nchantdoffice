@@ -46,6 +46,7 @@ if not log:
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "browsers.yaml")
+HOMEPAGE = "https://www.nchantdoffice.com/"
 
 
 class NchantdOfficeWebBrowser(NchantdOfficeDocument):
@@ -88,19 +89,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         cfg = {}
         self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
         cfg = {}
-        self.active_url.init_document(self.document.get_url(), cfg)
-        # Plain-string URL mirror for reopen: same 4-tier fallback
-        # pattern as NchantdOfficeImage.file_path. The URL is on
-        # the document's nested active_page.active_url.active_url
-        # attribute (set by load_document on the codex side), but
-        # we also peek at the saved content payload and the config
-        # in case Pyffice's load ran before the codex initialised.
-        self.url = (
-            getattr(self.active_url, "active_url", None)
-            or self.config.dikt.get("url")
-            or (self.document.content or {}).get("url")
-            or (self.document.content or {}).get("content", {}).get("url")
-        )
+        self.active_url.init_document(self.document.get_active_page().get_url_document(), cfg)
         self.library = self.document.library
         self.profiles = self.document.profile_manager
         self.get_current_profile()
@@ -110,7 +99,9 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """"""
         if cfg is None:
             cfg = {}
-        self.browser = NchantdOfficeWebViewer(self, {"url": self.active_url})
+        url = self.active_url.get_url()
+        cfg["url"] = url
+        self.browser = NchantdOfficeWebViewer(self, cfg)
         self.browser.is_simple = False
         cfg["buttons"] = self.build_toolbar()
         cfg["fill"] = True
@@ -120,7 +111,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.layout.addWidget(self.browser)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(3)
-        self.populate_document()
+        self.populate_document(url)
         # PUSH to 0.0.3 force external until
         # self.document.set_location("external")
         #
@@ -295,11 +286,9 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     def cmd_goto_page(self, event=None, *args, **kwargs) -> Self:
         """"""
         logma.info(f"Event {event}")
-        page = None
-        self.document.set_page_active(page)
+        # page = None
+        # self.document.set_page_active(page)
         url = self.document.active_page.active_url.active_url
-        if url is None:
-            return self
         logma.info(f"Goto {url}")
         self.populate_document(url)
         return self
@@ -1037,38 +1026,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browser] open_new_tab failed: {e}", exc_info=True)
             return self
 
-    def open_new_window(self, url) -> Self:
-        """Handle a target="_blank" / window.open request from the page.
-
-        Opens the URL as a browser tab in the center tabset, or focuses the tab
-        already showing it. Called (via a capture page) from
-        NchantdWebEnginePage.createWindow, which otherwise silently dropped these
-        (symptom: Google account "favorites" shortcuts did nothing on click).
-
-        Falls back to loading the URL in this view if the tabset path is
-        unavailable, so a click is never silently dropped.
-        """
-        # H28 FIX: Skip opening new tab if page is pinned
-        if self.pinned:
-            logma.info("[browser] open_new_window blocked: page is pinned")
-            return self
-
-        url_str = url.toString() if isinstance(url, pyqt.QUrl) else str(url)
-        logma.info(f"[browser] open_new_window url={url_str}")
-        try:
-            center = self.app.view.panes.get("center") if self.app and self.app.view else None
-            result = center.model.open_web_tab(url_str) if center is not None else None
-            if result is not None:
-                return self
-            logma.info("[browser] open_web_tab unavailable; loading in current view as fallback")
-        except Exception as e:
-            logma.error(f"[browser] open_new_window failed: {e}; falling back to in-place load", exc_info=True)
-        try:
-            self.populate_document(url_str)
-        except Exception as e:
-            logma.error(f"[browser] open_new_window fallback populate_document failed: {e}", exc_info=True)
-        return self
-
     def pin_page(self) -> Self:
         """"""
         if self.pinned is False:
@@ -1126,6 +1083,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """
         if self.pinned:
             return self
+        self.file_path = self.get_active_url()
         super().save()
         return self
 

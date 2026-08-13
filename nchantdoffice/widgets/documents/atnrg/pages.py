@@ -250,13 +250,13 @@ class NchantdOfficeURL(NchantdURL):
     def init_document(self, document=None, cfg=None) -> None:
         """"""
         cfg = cfg or {}
-        self.config.get(cfg)
+        self.config.override(cfg)
         if document is None:
             document = {"document": self.config.get("document", {})}
             self.document = self.app.model.codex.init_url(document)
         else:
             self.document = document
-        self.document.load_document()
+        self.document.load_unit()
 
 
 # ====================================================================================================================||
