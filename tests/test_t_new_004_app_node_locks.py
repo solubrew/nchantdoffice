@@ -200,8 +200,15 @@ def test_model_delete_node_skips_locked_node():
     ).read_text()
     # Find the delete_node method body
     import re
+    # The signature includes a return annotation
+    # (def delete_node(self, node) -> "NchantdOfficeCloakModel":)
+    # so the regex can't anchor on ')'. Use a non-greedy match that
+    # captures everything up to the next class/def boundary.
+    # Match the def signature (allowing for a return annotation) and
+    # capture the body via a non-greedy match ending at the next
+    # class/def boundary.
     m = re.search(
-        r"def delete_node\(self, node\):(.*?)(?=\n    def |\nclass |\Z)",
+        r"def delete_node\(self, node\).*?\n(.*?)(?=\n    def |\nclass |\Z)",
         models_py,
         re.S,
     )
