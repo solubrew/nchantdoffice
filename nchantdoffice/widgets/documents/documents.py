@@ -661,19 +661,36 @@ class NchantdOfficeDocumentMixin:
 
         - ``NchantdOfficeJournalEditor.save()`` -- the journal is
           an app_media document. It calls ``self.save_app()``
-          only. The ``_parse_entry()`` and ``parent.save()``
-          blocks are intentionally commented out (last seen in
-          commit 174cfd86) -- parsing is a separate workstream
-          (T-NEW-XXX) and the always-save scaffolding is left in
-          the source for the next agent to wire up.
+          only -- that is the entire save contract. Per the user
+          directive in commits ``9e74486`` / ``cb6ebb9``, the
+          ``super().save()`` call was removed because it persisted
+          to ``doc_media_content`` (the wrong table for a journal
+          entry), and the try/except wrappers around
+          ``save_app()`` and ``_parse_entry()`` were also removed
+          so a save_app failure propagates to the Qt event loop
+          instead of being silently dropped. The result: any
+          failure in the journal save path is loud, not silent,
+          and the user's text is never lost to a swallowed
+          exception.
+        - ``NchantdOfficeJournalAppendEditor.add_entry()`` -- the
+          inner append editor's ``add_entry`` method mirrors the
+          new entry to BOTH ``self.parent.pages`` (the editor's
+          in-memory alias) AND ``self.parent.document.pages``
+          (the persisted Pyffice document). The second write is
+          what makes the entry land in
+          ``app_media_content.content_enc64_txt`` via the outer
+          ``save()`` chain. Without the document mirror the entry
+          was in memory only and lost on reopen -- see
+          commit ``374c6eb`` and
+          ``tests/test_journal_add_entry_mirrors_to_document.py``.
         - ``NchantdOfficeWebBrowser.save()`` -- the browser is
           also an app_media document. ``save_app()`` writes the
-          full URL + page payload to ``app_media_content`` so
-          a redocument_reopen can restore the page.
+          full URL + page payload to ``app_media_content`` so a
+          reopen can restore the page.
 
         **PII / secrets guard (defensive):** the logger records
         only the content type and top-level keys, never the
-        payload body. See line 640 below.
+        payload body.
 
         **Returns self** for chainable callers.
         """

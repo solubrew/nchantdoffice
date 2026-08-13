@@ -46,11 +46,13 @@
 - add to Settings/Interface tab config to allow a user to select that tab name updates to the file name when a file is opened 
 - implement search across all nodes and tabs as well as node specific and tab specific search as well finish code in the NchantdOfficeApplicationToolBox 
 - NchantdOfficeJournalEditor always-save functionality fixed (outer save() now calls _parse_entry + parent.save) — **SUPERSEDED** by the
-  app_media restoration work (commits 9e74486 / cb6ebb9 / ca1b2e4 / dad65fe). The current canonical save contract is just
-  `self.save_app()` -- the parse_entry + parent.save blocks are intentionally commented out pending the always-save follow-up (see `parse()` for
-  the in-memory cache populated from the `--|YYYY-MM-DD HH:MM:SS|--` markers). Do NOT re-introduce `super().save()` on the journal path -- it persists
-  to `doc_media_content` which is the wrong table for an app_media document. See `nchantdoffice/widgets/documents/journal.py` and the
-  `save_app()` docstring at `nchantdoffice/widgets/documents/documents.py:625`.
+  app_media restoration work (T-NEW-079). The current canonical save contract: outer save() calls `self.save_app()` ONLY. The
+  `_parse_entry()` / `parent.save()` blocks are intentionally commented out (the always-save follow-up is a separate card). The inner
+  `NchantdOfficeJournalAppendEditor.save()` does call `_parse_entry()` -> `add_entry()` -> `parent.save()` chain which populates the entries
+  dict. `parse(content)` splits the full text on `--|YYYY-MM-DD HH:MM:SS|--` markers and stores the `{timestamp: block_text}` dict in
+  `self.entries` (the in-memory cache). Do NOT re-introduce `super().save()` on the journal path -- it persists to `doc_media_content` which
+  is the wrong table for an app_media document. See `nchantdoffice/widgets/documents/journal.py`, `save_app()` docstring at
+  `nchantdoffice/widgets/documents/documents.py:625`, and the full T-NEW-079 card body in this file.
 
 - Name-entry dialog for new nodes/tabs — checkboxes now in Settings/Interface tab — **FIXED** (prompt_for_new_node_name, prompt_for_new_tab_name checkboxes added to settings.py)
 - Tab drag-drop only initiates on tab name area — **FIXED** (nchantrs tabs.py _is_in_tab_name_area)
@@ -310,6 +312,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-040 | Toolbar init tech debt (redundant init_variables + MultiInstance switch) | ✅ Done — Sprint 29 (stale comment removed; _resolve_db_alias helper) |
 | T-NEW-041 | Widget lookup from document_types table | ✅ Done — Sprint 29 (stale TODO removed; canonical lookup verified) |
 | T-NEW-042 | Note position increment for multiple notes | ✅ Done — Sprint 29 (_compute_note_position helper) |
+| T-NEW-079 | Journal save/restore canonical contract (save_app only) + parse() + add_entry->document.pages mirror + refresh_content un-comment | ✅ Done — 2026-08-13 (commits `dad65fe`, `ca1b2e4`, `374c6eb`, `e1d660c`, `f978a95` cleanup). See journal save/restore restoration entry in CHANGES.md. |
 
 ### T-NEW-025 — Content versioning for `NchantdOfficeCloakModel.save` (2026-07-30)
 
@@ -1998,36 +2001,51 @@ Both are scoped for v0.2.0 because:
 
 ### T-NEW-079 — Journal save/restore canonical contract + parse() implementation (2026-08-13)
 
-**Context.** The journal save path had drifted through several Sprint 28+ attempts. The user restored the journal to the functional state at commit `174cfd86` (journal save functional...parsing still needs full implementation) and asked for the parse() logic to be added back. The current state is:
+**Context.** The journal save path had drifted through several Sprint 28+ attempts. The user restored the journal to the functional state at commit `174cfd86` (journal save functional...parsing still needs full implementation) and asked for the parse() logic to be added back. Then the user identified the live bug: the full text saved, but the entries dict inside `app_media_content.content_enc64_txt` was empty. Root cause: `add_entry()` only wrote to `self.parent.pages` (the editor's in-memory alias), not `self.parent.document.pages` (the persisted object). This card groups the restoration, the parse() implementation, and the add_entry mirror fix as one workstream.
+
+**Current state (this card is DONE; the future items are tracked below as separate follow-ups):**
 
 - `NchantdOfficeJournalEditor.save()` calls `self.save_app()` (the app_media path). That is the ONLY correct save path for the journal — `super().save()` was removed by the user (commits `9e74486` / `cb6ebb9`) because it persisted to `doc_media_content`, which is the wrong table for an app_media document.
-- `NchantdOfficeJournalEditor.parse(content)` is now implemented. It accepts ``content`` as either the dict returned by ``get_content()`` (production) or a plain string (test mocks), unpacks the ``"text"`` key when given a dict, runs the marker regex `--|(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|--`, and stores the `{timestamp: block_text}` dict in `self.entries` (the in-memory cache for date-navigation widgets like the journal overview).
+- `NchantdOfficeJournalEditor.save()` does NOT wrap `save_app()` in try/except. Per the user's `cb6ebb9` directive, save_app failures propagate to the Qt event loop rather than being silently dropped. The user-visible benefit: a save_app failure is loud, not silent, and the user's text is never lost to a swallowed exception.
+- `NchantdOfficeJournalEditor.parse(content)` is implemented. It accepts ``content`` as either the dict returned by ``get_content()`` (production) or a plain string (test mocks), unpacks the ``"text"`` key when given a dict, lazy-inits `self.entries` (for test mocks that bypass `__init__`), runs the marker regex `--|(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|--`, and stores the `{timestamp: block_text}` dict in `self.entries` (the in-memory cache for date-navigation widgets like the journal overview).
+- `NchantdOfficeJournalEditor.refresh_content()` is un-commented (per T-NEW-036 + T-NEW-073). It re-fetches the journal text from the model on every tab focus so the editor shows the current content instead of stale cached text.
+- `NchantdOfficeJournalAppendEditor.add_entry(entry, page)` writes to BOTH `self.parent.pages` (the editor's alias) AND `self.parent.document.pages` (the persisted Pyffice document). The second write is what makes the entry land in `app_media_content.content_enc64_txt` via the outer save chain. Without this mirror the entry is in memory only and lost on next reopen. Defensive fallbacks: creates page-0 entries on first call, skips the mirror when `self.parent.document is None`.
 - The save payload is NOT wrapped in `{full, blocks}`. The full text is the canonical payload (via `save_app()`); the parsed blocks live in `self.entries` only. The original idea of a `{full, blocks}` payload was rejected because it duplicated the full text inside the same blob and added no value for date-navigation widgets that read `self.entries` directly.
 
 **Why this card exists.** It pins the contract so a future agent doesn't re-introduce the prior regression:
 
 1. `super().save()` on the journal save path writes to `doc_media_content` — the wrong table. The user explicitly removed it because it broke things. The contract is: journal save = `save_app()` only.
-2. `save_app()` is the canonical full-text save for app_media documents. Its docstring at `nchantdoffice/widgets/documents/documents.py:625` now documents: "Do NOT call both `super().save()` and `self.save_app()` on the same document". Read that docstring before touching any save path.
-3. The parse() method normalizes input (dict vs string vs None) so the save flow can call it without first unpacking the get_content() dict. That fix is in `ca1b2e4` — without it, the user's save flow crashed with `TypeError: expected string or bytes-like object, got 'dict'`.
+2. `save_app()` is the canonical full-text save for app_media documents. Its docstring at `nchantdoffice/widgets/documents/documents.py:625` documents: "Do NOT call both `super().save()` and `self.save_app()` on the same document". Read that docstring before touching any save path.
+3. The parse() method normalizes input (dict vs string vs None) so the save flow can call it without first unpacking the get_content() dict. Without the normalize fix, the user's save flow crashed with `TypeError: expected string or bytes-like object, got 'dict'`.
+4. The add_entry mirror to document.pages is what makes the entries dict persist. Without the mirror, the full text saved but the entries dict was empty — that was the user-visible live bug this card fixes.
+5. save_app() is NOT wrapped in try/except. A save failure propagates to the Qt event loop. The user removed the wrapper in `cb6ebb9`; do NOT re-add it.
 
 **Affected sites:**
-- `nchantdoffice/widgets/documents/journal.py` — the canonical save/parse contract (current state).
+- `nchantdoffice/widgets/documents/journal.py` — the canonical save/parse/refresh contract (current state).
+- `nchantdoffice/widgets/documents/journal.py:refresh_content` — re-fetch on tab focus (T-NEW-036 + T-NEW-073).
+- `nchantdoffice/widgets/documents/journal.py:add_entry` — the entries -> document.pages mirror.
 - `nchantdoffice/widgets/documents/documents.py:625` — `save_app()` docstring documenting the app_media guarantee.
+- `tests/test_journal_always_save.py` — 6 canonical-contract tests pinning the save_app() flow.
+- `tests/test_journal_restore.py` — 7 refresh_content tests pinning the tab-focus re-fetch.
+- `tests/test_journal_add_entry_mirrors_to_document.py` — 5 mirror tests pinning the add_entry -> document.pages contract.
 - `CHANGES.md` (Unreleased > Added) — the journal save/restore restoration entry.
-- `TODOs.md` — the always-save line is now marked SUPERSEDED with the actual contract.
 
-**Migration plan** (no priority — design decision first). The card is informational; the actual follow-up is to wire the always-save scaffolding (the parse_entry + parent.save blocks left in the source as scaffolding) into the save() flow without breaking the app_media save contract. That work is T-NEW-XXX — not landed yet.
+**Migration plan** — DONE (all 4 steps landed + a follow-up cleanup):
+1. (Done — commit `dad65fe`) Restore `save_app()` as the only journal save path. Add `import re` + `parse()` implementation.
+2. (Done — commit `ca1b2e4`) Normalize parse() input for the dict-vs-string case (fixes the `TypeError: expected string or bytes-like object, got 'dict'` live crash).
+3. (Done — commit `374c6eb`) Make `add_entry()` mirror to the document. The persistent entries dict was empty because `add_entry()` only wrote to `self.parent.pages` (the editor's alias), not `self.parent.document.pages` (the actual persisted object). The fix writes to both, with defensive fallbacks for empty pages and missing documents.
+4. (Done — commit `e1d660c`) Un-comment `refresh_content()` so the editor re-fetches on tab focus. Update `test_journal_always_save.py` to assert the canonical contract (save_app() only, exceptions propagate, no parent.save). Add `import re` to journal.py (was missing — caused the user's live `NameError: name 're' is not defined` on first save).
+5. (Done — commit `f978a95` cleanup) User debug pass: removed the dead commented-out `refresh_content` block (replaced by the real method in step 4) and the dead `populate_document` scaffolding. No behavior change. The journal is now at 174cfd86 + the 4 functional fixes from steps 1-4, nothing more.
 
-**Steps:**
-1. (Done) Restore `save_app()` as the only journal save path. Add `import re` + `parse()` implementation. Normalize parse() input for the dict-vs-string case.
-2. (Done) Make `add_entry()` mirror to the document. The persistent entries dict was empty because `add_entry()` only wrote to `self.parent.pages` (the editor's alias), not `self.parent.document.pages` (the actual persisted object). The fix writes to both, with defensive fallbacks for empty pages and missing documents. See `tests/test_journal_add_entry_mirrors_to_document.py` (5 tests).
-3. (Future) Land the parsing follow-up that was deferred at `174cfd86`: the always-save flow that runs `self._parse_entry()` then `self.parent.save()` from the inner editor's `focusOutEvent`. Per the same constraint: do NOT add `super().save()` to that path, because the journal is an app_media document and the parent pipeline is doc_media_content.
-4. (Future) Land the date-navigation widget that consumes `self.entries`. The current journal overview doesn't read from the parsed dict — it shows a static label. That's a separate workstream.
+**Future work (separate cards):**
+1. The always-save scaffolding — `self._parse_entry()` then `self.parent.save()` from the inner editor's `focusOutEvent` — is intentionally NOT in the outer save() flow yet. Per the same constraint: do NOT add `super().save()` to that path, because the journal is an app_media document. Land this when the user signals the always-save contract should be wired (separate card).
+2. The date-navigation widget that consumes `self.entries`. The current journal overview doesn't read from the parsed dict — it shows a static label. That's a separate workstream.
 
-**Verification:**
-- `python -m pytest tests/test_journal_always_save.py tests/test_journal_restore.py --tb=no -q` → 4 passed, 11 failed (the 11 failures are pre-existing at 174cfd86 — not regressions from this card).
-- `python -c "from nchantdoffice.widgets.documents.journal import NchantdOfficeJournalEditor; e = NchantdOfficeJournalEditor.__new__(NchantdOfficeJournalEditor); e.entries = {}; print(e.parse({'text': 'preamble\n--|2026-08-13 10:00:00|--\nmorning', 'content': {}}))" {\'2026-08-13 10:00:00\': \'\\nmorning\'}` → the parse() output populates `self.entries` correctly.
-- `git log -- nchantdoffice/widgets/documents/journal.py` → confirms only the save_app() call is the active save path; the parse_entry / parent.save blocks remain commented out as deferred scaffolding.
+**Verification (all green at the time of this update):**
+- `python -m pytest tests/test_journal_always_save.py tests/test_journal_restore.py tests/test_journal_add_entry_mirrors_to_document.py --tb=no -q` → 18 passed (6 + 7 + 5).
+- `python -m pytest --tb=no -q` (full suite) → 685 passed, 0 failed, 6 skipped (Qt offscreen SIGSEGV — known issue).
+- `python -c "from nchantdoffice.widgets.documents.journal import NchantdOfficeJournalEditor; e = NchantdOfficeJournalEditor.__new__(NchantdOfficeJournalEditor); e.entries = {}; print(e.parse({'text': 'preamble\n--|2026-08-13 10:00:00|--\nmorning', 'content': {}}))"` → prints `{'2026-08-13 10:00:00': '\nmorning'}` (parse output populates `self.entries` correctly).
+- `git log -- nchantdoffice/widgets/documents/journal.py` → confirms `self.save_app()` is the only save path; the `_parse_entry` / `parent.save` blocks remain commented out as deferred scaffolding.
 
 ### T-NEW-072 — TODOs.md update-process consolidation (2026-08-10)
 
