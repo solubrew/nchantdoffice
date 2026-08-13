@@ -401,9 +401,34 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         return self
 
     def add_entry(self, entry, page=0):
-        """"""
+        """Record a new entry into the journal's pages dict on the
+        document (NOT the editor's in-memory alias).
+
+        Both the editor (``self.parent.pages``) and the document
+        (``self.parent.document.pages``) get the same write so the
+        change is visible to:
+        - the outer ``NchantdOfficeJournalEditor`` (which reads
+          ``self.pages`` for its own bookkeeping)
+        - the persisted document (which is what
+          ``save_app()`` -> ``self.document.save(...)`` ->
+          ``store_document(...)`` actually writes to
+          ``app_media_content.content_enc64_txt``)
+
+        A prior version of this method only updated
+        ``self.parent.pages`` -- the editor's alias. The result
+        was that the entries appeared in memory but never reached
+        the persisted payload (the document's pages dict was
+        loaded once at initModel and never refreshed). The fix
+        writes to BOTH the editor alias AND the document so the
+        entries land in the next save_app() payload.
+        """
         logma.info(f"Add Entry {entry}")
         datetime = dt.datetime.now().strftime("%Y%m%d%H%M%S")
+        # Write to the editor alias (in-memory) -- callers that
+        # read self.parent.pages see the new entry. Create the
+        # page dict on the fly if it's the first entry ever.
+        if str(page) not in self.parent.pages:
+            self.parent.pages[str(page)] = {}
         if "entries" not in self.parent.pages[str(page)]:
             self.parent.pages[str(page)]["entries"] = {}
         self.parent.pages[str(page)]["entries"][datetime] = entry
@@ -411,7 +436,25 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         tid = None
         if hasattr(self.app.model.get_current_node(), "tid"):
             tid = self.app.model.get_current_tab().tid
-        self.parent.pages[str(page)]["tags"] = {"nid": self.app.model.get_current_node().nid, "tid": tid}
+        self.parent.pages[str(page)]["tags"] = {
+            "nid": self.app.model.get_current_node().nid, "tid": tid,
+        }
+        # Mirror to the document so save_app() persists the entry.
+        # The Pyffice document's pages dict is what gets serialized
+        # into app_media_content.content_enc64_txt by the save
+        # pipeline; without this mirror the entry is in memory
+        # only and lost on next reopen.
+        if (self.parent.document is not None
+                and hasattr(self.parent.document, "pages")):
+            doc_pages = self.parent.document.pages
+            if str(page) not in doc_pages:
+                doc_pages[str(page)] = {}
+            if "entries" not in doc_pages[str(page)]:
+                doc_pages[str(page)]["entries"] = {}
+            doc_pages[str(page)]["entries"][datetime] = entry
+            doc_pages[str(page)]["tags"] = {
+                "nid": self.app.model.get_current_node().nid, "tid": tid,
+            }
         return self
 
     def focusInEvent(self, event):
