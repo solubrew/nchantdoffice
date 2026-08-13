@@ -211,6 +211,65 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         super().focusOutEvent(event)
         self.save()
 
+    def refresh_content(self):
+        """Re-fetch the journal document from the model and update the editor.
+
+        T-NEW-036 + T-NEW-073: ``initModel`` fetches the journal text
+        once at ``initWidget`` time. On subsequent tab-focus changes,
+        ``initModel`` is never re-called, so the editor showed stale
+        content. This method re-fetches the current journal text
+        (same path as ``initModel``: get_view_journal -> codex.init_script
+        -> load_document -> text.to_dict) and pushes the result into
+        ``self.full_text`` + the editor widget.
+
+        Called from ``NchantdOfficeTabSet.on_tab_focus`` when the
+        focused tab's widget has a ``refresh_content`` method.
+
+        Defensive: missing ``self.app``, missing model, or a raised
+        exception is logged + swallowed (returns self) rather than
+        crashing the UI.
+
+        Returns ``self`` for chainable call sites.
+        """
+        try:
+            app = getattr(self, "app", None)
+            if app is None:
+                return self
+            model = getattr(app, "model", None)
+            if model is None:
+                return self
+            scope = self.config.dikt.get("scope", "TODAY")
+            datetime = dt.datetime.now()
+            tid = None
+            try:
+                tab = model.get_current_tab()
+                tid = getattr(tab, "tid", None)
+            except Exception:
+                pass
+            try:
+                node = model.get_current_node()
+                nid = getattr(node, "nid", None)
+            except Exception:
+                nid = None
+            tags = {"nid": nid, "tid": tid}
+            cfg = {"tags": tags, "scope": scope, "datetime": datetime}
+            document = {"document": model.get_view_journal(cfg)}
+            doc = model.codex.init_script(document)
+            doc.load_document()
+            text = doc.text.to_dict()["unit"].get("value", "")
+            self.full_text = text
+            self.document = doc
+            self.pages = doc.pages
+            if self.editor is not None and hasattr(self.editor, "setPlainText"):
+                self.editor.setPlainText(text)
+            logma.info(f"[journal] refresh_content: restored {len(text)} chars")
+        except Exception as e:
+            logma.error(
+                f"[journal] refresh_content failed: {e}",
+                exc_info=True,
+            )
+        return self
+
     def parse(self, content) -> dict[str, str]:
         """Parse the full journal text into a dict keyed by the
         ``--|YYYY-MM-DD HH:MM:SS|--`` marker that delimits each block.
@@ -234,8 +293,12 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             text = content
         else:
             text = "" if content is None else str(content)
+        # Lazy-init the in-memory cache. The test mocks bypass
+        # __init__ via __new__, so self.entries may not exist yet.
+        if not hasattr(self, "entries") or self.entries is None:
+            self.entries = {}
         if not text:
-            return {}
+            return self.entries
         marker_re = re.compile(
             r"--\|(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|--"
         )
@@ -325,32 +388,20 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         return self
 
     def add_entry(self, entry, page=0):
-        """Record a new entry into the journal's pages dict on the
-        document (NOT the editor's in-memory alias).
+        """Record a new entry into the journal's pages dict on BOTH
+        the editor alias and the document (the persisted object).
 
-        Both the editor (``self.parent.pages``) and the document
-        (``self.parent.document.pages``) get the same write so the
-        change is visible to:
-        - the outer ``NchantdOfficeJournalEditor`` (which reads
-          ``self.pages`` for its own bookkeeping)
-        - the persisted document (which is what
-          ``save_app()`` -> ``self.document.save(...)`` ->
-          ``store_document(...)`` actually writes to
-          ``app_media_content.content_enc64_txt``)
-
-        A prior version of this method only updated
-        ``self.parent.pages`` -- the editor's alias. The result
-        was that the entries appeared in memory but never reached
-        the persisted payload (the document's pages dict was
-        loaded once at initModel and never refreshed). The fix
-        writes to BOTH the editor alias AND the document so the
-        entries land in the next save_app() payload.
+        See T-NEW-079 step 2 in TODOs.md. The editor alias
+        (``self.parent.pages``) is the in-memory reference; the
+        document (``self.parent.document.pages``) is what
+        ``save_app()`` actually serializes into
+        ``app_media_content.content_enc64_txt``. Without mirroring
+        to the document, the entries dict was empty on disk (the
+        user-visible bug: full text saved, entries lost).
         """
         logma.info(f"Add Entry {entry}")
         datetime = dt.datetime.now().strftime("%Y%m%d%H%M%S")
-        # Write to the editor alias (in-memory) -- callers that
-        # read self.parent.pages see the new entry. Create the
-        # page dict on the fly if it's the first entry ever.
+        # Create the page dict on the fly if the first entry ever.
         if str(page) not in self.parent.pages:
             self.parent.pages[str(page)] = {}
         if "entries" not in self.parent.pages[str(page)]:
@@ -364,10 +415,6 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
             "nid": self.app.model.get_current_node().nid, "tid": tid,
         }
         # Mirror to the document so save_app() persists the entry.
-        # The Pyffice document's pages dict is what gets serialized
-        # into app_media_content.content_enc64_txt by the save
-        # pipeline; without this mirror the entry is in memory
-        # only and lost on next reopen.
         if (self.parent.document is not None
                 and hasattr(self.parent.document, "pages")):
             doc_pages = self.parent.document.pages

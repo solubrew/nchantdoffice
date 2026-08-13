@@ -624,9 +624,58 @@ class NchantdOfficeDocumentMixin:
 
     def save_app(self, path=None, format_=None, encrypt=False) -> Self:
         """
-        Save method saves the current document in its most recent format ie internal or external file saving
-        this can be different than a store_document command
-        :return:
+        Full-text save path for app_media documents. Persists
+        ``self.document`` via ``self.document.save(path)`` (which
+        increments the version and writes the body) and then calls
+        ``self.app.model.store_document(self.document, True)`` so
+        the row lands in ``app_doc_content`` / ``app_media_content``
+        (the ``True`` flag means "store to app_doc", NOT
+        ``doc_media_content``).
+
+        **Why this method exists alongside ``super().save()``:**
+
+        - ``super().save()`` (inherited from NchantdOfficeDocument)
+          persists the same document via the *doc_media_content*
+          path. That is the correct path for a normal document
+          (browser tab, script, image, etc.).
+        - ``save_app()`` is the correct path for documents that
+          the user wants to save as **app-scoped content** rather
+          than doc-scoped content. The journal is the canonical
+          example: a journal entry is owned by the application
+          (Home / Journal / Settings root), not by a single doc
+          tab, so it must live in ``app_media_content`` -- never
+          in ``doc_media_content``.
+
+        **Do NOT call both ``super().save()`` and ``self.save_app()``**
+        on the same document. The two paths write to different
+        tables but the same model object, and dedupe is by
+        (pUUID, version) across the `_content` tables. A
+        double-write would either land two rows that reference
+        the same content or, worse, push the wrong payload to
+        the wrong table (the live T-NEW-079 regression: the
+        journal save once called ``super().save()`` and put
+        ordinary file-handle strings into ``doc_media_content``,
+        which is not the journal's table).
+
+        **Callers (the canonical pattern):**
+
+        - ``NchantdOfficeJournalEditor.save()`` -- the journal is
+          an app_media document. It calls ``self.save_app()``
+          only. The ``_parse_entry()`` and ``parent.save()``
+          blocks are intentionally commented out (last seen in
+          commit 174cfd86) -- parsing is a separate workstream
+          (T-NEW-XXX) and the always-save scaffolding is left in
+          the source for the next agent to wire up.
+        - ``NchantdOfficeWebBrowser.save()`` -- the browser is
+          also an app_media document. ``save_app()`` writes the
+          full URL + page payload to ``app_media_content`` so
+          a redocument_reopen can restore the page.
+
+        **PII / secrets guard (defensive):** the logger records
+        only the content type and top-level keys, never the
+        payload body. See line 640 below.
+
+        **Returns self** for chainable callers.
         """
         if self.document is None:
             return self
