@@ -115,8 +115,11 @@ def test_build_chart_action_button_group_has_no_todo_implement_marker():
     # Find the stub region (5 lines after the def).
     import re
 
+    # The signature has a return annotation
+    # (def _build_chart_action_button_group(self) -> Any:) so the
+    # regex needs to allow the optional annotation between ) and :.
     m = re.search(
-        r"def _build_chart_action_button_group\(self\):.*?(?=\n    def |\nclass |\Z)",
+        r"def _build_chart_action_button_group\(self\).*?\n.*?(?=\n    def |\nclass |\Z)",
         charts_py,
         re.S,
     )

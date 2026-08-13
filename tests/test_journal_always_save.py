@@ -58,6 +58,8 @@ def test_journal_outer_save_persists_via_parent():
     editor = NchantdOfficeJournalEditor.__new__(NchantdOfficeJournalEditor)
 
     calls = []
+    editor.save_app = lambda: calls.append("save_app-called") or editor
+    editor.new_document = lambda: None
 
     class FakeParent:
         def save(self):
@@ -102,6 +104,8 @@ def test_journal_outer_save_with_new_entry_parses():
     editor.parent = SimpleNamespace(save=lambda: None)
     editor.document = SimpleNamespace(content="", set_content=lambda c: None)
     editor.get_content = lambda: "x"
+    editor.save_app = lambda: None
+    editor.new_document = lambda: None
 
     parsed = []
     editor._parse_entry = lambda: parsed.append("parsed") or editor
@@ -127,6 +131,8 @@ def test_journal_outer_save_swallows_parent_save_exception():
     editor.new_entry = False
     editor.document = SimpleNamespace(content="", set_content=lambda c: None)
     editor.get_content = lambda: "x"
+    editor.save_app = lambda: None
+    editor.new_document = lambda: None
 
     class BadParent:
         def save(self):
@@ -146,8 +152,12 @@ def test_journal_outer_save_swallows_parent_save_exception():
     assert result is editor
 
 
-def test_journal_outer_save_swallows_parse_entry_exception():
-    """If _parse_entry raises, the journal save must not crash."""
+def test_journal_outer_save_does_not_swallow_parse_entry_exception():
+    """After cb6ebb9 the user removed the try/except around
+    ``_parse_entry()`` so a parse exception now propagates.
+    This test pins the new (un-swallowed) contract.
+    """
+    import pytest
     from nchantdoffice.widgets.documents.journal import (
         NchantdOfficeJournalEditor,
     )
@@ -157,6 +167,8 @@ def test_journal_outer_save_swallows_parse_entry_exception():
     editor.parent = SimpleNamespace(save=lambda: None)
     editor.document = SimpleNamespace(content="", set_content=lambda c: None)
     editor.get_content = lambda: "x"
+    editor.save_app = lambda: None
+    editor.new_document = lambda: None
 
     def bad_parse():
         raise RuntimeError("parse boom")
@@ -167,11 +179,10 @@ def test_journal_outer_save_swallows_parse_entry_exception():
     orig_save = base.save
     base.save = lambda *a, **kw: None
     try:
-        result = editor.save()
+        with pytest.raises(RuntimeError, match="parse boom"):
+            editor.save()
     finally:
         base.save = orig_save
-
-    assert result is editor
 
 
 def test_journal_outer_save_no_parent_is_safe():
@@ -185,6 +196,8 @@ def test_journal_outer_save_no_parent_is_safe():
     editor.parent = None
     editor.document = SimpleNamespace(content="", set_content=lambda c: None)
     editor.get_content = lambda: "x"
+    editor.save_app = lambda: None
+    editor.new_document = lambda: None
 
     base = NchantdOfficeJournalEditor.__mro__[1]
     orig_save = base.save

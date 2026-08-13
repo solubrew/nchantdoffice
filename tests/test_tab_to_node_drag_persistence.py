@@ -229,8 +229,10 @@ def test_trees_drop_event_calls_handle_tab_dropped_on_node():
         "widgets/trees.py"
     ).read_text()
     # Find the dropEvent method body
+    # The signature has a return annotation (def dropEvent(self, event) -> None:)
+    # so the regex needs to allow the optional annotation between ) and :.
     m = re.search(
-        r"def dropEvent\(self[^\)]*\):.*?(?=\n    def |\Z)",
+        r"def dropEvent\(self[^\)]*\).*?\n.*?(?=\n    def |\Z)",
         trees_py,
         re.S,
     )
@@ -254,7 +256,7 @@ def test_trees_drop_event_calls_handle_tab_dropped_on_node():
 
     # Also assert _handle_tab_dropped_on_node calls cmd_set_tab_parent
     m2 = re.search(
-        r"def _handle_tab_dropped_on_node\(self[^\)]*\):.*?(?=\n    def |\Z)",
+        r"def _handle_tab_dropped_on_node\(self[^\)]*\).*?\n.*?(?=\n    def |\Z)",
         trees_py,
         re.S,
     )

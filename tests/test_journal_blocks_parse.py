@@ -186,6 +186,8 @@ def test_save_constructs_payload_with_full_and_blocks():
     editor.new_entry = False
     editor.parent = SimpleNamespace(save=lambda: None)
     editor.get_content = lambda: JOURNAL_SAMPLE
+    editor.save_app = lambda: None
+    editor.new_document = lambda: None
 
     captured = {}
 
@@ -194,14 +196,7 @@ def test_save_constructs_payload_with_full_and_blocks():
 
     editor.document = SimpleNamespace(content=None, set_content=capture_set_content)
 
-    # Stub super().save() so we don't recurse.
-    base = NchantdOfficeJournalEditor.__mro__[1]
-    orig_save = base.save
-    base.save = lambda *a, **kw: None
-    try:
-        editor.save()
-    finally:
-        base.save = orig_save
+    editor.save()
 
     assert "content" in captured, "save() must call document.set_content()"
     assert isinstance(captured["content"], dict), (
