@@ -69,13 +69,23 @@ def _make_browser(profile, store):
     browser = NchantdOfficeWebBrowser.__new__(NchantdOfficeWebBrowser)
     browser.parent = parent
     browser.pinned = False
+    # T-NEW-079 followup: the browser refactor (commit ef709da) added
+    # ``self.file_path = self.get_active_url()`` to ``save()``; that
+    # walks ``self.document.active_page.active_url.active_url``. The
+    # mock must mirror the production shape — without the inner
+    # ``active_url`` SimpleNamespace, the run-on-save AttributeError
+    # shadows the round-trip test we actually care about.
+    active_url = SimpleNamespace(active_url="https://example.test/path?q=1")
     browser.document = SimpleNamespace(
         did="browser-1",
         location="internal",
         content=None,
         file_path=None,
         syntax="json",  # store_document writes doc_media.syntax_txt (T-NEW-024 followup)
-        active_page=SimpleNamespace(to_dict=lambda: profile),
+        active_page=SimpleNamespace(
+            to_dict=lambda profile=profile: profile,
+            active_url=active_url,
+        ),
         version=1,
         save=lambda path=None: None,
         set_content=lambda content: setattr(browser.document, "content", content),
