@@ -3284,7 +3284,77 @@ class NchantdOfficeStore(NchantdStore):
     """"""
 
     EXTENSION = ".pyof"
-
+    # Payload strategy: INSERT/UPDATE/DEACTIVATE/DELETE/ARCHIVE produce
+    # different payload initial states. Dispatch via dict so adding a new
+    # operation means registering an entry rather than editing the chain.
+    _DOC_MEDIA_PAYLOAD_INIT = {
+        "INSERT": list,
+        "UPDATE": lambda: [{}],
+        "DEACTIVATE": list,
+        "DELETE": list,
+        "ARCHIVE": list,
+    }
+    _DOC_MEDIA_COLUMNS = [
+        {"name": "did", "type": "text"},
+        {"name": "compatibility_txt", "type": "text"},
+        {"name": "document_type_txt", "type": "text"},
+        {"name": "syntax_txt", "type": "text"},
+        {"name": "name_txt", "type": "text"},
+        {"name": "filename_txt", "type": "text"},
+        {"name": "description_ltxt", "type": "text"},
+        {"name": "path_txt", "type": "text"},
+        {"name": "store_location_txt", "type": "text"},
+        {"name": "encoding_txt", "type": "text"},
+        {"name": "tags_dict", "type": "text"},
+        {"name": "version_int", "type": "integer"},
+        {"name": "pyffice_version_txt", "type": "text"},
+        {"name": "hash_txt", "type": "text"},
+        # Match the dstruct column names exactly:
+        # nchantrs/models/_data_/applicationmodels.yaml line 1668
+        # has ``policy_FK`` (capital F) and ``meta_data_enc64_dict``
+        # (not ``policy_fk`` / ``metadata_ltxt``). The dstruct
+        # created the table with those names and the INSERT must
+        # use the same names or SQLite raises
+        # ``no such column: policy_fk``.
+        {"name": "policy_FK", "type": "integer"},
+        {"name": "meta_data_enc64_dict", "type": "text"},
+    ]
+    # Canonical column list for doc_media_content. The schema lives
+    # in nchantrs/nchantrs/models/_data_ (doc_media_content entry).
+    # Passed to _store as the columns argument so squirl's
+    # _fill_admin_cols doesn't have to look it up in the dstruct.
+    _DOC_MEDIA_CONTENT_COLUMNS = [
+        {"name": "UUID", "type": "text"},
+        {"name": "pUUID", "type": "text"},
+        {"name": "page_int", "type": "integer"},
+        {"name": "entry_int", "type": "integer"},
+        {"name": "version_int", "type": "integer"},
+        {"name": "hash_txt", "type": "text"},
+        {"name": "content_enc64_txt", "type": "text"},
+        {"name": "context_ltxt", "type": "text"},
+    ]
+    # T-removed (FIX P8): explicit column schema for app_media_content.
+    # The parent NchantdStore.store_app_media_content() calls
+    # self._store(table, payload, db) WITHOUT passing columns=,
+    # which forces squirl's _fill_admin_cols() to look up the
+    # table schema in db_objects["table"][table]["columns"].
+    # The desktop's loaded dstruct (nchantdoffice/_data/models.yaml)
+    # does not include app_media_content, so that lookup yields
+    # ``None``, then ``list(None)`` raises
+    # ``TypeError: 'NoneType' object is not iterable``.
+    #
+    # Passing columns= explicitly bypasses the dstruct lookup, the
+    # same pattern the parent itself uses for doc_media_content.
+    _APP_MEDIA_CONTENT_COLUMNS = [
+        {"name": "UUID", "type": "text"},
+        {"name": "pUUID", "type": "text"},
+        {"name": "page_int", "type": "integer"},
+        {"name": "entry_int", "type": "integer"},
+        {"name": "version_int", "type": "integer"},
+        {"name": "hash_txt", "type": "text"},
+        {"name": "content_enc64_txt", "type": "text"},
+        {"name": "context_ltxt", "type": "text"},
+    ]
     # Default dimension for vector embeddings used by the
     # vectorized_data virtual table. 384 matches the
     # all-MiniLM-L6-v2 sentence-transformer model and keeps the
@@ -3305,101 +3375,6 @@ class NchantdOfficeStore(NchantdStore):
         # loaded rows back into the in-memory registry.
         self._sqlite_connection = None
         self._sqlite_path = None
-
-    def open_sqlite(self, path) -> Any:
-        """T-NEW-007: register the SQLite DB at ``path`` as a
-        SQuiRL sonql doc in the store. The store delegates to
-        ``initDocument(name, "sonql", path)`` (the canonical
-        NchantdStore -> MicroStash -> SQuiRL chain) so the DB
-        is opened by the same code path the rest of the project
-        uses; no raw sqlite3 calls leak into the application
-        layer.
-
-        One-per-app-instance is enforced by closing any
-        previously-registered ``db`` doc before opening a new
-        one. Returns the registered doc (a ``sonql.Doc``
-        instance) so callers can drive it via the standard
-        SQuiRL API when they need to.
-        """
-        import os
-
-        if not path or not os.path.isfile(path):
-            raise FileNotFoundError(f"NchantdOfficeStore.open_sqlite: missing file {path!r}")
-        # Close any previously-opened instance DB so we don't
-        # leak handles across imports (one-per-app-instance
-        # guarantee). The micromole store routes through the
-        # same sonql/SQuiRL chain that production uses, so
-        # we're going through the same closure path that the
-        # app boot sequence uses at shutdown.
-        self.close_sqlite()
-        # Canonical chain: NchantdStore (this class) ->
-        # MicroStash -> SQuiRL.initDocument(name, "sonql",
-        # path). sonql is the registered handler for SQLite
-        # DBs in SQuiRL's _handler_registry (squirl.py:160).
-        self.initDocument(
-            name="pyof",
-            doc_type="sonql",
-            path=path,
-            objects=self.config.dikt,
-        )
-        self._sqlite_path = path
-        return self.docs.get("pyof")
-
-    def refresh_from_sqlite(self, db="pyof") -> List[Dict[str, Any]]:
-        """T-NEW-007 store-layer integration: surface the rows
-        of the currently-open SQLite DB into a Python list so
-        the model layer can restore its in-memory registry from
-        the loaded file.
-
-        Per user direction (2026-07-29), the ``.pyof`` format is
-        one SQLite DB per app instance and the registry of
-        secondary instances lives in the ``app_instance`` table.
-        After ``open_sqlite`` registers the DB this helper reads
-        the ``app_instance`` rows via the canonical
-        ``self.get_table()`` path (NchantdStore -> MicroStash ->
-        SQuiRL -> sonql). Returns a list of dicts (one entry per
-        row).
-
-        Returns:
-            list[dict]: one entry per ``app_instance`` row.
-                Returns an empty list when the table is empty
-                or doesn't exist (e.g. an empty .pyof file).
-
-        Raises:
-            RuntimeError: when called before ``open_sqlite``
-                (no active sonql doc). The one-per-instance
-                guarantee means there must be exactly one open
-                connection per app instance.
-        """
-        if db not in self.docs:
-            raise RuntimeError(
-                f"NchantdOfficeStore.refresh_from_sqlite: no "
-                f"active SQLite connection on db={db!r} — call "
-                f"open_sqlite(path) first (one-per-app-instance "
-                f"guarantee)."
-            )
-        rows: list[dict] = []
-        try:
-            # Canonical chain: get_table routes through
-            # MicroStash._get_view -> SQuiRL.docs[db].read
-            # -> sonql.read -> SELECT. No raw sqlite3 here.
-            df = self.get_table(
-                "app_instance",
-                parameters={"get_all_columns": True},
-                db=db,
-            )
-            if df is not None and not df.empty:
-                # ``df`` is a pandas DataFrame; convert to
-                # list-of-dicts so the model layer can attach
-                # the rows to its in-memory registry without
-                # needing pandas.
-                rows = df.to_dict(orient="records")
-            logma.info(f"[store] refresh_from_sqlite: loaded " f"{len(rows)} app_instance row(s) from " f"db={db!r}")
-        except Exception as exc:
-            # The table doesn't exist (empty DB) or the sonql
-            # doc hasn't been initialised yet — return [].
-            logma.info(f"[store] refresh_from_sqlite: app_instance " f"unavailable ({exc}); returning []")
-        return rows
 
     def close_sqlite(self) -> None:
         """T-NEW-007: detach the ``pyof`` SQuiRL doc if one is
@@ -3464,20 +3439,6 @@ class NchantdOfficeStore(NchantdStore):
             logma.error(f"[store] create_vectorized_data_table failed: {e}", exc_info=True)
             return False
 
-    def drop_vectorized_data_table(self, db="db") -> bool:
-        """Drop the vec0 virtual table if it exists."""
-        try:
-            docs = self.docs if hasattr(self, "docs") else None
-            if docs is None or db not in docs:
-                return False
-            store_db = docs[db]
-            store_db.execute("DROP TABLE IF EXISTS vectorized_data")
-            store_db.commit()
-            return True
-        except Exception as e:
-            logma.error(f"[store] drop_vectorized_data_table failed: {e}", exc_info=True)
-            return False
-
     def convert_database(self, version_from, version_to) -> Self:
         """"""
         super().convert_database(version_from, version_to)
@@ -3497,6 +3458,20 @@ class NchantdOfficeStore(NchantdStore):
         if not self.docs[db].exists("vectorized_data"):
             return
         self.docs[db].commit()
+
+    def drop_vectorized_data_table(self, db="db") -> bool:
+        """Drop the vec0 virtual table if it exists."""
+        try:
+            docs = self.docs if hasattr(self, "docs") else None
+            if docs is None or db not in docs:
+                return False
+            store_db = docs[db]
+            store_db.execute("DROP TABLE IF EXISTS vectorized_data")
+            store_db.commit()
+            return True
+        except Exception as e:
+            logma.error(f"[store] drop_vectorized_data_table failed: {e}", exc_info=True)
+            return False
 
     def get_application_documents(self) -> Dict[str, Any]:
         """"""
@@ -3739,46 +3714,100 @@ class NchantdOfficeStore(NchantdStore):
                 table = f"vwt_tab_document_{self.instance.alias}"
         return self.get_table(table, cfg, db)
 
-    def _delete(self, table, cfg, db="db") -> Self:
-        """Delete rows matching ``cfg`` from ``table``.
+    def open_sqlite(self, path) -> Any:
+        """T-NEW-007: register the SQLite DB at ``path`` as a
+        SQuiRL sonql doc in the store. The store delegates to
+        ``initDocument(name, "sonql", path)`` (the canonical
+        NchantdStore -> MicroStash -> SQuiRL chain) so the DB
+        is opened by the same code path the rest of the project
+        uses; no raw sqlite3 calls leak into the application
+        layer.
 
-        Thin wrapper around the parent class's delete path. Mirrors
-        ``_delete_by_uuid`` but takes an arbitrary WHERE clause
-        (``cfg``) instead of an explicit ``column=`` + ``uuid=`` pair.
-
-        Used by ``remove_document`` for doc_media / doc_media_content
-        cleanup where the filter is on a non-UUID column (e.g.
-        ``parent_FK``).
+        One-per-app-instance is enforced by closing any
+        previously-registered ``db`` doc before opening a new
+        one. Returns the registered doc (a ``sonql.Doc``
+        instance) so callers can drive it via the standard
+        SQuiRL API when they need to.
         """
+        import os
+
+        if not path or not os.path.isfile(path):
+            raise FileNotFoundError(f"NchantdOfficeStore.open_sqlite: missing file {path!r}")
+        # Close any previously-opened instance DB so we don't
+        # leak handles across imports (one-per-app-instance
+        # guarantee). The micromole store routes through the
+        # same sonql/SQuiRL chain that production uses, so
+        # we're going through the same closure path that the
+        # app boot sequence uses at shutdown.
+        self.close_sqlite()
+        # Canonical chain: NchantdStore (this class) ->
+        # MicroStash -> SQuiRL.initDocument(name, "sonql",
+        # path). sonql is the registered handler for SQLite
+        # DBs in SQuiRL's _handler_registry (squirl.py:160).
+        self.initDocument(
+            name="pyof",
+            doc_type="sonql",
+            path=path,
+            objects=self.config.dikt,
+        )
+        self._sqlite_path = path
+        return self.docs.get("pyof")
+
+    def refresh_from_sqlite(self, db="pyof") -> List[Dict[str, Any]]:
+        """T-NEW-007 store-layer integration: surface the rows
+        of the currently-open SQLite DB into a Python list so
+        the model layer can restore its in-memory registry from
+        the loaded file.
+
+        Per user direction (2026-07-29), the ``.pyof`` format is
+        one SQLite DB per app instance and the registry of
+        secondary instances lives in the ``app_instance`` table.
+        After ``open_sqlite`` registers the DB this helper reads
+        the ``app_instance`` rows via the canonical
+        ``self.get_table()`` path (NchantdStore -> MicroStash ->
+        SQuiRL -> sonql). Returns a list of dicts (one entry per
+        row).
+
+        Returns:
+            list[dict]: one entry per ``app_instance`` row.
+                Returns an empty list when the table is empty
+                or doesn't exist (e.g. an empty .pyof file).
+
+        Raises:
+            RuntimeError: when called before ``open_sqlite``
+                (no active sonql doc). The one-per-instance
+                guarantee means there must be exactly one open
+                connection per app instance.
+        """
+        if db not in self.docs:
+            raise RuntimeError(
+                f"NchantdOfficeStore.refresh_from_sqlite: no "
+                f"active SQLite connection on db={db!r} — call "
+                f"open_sqlite(path) first (one-per-app-instance "
+                f"guarantee)."
+            )
+        rows: list[dict] = []
         try:
-            store = getattr(self, "docs", None)
-            if not isinstance(store, dict) or db not in store:
-                logma.warning(f"[models] _delete: no docs for db={db}")
-                return
-            parent_delete = getattr(super(), "_delete", None)
-            if callable(parent_delete):
-                parent_delete(table, cfg, db)
-                return
-            dbit = 1
-            abit = 0
-            data = {
-                "table": {
-                    table: {
-                        "data": {
-                            "DELETE_BIT": dbit,
-                            "ACTIVE_BIT": abit,
-                            "MODON_DTTM": dt.datetime.now(dt.timezone.utc).isoformat(),
-                            "MODBY_FK": getattr(self, "user_FK", 0),
-                        },
-                        "WHERE": cfg.get("WHERE", {}),
-                    }
-                }
-            }
-            if hasattr(store[db], "write"):
-                store[db].write(data, db, cfg)
-        except Exception as e:
-            logma.error(f"[models] _delete({table}) failed: {e}", exc_info=True)
-        return self
+            # Canonical chain: get_table routes through
+            # MicroStash._get_view -> SQuiRL.docs[db].read
+            # -> sonql.read -> SELECT. No raw sqlite3 here.
+            df = self.get_table(
+                "app_instance",
+                parameters={"get_all_columns": True},
+                db=db,
+            )
+            if df is not None and not df.empty:
+                # ``df`` is a pandas DataFrame; convert to
+                # list-of-dicts so the model layer can attach
+                # the rows to its in-memory registry without
+                # needing pandas.
+                rows = df.to_dict(orient="records")
+            logma.info(f"[store] refresh_from_sqlite: loaded " f"{len(rows)} app_instance row(s) from " f"db={db!r}")
+        except Exception as exc:
+            # The table doesn't exist (empty DB) or the sonql
+            # doc hasn't been initialised yet — return [].
+            logma.info(f"[store] refresh_from_sqlite: app_instance " f"unavailable ({exc}); returning []")
+        return rows
 
     def store_app_instance(self, instance, db="db") -> None:
         """Build payload from instance dict and dispatch. Delegates to the free function."""
@@ -3794,80 +3823,6 @@ class NchantdOfficeStore(NchantdStore):
         :return: Document ID.
         """
         return self.store_app_media(document, db, how, table="doc_media")
-
-    def update_doc_media_syntax(self, did, syntax, db="db") -> bool:
-        """T-NEW-024 reload: UPDATE the doc_media row's ``syntax``
-        column for a specific ``did``. The base ``add_document``
-        helper writes ``syntax="html"`` for new script tabs; when
-        a file is opened via ``cmd_open_local_file`` -> ``open_file``
-        -> ``_apply_extension_syntax``, the in-memory
-        ``self.document.syntax`` is updated to the file-extension
-        syntax, but the doc_media row still carries the original
-        ``"html"`` value. On reopen, the loaded tab reads
-        ``syntax="html"`` from the DB and the dispatch falls
-        through to ``setPlainText``, dropping the rich formatting.
-
-        This helper runs ``UPDATE doc_media SET syntax = ? WHERE
-        did = ?`` via the existing store.update_records() path
-        so the doc_media row stays in sync with the in-memory
-        document. Widgets call this on file-open and on save
-        so the next reopen reads the correct syntax.
-
-        Returns ``True`` when the update succeeded, ``False``
-        when the store lacks the update_records() helper (so
-        older installs no-op gracefully).
-        """
-        try:
-            data = {
-                "table": {
-                    "doc_media": {
-                        "data": {"syntax": syntax},
-                    }
-                }
-            }
-            cfg = {"WHERE": {"EQUAL": {"did": did}}}
-            store = getattr(self, "store", None)
-            if store is None or not hasattr(store, "update_records"):
-                logma.warning(
-                    f"[models] update_doc_media_syntax: store lacks "
-                    f"update_records helper — skipping UPDATE for did={did!r}."
-                )
-                return False
-            store.update_records(data, cfg, db)
-            logma.info(f"[models] update_doc_media_syntax: did={did!r} syntax={syntax!r}")
-            return True
-        except Exception as e:
-            logma.error(
-                f"[models] update_doc_media_syntax failed: {e}",
-                exc_info=True,
-            )
-            return False
-
-    _DOC_MEDIA_COLUMNS = [
-        {"name": "did", "type": "text"},
-        {"name": "compatibility_txt", "type": "text"},
-        {"name": "document_type_txt", "type": "text"},
-        {"name": "syntax_txt", "type": "text"},
-        {"name": "name_txt", "type": "text"},
-        {"name": "filename_txt", "type": "text"},
-        {"name": "description_ltxt", "type": "text"},
-        {"name": "path_txt", "type": "text"},
-        {"name": "store_location_txt", "type": "text"},
-        {"name": "encoding_txt", "type": "text"},
-        {"name": "tags_dict", "type": "text"},
-        {"name": "version_int", "type": "integer"},
-        {"name": "pyffice_version_txt", "type": "text"},
-        {"name": "hash_txt", "type": "text"},
-        # Match the dstruct column names exactly:
-        # nchantrs/models/_data_/applicationmodels.yaml line 1668
-        # has ``policy_FK`` (capital F) and ``meta_data_enc64_dict``
-        # (not ``policy_fk`` / ``metadata_ltxt``). The dstruct
-        # created the table with those names and the INSERT must
-        # use the same names or SQLite raises
-        # ``no such column: policy_fk``.
-        {"name": "policy_FK", "type": "integer"},
-        {"name": "meta_data_enc64_dict", "type": "text"},
-    ]
 
     def store_app_media(self, document, db="db", how="INSERT", table="app_media") -> str:
         """
@@ -3937,32 +3892,6 @@ class NchantdOfficeStore(NchantdStore):
         self._store(table, payload, db, columns=columns)
         return document["did"]
 
-    # Payload strategy: INSERT/UPDATE/DEACTIVATE/DELETE/ARCHIVE produce
-    # different payload initial states. Dispatch via dict so adding a new
-    # operation means registering an entry rather than editing the chain.
-    _DOC_MEDIA_PAYLOAD_INIT = {
-        "INSERT": list,
-        "UPDATE": lambda: [{}],
-        "DEACTIVATE": list,
-        "DELETE": list,
-        "ARCHIVE": list,
-    }
-
-    # Canonical column list for doc_media_content. The schema lives
-    # in nchantrs/nchantrs/models/_data_ (doc_media_content entry).
-    # Passed to _store as the columns argument so squirl's
-    # _fill_admin_cols doesn't have to look it up in the dstruct.
-    _DOC_MEDIA_CONTENT_COLUMNS = [
-        {"name": "UUID", "type": "text"},
-        {"name": "pUUID", "type": "text"},
-        {"name": "page_int", "type": "integer"},
-        {"name": "entry_int", "type": "integer"},
-        {"name": "version_int", "type": "integer"},
-        {"name": "hash_txt", "type": "text"},
-        {"name": "content_enc64_txt", "type": "text"},
-        {"name": "context_ltxt", "type": "text"},
-    ]
-
     def store_doc_media_content(self, content, db="db", how="INSERT") -> str:
         """Persist a document-content row to the doc_media_content table.
 
@@ -3995,29 +3924,6 @@ class NchantdOfficeStore(NchantdStore):
         # set delete for all but the last 30 versions eventually base on variable policy of time/szie/counts
         # self._archive_versions(table, content["pUUID"], "pUUID", "UUID", 3)
         return content["uuid"]
-
-    # T-removed (FIX P8): explicit column schema for app_media_content.
-    # The parent NchantdStore.store_app_media_content() calls
-    # self._store(table, payload, db) WITHOUT passing columns=,
-    # which forces squirl's _fill_admin_cols() to look up the
-    # table schema in db_objects["table"][table]["columns"].
-    # The desktop's loaded dstruct (nchantdoffice/_data/models.yaml)
-    # does not include app_media_content, so that lookup yields
-    # ``None``, then ``list(None)`` raises
-    # ``TypeError: 'NoneType' object is not iterable``.
-    #
-    # Passing columns= explicitly bypasses the dstruct lookup, the
-    # same pattern the parent itself uses for doc_media_content.
-    _APP_MEDIA_CONTENT_COLUMNS = [
-        {"name": "UUID", "type": "text"},
-        {"name": "pUUID", "type": "text"},
-        {"name": "page_int", "type": "integer"},
-        {"name": "entry_int", "type": "integer"},
-        {"name": "version_int", "type": "integer"},
-        {"name": "hash_txt", "type": "text"},
-        {"name": "content_enc64_txt", "type": "text"},
-        {"name": "context_ltxt", "type": "text"},
-    ]
 
     def store_app_media_content(self, content, db="db", how="INSERT") -> Optional[str]:
         """Persist a document-content row to the app_media_content table.
@@ -4052,6 +3958,95 @@ class NchantdOfficeStore(NchantdStore):
             columns=self._APP_MEDIA_CONTENT_COLUMNS,
         )
         return content.get("uuid")
+
+    def update_doc_media_syntax(self, did, syntax, db="db") -> bool:
+        """T-NEW-024 reload: UPDATE the doc_media row's ``syntax``
+        column for a specific ``did``. The base ``add_document``
+        helper writes ``syntax="html"`` for new script tabs; when
+        a file is opened via ``cmd_open_local_file`` -> ``open_file``
+        -> ``_apply_extension_syntax``, the in-memory
+        ``self.document.syntax`` is updated to the file-extension
+        syntax, but the doc_media row still carries the original
+        ``"html"`` value. On reopen, the loaded tab reads
+        ``syntax="html"`` from the DB and the dispatch falls
+        through to ``setPlainText``, dropping the rich formatting.
+
+        This helper runs ``UPDATE doc_media SET syntax = ? WHERE
+        did = ?`` via the existing store.update_records() path
+        so the doc_media row stays in sync with the in-memory
+        document. Widgets call this on file-open and on save
+        so the next reopen reads the correct syntax.
+
+        Returns ``True`` when the update succeeded, ``False``
+        when the store lacks the update_records() helper (so
+        older installs no-op gracefully).
+        """
+        try:
+            data = {
+                "table": {
+                    "doc_media": {
+                        "data": {"syntax": syntax},
+                    }
+                }
+            }
+            cfg = {"WHERE": {"EQUAL": {"did": did}}}
+            store = getattr(self, "store", None)
+            if store is None or not hasattr(store, "update_records"):
+                logma.warning(
+                    f"[models] update_doc_media_syntax: store lacks "
+                    f"update_records helper — skipping UPDATE for did={did!r}."
+                )
+                return False
+            store.update_records(data, cfg, db)
+            logma.info(f"[models] update_doc_media_syntax: did={did!r} syntax={syntax!r}")
+            return True
+        except Exception as e:
+            logma.error(
+                f"[models] update_doc_media_syntax failed: {e}",
+                exc_info=True,
+            )
+            return False
+
+    def _delete(self, table, cfg, db="db") -> Self:
+        """Delete rows matching ``cfg`` from ``table``.
+
+        Thin wrapper around the parent class's delete path. Mirrors
+        ``_delete_by_uuid`` but takes an arbitrary WHERE clause
+        (``cfg``) instead of an explicit ``column=`` + ``uuid=`` pair.
+
+        Used by ``remove_document`` for doc_media / doc_media_content
+        cleanup where the filter is on a non-UUID column (e.g.
+        ``parent_FK``).
+        """
+        try:
+            store = getattr(self, "docs", None)
+            if not isinstance(store, dict) or db not in store:
+                logma.warning(f"[models] _delete: no docs for db={db}")
+                return
+            parent_delete = getattr(super(), "_delete", None)
+            if callable(parent_delete):
+                parent_delete(table, cfg, db)
+                return
+            dbit = 1
+            abit = 0
+            data = {
+                "table": {
+                    table: {
+                        "data": {
+                            "DELETE_BIT": dbit,
+                            "ACTIVE_BIT": abit,
+                            "MODON_DTTM": dt.datetime.now(dt.timezone.utc).isoformat(),
+                            "MODBY_FK": getattr(self, "user_FK", 0),
+                        },
+                        "WHERE": cfg.get("WHERE", {}),
+                    }
+                }
+            }
+            if hasattr(store[db], "write"):
+                store[db].write(data, db, cfg)
+        except Exception as e:
+            logma.error(f"[models] _delete({table}) failed: {e}", exc_info=True)
+        return self
 
 
 def _content_to_app_media_row(content) -> List[Any]:

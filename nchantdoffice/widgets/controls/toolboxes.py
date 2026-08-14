@@ -226,12 +226,12 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         try:
             ratio = self.config.dikt.get("pane_width_ratio", self._DEFAULT_PANE_RATIO) if hasattr(self, "config") else self._DEFAULT_PANE_RATIO
             ratio = max(0.1, min(0.9, float(ratio)))
-            parent_splitter = getattr(self.parent(), "parent_splitter", None) if self.parent() is not None and hasattr(self.parent(), "parent") else None
+            parent_splitter = getattr(self.parent, "parent_splitter", None) if self.parent is not None and hasattr(self.parent, "parent") else None
             # Fallback - search the parent tree for a QSplitter
             if parent_splitter is None:
                 widget = self
                 for _ in range(4):
-                    p = widget.parent() if hasattr(widget, "parent") else None
+                    p = widget.parent if hasattr(widget, "parent") else None
                     if p is None:
                         break
                     if "Splitter" in type(p).__name__:
@@ -620,6 +620,9 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 self.app.model.import_image(self.local_file)
             elif self.local_file.endswith(".gif"):
                 pass
+            elif self.local_file.endswith(".pyof"):
+                self.app.model.import_nchantdoffice(self.local_file)
+                #Implement import of .pyof database
             else:
                 self.app.model.import_text(self.local_file)
                 # raise Exception(f"Unknown File {self.local_file}")
