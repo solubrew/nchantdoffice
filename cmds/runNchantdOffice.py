@@ -13,13 +13,13 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
-from os.path import abspath, dirname, join
-import os
-from sys import argv
 import datetime as dt
-import sys
-from pathlib import Path
+import os
 import shutil
+import sys
+from os.path import dirname, join
+from pathlib import Path
+from sys import argv
 
 # ---- QtWebEngine render diagnostics + software-render lever -------------------
 # These MUST be set before nchantrs (and therefore Qt/QtWebEngine) is imported
@@ -56,15 +56,17 @@ sys.path.insert(0, "/home/solubrew/Documents/AIM")
 import crow  # Commented out - not needed for local system
 
 crow.crowLoad("NchantdOffice", "DELTA")
-from kahndor import kahndor
-from nchantrs.nchantrs import nchantment
-from nchantdoffice.nchantdoffice import NchantdOfficeCloak
-from nchantdoffice.wizards.wizards import NchantdOfficeApplicationStartupWizard
 from kahndor.logma import Logma
+from nchantrs.nchantrs import nchantment
+
+from nchantdoffice.nchantdoffice import NchantdOfficeCloak
 from nchantdoffice.utilities.user_config import (  # noqa: E402
     get_webengine_software_render,
     write_default_config,
 )
+from nchantdoffice.wizards.wizards import NchantdOfficeApplicationStartupWizard
+
+logma = None  # noqa: F821  # placeholder until refactor
 
 write_default_config()  # idempotent — first-run setup
 
@@ -110,9 +112,9 @@ def restart() -> None:
     """"""
     try:
         shutil.rmtree(Path.home() / ".local" / "share" / "nchantdoffice")
-        logma.info(f"Removal Complete")
-    except Exception as e:
-        logma.info(f"Removal Failed")
+        logma.info("Removal Complete")
+    except Exception:
+        logma.info("Removal Failed")
 
 
 def run(args: list[str]) -> None:

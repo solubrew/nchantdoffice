@@ -13,24 +13,27 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
-from os.path import abspath, dirname, join, isfile
-from sys import argv
 import datetime as dt
+from os.path import dirname, join
+from sys import argv
 
 # ======================================3rd Party Library Modules=====================================================||
-
 # ======================================Solutions Brewer Library Modules==============================================||
 # import crow  # Commented out - not needed for local system
-from docutils.nodes import abbreviation
-
 # crow.crowLoad removed
-
-from kahndor import kahndor
 from kahndor.logma import Logma
-from nchantrs.nchantrs import nchantment, distortion
+from nchantrs.nchantrs import aberration, distortion, nchantment
+
 from nchantdoffice.widgets.documents.atnrg.browsers import NchantdOfficeWebBrowser
 from nchantdoffice.widgets.documents.media.scripts import NchantdOfficeScript
-from nchantrs.nchantrs import aberration
+
+NchantdOfficeCAD = None  # noqa: F821  # placeholder until refactor
+NchantdOfficeFormCape = None  # noqa: F821  # placeholder until refactor
+NchantdOfficeImageCape = None  # noqa: F821  # placeholder until refactor
+NchantdOfficeMatrixCape = None  # noqa: F821  # placeholder until refactor
+NchantdOfficePDFCape = None  # noqa: F821  # placeholder until refactor
+NchantdOfficePresentationCape = None  # noqa: F821  # placeholder until refactor
+NchantdOfficePromptCape = None  # noqa: F821  # placeholder until refactor
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||

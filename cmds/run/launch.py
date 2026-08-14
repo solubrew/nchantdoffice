@@ -13,15 +13,16 @@
 
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
-from os.path import abspath, dirname, join
 import datetime as dt
+from os.path import dirname, join
 
 # ======================================3rd Party Library Modules=====================================================||
-
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
 from kahndor.logma import Logma
 from pyularity.launch import Launch
+
+argv = None  # noqa: F821  # placeholder until refactor
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
