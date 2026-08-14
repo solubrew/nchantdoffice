@@ -211,65 +211,6 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         super().focusOutEvent(event)
         self.save()
 
-    def refresh_content(self):
-        """Re-fetch the journal document from the model and update the editor.
-
-        T-NEW-036 + T-NEW-073: ``initModel`` fetches the journal text
-        once at ``initWidget`` time. On subsequent tab-focus changes,
-        ``initModel`` is never re-called, so the editor showed stale
-        content. This method re-fetches the current journal text
-        (same path as ``initModel``: get_view_journal -> codex.init_script
-        -> load_document -> text.to_dict) and pushes the result into
-        ``self.full_text`` + the editor widget.
-
-        Called from ``NchantdOfficeTabSet.on_tab_focus`` when the
-        focused tab's widget has a ``refresh_content`` method.
-
-        Defensive: missing ``self.app``, missing model, or a raised
-        exception is logged + swallowed (returns self) rather than
-        crashing the UI.
-
-        Returns ``self`` for chainable call sites.
-        """
-        try:
-            app = getattr(self, "app", None)
-            if app is None:
-                return self
-            model = getattr(app, "model", None)
-            if model is None:
-                return self
-            scope = self.config.dikt.get("scope", "TODAY")
-            datetime = dt.datetime.now()
-            tid = None
-            try:
-                tab = model.get_current_tab()
-                tid = getattr(tab, "tid", None)
-            except Exception:
-                pass
-            try:
-                node = model.get_current_node()
-                nid = getattr(node, "nid", None)
-            except Exception:
-                nid = None
-            tags = {"nid": nid, "tid": tid}
-            cfg = {"tags": tags, "scope": scope, "datetime": datetime}
-            document = {"document": model.get_view_journal(cfg)}
-            doc = model.codex.init_script(document)
-            doc.load_document()
-            text = doc.text.to_dict()["unit"].get("value", "")
-            self.full_text = text
-            self.document = doc
-            self.pages = doc.pages
-            if self.editor is not None and hasattr(self.editor, "setPlainText"):
-                self.editor.setPlainText(text)
-            logma.info(f"[journal] refresh_content: restored {len(text)} chars")
-        except Exception as e:
-            logma.error(
-                f"[journal] refresh_content failed: {e}",
-                exc_info=True,
-            )
-        return self
-
     def parse(self, content) -> dict[str, str]:
         """Parse the full journal text into a dict keyed by the
         ``--|YYYY-MM-DD HH:MM:SS|--`` marker that delimits each block.
@@ -299,15 +240,13 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             self.entries = {}
         if not text:
             return self.entries
-        marker_re = re.compile(
-            r"--\|(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|--"
-        )
+        marker_re = re.compile(r"--\|(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|--")
         for match in marker_re.finditer(text):
             ts = match.group(1)
             # Each block runs from the end of its marker to the
             # next marker (or end of text). Store entry in the
             # in-memory cache so date-navigation widgets can read it.
-            self.entries[ts] = match.string[match.end():]
+            self.entries[ts] = match.string[match.end() :]
         return self.entries
 
     def populate_document(self):
@@ -412,11 +351,11 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         if hasattr(self.app.model.get_current_node(), "tid"):
             tid = self.app.model.get_current_tab().tid
         self.parent.pages[str(page)]["tags"] = {
-            "nid": self.app.model.get_current_node().nid, "tid": tid,
+            "nid": self.app.model.get_current_node().nid,
+            "tid": tid,
         }
         # Mirror to the document so save_app() persists the entry.
-        if (self.parent.document is not None
-                and hasattr(self.parent.document, "pages")):
+        if self.parent.document is not None and hasattr(self.parent.document, "pages"):
             doc_pages = self.parent.document.pages
             if str(page) not in doc_pages:
                 doc_pages[str(page)] = {}
@@ -424,7 +363,8 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
                 doc_pages[str(page)]["entries"] = {}
             doc_pages[str(page)]["entries"][datetime] = entry
             doc_pages[str(page)]["tags"] = {
-                "nid": self.app.model.get_current_node().nid, "tid": tid,
+                "nid": self.app.model.get_current_node().nid,
+                "tid": tid,
             }
         return self
 
@@ -479,7 +419,7 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         datetime = dt.datetime.now()
         tags = {"nid": self.app.model.get_current_node().nid, "tid": tid}
         text = self.parent.get_content_text()
-        #TODO refactor to use the standard populate methods
+        # TODO refactor to use the standard populate methods
         return text
 
     def save(self):

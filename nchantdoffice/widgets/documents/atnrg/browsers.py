@@ -79,13 +79,15 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # this translates url code from the web app tab catalog
         if self.config.get("url_code", None) is not None:
             cfg["document"]["data"]["unit"]["original_path"] = self.app.model.get_link(name=self.config.get("url_code"))
-        self.config.override(cfg)
-        document = {"document": self.config.get("document", {})}
+        document = {"document": self.config.override(cfg).get("document", {})}
         logma.json(document)
         self.document = self.app.model.codex.init_browser(document)
         self.document.load_document()
         self.initialize_context_menu("context.document.browser")
         logma.json(self.document.to_dict())
+
+        #need to connect to the active page aligned with PyfficeBrowser
+
         cfg = {}
         self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
         cfg = {}

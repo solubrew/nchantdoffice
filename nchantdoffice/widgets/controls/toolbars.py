@@ -27,6 +27,7 @@ from kahndor import kahndor
 from subtrix.utilities import uuid
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.controls.toolbars import NchantdApplicationToolBar
+
 try:
     from nchantrs.widgets.controls.buttons import NchantdButton
     from nchantrs.utilities.utils import lookup
@@ -85,7 +86,9 @@ class NchantdOfficeNotificationButtonBar(NchantdButtonBar):
     def __init__(self, parent=None, cfg=None) -> None:
         """Initialize the notification bar."""
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationNotificationButtonBar").override(cfg))
+        self.config.override(
+            kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationNotificationButtonBar").override(cfg)
+        )
 
     def initModel(self) -> Self:
         """Initialize the model."""
@@ -184,11 +187,12 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         context = ""
         content = {}
         if cfg["lookup_code_txt"] == "add_script_document_nchantdscript":
-            text = """
-            <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-            <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
-            """
-            content["content"] = text.replace("<[content]>", "")
+            # text = """
+            # <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+            # <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
+            # """
+            text = ""
+            content["content"] = {"text": text.replace("<[content]>", "")}
         syntax = ""
         doc_type = cfg["lookup_code_txt"]
         document = {
@@ -229,11 +233,10 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         the create.
         """
         from nchantrs.libraries import pyqt
+
         cfg = args[0]["action"].action
         # P1 name-entry dialog: respect the config flag.
-        prompt = bool(
-            (self.config.dikt or {}).get("prompt_for_new_node_name", False)
-        )
+        prompt = bool((self.config.dikt or {}).get("prompt_for_new_node_name", False))
         name = None
         if prompt:
             _inherited_name = uuid()[-5:]  # fallback if user clears the field
@@ -262,7 +265,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
             current_pos = int(self.app.view.panes[tree].tree.model.current_node.position)
             pos = current_pos + 1
             # Update positions of existing siblings that come after the current position
-            #self._increment_sibling_positions(pid, current_pos)
+            # self._increment_sibling_positions(pid, current_pos)
         elif cfg["lookup_code_txt"] in ("add_node_child_app_childnode"):
             pid = self.app.view.panes[tree].tree.model.current_node.nid
             pos = int(self.app.view.panes[tree].tree.model.current_node.max_position) + 1
@@ -315,9 +318,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
                 return "db"
             return db
         except Exception as e:
-            logma.warning(
-                f"[toolbars] _resolve_db_alias failed: {e}"
-            )
+            logma.warning(f"[toolbars] _resolve_db_alias failed: {e}")
             return "db"
 
     def _compute_note_position(self, existing_count, base_x, base_y, step) -> dict[str, Any]:
@@ -367,10 +368,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
             left = panes.get("left") if isinstance(panes, dict) else None
             tree = getattr(left, "tree", None) if left is not None else None
             tree_model = getattr(tree, "model", None) if tree is not None else None
-            current_node = (
-                getattr(tree_model, "current_node", None)
-                if tree_model is not None else None
-            )
+            current_node = getattr(tree_model, "current_node", None) if tree_model is not None else None
             nid = getattr(current_node, "nid", None)
             if nid is None:
                 return 0
@@ -388,9 +386,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
                     return 0
             return int(len(notes))
         except Exception as e:
-            logma.warning(
-                f"[toolbars] _count_existing_notes failed: {e}"
-            )
+            logma.warning(f"[toolbars] _count_existing_notes failed: {e}")
             return 0
 
     def add_note(self, signal=None, *args, **kwargs) -> Self:
@@ -403,6 +399,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         name.
         """
         from nchantrs.libraries import pyqt
+
         logma.info(f"Launch Note {signal}")
         cfg = args[0]["action"].action
         pid = self.app.view.panes["left"].tree.model.current_node.nid
@@ -410,13 +407,9 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         # count so each new note appears below the previous
         # one. Replaces the hardcoded {"x": 1287, "y": 125}.
         existing = self._count_existing_notes()
-        pos = self._compute_note_position(
-            existing_count=existing, base_x=1287, base_y=125, step=30
-        )
+        pos = self._compute_note_position(existing_count=existing, base_x=1287, base_y=125, step=30)
         # P1 name-entry dialog: respect the config flag.
-        prompt = bool(
-            (self.config.dikt or {}).get("prompt_for_new_node_name", False)
-        )
+        prompt = bool((self.config.dikt or {}).get("prompt_for_new_node_name", False))
         default_name = "{" + str(dt.datetime.now()) + "}"
         name = None
         if prompt:

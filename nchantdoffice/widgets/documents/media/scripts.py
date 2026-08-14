@@ -13,6 +13,7 @@
 
 # -*- coding: utf-8 -*
 from __future__ import annotations
+
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join, exists
 import json as j
@@ -215,6 +216,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             self.set_note_view()
         else:
             raise Exception("view_type must be 'page_view' or 'note_view'")
+        self.populate_document()
         # PUSH to 0.0.3 force external until
         # self.document.set_location("external")
         #
@@ -547,10 +549,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             or "html"
         )
         if syntax == "html":
-            html = """
-            <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
-            <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
-            """
+            # html = """
+            # <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
+            # <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
+            # """
+            html = ""
             editor_html = self.document_editor.toHtml()
             soup = BeautifulSoup(editor_html, "html.parser")
             text = html.replace("<[content]>", soup.body.decode_contents())
@@ -1220,56 +1223,57 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             detected = self._apply_extension_syntax(self.file_path)
             if detected and detected != "plain-text":
                 self.format_type = detected
+        if self.document.location == "external":
+            # External file loading: if the document has a file_path set
+            # (e.g. the user opened an external .py / .js / .md / .txt
+            # file via cmd_open_local_file), load its contents into the
+            # editor. Returns True when a file was loaded.
+            loaded_from_disk = self._load_external_file()
 
-        # External file loading: if the document has a file_path set
-        # (e.g. the user opened an external .py / .js / .md / .txt
-        # file via cmd_open_local_file), load its contents into the
-        # editor. Returns True when a file was loaded.
-        loaded_from_disk = self._load_external_file()
+            style = f"background-color: #FFFFFF;"
+            self.document_editor.setStyleSheet(style)
 
-        style = f"background-color: #FFFFFF;"
-        self.document_editor.setStyleSheet(style)
+            # T-NEW-023 (user-stated contract): the on-disk file is the
+            # source-of-truth. On an *initial* file-open
+            # (cmd_open_local_file -> open_file), apply the syntax
+            # dispatcher so markdown / python / pygments / html render
+            # with their proper editor APIs. On a *reload* (returning to
+            # the tab from a different tabset), mirror the raw bytes via
+            # the setPlainText call already made by
+            # ``_load_external_file`` — running pygments / markdown
+            # / html conversion drops the leading whitespace (verified:
+            # ``setMarkdown('# Hello\n\n    - indented bullet\n')``
+            # followed by ``toPlainText()`` returns
+            # ``'Hello\n- indented bullet'``).
+            if loaded_from_disk:
+                if getattr(self, "_initial_load", False):
+                    try:
+                        import os
 
-        # T-NEW-023 (user-stated contract): the on-disk file is the
-        # source-of-truth. On an *initial* file-open
-        # (cmd_open_local_file -> open_file), apply the syntax
-        # dispatcher so markdown / python / pygments / html render
-        # with their proper editor APIs. On a *reload* (returning to
-        # the tab from a different tabset), mirror the raw bytes via
-        # the setPlainText call already made by
-        # ``_load_external_file`` — running pygments / markdown
-        # / html conversion drops the leading whitespace (verified:
-        # ``setMarkdown('# Hello\n\n    - indented bullet\n')``
-        # followed by ``toPlainText()`` returns
-        # ``'Hello\n- indented bullet'``).
-        if loaded_from_disk:
-            if getattr(self, "_initial_load", False):
-                try:
-                    import os
-
-                    path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path", None)
-                    if path:
-                        path = os.path.abspath(path)
-                        with open(path, "r", encoding="utf-8", errors="replace") as f:
-                            text = f.read()
-                        # Apply the dispatcher for the initial
-                        # file-open so syntax highlighting works.
-                        self._apply_syntax_highlighting(text)
-                except Exception as e:
-                    logma.error(
-                        f"[scripts] populate_document: on-disk dispatch failed: {e}",
-                        exc_info=True,
-                    )
+                        path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path", None)
+                        if path:
+                            path = os.path.abspath(path)
+                            with open(path, "r", encoding="utf-8", errors="replace") as f:
+                                text = f.read()
+                            # Apply the dispatcher for the initial
+                            # file-open so syntax highlighting works.
+                            self._apply_syntax_highlighting(text)
+                    except Exception as e:
+                        logma.error(
+                            f"[scripts] populate_document: on-disk dispatch failed: {e}",
+                            exc_info=True,
+                        )
+                    return self
+                # Reload from a different tabset: preserve raw bytes.
                 return self
-            # Reload from a different tabset: preserve raw bytes.
-            return self
 
         text = self._resolve_document_text()
-        if self.document is None:
-            self.document_editor.convert_urls_to_links(text)
-            return self
 
+        # if self.document is None:
+        #    self.document_editor.convert_urls_to_links(text)
+        #    return self
         self._apply_syntax_highlighting(text)
+        # elif self.document.location == 'internal':
         return self
 
     def restore_formatting_from_metadata(self) -> Self:
@@ -1737,6 +1741,19 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             content_inner = content_obj.get("content", {}) if isinstance(content_obj, dict) else {}
             text_obj = content_inner.get("text", {}) if isinstance(content_inner, dict) else {}
             text = text_obj.get("value", "") if isinstance(text_obj, dict) else (text_obj or "")
+
+        # if text is None:
+        content = self.document.content
+        logma.info(f"[NCHANTDSCRIPT._resolve_document_text]\nCONTENT {content}")
+        if isinstance(content, str):
+            text = content
+        elif isinstance(content, dict):
+            text = content.get("text", {})
+
+        # if text is None:
+        #     content = self.get_content()
+        #     text = content.get("content", {}).get("content", {}).get("text", {})
+
         if text is None:
             logma.warning(f"[scripts] populate_document: doc has no text content yet - starting with empty editor")
             text = ""

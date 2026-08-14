@@ -1787,7 +1787,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         """"""
         #TODO: implement method
 
-    def _on_webview_load_progrss(self):
+    def _on_webview_load_progress(self):
         """"""
         #TODO: implement method
 
