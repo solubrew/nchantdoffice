@@ -65,6 +65,12 @@ logma = logging.getLogger(__name__)
 
 MergeStrategy = Literal["insert_or_ignore", "last_version_per_puuid"]
 
+# The starting node pid hardcoded across ALL .pyof files (user-
+# confirmed 2026-08-15). doc_tree_node rows parented to this app-
+# level anchor (or to "0") are re-parented under the user's
+# currently selected node on import.
+PYOF_STARTING_NODE_PID = "067ca837-17f6-74e7-8000-f7de9b7927f1"
+
 
 class TableSpec:
     """Per-table spec for the import orchestrator.
@@ -401,11 +407,15 @@ def import_pyof_via_doc(
         contract: the per-table spec list. Defaults to the
             ``T-NEW-074 / 075 / 076 / 077`` 9-table contract.
         target_parent_nid: optional nid to use as the parent for
-            top-level ``doc_tree_node`` rows (source
-            ``pid_txt == "0"``). When set, the orchestrator
-            re-parents those node rows under this nid so they
-            appear nested under the user's currently selected node
-            on the host. Only ``doc_tree_node`` is re-parented:
+            ``doc_tree_node`` rows parented to a source ANCHOR --
+            ``pid_txt == "0"`` (the source root) or ``pid_txt ==
+            PYOF_STARTING_NODE_PID`` (the starting-node pid
+            hardcoded across all .pyof files; the anchor lives in
+            the source's app-level ``app_tree_node`` and is not
+            part of the doc-level import). When set, the
+            orchestrator re-parents those node rows under this nid
+            so they appear nested under the user's currently
+            selected node on the host. Only ``doc_tree_node`` is re-parented:
             ``doc_tab`` rows keep their original ``pid_txt``
             (they point at node nids which are preserved on
             insert) and ``app_media`` / ``doc_media`` are parented
@@ -584,15 +594,16 @@ def import_pyof_via_doc(
                     if (
                         spec.name == "doc_tree_node"
                         and target_parent_nid
-                        and effective_pid == "0"
+                        and effective_pid in ("0", PYOF_STARTING_NODE_PID)
                         and "pid_txt" in cols
                     ):
-                        effective_pid = target_parent_nid
                         logma.info(
                             f"[import_pyof_via_doc] spec={spec.name} "
-                            f"reparenting top-level row nid={pk_value!r} "
-                            f"from pid=0 to pid={target_parent_nid!r} (model path)"
+                            f"reparenting row nid={pk_value!r} "
+                            f"from anchor pid={effective_pid!r} to "
+                            f"pid={target_parent_nid!r} (model path)"
                         )
+                        effective_pid = target_parent_nid
                     if spec.name in ("doc_tree_node",):
                         if _add_node_via_model(
                             model,
@@ -646,11 +657,14 @@ def import_pyof_via_doc(
                 # app_media / doc_media have no pid column at all.
                 if spec.name == "doc_tree_node" and "pid_txt" in cols:
                     src_pid = row_dict.get("pid_txt", "0") or "0"
-                    if target_parent_nid and src_pid == "0":
+                    if target_parent_nid and src_pid in (
+                        "0", PYOF_STARTING_NODE_PID,
+                    ):
                         logma.info(
                             f"[import_pyof_via_doc] spec={spec.name} "
-                            f"reparenting top-level row pk={pk_value!r} "
-                            f"from pid=0 to pid={target_parent_nid!r} (direct SQL path)"
+                            f"reparenting row pk={pk_value!r} "
+                            f"from anchor pid={src_pid!r} to "
+                            f"pid={target_parent_nid!r} (direct SQL path)"
                         )
                         row_dict["pid_txt"] = target_parent_nid
                 write_row = {c: row_dict.get(c) for c in write_cols}
