@@ -1177,39 +1177,50 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             # T-NEW-114 followup: refresh the live tree so the
             # newly-imported nodes/tabs/media appear. The orchestrator
             # writes via raw sqlite3 (the live sonql.Doc doesn't know
-            # about the new rows), so we walk the Qt widget tree and
-            # re-init every NchantdApplicationTree (which re-reads
-            # vw_tree_node from the DB).
+            # about the new rows), so we refresh every
+            # NchantdApplicationTree in place (which re-reads
+            # vw_tree_node from the DB without disturbing the pane
+            # layout or the headshot image beneath the tree).
             self._refresh_tree_widgets()
         except Exception as e:
             logma.error(f"[import_pyof] _show_pyof_import_result failed: {e}", exc_info=True)
 
     def _refresh_tree_widgets(self) -> None:
-        """T-NEW-114 followup: re-init every NchantdApplicationTree
-        visible in the app so newly-imported nodes/tabs/media show
-        up. The orchestrator bypasses the sonql.Doc with raw
-        sqlite3 (the only path that survives the cross-thread
-        sqlite3 binding constraint), so the live sonql state is
-        stale until the tree widget re-reads.
+        """T-NEW-114 followup: repopulate the tree data in place.
 
-        Walks ``self.app.view.panes`` (where the NchantdOfficeCloakView
-        keeps the live panes) and calls ``initWidget()`` on every
-        ``NchantdApplicationTree`` instance. This re-runs the
-        ``initModel`` + ``initView`` pair which re-fetches the
-        tree rows from the DB.
+        The import writes via raw sqlite3 (the only path that
+        survives the cross-thread sqlite3 binding constraint), so
+        the live tree widget is stale until it re-reads
+        ``vw_tree_node`` from the DB.
 
-        Safe to call multiple times — each call rebuilds the tree
-        in-place and replaces the model data on the QTreeWidget.
+        Widget structure (user-confirmed 2026-08-15):
+          NchantdOfficeApplicationTree  (pane-level CONTAINER)
+            .layout -> self.tree   = NchantdApplicationTree
+                                       (the inner QTreeWidget)
+            .layout -> self.image  = headshot NchantdImage
+                                       BENEATH the tree
+
+        The image lives in the container's layout, so the refresh
+        must NEVER call ``initWidget()`` on the container (or the
+        tree) -- that re-runs ``initView()`` and re-adds widgets to
+        the layout, dislodging the image (user-reported regression:
+        the image floated on top of and blocked the tree).
+
+        Instead we drill down to the inner tree and call its
+        ``refresh()``: ``NchantdTree.refresh()`` -> ``view.init_tree()``
+        re-reads ``model.get_nodes()`` and repopulates the SAME
+        QTreeWidget (``clear()`` + ``addTopLevelItem``), preserving
+        the horizontal scroll position and the container layout.
         """
         from nchantrs.widgets.trees import NchantdApplicationTree  # noqa
         logma.info(
-            f"[_refresh_tree_widgets] searching for "
-            f"NchantdApplicationTree instances in app hierarchy"
+            "[_refresh_tree_widgets] searching for inner tree widgets "
+            "in the app hierarchy"
         )
         try:
             app = getattr(self, "app", None)
             if app is None:
-                # Unit tests skip QObject init via __new__ — no app.
+                # Unit tests skip QObject init via __new__ -- no app.
                 logma.info(
                     "[_refresh_tree_widgets] no self.app (unit test); "
                     "skipping tree refresh"
@@ -1217,48 +1228,63 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 return
             view = getattr(app, "view", None)
             if view is None:
-                logma.info(
-                    "[_refresh_tree_widgets] no app.view; skipping"
-                )
+                logma.info("[_refresh_tree_widgets] no app.view; skipping")
                 return
-            # 1. Walk the app's view.panes (where the live panes live).
-            trees_found = []
+            # Discovery: collect the INNER tree widgets. A pane (or a
+            # pane attribute) may be either the office CONTAINER
+            # (NchantdOfficeApplicationTree, whose .tree is the inner)
+            # or the inner nchantrs tree itself. Either way we only
+            # keep the inner QTreeWidget -- the container and its
+            # image are never touched.
+            candidates: list[tuple[str, Any]] = []
             for pos, pane in getattr(view, "panes", {}).items():
                 if pane is None:
                     continue
-                # Some panes have a ``self.tree`` attribute (NchantdTabSet).
-                tree_attr = getattr(pane, "tree", None)
-                if tree_attr is not None and isinstance(
-                    tree_attr, NchantdApplicationTree
-                ):
-                    trees_found.append((f"pane[{pos}].tree", tree_attr))
-            # 2. Fallback: walk the whole widget tree via Qt findChildren.
-            # Catches trees nested deeper than self.panes[*].tree
-            # (e.g. inside splitters).
+                # Office flavor: pane IS the container -> drill into .tree
+                inner = getattr(pane, "tree", None)
+                if isinstance(inner, NchantdApplicationTree):
+                    candidates.append((f"pane[{pos}].tree", inner))
+                    continue
+                # Tabset flavor: pane.tree already the inner tree
+                if isinstance(pane, NchantdApplicationTree):
+                    candidates.append((f"pane[{pos}]", pane))
+            # Fallback: Qt findChildren on the main window for inner
+            # trees nested deeper than view.panes (e.g. splitters).
             try:
-                from PySide6.QtWidgets import QWidget  # type: ignore
-                root_widgets = []
                 if hasattr(app, "main"):
-                    root_widgets.append(app.main)
-                # Use findChildren on each candidate
-                for root in root_widgets:
-                    for child in root.findChildren(NchantdApplicationTree):
-                        already = any(t is child for _, t in trees_found)
-                        if not already:
-                            trees_found.append(("findChildren", child))
+                    for child in app.main.findChildren(NchantdApplicationTree):
+                        if not any(c is child for _, c in candidates):
+                            candidates.append(("findChildren", child))
             except Exception as e:
                 logma.warning(
                     f"[_refresh_tree_widgets] findChildren walk failed: {e}",
                     exc_info=True,
                 )
             logma.info(
-                f"[_refresh_tree_widgets] found {len(trees_found)} tree(s) to refresh"
+                f"[_refresh_tree_widgets] found {len(candidates)} inner "
+                f"tree(s) to refresh"
             )
-            for label, tree in trees_found:
+            for label, inner_tree in candidates:
                 try:
-                    tree.initWidget()
+                    refresh_fn = getattr(inner_tree, "refresh", None)
+                    if callable(refresh_fn):
+                        # In-place repopulation -- no layout rebuild.
+                        refresh_fn()
+                    else:
+                        # Last resort for trees without refresh():
+                        # call the view helper's init_tree() directly.
+                        view_helper = getattr(inner_tree, "view", None)
+                        init_tree_fn = getattr(view_helper, "init_tree", None)
+                        if callable(init_tree_fn):
+                            init_tree_fn()
+                        else:
+                            logma.warning(
+                                f"[_refresh_tree_widgets] {label} has no "
+                                f"refresh()/init_tree(); skipping"
+                            )
+                            continue
                     logma.info(
-                        f"[_refresh_tree_widgets] refreshed tree: {label}"
+                        f"[_refresh_tree_widgets] refreshed inner tree: {label}"
                     )
                 except Exception as e:
                     logma.error(
