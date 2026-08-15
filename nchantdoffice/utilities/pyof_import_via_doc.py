@@ -424,15 +424,51 @@ def import_pyof_via_doc(
     # None, we fall back to direct SQL via the host's underlying
     # connection (open it via _conx if needed). The direct path
     # is for unit tests that build a host_doc without a model.
-    host_conn = None
     def _get_host_conn():
-        nonlocal host_conn
-        if host_conn is None:
-            host_conn = getattr(host_doc, "conn", None)
-            if host_conn is None:
-                host_doc._conx({"server": "", "database": host_doc.doc})
-                host_conn = host_doc.conn
-        return host_conn
+        """Open a fresh sqlite3.Connection to the host's underlying
+        file in the CURRENT thread. SQLite connections are not
+        thread-safe — opening a connection in the GUI thread and
+        using it in the worker thread raises
+        ``sqlite3.ProgrammingError: SQLite objects created in a
+        thread can only be used in that same thread``.
+
+        Strategy:
+          1. Get the host's file path from the live sonql.Doc
+             (``host_doc.doc``) — that's the SQLite file path.
+          2. Open a fresh ``sqlite3.connect(path)`` in the calling
+             thread. No caching, no passing across threads.
+          3. ``check_same_thread=False`` is NOT used because the
+             fresh connection is created in the current thread and
+             only used in the current thread.
+        """
+        # Resolve the host's underlying file path. The sonql doc
+        # stores the path in self.doc; for the live "db" doc it's
+        # the app instance's primary file.
+        host_path = getattr(host_doc, "doc", None)
+        # If host_path looks like a sonql URI ("sonql://...") or is
+        # None, fall back to a SQuiRL-side lookup. The sonql Doc's
+        # .doc attribute is the file path for SQLite docs.
+        if not host_path or not isinstance(host_path, str) or "://" in host_path:
+            # Try the store's docs registry as a last resort
+            store = getattr(getattr(host_doc, "parent", None), "model", None)
+            store = getattr(store, "store", None) if store is not None else None
+            docs = getattr(store, "docs", None) if store is not None else None
+            if isinstance(docs, dict):
+                for key in ("db", "pyof"):
+                    candidate = docs.get(key)
+                    if candidate is not None:
+                        cand_doc = getattr(candidate, "doc", None)
+                        if isinstance(cand_doc, str) and "://" not in cand_doc:
+                            host_path = cand_doc
+                            break
+        if not host_path or not isinstance(host_path, str) or "://" in host_path:
+            raise RuntimeError(
+                f"_get_host_conn: cannot resolve host file path from "
+                f"host_doc={type(host_doc).__name__} doc={host_path!r}. "
+                f"Pass model= or a sonql.Doc pointing at a SQLite file."
+            )
+        import sqlite3 as _sqlite3
+        return _sqlite3.connect(host_path)
 
     for spec in contract:
         result = ImportResult(table=spec.name)

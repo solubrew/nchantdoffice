@@ -1031,6 +1031,9 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         test in ``tests/test_pyof_import.py`` injects a stub returning a
         temp ``.pyof`` path. Defaults to ``QFileDialog.getOpenFileName``.
         """
+        logma.info(
+            f"[cmd_import_pyof] ENTRY event={event}"
+        )
         try:
             from PySide6.QtWidgets import QFileDialog  # type: ignore
         except Exception as e:
@@ -1101,6 +1104,11 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         """T-NEW-114 Defect C: status-bar update callback fired on the
         main thread when the worker thread finishes. Kept separate from
         cmd_import_pyof so the connection is explicit and testable.
+        """
+        logma.info(
+            f"[_show_pyof_import_result] ENTRY path={path!r} "
+            f"results_count={len(results) if results is not None else 0}"
+        )
 
         The defensive getattr + hasattr walk is intentional: in
         unit tests self.parent() is None (we use __new__ and
