@@ -57,8 +57,11 @@ not duplicate them.
 from __future__ import annotations
 
 import datetime as dt
+import logging
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Literal, Optional
+
+logma = logging.getLogger(__name__)
 
 MergeStrategy = Literal["insert_or_ignore", "last_version_per_puuid"]
 
@@ -562,15 +565,30 @@ def import_pyof_via_doc(
                 values = [write_row.get(c) for c in write_cols] + [
                     now_iso, now_iso, 1,
                 ]
+                insert_sql = (
+                    f'INSERT INTO "{spec.name}" ({col_list}) '
+                    f'VALUES ({placeholders})'
+                )
+                logma.info(
+                    f'[import_pyof_via_doc] spec={spec.name} '
+                    f'pk={spec.pk_column}={pk_value!r} attempting insert '
+                    f'cols={write_cols + ["CREON_DTTM", "MODON_DTTM", "ACTIVE_BIT"]}'
+                )
                 try:
                     conn = _get_host_conn()
-                    conn.execute(
-                        f'INSERT INTO "{spec.name}" ({col_list}) VALUES ({placeholders})',
-                        values,
+                    cur = conn.execute(insert_sql, values)
+                    logma.info(
+                        f'[import_pyof_via_doc] spec={spec.name} '
+                        f'insert cur.rowcount={cur.rowcount}'
                     )
                     conn.commit()
                     result.inserted += 1
-                except Exception:
+                except Exception as e:
+                    logma.error(
+                        f'[import_pyof_via_doc] spec={spec.name} '
+                        f'pk={pk_value!r} INSERT FAILED: {type(e).__name__}: {e}',
+                        exc_info=True,
+                    )
                     result.skipped += 1
                 continue
 
@@ -625,17 +643,35 @@ def import_pyof_via_doc(
                 values = [write_row.get(c) for c in write_cols] + [
                     now_iso, now_iso, 1,
                 ]
+                insert_sql = (
+                    f'INSERT INTO "{spec.name}" ({col_list}) '
+                    f'VALUES ({placeholders})'
+                )
+                logma.info(
+                    f'[import_pyof_via_doc] spec={spec.name} '
+                    f'pk={spec.pk_column}={pk_value!r} attempting insert '
+                    f'cols={write_cols + ["CREON_DTTM", "MODON_DTTM", "ACTIVE_BIT"]}'
+                )
                 try:
                     conn = _get_host_conn()
-                    conn.execute(
-                        f'INSERT INTO "{spec.name}" ({col_list}) VALUES ({placeholders})',
-                        values,
+                    cur = conn.execute(insert_sql, values)
+                    logma.info(
+                        f'[import_pyof_via_doc] spec={spec.name} '
+                        f'insert cur.rowcount={cur.rowcount}'
                     )
                     conn.commit()
                     result.inserted += 1
-                except Exception:
+                except Exception as e:
+                    logma.error(
+                        f'[import_pyof_via_doc] spec={spec.name} '
+                        f'pk={pk_value!r} INSERT FAILED: {type(e).__name__}: {e}',
+                        exc_info=True,
+                    )
                     result.skipped += 1
                 continue
 
         results.append(result)
+    logma.info(
+        f'[import_pyof_via_doc] END results={[(r.table, r.inserted, r.skipped) for r in results]}'
+    )
     return results
