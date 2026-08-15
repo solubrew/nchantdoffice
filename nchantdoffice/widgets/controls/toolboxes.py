@@ -37,6 +37,12 @@ from nchantrs.widgets.controls.toolboxes import NchantdToolBox
 # in cmd_import_pyof (slot = _show_pyof_import_result on the main
 # thread, Qt.QueuedConnection is the default for cross-thread
 # signals).
+# T-NEW-114 Defect C: QObject worker for offloading the synchronous
+# import_pyof() call to a background QThread so the GUI thread does
+# not block on a large .pyof file. The signal/slot pair is wired
+# in cmd_import_pyof (slot = _show_pyof_import_result on the main
+# thread, Qt.QueuedConnection is the default for cross-thread
+# signals).
 try:
     from PySide6.QtCore import QObject, QThread, Signal  # type: ignore
 except Exception:  # pragma: no cover -- rare miss in headless envs
@@ -47,12 +53,13 @@ except Exception:  # pragma: no cover -- rare miss in headless envs
 
 
 class _PyofImportWorker(QObject):
-    """T-NEW-114 Defect C: QObject worker that runs import_pyof on
-    a background QThread so the GUI thread does not block on a
-    large .pyof file. Emits finished(path, results) when done; the
-    GUI thread slot (_show_pyof_import_result) updates the status
+    """T-NEW-114 Defect C: QObject worker that runs ``import_pyof`` on
+    a background ``QThread`` so the GUI thread does not block on a
+    large .pyof file. Emits ``finished(path, results)`` when done; the
+    GUI thread slot (``_show_pyof_import_result``) updates the status
     bar. Uses Qt.QueuedConnection (the default for cross-thread
-    signals) so the slot runs on the main thread."""
+    signals) so the slot runs on the main thread.
+    """
     finished = Signal(str, list)
 
     def __init__(self, import_pyof_fn, path, host_conn):
@@ -1052,24 +1059,30 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
             if not path:
                 return self
-            # Locate the host DB connection via the model / store
-            host_conn = getattr(self, "_host_db_conn", None)
-            if host_conn is None:
-                logma.warning(
-                    "[import_pyof] no host DB connection available on toolbox; "
-                    "fall back to opening instance .pyof via the app model."
-                )
-                host_conn = self._resolve_host_db_conn()
-            # T-NEW-114 Defect C: offload the synchronous import_pyof
-            # call to a worker QThread so the GUI thread does not
-            # block. The completion signal fires back on the main
-            # thread (Qt.QueuedConnection is the default for
-            # cross-thread signals) and slots into
-            # _show_pyof_import_result which updates the status
-            # bar. The worker + thread are kept alive on the toolbox
-            # instance (_pyof_import_thread) so the GC does not
-            # reap them mid-flight.
-            worker = _PyofImportWorker(import_pyof, path, host_conn)
+            # Locate the live sonql.Doc for the host instance.
+            # T-NEW-114 followup: the live SQuiRL/sonql store layer
+            # manages its own connection pool — there is no raw
+            # sqlite3.Connection to hand to the orchestrator.
+            # ``_resolve_host_doc`` walks the store-layer ``docs``
+            # registry and returns the live sonql.Doc so the
+            # orchestrator's writes participate in SQuiRL/sonql
+            # connection management instead of bypassing it.
+            explicit_doc = getattr(self, "_host_db_conn", None)
+            if explicit_doc is not None and self._looks_like_sonql_doc(explicit_doc):
+                host_doc = explicit_doc
+            else:
+                host_doc = self._resolve_host_doc()
+            # T-NEW-114 Defect C: offload the synchronous import to
+            # a worker QThread so the GUI thread does not block.
+            # The completion signal fires back on the main thread
+            # (Qt.QueuedConnection is the default for cross-thread
+            # signals) and slots into _show_pyof_import_result
+            # which updates the status bar. The worker + thread
+            # are kept alive on the toolbox instance
+            # (_pyof_import_thread) so the GC does not reap them
+            # mid-flight.
+            from nchantdoffice.utilities.pyof_import_via_doc import import_pyof_via_doc
+            worker = _PyofImportWorker(import_pyof_via_doc, path, host_doc)
             thread = QThread()
             worker.moveToThread(thread)
             thread.started.connect(worker.run)
@@ -1116,45 +1129,53 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         except Exception as e:
             logma.error(f"[import_pyof] _show_pyof_import_result failed: {e}", exc_info=True)
 
-    def _resolve_host_db_conn(self) -> "sqlite3.Connection | None":
-        """Return the live ``sqlite3.Connection`` for the host instance.
+    def _resolve_host_doc(self) -> Any:
+        """Return the live ``sonql.Doc`` for the host instance.
 
-        T-NEW-074: defensive accessor for the live host DB connection. The
-        Application ToolBox doesn't own the connection itself — it lives
-        on the store layer (``self.app.model.store._sqlite_connection``,
-        mirroring the ``models.get_app_instances`` path). We:
+        T-NEW-114 followup: the live SQuiRL/sonql store layer does NOT
+        expose a raw ``sqlite3.Connection`` at the application level —
+        it manages its own connection pool through the ``sonql.Doc``
+        abstraction. The previous ``_resolve_host_db_conn`` walked the
+        live tree for a ``sqlite3.Connection`` but never found one
+        (the live system stores everything through sonql).
 
-          1. Try the canonical path first (``self.app.model.store.
-             _sqlite_connection``). This is the path ``models.py`` uses
-             for direct SQLite reads.
-          2. Walk ``self.parent() -> self.app -> self.app.model ->
-             self.app.model.store`` and return the first attribute that
-             passes ``isinstance(..., sqlite3.Connection)``. This keeps
-             the method working if the store layer is refactored to
-             expose a differently-named connection attribute.
-          3. Raise a clear ``RuntimeError`` so the outer ``try/except``
-             in ``cmd_import_pyof`` logs it.
+        This helper returns the live ``sonql.Doc`` via the canonical
+        ``self.app.model.store.docs`` registry:
 
-        The helper is intentionally permissive on the fallback walk: any
-        attribute on any of the candidate nodes that IS a
-        ``sqlite3.Connection`` wins. This is safer than guessing
-        attribute names because the live codebase can change underneath
-        us without breaking the wiring.
+          1. Primary host DB — ``self.app.model.store.docs["db"]``.
+          2. Currently-open secondary instance —
+             ``self.app.model.store.docs["pyof"]`` (when the user has
+             imported a secondary .pyof and the live tree is operating
+             on that instance).
+          3. Defensive isinstance walk over self / parent / app /
+             app.model / app.model.store — return the first attribute
+             that is a ``sonql.Doc`` (recognized by the
+             ``attach`` + ``get_tables`` + ``upsert`` method triple).
+          4. Raise a clear RuntimeError so the outer try/except in
+             ``cmd_import_pyof`` logs it.
+
+        The host_doc is passed to ``import_pyof_via_doc`` (the SQuiRL
+        re-architect of the orchestrator) so the write path
+        participates in the live SQuiRL/sonql connection management
+        rather than bypassing it with raw sqlite3.
         """
-        import sqlite3 as _sqlite3
-
-        # 1. Canonical fast path — matches ``models.get_app_instances``.
+        # 1. Canonical fast path — primary host DB.
         try:
             store = getattr(getattr(self, "app", None), "model", None)
             store = getattr(store, "store", store) if store is not None else None
-            conn = getattr(store, "_sqlite_connection", None)
-            if isinstance(conn, _sqlite3.Connection):
-                return conn
+            docs = getattr(store, "docs", None) if store is not None else None
+            if isinstance(docs, dict):
+                host = docs.get("db")
+                if host is not None and self._looks_like_sonql_doc(host):
+                    return host
+                # 2. Currently-open secondary instance.
+                host = docs.get("pyof")
+                if host is not None and self._looks_like_sonql_doc(host):
+                    return host
         except Exception:
-            # Fall through to the isinstance walk.
             pass
 
-        # 2. Defensive isinstance walk over candidate nodes.
+        # 3. Defensive isinstance walk over candidate nodes.
         candidates = []
         try:
             candidates.append(self)
@@ -1180,10 +1201,8 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             if node is None or id(node) in seen:
                 continue
             seen.add(id(node))
-            # Direct check first.
-            if isinstance(node, _sqlite3.Connection):
+            if self._looks_like_sonql_doc(node):
                 return node
-            # Then scan attributes (only public-ish, no dunder spam).
             try:
                 attrs = list(vars(node).items())
             except Exception:
@@ -1191,18 +1210,55 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             for name, value in attrs:
                 if name.startswith("__"):
                     continue
-                if isinstance(value, _sqlite3.Connection):
+                if self._looks_like_sonql_doc(value):
                     return value
 
-        # 3. Nothing matched — surface a clear error for the outer
-        # try/except in cmd_import_pyof to log.
+        # 4. Nothing matched — surface a clear error.
+        raise RuntimeError(
+            "NchantdOfficeApplicationToolBox._resolve_host_doc: "
+            "no sonql.Doc found on self / parent / app / app.model / "
+            "app.model.store.docs. Open the host instance first so the "
+            "store layer registers the live sonql.Doc, or wire a "
+            "_host_db_conn attribute on the toolbox instance pointing "
+            "at an explicit sonql.Doc."
+        )
+
+    @staticmethod
+    def _looks_like_sonql_doc(obj: Any) -> bool:
+        """Defensive duck-type check for ``sonql.Doc``.
+
+        sonql.Doc exposes ``attach``, ``get_tables``, ``upsert``,
+        ``insert``, ``read``, and ``execute``. We accept any object
+        that has the first three (the minimal surface
+        ``import_pyof_via_doc`` needs). Pure ``sqlite3.Connection``
+        objects do NOT have ``attach`` so they correctly do not match
+        — the re-architect must use the SQuiRL surface, not the raw
+        connection.
+        """
+        import sqlite3 as _sqlite3
+        if isinstance(obj, _sqlite3.Connection):
+            return False
+        return all(callable(getattr(obj, n, None)) for n in ("attach", "get_tables", "upsert"))
+
+    def _resolve_host_db_conn(self) -> "sqlite3.Connection | None":
+        """DEPRECATED: kept as a thin shim for tests that still pass a
+        raw sqlite3.Connection. New callers should use
+        ``_resolve_host_doc`` and ``import_pyof_via_doc`` (the SQuiRL
+        re-architect of the orchestrator)."""
+        import sqlite3 as _sqlite3
+        try:
+            store = getattr(getattr(self, "app", None), "model", None)
+            store = getattr(store, "store", store) if store is not None else None
+            conn = getattr(store, "_sqlite_connection", None)
+            if isinstance(conn, _sqlite3.Connection):
+                return conn
+        except Exception:
+            pass
         raise RuntimeError(
             "NchantdOfficeApplicationToolBox._resolve_host_db_conn: "
-            "no sqlite3.Connection found on self / parent / app / "
-            "app.model / app.model.store. Wire a `_host_db_conn` "
-            "attribute on the toolbox instance or expose the live "
-            "connection on the store layer."
+            "deprecated. Use _resolve_host_doc via import_pyof_via_doc."
         )
+
 
 
 # ====================================================================================================================||
