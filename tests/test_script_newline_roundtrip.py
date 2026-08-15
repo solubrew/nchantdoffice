@@ -83,7 +83,6 @@ def _make_script(syntax, content_text):
     script.document = SimpleNamespace(
         syntax=syntax,
         file_path=None,
-        location="external",
         content={"content": {"file_path": None, "text": content_text}},
         file_format=syntax,
         text=SimpleNamespace(html=""),
@@ -91,15 +90,15 @@ def _make_script(syntax, content_text):
     script.document_editor = _EditorStub()
     return script
 
+
 def test_resolve_document_text_preserves_leading_indentation():
     """The reopen path must not strip leading whitespace — Python /
     YAML / indented-markdown documents lose their structure if the
-    first-line indent is dropped.
-    """
+    first-line indent is dropped."""
     indented = "    def hello():\n        return 1\n"
     doc = SimpleNamespace(
         text=None,
-        content={"content": {"text": {"value": indented}}},
+        content={"content": {"text": indented}},
     )
     script = _make_script("python", indented)
     script.document = doc
@@ -149,14 +148,10 @@ def test_reopen_round_trip_preserves_newlines_and_formatting():
     saved_text = content["text"]
 
     # Step 2: reopen — populate_document reads back from saved payload.
-    # Production shape: content["content"]["text"] is a dict with
-    # {"value": <text>}, not a bare string (see _resolve_document_text
-    # contract at scripts.py:1722).
     script.document = SimpleNamespace(
         syntax=syntax,
         file_path=None,
-        location="external",
-        content={"content": {"file_path": None, "text": {"value": saved_text}}},
+        content={"content": {"file_path": None, "text": saved_text}},
         file_format="",
         text=SimpleNamespace(html=""),
     )
@@ -199,8 +194,7 @@ def test_reopen_round_trip_preserves_indentation_plaintext():
     script.document = SimpleNamespace(
         syntax=syntax,
         file_path=None,
-        location="external",
-        content={"content": {"file_path": None, "text": {"value": saved_text}}},
+        content={"content": {"file_path": None, "text": saved_text}},
         file_format="",
         text=SimpleNamespace(html=""),
     )

@@ -549,16 +549,16 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             or "html"
         )
         if syntax == "html":
-            # Persist the editor HTML verbatim into the text payload so
-            # reopen can restore formatting (see _preserved_unit_html).
-            # The previous code wrapped the body in a templated HTML
-            # envelope, but the template was commented out ("html = """)
-            # so the body decode collapsed to "" — T-NEW-008 save()
-            # dropped all HTML text. Pass editor_html through directly.
+            # html = """
+            # <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
+            # <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
+            # """
+            html = ""
             editor_html = self.document_editor.toHtml()
-            text = editor_html
-            # Mirror the editor HTML into the Pyffice unit when the
-            # unit object exposes an ``html`` attribute.
+            soup = BeautifulSoup(editor_html, "html.parser")
+            text = html.replace("<[content]>", soup.body.decode_contents())
+            # Persist the editor HTML into the Pyffice unit so
+            # reopen can restore formatting (see _preserved_unit_html).
             text_attr = getattr(self.document, "text", None)
             if text_attr is not None and hasattr(text_attr, "html"):
                 text_attr.html = editor_html
@@ -1748,16 +1748,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         if isinstance(content, str):
             text = content
         elif isinstance(content, dict):
-            # Mirror the get_content() payload shape at scripts.py:568:
-            # ``content = {"content": {"file_path": ...}, "text": text}`` so
-            # the text lives at ``content["content"]["text"]["value"]``, not
-            # at the top-level ``content["text"]``. The previous
-            # ``content.get("text", {})`` lookup was reaching the inner
-            # ``content`` dict (which has a ``"text"`` key whose value is
-            # the structured payload) and the subsequent
-            # ``text.get("value", "")`` returned "" — T-NEW-008 reopen
-            # round-trip silently dropped all script text.
-            text = content.get("content", {}).get("text", {})
+            text = content.get("text", {})
 
         # if text is None:
         #     content = self.get_content()

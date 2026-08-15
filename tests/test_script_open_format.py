@@ -197,7 +197,6 @@ def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
         syntax="plaintext",
         file_format="plaintext",
         file_path=str(md),
-        location="external",
         content="",
         meta_data={"syntax": "plaintext"},
         open_file=lambda _path: None,  # T-NEW-023 reload stub
