@@ -1105,23 +1105,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             # internal tree shape is preserved within the
             # re-parented subtree. When nothing is selected, we
             # fall back to "0" (the source root).
-            target_parent_nid = None
-            try:
-                model_obj = getattr(getattr(self, "app", None), "model", None)
-                if model_obj is not None:
-                    current = getattr(model_obj, "current_node", None)
-                    if current:
-                        target_parent_nid = current.get("nid_txt")
-                        logma.info(
-                            f"[cmd_import_pyof] reparenting top-level "
-                            f"source rows under selected node nid="
-                            f"{target_parent_nid!r}"
-                        )
-            except Exception as e:
-                logma.warning(
-                    f"[cmd_import_pyof] could not resolve target_parent_nid: {e}",
-                    exc_info=True,
-                )
+            target_parent_nid = self._resolve_selected_nid()
             worker = _PyofImportWorker(
                 import_pyof_via_doc, path, host_doc,
                 target_parent_nid=target_parent_nid,
@@ -1297,6 +1281,100 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 f"[_refresh_tree_widgets] outer error: {type(e).__name__}: {e}",
                 exc_info=True,
             )
+
+    def _resolve_selected_nid(self):
+        """Return the nid of the currently selected tree node.
+
+        Used by ``cmd_import_pyof`` to re-parent imported top-level
+        ``doc_tree_node`` rows under the user's selection. The live
+        object graph stores the selection in several shapes, so we
+        try each in order and log what we found:
+
+          1. ``self.app.model.current_node`` -- the office cloak
+             model. Holds either a tree ITEM WIDGET (has a ``.nid``
+             attribute, plus ``.parameters``) or a row dict (has
+             ``nid_txt`` / ``nid`` keys).
+          2. ``self.app.view.panes['left'].tree.model.current_node``
+             -- the tree model's own selection (same shapes).
+          3. The QTreeWidget's currentItem() -- a tree item widget
+             with ``.nid``.
+
+        Returns None (no re-parenting, root) when nothing is
+        selected or the walk fails; failures are logged at ERROR
+        so a silent no-op is visible in the logs.
+        """
+        candidates = []
+        app = getattr(self, "app", None)
+        model_obj = getattr(app, "model", None)
+        if model_obj is not None:
+            candidates.append(("app.model.current_node",
+                               getattr(model_obj, "current_node", None)))
+        view = getattr(app, "view", None)
+        panes = getattr(view, "panes", {}) or {}
+        for pos, pane in panes.items():
+            # office container -> pane.tree (inner tree) -> .model
+            inner = getattr(pane, "tree", None)
+            tm = getattr(inner, "model", None) if inner is not None else None
+            if tm is not None:
+                candidates.append(
+                    (f"panes[{pos}].tree.model.current_node",
+                     getattr(tm, "current_node", None)))
+                break
+        # QTreeWidget currentItem fallback
+        for pos, pane in panes.items():
+            inner = getattr(pane, "tree", None)
+            if inner is not None and hasattr(inner, "currentItem"):
+                try:
+                    candidates.append(
+                        (f"panes[{pos}].tree.currentItem()",
+                         inner.currentItem()))
+                except Exception:
+                    pass
+                break
+
+        def _nid_from(cand):
+            if cand is None:
+                return None
+            # dict-like (row dicts / pandas records)
+            if hasattr(cand, "get") and not hasattr(cand, "nid"):
+                for key in ("nid_txt", "nid", "nid_txt "):
+                    val = cand.get(key)
+                    if val:
+                        return str(val)
+                return None
+            # item widgets / node objects
+            for attr in ("nid", "nid_txt"):
+                val = getattr(cand, attr, None)
+                if val:
+                    return str(val)
+            return None
+
+        for label, cand in candidates:
+            nid = None
+            try:
+                nid = _nid_from(cand)
+            except Exception as e:
+                logma.warning(
+                    f"[_resolve_selected_nid] {label} extraction failed: {e}"
+                )
+            if nid:
+                logma.info(
+                    f"[_resolve_selected_nid] resolved nid={nid!r} "
+                    f"from {label} (type={type(cand).__name__})"
+                )
+                return nid
+            logma.info(
+                f"[_resolve_selected_nid] {label} yielded no nid "
+                f"(type={type(cand).__name__}, value={cand!r:.60})"
+                if cand is not None
+                else f"[_resolve_selected_nid] {label} is None"
+            )
+        logma.error(
+            "[_resolve_selected_nid] no selected node found on "
+            "app.model / tree models / currentItem -- imported "
+            "top-level nodes will land at the tree ROOT"
+        )
+        return None
 
     def _resolve_host_doc(self) -> Any:
         """Return the live ``sonql.Doc`` for the host instance.
