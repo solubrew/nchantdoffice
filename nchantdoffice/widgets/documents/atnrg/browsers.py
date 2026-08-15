@@ -92,8 +92,8 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
         cfg = {}
         self.active_url.init_document(self.document.get_active_page().get_url_document(), cfg)
-        self.library = self.document.library
-        self.profiles = self.document.profile_manager
+        # self.library = self.document.library
+        # self.profiles = self.document.profile_manager
         self.get_current_profile()
         return self
 
