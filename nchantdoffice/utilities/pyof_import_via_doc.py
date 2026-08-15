@@ -401,15 +401,19 @@ def import_pyof_via_doc(
         contract: the per-table spec list. Defaults to the
             ``T-NEW-074 / 075 / 076 / 077`` 9-table contract.
         target_parent_nid: optional nid to use as the parent for
-            top-level rows (source ``pid_txt == "0"``). When set,
-            the orchestrator re-parents those rows under this nid
-            so they appear nested under the user's currently
-            selected node on the host. Children of those top-level
-            rows keep their original ``pid_txt`` (their parent's
-            new nid in the host), so the source's internal tree
-            shape is preserved within the re-parented subtree.
-            When None, top-level rows keep ``pid_txt == "0"`` (the
-            source root) and show up at the host root.
+            top-level ``doc_tree_node`` rows (source
+            ``pid_txt == "0"``). When set, the orchestrator
+            re-parents those node rows under this nid so they
+            appear nested under the user's currently selected node
+            on the host. Only ``doc_tree_node`` is re-parented:
+            ``doc_tab`` rows keep their original ``pid_txt``
+            (they point at node nids which are preserved on
+            insert) and ``app_media`` / ``doc_media`` are parented
+            via their tab's ``did``, so the tab -> node -> media
+            chain flows correctly once the node lands under the
+            new parent. When None, top-level nodes keep
+            ``pid_txt == "0"`` (the source root) and show up at
+            the host root.
 
     Returns:
         list[ImportResult]: one per contract table, in the same
@@ -563,17 +567,24 @@ def import_pyof_via_doc(
                 # the model is provided. The model owns audit
                 # columns, dedupe, and the cap limits.
                 if model is not None:
-                    # Re-parent top-level rows to the host's currently
-                    # selected node. Source rows with pid_txt="0" (or
-                    # missing/empty) get the override. Children of
-                    # those top-level rows keep their original
+                    # Re-parent ONLY doc_tree_node top-level rows to the
+                    # host's currently selected node. Source nodes with
+                    # pid_txt="0" (or missing/empty) get the override.
+                    # Children of those top-level rows keep their original
                     # pid_txt -- the source's internal tree shape is
                     # preserved within the re-parented subtree.
-                    src_pid = row_dict.get("pid_txt", "0") or "0"
-                    effective_pid = src_pid
+                    #
+                    # doc_tab is NOT re-parented: tabs point at node nids
+                    # via pid_txt, and those nids are preserved on insert,
+                    # so the tab -> node -> media chain flows correctly
+                    # once the node lands under the new parent.
+                    # app_media / doc_media are parented via their tab's
+                    # did, not via a pid column, so they flow too.
+                    effective_pid = row_dict.get("pid_txt", "0") or "0"
                     if (
-                        target_parent_nid
-                        and src_pid == "0"
+                        spec.name == "doc_tree_node"
+                        and target_parent_nid
+                        and effective_pid == "0"
                         and "pid_txt" in cols
                     ):
                         effective_pid = target_parent_nid
@@ -604,7 +615,7 @@ def import_pyof_via_doc(
                             name=row_dict.get("name_txt", ""),
                             widget=row_dict.get("widget_txt", ""),
                             widgdata=row_dict.get("widgdata_dict", "{}"),
-                            pid=effective_pid,
+                            pid=row_dict.get("pid_txt", "0") or "0",
                             did=row_dict.get("did_txt", ""),
                             pos=int(row_dict.get("position_int", 0) or 0),
                             tab_type=row_dict.get("tab_type_txt", "custom_widget"),
@@ -627,13 +638,13 @@ def import_pyof_via_doc(
                 write_cols = [c for c in cols if c not in audit and c not in host_pk_cols]
                 if spec.pk_column in host_pk_cols:
                     write_cols.append(spec.pk_column)
-                # Re-parent top-level rows to the host's currently
-                # selected node (same logic as the model branch).
-                # Only tables that actually carry a pid_txt column
-                # can be re-parented (app_media / doc_media /
-                # *_content have no parent column; the .get default
-                # would otherwise misfire the log line).
-                if "pid_txt" in cols:
+                # Re-parent ONLY doc_tree_node top-level rows to the
+                # host's currently selected node (same scoping as the
+                # model branch). doc_tab keeps its original pid_txt --
+                # tabs point at node nids which are preserved on
+                # insert, so the tab -> node -> media chain flows.
+                # app_media / doc_media have no pid column at all.
+                if spec.name == "doc_tree_node" and "pid_txt" in cols:
                     src_pid = row_dict.get("pid_txt", "0") or "0"
                     if target_parent_nid and src_pid == "0":
                         logma.info(
