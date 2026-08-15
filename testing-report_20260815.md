@@ -2,11 +2,11 @@
 - the following issues were found to existing testing the NchantdOffice Desktop Application with all its most updated internal dependencies.
 
 ## Document Changes:
+- feat(models): seed app_user row on initial install (T-NEW-129) -- bootstrap_app_user + store_app_user + get_app_user wired from run_on_launch (7da0d1e)
+- feat(toolbars): top-level new-node toolbar lands at pid=0 (T-NEW-130) -- NchantdNewDocumentSigil.top_level flag + launch_new_document_sigil signals the rootnode dispatch (ac448ad)
 - 
 
-
 ## Issues Found:
-- Block from creating new Nodes at the top level 
 - block from creating any nodes in the Settings and Journal trees
 - block from creating/deleting tabs in Settings node tree
 - node sort buttons in not actuallying sorting the subtree of selected node
