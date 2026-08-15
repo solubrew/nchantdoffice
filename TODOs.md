@@ -4634,3 +4634,38 @@ and deserves its own sub-card if non-trivial.
 - **T-NEW-121** em-dash sweep + encoding-declaration placement — filed after the `30593b9` SyntaxError incident; 197 files affected.
 - **T-NEW-122** Qt-harness migration for tests importing toolboxes — filed after `test_cmd_pyof_routing_consolidation.py` batch-crash (T-NEW-114 follow-up).
 - **T-NEW-123** Embedded-TODO sweep: implement-method stubs and config wiring — covers the 21 uncovered TODO markers (embedded_todos audit dim 58%).
+
+### T-NEW-124 — Doctype guard: strict-dtd payloads restore as HTML (2026-08-15)
+
+**Rich-text payloads restored under the wrong syntax.** User
+directive (2026-08-15): if the content being restored contains
+
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN"
+     "http://www.w3.org/TR/REC-html40/strict.dtd">
+
+it needs to be formatted as HTML. That doctype is the fingerprint
+Qt's ``QTextEdit.toHtml()`` stamps on every serialised rich-text
+payload; when such a payload round-trips back through restore
+while ``document.syntax`` says plain-text / python / markdown,
+the dispatch strips the formatting (setPlainText), mangles it
+(setMarkdown), or double-wraps the HTML source in a pygments
+highlight ``<pre>``.
+
+**Fix (scripts.py:1479):** the guard sits at the top of
+``_apply_syntax_highlighting``, before the syntax dispatch. Any
+string payload whose first 2048 chars contain the stable
+``rec-html40/strict.dtd`` fingerprint (case-insensitive, tolerant
+of spacing/quote variants) is routed to ``setHtml(text)``
+directly, overriding ``syntax``.
+
+**Affected sites:**
+- `nchantdoffice/widgets/documents/media/scripts.py:1465-1505`
+  — ``_apply_syntax_highlighting`` (guard at 1479)
+- `tests/test_script_doctype_guard.py` — 7 new tests
+
+**Verification:** 7/7 new tests; script/document surface 17/17
+(test_doctype_guard + html_envelope + reopen + no_missing_text +
+doc_media_syntax_update). Live numbers (per-file run, 21 known
+Qt-crashers + 2 pyof-Qt files excluded): **497 passed / 5 failed**
+— the 5 are the T-NEW-120 aspirational script tests, unchanged.
+

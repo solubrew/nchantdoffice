@@ -1476,6 +1476,31 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         language is a single tuple.
         """
 
+        # T-NEW-124 doctype guard: if the content being restored
+        # carries the Qt rich-text doctype
+        #     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN"
+        #      "http://www.w3.org/TR/REC-html40/strict.dtd">
+        # it is a serialised QTextEdit rich-text payload and MUST
+        # be rendered via setHtml regardless of what ``syntax``
+        # claims. Every other setter destroys it: setPlainText
+        # strips the formatting, setMarkdown mangles it, and the
+        # pygments highlight path wraps the HTML SOURCE in a
+        # highlight <pre> (double-escape). The doctype's stable
+        # fingerprint is the strict DTD URL; matching on it (case-
+        # insensitive) tolerates whitespace/quote variants.
+        _DOCTYPE_FINGERPRINT = "rec-html40/strict.dtd"
+        if (
+            isinstance(text, str)
+            and _DOCTYPE_FINGERPRINT in text[:2048].lower()
+        ):
+            logma.info(
+                "[scripts] doctype guard: strict-dtd payload -> "
+                "setHtml (syntax=%r overridden)"
+                % (self.document.syntax,)
+            )
+            self.document_editor.setHtml(text)
+            return
+
         # T-NEW-035: ``file_format`` and ``syntax`` are now the same
         # thing on the script document. ``syntax`` is the
         # canonical name (per the T-NEW-024 doc-media / T-NEW-035
