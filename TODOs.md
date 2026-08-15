@@ -4257,3 +4257,380 @@ it. The only remaining design question is **Defect C
 - **T-NEW-112** ✅ Type-aware file-import dialog filter — filed 2026-08-14 from `testing-report_20260814.md` item 2.
 - **T-NEW-113** ✅ Autosave on focal-change per document type — filed 2026-08-14 from `testing-report_20260814.md` item 3 (promoted from T-NEW-079 Future-work #1).
 - **T-NEW-114** ✅ `.pyof` import still broken after T-NEW-074/077 — fixed 2026-08-15 (commit `f81c8a7`). 3 wiring defects closed: cmd_import_local_file routes .pyof → cmd_import_pyof (was → model.import_nchantdoffice); cmd_open_local_file routes .pyof → cmd_import_local_file (was → _open_pyof_instance); cmd_import_pyof now offloads to a _PyofImportWorker on a QThread (was synchronous on GUI thread). TODO marker removed. 5 new tests pin the dispatch + worker thread. 437 passed / 0 failed (non-Qt subset).
+
+---
+
+## T-NEW cards filed 2026-08-15 (session: testing-report + TODO sweep)
+
+### T-NEW-115 — Creating new Nodes at the top level is blocked (2026-08-15)
+
+**Top-level node creation blocked.** Operator testing on 2026-08-15
+(`testing-report_20260815.md`) reported: *"Block from creating new
+Nodes at the top level"*. The add-node write path routes through
+`NchantdApplicationModel.add_node`, whose `pid='0'` branch resolves
+the tree-widget parent as `panes['left'].tree` itself
+(applicationmodels.py:207-208) before appending the row; the office
+layer additionally gates nodes via `LOCKED_NODE_NAMES` /
+`is_locked_node` (T-NEW-004). Which of these surfaces rejects (or
+silently drops) a user-initiated top-level create has not been
+root-caused yet — the card covers the investigation plus the fix.
+This has no prior T-NEW card.
+
+**Affected sites:**
+- `nchantrs/models/applicationmodels.py:198-217` — `add_node`
+  `pid='0'` parent-resolution branch
+- `nchantdoffice/models.py:614` — `add_node` delegation;
+  `models.py:633` `add_node_app`
+- `nchantdoffice/models.py:167-191` — `LOCKED_NODE_NAMES` /
+  `is_locked_node` gate (T-NEW-004)
+- `nchantdoffice/widgets/panes/documents.py` — the node-create
+  handler that initiates the call
+
+**Migration plan (no priority — design decision first):** decide
+whether top-level creation is (a) intentionally locked to the three
+canonical app nodes and the UI must say so, or (b) allowed and the
+gate/parent-resolution has a defect. Reproduce from the running app
+(File > New Node with nothing selected), capture the log line, and
+fix the rejecting layer only.
+
+**Steps:**
+1. Reproduce live: with no node selected, invoke new-node; record
+   which of `add_node` / `is_locked_node` / the pid='0' tree-parent
+   branch rejects it.
+2. Write a failing test in
+   `tests/test_toplevel_node_creation.py` pinning the decided
+   behavior (create succeeds at pid='0', or refusal returns a
+   user-visible message).
+3. Fix the identified layer; keep T-NEW-004 locked-node deletion
+   guards untouched.
+4. This card + CHANGES.md entry.
+
+### T-NEW-116 — Jupyter server default working directory (~/Documents/NchantdLibrary) (2026-08-15)
+
+**Notebook server cwd defaults to the process cwd.** Operator
+testing on 2026-08-10 (`testing-report_20260810.md`) reported:
+*"NchantdOfficeNotebook need to control working directory when
+server starts up to be the ~/Documents/NchantdLibrary path by
+default"*. Today `start_jupyter_server` sets the subprocess cwd to
+`dirname(self.file_path)` when a notebook file is open, else leaves
+it `None` (inheriting the app process cwd — often the repo or the
+launcher dir), so the Jupyter file browser roots itself wherever
+the app happened to start.
+
+**Affected sites:**
+- `nchantdoffice/widgets/documents/workbooks/notebooks.py:1384-1398`
+  — the `cwd = None` / `dirname(self.file_path)` block feeding
+  `subprocess.Popen(..., cwd=cwd)`
+
+**Migration plan (low priority):** three-tier resolution —
+(1) open notebook's directory, (2) `app.model.library_path` (the
+existing NchantdLibrary resolver used by the toolbox), (3)
+`~/Documents/NchantdLibrary` literal fallback; create the directory
+if missing.
+
+**Steps:**
+1. Add `_resolve_server_cwd()` on `NchantdOfficeNotebook`
+   implementing the three-tier resolution.
+2. Replace the inline block at notebooks.py:1384-1387 with a call
+   to it; log the resolved cwd in the existing launch log line.
+3. TDD: `tests/test_notebook_server_cwd.py` — stub `file_path`,
+   `app.model.library_path`, and HOME to prove each tier wins in
+   order.
+4. This card + CHANGES.md entry.
+
+### T-NEW-117 — Palette scan crashes: `PyfficeColorPalette.extract_palette` does not exist (2026-08-15)
+
+**Image palette scan button raises AttributeError.** Operator
+testing on 2026-08-10 (`testing-report_20260810_001.md`) captured
+the crash: `cmd_run_palette_scan failed:
+'PyfficeColorPalette' object has no attribute 'extract_palette'`
+at images.py:927. Verified still broken on 2026-08-15: the
+installed `pyffice.images.palettes.PyfficeColorPalette` exposes
+`add_color` / `get_palette` / `set_palette`-family methods only —
+no `extract_palette` — so the image-toolbar button 16 handler can
+never succeed.
+
+**Affected sites:**
+- `nchantdoffice/widgets/documents/media/images.py:984` —
+  `cmd_run_palette_scan` call to the missing method
+- `pyffice/pyffice/images/palettes.py:38` —
+  `PyfficeColorPalette` class (upstream; needs the extraction
+  surface)
+
+**Migration plan (no priority — design decision first):** decide
+where extraction lives: (a) upstream `extract_palette(path)` on
+`PyfficeColorPalette` reading the image and returning a
+palette + usage-counts structure, or (b) a standalone pyffice
+module the image widget calls. Downstream should also degrade
+gracefully (log + status message) instead of a raw traceback.
+
+**Steps:**
+1. Implement `extract_palette` upstream in pyffice
+   (`palettes.py`) with tests in
+   `tests/pyffice_unit/unit/images/` (fixture image → expected
+   dominant colors).
+2. Guard the call site at images.py:984 with hasattr + logma.error
+   + status-bar message when the upstream surface is missing.
+3. TDD: extend `tests/test_palette_in_image_toolbar.py` with a
+   missing-method degradation test.
+4. This card + CHANGES.md entry (both repos).
+
+### T-NEW-118 — Journal PII detector + redacted view with PIN copy (2026-08-15, re-file)
+
+**PII handling for journal entries.** Operator direction on
+2026-08-10 (`testing-report_20260810.md`): *"add a PII detector to
+the journal and hide the inputs stored to the secure storage
+area...need to show redacted and then allow the user to still copy
+and paste the full text with a pin"*. This was originally deferred
+inside the T-NEW-065 card body under the labels "T-NEW-066/067/068",
+but those numbers were subsequently consumed by the matrix-chart /
+retention-policy / filesystem-location cards, so the PII work lost
+its tracking. Re-filed here. Nothing is implemented today: journal
+content is stored verbatim in `app_media_content` via the journal
+save path.
+
+**Affected sites:**
+- `nchantdoffice/widgets/documents/journal.py:282` — journal save
+  (`save_app`) writing plain content rows
+- pycurity secure-storage surface (PyKeyStore) — target for the
+  redacted originals
+- `nchantdoffice/widgets/documents/journal.py` — render path for
+  the redacted view + PIN-gated copy
+
+**Migration plan (no priority — design decision first):** decide
+the detector scope (regex tier for emails/phones/keys vs a
+pycurity-provided scanner), the redaction token format persisted in
+`app_media_content`, and the PIN prompt surface (reuse the existing
+secure-store passphrase flow vs a per-document PIN).
+
+**Steps:**
+1. Detector: `nchantdoffice/utilities/pii_detect.py` returning
+   spans by category; unit tests per category.
+2. Save path: journal save detects spans, stores redacted text in
+   `app_media_content`, originals + span map in pycurity secure
+   storage keyed by entry UUID.
+3. Render path: journal view shows redacted tokens; copy action
+   prompts for PIN, decrypts, places full text on the clipboard.
+4. TDD: `tests/test_journal_pii_redaction.py` (detect → store →
+   render → PIN copy round-trip).
+5. This card + CHANGES.md entry.
+
+### T-NEW-119 — Journal content growth: timestamp column + retention policy + delete_marked (2026-08-15, re-file)
+
+**Retention follow-ups lost to a number collision.** T-NEW-065
+shipped version-based journal compaction; its card body deferred
+three follow-ups under the labels "T-NEW-066/067/068", but those
+numbers were reused by unrelated cards (matrix charts, chart
+xlsx, filesystem memory), orphaning the follow-ups. Re-filed as
+one card: (1) a timestamp/`MODON_DTTM`-based column usable for
+time-based pruning of `app_media_content` (schema has no usable
+timestamp today), (2) wiring the ``Data Retention Policy`` lookup
+via `get_app_policy` (referenced by micromole storage but not
+declared in any yaml cfg), (3) the `delete_marked` pattern that is
+a no-op across the storage chain.
+
+**Affected sites:**
+- `nchantdoffice/models.py` — `compact_journal_content` (the
+  version-based compaction this extends) and
+  `_APP_MEDIA_CONTENT_COLUMNS` (~line 3806) for the schema change
+- `micromole/storage.py:309,332` — `delete_marked` no-op and the
+  policy lookup reference
+- `nchantrs/models/models.py:300` — the upstream delete_marked
+  reference
+
+**Migration plan (no priority — design decision first):** the
+schema change is the gate: adding a timestamp column to
+`app_media_content` requires a migration story for existing
+`.pyof` files (lazy ALTER on open vs re-save). Decide retention
+policy granularity (per-user setting vs global policy row) before
+wiring `get_app_policy`.
+
+**Steps:**
+1. Schema: add the timestamp column + lazy-migration helper; pin
+   with a round-trip test on an old-format `.pyof`.
+2. Extend `compact_journal_content` with a time-based prune branch
+   driven by the timestamp.
+3. Declare the Data Retention Policy row surface + wire
+   `get_app_policy`; fall back to the version-based path when no
+   policy exists.
+4. Implement `delete_marked` in the storage chain (flag + sweep)
+   and route prune through it.
+5. TDD: extend `tests/test_compact_journal_content.py`.
+6. This card + CHANGES.md entry.
+
+### T-NEW-120 — Script save/restore aspirational tests fail at the 5d80f92 contract (2026-08-15)
+
+**5 red tests pin the future script round-trip contract.** The
+user confirmed (2026-08-15) that NchantdOfficeScript live save +
+reopen of internally and externally stored text works at commit
+`5d80f92`. The later production changes (`85e809e`) were built
+against the tests' aspirational contract and broke the live
+behavior, so they were reverted in `822b32e` (tests kept). The 5
+tests now fail by design and are the acceptance gate for this
+card: implement the proper contract WITHOUT regressing the
+`5d80f92` live path.
+
+**Affected sites:**
+- `nchantdoffice/widgets/documents/media/scripts.py:549-562` —
+  `get_content()` HTML branch (currently persists `text=""`; the
+  HTML lives in the Pyffice `text.html` attribute)
+- `nchantdoffice/widgets/documents/media/scripts.py:1748-1758` —
+  `_resolve_document_text()` pass 2 (`content.get("text", {})`
+  walk that only round-trips by accident of the isinstance
+  unwrap)
+- `tests/test_script_newline_roundtrip.py` (3 failing),
+  `tests/test_document_persistence.py` (1 failing),
+  `tests/test_script_open_format.py` (1 failing)
+
+**Migration plan (no priority — design decision first):** decide
+the canonical stored shape for HTML scripts (persist editor HTML
+in the content row vs keep the Pyffice-unit attribution and change
+only the reopen walk), then bring the OTHER side (save or reopen)
+to match — never both at once against the live behavior.
+
+**Steps:**
+1. Write a live-behavior pin FIRST: a test that saves + reopens a
+   script through the `5d80f92` path and asserts the editor text
+   survives (guards against regressing the working path).
+2. Align `get_content()`'s HTML branch with the decided shape.
+3. Align `_resolve_document_text()` pass 2 with the same shape
+   (correct dict walk: `content["content"]["text"]["value"]`).
+4. Turn the 5 aspirational tests green without touching the step-1
+   pin.
+5. Full non-Qt suite + this card + CHANGES.md entry.
+
+### T-NEW-121 — em-dash sweep + encoding-declaration placement (2026-08-15)
+
+**Non-ASCII bytes are a latent SyntaxError in 197 files.** Incident
+2026-08-15 (fixed in `30593b9`): `toolboxes.py` carries its
+`# -*- coding: utf-8 -*-` declaration on line 14 (after a 13-line
+module docstring), so Python's tokenizer falls back to ASCII
+source encoding and every em-dash (U+2014) added to the file is a
+`SyntaxError: invalid character`. 197 files in the repo contain
+em-dashes today; any of them with the declaration below line 2
+fails the same way the next time someone edits near a dash. The
+live app crash cascaded into `ModuleNotFoundError: No module named
+'widgets'` because the toolboxes import died at parse time.
+
+**Affected sites:**
+- All 197 files returned by:
+  `grep -rlP '\x{2014}' nchantdoffice/ cmds/ tests/ --include='*.py'`
+- Per-file: the `# -*- coding:` line position (`head -3` shows it
+  after the module docstring banner)
+
+**Migration plan (low priority, mechanical):** pick ONE convention
+— (a) move the coding declaration to line 2 of every affected file
+(one-line edit, keeps the prose), or (b) sweep all em-dashes to
+`--` (ASCII-safe). Option (a) is smaller and preserves the writing
+style; option (b) is what `30593b9` did locally for the two files
+touched.
+
+**Steps:**
+1. Script the sweep (`cmds/` one-off): for each affected file,
+   apply the chosen convention; `ast.parse` before/after to prove
+   no semantic change.
+2. Add a guard test `tests/test_source_encoding.py`: for every
+   tracked `.py`, if the file contains non-ASCII bytes, assert the
+   coding declaration is on line 1 or 2.
+3. Run the full non-Qt suite.
+4. This card + CHANGES.md entry.
+
+### T-NEW-122 — Qt-harness migration for tests importing toolboxes (2026-08-15)
+
+**test_cmd_pyof_routing_consolidation.py crashes when batched.**
+The 5 dispatch tests pass in isolation but abort the interpreter
+(`Fatal Python error: Aborted`, shiboken6 stack) when collected in
+a multi-file pytest run, because importing
+`nchantdoffice.widgets.controls.toolboxes` loads PySide6 at module
+level (the `_PyofImportWorker(QObject)` + Signal surface added by
+T-NEW-114). The established pattern for Qt-using tests in this
+repo is the qt_parent subprocess harness (fresh interpreter per Qt
+test file); this card migrates the file or makes the import lazy
+so the non-Qt batch stays usable.
+
+**Affected sites:**
+- `tests/test_cmd_pyof_routing_consolidation.py` — the crashing
+  file (5 tests)
+- `nchantdoffice/widgets/controls/toolboxes.py` — module-level
+  `QObject/QThread/Signal` import block (the trigger)
+- qt_parent harness — target runner
+
+**Migration plan (no priority — design decision first):** (a) move
+the file to the qt_parent harness (keeps production imports
+eager/simple), or (b) make the PySide6 QtCore import lazy inside
+the worker (keeps the file in the fast non-Qt subset but adds an
+import-time branch to production code).
+
+**Steps:**
+1. Decide (a)/(b); if (b), wrap the import and pin with a
+   non-Qt import test (`python -c "import
+   nchantdoffice.widgets.controls.toolboxes"` without a
+   QApplication).
+2. Re-run the full non-Qt batch WITH the file included and
+   confirm no interpreter abort.
+3. This card + CHANGES.md entry.
+
+### T-NEW-123 — Embedded-TODO sweep: implement-method stubs and config wiring (2026-08-15)
+
+**21 unimplemented-method TODO markers with no cards.** The
+embedded_todos audit dim sits at 58% because ~30 `TODO` markers
+remain in source; several are already covered by open cards
+(images.py:1162 → T-NEW-035 drawer redraw; charts.py:186/214 →
+T-NEW-029 segfault; toolbars.py:216 → T-NEW-039 signature
+cleanup; journal.py:422 → T-NEW-079 populate refactor; the
+T-035/082/083 historical markers are annotations, not work). The
+remainder are untracked stubs and config wirings collected here.
+
+**Affected sites (uncovered remainder):**
+- `nchantdoffice/widgets/documents/documents.py:1125` —
+  `# TODO implement method`
+- `nchantdoffice/widgets/widgets.py:113` — `# TODO implement
+  method`
+- `nchantdoffice/widgets/config/source_config.py:319` —
+  `# TODO implement method`
+- `nchantdoffice/widgets/documents/workbooks/notebooks.py:1788,
+  1792` — two `#TODO: implement method` stubs
+- `nchantdoffice/widgets/config/settings.py:980` —
+  NchantdOfficeDocumentConfigPane per-document-type features pane
+- `nchantdoffice/widgets/config/settings.py:1209` — lock default
+  right-side tab to the Ad tab for free users
+- `nchantdoffice/widgets/panes/documents.py:669` — catalog pane
+  tab-is-None stub values
+- `nchantdoffice/widgets/config/referral_panel.py:117` — referral
+  code must always load from external source
+- `nchantdoffice/models.py:2703` — node position correction
+  (`pos = 0 #TODO: need to find correction position`)
+- `nchantdoffice/widgets/documents/journal.py:132` — always
+  scroll to bottom of document
+- `nchantdoffice/widgets/documents/journal.py:282` — journal save
+  redirect to the `app_doc_content` table
+
+**Migration plan (no priority — triage first):** each site is
+either a real implementation (settings.py:980/1209, models.py:2703,
+journal.py:132/282, referral_panel.py:117) or a stub whose correct
+fate is deletion when the enclosing feature ships. Triage into
+implement vs delete, then batch by file. settings.py:1209 (Ad-tab
+default for free users) interacts with the advertisements surface
+and deserves its own sub-card if non-trivial.
+
+**Steps:**
+1. Triage table in this card: site → implement | delete | covered-elsewhere.
+2. Implement the chosen sites file-by-file with one test per
+   behavior added; remove each TODO marker as it lands (operator
+   convention: markers are removed when work lands).
+3. Re-run `sasquatch analyze` and record the embedded_todos delta.
+4. This card + CHANGES.md entry.
+
+---
+
+**Catalog updates** (filed 2026-08-15, session: testing-report + TODO sweep):
+
+- **T-NEW-115** Creating new Nodes at the top level is blocked — filed from `testing-report_20260815.md`.
+- **T-NEW-116** Jupyter server default working directory (~/Documents/NchantdLibrary) — filed from `testing-report_20260810.md`.
+- **T-NEW-117** Palette scan crashes: `PyfficeColorPalette.extract_palette` missing — filed from `testing-report_20260810_001.md`; verified still broken 2026-08-15.
+- **T-NEW-118** Journal PII detector + redacted view with PIN copy — re-filed (was orphaned by the T-NEW-066/067/068 number collision inside T-NEW-065's deferred-work section).
+- **T-NEW-119** Journal content retention: timestamp column + retention policy + delete_marked — re-filed (same number-collision orphaning).
+- **T-NEW-120** Script save/restore aspirational tests fail at the 5d80f92 contract — filed after the 2026-08-15 revert (`822b32e`); 5 red tests are the acceptance gate.
+- **T-NEW-121** em-dash sweep + encoding-declaration placement — filed after the `30593b9` SyntaxError incident; 197 files affected.
+- **T-NEW-122** Qt-harness migration for tests importing toolboxes — filed after `test_cmd_pyof_routing_consolidation.py` batch-crash (T-NEW-114 follow-up).
+- **T-NEW-123** Embedded-TODO sweep: implement-method stubs and config wiring — covers the 21 uncovered TODO markers (embedded_todos audit dim 58%).
