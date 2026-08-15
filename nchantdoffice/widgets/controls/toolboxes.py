@@ -224,9 +224,17 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         no splitter is present.
         """
         try:
-            ratio = self.config.dikt.get("pane_width_ratio", self._DEFAULT_PANE_RATIO) if hasattr(self, "config") else self._DEFAULT_PANE_RATIO
+            ratio = (
+                self.config.dikt.get("pane_width_ratio", self._DEFAULT_PANE_RATIO)
+                if hasattr(self, "config")
+                else self._DEFAULT_PANE_RATIO
+            )
             ratio = max(0.1, min(0.9, float(ratio)))
-            parent_splitter = getattr(self.parent, "parent_splitter", None) if self.parent is not None and hasattr(self.parent, "parent") else None
+            parent_splitter = (
+                getattr(self.parent, "parent_splitter", None)
+                if self.parent is not None and hasattr(self.parent, "parent")
+                else None
+            )
             # Fallback - search the parent tree for a QSplitter
             if parent_splitter is None:
                 widget = self
@@ -305,6 +313,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         try:
             cfg = {"layout": "vertical"}
             from nchantrs.widgets.panes.searches import NchantdApplicationSearchPane  # type: ignore
+
             self.application_search_pane = NchantdApplicationSearchPane(self, cfg).initWidget()
             # Register the tag-tracking columns so the pane pulls
             # them from the documents-pane helpers.
@@ -349,10 +358,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 try:
                     copy_helper()
                 except Exception as copy_exc:
-                    logma.warning(
-                        f"[toolboxes] cmd_duplicate_instance: "
-                        f"copy_database failed: {copy_exc}"
-                    )
+                    logma.warning(f"[toolboxes] cmd_duplicate_instance: " f"copy_database failed: {copy_exc}")
         except Exception as exc:
             logma.error(
                 f"[toolboxes] cmd_duplicate_instance failed: {exc}",
@@ -383,14 +389,10 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         """
         try:
             cfg = {}
-            self.open_file_sigil = NchantdFileOpenSigil(
-                "open_local_document", self, cfg
-            ).initWidget()
+            self.open_file_sigil = NchantdFileOpenSigil("open_local_document", self, cfg).initWidget()
             self.local_file = self.open_file_sigil.file_selected
             if self.local_file is not None:
-                importer = getattr(
-                    self.app.model, "import_local_file", None
-                )
+                importer = getattr(self.app.model, "import_local_file", None)
                 if callable(importer):
                     importer(self.local_file)
                 else:
@@ -468,20 +470,11 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             app = getattr(self, "app", None)
             model = getattr(app, "model", None) if app is not None else None
             if model is None or not hasattr(model, "search_documents"):
-                logma.warning(
-                    "[toolboxes] cmd_search_global: model not available"
-                )
+                logma.warning("[toolboxes] cmd_search_global: model not available")
                 return self
             results = model.search_documents(query, scope="global")
-            count = (
-                int(len(results))
-                if hasattr(results, "__len__")
-                else 0
-            )
-            logma.info(
-                f"[toolboxes] cmd_search_global: query={query!r} "
-                f"matches={count}"
-            )
+            count = int(len(results)) if hasattr(results, "__len__") else 0
+            logma.info(f"[toolboxes] cmd_search_global: query={query!r} " f"matches={count}")
         except Exception as e:
             logma.error(
                 f"[toolboxes] cmd_search_global failed: {e}",
@@ -514,9 +507,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             app = getattr(self, "app", None)
             model = getattr(app, "model", None) if app is not None else None
             if model is None or not hasattr(model, "search_documents"):
-                logma.warning(
-                    "[toolboxes] cmd_search_node: model not available"
-                )
+                logma.warning("[toolboxes] cmd_search_node: model not available")
                 return self
             active_nid = None
             try:
@@ -524,18 +515,9 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 active_nid = getattr(node, "nid", None)
             except Exception:
                 active_nid = None
-            results = model.search_documents(
-                query, scope="node", active_nid=active_nid
-            )
-            count = (
-                int(len(results))
-                if hasattr(results, "__len__")
-                else 0
-            )
-            logma.info(
-                f"[toolboxes] cmd_search_node: query={query!r} "
-                f"nid={active_nid} matches={count}"
-            )
+            results = model.search_documents(query, scope="node", active_nid=active_nid)
+            count = int(len(results)) if hasattr(results, "__len__") else 0
+            logma.info(f"[toolboxes] cmd_search_node: query={query!r} " f"nid={active_nid} matches={count}")
         except Exception as e:
             logma.error(
                 f"[toolboxes] cmd_search_node failed: {e}",
@@ -568,9 +550,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             app = getattr(self, "app", None)
             model = getattr(app, "model", None) if app is not None else None
             if model is None or not hasattr(model, "search_documents"):
-                logma.warning(
-                    "[toolboxes] cmd_search_tab: model not available"
-                )
+                logma.warning("[toolboxes] cmd_search_tab: model not available")
                 return self
             active_tid = None
             try:
@@ -578,18 +558,9 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 active_tid = getattr(tab, "tid", None)
             except Exception:
                 active_tid = None
-            results = model.search_documents(
-                query, scope="tab", active_tid=active_tid
-            )
-            count = (
-                int(len(results))
-                if hasattr(results, "__len__")
-                else 0
-            )
-            logma.info(
-                f"[toolboxes] cmd_search_tab: query={query!r} "
-                f"tid={active_tid} matches={count}"
-            )
+            results = model.search_documents(query, scope="tab", active_tid=active_tid)
+            count = int(len(results)) if hasattr(results, "__len__") else 0
+            logma.info(f"[toolboxes] cmd_search_tab: query={query!r} " f"tid={active_tid} matches={count}")
         except Exception as e:
             logma.error(
                 f"[toolboxes] cmd_search_tab failed: {e}",
@@ -622,7 +593,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 pass
             elif self.local_file.endswith(".pyof"):
                 self.app.model.import_nchantdoffice(self.local_file)
-                #Implement import of .pyof database
+                # Implement import of .pyof database
             else:
                 self.app.model.import_text(self.local_file)
                 # raise Exception(f"Unknown File {self.local_file}")
@@ -670,20 +641,12 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         selected path).
         """
         try:
-            model = (
-                getattr(self.app, "model", None) if hasattr(self, "app") else None
-            )
+            model = getattr(self.app, "model", None) if hasattr(self, "app") else None
             if model is None or not hasattr(model, "get_app_instances"):
-                logma.warning(
-                    "[toolboxes] cmd_browse_app_instances: no "
-                    "model.get_app_instances helper available."
-                )
+                logma.warning("[toolboxes] cmd_browse_app_instances: no " "model.get_app_instances helper available.")
                 return self
             rows = model.get_app_instances() or []
-            logma.info(
-                f"[toolboxes] cmd_browse_app_instances: "
-                f"{len(rows)} registered secondary instance(s)"
-            )
+            logma.info(f"[toolboxes] cmd_browse_app_instances: " f"{len(rows)} registered secondary instance(s)")
             # Surface to the UI: when a list dialog is available
             # use it; otherwise log the names so the test harness
             # (and headless environments) can verify the path.
@@ -702,15 +665,8 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 # clickable label that re-opens the instance.
                 choices = [
                     {
-                        "label": (
-                            f"{r.get('name', '?')} "
-                            f"({r.get('uuid', '?')})"
-                        ),
-                        "callback": (
-                            lambda r=r: self._open_pyof_instance(
-                                r.get("path", "")
-                            )
-                        ),
+                        "label": (f"{r.get('name', '?')} " f"({r.get('uuid', '?')})"),
+                        "callback": (lambda r=r: self._open_pyof_instance(r.get("path", ""))),
                     }
                     for r in rows
                     if isinstance(r, dict)
@@ -722,10 +678,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             # observe the data path.
             for r in rows:
                 if isinstance(r, dict):
-                    logma.info(
-                        f"[toolboxes] registered: "
-                        f"uuid={r.get('uuid')} name={r.get('name')}"
-                    )
+                    logma.info(f"[toolboxes] registered: " f"uuid={r.get('uuid')} name={r.get('name')}")
             return self
         except Exception as e:
             logma.error(
@@ -766,9 +719,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             # ``model.import_nchantdoffice``. If the model
             # helper is missing, log and continue rather than
             # fall back to the unsafe pickle path.
-            logma.warning(
-                f"[toolboxes] _open_pyof_instance: no model.import_nchantdoffice helper for {path!r}"
-            )
+            logma.warning(f"[toolboxes] _open_pyof_instance: no model.import_nchantdoffice helper for {path!r}")
         except Exception as e:
             logma.error(f"[toolboxes] _open_pyof_instance failed: {e}", exc_info=True)
         return self
@@ -852,31 +803,23 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         """
         try:
             cfg = {}
-            self.save_file_sigil = NchantdFileOpenSigil(
-                "save_local_document", self, cfg
-            ).initWidget()
+            self.save_file_sigil = NchantdFileOpenSigil("save_local_document", self, cfg).initWidget()
             self.local_file = self.save_file_sigil.file_selected
             if self.local_file is None:
                 return self
             # Pyof path: the model has a library, copy the DB.
             if self.local_file.endswith(".pyof"):
-                copy_helper = getattr(
-                    self.app.model, "copy_database", None
-                )
+                copy_helper = getattr(self.app.model, "copy_database", None)
                 if callable(copy_helper):
                     copy_helper(self.local_file)
                 # Mark saved when the model exposes the helper.
-                setter = getattr(
-                    self.app.model, "set_is_saved", None
-                )
+                setter = getattr(self.app.model, "set_is_saved", None)
                 if callable(setter):
                     setter(True)
             else:
                 # Non-pyof path: write the file via the
                 # model's import_local_file path (text).
-                importer = getattr(
-                    self.app.model, "import_local_file", None
-                )
+                importer = getattr(self.app.model, "import_local_file", None)
                 if callable(importer):
                     importer(self.local_file)
         except Exception as exc:
@@ -909,17 +852,22 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             "layout": "horizontal",
             "size": ["auto", 30],
             "actions": {
-                0: {"action": "new_instance", "type": "", "handler": self.cmd_create_new_instance},
                 1: {"action": "open_instance", "type": "", "handler": self.cmd_open_local_file},
                 2: {"action": "import_instance", "type": "", "handler": self.cmd_import_local_file},
-                3: {"action": "duplicate_instance", "type": "", "handler": self.cmd_duplicate_instance},
                 # PUSH to 0.0.3
+                # 3: {"action": "duplicate_instance", "type": "", "handler": self.cmd_duplicate_instance},
                 # implement a mirror instance so user can work on two different nodes in two differenct screens from the
                 # same document
                 # 3: {"action": "save_instance", "type": "", "handler": self.cmd_save_instance},
                 # 5: {"action": "export_instance", "type": "", "handler": self.cmd_export_instance},
             },
         }
+        if self.app.model.user.has_pro:
+            cfg["actions"][0] = {
+                "action": "new_instance",
+                "type": "",
+                "handler": self.cmd_create_new_instance,
+            }  # PUSH to 0.0.3 change a pop dialog for instance selection/open/new
         self.document_buttonbar = NchantdButtonBar(self, cfg)
         items[cnt]["widget"] = self.document_buttonbar
         cnt += 1
@@ -1041,11 +989,11 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             )
             return self
         try:
-            file_dialog_fn = kwargs.pop(
-                "file_dialog_fn", QFileDialog.getOpenFileName
-            )
+            file_dialog_fn = kwargs.pop("file_dialog_fn", QFileDialog.getOpenFileName)
             path, _ = file_dialog_fn(
-                self, "Import .pyof", "",
+                self,
+                "Import .pyof",
+                "",
                 "Pyof files (*.pyof);;SQLite DBs (*.sqlite *.db);;All files (*)",
             )
             if not path:
@@ -1061,13 +1009,9 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             results = import_pyof(path, host_conn)
             total_in = sum(r.inserted for r in results)
             total_skip = sum(r.skipped for r in results)
-            logma.info(
-                f"[import_pyof] {path}: inserted={total_in}, skipped={total_skip}"
-            )
+            logma.info(f"[import_pyof] {path}: inserted={total_in}, skipped={total_skip}")
             if hasattr(self.parent(), "statusBar"):
-                self.parent().statusBar().showMessage(
-                    f"Imported {total_in} rows ({total_skip} skipped)", 5000
-                )
+                self.parent().statusBar().showMessage(f"Imported {total_in} rows ({total_skip} skipped)", 5000)
         except Exception as e:
             logma.error(f"[import_pyof] failed: {e}", exc_info=True)
         return self

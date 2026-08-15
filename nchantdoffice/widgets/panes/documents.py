@@ -13,6 +13,7 @@
 
 # -*- coding: utf-8 -*
 from __future__ import annotations
+
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join
 import datetime as dt
@@ -97,7 +98,6 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         self.node_buttonbar = NchantdButtonBar(self, cfg).initWidget()
         layout.addWidget(self.node_buttonbar)
         node = self.get_node()
-        # logma.info(f"Node {dir(node)} {node.name}")
         logma.info(f"Node {node.item} {node.name}")
         cfg = {"label": "Node Name: ", "value": node.item}
         if node.node_type in ("displaynode", "sysorgnode", "yearnode", "monthnode", "daynode"):
@@ -667,27 +667,30 @@ class NchantdOfficeTabEditPane(NchantdPane):
         self.tab_buttonbar = NchantdButtonBar(self, cfg).initWidget()
         layout.addWidget(self.tab_buttonbar)
         tab = self.get_tab()
-        logma.info(f"Tab {dir(tab)}")
-        logma.info(f"Tab {tab.name}")
-        logma.info(f"Tab {tab.type}")
-        cfg = {"label": "Tab Name: ", "value": tab.name}
-        self.name_entry = NchantdLabeledEntry(self, cfg).initWidget()
-        layout.addWidget(self.name_entry)
+        try:
+            logma.info(f"Tab {dir(tab)}")
+            logma.info(f"Tab {tab.name}")
+            logma.info(f"Tab {tab.type}")
+            cfg = {"label": "Tab Name: ", "value": tab.name}
+            self.name_entry = NchantdLabeledEntry(self, cfg).initWidget()
+            layout.addWidget(self.name_entry)
 
-        cfg = {"label": "Tab Position: ", "value": tab.position}
-        self.position_entry = NchantdLabeledSpinBox(self, cfg).initWidget()
-        layout.addWidget(self.position_entry)
-        # T-doc-loc-resolve: pull the canonical ``location`` from the
-        # tab dict (the source of truth), falling back to
-        # ``"external"`` for tabs that pre-date the property. The
-        # label below always reflects the real stored value.
-        location = tab.location if getattr(tab, "location", None) else "external"
-        cfg = {"text": f"Document Location: {location}"}
-        self.location_label = NchantdLabel(self, cfg).initWidget()
-        layout.addWidget(self.location_label)
-        cfg = {"text": f"Tab Type: {tab.type}"}
-        self.type_label = NchantdLabel(self, cfg).initWidget()
-        layout.addWidget(self.type_label)
+            cfg = {"label": "Tab Position: ", "value": tab.position}
+            self.position_entry = NchantdLabeledSpinBox(self, cfg).initWidget()
+            layout.addWidget(self.position_entry)
+            # T-doc-loc-resolve: pull the canonical ``location`` from the
+            # tab dict (the source of truth), falling back to
+            # ``"external"`` for tabs that pre-date the property. The
+            # label below always reflects the real stored value.
+            location = tab.location if getattr(tab, "location", None) else "external"
+            cfg = {"text": f"Document Location: {location}"}
+            self.location_label = NchantdLabel(self, cfg).initWidget()
+            layout.addWidget(self.location_label)
+            cfg = {"text": f"Tab Type: {tab.type}"}
+            self.type_label = NchantdLabel(self, cfg).initWidget()
+            layout.addWidget(self.type_label)
+        except Exception as e:
+            logma.warning(e)
         # T-NEW-003 (d): save_mode toggle UI. Three modes:
         #   - "file_path"  — on-disk file is source of truth
         #     (default for new documents).
@@ -712,22 +715,6 @@ class NchantdOfficeTabEditPane(NchantdPane):
         self.accept_buttons = NchantdOkButtons(self, cfg).initWidget()
         layout.addWidget(self.accept_buttons)
         layout.addStretch()
-        # notes_label = NchantdLabel(self, {"text": "Notes: "}).initWidget()
-        # layout.addWidget(notes_label)
-        # self.notes = self.get_notes()
-        # cfg = {"data": self.notes, "columns": ["Notes"]}
-        # self.notes_list = NchantdList(self, cfg).initWidget()
-        # layout.addWidget(self.notes_list)
-        # cfg = {"label": "Add Tag: ", "value": ""}
-        # self.name_entry = NchantdLabeledEntry(self, cfg).initWidget()
-        # layout.addWidget(self.name_entry)
-        # tags_label = NchantdLabel(self, {"text": "Tags: "}).initWidget()
-        # layout.addWidget(tags_label)
-        # self.tags = self.get_tags()
-        # cfg = {"data": self.tags, "columns": ["Tags"]}
-        # self.tags_list = NchantdList(self, cfg).initWidget()
-        # layout.addWidget(self.tags_list)
-        # group.set_height(layout.sizeHint().height() * 1.2)
         self.layout.addWidget(group)
 
     def initWidget(self) -> Self:

@@ -160,19 +160,25 @@ class NchantdOfficeDocumentsCatalog(NchantdCatalog):
         """"""
         default_action = {"action": "insert_object", "type": "custom"}
         items = self.toolbox_config[50].get("items", {})
-        cnt = 0
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {"layout": "horizontal", "handler": self.cmd_node_edit}
-        self.node_edit_pane = NchantdOfficeNodeEditPane(self, cfg)
-        items[cnt]["widget"] = self.node_edit_pane
-        cnt += 1
-        if cnt not in items:
-            items[cnt] = default_action
-        cfg = {"layout": "horizontal", "handler": self.cmd_tab_edit}
-        self.tab_edit_pane = NchantdOfficeTabEditPane(self, cfg)
-        items[cnt]["widget"] = self.tab_edit_pane
-        cnt += 1
+        try:
+            cnt = 0
+            if cnt not in items:
+                items[cnt] = default_action
+            cfg = {"layout": "horizontal"}
+            self.node_edit_pane = NchantdOfficeNodeEditPane(self, cfg)
+            items[cnt]["widget"] = self.node_edit_pane
+            cnt += 1
+        except Exception as e:
+            logma.warning(f"Nchantd Office Node Edit Pane failed {e}")
+        try:
+            if cnt not in items:
+                items[cnt] = default_action
+            cfg = {"layout": "horizontal"}
+            self.tab_edit_pane = NchantdOfficeTabEditPane(self, cfg)
+            items[cnt]["widget"] = self.tab_edit_pane
+            cnt += 1
+        except Exception as e:
+            logma.warning(f"Nchantd Office Tab Edit Pane failed {e}")
         # PUSH to 0.0.3
         # if cnt not in items:
         #     items[cnt] = default_action
