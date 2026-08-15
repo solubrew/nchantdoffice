@@ -380,6 +380,7 @@ def import_pyof_via_doc(
     *,
     model: Optional[Any] = None,
     contract: tuple[TableSpec, ...] = PYOF_VIA_DOC_TABLES,
+    target_parent_nid: Optional[str] = None,
 ) -> list[ImportResult]:
     """Re-architect of import_pyof using sonql.Doc.
 
@@ -399,6 +400,16 @@ def import_pyof_via_doc(
             listeners but still keeps the on-disk DB in sync).
         contract: the per-table spec list. Defaults to the
             ``T-NEW-074 / 075 / 076 / 077`` 9-table contract.
+        target_parent_nid: optional nid to use as the parent for
+            top-level rows (source ``pid_txt == "0"``). When set,
+            the orchestrator re-parents those rows under this nid
+            so they appear nested under the user's currently
+            selected node on the host. Children of those top-level
+            rows keep their original ``pid_txt`` (their parent's
+            new nid in the host), so the source's internal tree
+            shape is preserved within the re-parented subtree.
+            When None, top-level rows keep ``pid_txt == "0"`` (the
+            source root) and show up at the host root.
 
     Returns:
         list[ImportResult]: one per contract table, in the same
@@ -414,8 +425,19 @@ def import_pyof_via_doc(
             f"import_pyof_via_doc: source not found: {source_path!r}"
         )
 
+    logma.info(
+        f"[import_pyof_via_doc] START source={source_path!r} "
+        f"host_doc={type(host_doc).__name__} "
+        f"host_doc.doc={host_doc.doc!r} "
+        f"model={type(model).__name__ if model is not None else 'None'} "
+        f"target_parent_nid={target_parent_nid!r}"
+    )
+
     # Open the source as its own sonql.Doc. Read-only.
     source_doc = Doc(source_path)
+    logma.info(
+        f"[import_pyof_via_doc] source_doc opened: doc={source_doc.doc!r}"
+    )
     results: list[ImportResult] = []
 
     # The model argument is OPTIONAL. When provided, we funnel
@@ -541,6 +563,25 @@ def import_pyof_via_doc(
                 # the model is provided. The model owns audit
                 # columns, dedupe, and the cap limits.
                 if model is not None:
+                    # Re-parent top-level rows to the host's currently
+                    # selected node. Source rows with pid_txt="0" (or
+                    # missing/empty) get the override. Children of
+                    # those top-level rows keep their original
+                    # pid_txt -- the source's internal tree shape is
+                    # preserved within the re-parented subtree.
+                    src_pid = row_dict.get("pid_txt", "0") or "0"
+                    effective_pid = src_pid
+                    if (
+                        target_parent_nid
+                        and src_pid == "0"
+                        and "pid_txt" in cols
+                    ):
+                        effective_pid = target_parent_nid
+                        logma.info(
+                            f"[import_pyof_via_doc] spec={spec.name} "
+                            f"reparenting top-level row nid={pk_value!r} "
+                            f"from pid=0 to pid={target_parent_nid!r} (model path)"
+                        )
                     if spec.name in ("doc_tree_node",):
                         if _add_node_via_model(
                             model,
@@ -548,7 +589,7 @@ def import_pyof_via_doc(
                             name=row_dict.get("name_txt", ""),
                             ntype=row_dict.get("ntype_txt", "usernode"),
                             nid=pk_value,
-                            pid=row_dict.get("pid_txt", "0"),
+                            pid=effective_pid,
                             pos=int(row_dict.get("position_int", 0) or 0),
                             parameters=row_dict.get("parameters_dict"),
                         ):
@@ -563,7 +604,7 @@ def import_pyof_via_doc(
                             name=row_dict.get("name_txt", ""),
                             widget=row_dict.get("widget_txt", ""),
                             widgdata=row_dict.get("widgdata_dict", "{}"),
-                            pid=row_dict.get("pid_txt", "0"),
+                            pid=effective_pid,
                             did=row_dict.get("did_txt", ""),
                             pos=int(row_dict.get("position_int", 0) or 0),
                             tab_type=row_dict.get("tab_type_txt", "custom_widget"),
@@ -586,6 +627,21 @@ def import_pyof_via_doc(
                 write_cols = [c for c in cols if c not in audit and c not in host_pk_cols]
                 if spec.pk_column in host_pk_cols:
                     write_cols.append(spec.pk_column)
+                # Re-parent top-level rows to the host's currently
+                # selected node (same logic as the model branch).
+                # Only tables that actually carry a pid_txt column
+                # can be re-parented (app_media / doc_media /
+                # *_content have no parent column; the .get default
+                # would otherwise misfire the log line).
+                if "pid_txt" in cols:
+                    src_pid = row_dict.get("pid_txt", "0") or "0"
+                    if target_parent_nid and src_pid == "0":
+                        logma.info(
+                            f"[import_pyof_via_doc] spec={spec.name} "
+                            f"reparenting top-level row pk={pk_value!r} "
+                            f"from pid=0 to pid={target_parent_nid!r} (direct SQL path)"
+                        )
+                        row_dict["pid_txt"] = target_parent_nid
                 write_row = {c: row_dict.get(c) for c in write_cols}
                 # Audit columns
                 now_iso = dt.datetime.now().isoformat()

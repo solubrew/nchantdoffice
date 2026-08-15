@@ -62,15 +62,26 @@ class _PyofImportWorker(QObject):
     """
     finished = Signal(str, list)
 
-    def __init__(self, import_pyof_fn, path, host_conn):
+    def __init__(
+        self,
+        import_pyof_fn,
+        path,
+        host_conn,
+        target_parent_nid=None,
+    ):
         super().__init__()
         self._import_pyof = import_pyof_fn
         self._path = path
         self._host_conn = host_conn
+        self._target_parent_nid = target_parent_nid
 
     def run(self):
         try:
-            results = self._import_pyof(self._path, self._host_conn)
+            results = self._import_pyof(
+                self._path,
+                self._host_conn,
+                target_parent_nid=self._target_parent_nid,
+            )
         except Exception as e:
             logma.error(f"[import_pyof] worker failed: {e}", exc_info=True)
             results = []
@@ -1085,7 +1096,36 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             # (_pyof_import_thread) so the GC does not reap them
             # mid-flight.
             from nchantdoffice.utilities.pyof_import_via_doc import import_pyof_via_doc
-            worker = _PyofImportWorker(import_pyof_via_doc, path, host_doc)
+            # Re-parent top-level rows from the source to the
+            # currently selected node on the host. When the user
+            # clicks the import button on a .pyof, the source's
+            # root-level nodes (pid_txt="0") get re-parented under
+            # the user's selected nid. Children of those top-level
+            # nodes keep their original pid_txt — the source's
+            # internal tree shape is preserved within the
+            # re-parented subtree. When nothing is selected, we
+            # fall back to "0" (the source root).
+            target_parent_nid = None
+            try:
+                model_obj = getattr(getattr(self, "app", None), "model", None)
+                if model_obj is not None:
+                    current = getattr(model_obj, "current_node", None)
+                    if current:
+                        target_parent_nid = current.get("nid_txt")
+                        logma.info(
+                            f"[cmd_import_pyof] reparenting top-level "
+                            f"source rows under selected node nid="
+                            f"{target_parent_nid!r}"
+                        )
+            except Exception as e:
+                logma.warning(
+                    f"[cmd_import_pyof] could not resolve target_parent_nid: {e}",
+                    exc_info=True,
+                )
+            worker = _PyofImportWorker(
+                import_pyof_via_doc, path, host_doc,
+                target_parent_nid=target_parent_nid,
+            )
             thread = QThread()
             worker.moveToThread(thread)
             thread.started.connect(worker.run)
