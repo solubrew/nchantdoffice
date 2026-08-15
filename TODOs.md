@@ -3642,3 +3642,618 @@ ATNRG repo:
 The **per-repo T-NEW-NNN card numbering convention** is
 documented at the top of each repo's TODOs.md —
 desktop, server, ATNRG each have their own number space.
+
+---
+
+## Cards raised from `testing-report_20260814.md` (2026-08-14)
+
+> **Source:** `testing-report_20260814.md` (pushed 2026-08-14; body
+> header still says "TODAY is 2026-08-03"). Per operator convention
+> (2026-08-14): *if a testing report is dated AFTER the fix, that
+> means the fix did not work in practice and the item must be
+> re-filed as a follow-up card*. Re-testing date is the
+> authoritative "is it still broken" signal, not the report's
+> body date.
+>
+> All four items below were cross-referenced against the
+> existing T-NEW card catalogue. Items 1 + 2 had no prior card.
+> Item 3 was deferred as T-NEW-079 "Future work #1" (autosave
+> scaffolding not yet wired). Item 4 — `.pyof import is still
+> broken` — was nominally addressed by T-NEW-074 / T-NEW-075 /
+> T-NEW-076 / T-NEW-077 (2026-08-11); the user re-reporting on
+> 2026-08-14 indicates the in-practice behaviour did not match
+> the test suite. Each card below calls out the discrepancy.
+>
+> Pytest report at the time of card-filing (`test_reports/pytest_report.json`,
+> created `2026-08-14`): **305 passed / 0 failed / 0 skipped** —
+> the entire unit test suite is green. Anything broken in
+> practice is something the unit tests do not cover
+> (operator convention: tests assert on captured bytes / live
+> behaviour, not log lines; a green suite does not prove the
+> GUI works).
+
+### T-NEW-111 — Type-aware file-open dialog filter (2026-08-14)
+
+**Context.** Operator testing on 2026-08-14 reported: *"need to
+implement a file open filter on the dialog based on the active
+tab document type"*. The current `cmd_open_local_file` /
+`import_document` / `export_document` paths use static
+`QFileDialog.getOpenFileName` filter strings (typically
+`"JSON Files (*.json);;Text Files (*.txt);;All Files (*)"`) with
+no awareness of the active tab's document type. The user opens
+an Image tab and the dialog still offers JSON / Text as primary
+filters. There is no prior T-NEW card for this; this is a fresh
+defect.
+
+**Affected sites:**
+- `nchantdoffice/widgets/documents/documents.py:316` —
+  `NchantdOfficeDocument.export_document` static filter
+- `nchantdoffice/widgets/documents/documents.py:344` —
+  `NchantdOfficeDocument.import_document` static filter
+- `nchantdoffice/widgets/controls/toolboxes.py:776` —
+  `NchantdOfficeApplicationToolBox.cmd_open_local_file` (no
+  filter string at all; relies on per-document-type overrides)
+- `nchantdoffice/widgets/documents/media/forms.py:615` and
+  `:1279` — static filters in `NchantdOfficeForm` open dialogs
+- `nchantdoffice/widgets/documents/atnrg/contacts.py:459` and
+  `:471` — static filters in `NchantdOfficeContacts`
+- `nchantdoffice/widgets/documents/workbooks/notebooks.py:366`
+  — `NchantdOfficeNotebook.cmd_open_local_file` override
+- `nchantdoffice/widgets/documents/media/pdfs.py:218` —
+  `NchantdOfficePdf.cmd_open_local_file` override
+- `nchantdoffice/widgets/documents/media/scripts.py:1086` —
+  commented-out dialog (already partially type-aware in intent)
+
+**Migration plan (no priority / low priority — design decision
+first):** the design question is "where does the active-tab
+type come from?". Options:
+1. Resolve from the active pane's `current_tab.type` (most
+   direct; requires threading the pane reference into
+   `NchantdOfficeDocument`).
+2. Resolve from `self.document.file_type_txt` (already on the
+   doc; loses the "tab in focus vs underlying doc type"
+   distinction).
+3. Resolve from a new `NchantdOfficeTabSet` accessor that exposes
+   the currently focused tab's document type cleanly
+   (`panes/tabs.py` already builds a tab registry for T-NEW-041).
+
+Option 3 is the cleanest because the per-tab-type override chain
+(`notebooks.py:366`, `pdfs.py:218`) already implies a polymorphic
+dispatch keyed on document type — the dialog filter should be
+sourced from the same place the dispatch is keyed. Whichever
+option is picked, the **filter string must be data-driven from
+the document type's `file_extensions` registry** (or a new
+`FILE_TYPE_FILTERS` constant in `widgets/documents/documents.py`)
+— not hard-coded at each call site. The `setNameFilter`
+semantics in `QFileDialog.getOpenFileName` are well-defined and
+the migration is purely additive (no existing static-filter call
+site needs to be deleted; only extended).
+
+**Steps:**
+1. Add `FILE_TYPE_FILTERS: dict[str, str]` registry in
+   `nchantdoffice/widgets/documents/documents.py` (e.g.
+   `"script": "Python Scripts (*.py);;All Files (*)"`,
+   `"image": "Images (*.png *.jpg *.jpeg *.gif *.bmp);;All Files (*)"`,
+   `"notebook": "Notebooks (*.ipynb);;All Files (*)"`,
+   `"matrix": "Excel/CSV (*.xlsx *.xls *.csv);;All Files (*)"`,
+   `"pdf": "PDFs (*.pdf);;All Files (*)"`).
+2. Add `NchantdOfficeTabSet.active_document_type() -> str`
+   accessor (or whichever option the design picks).
+3. Add `NchantdOfficeDocument.filter_for_active_type() -> str`
+   helper that looks up the registry by the active type and
+   falls back to `"All Files (*)"` for unknown / app-level
+   dialogs.
+4. Wire all 8 `QFileDialog` call sites (listed under Affected
+   sites) to use the helper. Per-document-type overrides
+   (`notebooks.py:366`, `pdfs.py:218`) stay in place and can
+   narrow the filter further.
+5. TDD: write `tests/test_type_aware_file_open_filter.py` with
+   one test per affected call site that mocks `QFileDialog` and
+   asserts the filter string passed to `setNameFilter` matches
+   the active document type's registry entry.
+6. This card + CHANGES.md entry.
+
+**Verification:**
+- `python -m pytest tests/test_type_aware_file_open_filter.py --tb=no -q` → all green
+- Manual: open a Notebook tab, hit `cmd_open_local_file`, confirm
+  the dialog default filter is `Notebooks (*.ipynb);;All Files (*)`.
+  Repeat for Image, Matrix, Script, Pdf, Form, Contacts.
+
+### T-NEW-112 — Type-aware file-import dialog filter (2026-08-14)
+
+**Context.** Operator testing on 2026-08-14 reported: *"need to
+implement a file import filter on the dialog based on what file
+types can be imported (.ctd, .pyof, etc)"*. Separate from
+T-NEW-111 (file-open, scoped to the active tab's *output* types),
+this is file-*import*, scoped to what the application can
+*accept as input* (`.ctd`, `.pyof`, plus whatever the
+per-document-type importer chain supports — see
+`tests/test_unimplemented_features.py:307-` for the CSV / DOCX /
+Matrix importer wiring). There is no prior T-NEW card for this;
+fresh defect.
+
+**Affected sites:**
+- `nchantdoffice/widgets/controls/toolboxes.py:776` —
+  `NchantdOfficeApplicationToolBox.cmd_open_local_file` (handles
+  `.pyof` import per T-NEW-074 — needs explicit `.pyof` filter
+  on the dialog)
+- `nchantdoffice/widgets/controls/toolboxes.py:1023-1045` —
+  `cmd_import_pyof` `QFileDialog.getOpenFileName` call (per
+  T-NEW-074, currently uses `QFileDialog` defaults; should set
+  `"NchantdOffice Database Files (*.pyof);;All Files (*)"`)
+- `nchantdoffice/widgets/documents/documents.py:344` —
+  `NchantdOfficeDocument.import_document` static filter
+- `nchantdoffice/models.py:307+` —
+  `NchantdOfficeCloakModel.import_csv` / `import_docx` /
+  `import_matrix` (per
+  `tests/test_unimplemented_features.py:307-`; their open-dialog
+  call sites — TBD — need tracing to confirm)
+- `nchantdoffice/widgets/panes/files.py` —
+  filesystem pane import dialog (TBD — confirm whether it
+  routes through `cmd_open_local_file` or has its own dialog)
+
+**Migration plan (no priority / low priority — design decision
+first):** design question is "what is the importable-file-set
+per call site?". Two distinct filter registries are needed:
+- `IMPORTABLE_FILE_FILTERS`: keyed by import-handler name
+  (`pyof_instance` → `*.pyof`, `ctd_doc` → `*.ctd`, `csv` →
+  `*.csv`, `docx` → `*.docx`, `matrix_excel` → `*.xlsx *.xls`).
+  This is a new constant — likely lives next to
+  `PyofImportContract.TABLES` in
+  `nchantdoffice/utilities/pyof_import.py`.
+- Per-document-type import filters: e.g. an Image tab can
+  import `.png .jpg .gif .bmp .webp`; a Notebook tab can import
+  `.ipynb .py .md`; a Matrix tab can import `.xlsx .xls .csv`.
+  This overlaps with T-NEW-111's `FILE_TYPE_FILTERS` registry
+  and should share the same source of truth.
+
+The cleanest design is to **unify both registries into a single
+`FILE_TYPE_FILTERS` dict keyed by a `(direction, doc_type)` tuple**
+(or two parallel dicts) in
+`nchantdoffice/widgets/documents/documents.py`, and have all
+dialog call sites read from there. This collapses T-NEW-111 +
+T-NEW-112 into a single registration surface.
+
+**Steps:**
+1. Extend `FILE_TYPE_FILTERS` (introduced in T-NEW-111 step 1)
+   with the `import_*` direction for each document type, plus
+   application-level entries (`pyof_instance`, `ctd_doc`).
+2. Add `NchantdOfficeDocument.import_filter_for_active_type() -> str`
+   that returns the `import_*` filter for the active tab type
+   (falls back to `"All Importable (*.pyof *.ctd *.json *.txt);;All Files (*)"`
+   for app-level dialogs).
+3. Wire `cmd_import_pyof` (T-NEW-074) to use
+   `"NchantdOffice Database Files (*.pyof);;All Files (*)"`.
+4. Wire `import_document` and any per-importer dialog sites
+   listed above to use the helper.
+5. TDD: extend `tests/test_type_aware_file_open_filter.py`
+   (T-NEW-111) with import-direction tests, or add
+   `tests/test_type_aware_file_import_filter.py` if separation
+   is cleaner.
+6. This card + CHANGES.md entry.
+
+**Verification:**
+- `python -m pytest tests/test_type_aware_file_import_filter.py --tb=no -q` → all green
+- Manual: hit the Application tab "Import from .pyof…" button,
+  confirm the dialog filter is `*.pyof`-scoped by default. Hit
+  Image tab → import, confirm filter is image-extension-scoped.
+
+### T-NEW-113 — Autosave on focal-change per document type (2026-08-14)
+
+**Context.** Operator testing on 2026-08-14 reported: *"implement
+autosave functionality on each action/focal-change of each
+document type"*. T-NEW-079 (2026-08-13) shipped the canonical
+journal save contract and explicitly deferred the autosave
+scaffolding as *"Future work #1"*:
+
+> "The always-save scaffolding — `self._parse_entry()` then
+> `self.parent.save()` from the inner editor's `focusOutEvent`
+> — is intentionally NOT in the outer save() flow yet. Per
+> the same constraint: do NOT add `super().save()` to that path,
+> because the journal is an app_media document. Land this when
+> the user signals the always-save contract should be wired
+> (separate card)."
+
+The 2026-08-14 testing report is exactly that signal. This card
+promotes T-NEW-079's deferred Future-work #1 into an actionable
+workstream. Re-implementation must respect the constraint in
+T-NEW-079's "Why this card exists" section: **journal save =
+`save_app()` only**; no `super().save()` on the journal path; no
+try/except around `save_app()` (failures propagate loud).
+
+**Affected sites:**
+- `nchantdoffice/widgets/documents/journal.py` — autosave
+  scaffolding (`self._parse_entry()` + `self.parent.save()`
+  from `focusOutEvent`) is commented out per T-NEW-079 Future
+  work #1. This is where the journal's autosave contract lives.
+- `nchantdoffice/widgets/documents/documents.py:625` —
+  `NchantdOfficeDocument.save_app()` is the canonical save path
+  for app_media documents; the journal must call it, not
+  `super().save()`. Re-read this docstring before touching the
+  autosave wiring.
+- `nchantdoffice/widgets/documents/atnrg/attentioneering.py`,
+  `browsers.py`, `contacts.py`, `news.py`, `pages.py`,
+  `prompts.py` — each `NchantdOffice*` document subclass has
+  its own `focusOutEvent` / `keyPressEvent` / per-action hook
+  surface; the autosave dispatch needs to land in a
+  centralised place (likely `NchantdOfficeDocument` base) and
+  have each subclass opt in via an `autosave_on_focal_change: bool`
+  flag (defaulting to `True`).
+- `nchantdoffice/widgets/documents/workbooks/notebooks.py` —
+  `NchantdOfficeNotebook` has its own `cmd_save_database` /
+  external-file-path semantics (see
+  `tests/test_notebook_save_bytes.py`); autosave must NOT
+  bypass the canonical file-path-or-blob save flow.
+- `nchantdoffice/widgets/documents/media/images.py`,
+  `scripts.py`, `sketches.py`, `pdfs.py`, `forms.py`,
+  `notes.py`, `audio.py` — each subclass has a `get_content()`
+  shape; the autosave trigger must call `save_app()` (app_media)
+  or the subclass's equivalent (doc_media), per the doc-type
+  classification already established in T-NEW-079 / T-NEW-006.
+- `tests/test_journal_always_save.py` (T-NEW-079, 6 tests) —
+  needs extension with the autosave-on-focal-change contract
+  once the wiring lands.
+
+**Migration plan (no priority / low priority — design decision
+first):** the design question is *"what counts as a
+focal-change?"*. Options:
+1. `focusOutEvent` on each per-document-type editor widget —
+   fires when focus leaves the widget; natural for "user moved
+   on" semantics.
+2. Debounced timer after every text/image/notebook mutation —
+   fires after N seconds of inactivity; smoother but harder to
+   test deterministically and conflicts with the journal's
+   "save on focusOut" intent.
+3. Both — `focusOutEvent` is the primary trigger; debounced
+   timer is a fallback for editors that don't naturally receive
+   focusOut (e.g. the Matrix grid).
+
+Operator convention (T-NEW-079) leans toward **option 1
+(focusOutEvent)** for the journal and any text/editor widgets.
+Option 3 (both) is acceptable as long as the debounced timer is
+opt-in per document type (off by default) so it doesn't fire
+during the middle of a user action. The autosave trigger must
+**never** call `super().save()` on the journal path (per
+T-NEW-079 contract); it must call `save_app()` (or the
+doc-type-appropriate equivalent). No try/except around
+`save_app()` — failures propagate loud so the user knows.
+
+**Steps:**
+1. Add `NchantdOfficeDocument.autosave_on_focal_change: bool`
+   class attribute (default `True`) to centralise opt-out.
+2. Add `NchantdOfficeDocument._autosave_on_focus_out(event)` —
+   base implementation that calls `self.save_app()` for
+   app_media docs or `super().save()` for doc_media docs.
+   Defensive: skip if `self.document is None` or if the
+   document has no unsaved changes (per `has_changed` flag
+   already on the model).
+3. Wire the journal subclass: uncomment the
+   `self._parse_entry()` + `self.parent.save()` block in
+   `focusOutEvent`, but route through `self.save_app()` (NOT
+   `super().save()`) per T-NEW-079 constraint. No try/except
+   wrapper around `save_app()`.
+4. Wire each `NchantdOffice*` subclass to override
+   `focusOutEvent` and call `_autosave_on_focus_out(event)` if
+   `autosave_on_focal_change` is True. Subclasses with custom
+   save flows (Notebook, Matrix) override the method, not the
+   flag.
+5. TDD: extend `tests/test_journal_always_save.py` with the
+   focusOutEvent autosave contract (asserts `save_app()` is
+   called, `super().save()` is NOT, no try/except swallows
+   exceptions). Add `tests/test_autosave_on_focus_out.py`
+   with one test per subclass that mocks `focusOutEvent` and
+   asserts the correct save path is invoked.
+6. This card + CHANGES.md entry.
+
+**Verification:**
+- `python -m pytest tests/test_journal_always_save.py tests/test_autosave_on_focus_out.py --tb=no -q` → all green
+- Manual: open a journal tab, type some entries, click on a
+  different tab, switch back — confirm the entries persisted
+  (the existing `test_journal_restore.py` round-trip suite
+  covers the load side). Repeat for Image, Script, Notebook,
+  Matrix.
+
+### T-NEW-114 — `.pyof` import still broken after T-NEW-074/077 (2026-08-14)
+
+**Context.** Operator testing on 2026-08-14 reported: *"import
+of .pyof is still broken, need to pull in the tables
+(doc_tree_node, doc_tab, doc_media, doc_media_content,
+app_media, app_media_content) grab the content data in each row
+and create a new row in the corresponding table of the current
+application database"*. T-NEW-074 / T-NEW-075 / T-NEW-076 /
+T-NEW-077 (2026-08-11) nominally addressed `.pyof` import for
+exactly the six base tables + three `_content` tables the report
+names. The pytest report at card-filing time shows
+**305 passed / 0 failed / 0 skipped** — including
+`tests/test_import_pyof_documents_empty.py` (T-NEW-079
+regression test for the `Documents Are Empty` crash chain) and
+all 24 `tests/test_pyof_import.py` cases.
+
+**Reproduction (2026-08-14, captured by operator):** operator
+clarified the entry point — they clicked the **Application tab
+ToolBox's import button** (the YAML action "Import from .pyof…"
+via the drawer button bar), NOT the file-open dialog. Captured
+log lines (verbatim, 20:40:43 → 20:41:01):
+
+```
+INFO  nchantrs.widgets.widgets     499: Focus Out
+INFO  nchantrs.dialogs.files        75: /home/solubrew/Documents/nchantdsb (2).pyof
+INFO  nchantrs.models.models       681: Initializing pyof sonql
+INFO  nchantrs.models.models       682: Path: /home/solubrew/Documents/nchantdsb (2).pyof
+INFO  nchantdoffice.models        2520: [models] import_nchantdoffice: opened SQLite DB at '/home/solubrew/Documents/nchantdsb (2).pyof'
+INFO  micromole.storage            587: Get Table app_instance {'get_all_columns': True} pyof None
+WARN  squirl.orgnql.sonql          257: Table app_instance
+WARN  squirl.orgnql.sonql          257: CMD PRAGMA table_info(app_instance);
+WARN  squirl.orgnql.sonql          257: Table app_instance
+WARN  squirl.orgnql.sonql          257: CMD SELECT [...] FROM "app_instance"
+INFO  micromole.storage            597: Data ... 1 rows x 17 columns
+INFO  nchantdoffice.models        3805: [store] refresh_from_sqlite: loaded 1 app_instance row(s) from db='pyof'
+INFO  nchantrs.widgets.widgets     494: Focus In
+INFO  nchantrs.widgets.widgets     499: Focus Out
+```
+
+**No `[import_pyof]` log lines, no `ImportResult` summary, no
+status-bar message.** The user's diagnosis ("it just doesn't do
+what it is supposed to do") is exact.
+
+**Root cause (Defect B — `cmd_import_pyof` is unreachable; the
+button you actually click routes to instance registration).**
+
+The operator clicked the **Application tab ToolBox's
+import-instance button** (drawer action `import_instance`,
+toolboxes.py:914, wired to `cmd_import_local_file`). For a
+`.pyof` path, `cmd_import_local_file` at
+`nchantdoffice/widgets/controls/toolboxes.py:623-624` runs:
+
+```python
+elif self.local_file.endswith(".pyof"):
+    self.app.model.import_nchantdoffice(self.local_file)
+    #Implement import of .pyof database
+```
+
+That is the **instance-registration path** (T-077 / T-NEW-007):
+it loads the source's `app_instance` row so the host can
+register the secondary instance. It does NOT copy any content
+tables. The trailing comment `#Implement import of .pyof
+database` is a TODO marker (per operator convention for
+unfinished work) — the implementation has been pending since
+the T-NEW-007 / T-077 era and the T-NEW-074 card did not
+finish it: T-NEW-074 added a new `cmd_import_pyof` method
+but did not redirect the existing import-button dispatch.
+
+`cmd_import_pyof` (the T-NEW-074 method,
+`toolboxes.py:1018-1075`) is the correct handler — it calls
+`import_pyof(path, host_conn)` from
+`nchantdoffice.utilities.pyof_import`, which is the T-NEW-074
+content-table ETL orchestrator. **But it is not wired into any
+drawer / button / menu.** The Application tab ToolBox drawer
+init at `toolboxes.py:906-922` lists four wired actions:
+`new_instance`, `open_instance`, `import_instance`,
+`duplicate_instance`. None of them points at
+`cmd_import_pyof`.
+
+Additionally, the YAML action row in
+`nchantdoffice/_data_/models.yaml:25` registers `import_pyof`
+with the user-facing label "Import from .pyof…", but the
+toolbar's `set_handler` switch at
+`nchantdoffice/widgets/controls/toolbars.py:501-518` has no
+case for `import_pyof` and falls through to
+`self.add_document` — so even if the button were rendered from
+the YAML directly (separate from the toolbox drawer), it would
+still hit the wrong handler.
+
+**Three independent wiring defects, all in the same feature
+(all corrected by the consolidated fix below):**
+
+1. **`cmd_import_local_file` routes `.pyof` to
+   `import_nchantdoffice`** (the wrong destination) at
+   `toolboxes.py:623-624`. **This is the bug the operator hit.**
+   The trailing comment `#Implement import of .pyof database`
+   on line 625 is a TODO marker (per operator convention for
+   unfinished work) — the implementation has been pending since
+   the T-NEW-007 / T-077 era and the T-NEW-074 card did not
+   finish it: T-NEW-074 added a new `cmd_import_pyof` method
+   but did not redirect the existing import-button dispatch.
+2. **`cmd_open_local_file` routes `.pyof` to
+   `_open_pyof_instance`** (same wrong destination) at
+   `toolboxes.py:835-836`. Same bug, different entry point
+   (the standard file-open dialog). T-NEW-074 also missed
+   this dispatch.
+3. **`cmd_import_pyof` is not wired into any button / drawer /
+   menu.** T-NEW-074 shipped the method but did not add it to
+   the `init_drawer_application` button bar at
+   `toolboxes.py:906-922`, and the toolbar's `set_handler`
+   switch at `toolbars.py:501-518` does not handle the
+   `import_pyof` lookup_code_txt value (falls through to
+   `add_document`).
+
+**Defect C — synchronous import blocks the GUI.** The
+T-NEW-074 `cmd_import_pyof` body at
+`toolboxes.py:1041-1043` runs `import_pyof(path, host_conn)`
+synchronously on the calling thread (which is the Qt event
+loop / GUI thread for menu/button actions). For a non-trivial
+`.pyof` the UI will freeze until the import completes. Not
+what the operator reported yet, but it'll bite the moment the
+dispatch is fixed.
+
+**Affected sites:**
+- `nchantdoffice/widgets/controls/toolboxes.py:623-624` —
+  `cmd_import_local_file` extension dispatch: `.pyof` →
+  `model.import_nchantdoffice` (the wrong destination). **The
+  bug the operator hit.** Plus the lingering
+  `#Implement import of .pyof database` TODO marker on line 625
+  (per operator convention, this marker must be removed once
+  the dispatch is fixed).
+- `nchantdoffice/widgets/controls/toolboxes.py:600-635` —
+  `cmd_import_local_file` body — the `.pyof` branch must be
+  rewritten to call `self.cmd_import_pyof()` (with the
+  pre-selected `local_file` injected via the `file_dialog_fn`
+  kwarg, same pattern as `cmd_import_pyof`'s own QFileDialog
+  call). **This is now the SINGLE canonical `.pyof` import
+  dispatcher** (operator direction, 2026-08-14: "consolidate
+  logic there should only be one and all needs to import
+  .pyof should use the same cmd_import_local_file").
+- `nchantdoffice/widgets/controls/toolboxes.py:835-836` —
+  `cmd_open_local_file` extension dispatch: `.pyof` →
+  `_open_pyof_instance` (wrong destination). Must be rewritten
+  to **delegate to `cmd_import_local_file`** (not call
+  `cmd_import_pyof` directly, not `_open_pyof_instance`,
+  not `import_nchantdoffice`) — per operator direction, all
+  `.pyof` import paths funnel through the single canonical
+  handler.
+- `nchantdoffice/widgets/controls/toolboxes.py:776-840` —
+  `cmd_open_local_file` body — the `.pyof` branch must be
+  rewritten to call `self.cmd_import_local_file()` (passing
+  through any kwargs / event) so the file-open dialog
+  delegates the `.pyof` decision to the single canonical
+  dispatcher.
+- `nchantdoffice/widgets/controls/toolboxes.py:1018-1075` —
+  `cmd_import_pyof` body (T-NEW-074). The orchestrator + UI
+  feedback here are correct for their intended purpose; **no
+  source change needed**, just wire it in (one line from
+  `cmd_import_local_file`).
+- `nchantdoffice/widgets/controls/toolboxes.py:1041-1043` —
+  synchronous `import_pyof()` call inside `cmd_import_pyof`
+  body (the GUI thread). **Defect C.**
+- `nchantdoffice/widgets/controls/toolboxes.py:906-922` —
+  `init_drawer_application` button-bar config. **NO CHANGE.**
+  Per operator direction: the existing button (`import_instance`
+  → `cmd_import_local_file`) is the correct button; the fix
+  lives entirely inside `cmd_import_local_file`'s `.pyof`
+  branch. No new button, no relabel, no `init_drawer_application`
+  edit.
+- `nchantdoffice/widgets/controls/toolbars.py:501-518` —
+  `set_handler` switch. **NO CHANGE.** The
+  `cmd_import_local_file` handler is reached via the existing
+  `import_instance` drawer button, not via the YAML-registered
+  `app_action` row. The YAML row's `set_handler` fallback to
+  `add_document` only matters if a button is ever rendered
+  directly from the YAML (which is not how the Application
+  tab ToolBox works today). Leave as-is.
+- `nchantdoffice/widgets/controls/toolboxes.py:738-770` —
+  `_open_pyof_instance` body. After the fix, **this method
+  becomes unreachable from the GUI** (both dispatchers point
+  at `cmd_import_local_file` instead). It can stay in place
+  as dead code for now (in case any test / unit harness
+  imports it directly) — but a follow-up commit may want to
+  remove it if no test references it. Out of scope for this
+  card; flag as a T-NEW cleanup item if encountered.
+- `nchantdoffice/_data_/models.yaml:25` — the
+  `app_action` registration for `import_pyof`. Correct
+  registration; **no change needed**. (If a future card wires
+  the YAML-registered action into a button or menu, that
+  separate card would add the `case "import_pyof": return
+  self.cmd_import_pyof` branch to `set_handler`.)
+- `nchantdoffice/utilities/pyof_import.py:339-` —
+  `import_pyof` orchestrator + `import_one_table` base path.
+  T-NEW-074/075/076/077 work landed here; the orchestrator
+  itself is correct. **No defect.**
+- `tests/test_pyof_import.py` — 24-test suite for
+  `cmd_import_pyof` + `import_pyof` orchestrator. **No
+  coverage** for `cmd_import_local_file`'s `.pyof` branch
+  dispatch decision; that is why a green suite does not catch
+  any of the three wiring defects.
+- `tests/test_pyof_sqlite_import.py` —
+  `model.import_nchantdoffice` integration test. **No
+  coverage** for the dispatch decisions either.
+
+**Migration plan (no priority / low priority — design decision
+first):** per operator direction (2026-08-14), the design is
+**already decided**: `cmd_import_local_file` is the single
+canonical `.pyof` import dispatcher. All paths funnel through
+it. The only remaining design question is **Defect C
+(synchronous GUI freeze)**:
+
+- The T-NEW-074 `cmd_import_pyof` body runs `import_pyof()`
+  synchronously on the GUI thread at
+  `toolboxes.py:1041-1043`. For a non-trivial `.pyof` this
+  freezes the UI.
+- Recommended fix: move `import_pyof()` to a worker thread
+  (QThread / QRunnable / `concurrent.futures.ThreadPoolExecutor`)
+  and emit progress + completion signals back to the GUI
+  thread for the status bar update. Defensive: signal
+  connection must use `Qt.QueuedConnection` so the slot runs
+  on the main thread.
+- Alternative: leave it synchronous and document the freeze as
+  acceptable for v0.x. Operator preference: the worker-thread
+  fix, since the user's testing report specifically called
+  out "grab the content data in each row and create a new row"
+  — implying large source `.pyof` files are in scope.
+
+**Steps:**
+1. **Failing test for the dispatch bug:** write
+   `tests/test_cmd_import_local_file_pyof_routing.py` that
+   mocks `cmd_import_pyof` on the toolbox instance, drives
+   `cmd_import_local_file` with a `.pyof` path, and asserts
+   `cmd_import_pyof` was called with the pre-selected path
+   (NOT `import_nchantdoffice`). The test must FAIL on the
+   current code (Defect 1) and PASS after the fix. Also
+   write `tests/test_cmd_open_local_file_delegates_pyof.py`
+   that asserts `cmd_open_local_file`'s `.pyof` branch calls
+   `cmd_import_local_file` (NOT `_open_pyof_instance`,
+   NOT `import_nchantdoffice`).
+2. **Fix the dispatcher (one-line change each):** in
+   `cmd_import_local_file` at `toolboxes.py:623-624`, replace
+   `self.app.model.import_nchantdoffice(self.local_file)` with
+   `self.cmd_import_pyof(file_dialog_fn=lambda *a, **kw:
+   (self.local_file, ""))`. In `cmd_open_local_file` at
+   `toolboxes.py:835-836`, replace the
+   `_open_pyof_instance(self.local_file)` call with
+   `return self.cmd_import_local_file(self.local_file)` (or
+   equivalent delegation that re-enters the single canonical
+   dispatcher).
+3. **Remove the TODO marker:** delete the
+   `#Implement import of .pyof database` comment on
+   `toolboxes.py:625`. Per operator convention, TODO markers
+   must be removed when the work lands.
+4. **Fix Defect C (sync GUI freeze):** wrap the
+   `import_pyof(path, host_conn)` call inside `cmd_import_pyof`
+   (`toolboxes.py:1041-1043`) in a worker thread. Emit a
+   `pyof_import_complete(results)` signal with the
+   `ImportResult` list; the slot updates the status bar from
+   the main thread. Use `Qt.QueuedConnection` for the signal
+   so the slot runs on the main thread.
+5. **Extend `tests/test_pyof_import.py`** (T-NEW-074 suite, 24
+   tests) with: (a) thread-safety test (the import result is
+   surfaced back to the GUI thread via signal, not direct
+   call); (b) end-to-end test that drives
+   `cmd_import_local_file` with a real `.pyof` fixture (not
+   just the unit-level `cmd_import_pyof` injection) and
+   asserts the content tables land on the host.
+6. **Manual smoke test:** click the Application tab ToolBox
+   import button on
+   `/home/solubrew/Documents/nchantdsb (2).pyof`, confirm the
+   log now shows `[import_pyof] {path}: inserted=N, skipped=M`
+   (the T-NEW-074 orchestrator call), the status bar updates
+   to `Imported N rows (M skipped)`, and the source's
+   `doc_tree_node` / `doc_tab` rows are visible in the host's
+   tree pane. Repeat via the file-open dialog → `.pyof` to
+   confirm both entry points funnel through the same
+   dispatcher.
+7. Verify all 305+ tests still pass (plus the new tests from
+   step 1 + step 5).
+8. This card + CHANGES.md entry.
+
+**Verification:**
+- `python -m pytest tests/ --tb=no -q` → 305 + N passed, 0
+  failed (N = new tests from step 1 + step 5).
+- Manual: re-run the exact 20:40:43 → 20:41:01 reproduction
+  sequence (click Application tab ToolBox import button, pick
+  `nchantdsb (2).pyof`); confirm the log now shows the
+  T-NEW-074 orchestrator call (`[import_pyof] {path}:
+  inserted=N, skipped=M`) and the status bar update,
+  instead of the silent instance-registration path.
+- Manual (secondary entry point): use File → Open, pick a
+  `.pyof`, confirm the same orchestrator log + status bar
+  message appears (proves both paths funnel through
+  `cmd_import_local_file`).
+
+---
+
+**Catalog updates** (one-line entries to add at the top of
+`TODOs.md` when this section is promoted):
+
+- **T-NEW-111** ✅ Type-aware file-open dialog filter — filed 2026-08-14 from `testing-report_20260814.md` item 1.
+- **T-NEW-112** ✅ Type-aware file-import dialog filter — filed 2026-08-14 from `testing-report_20260814.md` item 2.
+- **T-NEW-113** ✅ Autosave on focal-change per document type — filed 2026-08-14 from `testing-report_20260814.md` item 3 (promoted from T-NEW-079 Future-work #1).
+- **T-NEW-114** 🔴 `.pyof` import still broken after T-NEW-074/077 — filed 2026-08-14 from `testing-report_20260814.md` item 4 (REPRODUCED + FIX SCOPED: 3 wiring defects; consolidated fix = `cmd_import_local_file` is the single canonical `.pyof` dispatcher; both `cmd_import_local_file` and `cmd_open_local_file` route `.pyof` through it; remove the `#Implement import of .pyof database` TODO marker; Defect C worker-thread offload in same PR).
