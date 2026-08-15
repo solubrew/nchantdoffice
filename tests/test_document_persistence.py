@@ -119,6 +119,7 @@ def test_script_save_captures_current_editor_html_before_parent_save(monkeypatch
     script = _bare_qt_widget(NchantdOfficeScript)
     script.document = SimpleNamespace(
         syntax="html",
+        location="external",
         content={},
         set_content=lambda content: setattr(script.document, "content", content),
     )
