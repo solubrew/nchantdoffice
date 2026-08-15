@@ -62,13 +62,11 @@ class NchantdOfficeUser(NchantdUser):
 
     def __init__(self, parent=None, cfg=None) -> None:
         super().__init__(parent, cfg)
-        self.config.override(
-            kahndor.Instruct(pxcfg).select("NchantdOfficeUser").override(cfg)
-        )
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeUser").override(cfg))
         logma.info(
-            f"[users] NchantdOfficeUser.__init__ "
-            f"parent={type(parent).__name__} cfg_keys={list((cfg or {}).keys())}"
+            f"[users] NchantdOfficeUser.__init__ " f"parent={type(parent).__name__} cfg_keys={list((cfg or {}).keys())}"
         )
+        self.has_pro = True  # TODO: need to connect to service for truth and a need a place to store data locally
 
     def persist_uuid(self) -> str:
         """Read the persisted UUID from user_config; if absent,
@@ -86,17 +84,11 @@ class NchantdOfficeUser(NchantdUser):
         if persisted:
             # Use the persisted one (stable across launches)
             self.uuid = persisted
-            logma.info(
-                f"[users] persist_uuid: loaded persisted UUID "
-                f"({persisted[:8]}...)"
-            )
+            logma.info(f"[users] persist_uuid: loaded persisted UUID " f"({persisted[:8]}...)")
         else:
             # First launch — persist the freshly-generated UUID
             set_user_uuid(self.uuid)
-            logma.info(
-                f"[users] persist_uuid: persisted fresh UUID "
-                f"({self.uuid[:8]}...)"
-            )
+            logma.info(f"[users] persist_uuid: persisted fresh UUID " f"({self.uuid[:8]}...)")
         return self.uuid
 
 

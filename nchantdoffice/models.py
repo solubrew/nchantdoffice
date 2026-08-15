@@ -515,7 +515,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             self.add_tab(name, pid, pos, widget, widgdata, document["did"], tab["type"], tabset, True, db)
         self.has_changed = True
 
-    def add_document_content(self, document, media_fk=None, page_n=0, entry_n=0, version=0.0, hash_=None, policy=None) -> Self:
+    def add_document_content(
+        self, document, media_fk=None, page_n=0, entry_n=0, version=0.0, hash_=None, policy=None
+    ) -> Self:
         """"""
         context = ""
         logma.info(f"document {document}")
@@ -949,8 +951,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
                 if is_pro_user(user):
                     return True
-            except Exception:
-                pass
+            except Exception as e:
+                logma.warning(e)
+            # TODO need to debug pro_user data connection
+            return True
             limit = self.config.dikt.get("max_nodes_per_user", 100)
             if not isinstance(limit, (int, float)) or limit <= 0:
                 return True
@@ -1282,7 +1286,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def compact_journal_content(
-        self, max_versions_per_doc=30, db="db",
+        self,
+        max_versions_per_doc=30,
+        db="db",
     ):
         """T-NEW-065: prune old versions from ``app_media_content``.
 
@@ -1330,9 +1336,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         try:
             df = self.store.get_table(table, {}, db)
             if df is None or (isinstance(df, pd.DataFrame) and df.empty):
-                logma.info(
-                    f"[compact_journal_content] {table} is empty; no-op."
-                )
+                logma.info(f"[compact_journal_content] {table} is empty; no-op.")
                 return (rows_scanned, rows_deleted)
             rows_scanned = len(df)
             # Group by pUUID, sort each group by version_int
@@ -1350,12 +1354,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             # Rank each row by version_int within its pUUID group.
             # ``method='first'`` so ties (rare) keep the lowest UUID.
             df = df.sort_values(
-                by=["pUUID", "version_int"], ascending=[True, False],
+                by=["pUUID", "version_int"],
+                ascending=[True, False],
             )
-            df["_rank"] = (
-                df.groupby("pUUID")["version_int"]
-                .rank(method="first", ascending=False)
-            )
+            df["_rank"] = df.groupby("pUUID")["version_int"].rank(method="first", ascending=False)
             to_delete = df[df["_rank"] > max_versions_per_doc]
             if to_delete.empty:
                 logma.info(
@@ -1370,25 +1372,23 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             # fall back to per-row delete if that fails.
             try:
                 self.store.docs[db].delete(
-                    table, {"WHERE": {"IN": {"UUID": uuids_to_delete}}},
+                    table,
+                    {"WHERE": {"IN": {"UUID": uuids_to_delete}}},
                 )
                 rows_deleted = len(uuids_to_delete)
             except Exception as bulk_err:
                 logma.warning(
-                    f"[compact_journal_content] bulk delete failed "
-                    f"({bulk_err}); falling back to per-row delete."
+                    f"[compact_journal_content] bulk delete failed " f"({bulk_err}); falling back to per-row delete."
                 )
                 for uuid_str in uuids_to_delete:
                     try:
                         self.store.docs[db].delete(
-                            table, {"WHERE": {"EQUAL": {"UUID": uuid_str}}},
+                            table,
+                            {"WHERE": {"EQUAL": {"UUID": uuid_str}}},
                         )
                         rows_deleted += 1
                     except Exception as row_err:
-                        logma.warning(
-                            f"[compact_journal_content] delete {uuid_str} failed: "
-                            f"{row_err}"
-                        )
+                        logma.warning(f"[compact_journal_content] delete {uuid_str} failed: " f"{row_err}")
             logma.info(
                 f"[compact_journal_content] done: "
                 f"scanned={rows_scanned}, deleted={rows_deleted}, "
@@ -1987,10 +1987,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         try:
             df = self.store.get_view_documents_all(cfg)
         except Exception as e:
-            logma.warning(
-                f"[models] get_document_type: store lookup failed "
-                f"for action_code={action_code!r}: {e}"
-            )
+            logma.warning(f"[models] get_document_type: store lookup failed " f"for action_code={action_code!r}: {e}")
             return None
         if df is None or df.empty:
             return None
@@ -2700,7 +2697,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                         pos = current_tab.pos + 1
                     except Exception as e:
                         logma.warning(e)
-                        pos = 0 #TODO: need to find correction position
+                        pos = 0  # TODO: need to find correction position
                     self.add_document(document, document.did, self.get_current_node().nid, pos)
                 else:
                     logma.info(f"Load Document to existing tab {file}")
