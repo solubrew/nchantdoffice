@@ -3,7 +3,7 @@
 The previous ``import_pyof`` (in ``pyof_import.py``) used raw
 ``sqlite3.Connection`` for both the source read and the host
 write. That works for raw-SQL test fixtures but bypasses the
-live SQuiRL/sonql connection management — the live host DB
+live SQuiRL/sonql connection management -- the live host DB
 does not expose a raw ``sqlite3.Connection``; it manages
 everything through ``sonql.Doc`` objects registered on
 ``self.app.model.store.docs``.
@@ -22,7 +22,7 @@ The orchestrator signature is:
 where ``host_doc`` is the live ``sonql.Doc`` (the same one
 already registered on ``self.app.model.store.docs["db"]``) and
 ``model`` is the NchantdOfficeCloakModel whose standard logic
-circuits do the actual writes. ``model`` is optional — when
+circuits do the actual writes. ``model`` is optional -- when
 None, the helper falls back to using the host_doc's native
 insert (which works for the schema but doesn't fire the model's
 listeners / limits).
@@ -51,7 +51,7 @@ schema; the contract is corrected here.
 The orchestrator is a thin function: it opens the source as its
 own sonql.Doc, reads rows, and dispatches each row through the
 appropriate model method. The model's standard logic circuits
-own the dedupe / audit / limit checks — the orchestrator does
+own the dedupe / audit / limit checks -- the orchestrator does
 not duplicate them.
 """
 from __future__ import annotations
@@ -91,7 +91,7 @@ class TableSpec:
 # T-NEW-114 user direction (2026-08-15): app_tree_node and
 # app_tab are the wizard-generated system infrastructure (Home,
 # Journal, Settings, Sources, Help). The host ALREADY has these
-# installed by its own wizard — importing them again would
+# installed by its own wizard -- importing them again would
 # either trigger dedupe-skips (no harm) or, worse, replace
 # host-side extensions the user has made. Drop them from the
 # contract so the import only carries the user's content tables.
@@ -119,7 +119,7 @@ class ImportResult:
 
 
 # ---------------------------------------------------------------------------
-# Source row readers — use sonql.Doc.readFull so the source goes through
+# Source row readers -- use sonql.Doc.readFull so the source goes through
 # the same SQuiRL pipeline the rest of the app uses.
 # ---------------------------------------------------------------------------
 
@@ -155,7 +155,7 @@ def _row_to_dict(cols: list[str], row: list) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Dedupe helpers — query the host doc for the dedupe key.
+# Dedupe helpers -- query the host doc for the dedupe key.
 # ---------------------------------------------------------------------------
 
 def _host_has_pk(
@@ -216,7 +216,7 @@ def _host_delete_where_pUUID(
     pUUID: str,
 ) -> int:
     """Delete host rows for the given pUUID via sonql's write
-    interface. Returns the rowcount (0 when no rows matched — the
+    interface. Returns the rowcount (0 when no rows matched -- the
     host may not have had any)."""
     try:
         # Open the underlying connection if not already open.
@@ -234,7 +234,7 @@ def _host_delete_where_pUUID(
 
 
 # ---------------------------------------------------------------------------
-# Standard logic circuits — the model's own add_* methods.
+# Standard logic circuits -- the model's own add_* methods.
 # ---------------------------------------------------------------------------
 
 def _add_node_via_model(
@@ -356,13 +356,13 @@ def _add_media_via_model(
         # The model has add_document which the existing test
         # framework uses. We do NOT call add_document on
         # because that path is for "add a document to the
-        # tree" — the source media rows already have a did
+        # tree" -- the source media rows already have a did
         # and we want to import the entire row. The cleanest
         # path is to delegate to add_document_content_app /
         # add_document_content after the media row is
         # registered. For now, the orchestrator relies on
         # the model's native insert path via the host_doc
-        # (sonql.Doc.insert) — which writes the row
+        # (sonql.Doc.insert) -- which writes the row
         # directly without going through the tree. The
         # model's tree-add listener is a separate concern.
         return True
@@ -427,14 +427,14 @@ def import_pyof_via_doc(
     def _get_host_conn():
         """Open a fresh sqlite3.Connection to the host's underlying
         file in the CURRENT thread. SQLite connections are not
-        thread-safe — opening a connection in the GUI thread and
+        thread-safe -- opening a connection in the GUI thread and
         using it in the worker thread raises
         ``sqlite3.ProgrammingError: SQLite objects created in a
         thread can only be used in that same thread``.
 
         Strategy:
           1. Get the host's file path from the live sonql.Doc
-             (``host_doc.doc``) — that's the SQLite file path.
+             (``host_doc.doc``) -- that's the SQLite file path.
           2. Open a fresh ``sqlite3.connect(path)`` in the calling
              thread. No caching, no passing across threads.
           3. ``check_same_thread=False`` is NOT used because the
@@ -481,7 +481,7 @@ def import_pyof_via_doc(
         # max-version row per pUUID so we do not fan out N
         # inserts that the host would then collapse via the
         # version-merge step. The legacy import_pyof called
-        # this T-NEW-075 — the host should win-or-replace,
+        # this T-NEW-075 -- the host should win-or-replace,
         # not accumulate.
         if spec.merge_strategy == "last_version_per_puuid":
             pUUID_idx = cols.index("pUUID") if "pUUID" in cols else None
@@ -533,7 +533,7 @@ def import_pyof_via_doc(
                         continue
                 except Exception:
                     # Table missing on host (wizard lazy-created
-                    # it later) — silent skip, matches the legacy
+                    # it later) -- silent skip, matches the legacy
                     # behavior.
                     result.skipped += 1
                     continue
@@ -648,7 +648,7 @@ def import_pyof_via_doc(
                 if src_version <= host_max:
                     result.skipped += 1
                     continue
-                # Source is strictly newer — drop host rows for
+                # Source is strictly newer -- drop host rows for
                 # this pUUID and INSERT the source row.
                 try:
                     conn = _get_host_conn()

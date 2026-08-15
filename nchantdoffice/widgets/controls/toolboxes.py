@@ -1017,7 +1017,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
     # pointing at a UUID not present on the host) are NOT enforced; the
     # user is expected to inspect the host tree after a large import.
     #
-    # The host connection accessor is project-specific — see
+    # The host connection accessor is project-specific -- see
     # ``_resolve_host_db_conn`` below. We prefer the canonical store
     # attribute (``self.app.model.store._sqlite_connection``, mirroring
     # the ``models.get_app_instances`` path) and fall back to an
@@ -1027,7 +1027,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
     def cmd_import_pyof(self, event=None, *args, **kwargs) -> Self:
         """T-NEW-074: import content tables from a user-selected .pyof.
 
-        ``file_dialog_fn`` is overridable for testing — the integration
+        ``file_dialog_fn`` is overridable for testing -- the integration
         test in ``tests/test_pyof_import.py`` injects a stub returning a
         temp ``.pyof`` path. Defaults to ``QFileDialog.getOpenFileName``.
         """
@@ -1037,7 +1037,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         try:
             from PySide6.QtWidgets import QFileDialog  # type: ignore
         except Exception as e:
-            # Rare — Qt not installed in the headless test env. Log and
+            # Rare -- Qt not installed in the headless test env. Log and
             # bail; the rest of the app still works without this action.
             logma.error(
                 f"[import_pyof] QFileDialog unavailable: {e}",
@@ -1064,7 +1064,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 return self
             # Locate the live sonql.Doc for the host instance.
             # T-NEW-114 followup: the live SQuiRL/sonql store layer
-            # manages its own connection pool — there is no raw
+            # manages its own connection pool -- there is no raw
             # sqlite3.Connection to hand to the orchestrator.
             # ``_resolve_host_doc`` walks the store-layer ``docs``
             # registry and returns the live sonql.Doc so the
@@ -1104,17 +1104,16 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         """T-NEW-114 Defect C: status-bar update callback fired on the
         main thread when the worker thread finishes. Kept separate from
         cmd_import_pyof so the connection is explicit and testable.
-        """
-        logma.info(
-            f"[_show_pyof_import_result] ENTRY path={path!r} "
-            f"results_count={len(results) if results is not None else 0}"
-        )
 
         The defensive getattr + hasattr walk is intentional: in
         unit tests self.parent() is None (we use __new__ and
         skip QObject init), so the status bar update must be a no-op
         rather than crash the test.
         """
+        logma.info(
+            f"[_show_pyof_import_result] ENTRY path={path!r} "
+            f"results_count={len(results) if results is not None else 0}"
+        )
         try:
             total_in = sum(r.inserted for r in results)
             total_skip = sum(r.skipped for r in results)
@@ -1141,7 +1140,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         """Return the live ``sonql.Doc`` for the host instance.
 
         T-NEW-114 followup: the live SQuiRL/sonql store layer does NOT
-        expose a raw ``sqlite3.Connection`` at the application level —
+        expose a raw ``sqlite3.Connection`` at the application level --
         it manages its own connection pool through the ``sonql.Doc``
         abstraction. The previous ``_resolve_host_db_conn`` walked the
         live tree for a ``sqlite3.Connection`` but never found one
@@ -1150,13 +1149,13 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         This helper returns the live ``sonql.Doc`` via the canonical
         ``self.app.model.store.docs`` registry:
 
-          1. Primary host DB — ``self.app.model.store.docs["db"]``.
-          2. Currently-open secondary instance —
+          1. Primary host DB -- ``self.app.model.store.docs["db"]``.
+          2. Currently-open secondary instance --
              ``self.app.model.store.docs["pyof"]`` (when the user has
              imported a secondary .pyof and the live tree is operating
              on that instance).
           3. Defensive isinstance walk over self / parent / app /
-             app.model / app.model.store — return the first attribute
+             app.model / app.model.store -- return the first attribute
              that is a ``sonql.Doc`` (recognized by the
              ``attach`` + ``get_tables`` + ``upsert`` method triple).
           4. Raise a clear RuntimeError so the outer try/except in
@@ -1167,7 +1166,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         participates in the live SQuiRL/sonql connection management
         rather than bypassing it with raw sqlite3.
         """
-        # 1. Canonical fast path — primary host DB.
+        # 1. Canonical fast path -- primary host DB.
         try:
             store = getattr(getattr(self, "app", None), "model", None)
             store = getattr(store, "store", store) if store is not None else None
@@ -1221,7 +1220,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 if self._looks_like_sonql_doc(value):
                     return value
 
-        # 4. Nothing matched — surface a clear error.
+        # 4. Nothing matched -- surface a clear error.
         raise RuntimeError(
             "NchantdOfficeApplicationToolBox._resolve_host_doc: "
             "no sonql.Doc found on self / parent / app / app.model / "
@@ -1240,7 +1239,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         that has the first three (the minimal surface
         ``import_pyof_via_doc`` needs). Pure ``sqlite3.Connection``
         objects do NOT have ``attach`` so they correctly do not match
-        — the re-architect must use the SQuiRL surface, not the raw
+        -- the re-architect must use the SQuiRL surface, not the raw
         connection.
         """
         import sqlite3 as _sqlite3
