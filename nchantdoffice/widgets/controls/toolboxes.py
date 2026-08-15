@@ -1126,15 +1126,111 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             if parent is not None and hasattr(parent, "statusBar"):
                 try:
                     parent.statusBar().showMessage(
-                        f"Imported {total_in} rows ({total_skip} skipped)", 5000
+                        f"Imported {total_in} rows ({total_skip} skipped) -- refreshing tree...",
+                        5000,
                     )
                 except Exception as e:
                     logma.error(
                         f"[import_pyof] status bar update failed: {e}",
                         exc_info=True,
                     )
+            # T-NEW-114 followup: refresh the live tree so the
+            # newly-imported nodes/tabs/media appear. The orchestrator
+            # writes via raw sqlite3 (the live sonql.Doc doesn't know
+            # about the new rows), so we walk the Qt widget tree and
+            # re-init every NchantdApplicationTree (which re-reads
+            # vw_tree_node from the DB).
+            self._refresh_tree_widgets()
         except Exception as e:
             logma.error(f"[import_pyof] _show_pyof_import_result failed: {e}", exc_info=True)
+
+    def _refresh_tree_widgets(self) -> None:
+        """T-NEW-114 followup: re-init every NchantdApplicationTree
+        visible in the app so newly-imported nodes/tabs/media show
+        up. The orchestrator bypasses the sonql.Doc with raw
+        sqlite3 (the only path that survives the cross-thread
+        sqlite3 binding constraint), so the live sonql state is
+        stale until the tree widget re-reads.
+
+        Walks ``self.app.view.panes`` (where the NchantdOfficeCloakView
+        keeps the live panes) and calls ``initWidget()`` on every
+        ``NchantdApplicationTree`` instance. This re-runs the
+        ``initModel`` + ``initView`` pair which re-fetches the
+        tree rows from the DB.
+
+        Safe to call multiple times — each call rebuilds the tree
+        in-place and replaces the model data on the QTreeWidget.
+        """
+        from nchantrs.widgets.trees import NchantdApplicationTree  # noqa
+        logma.info(
+            f"[_refresh_tree_widgets] searching for "
+            f"NchantdApplicationTree instances in app hierarchy"
+        )
+        try:
+            app = getattr(self, "app", None)
+            if app is None:
+                # Unit tests skip QObject init via __new__ — no app.
+                logma.info(
+                    "[_refresh_tree_widgets] no self.app (unit test); "
+                    "skipping tree refresh"
+                )
+                return
+            view = getattr(app, "view", None)
+            if view is None:
+                logma.info(
+                    "[_refresh_tree_widgets] no app.view; skipping"
+                )
+                return
+            # 1. Walk the app's view.panes (where the live panes live).
+            trees_found = []
+            for pos, pane in getattr(view, "panes", {}).items():
+                if pane is None:
+                    continue
+                # Some panes have a ``self.tree`` attribute (NchantdTabSet).
+                tree_attr = getattr(pane, "tree", None)
+                if tree_attr is not None and isinstance(
+                    tree_attr, NchantdApplicationTree
+                ):
+                    trees_found.append((f"pane[{pos}].tree", tree_attr))
+            # 2. Fallback: walk the whole widget tree via Qt findChildren.
+            # Catches trees nested deeper than self.panes[*].tree
+            # (e.g. inside splitters).
+            try:
+                from PySide6.QtWidgets import QWidget  # type: ignore
+                root_widgets = []
+                if hasattr(app, "main"):
+                    root_widgets.append(app.main)
+                # Use findChildren on each candidate
+                for root in root_widgets:
+                    for child in root.findChildren(NchantdApplicationTree):
+                        already = any(t is child for _, t in trees_found)
+                        if not already:
+                            trees_found.append(("findChildren", child))
+            except Exception as e:
+                logma.warning(
+                    f"[_refresh_tree_widgets] findChildren walk failed: {e}",
+                    exc_info=True,
+                )
+            logma.info(
+                f"[_refresh_tree_widgets] found {len(trees_found)} tree(s) to refresh"
+            )
+            for label, tree in trees_found:
+                try:
+                    tree.initWidget()
+                    logma.info(
+                        f"[_refresh_tree_widgets] refreshed tree: {label}"
+                    )
+                except Exception as e:
+                    logma.error(
+                        f"[_refresh_tree_widgets] failed to refresh "
+                        f"{label}: {type(e).__name__}: {e}",
+                        exc_info=True,
+                    )
+        except Exception as e:
+            logma.error(
+                f"[_refresh_tree_widgets] outer error: {type(e).__name__}: {e}",
+                exc_info=True,
+            )
 
     def _resolve_host_doc(self) -> Any:
         """Return the live ``sonql.Doc`` for the host instance.
