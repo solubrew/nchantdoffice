@@ -42,42 +42,24 @@ class NchantdOfficeTab(NchantdTab):
     def __init__(self, parent=None, cfg=None) -> None:
         """ """
         logma.info(f"[tabs] NchantdOfficeTab.__init__ parent={type(parent).__name__ if parent else None}")
-        try:
-            super().__init__(parent, cfg)
-            self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTab").override(cfg))
-        except Exception as e:
-            logma.error(f"[tabs] NchantdOfficeTab.__init__ failed: {e}", exc_info=True)
-            raise
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeTab").override(cfg))
 
     def initModel(self, cfg=None) -> "NchantdOfficeTab":
         """"""
         logma.info(f"[tabs] NchantdOfficeTab.initModel cfg_provided={cfg is not None}")
-        try:
-            super().initModel(cfg)
-        except Exception as e:
-            logma.error(f"[tabs] NchantdOfficeTab.initModel failed: {e}", exc_info=True)
-            raise
+        super().initModel(cfg)
         return self
 
     def initView(self, cfg=None) -> "NchantdOfficeTab":
         """ """
-        logma.info(f"[tabs] NchantdOfficeTab.initView cfg_provided={cfg is not None}")
-        try:
-            super().initView(cfg)
-        except Exception as e:
-            logma.error(f"[tabs] NchantdOfficeTab.initView failed: {e}", exc_info=True)
-            raise
+        super().initView(cfg)
         return self
 
     def initWidget(self) -> "NchantdOfficeTab":
         """"""
-        logma.info("[tabs] NchantdOfficeTab.initWidget")
-        try:
-            self.initModel()
-            self.initView()
-        except Exception as e:
-            logma.error(f"[tabs] NchantdOfficeTab.initWidget failed: {e}", exc_info=True)
-            raise
+        self.initModel()
+        self.initView()
         return self
 
 
@@ -142,16 +124,12 @@ class NchantdOfficeTabs(NchantdTabSet):
             try:
                 tab_bar.setMovable(False)
             except Exception as e:
-                logma.warning(
-                    f"[tabs] tab_bar.setMovable(False) failed: {e}"
-                )
+                logma.warning(f"[tabs] tab_bar.setMovable(False) failed: {e}")
         if hasattr(tab_bar, "setDragable"):
             try:
                 tab_bar.setDragable(False)
             except Exception as e:
-                logma.warning(
-                    f"[tabs] tab_bar.setDragable(False) failed: {e}"
-                )
+                logma.warning(f"[tabs] tab_bar.setDragable(False) failed: {e}")
 
     def _is_in_tab_name_area(self, index, rect) -> bool:
         """Return True when ``rect`` is inside the tab-name
@@ -185,9 +163,7 @@ class NchantdOfficeTabs(NchantdTabSet):
             # bottom 30%, so dy_bottom is the negative of
             # ``tab_rect.height() - name_area_height``.
             bottom_trim = tab_rect.height() - name_area_height
-            name_rect = tab_rect.adjusted(
-                0, 0, 0, -bottom_trim
-            )
+            name_rect = tab_rect.adjusted(0, 0, 0, -bottom_trim)
             # ``rect`` here is the press-event rect (typically
             # 1x1 at the press position). Map it to local
             # coordinates: subtract ``tab_bar.pos()`` so it
@@ -197,9 +173,7 @@ class NchantdOfficeTabs(NchantdTabSet):
             local = rect.translated(-bar_pos.x(), -bar_pos.y())
             return bool(name_rect.contains(local))
         except Exception as e:
-            logma.warning(
-                f"[tabs] _is_in_tab_name_area failed: {e}"
-            )
+            logma.warning(f"[tabs] _is_in_tab_name_area failed: {e}")
             return False
 
     def mousePressEvent(self, event) -> None:
@@ -228,23 +202,20 @@ class NchantdOfficeTabs(NchantdTabSet):
                 # is inside the name area.
                 if 0 <= index < getattr(tab_bar, "count", lambda: 0)():
                     from PySide6.QtCore import QRect
+
                     press_rect = QRect(pos.x(), pos.y(), 1, 1)
                     if self._is_in_tab_name_area(index, press_rect):
                         self._drag_start_pos = pos
                         self._drag_start_index = index
                         logma.debug(
-                            f"[tabs] mousePressEvent: drag_start "
-                            f"index={self._drag_start_index} (in name area)"
+                            f"[tabs] mousePressEvent: drag_start " f"index={self._drag_start_index} (in name area)"
                         )
                     else:
                         logma.debug(
-                            f"[tabs] mousePressEvent: press in body "
-                            f"of tab {index} -- drag suppressed (T-NEW-029)"
+                            f"[tabs] mousePressEvent: press in body " f"of tab {index} -- drag suppressed (T-NEW-029)"
                         )
             except Exception as e:
-                logma.warning(
-                    f"[tabs] mousePressEvent drag-init check failed: {e}"
-                )
+                logma.warning(f"[tabs] mousePressEvent drag-init check failed: {e}")
         # T-NEW-029: wrap super().mousePressEvent in try/except
         # so the off-screen test harness (which constructs
         # the widget via __new__ without Shiboken-init)
@@ -254,9 +225,7 @@ class NchantdOfficeTabs(NchantdTabSet):
         try:
             super().mousePressEvent(event)
         except Exception as e:
-            logma.debug(
-                f"[tabs] super().mousePressEvent skipped: {e}"
-            )
+            logma.debug(f"[tabs] super().mousePressEvent skipped: {e}")
 
     def mouseMoveEvent(self, event) -> None:
         """Initiate drag if moved beyond threshold"""
@@ -292,7 +261,9 @@ class NchantdOfficeTabs(NchantdTabSet):
     def dragEnterEvent(self, event) -> None:
         """Accept drag enter from tabs and tree"""
         mime_data = event.mimeData()
-        logma.debug(f"[tabs] dragEnterEvent: has_tab={mime_data.hasFormat('application/x-nchantd-tab')} has_tree={mime_data.hasFormat('application/x-nchantd-tree-item')}")
+        logma.debug(
+            f"[tabs] dragEnterEvent: has_tab={mime_data.hasFormat('application/x-nchantd-tab')} has_tree={mime_data.hasFormat('application/x-nchantd-tree-item')}"
+        )
         if mime_data.hasFormat("application/x-nchantd-tab"):
             event.acceptProposedAction()
         elif mime_data.hasFormat("application/x-nchantd-tree-item"):
@@ -365,10 +336,7 @@ class NchantdOfficeTabs(NchantdTabSet):
                 unparseable.
         """
         if source_tab_pos < 0:
-            logma.debug(
-                f"[tabs] _handle_tab_dropped_in_right_scratch: "
-                f"skipping (source_tab_pos={source_tab_pos})"
-            )
+            logma.debug(f"[tabs] _handle_tab_dropped_in_right_scratch: " f"skipping (source_tab_pos={source_tab_pos})")
             return
         # Resolve the source tab dict from the tab model. The
         # source could be the center pane (cross-pane drop) or
@@ -383,13 +351,11 @@ class NchantdOfficeTabs(NchantdTabSet):
                 source_tab = tabsdata[source_tab_pos]
         except Exception as e:
             logma.warning(
-                f"[tabs] _handle_tab_dropped_in_right_scratch: "
-                f"source-tab lookup failed ({type(e).__name__}: {e})"
+                f"[tabs] _handle_tab_dropped_in_right_scratch: " f"source-tab lookup failed ({type(e).__name__}: {e})"
             )
         if source_tab is None:
             logma.debug(
-                f"[tabs] _handle_tab_dropped_in_right_scratch: "
-                f"could not resolve source tab (pos={source_tab_pos})"
+                f"[tabs] _handle_tab_dropped_in_right_scratch: " f"could not resolve source tab (pos={source_tab_pos})"
             )
             return
         # Call the canonical model method. The handler records
@@ -406,8 +372,7 @@ class NchantdOfficeTabs(NchantdTabSet):
                 )
         except Exception as e:
             logma.error(
-                f"[tabs] _handle_tab_dropped_in_right_scratch: "
-                f"persist failed ({type(e).__name__}: {e})",
+                f"[tabs] _handle_tab_dropped_in_right_scratch: " f"persist failed ({type(e).__name__}: {e})",
                 exc_info=True,
             )
 

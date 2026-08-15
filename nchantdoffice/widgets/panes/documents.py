@@ -15,10 +15,9 @@
 from __future__ import annotations
 
 # ======================================Standard Library Modules======================================================||
-from os.path import abspath, dirname, join
-import datetime as dt
+from os.path import dirname, join
 import json as j
-import uuid as _uuid
+from typing import Any, Self
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -32,16 +31,15 @@ from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
 from nchantrs.widgets.panes.panes import NchantdPane
 from nchantrs.widgets.media.editors.editors import NchantdLabeledEntry
-from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons, NchantdOkButtons
+from nchantrs.widgets.controls.button_groups import NchantdOkButtons
 from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.groups import NchantdGroup
-from kahndor.logma import Logma
 from nchantrs.dialogs.colors import NchantdColorSelectSigil
 from nchantrs.dialogs.files import NchantdFileOpenSigil
 from nchantrs.widgets.controls.button_groups import NchantdFontConfigBar
-from nchantrs.widgets.tables.lists import NchantdList
-from typing import Any, Self
+
+from nchantdoffice.widgets.tabs import NchantdOfficeTab
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -668,6 +666,11 @@ class NchantdOfficeTabEditPane(NchantdPane):
         layout.addWidget(self.tab_buttonbar)
         tab = self.get_tab()
         try:
+            # TODO: tab is None for intialized catalog and so we need to stub in values
+            if tab is None:
+                cfg = {"name": "", "type": "", "position": 0}
+                tab = NchantdOfficeTab(self, cfg).initWidget()
+
             logma.info(f"Tab {dir(tab)}")
             logma.info(f"Tab {tab.name}")
             logma.info(f"Tab {tab.type}")
