@@ -27,7 +27,48 @@ from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.dialogs.files import NchantdFileOpenSigil
+
+
 from nchantrs.widgets.controls.toolboxes import NchantdToolBox
+
+# T-NEW-114 Defect C: QObject worker for offloading the synchronous
+# import_pyof() call to a background QThread so the GUI thread does
+# not block on a large .pyof file. The signal/slot pair is wired
+# in cmd_import_pyof (slot = _show_pyof_import_result on the main
+# thread, Qt.QueuedConnection is the default for cross-thread
+# signals).
+try:
+    from PySide6.QtCore import QObject, QThread, Signal  # type: ignore
+except Exception:  # pragma: no cover -- rare miss in headless envs
+    QObject = object  # type: ignore
+    QThread = object  # type: ignore
+    def Signal(*args, **kwargs):  # type: ignore
+        return None
+
+
+class _PyofImportWorker(QObject):
+    """T-NEW-114 Defect C: QObject worker that runs import_pyof on
+    a background QThread so the GUI thread does not block on a
+    large .pyof file. Emits finished(path, results) when done; the
+    GUI thread slot (_show_pyof_import_result) updates the status
+    bar. Uses Qt.QueuedConnection (the default for cross-thread
+    signals) so the slot runs on the main thread."""
+    finished = Signal(str, list)
+
+    def __init__(self, import_pyof_fn, path, host_conn):
+        super().__init__()
+        self._import_pyof = import_pyof_fn
+        self._path = path
+        self._host_conn = host_conn
+
+    def run(self):
+        try:
+            results = self._import_pyof(self._path, self._host_conn)
+        except Exception as e:
+            logma.error(f"[import_pyof] worker failed: {e}", exc_info=True)
+            results = []
+        self.finished.emit(self._path, results)
+
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.media.editors.editors import NchantdEntryBox
 from nchantrs.widgets.controls.toolbars import NchantdButtonBar
@@ -592,8 +633,15 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             elif self.local_file.endswith(".gif"):
                 pass
             elif self.local_file.endswith(".pyof"):
-                self.app.model.import_nchantdoffice(self.local_file)
-                # Implement import of .pyof database
+                # T-NEW-114: route .pyof through the canonical
+                # cmd_import_pyof dispatcher (the T-NEW-074
+                # content-table ETL orchestrator) instead of the
+                # instance-registration path. The pre-selected
+                # local_file is injected via file_dialog_fn so the
+                # user does not get a second file dialog.
+                return self.cmd_import_pyof(
+                    file_dialog_fn=lambda *a, **kw: (self.local_file, ""),
+                )
             else:
                 self.app.model.import_text(self.local_file)
                 # raise Exception(f"Unknown File {self.local_file}")
@@ -777,8 +825,14 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 # dedicated OpenDocument parser yet).
                 self.app.model.import_text(self.local_file)
             elif self.local_file.endswith(".pyof"):
-                # T-078: delegate to the .pyof loader
-                return self._open_pyof_instance(self.local_file)
+                # T-NEW-114: delegate to the single canonical
+                # import dispatcher (cmd_import_local_file) so
+                # the user-facing .pyof import path funnels
+                # through the T-NEW-074 content-table ETL
+                # orchestrator. _open_pyof_instance is left in
+                # place as dead code for the unit-test harness
+                # that imports it directly.
+                return self.cmd_import_local_file(self.local_file)
             else:
                 self.app.model.import_text(self.local_file)
         return self
@@ -1006,15 +1060,61 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                     "fall back to opening instance .pyof via the app model."
                 )
                 host_conn = self._resolve_host_db_conn()
-            results = import_pyof(path, host_conn)
-            total_in = sum(r.inserted for r in results)
-            total_skip = sum(r.skipped for r in results)
-            logma.info(f"[import_pyof] {path}: inserted={total_in}, skipped={total_skip}")
-            if hasattr(self.parent(), "statusBar"):
-                self.parent().statusBar().showMessage(f"Imported {total_in} rows ({total_skip} skipped)", 5000)
+            # T-NEW-114 Defect C: offload the synchronous import_pyof
+            # call to a worker QThread so the GUI thread does not
+            # block. The completion signal fires back on the main
+            # thread (Qt.QueuedConnection is the default for
+            # cross-thread signals) and slots into
+            # _show_pyof_import_result which updates the status
+            # bar. The worker + thread are kept alive on the toolbox
+            # instance (_pyof_import_thread) so the GC does not
+            # reap them mid-flight.
+            worker = _PyofImportWorker(import_pyof, path, host_conn)
+            thread = QThread()
+            worker.moveToThread(thread)
+            thread.started.connect(worker.run)
+            worker.finished.connect(thread.quit)
+            worker.finished.connect(self._show_pyof_import_result)
+            worker.finished.connect(worker.deleteLater)
+            thread.finished.connect(thread.deleteLater)
+            self._pyof_import_thread = thread
+            self._pyof_import_worker = worker
+            thread.start()
         except Exception as e:
             logma.error(f"[import_pyof] failed: {e}", exc_info=True)
         return self
+
+    def _show_pyof_import_result(self, path: str, results) -> None:
+        """T-NEW-114 Defect C: status-bar update callback fired on the
+        main thread when the worker thread finishes. Kept separate from
+        cmd_import_pyof so the connection is explicit and testable.
+
+        The defensive getattr + hasattr walk is intentional: in
+        unit tests self.parent() is None (we use __new__ and
+        skip QObject init), so the status bar update must be a no-op
+        rather than crash the test.
+        """
+        try:
+            total_in = sum(r.inserted for r in results)
+            total_skip = sum(r.skipped for r in results)
+            logma.info(f"[import_pyof] {path}: inserted={total_in}, skipped={total_skip}")
+            parent = None
+            try:
+                parent = self.parent()
+            except Exception:
+                parent = None
+            if parent is not None and hasattr(parent, "statusBar"):
+                try:
+                    parent.statusBar().showMessage(
+                        f"Imported {total_in} rows ({total_skip} skipped)", 5000
+                    )
+                except Exception as e:
+                    logma.error(
+                        f"[import_pyof] status bar update failed: {e}",
+                        exc_info=True,
+                    )
+        except Exception as e:
+            logma.error(f"[import_pyof] _show_pyof_import_result failed: {e}", exc_info=True)
 
     def _resolve_host_db_conn(self) -> "sqlite3.Connection | None":
         """Return the live ``sqlite3.Connection`` for the host instance.
