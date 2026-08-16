@@ -192,6 +192,78 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         except Exception:
             return False
 
+    def is_locked_pid(self, pid) -> bool:
+        """T-NEW-131: return True when the node identified by
+        ``pid`` (UUID or nid_txt) is one of the app-locked
+        names (home, journal, settings).
+
+        Resolves the pid against the active
+        ``doc_tree_node`` table via
+        ``store._sqlite_connection`` (one-per-app-instance
+        guarantee). Case-insensitive match against
+        ``LOCKED_NODE_NAMES``. Defensive: missing pid,
+        missing store, missing table, missing row, or any
+        exception -> returns False (treat as not locked so
+        we never *accidentally* block legitimate creates).
+        """
+        try:
+            if pid is None:
+                return False
+            pid_str = str(pid).strip()
+            if not pid_str:
+                return False
+            conn = getattr(
+                getattr(self, "store", None), "_sqlite_connection", None
+            )
+            if conn is None:
+                return False
+            try:
+                cur = conn.execute(
+                    "SELECT name_txt FROM doc_tree_node "
+                    "WHERE nid_txt = ? LIMIT 1",
+                    (pid_str,),
+                )
+            except Exception:
+                # Table doesn't exist or schema differs
+                # (column may be nid vs nid_txt). Try nid.
+                try:
+                    cur = conn.execute(
+                        "SELECT name_txt FROM doc_tree_node "
+                        "WHERE nid = ? LIMIT 1",
+                        (pid_str,),
+                    )
+                except Exception:
+                    return False
+            row = cur.fetchone()
+            if row is None:
+                return False
+            name = row[0]
+            if not isinstance(name, str) or not name:
+                return False
+            return name.strip().lower() in self.LOCKED_NODE_NAMES
+        except Exception:
+            return False
+
+    def is_locked_parent(self, pid) -> bool:
+        """T-NEW-131: return True when the *parent* of a node
+        create is a locked app node.
+
+        Root pids (None, '', '0', 0) return False --
+        top-level creates are governed separately by the
+        T-NEW-130 follow-up (the user wants top-level creates
+        blocked for all users, not via this helper). For any
+        other pid the function defers to ``is_locked_pid``.
+        """
+        try:
+            if pid is None:
+                return False
+            pid_str = str(pid).strip()
+            if not pid_str or pid_str == "0":
+                return False
+        except Exception:
+            return False
+        return self.is_locked_pid(pid_str)
+
     def __init__(self, name, instance=None, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
@@ -614,13 +686,20 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def add_node(self, name, ntype, pid, pos, parameters=None, tabset=None, return_node=False) -> Any:
-        """Add a node (T-NEW-056: gated by max_nodes_per_user).
+        """Add a node (T-NEW-056: gated by max_nodes_per_user,
+        T-NEW-131: gated by locked-parent).
 
         Non-pro users can create at most
         ``config.dikt["max_nodes_per_user"]`` (default 100) total
         nodes. When the limit is reached, returns ``None`` without
         writing. Pro users (per ``is_pro_user(user)``) bypass the
         limit.
+
+        T-NEW-131 additionally refuses to create a child node
+        under Home / Journal / Settings -- those trees are
+        *terminal* for every user (pro or free). The deny is a
+        structural constraint, not a quota, so it is *not*
+        bypassed by pro status.
         """
         if not self._check_max_nodes_for_user():
             logma.warning(
@@ -628,16 +707,30 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 f"limit reached for user (ntype={ntype!r}, name={name!r})"
             )
             return None
+        if self.is_locked_parent(pid):
+            logma.warning(
+                f"[models] add_node rejected: parent pid={pid!r} "
+                f"is a locked app node (T-NEW-131). "
+                f"Settings / Journal / Home trees are terminal."
+            )
+            return None
         node = super().add_node(name, ntype, pid, pos, parameters, tabset, return_node)
         self.has_changed = True
         return node
 
     def add_node_app(self, name, ntype, pid, pos, parameters=None, tabset=None, return_node=False) -> Any:
-        """Add an app-schema node (T-NEW-056: same gating as add_node)."""
+        """Add an app-schema node (T-NEW-056 + T-NEW-131)."""
         if not self._check_max_nodes_for_user():
             logma.warning(
                 f"[models] add_node_app rejected: max_nodes_per_user "
                 f"limit reached for user (ntype={ntype!r}, name={name!r})"
+            )
+            return None
+        if self.is_locked_parent(pid):
+            logma.warning(
+                f"[models] add_node_app rejected: parent pid={pid!r} "
+                f"is a locked app node (T-NEW-131). "
+                f"Settings / Journal / Home trees are terminal."
             )
             return None
         node = super().add_node(name, ntype, pid, pos, parameters, tabset, return_node)

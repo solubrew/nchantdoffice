@@ -4,10 +4,10 @@
 ## Document Changes:
 - fix(models): seed app_user row on initial install (T-NEW-129) -- bootstrap_app_user + store_app_user + get_app_user wired from run_on_launch (7da0d1e)
 - feat(toolbars): top-level new-node toolbar lands at pid=0 (T-NEW-130) -- NchantdNewDocumentSigil.top_level flag + launch_new_document_sigil signals the rootnode dispatch (ac448ad)
-- 
+- feat(models): deny child-node creates under Home/Journal/Settings (T-NEW-131) -- is_locked_pid + is_locked_parent helpers, add_node/add_node_app refuse children of locked trees for all users (fc61c4e)
+-
 
 ## Issues Found:
-- block from creating any nodes in the Settings and Journal trees
 - block from creating/deleting tabs in Settings node tree
 - node sort buttons in not actuallying sorting the subtree of selected node
 - change color of get pro button to a green button
