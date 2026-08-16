@@ -272,10 +272,139 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         return self
 
     def cmd_sort_children(self, event=None, *args, **kwargs) -> Self:
-        """"""
+        """Sort the subtree of the currently-selected node.
+
+        T-NEW-133: the toolbar's ``sort_children_ascending`` /
+        ``sort_children_descending`` buttons wire here. The
+        handler must:
+
+        1. Read the requested direction from the call args
+           (positional ``"ascending" | "descending"``,
+           ``event`` arg, ``kwargs["order"]``). Default to
+           ``"ascending"`` when nothing is provided.
+        2. Sort + persist the *immediate* children via
+           ``NchantdTreeNode.sortChildren(order=...)`` (the
+           Python override at
+           ``nchantrs/widgets/items/nodes.py:512``). The bare
+           Qt ``super().sortChildren(column, ...)`` API sorts
+           in memory only and reverts on reload -- that is
+           the bug.
+        3. Recurse into the subtree -- every descendant
+           depth is sorted with the same direction, so the
+           whole subtree of the selected node is reordered,
+           not just the immediate children.
+
+        Returns ``self`` for chainable call sites.
+        """
+        direction = self._resolve_sort_direction(event, args, kwargs)
         node = self.get_node()
-        node.sortChildren()
+        if node is None:
+            return self
+        self._sort_subtree(node, direction)
         return self
+
+    @staticmethod
+    def _resolve_sort_direction(event, args, kwargs) -> str:
+        """T-NEW-133 helper: extract ``"ascending"`` or
+        ``"descending"`` from the messy toolbar call shapes.
+
+        Accepts direction from (in priority order):
+          - ``kwargs["order"]`` / ``kwargs["args"]`` /
+            ``kwargs["direction"]``
+          - ``args[0]`` if a string or a dict with an order key
+          - ``event`` if a string or a dict with an order key
+          - default ``"ascending"``
+        """
+        direction = "ascending"
+        for source in (
+            kwargs.get("order")
+            or kwargs.get("args")
+            or kwargs.get("direction"),
+            kwargs,
+            args,
+        ):
+            if source is None:
+                continue
+            if isinstance(source, str):
+                low = source.strip().lower()
+                if low in ("ascending", "descending"):
+                    return low
+                continue
+            if isinstance(source, dict):
+                inner = (
+                    source.get("order")
+                    or source.get("args")
+                    or source.get("direction")
+                )
+                if isinstance(inner, str):
+                    low = inner.strip().lower()
+                    if low in ("ascending", "descending"):
+                        return low
+                continue
+            if isinstance(source, (tuple, list)):
+                for cand in source:
+                    if isinstance(cand, str):
+                        low = cand.strip().lower()
+                        if low in ("ascending", "descending"):
+                            return low
+                    elif isinstance(cand, dict):
+                        inner = (
+                            cand.get("order")
+                            or cand.get("args")
+                            or cand.get("direction")
+                        )
+                        if isinstance(inner, str):
+                            low = inner.strip().lower()
+                            if low in ("ascending", "descending"):
+                                return low
+        if isinstance(event, str):
+            low = event.strip().lower()
+            if low in ("ascending", "descending"):
+                return low
+        elif isinstance(event, dict):
+            inner = (
+                event.get("order")
+                or event.get("args")
+                or event.get("direction")
+            )
+            if isinstance(inner, str):
+                low = inner.strip().lower()
+                if low in ("ascending", "descending"):
+                    return low
+        return direction
+
+    @staticmethod
+    def _sort_subtree(node, direction) -> None:
+        """T-NEW-133 helper: sort ``node``'s immediate children
+        (and persist) then recurse into each child.
+
+        Uses ``node.sortChildren(0, order=direction)`` --
+        the Python override -- so each call writes per-child
+        ``position_int`` to ``doc_tree_node``. Persistence
+        cascades naturally across every recursion level.
+        """
+        if node is None:
+            return
+        try:
+            node.sortChildren(0, order=direction)
+        except TypeError:
+            # Older Qt nodes that don't accept the order= kwarg.
+            node.sortChildren(0)
+        except Exception as e:
+            logma.warning(
+                f"[documents] _sort_subtree: node sort failed: {e}"
+            )
+            return
+        try:
+            count = node.childCount()
+        except Exception:
+            return
+        for i in range(count):
+            try:
+                child = node.child(i)
+            except Exception:
+                continue
+            NchantdOfficeNodeEditPane._sort_subtree(child, direction)
 
     def cmd_take_snapshot(self) -> Self:
         """"""

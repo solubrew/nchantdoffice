@@ -6,10 +6,10 @@
 - feat(toolbars): top-level new-node toolbar lands at pid=0 (T-NEW-130) -- NchantdNewDocumentSigil.top_level flag + launch_new_document_sigil signals the rootnode dispatch (ac448ad)
 - feat(models): deny child-node creates under Home/Journal/Settings (T-NEW-131) -- is_locked_pid + is_locked_parent helpers, add_node/add_node_app refuse children of locked trees for all users (fc61c4e)
 - feat(models): deny tab create/delete in Settings tree (T-NEW-132) -- is_locked_tab_parent helper, add_tab/delete_tab refuse Settings-tree tab ops for all users (87ace4d)
+- feat(panes): sort buttons now sort the entire subtree (T-NEW-133) -- cmd_sort_children + _resolve_sort_direction + _sort_subtree helper, every descendant depth is reordered (asc/desc) and persisted (8857081)
 -
 
 ## Issues Found:
-- node sort buttons in not actuallying sorting the subtree of selected node
 - change color of get pro button to a green button
 - total node limit of 100 for non-pro users needs to launch a popup warning with a Get Pro button when the user hits it not just silently deny
   8922              3767  0688d6e9-edd9-7af6-8000-9cae9e60d978           Wireless Internet     usernode  ...  2026-08-15T15:32:10.266384           0           0          1           doc
