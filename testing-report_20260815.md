@@ -22,7 +22,9 @@
 
 - app_instance entry is not being made on new install/creation of initial instance
 - new_child_node button on NewDocument toolbar was broken between b8798a38 solubrew <solubrew@solutionsbrewer.com> on 8/15/26 at 12:51 PM and the current HEAD
-- 
+
+- Tab Delete button not working from document toolbar or from NchantdTabPane in the toolbox
+- Ensure that .pyof import doesn't pull in DELETE_BIT=1 nodes or tabs
 
 
 ## Bugs:
