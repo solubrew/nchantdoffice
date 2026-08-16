@@ -2,8 +2,8 @@
 - the following issues were found to existing testing the NchantdOffice Desktop Application with all its most updated internal dependencies.
 
 ## Document Changes:
+- feat(models): 100-node cap redirects to Nchantd Account with reason param (T-NEW-135) -- fixed dead-code bug in _check_max_nodes_for_user, redirect_to_get_pro accepts reason, NchantdAccountSettings appends ?reason= to compare URL (5bf6f3d)
 - 
-
 
 ## Issues Found:
 - Block from creating new Nodes at the top level 
