@@ -142,11 +142,17 @@ class NchantdOfficeDocumentMixin:
         button via ``setStyleSheet`` so the rendered button is
         visibly tinted.
 
-        Accepts either a named CSS color (``"green"``,
-        ``"red"``, ...) or a hex string (``"#1d8f3a"``). Pairs
+        Accepts either a named CSS color (``"orange"``,
+        ``"red"``, ...) or a hex string (``"#FF8C00"``). Pairs
         the background with ``color: white`` for contrast on
-        saturated fills -- a green Get Pro button without a
+        saturated fills -- an orange Get Pro button without a
         contrasting text is hard to read.
+
+        The T-NEW-134 cfg ships dark orange (``#FF8C00``)
+        because orange is the universal ecommerce upsell
+        color (Stripe / Shopify / GitHub Pro all use it);
+        green reads as success / approved which doesn't carry
+        the same conversion intent.
 
         No-op when ``color`` is None / empty / whitespace --
         missing config must never apply an empty stylesheet
@@ -476,15 +482,23 @@ class NchantdOfficeDocumentMixin:
                 # center tabset.
                 "handler": (lambda *a, _self=self, **k: NchantdOfficeAdTab.redirect_to_get_pro(_self.app)),
                 "height": 24,
-                "background_color": "green",
+                # T-NEW-134 followup: dark orange (``#FF8C00``) instead
+                # of green. Orange reads as an upsell / offer (the
+                # universal ecommerce conversion color -- Stripe,
+                # Shopify, GitHub Pro all use it); green reads as
+                # success / approved which doesn't carry the same
+                # "click me, you're paying for this" intent. White
+                # text on the saturated fill keeps the contrast
+                # legible at the toolbar's 24px height.
+                "background_color": "#FF8C00",
             }
             self.profile_select_entry = NchantdButton(self, cfg).initWidget()
             # T-NEW-134: the cfg sets ``background_color`` but the
             # upstream ``NchantdButton.initView`` doesn't read it
             # (the key is dead config). Apply the color via
             # ``setStyleSheet`` so the rendered button is visibly
-            # green. Pair with white text for legibility on the
-            # saturated background.
+            # orange. Pair with white text for legibility on the
+            # saturated fill.
             self._apply_bg_color(
                 self.profile_select_entry,
                 cfg.get("background_color"),
