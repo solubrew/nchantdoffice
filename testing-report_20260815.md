@@ -2,13 +2,10 @@
 - the following issues were found to existing testing the NchantdOffice Desktop Application with all its most updated internal dependencies.
 
 ## Document Changes:
+- feat(models): deny tab create/delete in Settings tree (T-NEW-132) -- is_locked_tab_parent helper, add_tab/delete_tab refuse Settings-tree tab ops for all users (87ace4d)
 - 
 
-
 ## Issues Found:
-- Block from creating new Nodes at the top level 
-- block from creating any nodes in the Settings and Journal trees
-- block from creating/deleting tabs in Settings node tree
 - node sort buttons in not actuallying sorting the subtree of selected node
 - change color of get pro button to a green button
 - total node limit of 100 for non-pro users needs to launch a popup warning with a Get Pro button when the user hits it not just silently deny
