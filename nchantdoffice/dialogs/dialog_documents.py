@@ -51,29 +51,35 @@ class NchantdNewDocumentSigil(NchantdSigil):
     """"""
 
     def __init__(self, name, parent=None, cfg=None) -> None:
-        """ """
-        super().__init__(name, parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NewNchantdDocumentSigil").override(cfg))
-        
-        self.catalog = None
-        self.file_type = self.config.dikt.get("file_type", None)
-        self.action = name  # self.config.dikt.get('action', None)
-        self.document_nm = None
-        # logma.info(f"Name {name} {self.file_type} {self.action}")
-        self.file_type = None
-        self.google_available_bit = False
-        self.local_available_bit = False
-        self.multi_page_import = False
-        self.widget = None
-        self.load_google = None
-        self.params = None
-        self.open_file = None
-        self.import_file = None
-        self.open_book = None
-        self.file_path = None
-        self.file_path_label = None
-        self.connect_gfile = None
-        self.launch_button_layout = None
+            """ `` """
+            super().__init__(name, parent, cfg)
+            self.config.override(kahndor.Instruct(pxcfg).select("NewNchantdDocumentSigil").override(cfg))
+            # T-NEW-130: when True, ``add_tab`` must parent the new
+            # node at the root (``pid = 0``) instead of under
+            # ``current_node``. The toolbar sets this for the
+            # ``add_node_top_app_rootnode`` lookup code; all other
+            # callers default to False (legacy behavior preserved).
+            self.top_level = bool((cfg or {}).get("top_level", False))
+
+            self.catalog = None
+            self.file_type = self.config.dikt.get("file_type", None)
+            self.action = name  # self.config.dikt.get('action', None)
+            self.document_nm = None
+            # logma.info(f"Name {name} {self.file_type} {self.action}")
+            self.file_type = None
+            self.google_available_bit = False
+            self.local_available_bit = False
+            self.multi_page_import = False
+            self.widget = None
+            self.load_google = None
+            self.params = None
+            self.open_file = None
+            self.import_file = None
+            self.open_book = None
+            self.file_path = None
+            self.file_path_label = None
+            self.connect_gfile = None
+            self.launch_button_layout = None
 
     def finalizeView(self) -> None:
         """"""
@@ -284,7 +290,15 @@ class NchantdNewDocumentSigil(NchantdSigil):
         #        add_tab(sigil, app, widget, widgdata, doc_type, tabset)
         if self.ok:
             name = self.name.textbox.entry_data
-            pid = self.app.view.panes["left"].model.current_node.nid
+            # T-NEW-130: when launched for a top-level create
+            # (the toolbar's ``add_node_top_app_rootnode`` entry
+            # point), parent the new node at the root. Otherwise
+            # keep the legacy behavior of parenting under the
+            # currently-selected node.
+            if getattr(self, "top_level", False):
+                pid = 0
+            else:
+                pid = self.app.view.panes["left"].model.current_node.nid
             self.app.view.panes[tabset].model.max_position += 1
             pos = self.app.view.panes[tabset].model.max_position
             self.app.view.panes[tabset].model.add_tab(name, pid, pos, self.widget, widgdata, self.document_nm, tabset)

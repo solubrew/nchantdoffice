@@ -431,10 +431,39 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         return self
 
     def launch_new_document_sigil(self, signal=None, *args, **kwargs) -> Self:
-        """Launch the sigil dialog."""
+        """Launch the sigil dialog.
+
+        T-NEW-130: when dispatched from the toolbar's
+        ``add_node_top_app_rootnode`` lookup code (the only path
+        that genuinely intends a *root* create), pass
+        ``top_level=True`` so the sigil parents the new node at
+        ``pid=0`` instead of under ``current_node``. For all
+        other dispatch contexts the flag stays False and the
+        sigil keeps its legacy behaviour.
+        """
         logma.info(f"Launch the Sigil")
-        # cfg = {"documents": self.document_types}
         cfg = {}
+        # Identify the rootnode dispatch via args/kwargs/signal.
+        # ``signal`` is the action row passed by the toolbar's
+        # button click; its ``lookup_code_txt`` is the canonical
+        # signal. If absent, fall back to ``args[0]["action"]``.
+        top_level = False
+        try:
+            lookup_code = None
+            if signal is not None and hasattr(signal, "lookup_code_txt"):
+                lookup_code = signal.lookup_code_txt
+            elif args and isinstance(args[0], dict):
+                action = args[0].get("action")
+                if action is not None and hasattr(action, "action"):
+                    lookup_code = action.action.get("lookup_code_txt")
+            top_level = lookup_code == "add_node_top_app_rootnode"
+        except Exception as e:
+            logma.warning(
+                f"[toolbars] launch_new_document_sigil: lookup_code "
+                f"detection failed: {e}"
+            )
+        if top_level:
+            cfg["top_level"] = True
         sigil = NchantdNewDocumentSigil("Test", self, cfg).initWidget()
         return self
 
