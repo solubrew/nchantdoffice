@@ -4635,6 +4635,11 @@ and deserves its own sub-card if non-trivial.
 - **T-NEW-122** Qt-harness migration for tests importing toolboxes — filed after `test_cmd_pyof_routing_consolidation.py` batch-crash (T-NEW-114 follow-up).
 - **T-NEW-123** Embedded-TODO sweep: implement-method stubs and config wiring — covers the 21 uncovered TODO markers (embedded_todos audit dim 58%).
 
+- **T-NEW-138** Journal editor followups: always-scroll to bottom + refactor to standard populate (covers `journal.py:132, 422`) -- pairs with T-NEW-079.
+- **T-NEW-139** Toolbar signature cleanup: combine `add_tab` + `add_document` shared cfg/wiring (`toolbars.py:216`).
+- **T-NEW-140** Free-user right-side tab: lock default to Ad tab (`settings.py:1209`) -- pairs with T-NEW-135 redirect.
+- **T-NEW-141** Inside-nchantdoffice TODO sweep: 10 remaining markers (images palette drawer, notebook stubs, catalog tab-None, config features pane, 3 stub methods, users.has_pro service truth) -- filed from the 2026-08-15 inside-sweep.
+
 ### T-NEW-124 — Doctype guard: strict-dtd payloads restore as HTML (2026-08-15)
 
 **Rich-text payloads restored under the wrong syntax.** User
@@ -4668,4 +4673,181 @@ directly, overriding ``syntax``.
 doc_media_syntax_update). Live numbers (per-file run, 21 known
 Qt-crashers + 2 pyof-Qt files excluded): **497 passed / 5 failed**
 — the 5 are the T-NEW-120 aspirational script tests, unchanged.
+
+### T-NEW-138 — Journal editor followups: always-scroll + standard-populate (2026-08-15)
+
+**Two journal TODOs uncovered by the 2026-08-15 inside-sweep.**
+The journal document pane (``nchantdoffice/widgets/documents/journal.py``)
+has two unimplemented markers that belong together -- both
+are UX regressions relative to the standard ``populate`` contract
+that T-NEW-079 brought the entry editor up to.
+
+**Marker 1 (always-scroll to bottom):** ``journal.py:132``
+flags that the outer ``NchantdOfficeJournalEditor`` does not
+    scroll to the bottom of the document after init/refresh,
+    so when the user opens a long-running journal they see the
+    top instead of the latest entry. The standard
+    ``populate_document`` helper ends with
+    ``scroll_to_bottom()`` -- the journal override skips it.
+
+**Marker 2 (refactor to standard populate):** ``journal.py:422``
+flags that the ``_parse_entry`` + ``populate`` chain on the
+    journal editor is bespoke instead of going through the
+    standard ``populate_document`` pipeline. This means the
+    "always save" follow-up that T-NEW-079 deferred would
+    have to retest the whole editor again instead of dropping
+    in on top of the canonical contract.
+
+**Affected sites:**
+- ``nchantdoffice/widgets/documents/journal.py:132`` --
+  ``# TODO always scroll to bottom of document`` (in
+  ``initView`` of the outer journal editor)
+- ``nchantdoffice/widgets/documents/journal.py:422`` --
+  ``# TODO refactor to use the standard populate methods``
+
+**Migration plan (design decision first):** the always-scroll
+fix is a single ``self.scroll_to_bottom()`` call after
+``populate_document`` -- no priority, safe to land first.
+The standard-populate refactor is bigger (it changes the
+public contract of the journal editor's ``save`` /
+``populate`` cycle) and should land second behind a TDD
+recipe. Steps:
+1. Add ``test_journal_scroll_to_bottom`` that opens a journal
+   with N entries and asserts the cursor/anchor is at the
+   bottom after init.
+2. Add ``test_journal_uses_standard_populate`` that asserts
+   the journal's populate path goes through
+   ``populate_document`` (same call site as scripts/media/etc).
+3. Implement both fixes against the failing tests.
+4. Close out the two ``TODO`` markers.
+5. Update ``TODOs.md`` ``Document Changes`` section.
+
+### T-NEW-139 — Toolbar signature cleanup: combine ``add_tab`` + ``add_document`` (2026-08-15)
+
+**Two toolbar methods share 80% of their cfg/handler wiring.**
+``nchantdoffice/widgets/controls/toolbars.py:216`` flags:
+``# TODO cleanup add_tab, add_document signatures and
+combine as much code as possible``. Both methods duplicate
+the ``cfg = {"text": ..., "lookup_code_txt": ..., "handler":
+self.cmd_add_document_app, "args": ..., "icon_txt": ...}``
+build + the ``NchantdButton(self, cfg).initWidget()``
+construction + the same ``buttons[k] = ...`` placement.
+
+**Affected sites:**
+- ``nchantdoffice/widgets/controls/toolbars.py:216`` --
+  ``# TODO cleanup add_tab, add_document signatures``
+- ``nchantdoffice/widgets/controls/toolbars.py:160-222``
+  (``add_document``) and ``add_tab`` (paired method) --
+  both currently hold ~50 lines of duplicated cfg +
+  construction logic.
+
+**Migration plan (design decision first):** extract a
+private helper ``_launch_doc_sigil(cfg) -> QWidget`` that
+takes a cfg dict and emits the configured
+``NchantdButton``. ``add_tab`` and ``add_document`` then
+become a 10-line cfg dict + one helper call each. No
+public API change -- the ``cmd_add_document_app`` and
+``cmd_add_tab`` handlers are unchanged. Steps:
+1. Snapshot the toolbar buttons behaviour with the
+   existing ``tests/test_toolbar_*.py`` slice (or add
+   one if missing).
+2. Extract ``_launch_doc_sigil`` from the duplicated body.
+3. Verify the snapshot tests still pass.
+4. Close the ``TODO`` marker.
+
+### T-NEW-140 — Free-user right-side tab: lock default to Ad tab (2026-08-15)
+
+**Free users see all right-side tabs; should default to the Ad
+tab and restrict the rest.** ``nchantdoffice/widgets/config/settings.py:1209``
+flags: ``# TODO lock default right side tab to Ad tab for
+free users``. Today the right pane shows every available
+tab regardless of tier; the upsell surface (the Ad tab,
+where T-NEW-135 redirects the user when they hit the 100-node
+cap) is just one tab among many. This card locks the default
+selection to the Ad tab for free users so they actually see
+the upsell without having to hunt for it.
+
+**Affected sites:**
+- ``nchantdoffice/widgets/config/settings.py:1209`` --
+  ``# TODO lock default right side tab to Ad tab for free users``
+- The right-side tab pane (``panes["right"]`` / analogous)
+  default-selection logic -- consult
+  ``is_pro_user(model.user)`` and pick the Ad tab if not pro.
+- A new setting flag in the ``Settings/Interface`` tab so
+  users can override (pro) or accept the lock (free).
+
+**Migration plan (design decision first):** the lock is a
+single conditional on the default-selection read. Adds a
+new ``force_ad_tab_for_free_users`` setting (default True)
+that admins can disable. Steps:
+1. ``test_default_right_tab_is_ad_for_free_users``
+   (selectable through model.user.has_pro=False).
+2. ``test_default_right_tab_falls_through_for_pro_users``.
+3. Wire the conditional into the right-pane init.
+4. Add the setting to the ``Settings/Interface`` tab.
+5. Close the ``TODO`` marker.
+
+### T-NEW-141 — Inside-nchantdoffice TODO sweep: implementation stubs + config wirings (2026-08-15)
+
+**10 unimplemented TODO markers in the nchantdoffice package.**
+The 2026-08-15 inside-sweep (this session's TODO review) found
+14 outstanding TODO markers in ``nchantdoffice/``. Three of
+them belong with adjacent cards (T-NEW-138 covers journal
+items; T-NEW-139 covers the toolbar signature cleanup;
+T-NEW-140 covers the free-user right-tab lock). The remaining
+10 are independent stubs and config wirings collected here.
+
+**Affected sites (10 uncovered items):**
+- ``nchantdoffice/widgets/documents/media/images.py:807`` --
+  ``# TODO Open toolbox tab and Palette Drawer generate the
+  palette from the image`` (toolbox click should auto-open
+  the palette drawer).
+- ``nchantdoffice/widgets/documents/media/images.py:1162`` --
+  ``# TODO implement logic so that when a tool like
+  NchantdConvertSize button is clicked on the document toolbar
+  that the drawer is opened and redrawn to show only the
+  config for that tool``.
+- ``nchantdoffice/widgets/documents/workbooks/notebooks.py:1788`` --
+  ``#TODO: implement method`` (notebook widget state helper A).
+- ``nchantdoffice/widgets/documents/workbooks/notebooks.py:1792`` --
+  ``#TODO: implement method`` (notebook widget state helper B).
+- ``nchantdoffice/widgets/panes/documents.py:798`` --
+  ``# TODO: tab is None for initialized catalog and so we
+  need to stub in values`` (catalog pane blank when tab None).
+- ``nchantdoffice/widgets/config/settings.py:980`` --
+  ``# TODO implement in NchantdOfficeDocumentConfigPane -
+  features`` (per-document-type features pane is missing).
+- ``nchantdoffice/widgets/documents/documents.py:1184`` --
+  ``# TODO implement method`` (stub on document mixin).
+- ``nchantdoffice/widgets/widgets.py:113`` --
+  ``# TODO implement method`` (stub on top-level widget base).
+- ``nchantdoffice/widgets/config/source_config.py:319`` --
+  ``# TODO implement method`` (stub on source_config).
+- ``nchantdoffice/utilities/users.py:69`` --
+  ``# TODO: need to connect to service for truth and a need a
+  place to store data locally`` (``has_pro = True`` is
+  hardcoded; needs nchantdoffice_com service query + local
+  cache).
+
+**Migration plan (design decision first):** group by file
+for clean parallel work, not by feature:
+1. ``media/images.py`` (2 items) -- palette drawer wiring
+   from toolbar + toolbox. Land first; small UX win.
+2. ``workbooks/notebooks.py`` (2 items) -- two state
+   helpers; both stub-implementations.
+3. ``panes/documents.py`` (1 item) -- catalog tab-None
+   stub values.
+4. ``config/settings.py`` (1 item) -- per-doctype features
+   pane (this is a substantial card on its own; consider
+   a follow-up ``T-NEW-141b`` if scope balloons).
+5. Stub methods (3 items across ``documents.py:1184``,
+   ``widgets.py:113``, ``source_config.py:319``) --
+   implement-and-mark-done; smallest in the batch.
+6. ``utilities/users.py:69`` -- has_pro truth-from-service
+   card; this one is structural and may need a separate
+   ``T-NEW-141c`` card for the network/cache plumbing.
+
+For each: write a failing test that exercises the intended
+behaviour, implement the minimum to pass, refactor, commit,
+push, update ``TODOs.md`` ``Document Changes``.
 
