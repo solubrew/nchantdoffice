@@ -192,6 +192,63 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         except Exception:
             return False
 
+    def is_locked_tab_parent(self, pid) -> bool:
+        """T-NEW-132: return True when the *parent* of a tab
+        create/delete is the Settings node.
+
+        Narrower than ``is_locked_node``: only Settings
+        (case-insensitive) is tab-terminal. Home and Journal
+        remain tab-mutable -- only the Settings tree is
+        treated as a fixed app-settings container whose
+        tab set is curated by the app, not the user.
+
+        Root pids (None, '', '0', 0) return False -- top-level
+        tab creates are governed separately. For any other
+        pid the function resolves to ``doc_tree_node.name_txt``
+        via the active ``store._sqlite_connection`` and
+        returns True iff that name equals ``settings``.
+
+        Defensive: missing pid, missing store, missing table,
+        missing row, or any exception -> returns False (treat
+        as not locked so we never accidentally block
+        legitimate tab operations).
+        """
+        try:
+            if pid is None:
+                return False
+            pid_str = str(pid).strip()
+            if not pid_str or pid_str == "0":
+                return False
+            conn = getattr(
+                getattr(self, "store", None), "_sqlite_connection", None
+            )
+            if conn is None:
+                return False
+            try:
+                cur = conn.execute(
+                    "SELECT name_txt FROM doc_tree_node "
+                    "WHERE nid_txt = ? LIMIT 1",
+                    (pid_str,),
+                )
+            except Exception:
+                try:
+                    cur = conn.execute(
+                        "SELECT name_txt FROM doc_tree_node "
+                        "WHERE nid = ? LIMIT 1",
+                        (pid_str,),
+                    )
+                except Exception:
+                    return False
+            row = cur.fetchone()
+            if row is None:
+                return False
+            name = row[0]
+            if not isinstance(name, str) or not name:
+                return False
+            return name.strip().lower() == "settings"
+        except Exception:
+            return False
+
     def __init__(self, name, instance=None, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
@@ -806,6 +863,18 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         :return: Created tab object, or None if the limit was hit
                  AND a child node could not be created.
         """
+        # T-NEW-132: refuse tab creates in the Settings tree for all
+        # users (pro or free). Settings is tab-terminal -- the
+        # app curates that tab set, the user does not. We check
+        # BEFORE the T-NEW-054 max-tabs resolution so a Settings
+        # create never falls into the auto-child fallback.
+        if self.is_locked_tab_parent(pid):
+            logma.warning(
+                f"[models] add_tab rejected: parent pid={pid!r} "
+                f"is the Settings node (T-NEW-132). The Settings "
+                f"tree is tab-terminal."
+            )
+            return None
         pid = self._resolve_pid_for_max_tabs(pid, tabset)
         if pid is None:
             logma.warning(
@@ -1653,8 +1722,65 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def delete_tab(self, tab) -> "NchantdOfficeCloakModel":
-        """"""
+        """Delete a tab.
+
+        T-NEW-132: refuse to delete a tab whose parent node is
+        Settings. Settings tabs are curated by the app, not the
+        user; deletion is denied for all users (pro or free).
+        Resolves the tab's ``pid_txt`` via the active
+        ``store._sqlite_connection`` so we can consult
+        ``is_locked_tab_parent``. Defensive: missing tid,
+        missing tab object, missing connection, missing row,
+        or any exception -> falls through to the legacy delete
+        path (so a transient lookup failure never *prevents* a
+        legitimate delete the user explicitly asked for).
+        """
         logma.info(f"Tab will be deleted {tab.tid}")
+        try:
+            parent_pid = None
+            try:
+                tab_tid = getattr(tab, "tid", None)
+                if tab_tid is not None:
+                    conn = getattr(
+                        getattr(self, "store", None),
+                        "_sqlite_connection",
+                        None,
+                    )
+                    if conn is not None:
+                        try:
+                            cur = conn.execute(
+                                "SELECT pid_txt FROM doc_tab "
+                                "WHERE tid_txt = ? LIMIT 1",
+                                (str(tab_tid),),
+                            )
+                        except Exception:
+                            cur = conn.execute(
+                                "SELECT pid_txt FROM doc_tab "
+                                "WHERE tid = ? LIMIT 1",
+                                (str(tab_tid),),
+                            )
+                        row = cur.fetchone()
+                        if row is not None and len(row) > 0:
+                            parent_pid = row[0]
+            except Exception as e:
+                logma.warning(
+                    f"[models] delete_tab: pid lookup failed: {e}"
+                )
+                parent_pid = None
+            if self.is_locked_tab_parent(parent_pid):
+                logma.warning(
+                    f"[models] delete_tab rejected: tab tid="
+                    f"{getattr(tab, 'tid', '?')!r} parent pid="
+                    f"{parent_pid!r} is the Settings node "
+                    f"(T-NEW-132). The Settings tree is "
+                    f"tab-terminal."
+                )
+                return self
+        except Exception as e:
+            logma.warning(
+                f"[models] delete_tab: settings-guard "
+                f"consultation failed: {e}"
+            )
         cfg = {}
         # self.store_event("CloseTab", cfg)
         self.has_changed = True
