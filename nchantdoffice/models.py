@@ -1777,6 +1777,102 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             return rows
         return []
 
+    def get_app_user(self, db="db") -> list[dict[str, Any]]:
+        """T-NEW-129: return the list of rows from the ``app_user``
+        table.
+
+        Symmetric with ``get_app_instances``: reads via the active
+        ``store._sqlite_connection`` when available (one-per-app-
+        instance guarantee), falls back to ``self.get_table(...)``
+        through the store layer when the connection isn't bound.
+        Returns an empty list when the table is missing (fresh DB
+        before migration) or empty (first launch, before
+        ``bootstrap_app_user`` runs).
+
+        Normally the table has at most one row (one ``app_user``
+        per install), so this method is used both to read the
+        current user's row and to check whether the bootstrap has
+        already run (``len(get_app_user()) == 0``).
+        """
+        conn = getattr(getattr(self, "store", None), "_sqlite_connection", None)
+        if conn is not None:
+            try:
+                cur = conn.execute("SELECT * FROM app_user")
+                cols = [d[0] for d in cur.description] if cur.description else []
+                return [dict(zip(cols, row)) for row in cur.fetchall()]
+            except Exception as e:
+                logma.warning(
+                    f"[models] get_app_user: SQLite query failed: {e}"
+                )
+                # Fall through to the store layer.
+        try:
+            rows = self.get_table("app_user", {}, db)
+        except Exception as e:
+            logma.warning(f"[models] get_app_user failed: {e}")
+            return []
+        if rows is None:
+            return []
+        if hasattr(rows, "to_dict"):
+            try:
+                return rows.to_dict(orient="records")
+            except Exception:
+                pass
+        if isinstance(rows, list):
+            return rows
+        return []
+
+    def bootstrap_app_user(self) -> Self:
+        """T-NEW-129: seed the ``app_user`` row on first install.
+
+        Idempotent: if a row already exists, do nothing. Uses
+        ``self.user`` (the ``NchantdOfficeUser`` instance attached
+        to the app) as the source; falls back to a stub UUID if
+        ``self.user`` is unbound (e.g. during very early
+        bootstrap before user construction). Returns ``self``.
+
+        On any failure (missing store, missing table, broken
+        connection) logs and swallows the exception so the app
+        boot sequence is never blocked on this row.
+        """
+        try:
+            existing = self.get_app_user()
+            if existing:
+                logma.info(
+                    "[models] bootstrap_app_user: row already "
+                    "present; skip"
+                )
+                return self
+            user = getattr(self, "user", None)
+            if user is None:
+                # Synthesise a minimal stub so the row still gets
+                # written -- better one row of garbage than zero
+                # rows on a freshly-installed DB.
+                from types import SimpleNamespace
+
+                user = SimpleNamespace(
+                    uuid="bootstrap-no-user",
+                    name="bootstrap",
+                    user_name="bootstrap",
+                    pword="",
+                    salt="",
+                    iters="0",
+                    is_private=False,
+                    is_secure=False,
+                )
+            # Build the payload at the model layer (mirrors
+            # ``store_instance`` -> ``store.store_app_instance``
+            # pattern) and write through the store primitive.
+            self.store_app_user(user, db="db")
+            logma.info(
+                "[models] bootstrap_app_user: seeded app_user row"
+            )
+        except Exception as e:
+            logma.warning(
+                f"[models] bootstrap_app_user failed: {e}",
+                exc_info=True,
+            )
+        return self
+
     def get_document(self, doc_action=None, did=None, db="db") -> Any:
         """Return the document matching the action or the document id.
 
@@ -3103,7 +3199,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def store_instance(self, instance) -> Self:
-        """"""
+        """Save the in-memory instance dict to the ``app_instance`` table."""
         self.instance = instance
         instance = instance.to_dict()
 
@@ -3111,9 +3207,42 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def store_instances(self) -> Self:
-        """"""
+        """Save every in-memory instance dict to ``app_instance``."""
         for instance in self.instances:
             self.store_instance(instance)
+        return self
+
+    def store_user(self, user) -> Self:
+        """T-NEW-129: save the in-memory user to ``app_user``.
+
+        Symmetric with ``store_instance`` (T-NEW-005): the model
+        wrapper that builds the row payload via
+        ``_build_app_user_payload`` and dispatches through
+        ``self.store.store_app_user(...)``. Idempotent callers
+        should use ``bootstrap_app_user`` instead.
+        """
+        return self.store_app_user(user)
+
+    def store_app_user(self, user, db="db") -> Self:
+        """T-NEW-129: model-level write primitive for ``app_user``.
+
+        Builds the row payload via ``_build_app_user_payload`` and
+        delegates to ``self.store.store_app_user(payload, db)``.
+        The model-side wrapper is the public entry point --
+        tests and ``bootstrap_app_user`` both call this.
+
+        Mirrors ``store_instance`` -> ``store.store_app_instance``
+        layering.
+        """
+        if hasattr(user, "to_dict") and callable(getattr(user, "to_dict")):
+            payload = _build_app_user_payload(user.to_dict())
+        else:
+            payload = _build_app_user_payload(user)
+        store = getattr(self, "store", None)
+        if store is None:
+            logma.warning("[models] store_app_user: no store; skip")
+            return self
+        store.store_app_user(payload, db=db)
         return self
 
     def _resolve_widget_from_registry(self, lookup_code, fallback=None) -> Any:
@@ -3810,6 +3939,24 @@ class NchantdOfficeStore(NchantdStore):
         """Build payload from instance dict and dispatch. Delegates to the free function."""
         self._store("app_instance", [_build_app_instance_payload(instance)], db)
 
+    def store_app_user(self, user, db="db") -> None:
+        """T-NEW-129: store primitive for ``app_user`` rows.
+
+        Takes a pre-built payload dict and writes it through
+        ``self._store(...)``. Symmetric with
+        ``store_app_instance``. The high-level
+        ``model.store_user(user)`` wrapper calls
+        ``_build_app_user_payload`` and then this method; the
+        direct call exists for tests and for callers that have
+        already materialised the payload.
+        """
+        if isinstance(user, dict) and "UUID" in user and "user_nm_txt" not in user:
+            # Already a payload dict -- pass through unchanged.
+            payload = user
+        else:
+            payload = _build_app_user_payload(user)
+        self._store("app_user", [payload], db)
+
     def store_doc_media(self, document, db="db", how="INSERT") -> str:
         """
         Store document creates a new record in the database table doc_media representing a document.
@@ -4174,6 +4321,88 @@ def _build_app_instance_payload(instance) -> Dict[str, Any]:
     data.setdefault("creon_dttm", getattr(instance, "creon_dttm", None))
     data.setdefault("mod_dttm", getattr(instance, "mod_dttm", None))
     return data
+
+
+def _build_app_user_payload(user) -> Dict[str, Any]:
+    """Build the row dict for the ``app_user`` table (T-NEW-129).
+
+    The ``app_user`` table is declared in
+    ``nchantdoffice/updates/_data_/db.yaml`` and migrated by sonql;
+    this helper produces a row dict whose keys match the YAML schema:
+
+      UUID, user_nm_txt, password_txt, saltUUID, iterations_txt,
+      is_private_bit, is_secure_bit, instance_FK
+
+    Optional columns (``mac_hash_txt``, ``address_txt``,
+    ``public_key_txt``) are emitted when the user object supplies
+    them and skipped otherwise. The user may be a NchantdUser (or
+    subclass), an object exposing the same attributes, or a plain
+    dict with matching keys.
+    """
+    # 1. Materialise the source as a plain dict via duck-typing.
+    if hasattr(user, "to_dict") and callable(getattr(user, "to_dict")):
+        source: Dict[str, Any] = dict(user.to_dict())
+    elif isinstance(user, dict):
+        source = dict(user)
+    else:
+        source = {
+            "uuid": getattr(user, "uuid", None),
+            "name": getattr(user, "name", None),
+            "user_name": getattr(user, "user_name", None),
+            "pword": getattr(user, "pword", None),
+            "password": getattr(user, "password", None),
+            "salt": getattr(user, "salt", None),
+            "iters": getattr(user, "iters", None),
+            "is_private": getattr(user, "is_private", False),
+            "is_secure": getattr(user, "is_secure", False),
+        }
+
+    # 2. Map source keys -> column names. The ``user_nm_txt`` and
+    #    ``password_txt`` columns are the canonical names; older
+    #    keys (``name``, ``user_name``, ``pword``, ``password``)
+    #    are tolerated so legacy callers keep working.
+    payload: Dict[str, Any] = {}
+    uuid = source.get("uuid") or source.get("UUID")
+    if uuid is not None:
+        payload["UUID"] = uuid
+    user_nm = (
+        source.get("user_nm_txt")
+        or source.get("user_name")
+        or source.get("name")
+    )
+    if user_nm is not None:
+        payload["user_nm_txt"] = user_nm
+    pword = (
+        source.get("password_txt")
+        or source.get("pword")
+        or source.get("password")
+    )
+    if pword is not None:
+        payload["password_txt"] = pword
+    salt = source.get("saltUUID") or source.get("salt")
+    if salt is not None:
+        payload["saltUUID"] = salt
+    iters = source.get("iterations_txt") or source.get("iters")
+    if iters is not None:
+        payload["iterations_txt"] = str(iters)
+    for src_key, col in (
+        ("mac_hash_txt", "mac_hash_txt"),
+        ("address_txt", "address_txt"),
+        ("public_key_txt", "public_key_txt"),
+    ):
+        if source.get(src_key) is not None:
+            payload[col] = source[src_key]
+    if "is_private_bit" in source:
+        payload["is_private_bit"] = int(bool(source["is_private_bit"]))
+    elif source.get("is_private") is not None:
+        payload["is_private_bit"] = int(bool(source["is_private"]))
+    if "is_secure_bit" in source:
+        payload["is_secure_bit"] = int(bool(source["is_secure_bit"]))
+    elif source.get("is_secure") is not None:
+        payload["is_secure_bit"] = int(bool(source["is_secure"]))
+    if "instance_FK" in source and source["instance_FK"] is not None:
+        payload["instance_FK"] = source["instance_FK"]
+    return payload
 
     def update_document_entry(self, uuid, content, db="db") -> str:
         """"""
