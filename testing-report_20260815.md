@@ -2,12 +2,10 @@
 - the following issues were found to existing testing the NchantdOffice Desktop Application with all its most updated internal dependencies.
 
 ## Document Changes:
+- feat(models): deny child-node creates under Home/Journal/Settings (T-NEW-131) -- is_locked_pid + is_locked_parent helpers, add_node/add_node_app refuse children of locked trees for all users (fc61c4e)
 - 
 
-
 ## Issues Found:
-- Block from creating new Nodes at the top level 
-- block from creating any nodes in the Settings and Journal trees
 - block from creating/deleting tabs in Settings node tree
 - node sort buttons in not actuallying sorting the subtree of selected node
 - change color of get pro button to a green button
