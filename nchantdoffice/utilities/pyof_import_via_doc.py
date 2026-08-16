@@ -58,8 +58,10 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import sqlite3
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Literal, Optional
+from types import SimpleNamespace
 
 logma = logging.getLogger(__name__)
 
@@ -117,11 +119,82 @@ class ImportResult:
     """Per-table import summary kept identical to the existing
     ``import_pyof.ImportResult`` so the tests that consume it
     stay compatible.
+
+    T-NEW-137: ``aborted`` flags when the cap pre-flight
+    refused the entire import. ``aborted_source_count`` is
+    the projected source ``doc_tree_node`` row count that
+    pushed the host past the limit; ``aborted_reason`` is
+    the upsell reason passed to ``redirect_to_get_pro``.
+    Callers (orchestrator / UI) can distinguish "skipped
+    rows due to cap" from "ran and inserted N rows".
     """
 
     table: str
     inserted: int = 0
     skipped: int = 0
+    aborted: bool = False
+    aborted_source_count: int = 0
+    aborted_reason: str = ""
+
+
+def count_importable_nodes(source_path: str) -> int:
+    """T-NEW-137: count non-deleted ``doc_tree_node`` rows in
+    the source ``.pyof``.
+
+    Opens the file via a fresh ``sqlite3.Connection``
+    (``check_same_thread`` left at its True default --
+    import is a short-lived synchronous call from the GUI
+    thread). Counts only live rows (``DELETE_BIT = 0``) so
+    that the pre-flight total matches what
+    ``import_pyof_via_doc`` would actually insert.
+
+    Defensive against every failure mode that could brick
+    an otherwise-valid import:
+      - missing file -> 0
+      - missing ``doc_tree_node`` table -> 0
+      - missing ``DELETE_BIT`` column -> COUNT(*) (older
+        schemas didn't have a delete bit)
+      - any other exception -> 0 (best-effort; the
+        T-NEW-135 per-node redirect still kicks in if the
+        projected total was off)
+
+    Returns the live row count (int).
+    """
+    import os
+    if not source_path or not os.path.isfile(source_path):
+        return 0
+    try:
+        conn = sqlite3.connect(source_path)
+    except Exception as e:
+        logma.warning(
+            f"[import_pyof_via_doc] count_importable_nodes: "
+            f"open failed: {e}"
+        )
+        return 0
+    try:
+        try:
+            cur = conn.execute(
+                "SELECT COUNT(*) FROM doc_tree_node "
+                "WHERE DELETE_BIT = 0"
+            )
+        except Exception:
+            # No DELETE_BIT column (or no doc_tree_node table) --
+            # fall back to plain COUNT.
+            try:
+                cur = conn.execute(
+                    "SELECT COUNT(*) FROM doc_tree_node"
+                )
+            except Exception:
+                return 0
+        row = cur.fetchone()
+        if row is None:
+            return 0
+        return int(row[0])
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------------------
@@ -453,6 +526,77 @@ def import_pyof_via_doc(
         f"[import_pyof_via_doc] source_doc opened: doc={source_doc.doc!r}"
     )
     results: list[ImportResult] = []
+
+    # T-NEW-137: pre-flight the doc_tree_node count BEFORE any
+    # writes. When ``host_count + source_count > cap`` we fire
+    # ``redirect_to_get_pro(app, reason="hit_100_nodes")`` and
+    # return an aborted ImportResult so the user lands on the
+    # Nchantd Account tab with the upsell param once -- instead
+    # of seeing the cap fire per-row after the 100th insert.
+    # Pro users bypass (mirrors ``_check_max_nodes_for_user``).
+    if model is not None:
+        try:
+            host_count = len(model.get_nodes())
+        except Exception as e:
+            logma.warning(
+                f"[import_pyof_via_doc] pre-flight: host_count "
+                f"lookup failed: {e}"
+            )
+            host_count = 0
+        try:
+            source_count = count_importable_nodes(source_path)
+        except Exception as e:
+            logma.warning(
+                f"[import_pyof_via_doc] pre-flight: source_count "
+                f"lookup failed: {e}"
+            )
+            source_count = 0
+        try:
+            cap = int(
+                (getattr(model, "config", SimpleNamespace(dikt={}))
+                .dikt.get("max_nodes_per_user", 100))
+            )
+        except Exception:
+            cap = 100
+        is_pro = False
+        try:
+            from nchantdoffice.utilities.upgrades import is_pro_user
+            user = getattr(model, "user", None)
+            is_pro = bool(is_pro_user(user))
+        except Exception:
+            is_pro = False
+        if not is_pro and (host_count + source_count) > cap:
+            logma.warning(
+                f"[import_pyof_via_doc] pre-flight aborted: "
+                f"host_count={host_count} source_count={source_count} "
+                f"cap={cap}. Redirecting with reason=hit_100_nodes."
+            )
+            try:
+                from nchantdoffice.widgets.advertisements import (
+                    NchantdOfficeAdTab,
+                )
+
+                app = getattr(model, "app", None)
+                if app is not None:
+                    NchantdOfficeAdTab.redirect_to_get_pro(
+                        app, reason="hit_100_nodes"
+                    )
+            except Exception as e:
+                logma.warning(
+                    f"[import_pyof_via_doc] pre-flight: "
+                    f"redirect_to_get_pro failed: {e}"
+                )
+            results.append(
+                ImportResult(
+                    table="doc_tree_node",
+                    inserted=0,
+                    skipped=source_count,
+                    aborted=True,
+                    aborted_source_count=source_count,
+                    aborted_reason="hit_100_nodes",
+                )
+            )
+            return results
 
     # The model argument is OPTIONAL. When provided, we funnel
     # node / tab / media rows through the model's standard logic
