@@ -8,6 +8,7 @@
 - feat(models): deny tab create/delete in Settings tree (T-NEW-132) -- is_locked_tab_parent helper, add_tab/delete_tab refuse Settings-tree tab ops for all users (87ace4d)
 - feat(panes): sort buttons now sort the entire subtree (T-NEW-133) -- cmd_sort_children + _resolve_sort_direction + _sort_subtree helper, every descendant depth is reordered (asc/desc) and persisted (8857081)
 - feat(toolbars): Get Pro button visibly green (T-NEW-134) -- _apply_bg_color helper on NchantdOfficeDocumentMixin sets background-color via setStyleSheet, paired with white text for contrast (558a4f3)
+- feat(models): 100-node cap redirects to Nchantd Account with reason param (T-NEW-135) -- fixed dead-code bug in _check_max_nodes_for_user, redirect_to_get_pro accepts reason, NchantdAccountSettings appends ?reason= to compare URL (5bf6f3d)
 -
 
 ## Issues Found:

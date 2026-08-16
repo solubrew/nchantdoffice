@@ -1065,18 +1065,32 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def redirect_to_get_pro(app) -> bool:
+    def redirect_to_get_pro(app, reason: Optional[str] = None) -> bool:
         """Navigate the left-pane tree to the "Nchantd Account"
         tab (the embedded browser for the nchantdoffice_com
         account chain) so the user lands on the in-app Get Pro
         page instead of an external browser.
 
+        T-NEW-135: ``reason`` is a free-form string that gets
+        stashed on ``app.model.get_pro_redirect_reason`` so the
+        destination ``NchantdOfficeAccountSettings`` widget
+        can append it as a URL query parameter on next
+        construction. The website reads the param to tailor
+        its copy -- e.g. ``reason=hit_100_nodes`` shows a
+        dedicated upsell for users who hit the 100-node cap.
+
+        The stash is the single source of truth across the
+        redirect / nav / settings-load race: the helper
+        writes it, the settings widget reads + clears it.
         This is the shared helper used by:
           - the right-side Ad tab "Remove ads" button
             (``_on_remove_ads_clicked``)
           - the center-tab ``NchantdDocumentToolBar`` "Get Pro"
             button (``NchantdOfficeDocumentProfilePane.initView``
             in ``documents.py``).
+          - the 100-node cap deny path
+            (``NchantdOfficeCloakModel.add_node`` /
+            ``add_node_app``).
 
         The nchantrs tree structure is two-layered:
           - ``app.view.panes["left"].tree`` is the inner
@@ -1095,6 +1109,20 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         Returns ``True`` when the navigation succeeded,
         ``False`` when it was skipped (graceful no-op).
         """
+        # T-NEW-135: stash the reason BEFORE the navigation
+        # dance so the destination widget sees it regardless
+        # of whether the UI tree resolves. Failures in the
+        # nav chain below MUST NOT erase the stash -- the
+        # destination's ``initView`` will still pick it up.
+        try:
+            model = getattr(app, "model", None) if app is not None else None
+            if model is not None:
+                model.get_pro_redirect_reason = reason
+        except Exception as e:
+            logma.warning(
+                f"[ad_tab] redirect_to_get_pro: stash failed: {e}"
+            )
+
         target_url = "https://www.nchantdoffice.com/compare"
         try:
             view = getattr(app, "view", None) if app is not None else None

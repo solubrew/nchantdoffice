@@ -763,6 +763,26 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 f"[models] add_node rejected: max_nodes_per_user "
                 f"limit reached for user (ntype={ntype!r}, name={name!r})"
             )
+            # T-NEW-135: best-effort redirect to the in-app
+            # Nchantd Account tab so the user understands
+            # they hit the 100-node cap and can navigate to
+            # the Get Pro / compare page. Failure must NOT
+            # mask the deny itself.
+            try:
+                from nchantdoffice.widgets.advertisements import (
+                    NchantdOfficeAdTab,
+                )
+
+                app = getattr(self, "app", None)
+                if app is not None:
+                    NchantdOfficeAdTab.redirect_to_get_pro(
+                        app, reason="hit_100_nodes"
+                    )
+            except Exception as e:
+                logma.warning(
+                    f"[models] add_node: redirect_to_get_pro "
+                    f"failed: {e}"
+                )
             return None
         if self.is_locked_parent(pid):
             logma.warning(
@@ -776,12 +796,28 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return node
 
     def add_node_app(self, name, ntype, pid, pos, parameters=None, tabset=None, return_node=False) -> Any:
-        """Add an app-schema node (T-NEW-056 + T-NEW-131)."""
+        """Add an app-schema node (T-NEW-056 + T-NEW-131 + T-NEW-135)."""
         if not self._check_max_nodes_for_user():
             logma.warning(
                 f"[models] add_node_app rejected: max_nodes_per_user "
                 f"limit reached for user (ntype={ntype!r}, name={name!r})"
             )
+            # T-NEW-135: same redirect as add_node -- see above.
+            try:
+                from nchantdoffice.widgets.advertisements import (
+                    NchantdOfficeAdTab,
+                )
+
+                app = getattr(self, "app", None)
+                if app is not None:
+                    NchantdOfficeAdTab.redirect_to_get_pro(
+                        app, reason="hit_100_nodes"
+                    )
+            except Exception as e:
+                logma.warning(
+                    f"[models] add_node_app: redirect_to_get_pro "
+                    f"failed: {e}"
+                )
             return None
         if self.is_locked_parent(pid):
             logma.warning(
@@ -1115,8 +1151,15 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     return True
             except Exception as e:
                 logma.warning(e)
-            # TODO need to debug pro_user data connection
-            return True
+            # T-NEW-135: the early ``return True`` that lived
+            # here was dead code -- it short-circuited the
+            # 100-node limit check before ``get_nodes()`` ever
+            # ran, so non-pro users at the cap were never
+            # denied. Removed so the limit actually fires;
+            # the bug is what made T-NEW-056 silent for so
+            # long. Best-effort: the outer ``except`` still
+            # returns True so a config / store hiccup never
+            # blocks creation.
             limit = self.config.dikt.get("max_nodes_per_user", 100)
             if not isinstance(limit, (int, float)) or limit <= 0:
                 return True

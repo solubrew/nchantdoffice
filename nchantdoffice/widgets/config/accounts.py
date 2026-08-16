@@ -221,10 +221,73 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             cfg["url"] = "https://www.nchantdoffice.com/whats_new"
         elif self.user.has_account:
             cfg["url"] = "https://www.nchantdoffice.com/compare"
+        # T-NEW-135: when the redirect_to_get_pro helper fired
+        # with a reason (e.g. ``hit_100_nodes``), the model
+        # stashed it on ``app.model.get_pro_redirect_reason``.
+        # This widget is the destination of that redirect, so
+        # we read + clear the stash here. We only append the
+        # ``reason=`` query param to the *compare* URL --
+        # the whats_new / registration URLs are for users
+        # who haven't hit the cap and shouldn't be touched.
+        try:
+            stash = getattr(
+                getattr(self.app, "model", None),
+                "get_pro_redirect_reason",
+                None,
+            )
+            if stash and cfg["url"].startswith(
+                "https://www.nchantdoffice.com/compare"
+            ):
+                cfg["url"] = self._append_url_param(
+                    cfg["url"], "reason", str(stash)
+                )
+            if hasattr(
+                getattr(self.app, "model", None),
+                "get_pro_redirect_reason",
+            ):
+                self.app.model.get_pro_redirect_reason = None
+        except Exception as e:
+            logma.warning(
+                f"[accounts] initView: reason-param append "
+                f"failed: {e}"
+            )
         self.browser = NchantdWebViewer(self, cfg).initWidget()
         layout.addWidget(self.browser)
         self.layout.addLayout(layout)
         return self
+
+    @staticmethod
+    def _append_url_param(url: str, key: str, value: str) -> str:
+        """T-NEW-135 helper: append ``key=value`` to ``url`` as a
+        query string parameter. Preserves any existing query,
+        uses stdlib ``urllib.parse`` for safe encoding.
+
+        Returns the input URL unchanged if it doesn't parse
+        cleanly -- the caller is in a best-effort UX path,
+        never a security boundary.
+        """
+        from urllib.parse import urlencode, urlparse, urlunparse
+        try:
+            parsed = urlparse(url)
+            existing: dict = {}
+            if parsed.query:
+                for kv in parsed.query.split("&"):
+                    if "=" in kv:
+                        k, v = kv.split("=", 1)
+                        existing[k] = v
+            existing[key] = value
+            return urlunparse(
+                (
+                    parsed.scheme,
+                    parsed.netloc,
+                    parsed.path,
+                    parsed.params,
+                    urlencode(existing),
+                    parsed.fragment,
+                )
+            )
+        except Exception:
+            return url
 
     def initWidget(self) -> "NchantdOfficeAccountSettings":
         """"""
