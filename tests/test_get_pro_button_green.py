@@ -87,13 +87,15 @@ PROJ_ROOT = __import__("pathlib").Path(
 def test_get_pro_button_cfg_still_has_background_color():
     """Regression guard: the cfg dict still carries the
     ``background_color`` key (so the canonical name is the
-    single source of truth).
+    single source of truth). Updated 2026-08-15: green was
+    replaced with dark orange (``#FF8C00``) for better
+    conversion intent (T-NEW-134 followup).
     """
     src = _source()
     # Look for the Get Pro cfg block.
-    assert '"background_color": "green"' in src, (
+    assert '"background_color": "#FF8C00"' in src, (
         "Get Pro button cfg must continue to set background_color "
-        "(T-NEW-134 contract)"
+        "(T-NEW-134 contract); dark orange #FF8C00 is the new value."
     )
 
 
@@ -234,6 +236,8 @@ def test_initview_invokes_apply_bg_color_helper():
     must call ``_apply_bg_color`` (or equivalent) with the
     cfg's ``background_color`` value -- this is the
     single link between the cfg key and the rendered button.
+    Updated 2026-08-15: pins the dark-orange hex (#FF8C00)
+    rather than the old "green" string.
     """
     src = _source()
     assert "_apply_bg_color" in src, (
@@ -242,7 +246,7 @@ def test_initview_invokes_apply_bg_color_helper():
     )
     # Confirm it's invoked in the Get Pro block (after the
     # NchantdButton construction).
-    idx = src.index('"background_color": "green"')
+    idx = src.index('"background_color": "#FF8C00"')
     after = src[idx: idx + 1500]
     assert "_apply_bg_color" in after, (
         "_apply_bg_color must be invoked in the Get Pro block "
