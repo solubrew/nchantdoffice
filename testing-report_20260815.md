@@ -2,15 +2,14 @@
 - the following issues were found to existing testing the NchantdOffice Desktop Application with all its most updated internal dependencies.
 
 ## Document Changes:
+- feat(toolbars): Get Pro button visibly green (T-NEW-134) -- _apply_bg_color helper on NchantdOfficeDocumentMixin sets background-color via setStyleSheet, paired with white text for contrast (558a4f3)
 - 
-
 
 ## Issues Found:
 - Block from creating new Nodes at the top level 
 - block from creating any nodes in the Settings and Journal trees
 - block from creating/deleting tabs in Settings node tree
 - node sort buttons in not actuallying sorting the subtree of selected node
-- change color of get pro button to a green button
 - total node limit of 100 for non-pro users needs to launch a popup warning with a Get Pro button when the user hits it not just silently deny
   8922              3767  0688d6e9-edd9-7af6-8000-9cae9e60d978           Wireless Internet     usernode  ...  2026-08-15T15:32:10.266384           0           0          1           doc
   8923                 2  067ce332-8864-7d0b-8000-bfd314a580cc                     Journal  displaynode  ...              20260814091023           0           0          1           app
