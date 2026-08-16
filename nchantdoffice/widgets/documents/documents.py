@@ -136,6 +136,41 @@ class NchantdOfficeDocumentMixin:
             self.context_menu.exec(global_pos)
         return self
 
+    @staticmethod
+    def _apply_bg_color(button, color) -> None:
+        """T-NEW-134 helper: apply a background color to a
+        button via ``setStyleSheet`` so the rendered button is
+        visibly tinted.
+
+        Accepts either a named CSS color (``"green"``,
+        ``"red"``, ...) or a hex string (``"#1d8f3a"``). Pairs
+        the background with ``color: white`` for contrast on
+        saturated fills -- a green Get Pro button without a
+        contrasting text is hard to read.
+
+        No-op when ``color`` is None / empty / whitespace --
+        missing config must never apply an empty stylesheet
+        (which Qt would otherwise log as a malformed rule).
+        """
+        if not color:
+            return
+        if not isinstance(color, str) or not color.strip():
+            return
+        # Normalize: strip whitespace, pass through verbatim
+        # (Qt accepts both CSS named colors and hex literals).
+        css_color = color.strip()
+        stylesheet = (
+            f"QPushButton {{ background-color: {css_color}; "
+            f"color: white; }}"
+        )
+        try:
+            button.setStyleSheet(stylesheet)
+        except Exception as e:
+            logma.warning(
+                f"[documents] _apply_bg_color: setStyleSheet "
+                f"failed for color={css_color!r}: {e}"
+            )
+
     def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
@@ -444,6 +479,16 @@ class NchantdOfficeDocumentMixin:
                 "background_color": "green",
             }
             self.profile_select_entry = NchantdButton(self, cfg).initWidget()
+            # T-NEW-134: the cfg sets ``background_color`` but the
+            # upstream ``NchantdButton.initView`` doesn't read it
+            # (the key is dead config). Apply the color via
+            # ``setStyleSheet`` so the rendered button is visibly
+            # green. Pair with white text for legibility on the
+            # saturated background.
+            self._apply_bg_color(
+                self.profile_select_entry,
+                cfg.get("background_color"),
+            )
             buttons[1] = {"name": "get_pro_features", "widget": self.profile_select_entry}
         cfg = {"layout": "horizontal", "justify": "right"}
         buttons = {k: buttons[k] for k in sorted(buttons)}

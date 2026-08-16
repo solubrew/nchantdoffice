@@ -7,10 +7,10 @@
 - feat(models): deny child-node creates under Home/Journal/Settings (T-NEW-131) -- is_locked_pid + is_locked_parent helpers, add_node/add_node_app refuse children of locked trees for all users (fc61c4e)
 - feat(models): deny tab create/delete in Settings tree (T-NEW-132) -- is_locked_tab_parent helper, add_tab/delete_tab refuse Settings-tree tab ops for all users (87ace4d)
 - feat(panes): sort buttons now sort the entire subtree (T-NEW-133) -- cmd_sort_children + _resolve_sort_direction + _sort_subtree helper, every descendant depth is reordered (asc/desc) and persisted (8857081)
+- feat(toolbars): Get Pro button visibly green (T-NEW-134) -- _apply_bg_color helper on NchantdOfficeDocumentMixin sets background-color via setStyleSheet, paired with white text for contrast (558a4f3)
 -
 
 ## Issues Found:
-- change color of get pro button to a green button
 - total node limit of 100 for non-pro users needs to launch a popup warning with a Get Pro button when the user hits it not just silently deny
   8922              3767  0688d6e9-edd9-7af6-8000-9cae9e60d978           Wireless Internet     usernode  ...  2026-08-15T15:32:10.266384           0           0          1           doc
   8923                 2  067ce332-8864-7d0b-8000-bfd314a580cc                     Journal  displaynode  ...              20260814091023           0           0          1           app
