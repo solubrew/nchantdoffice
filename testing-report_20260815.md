@@ -32,4 +32,56 @@
 - 
 
 ## Bugs:
-- 
+- 2026-08-15 22:19:02,101 - squirl.orgnql.sonql                       257: WARNING  - Table app_tab
+2026-08-15 22:19:02,101 - squirl.orgnql.sonql                       257: WARNING  - Data [['Journal', 'nchantrs.widgets.calendars.days.NchantdDayJournal', '{}', '06a811e1-60bb-79b0-8000-793884599fdd', '06a811e1-6152-7159-8000-e208190c8b5b', 1, 'day', 'center', 0, 1, 1, 1, '06a811e1-619a-7b18-8000-8f7f4aca49dd', 0, '20260815221902', 0, '20260815221902', 0, 0, 1]]
+2026-08-15 22:19:02,109 - nchantdoffice.models                      257: WARNING  - [models] get_app_user failed: 'NchantdOfficeCloakModel' object has no attribute 'get_table'
+2026-08-15 22:19:02,109 - nchantdoffice.models                      257: WARNING  - [models] bootstrap_app_user failed: cannot pickle 'generator' object
+Traceback (most recent call last):
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 2127, in bootstrap_app_user
+    self.store_app_user(user, db="db")
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3507, in store_app_user
+    store.store_app_user(payload, db=db)
+  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 4220, in store_app_user
+    self._store("app_user", [payload], db)
+  File "/mnt/iverse/SB/3_Functions/Projects/MicroMole/3_Work/1_DELTA/micromole/micromole/storage.py", line 930, in _store
+    return self._store_impl(table, payload, db, columns)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Projects/MicroMole/3_Work/1_DELTA/micromole/micromole/storage.py", line 947, in _store_impl
+    return self.docs[db].write(cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskSQuiRL/1_DELTA/squirl/squirl/orgnql/sonql.py", line 1018, in write
+    self.dikt = sanitizeRecords(self._configure_data(data))
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskSQuiRL/1_DELTA/squirl/squirl/orgnql/sonql.py", line 1377, in _configure_data
+    return deepcopy(transform_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/copy.py", line 196, in _deepcopy_list
+    append(deepcopy(a, memo))
+           ^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/copy.py", line 151, in deepcopy
+    rv = reductor(4)
+         ^^^^^^^^^^^
+TypeError: cannot pickle 'generator' object
+2026-08-15 22:19:02,110 - nchantdoffice.updates.db                   79: INFO     - Updating pyffice document
+2026-08-15 22:19:07,129 - nchantdoffice.updates.checker             257: WARNING  - [update_checker] GET api/check-update failed: HTTPSConnectionPool(host='nchantdoffice.com', port=443): Max retries exceeded with url: /api/check-update?current_version=0.0.1&os=qt6-linux (Caused by ConnectTimeoutError(<HTTPSConnection(host='nchantdoffice.com', por
