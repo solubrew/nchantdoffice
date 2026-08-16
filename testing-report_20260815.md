@@ -25,7 +25,10 @@
 
 - Tab Delete button not working from document toolbar or from NchantdTabPane in the toolbox
 - Ensure that .pyof import doesn't pull in DELETE_BIT=1 nodes or tabs
-
+- need to redirect file_details in toolbox to internal data when the tab is an internal document
+- need to work on saving the external file externally when it is an external location file so that it is not just a viewer but an editor
+- connect ctrl+s to save button logic
+- 
 
 ## Bugs:
 - 
