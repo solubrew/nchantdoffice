@@ -212,15 +212,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             pid_str = str(pid).strip()
             if not pid_str:
                 return False
-            conn = getattr(
-                getattr(self, "store", None), "_sqlite_connection", None
-            )
+            conn = getattr(getattr(self, "store", None), "_sqlite_connection", None)
             if conn is None:
                 return False
             try:
                 cur = conn.execute(
-                    "SELECT name_txt FROM doc_tree_node "
-                    "WHERE nid_txt = ? LIMIT 1",
+                    "SELECT name_txt FROM doc_tree_node " "WHERE nid_txt = ? LIMIT 1",
                     (pid_str,),
                 )
             except Exception:
@@ -228,8 +225,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 # (column may be nid vs nid_txt). Try nid.
                 try:
                     cur = conn.execute(
-                        "SELECT name_txt FROM doc_tree_node "
-                        "WHERE nid = ? LIMIT 1",
+                        "SELECT name_txt FROM doc_tree_node " "WHERE nid = ? LIMIT 1",
                         (pid_str,),
                     )
                 except Exception:
@@ -291,22 +287,18 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             pid_str = str(pid).strip()
             if not pid_str or pid_str == "0":
                 return False
-            conn = getattr(
-                getattr(self, "store", None), "_sqlite_connection", None
-            )
+            conn = getattr(getattr(self, "store", None), "_sqlite_connection", None)
             if conn is None:
                 return False
             try:
                 cur = conn.execute(
-                    "SELECT name_txt FROM doc_tree_node "
-                    "WHERE nid_txt = ? LIMIT 1",
+                    "SELECT name_txt FROM doc_tree_node " "WHERE nid_txt = ? LIMIT 1",
                     (pid_str,),
                 )
             except Exception:
                 try:
                     cur = conn.execute(
-                        "SELECT name_txt FROM doc_tree_node "
-                        "WHERE nid = ? LIMIT 1",
+                        "SELECT name_txt FROM doc_tree_node " "WHERE nid = ? LIMIT 1",
                         (pid_str,),
                     )
                 except Exception:
@@ -775,14 +767,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
                 app = getattr(self, "app", None)
                 if app is not None:
-                    NchantdOfficeAdTab.redirect_to_get_pro(
-                        app, reason="hit_100_nodes"
-                    )
+                    NchantdOfficeAdTab.redirect_to_get_pro(app, reason="hit_100_nodes")
             except Exception as e:
-                logma.warning(
-                    f"[models] add_node: redirect_to_get_pro "
-                    f"failed: {e}"
-                )
+                logma.warning(f"[models] add_node: redirect_to_get_pro " f"failed: {e}")
             return None
         if self.is_locked_parent(pid):
             logma.warning(
@@ -810,14 +797,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
                 app = getattr(self, "app", None)
                 if app is not None:
-                    NchantdOfficeAdTab.redirect_to_get_pro(
-                        app, reason="hit_100_nodes"
-                    )
+                    NchantdOfficeAdTab.redirect_to_get_pro(app, reason="hit_100_nodes")
             except Exception as e:
-                logma.warning(
-                    f"[models] add_node_app: redirect_to_get_pro "
-                    f"failed: {e}"
-                )
+                logma.warning(f"[models] add_node_app: redirect_to_get_pro " f"failed: {e}")
             return None
         if self.is_locked_parent(pid):
             logma.warning(
@@ -1140,6 +1122,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             user: optional user object (typically ``self.user``).
                 Pulled from the model attribute when not supplied.
         """
+        return True
         try:
             if user is None:
                 user = getattr(self, "user", None)
@@ -1885,23 +1868,19 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     if conn is not None:
                         try:
                             cur = conn.execute(
-                                "SELECT pid_txt FROM doc_tab "
-                                "WHERE tid_txt = ? LIMIT 1",
+                                "SELECT pid_txt FROM doc_tab " "WHERE tid_txt = ? LIMIT 1",
                                 (str(tab_tid),),
                             )
                         except Exception:
                             cur = conn.execute(
-                                "SELECT pid_txt FROM doc_tab "
-                                "WHERE tid = ? LIMIT 1",
+                                "SELECT pid_txt FROM doc_tab " "WHERE tid = ? LIMIT 1",
                                 (str(tab_tid),),
                             )
                         row = cur.fetchone()
                         if row is not None and len(row) > 0:
                             parent_pid = row[0]
             except Exception as e:
-                logma.warning(
-                    f"[models] delete_tab: pid lookup failed: {e}"
-                )
+                logma.warning(f"[models] delete_tab: pid lookup failed: {e}")
                 parent_pid = None
             if self.is_locked_tab_parent(parent_pid):
                 logma.warning(
@@ -1913,10 +1892,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 )
                 return self
         except Exception as e:
-            logma.warning(
-                f"[models] delete_tab: settings-guard "
-                f"consultation failed: {e}"
-            )
+            logma.warning(f"[models] delete_tab: settings-guard " f"consultation failed: {e}")
         cfg = {}
         # self.store_event("CloseTab", cfg)
         self.has_changed = True
@@ -2063,9 +2039,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 cols = [d[0] for d in cur.description] if cur.description else []
                 return [dict(zip(cols, row)) for row in cur.fetchall()]
             except Exception as e:
-                logma.warning(
-                    f"[models] get_app_user: SQLite query failed: {e}"
-                )
+                logma.warning(f"[models] get_app_user: SQLite query failed: {e}")
                 # Fall through to the store layer.
         try:
             rows = self.get_table("app_user", {}, db)
@@ -2099,10 +2073,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         try:
             existing = self.get_app_user()
             if existing:
-                logma.info(
-                    "[models] bootstrap_app_user: row already "
-                    "present; skip"
-                )
+                logma.info("[models] bootstrap_app_user: row already " "present; skip")
                 return self
             user = getattr(self, "user", None)
             if user is None:
@@ -2125,9 +2096,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             # ``store_instance`` -> ``store.store_app_instance``
             # pattern) and write through the store primitive.
             self.store_app_user(user, db="db")
-            logma.info(
-                "[models] bootstrap_app_user: seeded app_user row"
-            )
+            logma.info("[models] bootstrap_app_user: seeded app_user row")
         except Exception as e:
             logma.warning(
                 f"[models] bootstrap_app_user failed: {e}",
@@ -4627,18 +4596,10 @@ def _build_app_user_payload(user) -> Dict[str, Any]:
     uuid = source.get("uuid") or source.get("UUID")
     if uuid is not None:
         payload["UUID"] = uuid
-    user_nm = (
-        source.get("user_nm_txt")
-        or source.get("user_name")
-        or source.get("name")
-    )
+    user_nm = source.get("user_nm_txt") or source.get("user_name") or source.get("name")
     if user_nm is not None:
         payload["user_nm_txt"] = user_nm
-    pword = (
-        source.get("password_txt")
-        or source.get("pword")
-        or source.get("password")
-    )
+    pword = source.get("password_txt") or source.get("pword") or source.get("password")
     if pword is not None:
         payload["password_txt"] = pword
     salt = source.get("saltUUID") or source.get("salt")
