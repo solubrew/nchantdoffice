@@ -5,6 +5,38 @@
 **Include Hidden Files:** False
 **Generated:** 2026-07-16 21:16:32
 
+> **STALE SNAPSHOT (2026-08-16, gamma `5b6397e`).** This file
+> was generated 2026-07-16 and predates the
+> T-NEW-110..147 burst. **Do not rely on it for current state.**
+> Regenerate before consuming:
+>
+> ```bash
+> tree -L 4 -I '__pycache__|*.egg-info|node_modules|.ruff_cache|.pytest_cache|dist' .
+> ```
+>
+> Notable drift since this snapshot was generated:
+>
+> - `nchantdoffice/config.py` was referenced in CHANGES.md
+>   `[Unreleased]` "Added" but never existed on `gamma` —
+>   configuration lives in `nchantdoffice/utilities/config.py`
+>   + `nchantdoffice/utilities/constants.py`.
+> - `tests/unit/` has 18 top-level entries (the 2026-07-16
+>   snapshot showed 0 — the unit suite was added during the
+>   T-NEW-058..137 burst).
+> - `tests/qt_parent/` has 1 entry (`server.py`) — T-NEW-122
+>   prep for Qt-using tests.
+> - `nchantdoffice/sync/` is still here (subprocess + QLocalServer
+>   helpers — predates this snapshot; ignore the wording above
+>   that said it was added).
+> - `nchantdoffice/dialogs/` and `nchantdoffice/widgets/` were
+>   re-organised (T-NEW-114, T-NEW-130, T-NEW-138..141).
+> - `STATE.md` is gone — the README no longer references it
+>   either; project status now lives in `TODOs.md` §1.
+>
+> For the live tree snapshot use `tree` per the command above,
+> or read the [`README.md`](./README.md) §"Project Structure"
+> block (manually maintained, last edited 2026-08-16).
+
 ---
 
 ```text

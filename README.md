@@ -17,6 +17,12 @@ NchantdOffice is a desktop application providing office automation capabilities 
 - **Image Handling**: Canonical external file storage with deprecation warnings for legacy modes
 - **Agent-Ready**: Structured output (JSON/YAML) for AI agent integration
 - **CLI Interface**: Programmatic access via `nchantdoffice` CLI
+- **Per-user quotas (T-NEW-129, 131, 132, 135, 137)**: app_user
+  seeded on first boot; child-node creates denied under
+  Home/Journal/Settings; tab creates denied in the Settings tree;
+  100-node cap pre-flight-checks both manual creates and `.pyof`
+  imports, redirecting to the Nchantd Account upsell page when
+  hit.
 
 ## Quick start
 
@@ -155,12 +161,19 @@ Cross-repo work that landed 2026-08-11:
 
 The full cross-repo log (every commit, every T-NEW card,
 every test total) lives at
-[`nchantdofficeATNRG/cross-repo-changelog.md`](
-https://gitlab.example.com/nchantdofficeATNRG/-/blob/gamma/cross-repo-changelog.md)
-— the canonical "current reality" anchor for all 3 repos.
+[`nchantdofficeATNRG/cross-repo-changelog.md`](../nchantdofficeATNRG/cross-repo-changelog.md)
+— the canonical "current reality" anchor for all 3 repos
+(`nchantdofficeATNRG/`, `nchantdofficeCOM/`, this repo). Path
+is a sibling repo in the same `/home/solubrew/.hermes/projects/`
+directory; the older `gitlab.example.com` URL was a placeholder
+that did not resolve and has been retired.
 
 Latest commit on `gamma`:
-[`b420a06 feat(desktop): grant trigger for ad-tab-free hours (T-NEW-045 WIRE-1)`]
+[`5b6397e docs(todos): file T-NEW-142..148 from 2026-08-15 testing-report sweep`]
+
+For a repo-local cross-reference of every shipped + filed
+T-NEW card with commit SHAs, see
+[`CHANGES.md`](./CHANGES.md) `[Unreleased]` block.
 
 ### Code style
 
@@ -185,30 +198,51 @@ See [TODOs.md](./TODOs.md) for the active task inventory and H## tracker.
 
 ## Project Structure
 
+> **Snapshot of the `gamma` branch HEAD `5b6397e` (2026-08-16).**
+> For an up-to-date tree see `directory_tree.md` (note: that
+> file's body is a 2026-07-16 snapshot — regenerate with
+> `tree -L 4 -I '__pycache__|*.egg-info|node_modules'`
+> before relying on it).
+
 ```
 nchantdoffice/
-├── nchantdoffice/        # Main package
-│   ├── __init__.py
-│   ├── cli.py             # CLI entry point
-│   ├── config.py          # Centralized configuration (100+ constants)
+├── __main__.py            # python -m nchantdoffice entry point
+├── nchantdoffice/         # Main package
+│   ├── __init__.py        # version + APP_* constants
+│   ├── __main__.py
+│   ├── cli.py             # CLI command surface (used by cmds/)
 │   ├── models.py          # Tabset + document models
 │   ├── views.py
-│   ├── nchantdoffice.py   # Main application
+│   ├── nchantdoffice.py   # Main application (NchantdOfficeCloakModel)
 │   ├── _data_/            # Config and resources
 │   ├── dialogs/           # Document dialogs
-│   ├── updates/           # Update handlers
-│   ├── utilities/         # Helpers and utilities
+│   ├── sync/              # app<->doc sync helpers
+│   ├── updates/           # Update handlers (checker, db)
+│   ├── utilities/         # Helpers (constants, users, config, pyof_import, …)
 │   ├── widgets/           # UI widgets
 │   └── wizards/           # Wizard dialogs
 ├── cmds/                  # CLI commands and run scripts
-├── tests/                 # Test suites (unit/fixtures)
+├── tests/                 # Test suites (1130+ entries — integration + unit + fixtures + qt_parent)
 ├── docs/                  # API and reference docs
 ├── .github/workflows/     # CI + docs deployment
-├── STATE.md              # Current project state
-├── CHANGES.md            # Changelog
-├── TODOs.md              # Active task inventory (H## tracker)
-├── pyproject.toml        # Package metadata
-└── pytest.ini            # Test config
+├── AXN.md                 # Account-experience notes
+├── BUGs.md                # Historical stack-trace archive
+├── CHANGES.md             # Changelog
+├── CI_CD.md               # CI/CD pipeline reference
+├── CLI.md                 # CLI reference
+├── CODING_STANDARDS.md    # V4 standards compliance
+├── directory_tree.md      # File-tree snapshot (2026-07-16)
+├── FALCON_TEST.yaml       # Last sasquatch-falcon test run summary
+├── LICENSE                # MIT
+├── license_dependencies.txt
+├── profile.html           # SB workspace profile export
+├── profile.json           # SB workspace profile export
+├── PROJECT_TRACKER.yaml   # Last full sasquatch audit
+├── pyproject.toml         # Package metadata (version 0.0.1.0.1.4)
+├── pytest.ini             # Test config
+├── README.md              # This file
+├── testing-report_20260815.md  # Latest live-testing issues
+└── TODOs.md               # Active task inventory (T-NEW-NNN tracker)
 ```
 
 ## Recent Bug Fixes (2026-07)
@@ -225,17 +259,20 @@ See [TODOs.md](./TODOs.md) for the complete task inventory.
 
 ## Documentation
 
-- [TODOs.md](./TODOs.md) - Active task inventory and H## tracker
-- [STATE.md](./STATE.md) - Current development status
-- [CHANGES.md](./CHANGES.md) - Changelog
+- [TODOs.md](./TODOs.md) - Active task inventory and T-NEW-NNN tracker
+- [CHANGES.md](./CHANGES.md) - Changelog (current `gamma` `[Unreleased]` block mirrors TODOs.md)
 - [CLI.md](./CLI.md) - CLI reference
-- [CODING_STANDARDS.md](./CODING_STANDARDS.md) - Development standards
+- [CI_CD.md](./CI_CD.md) - CI/CD pipeline reference
+- [CODING_STANDARDS.md](./CODING_STANDARDS.md) - V4 standards compliance
+- [directory_tree.md](./directory_tree.md) - File-tree snapshot (2026-07-16, regenerate before relying)
+- [BUGs.md](./BUGs.md) - Historical stack-trace archive (read-only)
+- [testing-report_20260815.md](./testing-report_20260815.md) - Latest live-testing issues
 
 ## Dependencies
 
-- **Core**: nchantrs, pyffice, kahndor
+- **Core**: nchantrs, pyffice, kahndor, pycurity, subtrix
 - **GUI**: PySide6
-- **Data**: pandas, sqlalchemy
+- **Data**: pandas (DataFrames only — used in calendars.py, filesystems.py, atnrg/browsers.py); **persistence via `squirl` + `micromole` (NOT SQLAlchemy — this is a hard working agreement).**
 
 ## License
 

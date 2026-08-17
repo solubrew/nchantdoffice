@@ -1,4 +1,4 @@
-# TODAY is 2026-08-03:
+# TODAY is 2026-08-15:
 - the following issues were found to existing testing the NchantdOffice Desktop Application with all its most updated internal dependencies.
 
 ## Document Changes:
@@ -84,4 +84,33 @@ Traceback (most recent call last):
          ^^^^^^^^^^^
 TypeError: cannot pickle 'generator' object
 2026-08-15 22:19:02,110 - nchantdoffice.updates.db                   79: INFO     - Updating pyffice document
-2026-08-15 22:19:07,129 - nchantdoffice.updates.checker             257: WARNING  - [update_checker] GET api/check-update failed: HTTPSConnectionPool(host='nchantdoffice.com', port=443): Max retries exceeded with url: /api/check-update?current_version=0.0.1&os=qt6-linux (Caused by ConnectTimeoutError(<HTTPSConnection(host='nchantdoffice.com', por
+- 2026-08-15 22:19:07,129 - nchantdoffice.updates.checker             257: WARNING  - [update_checker] GET api/check-update failed: HTTPSConnectionPool(host='nchantdoffice.com', port=443): Max retries exceeded with url: /api/check-update?current_version=0.0.1&os=qt6-linux (Caused by ConnectTimeoutError(<HTTPSConnection(host='nchantdoffice.com', por
+- 2026-08-15 22:19:07,143 - nchantdoffice.updates.checker             257: WARNING  - [update_checker] check-update timed out (expected on a dev/offline box); falling back to local-only mode.
+
+## Filed from this report (2026-08-16 sweep)
+
+The "Issues Found" section above maps to the following T-NEW
+cards in `TODOs.md` (filed 2026-08-16, gamma `5b6397e`):
+
+| Issue | T-NEW card | Status |
+|-------|-----------|--------|
+| 1. 100-node cap popup | (none — popup superseded by T-NEW-135 redirect per user direction 2026-08-16) | closed |
+| 2. Tab Delete broken from document toolbar + NchantdTabPane | **T-NEW-142** | open |
+| 3. .pyof import pulls DELETE_BIT=1 nodes | **T-NEW-143** | open |
+| 4. file_details toolbox should redirect to internal data for internal docs | **T-NEW-144a** | open |
+| 5. External file should be editor, not viewer | **T-NEW-144b** | open |
+| 6. ctrl+s should call save button | **T-NEW-145** | open |
+
+The traceback block above (timestamps 22:19:02.10 → 22:19:07.12)
+also surfaced two regressions in the **T-NEW-129** wiring
+(`bootstrap_app_user` / `get_app_user`):
+
+| Traceback | T-NEW card | Status |
+|-----------|-----------|--------|
+| `get_app_user failed: 'NchantdOfficeCloakModel' object has no attribute 'get_table'` | **T-NEW-147** | open |
+| `bootstrap_app_user failed: cannot pickle 'generator' object` | **T-NEW-146** | open |
+
+Both regressions should be considered **lead candidates** for
+the next sprint — they break first-boot behaviour for every
+new install (T-NEW-129 was supposed to fix first-boot, not
+break it).

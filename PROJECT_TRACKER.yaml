@@ -1,3 +1,19 @@
+# Project Tracker — sasquatch auditor output.
+#
+# STALE SNAPSHOT (2026-08-16, gamma 5b6397e): The audit below
+# was generated on 2026-07-29 (audit_date epoch 1785682798) by
+# agent `m3rl1n`. It does not reflect the T-NEW-110..147 burst
+# that landed 2026-08-10 → 2026-08-15 (notably the T-NEW-129
+# app_user bootstrap, T-NEW-131/132 lock denials, T-NEW-133
+# sort-subtree, T-NEW-134/135/137 get-pro button + 100-node
+# cap, and T-NEW-114 pyof import consolidation).
+#
+# Regenerate before relying on the per-dimension scores:
+#   sasquatch analyze -p . --skip-pii-secrets
+#
+# Counts and overall_score below are left intact for the audit
+# trail — they are a true picture of 2026-07-29 gamma HEAD, not
+# current state.
 agent: m3rl1n
 analysis:
   counts:
