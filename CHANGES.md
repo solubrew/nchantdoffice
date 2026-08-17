@@ -196,6 +196,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   can call the same helper. 4 new regression tests in
   `tests/test_t_new_139_toolbar_navigate.py`.
 
+- **T-NEW-140** Free-user right-side tab lock (2026-08-16)
+  -- ``cmd_on_change_right_side_tab_select`` recorded
+  whatever the user picked, regardless of tier. Free
+  users could therefore set their default right tab to
+  Settings / Help / etc. and miss the upsell surface.
+  Fix: when the user is not pro (``is_pro_user(user)``),
+  non-Ad selections are coerced to ``"4 - Ad"``. Pro
+  users are unrestricted. The right-pane options
+  themselves are unchanged (free users still see every
+  tab); only the *default* they open on launch is locked.
+  Pairs with T-NEW-135 (100-node cap redirect): free users
+  who hit the cap are redirected to Get Pro AND they
+  default-open on the Ad tab. 6 new regression tests in
+  `tests/test_t_new_140_free_user_ad_tab.py`.
+
 ### Changed (T-NEW-110..137)
 
 - **T-NEW-121** em-dash sweep + encoding-declaration placement —

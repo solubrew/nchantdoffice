@@ -4650,7 +4650,23 @@ and deserves its own sub-card if non-trivial.
   method on this class can call the same helper. Pin:
   `tests/test_t_new_139_toolbar_navigate.py` 4 new tests
   (helper-exists, signature shape, source-level pin x2).
-- **T-NEW-140** Free-user right-side tab: lock default to Ad tab (`settings.py:1209`) -- pairs with T-NEW-135 redirect.
+- **T-NEW-140** ✅ Free-user right-side tab: lock default to Ad
+  tab (`settings.py:1209`) -- **FIXED** (2026-08-16, gamma
+  `pending`). The right-side tab dropdown options are not
+  restricted (free users still see Settings / Help / Ad / etc.
+  in the right pane), but the *default* they open on launch
+  is locked to the Ad tab. Fix: in
+  `cmd_on_change_right_side_tab_select`, when the user is
+  not pro (`is_pro_user(user) is False`) and the selected
+  value is not `"4 - Ad"`, coerce the recorded value to
+  `"4 - Ad"` and log a warning. Pro users are unrestricted.
+  The lock pairs with T-NEW-135 (100-node cap redirect):
+  free users who hit the cap are redirected to the Get Pro
+  upsell AND they default-open on the Ad tab so the upsell
+  is the first thing they see. Pin:
+  `tests/test_t_new_140_free_user_ad_tab.py` 6 new tests
+  (source-level pin x2, behavioural: free-user coercion,
+  pro-user preservation, idempotent ad-tab, exception swallow).
 - **T-NEW-141** Inside-nchantdoffice TODO sweep: 10 remaining markers (images palette drawer, notebook stubs, catalog tab-None, config features pane, 3 stub methods, users.has_pro service truth) -- filed from the 2026-08-15 inside-sweep.
 - **T-NEW-142** ✅ Tab Delete broken from document toolbar +
   `NchantdTabPane` -- **FIXED** (2026-08-16, gamma `pending`).

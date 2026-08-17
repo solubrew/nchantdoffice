@@ -447,8 +447,17 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         and persists it on the config so the next session opens the
         selected right-pane tab.
 
+        T-NEW-140: free-tier users (``is_pro_user(user) is False``)
+        are locked to the Ad tab (``"4 - Ad"`` per the
+        ``get_right_pane_tab_options`` convention). Their right
+        pane still shows every tab (Settings, Help, Ad, etc.) --
+        only the *default* they open on launch is constrained, so
+        the upsell surface stays the first thing free users see.
+        Pro users are unrestricted.
+
         Returns ``self`` for chainable call sites.
         """
+        AD_TAB_DEFAULT = "4 - Ad"
         try:
             value = None
             widget = getattr(self, "default_tab_switch", None) or getattr(self, "default_right_side_tab_select", None)
@@ -458,6 +467,33 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
                     value = getter()
             if value is None:
                 value = getattr(self, "default_right_side_tab", None)
+            # T-NEW-140: free-user lock -- coerce to the Ad tab.
+            # Defensive: a missing user object or a failing
+            # is_pro_user helper must not crash the handler, so
+            # wrap in try/except and fall back to recording the
+            # value verbatim when the tier lookup is unavailable.
+            if value is not None and value != AD_TAB_DEFAULT:
+                try:
+                    from nchantdoffice.utilities.upgrades import is_pro_user
+                    user = (
+                        getattr(getattr(self, "app", None), "model", None)
+                        and getattr(self.app.model, "user", None)
+                    )
+                    if user is not None and not is_pro_user(user):
+                        logma.info(
+                            "[settings] cmd_on_change_right_side_tab_select: "
+                            "free user selected %r; coercing to %r "
+                            "(T-NEW-140)",
+                            value,
+                            AD_TAB_DEFAULT,
+                        )
+                        value = AD_TAB_DEFAULT
+                except Exception as exc:
+                    logma.warning(
+                        f"[settings] cmd_on_change_right_side_tab_select: "
+                        f"is_pro_user lookup failed: {exc}; recording "
+                        f"verbatim value {value!r}"
+                    )
             if value is not None:
                 self.default_right_side_tab = value
                 self.config.dikt["default_right_side_tab"] = value
