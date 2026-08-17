@@ -164,6 +164,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   notebooks JSON, etc.) and would touch ~14 doc
   subclasses; tracked under T-NEW-144b in TODOs.md.
 
+- **T-NEW-138** Journal editor followups: always-scroll
+  + standard-populate (2026-08-16) -- the outer journal
+  editor's `initView` did not call `scroll_to_bottom()`,
+  so opening a long journal left the user looking at the
+  first entry instead of the latest; the
+  `populate_document()` was a no-op stub instead of
+  routing through the canonical `parse()` contract. Fix:
+  `initView` now calls `self.scroll_to_bottom()` after the
+  editor is added to the layout (matches the standard
+  populate_document helper's tail); `populate_document`
+  reads the loaded content via `self.get_content()` and
+  feeds it to `self.parse(...)`, populating
+  `self.entries` by the standard pipeline. Pin:
+  `tests/test_t_new_138_journal_scroll_and_populate.py`
+  4 new tests (initView source-level pin, populate
+  source-level pin, populate delegates-to-parse
+  behavioural, populate populates-entries behavioural).
+
 ### Changed (T-NEW-110..137)
 
 - **T-NEW-121** em-dash sweep + encoding-declaration placement —

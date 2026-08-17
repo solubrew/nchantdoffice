@@ -129,7 +129,10 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
 
         self.editor.set_background(hex="#4F5665")
         self.layout.addWidget(self.editor)
-        # TODO always scroll to bottom of document
+        # T-NEW-138: scroll to bottom after the editor is in the
+        # layout. Mirrors the standard populate_document helper's
+        # tail -- the journal override previously skipped it.
+        self.scroll_to_bottom()
         return self
 
     def initWidget(self):
@@ -250,7 +253,30 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         return self.entries
 
     def populate_document(self):
-        """"""
+        """T-NEW-138: route through the standard ``parse()``
+        contract so the entries dict is populated by the
+        canonical pipeline rather than via a bespoke no-op.
+
+        Reads the current content via ``self.get_content()``
+        and feeds it to ``self.parse(...)``. ``parse`` already
+        handles None / empty / dict / string / bytes input
+        shapes (T-NEW-079) so the call is safe to make on
+        any path.
+        """
+        try:
+            content = self.get_content()
+        except Exception as exc:
+            logma.warning(
+                f"[journal] populate_document: get_content failed: {exc}"
+            )
+            return self
+        try:
+            self.entries = self.parse(content) or {}
+        except Exception as exc:
+            logma.warning(
+                f"[journal] populate_document: parse failed: {exc}"
+            )
+        return self
 
     def save(self, path=None, format_=None, encrypt=False):
         """Persist the journal entry.

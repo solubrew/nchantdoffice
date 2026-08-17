@@ -4779,7 +4779,7 @@ doc_media_syntax_update). Live numbers (per-file run, 21 known
 Qt-crashers + 2 pyof-Qt files excluded): **497 passed / 5 failed**
 — the 5 are the T-NEW-120 aspirational script tests, unchanged.
 
-### T-NEW-138 — Journal editor followups: always-scroll + standard-populate (2026-08-15)
+### T-NEW-138 ✅ Journal editor followups: always-scroll + standard-populate (2026-08-15) DONE
 
 **Two journal TODOs uncovered by the 2026-08-15 inside-sweep.**
 The journal document pane (``nchantdoffice/widgets/documents/journal.py``)
