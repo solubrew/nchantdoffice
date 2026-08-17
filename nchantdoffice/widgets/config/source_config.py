@@ -315,8 +315,59 @@ class NchantdOfficeDataSourcesSettings(NchantdWidget):
         return self.app.model.get_sources()
 
     def _load_api_key(self, source=None) -> Any:
-        """"""
-        # TODO implement method
+        """T-NEW-141: load the raw API key for a source so the caller
+        can mask it via ``obscure_key`` before display.
+
+        Lookup chain (defensive at every step):
+          1. The bound source object (consults ``source.api_key``
+             directly when the source arg carries it).
+          2. The user config dictionary
+             (``nchantdoffice.utilities.user_config``) under the
+             ``api_keys`` namespace, keyed by source id.
+          3. PyKeyStore via ``pycurity.pykey.get_secret`` under the
+             ``api_key`` service when PyKeyStore is available.
+
+        Returns the raw API key string, or ``None`` when no key
+        is configured for the source. The caller's
+        ``obscure_key`` step handles masking.
+        """
+        # Step 1: explicit source arg carries the key directly.
+        if source is not None:
+            key = getattr(source, "api_key", None)
+            if key:
+                return key
+        # Resolve source id from the bound source / the arg.
+        source_id = None
+        try:
+            ref = source if source is not None else getattr(
+                self, "_active_source", None
+            )
+            if ref is not None:
+                source_id = (
+                    getattr(ref, "UUID", None)
+                    or getattr(ref, "id", None)
+                    or getattr(ref, "name", None)
+                )
+        except Exception:
+            source_id = None
+        if not source_id:
+            return None
+        # Step 2: user_config dict lookup.
+        try:
+            from nchantdoffice.utilities.user_config import get_config
+            cfg = get_config() or {}
+            api_keys = cfg.get("api_keys", {}) or {}
+            key = api_keys.get(source_id)
+            if key:
+                return key
+        except Exception:
+            pass
+        # Step 3: PyKeyStore fallback.
+        try:
+            from pycurity.pykey import get_secret  # type: ignore
+            return get_secret("api_key", source_id)
+        except Exception:
+            return None
 
     def obscure_key(self, key) -> str:
         """"""

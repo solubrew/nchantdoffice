@@ -109,8 +109,20 @@ class NchantdOfficeTabSet(NchantdTabSet):
         return None
 
     def go_to_previous_tab(self) -> None:
-        """ """
-        # TODO implement method
+        """T-NEW-141: move focus to the previous tab in the
+        current tabset. Called by ``cmd_delete_tab`` after a
+        tab is removed; without this, focus stays on the
+        now-deleted index (Qt renders an empty pane). Clamps
+        at index 0 so deleting at index 0 is a no-op rather
+        than an IndexError."""
+        try:
+            current = self.app.view.panes["center"].currentIndex()
+        except Exception:
+            return
+        try:
+            self.app.view.panes["center"].setCurrentIndex(max(0, current - 1))
+        except Exception:
+            pass
 
     def setTabText(self, position, text, store=True) -> None:
         """ """

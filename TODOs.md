@@ -4667,7 +4667,49 @@ and deserves its own sub-card if non-trivial.
   `tests/test_t_new_140_free_user_ad_tab.py` 6 new tests
   (source-level pin x2, behavioural: free-user coercion,
   pro-user preservation, idempotent ad-tab, exception swallow).
-- **T-NEW-141** Inside-nchantdoffice TODO sweep: 10 remaining markers (images palette drawer, notebook stubs, catalog tab-None, config features pane, 3 stub methods, users.has_pro service truth) -- filed from the 2026-08-15 inside-sweep.
+- **T-NEW-141** ✅ Inside-nchantdoffice TODO sweep: 10
+  remaining markers (images palette drawer, notebook
+  stubs, catalog tab-None, config features pane, 3 stub
+  methods, `users.has_pro` service truth) --
+  **FIXED (subset)** (2026-08-16, gamma `pending`). This
+  commit closes the3 smallest, well-scoped stub-method
+  markers:
+  - `widgets.py:111` `go_to_previous_tab` was a
+    one-line TODO stub; today the caller in
+    `panes/documents.py:872` (`cmd_delete_tab`) relied on
+    a no-op. Fix: decrements the center-pane
+    `currentIndex` by 1, clamped at 0 so deleting at
+    index 0 is a safe no-op rather than an IndexError.
+  - `documents.py:1182` `populate_data` had a TODO
+    marker plus two real lines (`set_location` + `save`).
+    Fix: replace the TODO with a real docstring
+    describing the internal-location contract; method
+    signature changed from `-> None` to `-> Self` for
+    parity with the other `populate_data` callers
+    (scripts.py, pdfs.py, images.py, etc.).
+  - `config/source_config.py:317` `_load_api_key` was a
+    no-op stub. The caller at `source_config.py:184`
+    (`self._load_api_key(source)`) returned `None`
+    always, so the source panel never displayed a real
+    API key. Fix: defensive lookup chain -- source
+    arg -> `user_config.api_keys[source_id]` ->
+    `pycurity.pykey.get_secret("api_key", source_id)`;
+    returns the raw key (caller's `obscure_key` masks).
+
+  Remaining 7 markers (palette drawer wiring, tool
+  drawer re-render, notebook webview instrumentation,
+  catalog tab-None stub, config features pane) are
+  deferred to a follow-up T-NEW-141b card -- they
+  touch live UI architecture (drawer re-render,
+  webview instrumentation) that needs design decisions
+  before shipping.
+
+  Pin: `tests/test_t_new_141_stub_methods.py` 4 new
+  tests (source-level pin: `go_to_previous_tab`
+  contains real logic, source-level pin: `_load_api_key`
+  consults a real backend, source-level pin:
+  `populate_data` has a real docstring, behavioural:
+  index math for the clamp).
 - **T-NEW-142** ✅ Tab Delete broken from document toolbar +
   `NchantdTabPane` -- **FIXED** (2026-08-16, gamma `pending`).
   Root cause: the button-bar config at

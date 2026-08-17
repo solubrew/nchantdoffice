@@ -1179,11 +1179,21 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
             logma.error(f"Failed to open remote document: {e}")
         return self
 
-    def populate_data(self, data=None) -> None:
-        """"""
-        # TODO implement method
+    def populate_data(self, data=None) -> Self:
+        """T-NEW-141: populate the in-memory document cache for an
+        internal-location tab.
+
+        Sets the document location to ``"internal"`` and triggers
+        a save so the editor content is round-tripped through the
+        doc_media / app_media_content table. The ``data`` arg is
+        accepted for parity with the ``populate_data`` contract
+        used by other doc subclasses (scripts, pdfs, images,
+        etc.) but is not consumed here -- the document's own
+        state is the source of truth.
+        """
         self.document.set_location("internal")
         self.save()
+        return self
 
     def populate_document(self, file=None) -> Self:
         """"""

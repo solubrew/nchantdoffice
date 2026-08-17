@@ -200,7 +200,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   -- ``cmd_on_change_right_side_tab_select`` recorded
   whatever the user picked, regardless of tier. Free
   users could therefore set their default right tab to
-  Settings / Help / etc. and miss the upsell surface.
+  Settings / Help / Ad / etc. and miss the upsell surface.
   Fix: when the user is not pro (``is_pro_user(user)``),
   non-Ad selections are coerced to ``"4 - Ad"``. Pro
   users are unrestricted. The right-pane options
@@ -210,6 +210,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   who hit the cap are redirected to Get Pro AND they
   default-open on the Ad tab. 6 new regression tests in
   `tests/test_t_new_140_free_user_ad_tab.py`.
+- **T-NEW-141** Inside-nchantdoffice TODO sweep (subset)
+  (2026-08-16) -- three of the ten outstanding
+  ``# TODO implement method`` markers in the
+  ``nchantdoffice/`` package shipped here. ``go_to_previous_tab``
+  (``widgets.py:111``) was a no-op stub; the caller in
+  ``panes/documents.py:872`` ``cmd_delete_tab`` relied on
+  the no-op, so deleting a tab left focus on a now-deleted
+  index. Fix: decrements ``currentIndex`` by 1, clamped
+  at 0. ``populate_data`` (``documents.py:1182``) had a
+  misleading TODO comment plus two real lines; replaced
+  the TODO with a real docstring + ``-> Self`` return
+  type for parity with the other ``populate_data``
+  callers. ``_load_api_key`` (``source_config.py:317``)
+  was a no-op stub; the caller at ``source_config.py:184``
+  always received ``None`` and the source panel never
+  displayed a real API key. Fix: defensive lookup chain
+  -- source arg -> ``user_config.api_keys[source_id]`` ->
+  ``pycurity.pykey.get_secret("api_key", source_id)``;
+  returns the raw key (caller's ``obscure_key`` masks).
+  The remaining 7 markers (palette drawer wiring, tool
+  drawer re-render, notebook webview instrumentation,
+  catalog tab-None stub, config features pane) are
+  deferred to T-NEW-141b. 4 new regression tests in
+  `tests/test_t_new_141_stub_methods.py`.
 
 ### Changed (T-NEW-110..137)
 
