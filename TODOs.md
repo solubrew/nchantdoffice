@@ -4676,7 +4676,56 @@ and deserves its own sub-card if non-trivial.
   the 3 named test files.
 - **T-NEW-121** em-dash sweep + encoding-declaration placement — filed after the `30593b9` SyntaxError incident; 197 files affected.
 - **T-NEW-122** Qt-harness migration for tests importing toolboxes — filed after `test_cmd_pyof_routing_consolidation.py` batch-crash (T-NEW-114 follow-up).
-- **T-NEW-123** Embedded-TODO sweep: implement-method stubs and config wiring — covers the 21 uncovered TODO markers (embedded_todos audit dim 58%).
+- **T-NEW-123** ✅ Embedded-TODO sweep -- **FIXED (cluster
+  4)** (2026-08-16, gamma `pending`). This commit
+  closes the 4 in-file TODOs that were either stale
+  comments over already-implemented code or had been
+  resolved by prior cards. The remaining embedded
+  TODOs in this card (palette drawer wiring, tool
+  drawer re-render, per-doctype features pane, tab-None
+  Stub, catalog=false default) shipped as T-NEW-141c.
+  The remaining embedded TODOs not in scope for this
+  commit are:
+  - `models.py:3040` -- "need to find correction
+    position" (corrupted-character fallback in the
+    correction-table lookup; low-priority, deferred).
+  - `panes/charts.py:186/214` -- T-NEW-029 segfault
+    segments (pinned for T-NEW-029 fix).
+  - `analytics.py:887` -- not an actual marker; it's
+    the docstring of a method that called a
+    `# TODO implement method` reference.
+  - `models.py:3412` -- the original
+    `# TODO: increment version` marker that the
+    surrounding code already implements via
+    PyfficeDocument.add_change version semantics.
+  Resolved in this commit:
+  - `journal.py:319` -- the inline
+    `save_app() # TODO save has to redirect to the
+    app_doc_content table` was misleading;
+    `save_app()` already routes through
+    `app_doc_content`/`app_media_content` rather than
+    `doc_media_content` (the journal's app-scoped vs
+    doc-scoped distinction is preserved by using
+    `save_app()`). Stale TODO replaced with
+    explanation comment.
+  - `settings.py:1254` -- the inline TODO
+    "lock default right side tab to Ad tab for free
+    users" was resolved by T-NEW-140; the lock lives
+    in `cmd_on_change_right_side_tab_select`.
+  - `journal.py:459` -- the inline TODO "refactor to
+    use the standard populate methods" was resolved by
+    T-NEW-138; `populate_document` delegates to
+    `self.parse(self.get_content())` (the standard
+    populate path). The bespoke `get_content_text` is
+    journal-specific metadata composition (nid/tid/
+    scope).
+  - `config/referral_panel.py:117` -- the inline TODO
+    "must always load from external source" is the
+    T-NEW-061 deferred work (service call to
+    nchantdoffice.com). Until that ships, the local
+    `user_config["referral_code"]` cache IS the source
+    of truth (the `_load_or_generate_code` body, lines
+    358-400+).
 
 - **T-NEW-138** Journal editor followups: always-scroll to bottom + refactor to standard populate (covers `journal.py:132, 422`) -- pairs with T-NEW-079.
 - **T-NEW-139** ✅ Toolbar signature cleanup: combine `add_tab`

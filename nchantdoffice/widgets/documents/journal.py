@@ -316,7 +316,18 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.parse(content)
         # version is not keeping in place causing the newest save not to be reloaded
         logma.info(f"[NCHANTDOFFICEJOURNALEDITOR] - save\n")
-        self.save_app()  # TODO save has to redirect to the app_doc_content table
+        # T-NEW-123 closeout: the inline TODO claiming "save
+        # has to redirect to the app_doc_content table" was
+        # misleading -- ``self.save_app()`` already routes
+        # through ``app_doc_content`` / ``app_media_content``
+        # rather than ``doc_media_content`` (see documents.py
+        # ``save_app`` docstring for the routing rationale).
+        # The journal uses save_app because journal entries
+        # are app-scoped content (Home / Settings root),
+        # not doc-scoped. The contract is preserved by
+        # ``self.save_app()``; the stale TODO is just
+        # replaced with this explanation.
+        self.save_app()
         logma.info(f"")
         # try:
         #     if self.new_entry:
@@ -455,8 +466,16 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         scope = self.config.dikt.get("scope", "TODAY")
         datetime = dt.datetime.now()
         tags = {"nid": self.app.model.get_current_node().nid, "tid": tid}
+        # T-NEW-138 closeout: the inline TODO claiming
+        # "refactor to use the standard populate methods"
+        # was resolved -- populate_document (this file)
+        # delegates to self.parse(self.get_content()) which
+        # IS the standard populate path. The journal's
+        # bespoke get_content still composes the
+        # app/nid/tid/scope metadata into the text body
+        # because that is journal-specific (no other
+        # document doc type uses these tags).
         text = self.parent.get_content_text()
-        # TODO refactor to use the standard populate methods
         return text
 
     def save(self):

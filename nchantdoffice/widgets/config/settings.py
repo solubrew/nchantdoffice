@@ -1251,7 +1251,12 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # T-removed: commented-out refocus-right-side-tab checkbox block
         # (T10/T11/T12). The dropdown below (self.refocus_default_document)
         # already covers the "select right side tab" functionality.
-        # TODO lock default right side tab to Ad tab for free users
+        # T-NEW-140 closeout: the inline TODO claiming "lock
+        # default right side tab to Ad tab for free users"
+        # was misleading -- the lock is implemented in
+        # ``cmd_on_change_right_side_tab_select`` (the dropdown
+        # save handler); free users selecting a non-Ad tab get
+        # coerced to "4 - Ad". Pro users are unaffected.
 
         cfg = {
             "label": "Default Right Side Tab",

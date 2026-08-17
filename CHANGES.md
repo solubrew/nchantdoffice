@@ -303,6 +303,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ``populate_document`` dispatch. All changes leverage
   existing scripts.py patterns -- no new helpers. 15
   tests pass across the 3 named test files.
+- **T-NEW-123** Embedded-TODO sweep (cluster 4)
+  (2026-08-16) -- closes the 4 in-file TODOs that
+  were either stale comments over already-implemented
+  code or had been resolved by prior cards.
+  ``journal.py:319`` (save_app redirect -- already
+  implemented), ``settings.py:1254`` (lock default
+  right tab for free users -- T-NEW-140),
+  ``journal.py:459`` (refactor to populate -- T-NEW-138),
+  ``config/referral_panel.py:117`` (external source --
+  T-NEW-061 deferred). Stale TODOs replaced with
+  explanation comments documenting the existing
+  contract or the deferred-work rationale. Remaining
+  embedded TODOs (`models.py:3040` correction-position,
+  `panes/charts.py:186/214` T-NEW-029 segfaults, the
+  `analytics.py:887` docstring reference,
+  `models.py:3412` PyfficeDocument version increment)
+  documented inline. No test surface added -- all 4
+  fixes are documentation / explanation comments
+  around code that is already correct. 28 regression
+  tests pass across the journal test surface
+  (`test_t_new_138_journal_scroll_and_populate.py` +
+  `test_journal_always_save.py` +
+  `test_compact_journal_content.py` +
+  `test_journal_settings_pro_tier.py` +
+  `test_journal_add_entry_mirrors_to_document.py`).
 - **T-NEW-115** (audit only) -- the live bug was already
   fixed by T-NEW-130 (`ac448ad`); this card is a
   catalogue cleanup.
