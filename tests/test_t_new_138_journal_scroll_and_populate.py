@@ -62,17 +62,34 @@ from nchantdoffice.widgets.documents.journal import (
 # Source-level pin: initView scrolls to bottom
 # ---------------------------------------------------------------------------
 
-def test_journal_init_view_calls_scroll_to_bottom():
+def test_journal_init_view_calls_moveposition_end():
     """T-NEW-138 (scroll half): ``NchantdOfficeJournalEditor
-    .initView`` must call ``self.scroll_to_bottom()`` (or
-    equivalent) after the editor widget is added to the layout.
-    Without this, opening a long journal leaves the user looking
-    at the first entry instead of the latest.
+    .initView`` must position the cursor at the end of the
+    document so opening a long journal shows the latest
+    entry. Uses the established nchantrs pattern
+    (editors.py:764): get a text cursor, call
+    ``movePosition(QTextCursor.End)``, set the cursor on
+    the editor.
+
+    Earlier fix introduced a ``self.scroll_to_bottom()``
+    helper that crashed the live app (the helper did not
+    exist -- live trace from journal.py:135). This test
+    pins the established nchantrs pattern instead of a
+    bespoke helper.
     """
     src = inspect.getsource(NchantdOfficeJournalEditor.initView)
-    assert "scroll_to_bottom" in src, (
-        "NchantdOfficeJournalEditor.initView must call "
-        "scroll_to_bottom() (T-NEW-138). Source:\n" + src[:1500]
+    # Must NOT reference a non-existent self.scroll_to_bottom()
+    # helper (the earlier fix crashed the live app).
+    assert "self.scroll_to_bottom()" not in src, (
+        "initView must NOT call a self.scroll_to_bottom() "
+        "helper that doesn't exist (T-NEW-138 regression "
+        "guard)."
+    )
+    # Must use the established nchantrs pattern.
+    assert "movePosition" in src and "QTextCursor.End" in src, (
+        f"initView must use the established nchantrs pattern "
+        f"movePosition(QTextCursor.End) (T-NEW-138). "
+        f"Got:\n{src[:1500]}"
     )
 
 

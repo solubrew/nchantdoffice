@@ -129,10 +129,21 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
 
         self.editor.set_background(hex="#4F5665")
         self.layout.addWidget(self.editor)
-        # T-NEW-138: scroll to bottom after the editor is in the
-        # layout. Mirrors the standard populate_document helper's
-        # tail -- the journal override previously skipped it.
-        self.scroll_to_bottom()
+        # T-NEW-138: position the cursor at the end of the
+        # document so the user sees the latest journal entry
+        # when opening a long-running journal. Mirrors the
+        # established pattern in nchantrs (editors.py:764,
+        # calculators.py:370) -- movePosition(QTextCursor.End)
+        # on a text cursor and re-set it on the editor. Using
+        # the existing pattern avoids introducing a new helper.
+        try:
+            text_cursor = self.editor.textCursor()
+            text_cursor.movePosition(pyqt.QTextCursor.End)
+            self.editor.setTextCursor(text_cursor)
+        except Exception as exc:
+            logma.warning(
+                f"[journal] initView: scroll to bottom failed: {exc}"
+            )
         return self
 
     def initWidget(self):
