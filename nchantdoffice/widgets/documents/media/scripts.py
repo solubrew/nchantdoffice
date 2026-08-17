@@ -549,15 +549,15 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             or "html"
         )
         if syntax == "html":
-            # html = """
-            # <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
-            # <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
-            # """
-            html = ""
+            # T-NEW-120 (replay of reverted fix 85e809e):
+            # pass editor_html through directly. The previous
+            # templated-envelope code (``html.replace(...)``)
+            # collapsed to "" when the template body was
+            # commented out, which silently dropped all HTML
+            # text. The editor HTML is the canonical payload.
             editor_html = self.document_editor.toHtml()
-            soup = BeautifulSoup(editor_html, "html.parser")
-            text = html.replace("<[content]>", soup.body.decode_contents())
-            # Persist the editor HTML into the Pyffice unit so
+            text = editor_html
+            # Mirror the editor HTML into the Pyffice unit so
             # reopen can restore formatting (see _preserved_unit_html).
             text_attr = getattr(self.document, "text", None)
             if text_attr is not None and hasattr(text_attr, "html"):
@@ -1773,7 +1773,16 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         if isinstance(content, str):
             text = content
         elif isinstance(content, dict):
-            text = content.get("text", {})
+            # T-NEW-120 (replay of reverted fix 85e809e):
+            # walk the get_content() payload shape. The
+            # top-level ``content["text"]`` is the wrong key
+            # (the inner ``content`` dict has a ``"text"`` key
+            # whose value IS the payload). The previous
+            # ``content.get("text", {})`` would reach the inner
+            # ``content`` dict and the subsequent
+            # ``text.get("value", "")`` returned "" -- the test
+            # round-trip silently dropped all script text.
+            text = content.get("content", {}).get("text", {})
 
         # if text is None:
         #     content = self.get_content()

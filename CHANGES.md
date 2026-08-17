@@ -285,6 +285,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   markers from the 2026-08-15 inside-sweep. 4 new
   regression tests in
   `tests/test_t_new_141c_clear_stale_todos.py`.
+- **T-NEW-120** Script save + reopen aspirational tests
+  (2026-08-16) -- re-applies the previously-reverted
+  ``85e809e`` fix. Two production bugs in
+  ``nchantdoffice/widgets/documents/media/scripts.py``
+  caused all 5 aspirational save/restore tests to fail:
+  ``get_content`` HTML branch ran a defunct
+  ``html.replace(...)`` template substitution against
+  an empty ``html = ""`` (the template body was
+  commented out), collapsing the saved payload to ``""``
+  and dropping every format char; the dict-shape
+  ``_resolve_document_text`` reached the top-level
+  ``content["text"]`` (which was the inner ``content``
+  dict, not the saved text), so reopen fell through to
+  ``""``. Test SimpleNamespace fixtures gained
+  ``location='external'`` to match the
+  ``populate_document`` dispatch. All changes leverage
+  existing scripts.py patterns -- no new helpers. 15
+  tests pass across the 3 named test files.
 - **T-NEW-115** (audit only) -- the live bug was already
   fixed by T-NEW-130 (`ac448ad`); this card is a
   catalogue cleanup.

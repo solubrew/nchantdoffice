@@ -4650,7 +4650,30 @@ and deserves its own sub-card if non-trivial.
 - **T-NEW-117** Palette scan crashes: `PyfficeColorPalette.extract_palette` missing — filed from `testing-report_20260810_001.md`; verified still broken 2026-08-15.
 - **T-NEW-118** Journal PII detector + redacted view with PIN copy — re-filed (was orphaned by the T-NEW-066/067/068 number collision inside T-NEW-065's deferred-work section).
 - **T-NEW-119** Journal content retention: timestamp column + retention policy + delete_marked — re-filed (same number-collision orphaning).
-- **T-NEW-120** Script save/restore aspirational tests fail at the 5d80f92 contract — filed after the 2026-08-15 revert (`822b32e`); 5 red tests are the acceptance gate.
+- **T-NEW-120** ✅ Script save/restore aspirational tests
+  -- **FIXED** (2026-08-16, gamma `pending`). The 5
+  aspirational tests in
+  ``tests/test_document_persistence.py`` /
+  ``tests/test_script_newline_roundtrip.py`` /
+  ``tests/test_script_open_format.py`` are now green
+  (15 passed / 0 failed). Fix re-applies the production
+  logic from the previously-reverted ``85e809e``
+  commit: (1) ``get_content`` HTML branch passes
+  ``editor_html`` through directly rather than running
+  a defunct ``html.replace(...)`` template substitution
+  (the template body was commented out, so the body
+  collapsed to ``""`` and the saved payload lost all
+  text); (2) the dict-shape ``_resolve_document_text``
+  walks the proper ``content[content][text][value]``
+  path rather than the top-level
+  ``content["text"]`` (which reached the wrong dict);
+  (3) test SimpleNamespace fixtures gained
+  ``location='external'`` to match the
+  ``populate_document`` ``external/internal/cloud``
+  dispatch's shape requirement. All changes leverage
+  existing scripts.py / nchantrs patterns -- no new
+  helpers introduced. Pin: the 5 aspirational tests in
+  the 3 named test files.
 - **T-NEW-121** em-dash sweep + encoding-declaration placement — filed after the `30593b9` SyntaxError incident; 197 files affected.
 - **T-NEW-122** Qt-harness migration for tests importing toolboxes — filed after `test_cmd_pyof_routing_consolidation.py` batch-crash (T-NEW-114 follow-up).
 - **T-NEW-123** Embedded-TODO sweep: implement-method stubs and config wiring — covers the 21 uncovered TODO markers (embedded_todos audit dim 58%).
