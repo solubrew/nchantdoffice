@@ -124,6 +124,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (defensive against missing view/panes/currentWidget).
   4 new source-shape regression tests in
   `tests/test_t_new_145_ctrl_s_save.py`.
+- **T-NEW-142** Tab Delete button registrations
+  (2026-08-16) — the button-bar config at
+  `widgets/panes/documents.py:791` (`delete_tab`) and line 93
+  (`delete_node`) referenced action names that were never
+  registered as `app_action` rows in
+  `nchantdoffice/_data_/models.yaml`. The nchantrs
+  `lookup()` chain reads `app_action` from the DB by
+  `lookup_code_txt` and raises
+  `Exception('Action delete_tab Lookup Config is Empty')`
+  when missing — which silently fails the button-bar render.
+  Fix: added two `app_action` records (icon
+  `actions-remove-tab-svgrepo-com` for delete_tab,
+  `remove-delete-trash-cancel-svgrepo-com` for delete_node).
+  5 new regression tests in
+  `tests/test_t_new_142_tab_delete_action.py`.
 
 ### Changed (T-NEW-110..137)
 
@@ -226,9 +241,10 @@ them to "Added"/"Fixed" until they ship.
   markers (images palette drawer, notebook stubs, catalog
   tab-None, config features pane, 3 stub methods,
   `users.has_pro` service truth).
-- **T-NEW-142** Tab Delete broken from document toolbar +
+- **T-NEW-142** ✅ Tab Delete broken from document toolbar +
   `NchantdTabPane` (filed from `testing-report_20260815.md`
-  Issue 2). **Note: 100-node cap popup superseded by T-NEW-135
+  Issue 2). **FIXED** in the T-NEW-142 commit; see "Added"
+  above. **Note: 100-node cap popup superseded by T-NEW-135
   redirect per user direction 2026-08-16; no T-NEW for popup.**
 - **T-NEW-143** ✅ `.pyof` import excludes `DELETE_BIT=1` rows
   (filed from `testing-report_20260815.md` Issue 3).

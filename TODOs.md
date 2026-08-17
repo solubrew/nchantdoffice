@@ -4639,7 +4639,24 @@ and deserves its own sub-card if non-trivial.
 - **T-NEW-139** Toolbar signature cleanup: combine `add_tab` + `add_document` shared cfg/wiring (`toolbars.py:216`).
 - **T-NEW-140** Free-user right-side tab: lock default to Ad tab (`settings.py:1209`) -- pairs with T-NEW-135 redirect.
 - **T-NEW-141** Inside-nchantdoffice TODO sweep: 10 remaining markers (images palette drawer, notebook stubs, catalog tab-None, config features pane, 3 stub methods, users.has_pro service truth) -- filed from the 2026-08-15 inside-sweep.
-- **T-NEW-142** Tab Delete broken from document toolbar + NchantdTabPane -- filed from `testing-report_20260815.md` Issue 2.
+- **T-NEW-142** ✅ Tab Delete broken from document toolbar +
+  `NchantdTabPane` -- **FIXED** (2026-08-16, gamma `pending`).
+  Root cause: the button-bar config at
+  `widgets/panes/documents.py:791` (and the sibling
+  `delete_node` at line 93) references `delete_tab` /
+  `delete_node` action names that were never registered as
+  `app_action` rows in `nchantdoffice/_data_/models.yaml`.
+  The nchantrs lookup chain
+  (`nchantrs.utilities.utils.lookup`) reads `app_action` from
+  the database, indexed by `lookup_code_txt`, and raises
+  `Exception('Action delete_tab Lookup Config is Empty')`
+  when missing -- which fails the entire button-bar render.
+  Fix: add two `app_action` records (icon
+  `actions-remove-tab-svgrepo-com` for delete_tab,
+  `remove-delete-trash-cancel-svgrepo-com` for delete_node).
+  Pin: `tests/test_t_new_142_tab_delete_action.py` 5 new tests
+  (yaml registration pin for both, icon/tip non-empty pin,
+  lookup-config-retrieval e2e for both).
 - **T-NEW-143** `.pyof` import excludes `DELETE_BIT=1` rows -- filed from `testing-report_20260815.md` Issue 3.
 - **T-NEW-144** `file_details` toolbox redirects to internal data when tab is an internal document + external file becomes editor (not viewer) -- filed from `testing-report_20260815.md` Issues 4 & 5; consider T-NEW-144a (redirect) / T-NEW-144b (editor) if scope splits.
 - **T-NEW-145** `Ctrl+S` wired to save button logic -- filed from `testing-report_20260815.md` Issue 6.

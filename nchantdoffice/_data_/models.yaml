@@ -23,6 +23,17 @@ NchantdOfficeCloakModel:
                       {'name': 'parameters_dict', 'type': 'text'}]
             records:
               - ['base', 'import_pyof', 'Import .pyof', 'Import content tables from a source .pyof into this instance.', 'c6ea4006-2ad2-4600-b109-23791eea20c8', 'import', '', 'Import from .pyof…', 'Open a file picker, choose a .pyof, and copy its content tables (nodes, tabs, media) into this instance. Source UUIDs are preserved.', '', '{}']
+              # T-NEW-142: the Tab Delete button (document toolbar +
+              # NchantdTabPane toolbox) and Node Delete button (left
+              # toolbox) need app_action rows so the nchantrs
+              # ``lookup()`` chain resolves the icon + tip + handler.
+              # Without these rows the lookup raises "Action
+              # delete_tab Lookup Config is Empty" and the buttons
+              # silently fail to render. Icon names match the
+              # midnight_icons stems: actions-remove-tab and
+              # remove-delete-trash-cancel.
+              - ['base', 'delete_tab', 'Delete Tab', 'Close and remove the active tab from this node.', '1b2cd1f0-1c2c-4d8e-9a8e-7e1f5b3a9d10', 'actions-remove-tab-svgrepo-com', '', 'Delete tab', 'Close the active tab, remove it from the doc_tab table, and select the previous tab.', '', '{}']
+              - ['base', 'delete_node', 'Delete Node', 'Close all tabs and remove the active node from this tree.', '2c3de2a1-2d3d-4e9f-8a8f-8e2f6c4b0e21', 'remove-delete-trash-cancel-svgrepo-com', '', 'Delete node', 'Close all tabs under the active node, remove the node and descendants from doc_tree_node, and select its parent.', '', '{}']
           app_document_type:
             columns: [{"name": 'UUID', "type": "text"}, {"name": 'document_txt', "type": "text"},
                       {"name": 'file_type_txt', "type": "text"}, {"name": 'name_txt', "type": "text"},
