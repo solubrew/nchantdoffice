@@ -86,7 +86,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.initialize_context_menu("context.document.browser")
         logma.json(self.document.to_dict())
 
-        #need to connect to the active page aligned with PyfficeBrowser
+        # need to connect to the active page aligned with PyfficeBrowser
 
         cfg = {}
         self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
@@ -1124,8 +1124,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.profile = profile
         return self
 
-
-
     def store_profile(self) -> Self:
         """Persist current profile fields to the profile manager."""
         if self.profile is None or self.profiles is None:
@@ -1444,6 +1442,9 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browsers] _delete_cookies failed: {e}", exc_info=True)
         return self
 
+    def _on_url_change(self):
+        """"""
+
     def _ensure_drawer_item(self, items, cnt) -> Dict[str, Any]:
         """Lazily create a default drawer-item slot.
 
@@ -1534,35 +1535,6 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
         """"""
         return self
 
-    # T-NEW-069 — URL dropdown history helpers (live on the
-    # WebViewer because that's where set_url_path lives).
-
-    def _track_url(self, url) -> List[str]:
-        """Add ``url`` to the persistent URL history.
-
-        Maintains ``config.dikt["url_history"]`` as a
-        most-recent-first list, deduped (case-sensitive),
-        capped at ``_url_history_max`` entries. No-op when
-        ``url`` is None or empty. Returns the resulting
-        history list (most-recent-first).
-        """
-        if not url or not isinstance(url, str):
-            return list(self.config.dikt.get("url_history", []) or [])
-        history = list(self.config.dikt.get("url_history", []) or [])
-        history = [u for u in history if u != url]
-        history.insert(0, url)
-        history = history[: max(1, int(self._url_history_max))]
-        self.config.dikt["url_history"] = history
-        return history
-
-    def _clear_url_history(self) -> None:
-        """Wipe the URL history list (dropdown-only)."""
-        self.config.dikt["url_history"] = []
-
-    def _get_url_history(self) -> List[str]:
-        """Return the URL history list (most-recent-first)."""
-        return list(self.config.dikt.get("url_history", []) or [])
-
     def set_url_path(self, url=None) -> Self:
         """T-NEW-069 — navigate to ``url`` and sync the dropdown.
 
@@ -1592,6 +1564,35 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
         # self.save()
         # self.parent.document.add_page({"url": url})
         return self
+
+    def _clear_url_history(self) -> None:
+        """Wipe the URL history list (dropdown-only)."""
+        self.config.dikt["url_history"] = []
+
+    def _get_url_history(self) -> List[str]:
+        """Return the URL history list (most-recent-first)."""
+        return list(self.config.dikt.get("url_history", []) or [])
+
+    # T-NEW-069 — URL dropdown history helpers (live on the
+    # WebViewer because that's where set_url_path lives).
+
+    def _track_url(self, url) -> List[str]:
+        """Add ``url`` to the persistent URL history.
+
+        Maintains ``config.dikt["url_history"]`` as a
+        most-recent-first list, deduped (case-sensitive),
+        capped at ``_url_history_max`` entries. No-op when
+        ``url`` is None or empty. Returns the resulting
+        history list (most-recent-first).
+        """
+        if not url or not isinstance(url, str):
+            return list(self.config.dikt.get("url_history", []) or [])
+        history = list(self.config.dikt.get("url_history", []) or [])
+        history = [u for u in history if u != url]
+        history.insert(0, url)
+        history = history[: max(1, int(self._url_history_max))]
+        self.config.dikt["url_history"] = history
+        return history
 
 
 class NchantdOfficeAdTab(NchantdOfficeDocument):
@@ -1733,6 +1734,7 @@ class NchantdOfficeWebProfile(NchantdWebProfile):
         except Exception as e:
             logma.error(f"[browsers] emergency_phone data sourcing failed: {e}", exc_info=True)
         self.contact.emergency_phone = emergency
+
     def set_profile_user_name_entry(self, name) -> Self:
         """Update the user_name_entry Qt widget from an external change."""
         if hasattr(self, "user_name_entry") and self.user_name_entry is not None:
@@ -1822,6 +1824,7 @@ class NchantdOfficeWebProfile(NchantdWebProfile):
         if hasattr(self, "zip_code_entry") and self.zip_code_entry is not None:
             self.zip_code_entry.setText(str(zipcode))
         return self
+
 
 # ====================================================================================================================||
 
