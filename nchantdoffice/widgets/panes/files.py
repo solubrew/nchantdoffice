@@ -38,13 +38,20 @@ pxcfg = join(here, "_data_", "files.yaml")
 
 
 class NchantdFileDetailsPane(NchantdPane):
-    """"""
+    """T-NEW-144a: shows internal-document data when the bound tab
+    has no on-disk file_path. Mirrors the T-NEW-038 refresh
+    pattern: every getter re-runs against the bound tab +
+    file_path, so a tab switch updates the pane."""
 
     def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdFileDetailsPane").override(cfg))
         self.file_path = None
+        # T-NEW-144a: bound-tab reference for internal-doc
+        # fallback. ``set_tab`` / ``bind_to_tab`` populates this;
+        # the getters consult it when ``file_path`` is empty.
+        self.tab = None
         self.file_name_entry = None
         self.file_path_entry = None
         self.file_size_entry = None
@@ -52,6 +59,28 @@ class NchantdFileDetailsPane(NchantdPane):
         self.accon_entry = None
         self.modon_entry = None
         self.hash_entry = None
+
+    def bind_to_tab(self, tab) -> Self:
+        """T-NEW-144a: bind the pane to the active tab so internal-
+document metadata (no file_path) renders correctly.
+
+        Stores ``tab`` on ``self.tab`` and refreshes the detail
+widgets. The bound tab dict (or SimpleNamespace) must
+expose ``name``, ``location``, optional ``file_path``,
+optional ``content`` (bytes / str), optional ``creon`` /
+``accon`` / ``modon`` ISO timestamps. Missing attributes
+fall back to defaults rather than raising.
+
+        If the tab carries a non-empty ``file_path``, the pane
+adopts it so the on-disk getters continue to work for
+external docs (backward compat with T-NEW-038).
+        """
+        self.tab = tab
+        tab_file_path = getattr(tab, "file_path", None)
+        if tab_file_path:
+            self.file_path = Path(tab_file_path)
+        self.refresh()
+        return self
 
     def initModel(self, cfg=None) -> Self:
         """"""
@@ -155,16 +184,43 @@ class NchantdFileDetailsPane(NchantdPane):
         return date
 
     def get_file_path(self) -> Path:
-        """"""
+        """T-NEW-144a: show '(internal storage)' when no
+        file_path is set (internal docs). The widget text is
+        updated via the file_path_entry attribute. For external
+        docs we leave the widget alone -- set_file_path already
+        populates it with the full path, and overwriting with
+        the parent dir would regress T-NEW-038.
+        """
+        if self.file_path is None or not str(self.file_path):
+            placeholder = "(internal storage)"
+            if getattr(self, "file_path_entry", None) is not None:
+                self.file_path_entry.setText(placeholder)
+            return Path(placeholder)
+        # External doc: preserve the pre-T-NEW-144a behaviour
+        # (return parent dir, leave widget text alone so the
+        # value set by set_file_path / refresh wins).
         return self.file_path.parent
 
     def get_file_size(self, path=None) -> str | int:
-        """"""
+        """T-NEW-144a: fall back to self.tab.content length
+        when no file_path is set. Internal docs are stored in
+        the doc_media / app_media_content table as bytes (or
+        str); we report the byte length so the user can see
+        the actual stored size."""
         path = path or self.file_path or Path("")
         logma.debug(f"[files] get_file_size: path={path!r}")
-        if not exists(path):
-            logma.warning(f"[files] get_file_size: path missing, using '0': {path!r}")
-            size = "0"
+        if not path or not path.name or not exists(path):
+            tab_content = (
+                getattr(self.tab, "content", None) if self.tab is not None else None
+            )
+            if tab_content is None:
+                size = "0"
+            elif isinstance(tab_content, (bytes, bytearray)):
+                size = len(tab_content)
+            elif isinstance(tab_content, str):
+                size = len(tab_content.encode("utf-8"))
+            else:
+                size = len(str(tab_content))
         else:
             try:
                 size = getsize(path)
@@ -199,12 +255,16 @@ class NchantdFileDetailsPane(NchantdPane):
         return hash_
 
     def get_modified_date(self, path=None) -> str:
-        """"""
+        """T-NEW-144a: fall back to self.tab.modon (ISO string)
+        when no file_path is set. Internal tabs store the
+        modification timestamp in the doc_media row."""
         path = path or self.file_path or Path("")
         logma.debug(f"[files] get_modified_date: path={path!r}")
-        if not exists(path):
-            logma.warning(f"[files] get_modified_date: path missing, using '0': {path!r}")
-            date = "0"
+        if not path or not path.name or not exists(path):
+            tab_modon = (
+                getattr(self.tab, "modon", None) if self.tab is not None else None
+            )
+            date = str(tab_modon) if tab_modon else "0"
         else:
             try:
                 ts = getmtime(path)
@@ -225,9 +285,15 @@ class NchantdFileDetailsPane(NchantdPane):
         mirrors the pattern used by the other getters (``get_file_size``
         etc.) and writes the name into the widget so a ``refresh()``
         after ``initView`` actually refreshes every field.
+
+        T-NEW-144a: when ``self.file_path`` is empty (internal doc),
+        fall back to ``self.tab.name`` (or "(unnamed)" when missing)
+        so internal tabs render a meaningful file_name field.
         """
         path = path or self.file_path or Path("")
-        name = path.name
+        name = path.name if path.name else (
+            getattr(self.tab, "name", None) if self.tab is not None else None
+        ) or "(unnamed)"
         if self.file_name_entry is not None:
             self.file_name_entry.setText(str(name))
         return name

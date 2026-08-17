@@ -4658,7 +4658,35 @@ and deserves its own sub-card if non-trivial.
   (yaml registration pin for both, icon/tip non-empty pin,
   lookup-config-retrieval e2e for both).
 - **T-NEW-143** `.pyof` import excludes `DELETE_BIT=1` rows -- filed from `testing-report_20260815.md` Issue 3.
-- **T-NEW-144** `file_details` toolbox redirects to internal data when tab is an internal document + external file becomes editor (not viewer) -- filed from `testing-report_20260815.md` Issues 4 & 5; consider T-NEW-144a (redirect) / T-NEW-144b (editor) if scope splits.
+- **T-NEW-144a** ✅ `file_details` toolbox redirects to
+  internal data when tab is an internal document --
+  **FIXED** (2026-08-16, gamma `pending`). When the active
+  tab is internal (no `file_path`), the
+  `NchantdFileDetailsPane` previously read empty / "0"
+  values from disk. Fix: added `bind_to_tab(tab)` method
+  on the pane that stores the tab reference; `get_name`,
+  `get_file_path`, `get_file_size`, `get_modified_date`
+  now consult `self.tab` when `self.file_path` is empty
+  (returns `tab.name` / `"(internal storage)"` /
+  `len(tab.content)` / `tab.modon`). External docs (real
+  `file_path` on disk) are unchanged -- `set_file_path`
+  still populates the widget with the full path; the new
+  code only updates the widget in the internal-doc
+  fallback branch. Pin:
+  `tests/test_t_new_144a_file_details_internal.py` 6 new
+  tests (method-exists, source-level pin x2, e2e x3
+  covering internal-doc populate, tab-switch refresh,
+  external backward compat).
+- **T-NEW-144b** ⏳ external file becomes editor (not
+  viewer) -- DEFERRED to v0.2.0 (out of scope for the
+  T-NEW-144a commit). The current `NchantdOfficeDocument
+  Mixin.save()` (line 1193) only writes to the doc_media
+  row when `document.location == "external"`; it does NOT
+  write the editor content back to the on-disk file. A
+  proper fix needs per-document-type dispatch (script
+  text files, images binary, PDFs, notebooks JSON, etc.)
+  and would touch ~14 doc subclasses. Will need its own
+  design card before shipping.
 - **T-NEW-145** `Ctrl+S` wired to save button logic -- filed from `testing-report_20260815.md` Issue 6.
 - **T-NEW-143** ✅ `.pyof` import excludes `DELETE_BIT=1` rows
   -- **FIXED** (2026-08-16, gamma `pending`). The base-6

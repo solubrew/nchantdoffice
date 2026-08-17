@@ -140,6 +140,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   5 new regression tests in
   `tests/test_t_new_142_tab_delete_action.py`.
 
+- **T-NEW-144a** FileDetailsPane shows internal-doc data
+  (2026-08-16) — when the active tab is internal (no
+  `file_path`), `NchantdFileDetailsPane` previously
+  returned empty / "0" for every detail field (size, hash,
+  dates). Fix: added `bind_to_tab(tab)` method on the
+  pane; `get_name` / `get_file_path` / `get_file_size` /
+  `get_modified_date` now consult `self.tab` when
+  `self.file_path` is empty (returns `tab.name`,
+  `"(internal storage)"`, `len(tab.content)`,
+  `tab.modon`). External docs are unchanged —
+  `set_file_path` still populates the widget with the
+  full path; the new code only writes the widget in the
+  internal-doc fallback branch. 6 new regression tests in
+  `tests/test_t_new_144a_file_details_internal.py`.
+- **T-NEW-144b** External file becomes editor
+  (2026-08-16) — DEFERRED to v0.2.0. The current
+  `NchantdOfficeDocumentMixin.save()` only persists to
+  the doc_media row when `document.location == "external"`;
+  it does not write the editor content back to the
+  on-disk file. A proper fix needs per-document-type
+  dispatch (script text files, images binary, PDFs,
+  notebooks JSON, etc.) and would touch ~14 doc
+  subclasses; tracked under T-NEW-144b in TODOs.md.
+
 ### Changed (T-NEW-110..137)
 
 - **T-NEW-121** em-dash sweep + encoding-declaration placement —
