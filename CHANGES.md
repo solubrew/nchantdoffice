@@ -84,6 +84,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   computes the source's net node count and refuses the import
   if it would push the host over the cap; redirects to Get Pro
   via the same path as T-NEW-135.
+- **T-NEW-146** `_build_app_user_payload` generator coercion
+  (2026-08-16) — `NchantdUser.get_password` is a generator
+  function so `user.pword` is a generator instance by default;
+  the payload-builder's duck-typed branch was passing it
+  through verbatim, and `squirl._store` exploded on deepcopy
+  with `TypeError: cannot pickle 'generator' object`. Fix:
+  `_coerce_scalar(value)` helper unwraps iterators/generators
+  (`next()` on the first yielded value) and falls back to
+  `str()` for any other non-scalar.3 new regression tests in
+  `tests/test_app_user_bootstrap.py`.
+- **T-NEW-147** `get_app_user` fallback routes through the store
+  layer (2026-08-16) — the fallback branch was calling
+  `self.get_table(...)` (a method that doesn't exist on
+  `NchantdOfficeCloakModel`), so every fresh-boot where
+  `_sqlite_connection` was unbound raised `AttributeError` and
+  logged `get_app_user failed: 'NchantdOfficeCloakModel' object
+  has no attribute 'get_table'`. Fix: route through
+  `self.store.get_table` (the store-layer method). 2 new
+  regression tests in `tests/test_app_user_bootstrap.py`.
 
 ### Changed (T-NEW-110..137)
 
@@ -203,13 +222,13 @@ them to "Added"/"Fixed" until they ship.
   'generator' object — post-T-NEW-129 live traceback
   2026-08-15 22:19:02; the `user` dict passed to
   `store_app_user` contains a generator value that
-  `squirl.deepcopy` cannot serialise.
+  `squirl.deepcopy` cannot serialise. **FIXED** in the
+  T-NEW-146/147 commit; see "Added" above.
 - **T-NEW-147** `get_app_user` AttributeError:
   `'NchantdOfficeCloakModel' object has no attribute
   'get_table'` — post-T-NEW-129 live traceback 2026-08-15
   22:19:02; `model.get_table` does not exist on the cloak
-  model (likely `self.codex` or `self.store.get_table` is
-  intended).
+  model. **FIXED** in the T-NEW-146/147 commit.
 
 ### Security
 - Added CI security scanning with bandit and safety

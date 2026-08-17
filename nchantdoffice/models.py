@@ -2021,11 +2021,19 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
 
         Symmetric with ``get_app_instances``: reads via the active
         ``store._sqlite_connection`` when available (one-per-app-
-        instance guarantee), falls back to ``self.get_table(...)``
+        instance guarantee), falls back to ``self.store.get_table(...)``
         through the store layer when the connection isn't bound.
         Returns an empty list when the table is missing (fresh DB
         before migration) or empty (first launch, before
         ``bootstrap_app_user`` runs).
+
+        T-NEW-147: the fallback dispatch goes through
+        ``self.store.get_table`` (the store-layer method), not
+        ``self.get_table`` (which does not exist on
+        ``NchantdOfficeCloakModel``). Calling ``self.get_table``
+        used to raise ``AttributeError`` and was logged as
+        ``get_app_user failed: 'NchantdOfficeCloakModel' object
+        has no attribute 'get_table'`` on every fresh boot.
 
         Normally the table has at most one row (one ``app_user``
         per install), so this method is used both to read the
@@ -2042,7 +2050,12 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 logma.warning(f"[models] get_app_user: SQLite query failed: {e}")
                 # Fall through to the store layer.
         try:
-            rows = self.get_table("app_user", {}, db)
+            # T-NEW-147: route through the store layer; ``self.get_table``
+            # does not exist on NchantdOfficeCloakModel (it lives on
+            # self.store), which caused
+            # ``AttributeError: 'NchantdOfficeCloakModel' object has no
+            # attribute 'get_table'`` on every fresh-boot.
+            rows = self.store.get_table("app_user", {}, db)
         except Exception as e:
             logma.warning(f"[models] get_app_user failed: {e}")
             return []
@@ -4592,39 +4605,59 @@ def _build_app_user_payload(user) -> Dict[str, Any]:
     #    ``password_txt`` columns are the canonical names; older
     #    keys (``name``, ``user_name``, ``pword``, ``password``)
     #    are tolerated so legacy callers keep working.
+    # Coerce any value that arrives as a generator/iterator
+    # (T-NEW-146: NchantdUser.pword is the return value of
+    # ``get_password()``, which is a generator function). The
+    # squirl ``_store`` path deepcopies the payload and raises
+    # ``TypeError: cannot pickle 'generator' object`` if a
+    # generator leaks through; coerce to a stable string so the
+    # payload survives ``copy.deepcopy``.
+    def _coerce_scalar(value):
+        if value is None:
+            return None
+        if isinstance(value, (str, int, float, bytes, bool)):
+            return value
+        if hasattr(value, "__next__"):
+            # Iterator/generator: take the first yielded value.
+            try:
+                return _coerce_scalar(next(value))
+            except StopIteration:
+                return None
+        return str(value)
+
     payload: Dict[str, Any] = {}
     uuid = source.get("uuid") or source.get("UUID")
     if uuid is not None:
-        payload["UUID"] = uuid
+        payload["UUID"] = _coerce_scalar(uuid)
     user_nm = source.get("user_nm_txt") or source.get("user_name") or source.get("name")
     if user_nm is not None:
-        payload["user_nm_txt"] = user_nm
+        payload["user_nm_txt"] = _coerce_scalar(user_nm)
     pword = source.get("password_txt") or source.get("pword") or source.get("password")
     if pword is not None:
-        payload["password_txt"] = pword
+        payload["password_txt"] = _coerce_scalar(pword)
     salt = source.get("saltUUID") or source.get("salt")
     if salt is not None:
-        payload["saltUUID"] = salt
+        payload["saltUUID"] = _coerce_scalar(salt)
     iters = source.get("iterations_txt") or source.get("iters")
     if iters is not None:
-        payload["iterations_txt"] = str(iters)
+        payload["iterations_txt"] = str(_coerce_scalar(iters))
     for src_key, col in (
         ("mac_hash_txt", "mac_hash_txt"),
         ("address_txt", "address_txt"),
         ("public_key_txt", "public_key_txt"),
     ):
         if source.get(src_key) is not None:
-            payload[col] = source[src_key]
+            payload[col] = _coerce_scalar(source[src_key])
     if "is_private_bit" in source:
-        payload["is_private_bit"] = int(bool(source["is_private_bit"]))
+        payload["is_private_bit"] = int(bool(_coerce_scalar(source["is_private_bit"])))
     elif source.get("is_private") is not None:
-        payload["is_private_bit"] = int(bool(source["is_private"]))
+        payload["is_private_bit"] = int(bool(_coerce_scalar(source["is_private"])))
     if "is_secure_bit" in source:
-        payload["is_secure_bit"] = int(bool(source["is_secure_bit"]))
+        payload["is_secure_bit"] = int(bool(_coerce_scalar(source["is_secure_bit"])))
     elif source.get("is_secure") is not None:
-        payload["is_secure_bit"] = int(bool(source["is_secure"]))
+        payload["is_secure_bit"] = int(bool(_coerce_scalar(source["is_secure"])))
     if "instance_FK" in source and source["instance_FK"] is not None:
-        payload["instance_FK"] = source["instance_FK"]
+        payload["instance_FK"] = _coerce_scalar(source["instance_FK"])
     return payload
 
     def update_document_entry(self, uuid, content, db="db") -> str:

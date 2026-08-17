@@ -489,3 +489,236 @@ def test_run_on_launch_calls_bootstrap_app_user():
         "NchantdOfficeCloak.run_on_launch must call "
         "self.model.bootstrap_app_user() (T-NEW-129)."
     )
+
+
+# ---------------------------------------------------------------------------
+# T-NEW-146 regression: payload must NOT contain a generator from NchantdUser
+# ---------------------------------------------------------------------------
+
+def test_payload_does_not_leak_nchantd_user_pword_generator():
+    """T-NEW-146: ``NchantdUser.__init__`` assigns ``self.pword = self.get_password()``
+    and ``get_password`` is a generator function. The
+    ``_build_app_user_payload`` duck-type branch reads ``pword``
+    via ``getattr(user, "pword", None)`` — without coercion the
+    payload contains the *generator instance*, not the password.
+    When the payload reaches ``squirl._store`` the deepcopy step
+    raises ``TypeError: cannot pickle 'generator' object``.
+
+    The payload must coerce the generator (or otherwise reach a
+    string/int representation) — whatever value is emitted must
+    be picklable.
+    """
+    import pickle
+
+    from nchantdoffice.models import _build_app_user_payload
+
+    def _gen():
+        yield "the-actual-password"
+
+    user = SimpleNamespace(
+        uuid="u-uuid-gen",
+        name="alice",
+        user_name="alice",
+        pword=_gen(),          # a generator, like NchantdUser does
+        salt="salt-1",
+        iters="1000",
+        is_private=False,
+        is_secure=False,
+    )
+    payload = _build_app_user_payload(user)
+
+    # Picklability is the gate. If the generator leaked through
+    # every key of the payload, this raises TypeError.
+    try:
+        for key, value in payload.items():
+            pickle.dumps(value)
+    except TypeError as exc:
+        pytest.fail(
+            f"_build_app_user_payload emitted a non-picklable value "
+            f"(T-NEW-146): {exc!r}. payload={payload!r}"
+        )
+
+
+def test_payload_pword_is_string_for_nchantd_user():
+    """T-NEW-146 (narrow): the ``password_txt`` column must receive a
+    string when ``user.pword`` is a generator (the canonical
+    NchantdUser case). The current code emits the generator
+    itself.
+    """
+    from nchantdoffice.models import _build_app_user_payload
+
+    def _gen():
+        yield "secret"
+
+    user = SimpleNamespace(
+        uuid="u-uuid-2",
+        name="bob",
+        user_name="bob",
+        pword=_gen(),
+        salt="s",
+        iters=1000,
+        is_private=False,
+        is_secure=False,
+    )
+    payload = _build_app_user_payload(user)
+    pword = payload.get("password_txt")
+    assert not hasattr(pword, "__next__"), (
+        f"password_txt must not be a generator/iterator "
+        f"(T-NEW-146); got {type(pword).__name__}: {pword!r}"
+    )
+    # Coerced value should be a str. We don't assert the exact
+    # coercion (next() vs str() vs repr()) — just that it's a
+    # non-generator scalar.
+    assert isinstance(pword, str), (
+        f"password_txt must be a str (T-NEW-146); got "
+        f"{type(pword).__name__}: {pword!r}"
+    )
+
+
+def test_bootstrap_app_user_with_real_nchantd_user_does_not_explode(tmp_path):
+    """T-NEW-146 (end-to-end): bootstrap_app_user must succeed when
+    the user is a NchantdUser instance (whose ``pword`` is a
+    generator from ``get_password()``). The current code raises
+    ``TypeError: cannot pickle 'generator' object`` because the
+    payload leaks the generator.
+
+    We avoid importing NchantdUser directly (it imports Qt) and
+    instead stub the duck-typed surface — same shape, same
+    generator, same failure mode.
+    """
+    from nchantdoffice.models import NchantdOfficeCloakModel
+
+    db_path = tmp_path / "real-user.pyof"
+    conn = sqlite3.connect(str(db_path))
+    conn.execute(
+        "CREATE TABLE app_user ("
+        "  UUID TEXT PRIMARY KEY,"
+        "  user_nm_txt TEXT,"
+        "  password_txt TEXT,"
+        "  saltUUID TEXT,"
+        "  iterations_txt TEXT,"
+        "  is_private_bit INTEGER,"
+        "  is_secure_bit INTEGER,"
+        "  instance_FK INTEGER"
+        ")"
+    )
+    conn.commit()
+
+    class _StubStore:
+        def __init__(self, conn=None):
+            self._sqlite_connection = conn
+
+        def store_app_user(self, payload, db="db"):
+            self._store("app_user", [payload], db=db)
+
+        def _store(self, table, payloads, db="db"):
+            # Mimic squirl: every value in the payload must be
+            # deepcopy-able. The pre-T-NEW-146 path explodes here.
+            import copy
+            for payload in payloads:
+                copy.deepcopy(payload)
+            # Mirror the INSERT so get_app_user sees the row.
+            for payload in payloads:
+                cols = list(payload.keys())
+                placeholders = ",".join("?" * len(cols))
+                conn.execute(
+                    f"INSERT OR REPLACE INTO {table} "
+                    f"({','.join(cols)}) VALUES ({placeholders})",
+                    list(payload.values()),
+                )
+            conn.commit()
+
+    def _realistic_pword():
+        # Mirrors NchantdUser.get_password()'s yield-shape.
+        yield "user-entered-password"
+
+    real_user = SimpleNamespace(
+        uuid="u-real-1",
+        name="alice",
+        user_name="alice",
+        pword=_realistic_pword(),   # generator, like the real user
+        salt="s",
+        iters=1000,
+        is_private=False,
+        is_secure=False,
+    )
+
+    model = _bare_model()
+    model.store = _StubStore(conn=conn)
+    model.user = real_user
+
+    # Must not raise.
+    model.bootstrap_app_user()
+
+    # And the row must actually be on disk.
+    (count,) = conn.execute("SELECT COUNT(*) FROM app_user").fetchone()
+    assert count == 1
+    (uuid_val,) = conn.execute("SELECT UUID FROM app_user").fetchone()
+    assert uuid_val == "u-real-1"
+    conn.close()
+
+
+# ---------------------------------------------------------------------------
+# T-NEW-147 regression: get_app_user fallback must go through self.store
+# ---------------------------------------------------------------------------
+
+def test_get_app_user_fallback_path_routes_through_store():
+    """T-NEW-147: when ``self.store._sqlite_connection`` is unbound,
+    ``get_app_user`` falls back to ``self.store.get_table(...)``.
+    The current implementation calls ``self.get_table(...)`` — a
+    method that does not exist on ``NchantdOfficeCloakModel`` —
+    which raises ``AttributeError`` and is logged as
+    ``get_app_user failed: 'NchantdOfficeCloakModel' object has no
+    attribute 'get_table'``.
+
+    Source-level pin: the fallback path must mention
+    ``self.store.get_table`` (or equivalent), never bare
+    ``self.get_table``.
+    """
+    from nchantdoffice.models import NchantdOfficeCloakModel
+    src = inspect.getsource(NchantdOfficeCloakModel.get_app_user)
+    # Must route through the store layer in the fallback branch.
+    assert "self.store.get_table" in src, (
+        "get_app_user fallback must dispatch via self.store.get_table "
+        "(T-NEW-147). Got source: " + src[:400]
+    )
+    # And must NOT call the non-existent bare get_table on the model.
+    bad = "self.get_table("
+    # Allow comments / docstrings; the assertion scans actual code lines.
+    code_lines = [
+        line for line in src.splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    for line in code_lines:
+        assert bad not in line, (
+            f"get_app_user must NOT call self.get_table(...) on the model "
+            f"(T-NEW-147); offending line: {line!r}"
+        )
+
+
+def test_get_app_user_returns_empty_list_when_connection_unbound_and_table_missing(tmp_path):
+    """T-NEW-147 (end-to-end): with ``self.store._sqlite_connection``
+    unbound (the live-boot condition), get_app_user must hit the
+    fallback path without raising AttributeError. We simulate the
+    unbound case by giving the stub store NO ``_sqlite_connection``
+    attribute and a ``get_table`` that raises (table missing).
+    The contract: ``get_app_user`` returns ``[] rather`` and the
+    exception is swallowed (logged at warning).
+    """
+    from nchantdoffice.models import NchantdOfficeCloakModel
+
+    class _StubStoreNoConn:
+        """No _sqlite_connection attribute; get_table raises."""
+
+        def get_table(self, table, cfg, db):
+            raise Exception(f"table {table} missing")
+
+    model = _bare_model()
+    model.store = _StubStoreNoConn()
+
+    # Must not raise AttributeError ("no attribute 'get_table'").
+    rows = model.get_app_user()
+    assert rows == [], (
+        f"With no _sqlite_connection and a failing store.get_table, "
+        f"get_app_user must return []; got {rows!r}"
+    )

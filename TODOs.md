@@ -4643,8 +4643,33 @@ and deserves its own sub-card if non-trivial.
 - **T-NEW-143** `.pyof` import excludes `DELETE_BIT=1` rows -- filed from `testing-report_20260815.md` Issue 3.
 - **T-NEW-144** `file_details` toolbox redirects to internal data when tab is an internal document + external file becomes editor (not viewer) -- filed from `testing-report_20260815.md` Issues 4 & 5; consider T-NEW-144a (redirect) / T-NEW-144b (editor) if scope splits.
 - **T-NEW-145** `Ctrl+S` wired to save button logic -- filed from `testing-report_20260815.md` Issue 6.
-- **T-NEW-146** `bootstrap_app_user` regression: `cannot pickle 'generator' object` -- post-T-NEW-129 live traceback 2026-08-15 22:19:02; the `user` dict passed to `store_app_user` contains a generator value that `squirl.deepcopy` cannot serialise.
-- **T-NEW-147** `get_app_user` AttributeError: `'NchantdOfficeCloakModel' object has no attribute 'get_table'` -- post-T-NEW-129 live traceback 2026-08-15 22:19:02; `model.get_table` does not exist on the cloak model (likely `self.codex` or `self.store.get_table` is intended).
+- **T-NEW-146** ✅ `bootstrap_app_user` regression: `cannot pickle
+  'generator' object` -- **FIXED** (2026-08-16, gamma `pending`).
+  Root cause: `NchantdUser.__init__` (nchantrs) assigns
+  `self.pword = self.get_password()` and `get_password` is a
+  generator function, so `pword` is a generator instance by
+  default. The duck-typed branch of `_build_app_user_payload`
+  reads `pword` via `getattr(user, "pword", None)` -- without
+  coercion the payload contains the generator, and
+  `squirl._store` raises `TypeError` on deepcopy. Fix:
+  `_coerce_scalar(value)` helper inside
+  `_build_app_user_payload` unwraps generators/iterators
+  (`next()` on the first yielded value) and falls back to
+  `str()` for any other non-scalar. Pin:
+  `tests/test_app_user_bootstrap.py` 3 new tests
+  (`test_payload_does_not_leak_nchantd_user_pword_generator`,
+  `test_payload_pword_is_string_for_nchantd_user`,
+  `test_bootstrap_app_user_with_real_nchantd_user_does_not_explode`).
+- **T-NEW-147** ✅ `get_app_user` AttributeError:
+  `'NchantdOfficeCloakModel' object has no attribute 'get_table'`
+  -- **FIXED** (2026-08-16, gamma `pending`). Root cause: the
+  store-layer fallback called `self.get_table(...)` instead of
+  `self.store.get_table(...)`. `get_table` lives on the store
+  (the layer below the model), not on `NchantdOfficeCloakModel`.
+  Fix: call `self.store.get_table`. Pin:
+  `tests/test_app_user_bootstrap.py` 2 new tests
+  (`test_get_app_user_fallback_path_routes_through_store` +
+  `test_get_app_user_returns_empty_list_when_connection_unbound_and_table_missing`).
 
 ### T-NEW-124 — Doctype guard: strict-dtd payloads restore as HTML (2026-08-15)
 
