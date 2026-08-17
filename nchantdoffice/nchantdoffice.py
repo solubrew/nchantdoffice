@@ -14,6 +14,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 from typing import Any, Self
+
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
 
@@ -28,6 +29,8 @@ from nchantdoffice.updates.db import NchantdOfficeDBUpdate
 from nchantdoffice.updates.checker import UpdateChecker
 from kahndor.logma import Logma
 from nchantrs.libraries import pyqt
+from pycurity.pyvice import Device
+from nchantdoffice.utilities.users import NchantdOfficeUser
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -70,7 +73,6 @@ class NchantdOfficeCloak(NchantdCloak):
         # reported 2026-08-11 14:21:27:
         #   AttributeError: 'NchantdOfficeCloak' object has no
         #   attribute 'device'
-        from pycurity.pyvice import Device
         self.device = Device()
         # T-NEW-042 (DESK-0): instantiate the user singleton so
         # self.user.uuid is the canonical per-install identifier
@@ -78,7 +80,6 @@ class NchantdOfficeCloak(NchantdCloak):
         # constant). The UUID is loaded from user_config if
         # present, otherwise generated + persisted on first
         # launch — guaranteeing stability across launches.
-        from nchantdoffice.utilities.users import NchantdOfficeUser
         self.user = NchantdOfficeUser(self)
         self.user.persist_uuid()
         self.application_NCD = self.user.uuid
@@ -123,10 +124,7 @@ class NchantdOfficeCloak(NchantdCloak):
         try:
             self.model.bootstrap_app_user()
         except Exception as e:
-            logma.warning(
-                f"[nchantdoffice] run_on_launch: "
-                f"bootstrap_app_user raised: {e}"
-            )
+            logma.warning(f"[nchantdoffice] run_on_launch: " f"bootstrap_app_user raised: {e}")
         # Restore last selected node or default to Home
         self.select_initial_node()
         # T-NEW-058 §2.4 — delegate to the testable module-level
@@ -170,8 +168,7 @@ class NchantdOfficeCloak(NchantdCloak):
             active_doc = center.currentWidget() if center is not None else None
         except Exception as exc:
             logma.warning(
-                f"[nchantdoffice] cmd_save: active-document lookup "
-                f"failed: {exc}; falling back to model.save()"
+                f"[nchantdoffice] cmd_save: active-document lookup " f"failed: {exc}; falling back to model.save()"
             )
         if active_doc is not None:
             try:
@@ -185,8 +182,7 @@ class NchantdOfficeCloak(NchantdCloak):
                 return
             except Exception as exc:
                 logma.warning(
-                    f"[nchantdoffice] cmd_save: active document save "
-                    f"raised: {exc}; falling back to model.save()"
+                    f"[nchantdoffice] cmd_save: active document save " f"raised: {exc}; falling back to model.save()"
                 )
         # No active document (or its save raised): preserve the
         # inherited app-instance save behaviour so the application
@@ -257,9 +253,7 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
             try:
                 self.tray_icon = pyqt.QSystemTrayIcon(self)
             except Exception as e:
-                logma.warning(
-                    f"[NchantdOfficeMainWindow] QSystemTrayIcon init failed: {e}"
-                )
+                logma.warning(f"[NchantdOfficeMainWindow] QSystemTrayIcon init failed: {e}")
 
     def initModel(self, cfg=None) -> Self:
         """"""
@@ -324,24 +318,16 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
             return
         try:
             menu = pyqt.QMenu()
-            version_action = menu.addAction(
-                f"New version available: {info.latest_version}"
-            )
+            version_action = menu.addAction(f"New version available: {info.latest_version}")
             version_action.setEnabled(False)  # label only
             if info.download_url:
                 download_action = menu.addAction("Open download page")
                 # Capture info.download_url for the lambda — avoid
                 # the classic Python closure-over-loop-variable bug
                 # by binding as default arg.
-                download_action.triggered.connect(
-                    lambda checked=False, url=info.download_url: self._open_url(url)
-                )
-            dismiss_action = menu.addAction(
-                f"Dismiss for {DISMISS_DURATION_DAYS} days"
-            )
-            dismiss_action.triggered.connect(
-                lambda checked=False, v=info.latest_version: dismiss_version(v)
-            )
+                download_action.triggered.connect(lambda checked=False, url=info.download_url: self._open_url(url))
+            dismiss_action = menu.addAction(f"Dismiss for {DISMISS_DURATION_DAYS} days")
+            dismiss_action.triggered.connect(lambda checked=False, v=info.latest_version: dismiss_version(v))
             self.tray_icon.setContextMenu(menu)
             self.tray_icon.show()
             self.tray_icon.showMessage(
@@ -350,10 +336,7 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
                 pyqt.QSystemTrayIcon.Information,
                 5000,  # 5-second balloon
             )
-            logma.info(
-                f"[NchantdOfficeMainWindow] tray icon menu populated for "
-                f"version {info.latest_version!r}."
-            )
+            logma.info(f"[NchantdOfficeMainWindow] tray icon menu populated for " f"version {info.latest_version!r}.")
         except Exception as e:
             logma.warning(
                 f"[NchantdOfficeMainWindow] _populate_update_tray_menu failed: {e}",
@@ -376,6 +359,7 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
             logma.warning(f"[NchantdOfficeMainWindow] QDesktopServices failed: {e}")
         try:
             import webbrowser
+
             webbrowser.open(url)
         except Exception as e:
             logma.warning(f"[NchantdOfficeMainWindow] webbrowser.open failed: {e}")
@@ -452,11 +436,7 @@ def run_update_process(dbupdate, update_checker, main_window=None) -> dict:
             )
             # T-NEW-060: populate the tray icon menu when an
             # update is available AND the user hasn't dismissed it.
-            if (
-                info.update_available
-                and main_window is not None
-                and hasattr(main_window, "_populate_update_tray_menu")
-            ):
+            if info.update_available and main_window is not None and hasattr(main_window, "_populate_update_tray_menu"):
                 try:
                     main_window._populate_update_tray_menu(info)
                     summary["tray_populated"] = True
