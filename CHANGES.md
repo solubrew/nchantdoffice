@@ -285,6 +285,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   markers from the 2026-08-15 inside-sweep. 4 new
   regression tests in
   `tests/test_t_new_141c_clear_stale_todos.py`.
+- **T-NEW-115** (audit only) -- the live bug was already
+  fixed by T-NEW-130 (`ac448ad`); this card is a
+  catalogue cleanup.
+- **T-NEW-116** Jupyter default working directory
+  (2026-08-16) -- the Jupyter subprocess is now spawned
+  with a cwd that defaults to
+  ``~/Documents/NchantdLibrary`` (created if missing)
+  when no file is open. The previous behaviour fell
+  back to the bare process cwd (often the application
+  bundle dir, which is read-only on packaged installs).
+  Fix: extracted ``_resolve_jupyter_cwd()`` helper with
+  a 3-step lookup chain (file parent -> NchantdLibrary
+  default -> process cwd as last-resort).
+  ``start_jupyter_server`` delegates to it. 4 new
+  regression tests in
+  `tests/test_t_new_116_jupyter_default_dir.py`.
 
 ### Changed (T-NEW-110..137)
 

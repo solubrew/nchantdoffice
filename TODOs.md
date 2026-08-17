@@ -4625,8 +4625,28 @@ and deserves its own sub-card if non-trivial.
 
 **Catalog updates** (filed 2026-08-15, session: testing-report + TODO sweep):
 
-- **T-NEW-115** Creating new Nodes at the top level is blocked — filed from `testing-report_20260815.md`.
-- **T-NEW-116** Jupyter server default working directory (~/Documents/NchantdLibrary) — filed from `testing-report_20260810.md`.
+- **T-NEW-115** ✅ Creating new Nodes at the top level is
+  blocked -- **FIXED** by T-NEW-130 (`ac448ad`). Top-level
+  node creation now lands at `pid=0` via the `top_level`
+  flag on `NchantdNewDocumentSigil`. Pin:
+  `tests/test_top_level_node_create.py` 8 RED tests
+  covering the flag dispatch + sigil launch.
+- **T-NEW-116** ✅ Jupyter server default working directory
+  (~/Documents/NchantdLibrary) -- **FIXED** (2026-08-16,
+  gamma `pending`). The Jupyter subprocess is now spawned
+  with a cwd that defaults to
+  ``~/Documents/NchantdLibrary`` (created if missing)
+  when no file is open. The previous behaviour used
+  ``dirname(self.file_path)`` when a file is set and
+  fell back to the bare process cwd (often the
+  application bundle dir, which is read-only on packaged
+  installs). Fix: extracted ``_resolve_jupyter_cwd()``
+  helper with a 3-step lookup chain (file parent ->
+  ``~/Documents/NchantdLibrary`` -> process cwd as
+  last-resort). ``start_jupyter_server`` delegates to
+  it. Pin: `tests/test_t_new_116_jupyter_default_dir.py`
+  4 new tests (behavioural: default + file-path, source-
+  level: helper exists + start_jupyter_server delegates).
 - **T-NEW-117** Palette scan crashes: `PyfficeColorPalette.extract_palette` missing — filed from `testing-report_20260810_001.md`; verified still broken 2026-08-15.
 - **T-NEW-118** Journal PII detector + redacted view with PIN copy — re-filed (was orphaned by the T-NEW-066/067/068 number collision inside T-NEW-065's deferred-work section).
 - **T-NEW-119** Journal content retention: timestamp column + retention policy + delete_marked — re-filed (same number-collision orphaning).

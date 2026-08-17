@@ -1317,6 +1317,63 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self.stop_jupyter_server()
         return self
 
+    def _resolve_jupyter_cwd(self) -> Any:
+        """T-NEW-116: return the cwd the Jupyter subprocess
+        should be spawned in.
+
+        Resolution order (first match wins):
+          1. The parent directory of ``self.file_path``
+             (when a notebook file is open) so the user
+             sees the same folder Jupyter shows in the
+             webview.
+          2. ``~/Documents/NchantdLibrary`` (the user
+             library convention) when no file is open.
+             The directory is created if missing so the
+             Jupyter webview always has a non-empty tree
+             to show on first run.
+          3. ``os.getcwd()`` (process cwd) as a last-resort
+             fallback -- only on systems where the home
+             directory is unavailable.
+
+        Returns:
+            The cwd as a string path suitable for
+            ``subprocess.Popen(cwd=...)``.
+
+        Defensive at every step: any exception is logged
+        and falls back to ``os.getcwd()`` so Jupyter can
+        still launch (the user just sees the wrong tree).
+        """
+        from os.path import dirname as _dirname
+        from pathlib import Path as _Path
+        # Use the module-level os.path.expanduser so tests
+        # that monkeypatch ``os.path.expanduser`` see the
+        # patch. (T-NEW-116)
+        from os.path import expanduser as _expanduser
+        try:
+            if self.file_path:
+                parent = _dirname(self.file_path)
+                if exists(parent):
+                    return parent
+        except Exception as exc:
+            logma.warning(
+                f"[notebook] _resolve_jupyter_cwd: file_path "
+                f"lookup failed: {exc}; falling back to default"
+            )
+        # Default: ~/Documents/NchantdLibrary, created if
+        # missing.
+        try:
+            default_dir = _Path(
+                _expanduser("~")
+            ) / "Documents" / "NchantdLibrary"
+            default_dir.mkdir(parents=True, exist_ok=True)
+            return str(default_dir)
+        except Exception as exc:
+            logma.warning(
+                f"[notebook] _resolve_jupyter_cwd: default "
+                f"dir create failed: {exc}; using process cwd"
+            )
+            return os.getcwd()
+
     def start_jupyter_server(self, port=None) -> Self:
         """Start the Jupyter notebook server"""
         import time
@@ -1381,10 +1438,15 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
                 "--ServerApp.allow_remote_access=True",
             ]
 
-            # Start notebook in specific directory if file_path is set
-            cwd = None
-            if self.file_path and exists(dirname(self.file_path)):
-                cwd = dirname(self.file_path)
+            # Start notebook in specific directory. T-NEW-116:
+            # the default is now ``~/Documents/NchantdLibrary`` so
+            # the Jupyter tree starts at the user's library
+            # directory (rather than the application bundle cwd,
+            # which is read-only on packaged installs). The cwd
+            # is created if missing. When a file path is set,
+            # the file's parent directory is used (unchanged from
+            # the pre-fix behaviour).
+            cwd = self._resolve_jupyter_cwd()
 
             logma.info(
                 f"[notebook] launching Jupyter | argv={cmd} | " f"cmdline={' '.join(cmd)} | cwd={cwd or os.getcwd()}"
