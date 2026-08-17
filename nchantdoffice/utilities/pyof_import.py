@@ -312,6 +312,14 @@ def import_one_table(src: sqlite3.Connection, host: sqlite3.Connection, spec: Ta
             # risk a duplicate on re-import. Matches the defensive
             # treatment of pUUID=None in _import_content_table.
             continue
+        # T-NEW-143: skip soft-deleted source rows. DELETE_BIT=1 is a
+        # squirl tombstone and must not be resurrected on the host.
+        # row.get() returns None when the column is absent on an older
+        # source schema — treated as "not deleted" so legacy sources
+        # keep importing. Missing/None/0 → live; any truthy int → skip.
+        if row.get("DELETE_BIT"):
+            result.skipped += 1
+            continue
         # Host UUID lookup first. If the host already has this UUID,
         # skip (host wins). The host may have additional columns the
         # source doesn't (e.g. host-side metadata); we only care about

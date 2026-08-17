@@ -4643,8 +4643,37 @@ and deserves its own sub-card if non-trivial.
 - **T-NEW-143** `.pyof` import excludes `DELETE_BIT=1` rows -- filed from `testing-report_20260815.md` Issue 3.
 - **T-NEW-144** `file_details` toolbox redirects to internal data when tab is an internal document + external file becomes editor (not viewer) -- filed from `testing-report_20260815.md` Issues 4 & 5; consider T-NEW-144a (redirect) / T-NEW-144b (editor) if scope splits.
 - **T-NEW-145** `Ctrl+S` wired to save button logic -- filed from `testing-report_20260815.md` Issue 6.
-- **T-NEW-146** ✅ `bootstrap_app_user` regression: `cannot pickle
-  'generator' object` -- **FIXED** (2026-08-16, gamma `pending`).
+- **T-NEW-143** ✅ `.pyof` import excludes `DELETE_BIT=1` rows
+  -- **FIXED** (2026-08-16, gamma `pending`). The base-6
+  branch of `import_one_table` (nchantdoffice/utilities/
+  pyof_import.py) now skips any source row whose `DELETE_BIT`
+  is truthy (squirl soft-delete tombstones). `row.get(
+  "DELETE_BIT")` returns `None` when the column is absent on
+  older schemas -- treated as "not deleted" so legacy
+  sources keep importing. Missing/None/0 = live; any
+  truthy int = skip. The `_content` branch is untouched
+  (content tables are versioned, not soft-deleted). Pin:
+  `tests/test_t_new_143_delete_bit_filter.py` 6 new tests
+  (1 source-level + 5 e2e: doc_tree_node, app_tab, all-base-6
+  broad sweep, NULL-as-live, missing-column backward compat).
+- **T-NEW-145** ✅ `Ctrl+S` wired to save button logic --
+  **FIXED** (2026-08-16, gamma `pending`). The nchantrs
+  shortcut wiring (`NchantdCloak.setup_shortcuts`) binds
+  `Ctrl+S -> self.cmd_save -> self.parent.model.save()`
+  (application-level instance write). The user expects
+  Ctrl+S to behave like the document toolbar save button
+  (`cmd_save_tab -> self.save()`). Fix: override `cmd_save`
+  on `NchantdOfficeCloak` -- active-doc lookup via
+  `self.main.view.panes["center"].currentWidget()`; when
+  found, dispatch to the doc's `save()` / `save_app()`;
+  fall back to `self.parent.model.save()` when no active
+  document (defensive: missing view/panes/currentWidget).
+  Pin: `tests/test_t_new_145_ctrl_s_save.py` 4 new tests
+  (override exists, dispatch-to-active-document source
+  shape, fallback-to-model source shape, defensive-missing-
+  panes source shape).
+- **T-NEW-146** ✅ `bootstrap_app_user` regression: cannot pickle
+  'generator' object — **FIXED** (2026-08-16, gamma `pending`).
   Root cause: `NchantdUser.__init__` (nchantrs) assigns
   `self.pword = self.get_password()` and `get_password` is a
   generator function, so `pword` is a generator instance by

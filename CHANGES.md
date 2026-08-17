@@ -103,6 +103,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   has no attribute 'get_table'`. Fix: route through
   `self.store.get_table` (the store-layer method). 2 new
   regression tests in `tests/test_app_user_bootstrap.py`.
+- **T-NEW-143** `.pyof` import excludes `DELETE_BIT=1` rows
+  (2026-08-16) — the base-6 branch of `import_one_table`
+  (nchantdoffice/utilities/pyof_import.py) was copying
+  squirl soft-delete tombstones verbatim into the host.
+  Fix: `if row.get("DELETE_BIT"): continue` at the top of
+  the base-6 per-row loop. Missing/None/0 = live; any truthy
+  int = skip. `_content` tables are untouched (they are
+  versioned, not soft-deleted). 6 new regression tests in
+  `tests/test_t_new_143_delete_bit_filter.py`.
+- **T-NEW-145** `Ctrl+S` wired to save button logic
+  (2026-08-16) — overrode `cmd_save` on `NchantdOfficeCloak`
+  (the nchantrs shortcut was calling the inherited
+  `NchantdCloak.cmd_save`, which calls `self.parent.model.save()`
+  — the application-level instance write, NOT the
+  document-level save). Override does an active-doc lookup
+  via `self.main.view.panes["center"].currentWidget()` and
+  dispatches to the doc's `save()` / `save_app()`; falls back
+  to `self.parent.model.save()` when no active document
+  (defensive against missing view/panes/currentWidget).
+  4 new source-shape regression tests in
+  `tests/test_t_new_145_ctrl_s_save.py`.
 
 ### Changed (T-NEW-110..137)
 
@@ -209,15 +230,17 @@ them to "Added"/"Fixed" until they ship.
   `NchantdTabPane` (filed from `testing-report_20260815.md`
   Issue 2). **Note: 100-node cap popup superseded by T-NEW-135
   redirect per user direction 2026-08-16; no T-NEW for popup.**
-- **T-NEW-143** `.pyof` import excludes `DELETE_BIT=1` rows
+- **T-NEW-143** ✅ `.pyof` import excludes `DELETE_BIT=1` rows
   (filed from `testing-report_20260815.md` Issue 3).
+  **FIXED** in the T-NEW-143 commit; see "Added" above.
 - **T-NEW-144** `file_details` toolbox redirects to internal
   data when tab is an internal document + external file
-  becomes editor (not viewer) (filed from
+  becomes editor (not viewer) -- filed from
   `testing-report_20260815.md` Issues 4 & 5; split into
-  T-NEW-144a/144b if scope balloons).
-- **T-NEW-145** `Ctrl+S` wired to save button logic (filed from
-  `testing-report_20260815.md` Issue 6).
+  T-NEW-144a/144b if scope balloons.
+- **T-NEW-145** ✅ `Ctrl+S` wired to save button logic (filed from
+  `testing-report_20260815.md` Issue 6). **FIXED** in the
+  T-NEW-145 commit; see "Added" above.
 - **T-NEW-146** `bootstrap_app_user` regression: cannot pickle
   'generator' object — post-T-NEW-129 live traceback
   2026-08-15 22:19:02; the `user` dict passed to

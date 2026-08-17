@@ -143,6 +143,56 @@ class NchantdOfficeCloak(NchantdCloak):
         )
         return self
 
+    def cmd_save(self) -> None:
+        """T-NEW-145: Ctrl+S dispatch.
+
+        Overrides ``NchantdCloak.cmd_save`` (which calls
+        ``self.parent.model.save()`` — application-level instance
+        write). The user expects Ctrl+S to behave like the
+        document toolbar save button (``cmd_save_tab`` -> ``self.save()``),
+        not the app-instance save.
+
+        Resolution order:
+          1. Look up the active document via
+             ``self.main.view.panes["center"].currentWidget()``.
+          2. If found, call its ``save()`` (and ``save_app()`` when
+             the doc is an app_media document — same routing as
+             ``NchantdOfficeDocumentMixin.save``).
+          3. Fall back to ``self.parent.model.save()`` when no
+             active document exists or the lookup chain raises
+             (defensive: missing view / panes / currentWidget).
+        """
+        active_doc = None
+        try:
+            view = getattr(getattr(self, "main", None), "view", None)
+            panes = getattr(view, "panes", {}) or {}
+            center = panes.get("center")
+            active_doc = center.currentWidget() if center is not None else None
+        except Exception as exc:
+            logma.warning(
+                f"[nchantdoffice] cmd_save: active-document lookup "
+                f"failed: {exc}; falling back to model.save()"
+            )
+        if active_doc is not None:
+            try:
+                # Mirror cmd_save_tab: call save() (and save_app()
+                # when present) so app_media docs persist through
+                # the app_doc_content / app_media_content path.
+                if hasattr(active_doc, "save") and callable(active_doc.save):
+                    active_doc.save()
+                if hasattr(active_doc, "save_app") and callable(active_doc.save_app):
+                    active_doc.save_app()
+                return
+            except Exception as exc:
+                logma.warning(
+                    f"[nchantdoffice] cmd_save: active document save "
+                    f"raised: {exc}; falling back to model.save()"
+                )
+        # No active document (or its save raised): preserve the
+        # inherited app-instance save behaviour so the application
+        # state still persists when no tab is focused.
+        self.parent.model.save()
+
     def select_initial_node(self) -> None:
         """Restore last selected node on successive runs, fallback to Home."""
         # Get last selected node from preferences
