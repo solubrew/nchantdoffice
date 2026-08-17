@@ -158,6 +158,18 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         self.initView()
         return self
 
+    def _navigate_to_new_doc(self, pos: int) -> Self:
+        """T-NEW-139: shared post-creation navigation.
+
+        Refreshes the left-pane tree so the new doc shows up
+        in its parent's tab list, then focuses the new
+        tab in the center pane. Used by ``add_document``
+        and any future sibling (e.g. ``add_tab``).
+        """
+        self.app.view.panes["left"].tree.model.current_node.updateTabs("center")
+        self.app.view.panes["center"].setCurrentIndex(pos)
+        return self
+
     def add_document(self, signal=None, *args, **kwargs) -> Self:
         """Add a new document."""
         cfg = args[0]["action"].action
@@ -213,9 +225,10 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         }
         params = cfg["parameters_dict"]
         self.app.model.add_document(document, did, pid, pos, widget, params, doc_type, "center", db, True)
-        # TODO cleanup add_tab, add_document signatures and combine as much code as possible
-        self.app.view.panes["left"].tree.model.current_node.updateTabs("center")
-        self.app.view.panes["center"].setCurrentIndex(pos)
+        # T-NEW-139: post-creation navigation extracted to
+        # _navigate_to_new_doc(pos) so any future sibling
+        # (add_tab, add_shortcut, etc.) can reuse it.
+        self._navigate_to_new_doc(pos)
 
         # Emit signal that document was created
         self.document_created.emit(doc_type)

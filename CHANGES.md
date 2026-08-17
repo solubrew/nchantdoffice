@@ -182,6 +182,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   source-level pin, populate delegates-to-parse
   behavioural, populate populates-entries behavioural).
 
+- **T-NEW-139** Toolbar post-creation navigation helper
+  (2026-08-16) -- the original TODO at ``toolbars.py:216``
+  asked to combine ``add_tab`` + ``add_document`` cfg
+  wiring. There is no ``add_tab`` sibling on
+  ``NchantdNewDocumentToolBar``; the real candidate for
+  extraction was the two-line post-creation navigation
+  block (left-pane ``updateTabs('center')`` + center-pane
+  ``setCurrentIndex(pos)``). Fix: extracted
+  ``_navigate_to_new_doc(pos) -> Self`` helper;
+  ``add_document`` delegates to it. Any future
+  ``add_tab`` / ``add_shortcut`` method on this class
+  can call the same helper. 4 new regression tests in
+  `tests/test_t_new_139_toolbar_navigate.py`.
+
 ### Changed (T-NEW-110..137)
 
 - **T-NEW-121** em-dash sweep + encoding-declaration placement —

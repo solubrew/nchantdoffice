@@ -4636,7 +4636,20 @@ and deserves its own sub-card if non-trivial.
 - **T-NEW-123** Embedded-TODO sweep: implement-method stubs and config wiring — covers the 21 uncovered TODO markers (embedded_todos audit dim 58%).
 
 - **T-NEW-138** Journal editor followups: always-scroll to bottom + refactor to standard populate (covers `journal.py:132, 422`) -- pairs with T-NEW-079.
-- **T-NEW-139** Toolbar signature cleanup: combine `add_tab` + `add_document` shared cfg/wiring (`toolbars.py:216`).
+- **T-NEW-139** ✅ Toolbar signature cleanup: combine `add_tab`
+  + `add_document` shared cfg/wiring (`toolbars.py:216`) --
+  **FIXED** (2026-08-16, gamma `pending`). The original
+  TODO asked to combine ``add_tab`` and ``add_document``,
+  but no ``add_tab`` sibling exists on
+  ``NchantdNewDocumentToolBar``. The real candidate for
+  extraction was the two-line post-creation navigation
+  block (left-pane ``updateTabs('center')`` + center-pane
+  ``setCurrentIndex(pos)``). Fix: extracted
+  ``_navigate_to_new_doc(pos) -> Self`` helper; ``add_document``
+  delegates to it. Any future ``add_tab`` / ``add_shortcut``
+  method on this class can call the same helper. Pin:
+  `tests/test_t_new_139_toolbar_navigate.py` 4 new tests
+  (helper-exists, signature shape, source-level pin x2).
 - **T-NEW-140** Free-user right-side tab: lock default to Ad tab (`settings.py:1209`) -- pairs with T-NEW-135 redirect.
 - **T-NEW-141** Inside-nchantdoffice TODO sweep: 10 remaining markers (images palette drawer, notebook stubs, catalog tab-None, config features pane, 3 stub methods, users.has_pro service truth) -- filed from the 2026-08-15 inside-sweep.
 - **T-NEW-142** ✅ Tab Delete broken from document toolbar +
