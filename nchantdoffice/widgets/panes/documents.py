@@ -794,8 +794,15 @@ class NchantdOfficeTabEditPane(NchantdPane):
         self.tab_buttonbar = NchantdButtonBar(self, cfg).initWidget()
         layout.addWidget(self.tab_buttonbar)
         tab = self.get_tab()
+        # T-NEW-141b: when no tab is selected (e.g. the user
+        # just opened the toolbox with the center pane empty
+        # or focused on a brand-new node that has no tabs
+        # yet), ``get_tab()`` returns ``None``. Synthesize a
+        # placeholder ``NchantdOfficeTab`` so the toolbox
+        # renders empty label fields (name, position, location,
+        # type) without crashing. The placeholder is NOT
+        # persisted -- it is purely a UI scaffold.
         try:
-            # TODO: tab is None for intialized catalog and so we need to stub in values
             if tab is None:
                 cfg = {"name": "", "type": "", "position": 0}
                 tab = NchantdOfficeTab(self, cfg).initWidget()

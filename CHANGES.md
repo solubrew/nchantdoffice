@@ -234,6 +234,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   catalog tab-None stub, config features pane) are
   deferred to T-NEW-141b. 4 new regression tests in
   `tests/test_t_new_141_stub_methods.py`.
+- **T-NEW-141b** Inside-nchantdoffice TODO sweep (subset 2)
+  (2026-08-16) -- four of the seven remaining
+  ``# TODO`` / no-op stub markers in the
+  ``nchantdoffice/`` package shipped here; the remaining
+  three (palette drawer wiring, tool drawer re-render,
+  per-doctype features pane) are deferred to T-NEW-141c
+  (live UI architecture). The catalog tab-None marker at
+  ``panes/documents.py:798`` was a misleading TODO
+  comment over an existing stub; replaced with a real
+  docstring describing the placeholder-tab contract.
+  The two Jupyter webview hooks
+  (``notebooks.py:1786/1790``) were no-op stubs; they
+  now log the ``loadStarted`` / ``loadProgress`` signals
+  so Jupyter-tab load attempts are visible in the
+  application log. The hardcoded ``self.has_pro = True``
+  in ``users.py:69`` now reads from
+  ``load_credentials().user_tier`` (pycurity
+  ``DesktopCredentials``); tier mapping is
+  `pro` / `pro_data` / `enterprise` -> True, `free` ->
+  False, missing / malformed -> True (backward compat
+  with the original). The service-truth path is
+  deferred; the local cache is what we have. 7 new
+  regression tests in
+  `tests/test_t_new_141b_safe_subset.py`.
 
 ### Changed (T-NEW-110..137)
 

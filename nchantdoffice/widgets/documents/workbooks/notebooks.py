@@ -1783,13 +1783,29 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             logma.error(f"[notebook] failed to wire browser load logging: {e}", exc_info=True)
         return self
 
-    def _on_webview_load_started(self):
-        """"""
-        #TODO: implement method
+    def _on_webview_load_started(self) -> None:
+        """T-NEW-141b: log the QWebEngineView ``loadStarted``
+        signal so Jupyter-tab load attempts are visible in
+        the application log. The richer telemetry
+        (load-progress percent + load-failed reasons) is
+        handled by ``_install_net_instrumentation`` /
+        ``_install_error_instrumentation``; this hook is
+        the coarse "the user just kicked off a load" event.
+        """
+        logma.info("[notebook] Jupyter webview load started")
 
-    def _on_webview_load_progress(self):
-        """"""
-        #TODO: implement method
+    def _on_webview_load_progress(self, progress: int = 0) -> None:
+        """T-NEW-141b: log the QWebEngineView ``loadProgress``
+        signal so slow Jupyter loads are observable. The
+        ``progress`` arg is the percent (0..100); we log
+        the integer at debug level so the log is not
+        noisy in normal operation.
+        """
+        try:
+            pct = int(progress)
+        except (TypeError, ValueError):
+            pct = 0
+        logma.debug(f"[notebook] Jupyter webview load progress: {pct}%")
 
     def _install_net_instrumentation(self, view) -> Self:
         """Wrap window.fetch / window.WebSocket to log failures.

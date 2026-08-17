@@ -4710,6 +4710,39 @@ and deserves its own sub-card if non-trivial.
   consults a real backend, source-level pin:
   `populate_data` has a real docstring, behavioural:
   index math for the clamp).
+
+- **T-NEW-141b** ✅ Inside-nchantdoffice TODO sweep (subset 2)
+  -- **FIXED (subset)** (2026-08-16, gamma `pending`).
+  This commit closes 4 of the 7 remaining markers from
+  T-NEW-141b. Three are deferred to T-NEW-141c
+  (palette drawer wiring, tool drawer re-render,
+  per-doctype features pane -- all require live UI
+  architecture decisions before shipping).
+  - `panes/documents.py:798` -- the misleading "tab is
+    None" TODO was replaced with a real docstring; the
+    stub (placeholder NchantdOfficeTab) is preserved and
+    documented as a UI scaffold only.
+  - `documents/workbooks/notebooks.py:1786/1790` --
+    `_on_webview_load_started` and
+    `_on_webview_load_progress` were no-op stubs. The
+    QWebEngineView `loadStarted` / `loadProgress` signals
+    now log the event (info + debug percent) so
+    Jupyter-tab load attempts are visible in the app
+    log.
+  - `utilities/users.py:69` -- `self.has_pro = True` was
+    hardcoded. Fix: read from
+    `load_credentials().user_tier` (pycurity
+    `DesktopCredentials` cache). Tier mapping:
+    `pro` / `pro_data` / `enterprise` -> True; `free`
+    -> False; missing / malformed creds -> True
+    (backward compat with the hardcoded original).
+    The service-truth path (a live
+    `nchantdoffice.com` call to refresh `user_tier` on
+    every boot) is explicitly deferred; the local cache
+    is what we have. Pin:
+    `tests/test_t_new_141b_safe_subset.py` 7 new tests
+    (3 source-level + 4 behavioural: pro / free /
+    enterprise / no-creds scenarios).
 - **T-NEW-142** ✅ Tab Delete broken from document toolbar +
   `NchantdTabPane` -- **FIXED** (2026-08-16, gamma `pending`).
   Root cause: the button-bar config at

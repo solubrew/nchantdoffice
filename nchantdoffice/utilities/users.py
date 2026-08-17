@@ -66,7 +66,50 @@ class NchantdOfficeUser(NchantdUser):
         logma.info(
             f"[users] NchantdOfficeUser.__init__ " f"parent={type(parent).__name__} cfg_keys={list((cfg or {}).keys())}"
         )
-        self.has_pro = True  # TODO: need to connect to service for truth and a need a place to store data locally
+        # T-NEW-141b: derive ``has_pro`` from the local
+        # ``DesktopCredentials`` cache (``pycurity`` /
+        # ``credentials.load_credentials().user_tier``).
+        # The service-truth path (a live ``nchantdoffice.com``
+        # call to refresh ``user_tier`` on every boot) is
+        # explicitly out of scope; the local cache is what
+        # we have. Tier semantics: ``pro`` / ``pro_data`` /
+        # ``enterprise`` grant ``has_pro=True``; ``free`` (and
+        # missing / malformed creds) default to True to
+        # preserve the original hardcoded behaviour.
+        self.has_pro = self._resolve_has_pro_from_credentials()
+
+    @staticmethod
+    def _resolve_has_pro_from_credentials() -> bool:
+        """T-NEW-141b: read the cached ``user_tier`` and map
+        it to a pro / free boolean.
+
+        Defensive at every step: any exception, missing
+        field, or unparseable value falls back to True
+        (the original hardcoded behaviour). The free tier
+        has_pro=False path is opt-in -- the user must
+        have explicitly stored ``user_tier='free'`` for
+        this method to return False.
+        """
+        try:
+            from nchantdoffice.utilities.credentials import (
+                load_credentials,
+            )
+            creds = load_credentials()
+        except Exception as exc:
+            logma.warning(
+                f"[users] _resolve_has_pro_from_credentials: "
+                f"load_credentials failed: {exc}; defaulting "
+                f"has_pro=True"
+            )
+            return True
+        if creds is None:
+            return True
+        tier = getattr(creds, "user_tier", None)
+        if not tier:
+            # Legacy credentials with no user_tier field
+            # default to True (matches the pre-141b behaviour).
+            return True
+        return tier in ("pro", "pro_data", "enterprise")
 
     def persist_uuid(self) -> str:
         """Read the persisted UUID from user_config; if absent,
