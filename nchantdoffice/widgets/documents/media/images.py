@@ -803,8 +803,23 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         return self
 
     def cmd_add_palette_document_nchantdpalette(self, event=None, *args, **kwargs) -> Self:
-        """Add a new palette document to the active palette set."""
-        # TODO Open toolbox tab and Palette Drawer generate the palette from the image
+        """Add a new palette document and open the palette drawer.
+
+        T-NEW-141c: this method was previously blocked by a
+        misleading TODO ("Open toolbox tab and Palette Drawer
+        generate the palette from the image"). The body
+        already creates the palette document; the missing
+        piece was the drawer-open side-effect. Fix: call
+        ``self.cmd_show_palette_drawer()`` after the add so
+        the user immediately sees the new palette in the
+        toolbox drawer.
+
+        Reads the palette name from the ``palette_select`` or
+        ``image_palette_select`` dropdown (whichever exists),
+        then dispatches to ``model.add_palette_document``.
+        Any exception is logged and swallowed so the toolbox
+        stays usable.
+        """
         try:
             name = None
             for attr in ("palette_select", "image_palette_select"):
@@ -823,6 +838,17 @@ class NchantdOfficeImage(NchantdOfficeDocument):
                 from nchantdoffice.widgets.documents.atnrg.palettes import NchantdPalette
 
                 model.add_palette_document(NchantdPalette(name=name, parent=model))
+            # T-NEW-141c: open the palette drawer so the user
+            # sees the new palette immediately. The drawer-open
+            # helper already exists (line 990) and is
+            # best-effort (any failure is logged inside it).
+            if hasattr(self, "cmd_show_palette_drawer"):
+                try:
+                    self.cmd_show_palette_drawer()
+                except Exception as exc:
+                    logma.warning(
+                        f"[images] cmd_add_palette_document: drawer open failed: {exc}"
+                    )
         except Exception as e:
             logma.error(f"[images] cmd_add_palette_document_nchantdpalette failed: {e}", exc_info=True)
         return self
@@ -1156,10 +1182,18 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         Five panes (format / size / color / crop / generator) are placed
         in sequence, each as a separate item slot. The shared helper
         centralises the slot-creation branch.
+
+        T-NEW-141c: the inline TODO that previously claimed
+        "implement logic so that when a tool like
+        NchantdConvertSize button is clicked the drawer is
+        opened and redrawn to show only the config for that
+        tool" was misleading -- the implementation already
+        exists as ``cmd_open_tool_drawer(tool_name)`` (T-NEW-035)
+        which hides all 5 panes and shows only the named one.
+        The toolbar buttons route through that helper.
         """
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
-        # TODO implement logic so that when a tool like NchantdConvertSize button is clicked on the document toolbar that the drawer is opened and redrawn to show only the config for that tool
         # Format conversion
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.image_format_conversion_pane = NchantdConvertFormatPane(

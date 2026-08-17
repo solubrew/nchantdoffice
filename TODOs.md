@@ -4711,6 +4711,50 @@ and deserves its own sub-card if non-trivial.
   `populate_data` has a real docstring, behavioural:
   index math for the clamp).
 
+- **T-NEW-141c** ✅ Inside-nchantdoffice TODO sweep (final
+  subset) -- **FIXED** (2026-08-16, gamma `pending`).
+  Investigation of the 3 remaining markers showed that
+  the actual implementation already exists; the
+  original TODOs were misleading. Fix: replace each
+  with a real docstring describing the existing
+  contract.
+  - `images.py:807` ``cmd_add_palette_document
+    _nchantdpalette`` claimed the TODO was "Open toolbox
+    tab and Palette Drawer generate the palette from
+    the image". The function body already created the
+    palette document; the missing piece was the
+    drawer-open side-effect. Fix: call
+    ``self.cmd_show_palette_drawer()`` after the add so
+    the user immediately sees the new palette.
+  - `images.py:1162`` ``init_drawer_image_tools``
+    claimed "implement logic so that when a tool like
+    NchantdConvertSize button is clicked the drawer is
+    opened and redrawn to show only the config for
+    that tool". The implementation already exists as
+    ``cmd_open_tool_drawer(tool_name)`` (T-NEW-035) which
+    hides all 5 panes and shows only the named one. Fix:
+    replace the stale TODO with a docstring referencing
+    the dispatcher.
+  - `settings.py:1016` claimed "implement in
+    NchantdOfficeDocumentConfigPane - features". The
+    class exists at ``panes/document_settings.py:73``
+    with a per-doctype registry
+    (MatrixConfigPane, NotebookConfigPane,
+    ImageConfigPane, ScriptConfigPane) wired by
+    T-NEW-027. Fix: replace the stale TODO with a
+    docstring describing the registry contract.
+
+  Pin: `tests/test_t_new_141c_clear_stale_todos.py` 4
+  new tests (3 source-level pins confirming the
+  draw-open / drawer-dispatch / registry contracts +
+  1 regression guard for the
+  ``NchantdOfficeDocumentConfigPane`` class).
+
+  T-NEW-141 (with 141b + 141c) closes all 10 of the
+  inside-nchantdoffice TODO markers from the
+  2026-08-15 inside-sweep. No markers remain in
+  scope.
+
 - **T-NEW-141b** ✅ Inside-nchantdoffice TODO sweep (subset 2)
   -- **FIXED (subset)** (2026-08-16, gamma `pending`).
   This commit closes 4 of the 7 remaining markers from

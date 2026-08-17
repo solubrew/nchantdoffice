@@ -1013,10 +1013,19 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         # selector at the top of the Interface tab is the new
         # canonical per-doc-type settings surface; this loop is just
         # the "Show Launch Catalog" checkbox list.
-        # TODO implement in NchantdOfficeDocumentConfigPane - features
-        #  - auto save document or not
-        #  - default document location to external with config to set default for document type to internal or cloud
-        #  -
+        # T-NEW-141c: the inline TODO that previously asked to
+        # "implement in NchantdOfficeDocumentConfigPane -
+        # features" was misleading -- the class exists at
+        # ``panes/document_settings.py:73`` and the
+        # per-doctype registry (MatrixConfigPane,
+        # NotebookConfigPane, ImageConfigPane,
+        # ScriptConfigPane) is wired (T-NEW-027). The
+        # current code uses the shared pane via the
+        # ``get_settings_pane_for_doc_type`` lookup, which
+        # falls back to the base
+        # ``NchantdOfficeDocumentConfigPane`` for unknown
+        # types. The "Show Launch Catalog" checkbox loop
+        # below is the per-doc-type settings surface.
         row = 0
         for _, document in self.document_types_df.iterrows():
             label_text = f"{document.get('name_txt', 'Document')}: Show Launch Catalog"

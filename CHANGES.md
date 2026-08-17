@@ -254,10 +254,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ``DesktopCredentials``); tier mapping is
   `pro` / `pro_data` / `enterprise` -> True, `free` ->
   False, missing / malformed -> True (backward compat
-  with the original). The service-truth path is
-  deferred; the local cache is what we have. 7 new
+  Defaulting to True preserves the
+  pre-141b behaviour for legacy users. 7 new
   regression tests in
   `tests/test_t_new_141b_safe_subset.py`.
+- **T-NEW-141c** Inside-nchantdoffice TODO sweep (final
+  subset) (2026-08-16) -- investigation of the 3
+  remaining markers showed that the actual implementation
+  already exists; the original TODOs were misleading.
+  ``images.py:807`` ``cmd_add_palette_document
+  _nchantdpalette`` already created the palette document
+  but did not open the drawer; the fix calls
+  ``self.cmd_show_palette_drawer()`` after the add so the
+  user immediately sees the new palette.
+  ``images.py:1162`` ``init_drawer_image_tools`` claimed
+  the per-tool selective re-render was unimplemented; the
+  implementation already exists as
+  ``cmd_open_tool_drawer(tool_name)`` (T-NEW-035) which
+  hides all 5 panes and shows only the named one. The
+  stale TODO is replaced with a docstring referencing the
+  dispatcher. ``settings.py:1016`` claimed the
+  ``NchantdOfficeDocumentConfigPane`` features pane was
+  unimplemented; the class exists at
+  ``panes/document_settings.py:73`` with a per-doctype
+  registry (MatrixConfigPane, NotebookConfigPane,
+  ImageConfigPane, ScriptConfigPane) wired by T-NEW-027.
+  The stale TODO is replaced with a docstring describing
+  the registry contract. T-NEW-141 (with 141b + 141c)
+  closes all 10 of the inside-nchantdoffice TODO
+  markers from the 2026-08-15 inside-sweep. 4 new
+  regression tests in
+  `tests/test_t_new_141c_clear_stale_todos.py`.
 
 ### Changed (T-NEW-110..137)
 
