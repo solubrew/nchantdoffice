@@ -4639,6 +4639,12 @@ and deserves its own sub-card if non-trivial.
 - **T-NEW-139** Toolbar signature cleanup: combine `add_tab` + `add_document` shared cfg/wiring (`toolbars.py:216`).
 - **T-NEW-140** Free-user right-side tab: lock default to Ad tab (`settings.py:1209`) -- pairs with T-NEW-135 redirect.
 - **T-NEW-141** Inside-nchantdoffice TODO sweep: 10 remaining markers (images palette drawer, notebook stubs, catalog tab-None, config features pane, 3 stub methods, users.has_pro service truth) -- filed from the 2026-08-15 inside-sweep.
+- **T-NEW-142** Tab Delete broken from document toolbar + NchantdTabPane -- filed from `testing-report_20260815.md` Issue 2.
+- **T-NEW-143** `.pyof` import excludes `DELETE_BIT=1` rows -- filed from `testing-report_20260815.md` Issue 3.
+- **T-NEW-144** `file_details` toolbox redirects to internal data when tab is an internal document + external file becomes editor (not viewer) -- filed from `testing-report_20260815.md` Issues 4 & 5; consider T-NEW-144a (redirect) / T-NEW-144b (editor) if scope splits.
+- **T-NEW-145** `Ctrl+S` wired to save button logic -- filed from `testing-report_20260815.md` Issue 6.
+- **T-NEW-146** `bootstrap_app_user` regression: `cannot pickle 'generator' object` -- post-T-NEW-129 live traceback 2026-08-15 22:19:02; the `user` dict passed to `store_app_user` contains a generator value that `squirl.deepcopy` cannot serialise.
+- **T-NEW-147** `get_app_user` AttributeError: `'NchantdOfficeCloakModel' object has no attribute 'get_table'` -- post-T-NEW-129 live traceback 2026-08-15 22:19:02; `model.get_table` does not exist on the cloak model (likely `self.codex` or `self.store.get_table` is intended).
 
 ### T-NEW-124 — Doctype guard: strict-dtd payloads restore as HTML (2026-08-15)
 
