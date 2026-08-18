@@ -107,51 +107,6 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             self.initialize_context_menu("context.document.journal")
         return self
 
-    def refresh_content(self):
-        """T-NEW-036: re-fetch the journal document from the
-        model and update ``self.full_text`` + the editor widget.
-
-        ``initModel`` only runs once at ``initWidget`` time, so
-        a tab that was opened earlier in the session showed stale
-        text after a tab focus change. ``on_tab_focus`` now calls
-        this method on the focused widget when the widget exposes
-        it (see widgets.py:215), restoring the current journal
-        text on every tab change.
-
-        Contract:
-          * Re-builds the same cfg used by ``initModel`` so the
-            scope/nid/tid tags are consistent.
-          * ``self.full_text`` is set to the fetched string.
-          * If ``self.editor`` is live, ``setPlainText`` pushes
-            the fetched string into the visible editor.
-          * Returns ``self`` (mirrors the Sprint 23 chainable
-            return pattern used across the codebase).
-          * Defensive: ``self.app is None`` is a no-op (return
-            self); any exception raised by the model is logged
-            + swallowed so the tab-focus flow never crashes.
-        """
-        if self.app is None:
-            return self
-        try:
-            scope = self.config.dikt.get("scope", "TODAY")
-            datetime = dt.datetime.now()
-            tid = None
-            if hasattr(self.app.model.get_current_node(), "tid"):
-                tid = self.app.model.get_current_tab().tid
-            tags = {"nid": self.app.model.get_current_node().nid, "tid": tid}
-            cfg = {"tags": tags, "scope": scope, "datetime": datetime}
-            document = self.app.model.get_view_journal(cfg)
-            text = (document or {}).get("content", "") or ""
-            self.full_text = text
-            editor = getattr(self, "editor", None)
-            if editor is not None:
-                editor.setPlainText(text)
-        except Exception as exc:
-            logma.warning(
-                f"[journal] refresh_content failed: {exc}"
-            )
-        return self
-
     def initView(self, cfg=None):
         """ """
         cfg = cfg or {}
