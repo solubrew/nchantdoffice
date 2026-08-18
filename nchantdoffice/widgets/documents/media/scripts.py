@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 # ======================================Standard Library Modules======================================================||
-import os
 from os.path import dirname, join, exists
 import json as j
 from bs4 import BeautifulSoup
@@ -1335,95 +1334,14 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         return self
 
     def save(self) -> Self:
-        """Capture the current editor contents and persist.
-
-        T-NEW-148 (phase 1 of T-NEW-144b umbrella): when the
-        document is ``location == "external"`` and a
-        ``file_path`` is set, write the bare editor text to
-        that file before delegating to ``super().save()`` --
-        which only increments the Pyffice version and writes
-        the DB row. The internal Script persistence path is
-        unchanged: when ``location == "internal"`` (or
-        ``file_path`` is absent), no external file is touched.
-
-        Atomic-ish write: stream the bytes to a sibling
-        ``.tmp`` file and ``os.replace`` it onto the target.
-        If the rename fails, the original file is left intact
-        and the temp file is cleaned up. Encoding defaults to
-        UTF-8 and can be overridden via
-        ``self.config.dikt["encoding"]`` (falls back to UTF-8).
-        """
+        """Capture the current editor contents before persistence."""
         if self.document is None:
             self.new_document()
         content = self.get_content()
         if content != self.document.content:
             self.document.set_content(content)
-        # T-NEW-148: external-file write happens here, *before*
-        # the DB write. We deliberately bypass the base mixin
-        # ``save()`` for the file bytes because:
-        #   1. PyfficeDocument.save() only increments the
-        #      version -- it never writes user bytes.
-        #   2. The base ``NchantdOfficeDocument.save()`` is
-        #      DB-centric; it does not know about per-document
-        #      type file formats (script = raw text vs. JSON
-        #      blob vs. image bytes).
-        #   3. Script text is captured into a dict by
-        #      ``get_content()``; the on-disk file must be the
-        #      bare editor text (not the dict wrapper).
-        if (
-            getattr(self.document, "location", None) == "external"
-            and getattr(self, "file_path", None)
-        ):
-            editor_text = content.get("text", "") if isinstance(content, dict) else ""
-            self._write_external_file(editor_text)
         super().save()
         return self
-
-    def _write_external_file(self, text: str) -> None:
-        """Atomically write ``text`` to ``self.file_path`` (UTF-8).
-
-        T-NEW-148 helper. Stream to a sibling ``.tmp`` file
-        and ``os.replace`` onto the target so a partial write
-        never clobbers an existing file. On any failure the
-        temp file is removed and the original is preserved.
-        """
-        target = self.file_path
-        if not target:
-            return
-        encoding = "utf-8"
-        try:
-            cfg_encoding = getattr(self.config, "dikt", {}).get("encoding")
-            if cfg_encoding:
-                encoding = cfg_encoding
-        except Exception:
-            pass
-        directory = dirname(target) or "."
-        try:
-            os.makedirs(directory, exist_ok=True)
-        except Exception as e:
-            logma.error(
-                f"[scripts] _write_external_file: mkdir failed for {directory}: {e}",
-                exc_info=True,
-            )
-            return
-        tmp_path = f"{target}.tmp"
-        try:
-            with open(tmp_path, "w", encoding=encoding) as f:
-                f.write(text)
-            os.replace(tmp_path, target)
-            logma.info(f"[scripts] _write_external_file: wrote {target} ({len(text)} chars)")
-        except Exception as e:
-            logma.error(
-                f"[scripts] _write_external_file: write failed for {target}: {e}",
-                exc_info=True,
-            )
-            # Best-effort cleanup of the temp file; the original
-            # (if any) is untouched.
-            try:
-                if exists(tmp_path):
-                    os.remove(tmp_path)
-            except Exception:
-                pass
 
     def set_page_view(self) -> None:
         """"""
