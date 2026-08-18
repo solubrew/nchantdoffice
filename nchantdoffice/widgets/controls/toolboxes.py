@@ -1423,13 +1423,42 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             pass
 
         # 3. Defensive isinstance walk over candidate nodes.
+        #
+        # NB: ``self.parent()`` is a Qt C++ method on QObject. When the
+        # toolbox is constructed via ``__new__`` for a unit test (the
+        # T-NEW-074 / T-NEW-114 dispatch pin pattern), the underlying
+        # shiboken QObject binding is not initialised. On some hosts
+        # ``self.parent()`` then segfaults with exit 139 (a native
+        # SIGSEGV, NOT a Python exception -- the surrounding
+        # ``try/except Exception`` cannot intercept it). Gate the call
+        # on ``shiboken6.isValid(self)`` so the bare test instance
+        # skips the parent() call entirely; the walk then falls
+        # through to the app/model loop below (which is no-op-safe on
+        # a stub) and ends at the clear ``RuntimeError`` at the bottom
+        # of the helper. ``shiboken6`` is imported lazily and treated
+        # as unavailable in headless envs that have no Qt parent.
         candidates = []
         try:
             candidates.append(self)
-            if self.parent() is not None:
-                candidates.append(self.parent())
         except Exception:
             pass
+        try:
+            import shiboken6 as _shiboken6  # type: ignore
+            _parent_callable = (
+                callable(getattr(self, "parent", None))
+                and _shiboken6.isValid(self)
+            )
+        except Exception:
+            _parent_callable = False
+        if _parent_callable:
+            try:
+                parent_obj = self.parent()
+                if parent_obj is not None:
+                    candidates.append(parent_obj)
+            except Exception:
+                # ``parent()`` shim missing or transient shiboken
+                # error -- skip without crashing.
+                pass
         try:
             app = getattr(self, "app", None)
             if app is not None:
