@@ -251,7 +251,7 @@ NchantdOfficeTabSetModel:
               #Journal
               - ['Today', 'nchantdoffice.widgets.documents.managers.calendars.NchantdOfficeTodayOverview', "{}", '067ce332-8864-7d0b-8000-bfd314a580cc', "ac3d3fa2-c0ca-4963-8fae-d90cd722aa5d", 0, 'custom_widget', 'center']
               #- ['Overview', 'nchantdoffice.widgets.documents.journal.NchantdOfficeJournalOverview', "{}", '067ce332-8864-7d0b-8000-bfd314a580cc', "ecd86055-c7b2-4911-895d-f99f14e50cea", 1, 'custom_widget', 'center']
-              - ['Settings', 'nchantdoffice.widgets.config.config_journal.NchantdOfficeJournalSettings', "{}", '067ce332-8864-7d0b-8000-bfd314a580cc', "e5e1dbe7-5b48-4edc-a18b-4b1340ec799d", 2, 'custom_widget', 'center']
+              - ['Settings', 'nchantdoffice.widgets.config.journal_config.NchantdOfficeJournalSettings', "{}", '067ce332-8864-7d0b-8000-bfd314a580cc', "e5e1dbe7-5b48-4edc-a18b-4b1340ec799d", 2, 'custom_widget', 'center']
               #App Settings
               - ['Nchantd Account', 'nchantdoffice.widgets.config.accounts.NchantdOfficeAccountSettings', "{}", '066a7cf6-5aca-79a2-8000-f4b5405a0427', "c919cbf9-2c85-4256-b645-2287346749c2", 0, 'custom_widget', 'center']
               - ['Interface', 'nchantdoffice.widgets.config.settings.NchantdOfficeInterfaceSettings', "{}", '066a7cf6-5aca-79a2-8000-f4b5405a0427', "999d42e6-c678-4f6b-81e2-ff7ca6451564", 1, 'custom_widget', 'center']
