@@ -97,8 +97,8 @@
 |---|---|
 | Project | NchantdOffice |
 | Type | Desktop GUI application (PySide6) |
-| Branch | `gamma` (ahead of `origin/gamma`: `c246108` t-new-068 merge, `9f18e30` Script external save-to-disk via syntax-aware exporter; Script cell mirror / Matrix toolbar + DB encoded payload fixes) |
-| HEAD | `9f18e30` (nchantdoffice/gamma, 2026-08-18) |
+| Branch | `gamma` (ahead of `origin/gamma`: `c246108` t-new-068 merge, `9f18e30` Script external save-to-disk via syntax-aware exporter, `cbec5b3` PDF internal binary storage + canonical envelope; plus Script cell mirror / Matrix toolbar / Matrix DB encoded payload / T-NEW-122 Qt-collection guard fixes) |
+| HEAD | `cbec5b3` (nchantdoffice/gamma, 2026-08-18) |
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
 | Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests --continue-on-collection-errors -q` |
@@ -140,33 +140,42 @@ bodies remain below for traceability, but do not override this list.
 ### P0 -- confirmed broken in operator testing
 
 1. **T-NEW-148 -- External Script Save writes back to disk.**
-   `NchantdOfficeScript.save()` captures editor content but only reaches
-   the DB path; `PyfficeDocument.save()` increments the version without
-   writing bytes. Preserve internal Script persistence unchanged.
-   **Affected sites:** `widgets/documents/media/scripts.py:1336-1344`,
-   `widgets/documents/documents.py:601-689`, pyffice
-   `document.py:1065-1084`.
-   **Acceptance:** external UTF-8 file bytes equal current editor text;
-   DB write still occurs; internal documents do not touch disk.
+   ✅ FIXED in `9f18e30`. `NchantdOfficeScript.save()` now exports
+   the editor payload through the syntax-aware helper
+   (``toHtml`` / ``toMarkdown`` / ``toPlainText``), writes it
+   atomically through ``.tmp + os.replace``, and only when
+   ``document.location == "external"``. Internal Script persistence
+   is unchanged. 5 new tests in
+   ``tests/test_t_new_148_script_external_save.py``.
 2. **T-NEW-149 -- Matrix internal value persistence and restore.**
-   Save captures a grid, but cell changes are not mirrored incrementally
-   and no real DB round-trip proves `content_enc64_txt` restores into a
-   fresh Matrix widget.
-   **Affected sites:** `widgets/documents/workbooks/matricies.py:1713-1741,
-   1896-1950,2353-2392`, `models.py:3399-3434`.
-   **Acceptance:** a non-square entered grid survives save, tab close,
-   and reopen by the same document ID. This card is internal-only; do not
-   expand it into external spreadsheet export.
+   ✅ PARTIAL via `cbec5b3` comm flow -- the actual Matrix fix for
+   `content_enc64_txt` preserving the grid through the save chain was
+   landed via the `_legacy_export_editor_payload` envelope changes; see
+   `widgets/documents/workbooks/matricies.py:1280-1310`. The full DB
+   round-trip still needs an integration pin. Cell mirror lives in
+   `matricies.py:1739-1765` (`_mirror_cell_to_document`).
 3. **T-NEW-150 -- Disable Matrix formula toolbar until 0.0.3.**
-   Remove `Apply Formula` and `Auto Calculate` actions from toolbar
-   construction while leaving their implementation available for 0.0.3.
-   **Affected site:** `matricies.py:2016-2019`.
+   ✅ FIXED in `5a95c54`. `_FORMULA_TOOLBAR_ENABLED = False` guards
+   both `Apply Formula` and `Auto Calculate` actions; the methods
+   remain defined for 0.0.3 re-enable. 5 tests in
+   `tests/test_t_new_150_matrix_formula_toolbar_disable.py`.
 4. **T-NEW-151 -- Fix nchantrs password verifier mismatch.**
    `NchantdUser.get_password()` calls missing `verify_password`; the
-   available method is `verify_pword`. This is an upstream nchantrs fix,
-   tracked here because it breaks NchantdOffice first-boot app_user
-   bootstrap. Operator traceback: `testing-report_20260817.md` /
-   `origin/gamma` commit `3799b3f`.
+   available method is `verify_pword`. Upstream nchantrs fix tracked
+   here because it breaks NchantdOffice first-boot app_user bootstrap.
+
+### P0.b -- T-NEW-144b phase 2 completed (2026-08-18)
+
+- **T-NEW-159 -- NchantdOfficePDF internal binary storage.**
+  ✅ FIXED in `cbec5b3` (downstream) and `4a7914c` (upstream pyffice).
+  `populate_document` honours origin: ``internal`` -> load from
+  ``document.binary`` / ``bytes`` via ``QPdfDocument.loadFromData``,
+  ``external`` -> load from ``file_path``. ``get_content`` returns
+  the canonical envelope (``{"content": {"file_path": ...,
+  "bytes": ...}, "data": None}`` when internal). Pyffice
+  ``PyfficePDF.get_binary`` returns the stored blob when set,
+  otherwise disk bytes. PDF widget remains read-only; no
+  external-save seam yet. 5+5 new tests.
 
 ### P1 -- operator workflow and performance
 
@@ -205,11 +214,24 @@ bodies remain below for traceability, but do not override this list.
 ### Active umbrella sequencing
 
 - **T-NEW-144b -- Multi-format external editing:** active umbrella.
-  Work proceeds one document type at a time. The first child is
-  **T-NEW-148 NchantdOfficeScript**. Before choosing the next format,
-  complete its save/reopen tests and verify no regression to internal
-  Script persistence. Every later document type receives a separate
-  child card, acceptance test, implementation, and verification cycle.
+  Work proceeds one document type at a time. The phased children
+  completed so far:
+
+    * **T-NEW-148 / NchantdOfficeScript** -- DONE (`9f18e30`).
+      Syntax-aware atomic external save, internal save untouched.
+    * **T-NEW-159 / NchantdOfficePDF** -- DONE (`cbec5b3` +
+      `4a7914c`). Internal binary storage via blob; external path
+      remains file-only because the widget is read-only.
+    * **NchantdOfficeImage** -- internal blob works; external
+      load-only because ``initModel`` hardcodes
+      ``set_location("external")``. Needs the same external-save
+      seam as Script before external edits round-trip back to disk.
+    * **NchantdOfficeNotebook** -- both internal (notebook_bytes)
+      and external (.ipynb write) work; the default origin is still
+      hardcoded to external in `initModel`.
+
+  Next child: T-NEW-160 NchantdOfficeImage external save (mirror the
+  Script seam). No two formats move forward in parallel.
 
 ### Closed / demoted by operator clarification
 

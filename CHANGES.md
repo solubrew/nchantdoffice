@@ -242,6 +242,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   No changes to journal storage, populate_document, or any other
   document type.
 
+- **T-NEW-159** NchantdOfficePDF internal binary storage
+  (2026-08-18, T-NEW-144b phase 2) -- ✅ FIXED in
+  ``cbec5b3`` (downstream) and ``4a7914c`` (upstream pyffice).
+  ``NchantdOfficePDF.populate_document`` now branches by
+  ``document.location``:
+
+    * ``internal`` -> ``QPdfDocument.loadFromData(binary)`` from
+      ``document.binary`` / ``document.bytes``; falls back to
+      ``file_path`` on error.
+    * ``external`` -> ``QPdfDocument.load(file_path)``
+      (read-only widget, no save-to-disk).
+
+  ``NchantdOfficePDF.get_content`` now returns the canonical
+  envelope: ``{"content": {"file_path": ..., "bytes": ...},
+  "data": None}`` when internal, ``{"content": {"file_path":
+  ...}, "data": None}`` when external. Upstream
+  ``PyfficePDF.get_binary`` returns the stored binary blob
+  (``content["bytes"]``) when set, otherwise the on-disk bytes;
+  ``set_content`` recognises the internal envelope and round-trips
+  the bytes for a fresh ``PyfficeDocument`` rebuild without disk.
+  5 new tests in
+  ``tests/test_t_new_159_pdf_internal_external.py`` + 5 in
+  ``tests/pyffice_unit/unit/images/test_pdf_binary.py``. PDF
+  remains read-only; no external-save seam yet.
+
 - **T-NEW-139** Toolbar post-creation navigation helper
   (2026-08-16) -- the original TODO at ``toolbars.py:216``
   asked to combine ``add_tab`` + ``add_document`` cfg
