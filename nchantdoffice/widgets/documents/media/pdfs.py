@@ -372,8 +372,8 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         return self
 
     def get_content(self) -> Any:
-        """"""
-        return super().get_content()
+        """Deprecated stub; the real override below returns the canonical envelope."""
+        return None
 
     def get_file_convert(self) -> str:
         """Return the stored value of get_file_convert."""
@@ -449,12 +449,70 @@ class NchantdOfficePDF(NchantdOfficeDocument):
         return self
 
     def populate_document(self) -> Self:
-        """"""
+        """Populate the PDF viewer.
+
+        T-NEW-159 (T-NEW-144b phase 2): respect the document origin.
+
+        * ``internal`` -> load from the binary blob on
+          ``document.binary`` / ``document.bytes`` (fall back to
+          ``file_path`` only when no bytes are present).
+        * ``external`` -> load from ``file_path`` (the user-edited
+          source of truth).
+        """
+        document = getattr(self, "document", None)
+        if document is None:
+            return self
+        location = getattr(document, "location", None)
+        binary = (
+            getattr(document, "binary", None)
+            or getattr(document, "bytes", None)
+            or getattr(document, "data", None)
+        )
+        if location == "internal" and binary:
+            try:
+                self.pdf.loadFromData(binary)
+            except Exception as exc:  # pragma: no cover - format fallback
+                logma.error(
+                    f"[pdfs] populate_document: loadFromData failed: {exc}",
+                    exc_info=True,
+                )
+                if self.file_path:
+                    self.pdf.load(self.file_path)
+            return self
         if self.document.file_path is None:
             return
         self.pdf.load(self.document.file_path)
         self.view.setDocument(self.pdf)
         return self
+
+    def get_content(self) -> dict[str, Any]:
+        """Return the canonical PDF content envelope.
+
+        T-NEW-159 (T-NEW-144b phase 2):
+
+        * ``internal`` -> carry the PDF binary blob (``bytes``)
+          alongside the originating path so a fresh
+          ``PyfficeDocument`` can rebuild the PDF without disk.
+        * ``external`` -> carry only the file path; the on-disk
+          source of truth is read on reopen.
+        """
+        document = getattr(self, "document", None)
+        path = getattr(self, "file_path", None) or getattr(document, "file_path", None)
+        payload: dict[str, Any] = {"file_path": path}
+        location = getattr(document, "location", None) if document is not None else None
+        if location == "internal":
+            binary = (
+                getattr(document, "binary", None)
+                if document is not None
+                else None
+            ) or (
+                getattr(document, "bytes", None)
+                if document is not None
+                else None
+            )
+            if isinstance(binary, (bytes, bytearray)) and binary:
+                payload["bytes"] = bytes(binary)
+        return {"content": payload, "data": None}
 
     def save(self) -> Self:
         """"""
