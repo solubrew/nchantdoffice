@@ -179,16 +179,12 @@ class NchantdChartConfigPane(NchantdPane):
         self.chart_specific_widget = self.get_chart_specific_widget(self.get_type())
         if self.chart_specific_widget is not None:
             chart_details_layout.addWidget(self.chart_specific_widget)
-        #
-        # # T-056: chart-config actions as a button group (background /
-        # # area colour / border style / theme) so the user can
-        # # switch editing mode without context-switching.
-        # TODO causes segmentation fault -- T-NEW-029: same root cause as
-        # the tab drag-init fix (drag-init on the chart widget area
-        # rather than a discrete handle). Apply the same gate
-        # pattern when this stub is implemented.
-        # self.action_button_group = self._build_chart_action_button_group()
-        # chart_details_layout.addWidget(self.action_button_group)
+        # T-056: chart-config actions as a button group (background /
+        # area colour / border style / theme) so the user can
+        # switch editing mode without context-switching.
+        self.action_button_group = self._build_chart_action_button_group()
+        if self.action_button_group is not None:
+            chart_details_layout.addWidget(self.action_button_group)
 
         cfg = {
             "text": "Set Chart Background Color",
@@ -208,15 +204,17 @@ class NchantdChartConfigPane(NchantdPane):
         }
         self.chart_color = NchantdButton(self, cfg).initWidget()
         chart_details_layout.addWidget(self.chart_color)
-        # # T-057: real border-style editor (button group of
-        # # solid / dashed / dotted / double / none). The chosen
-        # # style is stored on config.dikt['chart_border_style'].
-        # TODO causes segmentation fault -- T-NEW-029: same root cause as
-        # the tab drag-init fix (drag-init on the chart widget area
-        # rather than a discrete handle). Apply the same gate
-        # pattern when this stub is implemented.
-        # self.chart_border_bar = self._build_border_style_editor()
-        # chart_details_layout.addWidget(self.chart_border_bar)
+        # T-057: real border-style editor (button group of
+        # solid / dashed / dotted / double / none). The chosen
+        # style is stored on config.dikt['chart_border_style'].
+        # T-NEW-037 (followup): the historical TODO wrongly blamed
+        # this call site on T-NEW-029 drag gating. The real root
+        # cause was addWidget(None) -- the empty stub returned
+        # None implicitly. Now that the builder returns a real
+        # QWidget, the call site is safe.
+        self.chart_border_bar = self._build_border_style_editor()
+        if self.chart_border_bar is not None:
+            chart_details_layout.addWidget(self.chart_border_bar)
         self.left_group.addWidget(chart_details_group)
         # self.left_group.layout_box.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop | pyqt.Qt.AlignmentFlag.AlignLeft)
         self.layout.addLayout(self.left_group.layout)
@@ -275,8 +273,68 @@ class NchantdChartConfigPane(NchantdPane):
         "radar": "_chart_radar_extras",
     }
 
+    def _build_chart_action_button_group(self) -> Any:
+        """Build the chart-config action button group.
+
+        Returns a real ``QWidget`` (button group containing
+        theme/area-color/border-style actions) so the caller
+        can safely pass the result to ``layout.addWidget``
+        without triggering PySide6's ``addWidget(None)``
+        segfault.
+
+        T-NEW-037 (followup): the historical TODO at
+        ``initView`` blamed a NchantdChart segfault on
+        T-NEW-029 drag-init gating. The real root cause was
+        the implicit ``None`` return + ``addWidget(None)``
+        combo -- not drag gating. Now that we return a real
+        widget, the call site can be safely re-enabled.
+        """
+        try:
+            from nchantrs.widgets.controls.button_groups import NchantdAcceptButtons
+
+            cfg = {
+                "text": "Chart Actions",
+                "options": [
+                    "Set Background Color",
+                    "Set Area Color",
+                    "Edit Border Style",
+                    "Edit Theme",
+                ],
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+            }
+            return NchantdAcceptButtons(self, cfg).initWidget()
+        except Exception as e:
+            logma.error(f"[charts] _build_chart_action_button_group failed: {e}", exc_info=True)
+            return pyqt.QWidget(self)
+
     def _build_border_style_editor(self) -> Any:
-        """"""
+        """Build the real border-style editor (button group for
+        solid/dashed/dotted/double/none).
+
+        Returns a real ``QWidget`` so the caller can safely
+        pass the result to ``layout.addWidget`` without
+        triggering PySide6's ``addWidget(None)`` segfault.
+
+        T-NEW-037 (followup): same root cause as
+        ``_build_chart_action_button_group`` -- the empty
+        body implicitly returned ``None``. The chosen border
+        style is stored on ``config.dikt['chart_border_style']``.
+        """
+        try:
+            from nchantrs.widgets.controls.button_groups import NchantdBorderConfigBar
+
+            cfg = {
+                "text": "Border Style",
+                "options": ["solid", "dashed", "dotted", "double", "none"],
+                "handler": self.cmd_set_border_style,
+                "layout": "horizontal",
+                "size": ["auto", "auto"],
+            }
+            return NchantdBorderConfigBar(self, cfg).initWidget()
+        except Exception as e:
+            logma.error(f"[charts] _build_border_style_editor failed: {e}", exc_info=True)
+            return pyqt.QWidget(self)
 
     def get_chart_specific_widget(self, chart_type) -> "pyqt.QWidget | None":
         """Build the chart-type-specific extras widget (T-063).
@@ -298,17 +356,6 @@ class NchantdChartConfigPane(NchantdPane):
         except Exception as e:
             logma.error(f"[charts] get_chart_specific_widget failed for {chart_type}: {e}", exc_info=True)
         return None
-
-    def _build_chart_action_button_group(self) -> Any:
-        """Build the chart-config action button group.
-
-        T-NEW-037: DEFERRED. The caller at L184 is COMMENTED
-        OUT (comment line 183: "TODO causes segmentation
-        fault") because invoking this method triggers a
-        NchantdChart segfault -- T-NEW-029. The stub is
-        dead code until the segfault is fixed. Resolves
-        when T-NEW-029 ships.
-        """
 
     def _chart_line_extras(self) -> "pyqt.QWidget | None":
         """Build the line-chart-specific extras widget (T-063).
