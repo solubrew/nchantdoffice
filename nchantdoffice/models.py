@@ -1122,7 +1122,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             user: optional user object (typically ``self.user``).
                 Pulled from the model attribute when not supplied.
         """
-        return True
         try:
             if user is None:
                 user = getattr(self, "user", None)

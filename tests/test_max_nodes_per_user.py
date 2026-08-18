@@ -73,6 +73,24 @@ def test_check_max_nodes_at_limit_returns_false():
     assert model._check_max_nodes_for_user() is False
 
 
+def test_check_max_nodes_evaluates_store_for_non_pro_user():
+    """A non-pro cap check must reach the node store, not short-circuit allow."""
+    model = _bare_model()
+    model.config = SimpleNamespace(dikt={"max_nodes_per_user": 100})
+    calls = []
+
+    def get_nodes():
+        from pandas import DataFrame
+
+        calls.append("get_nodes")
+        return DataFrame([{"a": 1}] * 100)
+
+    model.get_nodes = get_nodes
+
+    assert model._check_max_nodes_for_user(SimpleNamespace(has_pro=False)) is False
+    assert calls == ["get_nodes"]
+
+
 def test_check_max_nodes_above_limit_returns_false():
     """With 150 nodes and limit 100, returns False."""
     model = _bare_model()
