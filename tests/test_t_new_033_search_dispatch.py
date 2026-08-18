@@ -32,9 +32,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from PySide6.QtWidgets import QApplication
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
-
 # ---------------------------------------------------------------------------
 # NchantdOfficeCloakModel.search_documents (SQLite-backed)
 # ---------------------------------------------------------------------------

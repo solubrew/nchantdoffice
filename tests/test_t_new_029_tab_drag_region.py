@@ -48,9 +48,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from PySide6.QtWidgets import QApplication, QTabWidget, QWidget
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
-
 # ---------------------------------------------------------------------------
 # _is_in_tab_name_area helper
 # ---------------------------------------------------------------------------

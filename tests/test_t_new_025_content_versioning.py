@@ -43,9 +43,6 @@ import sys
 from types import SimpleNamespace
 
 from PySide6.QtWidgets import QApplication
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
-
 # ---------------------------------------------------------------------------
 # _coerce_doc_version helper
 # ---------------------------------------------------------------------------

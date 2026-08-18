@@ -42,9 +42,6 @@ from PySide6.QtCore import Qt, QSize
 from PySide6.QtWidgets import QApplication, QWidget, QSplitter, QLabel, QVBoxLayout
 
 
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
-
 def _build_three_pane_splitter() -> tuple[QSplitter, QWidget, QWidget, QWidget]:
     """Return a (splitter, left, center, right) tuple that mirrors
     the production 3Pane layout: left, center, right."""

@@ -41,9 +41,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from PySide6.QtWidgets import QApplication
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
-
 # ---------------------------------------------------------------------------
 # Item #1: source-level check that the typo is gone
 # ---------------------------------------------------------------------------

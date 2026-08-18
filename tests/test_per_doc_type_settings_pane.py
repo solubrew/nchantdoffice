@@ -26,8 +26,6 @@ from types import SimpleNamespace
 # existing ``tests/unit/widgets/documents/diagramsTEST.py`` uses the
 # same pattern (QApplication(sys.argv)).
 from PySide6.QtWidgets import QApplication
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
 import nchantdoffice.models  # noqa: F401  — establish import order first
 
 from nchantdoffice.widgets.panes.document_settings import (

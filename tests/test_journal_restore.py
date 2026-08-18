@@ -21,8 +21,6 @@ import sys
 from types import SimpleNamespace
 
 from PySide6.QtWidgets import QApplication
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
 import nchantdoffice.widgets.documents.journal  # noqa: F401
 from nchantdoffice.widgets.documents.journal import NchantdOfficeJournalEditor
 

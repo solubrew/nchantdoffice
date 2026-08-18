@@ -30,8 +30,6 @@ import sys
 from types import SimpleNamespace
 
 from PySide6.QtWidgets import QApplication
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
 import nchantdoffice.models  # noqa: F401  -- establish import order first
 
 from nchantdoffice.models import NchantdOfficeCloakModel

@@ -28,9 +28,6 @@ import sys
 from types import SimpleNamespace
 
 from PySide6.QtWidgets import QApplication
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
-
 # ---------------------------------------------------------------------------
 # cmd_on_change_update_tab_name_to_file_name -- the new T-NEW-032 handler
 # ---------------------------------------------------------------------------

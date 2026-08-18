@@ -39,8 +39,6 @@ import sys
 from types import SimpleNamespace
 
 from PySide6.QtWidgets import QApplication
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
 import nchantdoffice.widgets.controls.toolbars  # noqa: F401
 
 

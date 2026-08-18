@@ -45,9 +45,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from PySide6.QtWidgets import QApplication, QWidget
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
-
 def _make_model_with_config(tab_color=None, tab_icon=None):
     """Build a NchantdOfficeCloakModel via __new__ with a
     config dikt carrying the optional tab_color / tab_icon
