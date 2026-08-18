@@ -51,6 +51,7 @@ HOMEPAGE = "https://www.nchantdoffice.com/"
 
 
 class NchantdOfficeWebBrowser(NchantdOfficeDocument):
+    """NchantdOffice Web Browser is a Widget that navigates a timeline of pages where each page is associated to one primary url"""
 
     def __init__(self, parent=None, cfg=None) -> None:
         """ """
@@ -1719,82 +1720,6 @@ class NchantdOfficeWebProfile(NchantdWebProfile):
         """Update the zip_code_entry Qt widget from an external change."""
         if hasattr(self, "zip_code_entry") and self.zip_code_entry is not None:
             self.zip_code_entry.setText(str(zipcode))
-        return self
-
-
-class NchantdOfficeWebBrowserSettingsManager(NchantdOfficeDocument):
-    """"""
-
-    def __init__(self, parent=None, cfg=None):
-        super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeWebBrowserSettingsManager").override(cfg))
-        self.document = None
-        self.library = None
-        self.profiles = None
-
-    def initModel(self, cfg=None):
-        """"""
-        super().initModel(cfg)
-        document = {"document": self.config.override(cfg).get("document", {})}
-        self.document = self.app.model.codex.init_web_config(document)
-        self.document.load_document()
-        self.load_library()
-        self.load_profiles()
-        # self.library = self.document.library  # store the library as an app_media document
-        # self.profiles = self.document.profile_manager  # store the profile_manager as an app_media document
-        return self
-
-    def initView(self, cfg=None):
-        """"""
-        super().initView(cfg)
-        return self
-
-    def initWidget(self, cfg=None):
-        """"""
-        self.initModel(cfg)
-        self.initView(cfg)
-        return self
-
-    def get_url_library_data(self):
-        """"""
-        return self.app.model.get_urls()
-
-    def get_profiles_data(self):
-        """"""
-        return self.app.model.get_profiles("web")
-
-    def load_library(self):
-        """"""
-        data = self.get_url_library_data()
-        self.document.load_library(data)
-        self.library = self.document.library
-
-    def load_profiles(self):
-        """"""
-        data = self.get_profiles_data()
-        self.document.load_profiles(data)
-        self.profiles = self.document.profile_manager
-
-    def save(self) -> Self:
-        """Save the browser document.
-
-        Delegates to the parent ``save()`` (the line-843 form which
-        calls ``get_content()`` -> ``set_content()`` -> the line-467
-        unconditional form which writes both the doc_media row and
-        the doc_media_content.content_enc64_txt blob).
-
-        The previous override also called ``self.document.save()``
-        directly (the pyffice file-side save) AND ``super().save()``
-        -- but never went through ``get_content()`` / ``set_content()``,
-        so ``self.document.content`` stayed empty and the saved
-        ``content_enc64_txt`` ended up with ``{}``. Mirroring the
-        NchantdImage pattern (which is just ``super().save()``) lets
-        the parent flow do the right thing.
-        """
-        if self.pinned:
-            return self
-        self.file_path = self.get_active_url()
-        super().save()
         return self
 
 

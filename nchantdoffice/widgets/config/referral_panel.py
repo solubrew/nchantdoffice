@@ -72,6 +72,16 @@ logma = Logma(__name__)
 here = join(dirname(__file__), "")  # ||
 pxcfg = join(here, "_data_", "referral_panel.yaml")  # optional; falls back to code-driven layout
 
+# T-DESK: NchantdOfficeAffiliateManager (the old placeholder that just
+# rendered an external /affiliate_marketing webview) was replaced by
+# ``NchantdOfficeReferralPanel`` (see ``widgets/config/referral_panel.py``).
+# The class name is preserved here as a re-export so any existing
+# registry/init code that references ``NchantdOfficeAffiliateManager``
+# keeps working without changes.
+from nchantdoffice.widgets.config.referral_panel import NchantdOfficeReferralPanel
+
+NchantdOfficeAffiliateManager = NchantdOfficeReferralPanel
+
 
 class NchantdOfficeReferralPanel(NchantdOfficeDocument):
     """In-app Referral Panel (DESK-2 / ATNRG spec §5).
@@ -257,9 +267,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
             # Server hasn't responded yet (or offline). Show a
             # neutral state — never claim "Eligible" without
             # server confirmation.
-            payout_label.setText(
-                "<i>Checking payout eligibility...</i>"
-            )
+            payout_label.setText("<i>Checking payout eligibility...</i>")
         elif reason == "free_tier":
             # Free-tier referrer (AppReferralSpec §10): not
             # eligible for paid payouts. They get "ad-tab-free
@@ -286,10 +294,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
             )
         else:
             # Unknown reason — fail safe with neutral copy.
-            payout_label.setText(
-                "<i>Payout status unavailable. Try refreshing "
-                "the panel.</i>"
-            )
+            payout_label.setText("<i>Payout status unavailable. Try refreshing " "the panel.</i>")
         card.addWidget(payout_label)
 
         # Request payout button (only if server says eligible).
@@ -463,9 +468,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         try:
             from PySide6.QtWidgets import QInputDialog, QLineEdit
         except Exception as e:
-            logma.debug(
-                f"[referral_panel] Qt unavailable for passphrase prompt: {e}"
-            )
+            logma.debug(f"[referral_panel] Qt unavailable for passphrase prompt: {e}")
             return ""
         parent = getattr(self, "parent", None) or self
         try:
@@ -476,9 +479,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
                 QLineEdit.Password,
             )
         except Exception as e:
-            logma.debug(
-                f"[referral_panel] QInputDialog.getText failed: {e}"
-            )
+            logma.debug(f"[referral_panel] QInputDialog.getText failed: {e}")
             return ""
         if not ok:
             return ""
@@ -549,12 +550,9 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
             if self.payout_eligibility_data.get("reason") == "free_tier":
                 self._maybe_grant_ad_tab_free_hours()
         except Exception as e:
-            logma.warning(
-                f"[referral_panel] fetch_payout_eligibility failed: {e}"
-            )
+            logma.warning(f"[referral_panel] fetch_payout_eligibility failed: {e}")
 
     def _maybe_grant_ad_tab_free_hours(self) -> None:
-
         """T-NEW-045 (WIRE-1): grant ad-tab-free hours to a
         free-tier referrer based on their pending credit.
 
@@ -588,14 +586,9 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         try:
             # Skip if a grant is already active (no stacking).
             if is_ad_tab_free_active():
-                logma.info(
-                    "[referral_panel] ad-tab-free grant already "
-                    "active — skipping (no stacking)"
-                )
+                logma.info("[referral_panel] ad-tab-free grant already " "active — skipping (no stacking)")
                 return
-            pending_total = float(
-                self.payout_eligibility_data.get("pending_total", 0)
-            )
+            pending_total = float(self.payout_eligibility_data.get("pending_total", 0))
             # 24 hours per $5 of pending credit. Floor to int.
             hours = int(pending_total * 24 / 5)
             if hours < 1:
@@ -611,12 +604,9 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
                 f"expires {expiry})"
             )
         except Exception as e:
-            logma.warning(
-                f"[referral_panel] grant_ad_tab_free_hours failed: {e}"
-            )
+            logma.warning(f"[referral_panel] grant_ad_tab_free_hours failed: {e}")
 
     def _fetch_dashboard(self) -> None:
-
         """Fetch earnings + invitations from the server; fall back to local store.
 
         T-NEW-044 (UI-1): also fetches the payout-eligibility
@@ -647,6 +637,44 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
             "lifetime_cents": 0,
             "pending_cents": 0,
         }
+
+
+class NchantdOfficeAffiliateManager(NchantdOfficeDocumentManager):  # noqa: F811
+    """Fallback shim if referral_panel.py cannot be imported.
+
+    Renders a minimal stub webview pointing at the affiliate
+    marketing page so the app doesn't crash if the new panel
+    module has an import error.
+    """
+
+    def __init__(self, parent=None, cfg=None) -> None:
+        super().__init__(parent, cfg)
+        self.name = "NchantdOffice Affiliate Manager (fallback)"
+        self.user = pyqt.QApplication.instance().model.user
+        self.canvas = None
+        self.data_series = None
+
+    def initModel(self) -> Self:
+        super().initModel()
+        return self
+
+    def initView(self, cfg=None) -> Any:
+        super().initView(cfg or {})
+        layout = pyqt.QHBoxLayout()
+        url_cfg = {
+            "url": "https://www.nchantdoffice.com/affiliate_marketing",
+            "size": [1600, 750],
+            "is_simple": True,
+        }
+        self.browser = NchantdWebViewer(self, url_cfg).initWidget()
+        layout.addWidget(self.browser)
+        self.layout.addLayout(layout)
+        return cfg
+
+    def initWidget(self) -> Self:
+        self.initModel()
+        self.initView()
+        return self
 
 
 __all__ = ["NchantdOfficeReferralPanel"]
