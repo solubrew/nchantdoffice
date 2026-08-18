@@ -143,7 +143,98 @@
 
 ---
 
-## 2. Live open items
+## 2. Canonical active backlog (2026-08-18)
+
+This section is the source of truth for current work. Historical card
+bodies remain below for traceability, but do not override this list.
+
+### P0 -- confirmed broken in operator testing
+
+1. **T-NEW-148 -- External Script Save writes back to disk.**
+   `NchantdOfficeScript.save()` captures editor content but only reaches
+   the DB path; `PyfficeDocument.save()` increments the version without
+   writing bytes. Preserve internal Script persistence unchanged.
+   **Affected sites:** `widgets/documents/media/scripts.py:1336-1344`,
+   `widgets/documents/documents.py:601-689`, pyffice
+   `document.py:1065-1084`.
+   **Acceptance:** external UTF-8 file bytes equal current editor text;
+   DB write still occurs; internal documents do not touch disk.
+2. **T-NEW-149 -- Matrix internal value persistence and restore.**
+   Save captures a grid, but cell changes are not mirrored incrementally
+   and no real DB round-trip proves `content_enc64_txt` restores into a
+   fresh Matrix widget.
+   **Affected sites:** `widgets/documents/workbooks/matricies.py:1713-1741,
+   1896-1950,2353-2392`, `models.py:3399-3434`.
+   **Acceptance:** a non-square entered grid survives save, tab close,
+   and reopen by the same document ID. This card is internal-only; do not
+   expand it into external spreadsheet export.
+3. **T-NEW-150 -- Disable Matrix formula toolbar until 0.0.3.**
+   Remove `Apply Formula` and `Auto Calculate` actions from toolbar
+   construction while leaving their implementation available for 0.0.3.
+   **Affected site:** `matricies.py:2016-2019`.
+4. **T-NEW-151 -- Fix nchantrs password verifier mismatch.**
+   `NchantdUser.get_password()` calls missing `verify_password`; the
+   available method is `verify_pword`. This is an upstream nchantrs fix,
+   tracked here because it breaks NchantdOffice first-boot app_user
+   bootstrap. Operator traceback: `testing-report_20260817.md` /
+   `origin/gamma` commit `3799b3f`.
+
+### P1 -- operator workflow and performance
+
+5. **T-NEW-152 -- Refresh ToolBox after node deletion.**
+   `cmd_delete_node` refreshes the tree but not the document ToolBox.
+   **Affected site:** `widgets/panes/documents.py:127-159`.
+6. **T-NEW-153 -- Node-delete navigation fallback.**
+   Navigate previous node first, then sibling, then parent when deleting
+   the active node. Upstream `go_to_previous_node` currently handles only
+   `previous_index` (`nchantrs/views/treeviews.py:110-117`).
+7. **T-NEW-154 -- Profile new-document creation performance.**
+   Add stage timing before optimizing; no timing instrumentation currently
+   identifies the bottleneck in `widgets/panes/new.py` / document create.
+8. **T-NEW-155 -- Script date/time insert and Ctrl+D.**
+   Add the toolbar action and shortcut requested in the latest operator
+   report; no Ctrl+D registration currently exists.
+9. **T-NEW-156 -- Sort `_`-prefixed nodes first.**
+   Add an explicit underscore-priority comparator while preserving the
+   selected ascending/descending order for the remaining names.
+
+### P2 -- parsing, privacy, and technical debt
+
+10. **T-NEW-118 -- Journal parsing + PII integration only.**
+    Full-text save/restore and retention already work and MUST NOT be
+    changed. Integrate existing `pycurity.pymatch.extract_all_pii()` into
+    journal parsing/redaction/PIN-copy behavior. Any expansion of base PII
+    functionality belongs upstream in pycurity.
+11. **T-NEW-121 -- Source-encoding guard and ASCII cleanup.**
+12. **T-NEW-157 -- Search correction-position fallback.**
+    Resolve `models.py:3039` instead of silently forcing position 0.
+13. **T-NEW-158 -- Referral desktop passphrase guard.**
+    Replace the unnumbered `T-NEW-XXX` marker at
+    `widgets/config/referral_panel.py:395` with the real Qt masked-entry
+    flow so the desktop never falls into a CLI getpass prompt.
+
+### Closed / demoted by operator clarification
+
+- **T-NEW-119 -- CLOSED.** Journal retention, timestamp handling, and
+  full-text storage are working. Do not modify those paths.
+- **T-NEW-144b -- SUPERSEDED IN SCOPE.** The broad ~14-document
+  "external editor" project is replaced by the specific Script external
+  save card T-NEW-148. Do not widen that fix to unrelated formats.
+- **NchantdChart config-pane segfault -- FIXED** by `899962c`.
+- **T-NEW-023 Script external reload whitespace -- FIXED/pinned** by
+  existing reload tests. It is distinct from T-NEW-148 save-to-disk.
+
+### In-code marker audit
+
+The production marker sweep found 23 TODO-family hits across 11 files.
+All except `models.py:3039` and `referral_panel.py:395` are historical
+closeout comments or deliberate abstract/delegated behavior; they are not
+new backlog items.
+
+### Historical live-open section (superseded)
+
+The material below is retained for audit history. Its old priority labels
+are not current.
 
 These are the items still requiring work, in priority order.
 

@@ -243,7 +243,7 @@ nchantdoffice/
 ├── pyproject.toml         # Package metadata (version 0.0.1.0.1.4)
 ├── pytest.ini             # Test config
 ├── README.md              # This file
-├── testing-report_20260815.md  # Latest live-testing issues
+├── testing-report_20260817.md  # Latest live-testing issues
 └── TODOs.md               # Active task inventory (T-NEW-NNN tracker)
 ```
 
@@ -268,7 +268,7 @@ See [TODOs.md](./TODOs.md) for the complete task inventory.
 - [CODING_STANDARDS.md](./CODING_STANDARDS.md) - V4 standards compliance
 - [directory_tree.md](./directory_tree.md) - File-tree snapshot (2026-07-16, regenerate before relying)
 - [BUGs.md](./BUGs.md) - Historical stack-trace archive (read-only)
-- [testing-report_20260815.md](./testing-report_20260815.md) - Latest live-testing issues
+- [testing-report_20260817.md](./testing-report_20260817.md) - Latest live-testing issues
 
 ## Dependencies
 

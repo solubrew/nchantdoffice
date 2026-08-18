@@ -198,14 +198,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   internal-doc fallback branch. 6 new regression tests in
   `tests/test_t_new_144a_file_details_internal.py`.
 - **T-NEW-144b** External file becomes editor
-  (2026-08-16) — DEFERRED to v0.2.0. The current
-  `NchantdOfficeDocumentMixin.save()` only persists to
-  the doc_media row when `document.location == "external"`;
-  it does not write the editor content back to the
-  on-disk file. A proper fix needs per-document-type
-  dispatch (script text files, images binary, PDFs,
-  notebooks JSON, etc.) and would touch ~14 doc
-  subclasses; tracked under T-NEW-144b in TODOs.md.
+  (2026-08-16) — **SUPERSEDED IN SCOPE on 2026-08-18.** The
+  broad multi-format project is replaced by T-NEW-148, which fixes
+  external Script save-to-disk while preserving already-working
+  internal Script persistence. Do not widen this to unrelated
+  document formats without a new operator report.
 
 - **T-NEW-138** Journal editor followups: always-scroll
   + standard-populate (2026-08-16) -- the outer journal
@@ -534,9 +531,7 @@ traceability.)
 - **T-NEW-118** Journal PII detector + redacted view with PIN
   copy (re-filed, was orphaned by the T-NEW-066/067/068 number
   collision inside T-NEW-065's deferred-work section).
-- **T-NEW-119** Journal content growth: timestamp column +
-  retention policy + `delete_marked` (re-filed, same number
-  collision orphaning).
+- **T-NEW-119** Journal retention/timestamp/delete-marked — **CLOSED by operator clarification (2026-08-18):** full-text save/restore and retention already work and must not be changed. Remaining journal scope is parsing/PII integration under T-NEW-118.
 - **T-NEW-120** ✅ Script save/restore aspirational tests fail
   at the `5d80f92` contract — **FIXED** (`a2a0361`,
   2026-08-16). Pin: 15 tests green across
