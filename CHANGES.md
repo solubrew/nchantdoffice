@@ -198,11 +198,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   internal-doc fallback branch. 6 new regression tests in
   `tests/test_t_new_144a_file_details_internal.py`.
 - **T-NEW-144b** External file becomes editor
-  (2026-08-16) — **SUPERSEDED IN SCOPE on 2026-08-18.** The
-  broad multi-format project is replaced by T-NEW-148, which fixes
-  external Script save-to-disk while preserving already-working
-  internal Script persistence. Do not widen this to unrelated
-  document formats without a new operator report.
+  (2026-08-16) — **ACTIVE UMBRELLA, phased by document type.**
+  The broad multi-format project remains active, but each document
+  type must be implemented and regression-tested independently to
+  protect existing behavior. T-NEW-148 is phase 1 for
+  NchantdOfficeScript; later formats receive separate child cards.
 
 - **T-NEW-138** Journal editor followups: always-scroll
   + standard-populate (2026-08-16) -- the outer journal

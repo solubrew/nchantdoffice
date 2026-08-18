@@ -213,13 +213,19 @@ bodies remain below for traceability, but do not override this list.
     `widgets/config/referral_panel.py:395` with the real Qt masked-entry
     flow so the desktop never falls into a CLI getpass prompt.
 
+### Active umbrella sequencing
+
+- **T-NEW-144b -- Multi-format external editing:** active umbrella.
+  Work proceeds one document type at a time. The first child is
+  **T-NEW-148 NchantdOfficeScript**. Before choosing the next format,
+  complete its save/reopen tests and verify no regression to internal
+  Script persistence. Every later document type receives a separate
+  child card, acceptance test, implementation, and verification cycle.
+
 ### Closed / demoted by operator clarification
 
 - **T-NEW-119 -- CLOSED.** Journal retention, timestamp handling, and
   full-text storage are working. Do not modify those paths.
-- **T-NEW-144b -- SUPERSEDED IN SCOPE.** The broad ~14-document
-  "external editor" project is replaced by the specific Script external
-  save card T-NEW-148. Do not widen that fix to unrelated formats.
 - **NchantdChart config-pane segfault -- FIXED** by `899962c`.
 - **T-NEW-023 Script external reload whitespace -- FIXED/pinned** by
   existing reload tests. It is distinct from T-NEW-148 save-to-disk.
