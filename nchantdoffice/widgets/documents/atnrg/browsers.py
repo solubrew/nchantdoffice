@@ -1738,8 +1738,10 @@ class NchantdOfficeWebBrowserSettingsManager(NchantdOfficeDocument):
         document = {"document": self.config.override(cfg).get("document", {})}
         self.document = self.app.model.codex.init_web_config(document)
         self.document.load_document()
-        self.library = self.document.library  # store the library as an app_media document
-        self.profiles = self.document.profile_manager  # store the profile_manager as an app_media document
+        self.load_library()
+        self.load_profiles()
+        # self.library = self.document.library  # store the library as an app_media document
+        # self.profiles = self.document.profile_manager  # store the profile_manager as an app_media document
         return self
 
     def initView(self, cfg=None):
@@ -1752,6 +1754,26 @@ class NchantdOfficeWebBrowserSettingsManager(NchantdOfficeDocument):
         self.initModel(cfg)
         self.initView(cfg)
         return self
+
+    def get_url_library_data(self):
+        """"""
+        return self.app.model.get_urls()
+
+    def get_profiles_data(self):
+        """"""
+        return self.app.model.get_profiles("web")
+
+    def load_library(self):
+        """"""
+        data = self.get_url_library_data()
+        self.document.load_library(data)
+        self.library = self.document.library
+
+    def load_profiles(self):
+        """"""
+        data = self.get_profiles_data()
+        self.document.load_profiles(data)
+        self.profiles = self.document.profile_manager
 
     def save(self) -> Self:
         """Save the browser document.
