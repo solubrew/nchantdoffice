@@ -1334,12 +1334,24 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         return self
 
     def save(self) -> Self:
-        """Capture the current editor contents before persistence."""
+        """Capture editor contents and save loaded external files safely."""
         if self.document is None:
             self.new_document()
         content = self.get_content()
         if content != self.document.content:
             self.document.set_content(content)
+        if (
+            getattr(self.document, "location", None) == "external"
+            and getattr(self, "file_path", None)
+            and getattr(self, "_external_file_loaded", False)
+        ):
+            file_path = getattr(self, "file_path", None)
+            editor = getattr(self, "document_editor", None)
+            if file_path and editor is not None and hasattr(editor, "toPlainText"):
+                text = editor.toPlainText()
+                encoding = getattr(getattr(self, "config", None), "dikt", {}).get("encoding", "utf-8")
+                with open(file_path, "w", encoding=encoding) as external_file:
+                    external_file.write(text)
         super().save()
         return self
 
@@ -1688,6 +1700,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             else:
                 return False
             logma.info(f"[scripts] _load_external_file loaded {len(text)} chars from {path}")
+            self._external_file_loaded = True
             return True
         except Exception as e:
             logma.error(f"[scripts] _load_external_file failed: {e}", exc_info=True)
