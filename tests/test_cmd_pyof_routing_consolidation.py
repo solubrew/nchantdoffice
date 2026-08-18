@@ -198,10 +198,17 @@ def test_cmd_import_pyof_uses_worker_thread(monkeypatch, tmp_path):
     # Stub worker: records init args, emits a canned result on run().
     class _StubWorker:
         instances = []
-        def __init__(self, import_pyof_fn, path, host_conn):
+        def __init__(
+            self,
+            import_pyof_fn,
+            path,
+            host_conn,
+            target_parent_nid=None,
+        ):
             self._import_pyof_fn = import_pyof_fn
             self._path = path
             self._host_conn = host_conn
+            self._target_parent_nid = target_parent_nid
             self.started = False
             self.moveToThread_called = False
             self._stub_finished = tb_mod.Signal(str, list) if isinstance(tb_mod.Signal, type) else None

@@ -42,9 +42,6 @@ from types import SimpleNamespace
 
 from PySide6.QtWidgets import QApplication, QWidget
 
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
-
 SCRIPTS_PY = Path("/home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/" "widgets/documents/media/scripts.py")
 IMAGES_PY = Path("/home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/" "widgets/documents/media/images.py")
 

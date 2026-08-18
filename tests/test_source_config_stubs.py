@@ -24,8 +24,6 @@ from types import SimpleNamespace
 
 from PySide6.QtWidgets import QApplication, QLineEdit
 
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
 import nchantdoffice.widgets.config.source_config  # establish import order
 
 # ---------------------------------------------------------------------------

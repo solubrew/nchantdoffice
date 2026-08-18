@@ -24,8 +24,6 @@ from types import SimpleNamespace
 # constructed -- even via __new__ -- because the Shiboken parent class
 # registers itself against the app singleton at type-load time.
 from PySide6.QtWidgets import QApplication
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
 import nchantdoffice.models  # noqa: F401  -- establish import order first
 
 from nchantdoffice.widgets.config.settings import (

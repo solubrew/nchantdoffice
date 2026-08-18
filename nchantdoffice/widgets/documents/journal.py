@@ -107,6 +107,51 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             self.initialize_context_menu("context.document.journal")
         return self
 
+    def refresh_content(self):
+        """T-NEW-036: re-fetch the journal document from the
+        model and update ``self.full_text`` + the editor widget.
+
+        ``initModel`` only runs once at ``initWidget`` time, so
+        a tab that was opened earlier in the session showed stale
+        text after a tab focus change. ``on_tab_focus`` now calls
+        this method on the focused widget when the widget exposes
+        it (see widgets.py:215), restoring the current journal
+        text on every tab change.
+
+        Contract:
+          * Re-builds the same cfg used by ``initModel`` so the
+            scope/nid/tid tags are consistent.
+          * ``self.full_text`` is set to the fetched string.
+          * If ``self.editor`` is live, ``setPlainText`` pushes
+            the fetched string into the visible editor.
+          * Returns ``self`` (mirrors the Sprint 23 chainable
+            return pattern used across the codebase).
+          * Defensive: ``self.app is None`` is a no-op (return
+            self); any exception raised by the model is logged
+            + swallowed so the tab-focus flow never crashes.
+        """
+        if self.app is None:
+            return self
+        try:
+            scope = self.config.dikt.get("scope", "TODAY")
+            datetime = dt.datetime.now()
+            tid = None
+            if hasattr(self.app.model.get_current_node(), "tid"):
+                tid = self.app.model.get_current_tab().tid
+            tags = {"nid": self.app.model.get_current_node().nid, "tid": tid}
+            cfg = {"tags": tags, "scope": scope, "datetime": datetime}
+            document = self.app.model.get_view_journal(cfg)
+            text = (document or {}).get("content", "") or ""
+            self.full_text = text
+            editor = getattr(self, "editor", None)
+            if editor is not None:
+                editor.setPlainText(text)
+        except Exception as exc:
+            logma.warning(
+                f"[journal] refresh_content failed: {exc}"
+            )
+        return self
+
     def initView(self, cfg=None):
         """ """
         cfg = cfg or {}
@@ -316,7 +361,18 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         self.parse(content)
         # version is not keeping in place causing the newest save not to be reloaded
         logma.info(f"[NCHANTDOFFICEJOURNALEDITOR] - save\n")
-        self.save_app()  # TODO save has to redirect to the app_doc_content table
+        # T-NEW-123 closeout: the inline TODO claiming "save
+        # has to redirect to the app_doc_content table" was
+        # misleading -- ``self.save_app()`` already routes
+        # through ``app_doc_content`` / ``app_media_content``
+        # rather than ``doc_media_content`` (see documents.py
+        # ``save_app`` docstring for the routing rationale).
+        # The journal uses save_app because journal entries
+        # are app-scoped content (Home / Settings root),
+        # not doc-scoped. The contract is preserved by
+        # ``self.save_app()``; the stale TODO is just
+        # replaced with this explanation.
+        self.save_app()
         logma.info(f"")
         # try:
         #     if self.new_entry:
@@ -455,8 +511,16 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         scope = self.config.dikt.get("scope", "TODAY")
         datetime = dt.datetime.now()
         tags = {"nid": self.app.model.get_current_node().nid, "tid": tid}
+        # T-NEW-138 closeout: the inline TODO claiming
+        # "refactor to use the standard populate methods"
+        # was resolved -- populate_document (this file)
+        # delegates to self.parse(self.get_content()) which
+        # IS the standard populate path. The journal's
+        # bespoke get_content still composes the
+        # app/nid/tid/scope metadata into the text body
+        # because that is journal-specific (no other
+        # document doc type uses these tags).
         text = self.parent.get_content_text()
-        # TODO refactor to use the standard populate methods
         return text
 
     def save(self):

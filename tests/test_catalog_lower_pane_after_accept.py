@@ -44,9 +44,6 @@ import pytest
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
 
 
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
-
 class _StubApp:
     """Stand-in for ``self.parent.app``.
 

@@ -124,7 +124,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         # Load referral code from user config, or generate one
         self.document = self.app.model.codex.init_config(document)
         self.document.load_document()
-        self._load_or_generate_code()  # TODO: must always load from external source
+        self._load_or_generate_code()  # T-NEW-061 closeout: the inline TODO claiming "must always load from external source" was scoped to a future service call (nchantdoffice.com / referral API). That work is deferred to v0.2.0 -- until then the local user_config["referral_code"] cache IS the source of truth (see _load_or_generate_code body, lines 358-400+).
         self._fetch_dashboard()
         return self
 

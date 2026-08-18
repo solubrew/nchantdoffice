@@ -27,9 +27,6 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 from PySide6.QtWidgets import QApplication
-_QAPP = QApplication.instance() or QApplication(sys.argv)
-
-
 def _toolbars_py():
     return Path(
         "/home/solubrew/.hermes/projects/nchantdoffice/nchantdoffice/"

@@ -1007,7 +1007,18 @@ class NchantdOfficeImage(NchantdOfficeDocument):
                 logma.warning("[images] cmd_run_palette_scan: no image path")
                 return self
             cfg = {}
-            palette = PyfficeColorPalette(cfg).extract_palette(path)
+            palette_document = PyfficeColorPalette(cfg)
+            if not hasattr(palette_document, "extract_palette"):
+                message = "Palette scan unavailable -- update pyffice"
+                logma.error(f"[images] cmd_run_palette_scan: {message}")
+                parent = getattr(self, "parent", None)
+                if parent is not None and hasattr(parent, "statusBar"):
+                    try:
+                        parent.statusBar().showMessage(message, 5000)
+                    except Exception:
+                        pass
+                return self
+            palette = palette_document.extract_palette(path)
             self.config.dikt["palette_scan"] = palette
         except Exception as e:
             logma.error(f"[images] cmd_run_palette_scan failed: {e}", exc_info=True)

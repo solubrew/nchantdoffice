@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 # ======================================Standard Library Modules======================================================||
+import os
 from os.path import dirname, join, exists
 import json as j
 from bs4 import BeautifulSoup
@@ -549,15 +550,15 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             or "html"
         )
         if syntax == "html":
-            # html = """
-            # <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN http://www.w3.org/TR/REC-html40/strict.dtd">
-            # <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
-            # """
-            html = ""
+            # T-NEW-120 (replay of reverted fix 85e809e):
+            # pass editor_html through directly. The previous
+            # templated-envelope code (``html.replace(...)``)
+            # collapsed to "" when the template body was
+            # commented out, which silently dropped all HTML
+            # text. The editor HTML is the canonical payload.
             editor_html = self.document_editor.toHtml()
-            soup = BeautifulSoup(editor_html, "html.parser")
-            text = html.replace("<[content]>", soup.body.decode_contents())
-            # Persist the editor HTML into the Pyffice unit so
+            text = editor_html
+            # Mirror the editor HTML into the Pyffice unit so
             # reopen can restore formatting (see _preserved_unit_html).
             text_attr = getattr(self.document, "text", None)
             if text_attr is not None and hasattr(text_attr, "html"):
@@ -1334,14 +1335,95 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         return self
 
     def save(self) -> Self:
-        """Capture the current editor contents before persistence."""
+        """Capture the current editor contents and persist.
+
+        T-NEW-148 (phase 1 of T-NEW-144b umbrella): when the
+        document is ``location == "external"`` and a
+        ``file_path`` is set, write the bare editor text to
+        that file before delegating to ``super().save()`` --
+        which only increments the Pyffice version and writes
+        the DB row. The internal Script persistence path is
+        unchanged: when ``location == "internal"`` (or
+        ``file_path`` is absent), no external file is touched.
+
+        Atomic-ish write: stream the bytes to a sibling
+        ``.tmp`` file and ``os.replace`` it onto the target.
+        If the rename fails, the original file is left intact
+        and the temp file is cleaned up. Encoding defaults to
+        UTF-8 and can be overridden via
+        ``self.config.dikt["encoding"]`` (falls back to UTF-8).
+        """
         if self.document is None:
             self.new_document()
         content = self.get_content()
         if content != self.document.content:
             self.document.set_content(content)
+        # T-NEW-148: external-file write happens here, *before*
+        # the DB write. We deliberately bypass the base mixin
+        # ``save()`` for the file bytes because:
+        #   1. PyfficeDocument.save() only increments the
+        #      version -- it never writes user bytes.
+        #   2. The base ``NchantdOfficeDocument.save()`` is
+        #      DB-centric; it does not know about per-document
+        #      type file formats (script = raw text vs. JSON
+        #      blob vs. image bytes).
+        #   3. Script text is captured into a dict by
+        #      ``get_content()``; the on-disk file must be the
+        #      bare editor text (not the dict wrapper).
+        if (
+            getattr(self.document, "location", None) == "external"
+            and getattr(self, "file_path", None)
+        ):
+            editor_text = content.get("text", "") if isinstance(content, dict) else ""
+            self._write_external_file(editor_text)
         super().save()
         return self
+
+    def _write_external_file(self, text: str) -> None:
+        """Atomically write ``text`` to ``self.file_path`` (UTF-8).
+
+        T-NEW-148 helper. Stream to a sibling ``.tmp`` file
+        and ``os.replace`` onto the target so a partial write
+        never clobbers an existing file. On any failure the
+        temp file is removed and the original is preserved.
+        """
+        target = self.file_path
+        if not target:
+            return
+        encoding = "utf-8"
+        try:
+            cfg_encoding = getattr(self.config, "dikt", {}).get("encoding")
+            if cfg_encoding:
+                encoding = cfg_encoding
+        except Exception:
+            pass
+        directory = dirname(target) or "."
+        try:
+            os.makedirs(directory, exist_ok=True)
+        except Exception as e:
+            logma.error(
+                f"[scripts] _write_external_file: mkdir failed for {directory}: {e}",
+                exc_info=True,
+            )
+            return
+        tmp_path = f"{target}.tmp"
+        try:
+            with open(tmp_path, "w", encoding=encoding) as f:
+                f.write(text)
+            os.replace(tmp_path, target)
+            logma.info(f"[scripts] _write_external_file: wrote {target} ({len(text)} chars)")
+        except Exception as e:
+            logma.error(
+                f"[scripts] _write_external_file: write failed for {target}: {e}",
+                exc_info=True,
+            )
+            # Best-effort cleanup of the temp file; the original
+            # (if any) is untouched.
+            try:
+                if exists(tmp_path):
+                    os.remove(tmp_path)
+            except Exception:
+                pass
 
     def set_page_view(self) -> None:
         """"""
@@ -1773,7 +1855,16 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         if isinstance(content, str):
             text = content
         elif isinstance(content, dict):
-            text = content.get("text", {})
+            # T-NEW-120 (replay of reverted fix 85e809e):
+            # walk the get_content() payload shape. The
+            # top-level ``content["text"]`` is the wrong key
+            # (the inner ``content`` dict has a ``"text"`` key
+            # whose value IS the payload). The previous
+            # ``content.get("text", {})`` would reach the inner
+            # ``content`` dict and the subsequent
+            # ``text.get("value", "")`` returned "" -- the test
+            # round-trip silently dropped all script text.
+            text = content.get("content", {}).get("text", {})
 
         # if text is None:
         #     content = self.get_content()

@@ -1,12 +1,16 @@
-# NchantdOffice TODOs — current state (2026-08-06)
+# NchantdOffice TODOs — current state (2026-08-17)
 
-> **Consolidation date:** 2026-07-29.
+> **Consolidation date:** 2026-08-17.
 >
 > This file replaces the previous `TODOs.md`, the historical `STATE.md`,
 > and the session-only `SESSION_NOTES.md` (both now in
 > `_data_/archive/2026-07-29/`). It captures the project state after the
 > closed-loop of Sprints 1-17 across nchantdoffice / nchantrs / pyffice /
-> pycurity / pyside6pandas.
+> pycurity / pyside6pandas, plus the 2026-08-10 → 2026-08-17 T-NEW
+> sweep (110..147) and the 2026-08-17 batch
+> (`260886a` / `419a317` / `899962c` / `07fc18b` — closes
+> T-NEW-122, T-NEW-117, T-NEW-037-followup, and the pyof
+> bare-parent segfault respectively).
 >
 > **T-NEW-NNN card numbering — per-repo convention.** This
 > repo's `T-NEW-NNN` numbers are local to nchantdoffice
@@ -104,12 +108,12 @@
 |---|---|
 | Project | NchantdOffice |
 | Type | Desktop GUI application (PySide6) |
-| Branch | `gamma` (in sync with `origin/gamma`) |
-| HEAD | `bcfb730` (nchantdoffice/gamma) |
+| Branch | `gamma` (4 commits ahead of `origin/gamma`: `260886a` T-NEW-122, `419a317` T-NEW-117, `899962c` addWidget(None), `07fc18b` pyof bare parent) |
+| HEAD | `07fc18b` (nchantdoffice/gamma, 2026-08-17) |
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
-| Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests -q` |
-| Current test surface | 20 passed (12 update_checker + 3 boot-hook + 5 review-pinning RED-tests still RED awaiting T-NEW-059/060). Pre-existing failure `test_app_action_has_position_int_nchantdoffice` is unrelated to T-NEW-058. |
+| Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests --continue-on-collection-errors -q` |
+| Current test surface (T-NEW-122 baseline) | `260886a` post-fix full-suite run with `--ignore=tests/test_cmd_pyof_routing_consolidation.py` (the file exposed the unrelated pre-existing pyof bare-parent SIGSEGV, fixed the same day in `07fc18b`): **19 failed, 836 passed, 6 skipped** (100% collection reached; pre-`260886a` the run aborted at 8% of collection). The 19 functional failures are pre-existing logic bugs unrelated to collection stability; the 6 skips are defensive `pytest.skip()` guards against a pre-existing Qt+offscreen SIGSEGV in production `initView` (`widgets.py:193`, `document_settings.py:158`). Full-suite final count NOT independently re-measured after the `07fc18b` pyof fix on 2026-08-17 — see `testing-report_20260817.md` for next-day targeted evidence. |
 
 ### Internal-project stack (CORE INTEGRATED)
 
@@ -139,7 +143,104 @@
 
 ---
 
-## 2. Live open items
+## 2. Canonical active backlog (2026-08-18)
+
+This section is the source of truth for current work. Historical card
+bodies remain below for traceability, but do not override this list.
+
+### P0 -- confirmed broken in operator testing
+
+1. **T-NEW-148 -- External Script Save writes back to disk.**
+   `NchantdOfficeScript.save()` captures editor content but only reaches
+   the DB path; `PyfficeDocument.save()` increments the version without
+   writing bytes. Preserve internal Script persistence unchanged.
+   **Affected sites:** `widgets/documents/media/scripts.py:1336-1344`,
+   `widgets/documents/documents.py:601-689`, pyffice
+   `document.py:1065-1084`.
+   **Acceptance:** external UTF-8 file bytes equal current editor text;
+   DB write still occurs; internal documents do not touch disk.
+2. **T-NEW-149 -- Matrix internal value persistence and restore.**
+   Save captures a grid, but cell changes are not mirrored incrementally
+   and no real DB round-trip proves `content_enc64_txt` restores into a
+   fresh Matrix widget.
+   **Affected sites:** `widgets/documents/workbooks/matricies.py:1713-1741,
+   1896-1950,2353-2392`, `models.py:3399-3434`.
+   **Acceptance:** a non-square entered grid survives save, tab close,
+   and reopen by the same document ID. This card is internal-only; do not
+   expand it into external spreadsheet export.
+3. **T-NEW-150 -- Disable Matrix formula toolbar until 0.0.3.**
+   Remove `Apply Formula` and `Auto Calculate` actions from toolbar
+   construction while leaving their implementation available for 0.0.3.
+   **Affected site:** `matricies.py:2016-2019`.
+4. **T-NEW-151 -- Fix nchantrs password verifier mismatch.**
+   `NchantdUser.get_password()` calls missing `verify_password`; the
+   available method is `verify_pword`. This is an upstream nchantrs fix,
+   tracked here because it breaks NchantdOffice first-boot app_user
+   bootstrap. Operator traceback: `testing-report_20260817.md` /
+   `origin/gamma` commit `3799b3f`.
+
+### P1 -- operator workflow and performance
+
+5. **T-NEW-152 -- Refresh ToolBox after node deletion.**
+   `cmd_delete_node` refreshes the tree but not the document ToolBox.
+   **Affected site:** `widgets/panes/documents.py:127-159`.
+6. **T-NEW-153 -- Node-delete navigation fallback.**
+   Navigate previous node first, then sibling, then parent when deleting
+   the active node. Upstream `go_to_previous_node` currently handles only
+   `previous_index` (`nchantrs/views/treeviews.py:110-117`).
+7. **T-NEW-154 -- Profile new-document creation performance.**
+   Add stage timing before optimizing; no timing instrumentation currently
+   identifies the bottleneck in `widgets/panes/new.py` / document create.
+8. **T-NEW-155 -- Script date/time insert and Ctrl+D.**
+   Add the toolbar action and shortcut requested in the latest operator
+   report; no Ctrl+D registration currently exists.
+9. **T-NEW-156 -- Sort `_`-prefixed nodes first.**
+   Add an explicit underscore-priority comparator while preserving the
+   selected ascending/descending order for the remaining names.
+
+### P2 -- parsing, privacy, and technical debt
+
+10. **T-NEW-118 -- Journal parsing + PII integration only.**
+    Full-text save/restore and retention already work and MUST NOT be
+    changed. Integrate existing `pycurity.pymatch.extract_all_pii()` into
+    journal parsing/redaction/PIN-copy behavior. Any expansion of base PII
+    functionality belongs upstream in pycurity.
+11. **T-NEW-121 -- Source-encoding guard and ASCII cleanup.**
+12. **T-NEW-157 -- Search correction-position fallback.**
+    Resolve `models.py:3039` instead of silently forcing position 0.
+13. **T-NEW-158 -- Referral desktop passphrase guard.**
+    Replace the unnumbered `T-NEW-XXX` marker at
+    `widgets/config/referral_panel.py:395` with the real Qt masked-entry
+    flow so the desktop never falls into a CLI getpass prompt.
+
+### Active umbrella sequencing
+
+- **T-NEW-144b -- Multi-format external editing:** active umbrella.
+  Work proceeds one document type at a time. The first child is
+  **T-NEW-148 NchantdOfficeScript**. Before choosing the next format,
+  complete its save/reopen tests and verify no regression to internal
+  Script persistence. Every later document type receives a separate
+  child card, acceptance test, implementation, and verification cycle.
+
+### Closed / demoted by operator clarification
+
+- **T-NEW-119 -- CLOSED.** Journal retention, timestamp handling, and
+  full-text storage are working. Do not modify those paths.
+- **NchantdChart config-pane segfault -- FIXED** by `899962c`.
+- **T-NEW-023 Script external reload whitespace -- FIXED/pinned** by
+  existing reload tests. It is distinct from T-NEW-148 save-to-disk.
+
+### In-code marker audit
+
+The production marker sweep found 23 TODO-family hits across 11 files.
+All except `models.py:3039` and `referral_panel.py:395` are historical
+closeout comments or deliberate abstract/delegated behavior; they are not
+new backlog items.
+
+### Historical live-open section (superseded)
+
+The material below is retained for audit history. Its old priority labels
+are not current.
 
 These are the items still requiring work, in priority order.
 
@@ -148,11 +249,29 @@ These are the items still requiring work, in priority order.
 - [ ] **NchantdChart segmentation fault.** Held per user instruction
   (2026-07-28). Reproduction requires a parent-app Qt harness; the live
   bug cannot be reproduced in the sasquatch headless env.
-- [ ] **T-NEW-023 — NchantdScript reload whitespace lost on reopen**
-  (2026-07-29). Per user: "reload should be opening the file on
-  disk again". Initial open renders correctly (markdown/python/etc.)
-  but reload from another tabset still does not preserve
-  indentation. Marked as a pin — needs a Qt-parent subprocess harness.
+  **2026-08-17 update:** the chart-config action-button / border-style
+  builder sites (`panes/charts.py:186/214`) that were historically
+  blamed on T-NEW-029 drag-init gating are now identified as
+  `addWidget(None)` segfaults (PySide6 segfault on implicit `None`
+  return from the builder stubs); **fixed by `899962c`** with the
+  `_build_chart_action_button_group` / `_build_border_style_editor`
+  real QWidget returners + `is not None` gates. The pin remains
+  open for the broader live-app crash that originally motivated
+  it; the chart-config-pane half is resolved.
+- [x] **T-NEW-023 — NchantdScript reload whitespace lost on reopen**
+  (Sprint 9 commits `1a7aa05` / `5ae6a32` / `99bb286`; pinned for
+  full validation per user direction 2026-07-29). Per user:
+  "reload should be opening the file on disk again". Initial
+  open renders correctly (markdown/python/etc.) and the
+  reload-from-disk contract is implemented in
+  `_load_external_file` + the production
+  `populate_document` flow (skip DB dispatch when file_path
+  loads from disk). Pin: `tests/test_script_html_envelope.py`
+  (4 tests encoding the contract). The
+  Qt-parent-subprocess harness for full live-app validation
+  was deferred (per user direction in `f0cf4aa`) but the
+  contract is now pinned by tests; the open pin here
+  records the deferred-harness piece only.
 - [x] **T-NEW-024 followup — doc_media.syntax not updated on file-open** (Sprint 17, 2026-07-29). The `doc_media` row carried the `"html"` default written at tab-creation time; the in-memory `document.syntax` was updated correctly by `_apply_extension_syntax` but the DB row was never touched, so the next reopen read `syntax="html"` from the DB and the dispatch fell through to `setPlainText`. Fixed: `model.update_doc_media_syntax(did, syntax)` runs `UPDATE doc_media SET syntax = ? WHERE did = ?` via the existing `store.update_records()` path. Called from `scripts.py::open_file` after `_apply_extension_syntax` and from `documents.py::save` on every save. Regression test: `tests/test_script_doc_media_syntax_update.py` (3 AST checks: model helper exists with `syntax` + `did` + `UPDATE`, `scripts.py::open_file` triggers the update, `documents.py::save` triggers the update).
 
 ### Deferred / non-blocking
@@ -306,7 +425,7 @@ matching key (`enable_journal_focus`, `enable_settings_focus`,
 | T-NEW-034 | Data Source config card polish (apikey / tracked / size / retention / save) | ✅ Done — Sprint 30 (tracked checkbox + size label + retention spinbox + save button added) |
 | T-NEW-035 | Script-tool polish (`file_format` vs `syntax`, drawer-redraw, object-config inserts, pane-spacing) | ✅ Done — Sprint 30 (file_format-vs-syntax closed; file_format kept as backward-compat alias of syntax) |
 | T-NEW-036 | Journal restore on tab change | ✅ Done — Sprint 29 (refresh_content on tab focus) |
-| T-NEW-037 | Empty method stubs (analytics_charts, charts, toolbars) | ✅ Done — Sprint 29 (2 filled, 1 deferred to T-NEW-029) |
+| T-NEW-037 | Empty method stubs (analytics_charts, charts, toolbars) | ✅ Done — Sprint 29 (2 filled, 1 deferred to T-NEW-029) + 2026-08-17 (`899962c` chart addWidget(None) followup: action-button + border-style builders implemented; root cause was addWidget(None) implicit None return, not T-NEW-029 drag-init gating) |
 | T-NEW-038 | Database-save icon for internally stored documents | ✅ Done — Sprint 29 (_save_action picks save_database for internal docs) |
 | T-NEW-039 | Refactor: move document-save hack to model + consolidate add_tab/add_document | ✅ Done — Sprint 30 (widget hack removed; model owns the doc_media syntax update) |
 | T-NEW-040 | Toolbar init tech debt (redundant init_variables + MultiInstance switch) | ✅ Done — Sprint 29 (stale comment removed; _resolve_db_alias helper) |
@@ -4647,13 +4766,125 @@ and deserves its own sub-card if non-trivial.
   it. Pin: `tests/test_t_new_116_jupyter_default_dir.py`
   4 new tests (behavioural: default + file-path, source-
   level: helper exists + start_jupyter_server delegates).
-- **T-NEW-117** Palette scan crashes: `PyfficeColorPalette.extract_palette` missing — filed from `testing-report_20260810_001.md`; verified still broken 2026-08-15.
+- **T-NEW-117** ✅ Palette scan crashes:
+  `PyfficeColorPalette.extract_palette` missing —
+  **FIXED** (2026-08-17, gamma `419a317`). Upstream
+  pyffice `1cd3c48` added `PyfficeColorPalette.extract_
+  palette`; nchantdoffice `419a317` adds a `hasattr`
+  graceful-degradation guard at the image-toolbar call
+  site so older pyffice builds log + status-bar the
+  failure instead of crashing with AttributeError. Pin:
+  `tests/test_t_new_117_palette_scan_degradation.py` (3
+  tests).
 - **T-NEW-118** Journal PII detector + redacted view with PIN copy — re-filed (was orphaned by the T-NEW-066/067/068 number collision inside T-NEW-065's deferred-work section).
 - **T-NEW-119** Journal content retention: timestamp column + retention policy + delete_marked — re-filed (same number-collision orphaning).
-- **T-NEW-120** Script save/restore aspirational tests fail at the 5d80f92 contract — filed after the 2026-08-15 revert (`822b32e`); 5 red tests are the acceptance gate.
+- **T-NEW-120** ✅ Script save/restore aspirational tests
+  -- **FIXED** (2026-08-16, gamma `pending`). The 5
+  aspirational tests in
+  ``tests/test_document_persistence.py`` /
+  ``tests/test_script_newline_roundtrip.py`` /
+  ``tests/test_script_open_format.py`` are now green
+  (15 passed / 0 failed). Fix re-applies the production
+  logic from the previously-reverted ``85e809e``
+  commit: (1) ``get_content`` HTML branch passes
+  ``editor_html`` through directly rather than running
+  a defunct ``html.replace(...)`` template substitution
+  (the template body was commented out, so the body
+  collapsed to ``""`` and the saved payload lost all
+  text); (2) the dict-shape ``_resolve_document_text``
+  walks the proper ``content[content][text][value]``
+  path rather than the top-level
+  ``content["text"]`` (which reached the wrong dict);
+  (3) test SimpleNamespace fixtures gained
+  ``location='external'`` to match the
+  ``populate_document`` ``external/internal/cloud``
+  dispatch's shape requirement. All changes leverage
+  existing scripts.py / nchantrs patterns -- no new
+  helpers introduced. Pin: the 5 aspirational tests in
+  the 3 named test files.
 - **T-NEW-121** em-dash sweep + encoding-declaration placement — filed after the `30593b9` SyntaxError incident; 197 files affected.
-- **T-NEW-122** Qt-harness migration for tests importing toolboxes — filed after `test_cmd_pyof_routing_consolidation.py` batch-crash (T-NEW-114 follow-up).
-- **T-NEW-123** Embedded-TODO sweep: implement-method stubs and config wiring — covers the 21 uncovered TODO markers (embedded_todos audit dim 58%).
+- **T-NEW-122** ✅ Qt-harness migration for tests importing
+  toolboxes — **FIXED** (2026-08-17, gamma `260886a`). The
+  module-level `_QAPP = QApplication.instance() or
+  QApplication(sys.argv)` pattern in 21 test files
+  aborted multi-file pytest collection at exit 134/139.
+  `260886a` adds `tests/conftest.py` with a session-scoped
+  autouse fixture that lazily constructs one
+  `QApplication` for the whole pytest session (deferred
+  import so non-Qt hosts stay safe); opt-in
+  `tests/qt_parent/__init__.py` exposes session- and
+  function-scoped `qapp` fixtures for tests that want to
+  declare Qt dependency explicitly. The offending
+  module-level line was stripped from all 21 offenders;
+  the autouse conftest provides the same instance
+  lazily. Pin: `tests/test_t_new_122_qt_collection_guard.py`
+  (2 tests: AST scan finds no offender + RED→GREEN
+  history). Full suite (with
+  `--ignore=tests/test_cmd_pyof_routing_consolidation.py`
+  for the unrelated pre-existing pyof bare-parent
+  SIGSEGV that `07fc18b` fixed the same day): 19 failed,
+  836 passed, 6 skipped (100% collection reached; pre
+  `260886a` the run aborted at 8% of collection).
+- **T-NEW-123** ✅ Embedded-TODO sweep -- **FIXED (cluster
+  4)** (2026-08-16, gamma `pending`). This commit
+  closes the 4 in-file TODOs that were either stale
+  comments over already-implemented code or had been
+  resolved by prior cards. The remaining embedded
+  TODOs in this card (palette drawer wiring, tool
+  drawer re-render, per-doctype features pane, tab-None
+  Stub, catalog=false default) shipped as T-NEW-141c.
+  The remaining embedded TODOs not in scope for this
+  commit are:
+  - `models.py:3040` -- "need to find correction
+    position" (corrupted-character fallback in the
+    correction-table lookup; low-priority, deferred).
+  - `panes/charts.py:186/214` -- the chart-config
+    action-button / border-style builder TODOs that
+    were historically blamed on T-NEW-029 drag-init
+    gating. **FIXED** (2026-08-17, gamma `899962c`):
+    the real root cause was an implicit `None` return
+    feeding `layout.addWidget(None)` (PySide6 segfault),
+    not drag gating. Fix: `_build_chart_action_button_
+    group` / `_build_border_style_editor` now return
+    real `QWidget`s with an `is not None` gate before
+    `addWidget(...)`. Pin:
+    `tests/test_t_new_037_addwidget_none_root_cause.py`
+    (behavioural + source-shape regressions).
+  - `analytics.py:887` -- not an actual marker; it's
+    the docstring of a method that called a
+    `# TODO implement method` reference.
+  - `models.py:3412` -- the original
+    `# TODO: increment version` marker that the
+    surrounding code already implements via
+    PyfficeDocument.add_change version semantics.
+  Resolved in this commit:
+  - `journal.py:319` -- the inline
+    `save_app() # TODO save has to redirect to the
+    app_doc_content table` was misleading;
+    `save_app()` already routes through
+    `app_doc_content`/`app_media_content` rather than
+    `doc_media_content` (the journal's app-scoped vs
+    doc-scoped distinction is preserved by using
+    `save_app()`). Stale TODO replaced with
+    explanation comment.
+  - `settings.py:1254` -- the inline TODO
+    "lock default right side tab to Ad tab for free
+    users" was resolved by T-NEW-140; the lock lives
+    in `cmd_on_change_right_side_tab_select`.
+  - `journal.py:459` -- the inline TODO "refactor to
+    use the standard populate methods" was resolved by
+    T-NEW-138; `populate_document` delegates to
+    `self.parse(self.get_content())` (the standard
+    populate path). The bespoke `get_content_text` is
+    journal-specific metadata composition (nid/tid/
+    scope).
+  - `config/referral_panel.py:117` -- the inline TODO
+    "must always load from external source" is the
+    T-NEW-061 deferred work (service call to
+    nchantdoffice.com). Until that ships, the local
+    `user_config["referral_code"]` cache IS the source
+    of truth (the `_load_or_generate_code` body, lines
+    358-400+).
 
 - **T-NEW-138** Journal editor followups: always-scroll to bottom + refactor to standard populate (covers `journal.py:132, 422`) -- pairs with T-NEW-079.
 - **T-NEW-139** ✅ Toolbar signature cleanup: combine `add_tab`

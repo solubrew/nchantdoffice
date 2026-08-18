@@ -44,6 +44,10 @@ logma = Logma(__name__)
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "matricies.yaml")
 
+# T-NEW-150: formula actions remain implemented but are hidden
+# from the Matrix toolbar until the 0.0.3 release.
+_FORMULA_TOOLBAR_ENABLED = False
+
 
 class NchantdOfficeCellBorderFormats(NchantdWidget):
     """"""
@@ -1736,9 +1740,33 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             col_label = f"{chr(65 + high - 1)}{chr(65 + low)}"
         address = f"{col_label}{row}"
         value = item.text()
+        self._mirror_cell_to_document(item.row(), column, value)
 
         # Emit signal
         self.dataChanged.emit({"address": address, "value": value})
+
+    def _mirror_cell_to_document(self, row, column, value) -> None:
+        """Mirror one edited cell into the internal document grid."""
+        document = getattr(self, "document", None)
+        if document is None:
+            return
+        content = getattr(document, "content", None)
+        if not isinstance(content, dict):
+            content = {}
+            document.content = content
+        grid = content.get("grid")
+        if not isinstance(grid, list):
+            grid = []
+        while len(grid) <= row:
+            width = max(column + 1, max((len(r) for r in grid if isinstance(r, list)), default=0))
+            grid.append([""] * width)
+        for existing_row in grid:
+            if isinstance(existing_row, list) and len(existing_row) <= column:
+                existing_row.extend([""] * (column + 1 - len(existing_row)))
+        if not isinstance(grid[row], list):
+            grid[row] = [""] * (column + 1)
+        grid[row][column] = value
+        content["grid"] = grid
 
     def on_selection_changed(self) -> None:
         """Handle selection change"""
@@ -2013,11 +2041,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.toolbar.addAction("Italic", self.toggle_italic)
         self.toolbar.addSeparator()
 
-        # Formula operations from formula toolbar
-        if hasattr(self, "cmd_formula_entrybox"):
-            self.toolbar.addAction("Apply Formula", self.cmd_formula_entrybox)
-        self.toolbar.addAction("Auto Calculate", self.cmd_auto_calculate)
-        self.toolbar.addSeparator()
+        # Formula operations remain implemented for 0.0.3, but are
+        # intentionally absent from the current toolbar.
+        if _FORMULA_TOOLBAR_ENABLED:
+            if hasattr(self, "cmd_formula_entrybox"):
+                self.toolbar.addAction("Apply Formula", self.cmd_formula_entrybox)
+            self.toolbar.addAction("Auto Calculate", self.cmd_auto_calculate)
+            self.toolbar.addSeparator()
 
         # Insert operations
         self.toolbar.addAction("Insert Row", self.insert_row)

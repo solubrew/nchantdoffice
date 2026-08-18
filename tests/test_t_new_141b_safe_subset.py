@@ -142,6 +142,52 @@ def test_on_webview_load_progress_logs_percent():
 # 4. utilities/users.py:69 -- has_pro from credentials
 # ---------------------------------------------------------------------------
 
+def _stub_kahndor_instruct(monkeypatch):
+    """Stub the kahndor.Instruct symbol used inside
+    NchantdOfficeUser.__init__ so the .config.override
+    line does not raise. The override is a no-op for the
+    has_pro test -- we just need __init__ to return.
+
+    T-NEW-141b patch-point correction: production
+    ``nchantdoffice/utilities/users.py`` binds its local
+    ``kahndor`` name via ``from kahndor import kahndor``
+    (i.e. the *submodule* ``kahndor.kahndor``), and the
+    call site uses ``kahndor.Instruct(...)`` on that local
+    binding. Patching the top-level ``kahndor`` namespace
+    package (``kahndor.Instruct``) misses the production
+    symbol AND fails outright in editable installs where
+    ``kahndor`` is loaded as a PEP 420 namespace package
+    (no ``__init__.py`` executed, no module-level
+    ``__getattr__``), making the test unwritable against
+    the production code path. Patching the submodule
+    works regardless of install mode and matches the
+    symbol ``users.py`` actually resolves.
+    """
+    from kahndor import kahndor as _kahndor
+    monkeypatch.setattr(
+        _kahndor, "Instruct",
+        lambda *a, **kw: SimpleNamespace(
+            select=lambda *a, **kw: SimpleNamespace(override=lambda *a, **kw: None)
+        ),
+    )
+
+
+def _stub_nchantd_user_init(monkeypatch):
+    """Stub the parent ``NchantdUser.__init__`` so the
+    secure-store branch does not execute during the
+    has_pro test -- we are only exercising the
+    ``_resolve_has_pro_from_credentials`` branch in
+    ``NchantdOfficeUser.__init__``.
+    """
+    from nchantrs.utilities.users import NchantdUser
+    monkeypatch.setattr(
+        NchantdUser, "__init__",
+        lambda self, parent, cfg=None: setattr(self, "config",
+            SimpleNamespace(override=lambda *a, **kw: None,
+                            dikt={})) or None
+    )
+
+
 def test_users_init_reads_has_pro_from_credentials(monkeypatch):
     """T-NEW-141b (4): ``NchantdOfficeUser.__init__`` must
     read ``has_pro`` from ``load_credentials().user_tier``
@@ -155,26 +201,8 @@ def test_users_init_reads_has_pro_from_credentials(monkeypatch):
     # Stub load_credentials to return a 'pro' tier.
     fake_creds = SimpleNamespace(user_tier="pro")
     monkeypatch.setattr(creds, "load_credentials", lambda: fake_creds)
-    # Stub the parent NchantdUser.__init__ so it doesn't
-    # try to read the secure store.
-    from nchantrs.utilities.users import NchantdUser
-    monkeypatch.setattr(
-        NchantdUser, "__init__",
-        lambda self, parent, cfg=None: setattr(self, "config",
-            SimpleNamespace(override=lambda *a, **kw: None,
-                            dikt={})) or None
-    )
-    # Stub the kahndor.Instruct call inside
-    # NchantdOfficeUser.__init__ so the .config.override
-    # line does not raise. The override is a no-op for the
-    # has_pro test -- we just need __init__ to return.
-    import kahndor
-    monkeypatch.setattr(
-        kahndor, "Instruct",
-        lambda *a, **kw: SimpleNamespace(
-            select=lambda *a, **kw: SimpleNamespace(override=lambda *a, **kw: None)
-        ),
-    )
+    _stub_nchantd_user_init(monkeypatch)
+    _stub_kahndor_instruct(monkeypatch)
 
     user = users_mod.NchantdOfficeUser.__new__(
         users_mod.NchantdOfficeUser
@@ -192,20 +220,8 @@ def test_users_init_free_user_has_pro_false(monkeypatch):
     """
     from nchantdoffice.utilities import credentials as creds
     from nchantdoffice.utilities import users as users_mod
-    from nchantrs.utilities.users import NchantdUser
-    monkeypatch.setattr(
-        NchantdUser, "__init__",
-        lambda self, parent, cfg=None: setattr(self, "config",
-            SimpleNamespace(override=lambda *a, **kw: None,
-                            dikt={})) or None
-    )
-    import kahndor
-    monkeypatch.setattr(
-        kahndor, "Instruct",
-        lambda *a, **kw: SimpleNamespace(
-            select=lambda *a, **kw: SimpleNamespace(override=lambda *a, **kw: None)
-        ),
-    )
+    _stub_nchantd_user_init(monkeypatch)
+    _stub_kahndor_instruct(monkeypatch)
 
     fake_creds = SimpleNamespace(user_tier="free")
     monkeypatch.setattr(creds, "load_credentials", lambda: fake_creds)
@@ -225,20 +241,8 @@ def test_users_init_no_creds_defaults_to_true(monkeypatch):
     """
     from nchantdoffice.utilities import credentials as creds
     from nchantdoffice.utilities import users as users_mod
-    from nchantrs.utilities.users import NchantdUser
-    monkeypatch.setattr(
-        NchantdUser, "__init__",
-        lambda self, parent, cfg=None: setattr(self, "config",
-            SimpleNamespace(override=lambda *a, **kw: None,
-                            dikt={})) or None
-    )
-    import kahndor
-    monkeypatch.setattr(
-        kahndor, "Instruct",
-        lambda *a, **kw: SimpleNamespace(
-            select=lambda *a, **kw: SimpleNamespace(override=lambda *a, **kw: None)
-        ),
-    )
+    _stub_nchantd_user_init(monkeypatch)
+    _stub_kahndor_instruct(monkeypatch)
 
     monkeypatch.setattr(creds, "load_credentials", lambda: None)
     user = users_mod.NchantdOfficeUser.__new__(users_mod.NchantdOfficeUser)
@@ -255,20 +259,8 @@ def test_users_init_enterprise_user_has_pro_true(monkeypatch):
     """
     from nchantdoffice.utilities import credentials as creds
     from nchantdoffice.utilities import users as users_mod
-    from nchantrs.utilities.users import NchantdUser
-    monkeypatch.setattr(
-        NchantdUser, "__init__",
-        lambda self, parent, cfg=None: setattr(self, "config",
-            SimpleNamespace(override=lambda *a, **kw: None,
-                            dikt={})) or None
-    )
-    import kahndor
-    monkeypatch.setattr(
-        kahndor, "Instruct",
-        lambda *a, **kw: SimpleNamespace(
-            select=lambda *a, **kw: SimpleNamespace(override=lambda *a, **kw: None)
-        ),
-    )
+    _stub_nchantd_user_init(monkeypatch)
+    _stub_kahndor_instruct(monkeypatch)
 
     fake_creds = SimpleNamespace(user_tier="enterprise")
     monkeypatch.setattr(creds, "load_credentials", lambda: fake_creds)

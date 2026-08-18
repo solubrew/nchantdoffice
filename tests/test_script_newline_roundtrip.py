@@ -150,6 +150,7 @@ def test_reopen_round_trip_preserves_newlines_and_formatting():
     # Step 2: reopen — populate_document reads back from saved payload.
     script.document = SimpleNamespace(
         syntax=syntax,
+        location="external",  # T-NEW-120
         file_path=None,
         content={"content": {"file_path": None, "text": saved_text}},
         file_format="",
@@ -193,6 +194,7 @@ def test_reopen_round_trip_preserves_indentation_plaintext():
 
     script.document = SimpleNamespace(
         syntax=syntax,
+        location="external",  # T-NEW-120
         file_path=None,
         content={"content": {"file_path": None, "text": saved_text}},
         file_format="",
