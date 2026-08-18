@@ -84,20 +84,9 @@
 - **T-NEW-066** ✅ Matrix chart extraction from Excel workbooks — **landed in pyffice** (upstream of nchantdoffice). `PyfficeMatrix.load_excel()` now extracts charts from `ws._charts` via two new helpers (`_extract_charts_from_worksheet` + `_chart_from_openpyxl`). 5 tests in `tests/pyffice_unit/unit/matrix/chartExtractionTEST.py`. Commit `95a8d9f` (pyffice gamma, merged as `4ed8768`). User-facing: NchantdOfficeMatrix inherits the change automatically.
 - **T-NEW-067** ✅ PyfficeChart direct .xlsx loading — **landed in pyffice**. New `PyfficeChart.load_from_xlsx(file_path, chart_index=0, include_data=True)` opens a chart directly without going through Matrix. 4 tests in `tests/pyffice_unit/unit/charts/loadFromXlsxTEST.py`. Commit `3fb26cf` (pyffice gamma, merged as `b3aee3f`). User-facing: NchantdOfficeChart inherits the change automatically.
 - **T-NEW-068** ✅ NchantdFilesystem location memory, commit `46cb95f` (2026-08-10, t-new-068).
-- **T-NEW-069** ✅ NchantdBrowser URL history tracking, commit `10e62cc` (2026-08-10, t-new-069).
-- **T-NEW-070** ✅ NchantdOfficeNotebook click capture/redirect/replace, commit `264df18` (2026-08-10, t-new-070).
-- **T-NEW-071** ✅ NchantdOfficeJournalSettings pro-tier editor, commit `a9c1f6f` (2026-08-10, t-new-071).
-- **T-NEW-072** ✅ TODOs.md update-process consolidation — added "Update Process Overview" section + T-NEW-061 deferred card body.
-- **T-NEW-073** ✅ P1 bug sweep — `NchantdOfficeJournalEditor.refresh_content` un-commented (T-NEW-036 step 3) + T-NEW-058 `_make_dbupdate` mock fixture aligned with production `parent.model.codex` call shape. Qt batched suite: 159/159 pass (was 153/165). No source-of-truth change in `updates/db.py` — the fixture was the drift.
-- **T-NEW-074** ✅ Content-only .pyof import from Application tab ToolBox (button), commit `6f5d28f` (2026-08-11, t-new-074).
-- **T-NEW-075** ✅ Content-table last-version-wins import — `app_doc_content`, `app_media_content`, `doc_media_content` added to `PyofImportContract.TABLES` with `merge_strategy='last_version_per_puuid'`. Host PKs regenerated; `UUID`/`pUUID` preserved. Commit `00ceea3` (2026-08-11, t-new-075).
-- **T-NEW-076** ✅ Content-table merge-by-version dedupe — `_import_content_table` is now host-aware: query MAX(version) for each source pUUID, DELETE host rows only when source is strictly newer, INSERT source's max-version row. Re-imports no longer duplicate. Commit `d49c0c3` (2026-08-11, t-new-076).
-- **T-NEW-077** ✅ Base-table UUID-lookup dedupe — `import_one_table` base path now drops the source PK and queries the host for UUID existence before inserting. Uniform with `_content` (host regenerates rowid everywhere). Re-imports dedupe base tables too. Commit `869f0ce` (2026-08-11, t-new-077).
-- **T-NEW-078** ✅ Type-annotations sweep (2026-08-12) — added return-type annotations to ~1100 functions across the 11 highest-impact `nchantdoffice/` files, lifting `type_annotations` dim from 6% → 100% (crossed the auditor's 50% threshold for a perfect score). Includes `from __future__ import annotations` + `from typing_extensions import Self` imports. Multi-line signatures left intact (the audit regex doesn't match them; accepting the ~5% ceiling). `verify_annotations.py` tool added at `.hermes/scripts/` for local progress tracking. Commits `167b569` through `fc31f48`.
+
 - **test fix** test_script_open_format failing — test mock missing `.content` attribute
 - **test fix** test_per_doc_type_settings_pane segfaulting in initView (nchantrs line 193)
-
-
 
 
 ---
@@ -2565,6 +2554,7 @@ Per `testing-report_20260810.md` lines 26–27:
 - `nchantdoffice/widgets/documents/managers/filesystems.py:1423`
   — original `show_tree` (now persists).
 
+<<<<<<< HEAD
 ### T-NEW-069 — NchantdBrowser URL history tracking (2026-08-10)
 
 **Status:** ✅ Resolved in commit `10e62cc` (2026-08-10,
@@ -2786,6 +2776,8 @@ Per `testing-report_20260810.md` line 17:
   commented-out `journal_edit_enable` /
   `journal_reedit_enable` block that this card activates.
 
+=======
+>>>>>>> origin/t-new-068
 ### T-NEW-045 — Document Catalog lower pane disappears after accepting a new tab (2026-08-04)
 
 Per `testing-report_20260803.md`, after accepting a newly created
@@ -2818,7 +2810,6 @@ visible and non-empty.
 3. Fix the accept-time mutation so the catalog's display
    group is preserved (or rebuilt) after a tab is created.
 4. Re-verify the harness assertion.
-
 
 
 **Resolution (commit 8e3a1f2):** the central ``QSplitter`` in
@@ -5354,4 +5345,3 @@ for clean parallel work, not by feature:
 For each: write a failing test that exercises the intended
 behaviour, implement the minimum to pass, refactor, commit,
 push, update ``TODOs.md`` ``Document Changes``.
-
