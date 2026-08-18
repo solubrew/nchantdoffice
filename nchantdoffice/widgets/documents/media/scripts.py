@@ -1333,15 +1333,134 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self.view_type = self.config.dikt.get("view_type", "note_view")
         return self
 
+
+    def _export_editor_payload(self) -> str:
+        """Return the text payload that matches the editor's current syntax."""
+        editor = getattr(self, "document_editor", None)
+        if editor is None:
+            return ""
+        syntax = getattr(getattr(self, "document", None), "syntax", None) or "plain-text"
+        try:
+            if syntax == "html":
+                return editor.toHtml()
+            if syntax == "markdown":
+                try:
+                    return editor.toMarkdown()
+                except Exception:
+                    return editor.toPlainText()
+            if syntax in ("plain-text", "plaintext"):
+                return editor.toPlainText()
+            if syntax in ("xml", "latex", "tex", "rmd", "rst", "texinfo"):
+                return editor.toPlainText()
+            return editor.toPlainText()
+        except Exception:
+            return editor.toPlainText()
+
+    def _legacy_export_editor_payload(self) -> str:
+        """Return the text payload that matches the editor's current syntax.
+
+        Used by external-file save so the bytes on disk mirror the
+        syntax the user sees. Each syntax maps to the editor API
+        that produces its native representation:
+
+            * html  -> document_editor.toHtml()
+            * markdown -> document_editor.toMarkdown()
+            * plain-text / plaintext -> document_editor.toPlainText()
+            * python / javascript / json / yaml / toml / css / r /
+              bash / ruby / c / cpp / cs / qss -> toPlainText() then
+              highlightable lexer mapping matches the editor's
+              syntax; pygments-produced payloads still come from the
+              editor via setHtml, so a round-trip to source text uses
+              toPlainText() (the source the user actually edits).
+            * xml / latex / tex / rmd / rst / texinfo -> toPlainText()
+              (those syntaxes do not round-trip via setHtml).
+
+        Returns an empty string when the editor is missing.
+        """
+        editor = getattr(self, "document_editor", None)
+        if editor is None:
+            return ""
+        syntax = getattr(getattr(self, "document", None), "syntax", None) or "plain-text"
+        try:
+            if syntax == "html":
+                return editor.toHtml()
+            if syntax == "markdown":
+                try:
+                    return editor.toMarkdown()
+                except Exception:
+                    return editor.toPlainText()
+            if syntax in ("plain-text", "plaintext"):
+                return editor.toPlainText()
+            if syntax in ("xml", "latex", "tex", "rmd", "rst", "texinfo"):
+                return editor.toPlainText()
+            # highlightable languages: editor holds a setHtml() payload;
+            # the source text the user edits is the plain text.
+            return editor.toPlainText()
+        except Exception:
+            return editor.toPlainText()
+
     def save(self) -> Self:
-        """Capture the current editor contents before persistence."""
+        """Capture the current editor contents and persist them.
+
+        External-origin scripts (file_path set, location == "external")
+        also write the editor payload back to the on-disk file using
+        the syntax-aware ``_export_editor_payload()`` helper so
+        formatting, doctype wrappers, and trailing newlines are
+        preserved. Internal-origin scripts save only to the database
+        -- the on-disk file path is left untouched.
+        """
         if self.document is None:
             self.new_document()
         content = self.get_content()
         if content != self.document.content:
             self.document.set_content(content)
+        if (
+            getattr(self.document, "location", None) == "external"
+            and getattr(self, "file_path", None)
+        ):
+            self._write_external_file()
         super().save()
         return self
+
+    def _write_external_file(self) -> None:
+        """Atomically save the editor payload to ``self.file_path``.
+
+        Only runs when ``self.document.location == "external"`` and
+        ``self.file_path`` is set. Uses the syntax-aware exporter so
+        the bytes on disk match what the user sees in the editor
+        (HTML for HTML documents, plain text for code, etc.).
+        """
+        path = getattr(self, "file_path", None)
+        if not path:
+            return
+        text = self._export_editor_payload()
+        if not text:
+            return
+        encoding = "utf-8"
+        try:
+            cfg_encoding = (
+                getattr(getattr(self, "config", None), "dikt", {}) or {}
+            ).get("encoding")
+            if cfg_encoding:
+                encoding = cfg_encoding
+        except Exception:
+            pass
+        directory = dirname(path) or "."
+        tmp_path = f"{path}.tmp"
+        try:
+            from os import makedirs, replace
+
+            makedirs(directory, exist_ok=True)
+            with open(tmp_path, "w", encoding=encoding) as f:
+                f.write(text)
+            replace(tmp_path, path)
+        except Exception:
+            try:
+                if exists(tmp_path):
+                    from os import remove
+                    remove(tmp_path)
+            except Exception:
+                pass
 
     def set_page_view(self) -> None:
         """"""
