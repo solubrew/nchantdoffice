@@ -97,8 +97,8 @@
 |---|---|
 | Project | NchantdOffice |
 | Type | Desktop GUI application (PySide6) |
-| Branch | `gamma` (4 commits ahead of `origin/gamma`: `260886a` T-NEW-122, `419a317` T-NEW-117, `899962c` addWidget(None), `07fc18b` pyof bare parent) |
-| HEAD | `07fc18b` (nchantdoffice/gamma, 2026-08-17) |
+| Branch | `gamma` (ahead of `origin/gamma`: `c246108` t-new-068 merge, `9f18e30` Script external save-to-disk via syntax-aware exporter; Script cell mirror / Matrix toolbar + DB encoded payload fixes) |
+| HEAD | `9f18e30` (nchantdoffice/gamma, 2026-08-18) |
 | Working agreement | Internal projects are CORE INTEGRATED; never stub them out |
 | Test env | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python` |
 | Test command | `QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python -m pytest tests --continue-on-collection-errors -q` |

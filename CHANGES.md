@@ -222,6 +222,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   source-level pin, populate delegates-to-parse
   behavioural, populate populates-entries behavioural).
 
+- **T-NEW-148** NchantdOfficeScript external save-to-disk
+  (2026-08-18) -- ✅ FIXED in `9f18e30`.
+  ``NchantdOfficeScript.save()`` now writes the editor payload
+  back to ``self.file_path`` for external-origin scripts using a
+  syntax-aware exporter:
+
+    * ``html``  -> ``document_editor.toHtml()``
+    * ``markdown`` -> ``document_editor.toMarkdown()``
+    * plain-text / code / JSON / YAML / etc.
+      -> ``document_editor.toPlainText()``
+
+  Atomic write via sibling ``.tmp`` + ``os.replace``; UTF-8
+  default; encoding overridable through ``config.dikt['encoding']``.
+  Internal-origin scripts (``location == "internal"``) never touch
+  disk. 5 new tests in
+  ``tests/test_t_new_148_script_external_save.py`` (HTML,
+  plain text, markdown, internal-skip, no-editor no-op).
+  No changes to journal storage, populate_document, or any other
+  document type.
+
 - **T-NEW-139** Toolbar post-creation navigation helper
   (2026-08-16) -- the original TODO at ``toolbars.py:216``
   asked to combine ``add_tab`` + ``add_document`` cfg
