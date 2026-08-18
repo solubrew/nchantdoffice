@@ -62,6 +62,47 @@ def test_external_script_open_edit_save_reopen_preserves_real_file_lifecycle(tmp
     assert reopened.document_editor.toPlainText() == edited
 
 
+def test_new_internal_script_saves_editor_content_to_database_only(tmp_path, monkeypatch):
+    path = tmp_path / "must-not-exist.md"
+    script = _script(path)
+    script.file_path = None
+    script.document.file_path = None
+    script.document.location = "internal"
+    script.document_editor.setPlainText("internal draft\n")
+    stored = []
+    monkeypatch.setattr(
+        NchantdOfficeDocument,
+        "save",
+        lambda self, *a, **k: stored.append(self.document.content) or self,
+    )
+
+    script.save()
+
+    assert not path.exists()
+    assert stored
+    assert stored[0]["text"] == "internal draft\n"
+
+
+def test_external_script_persists_path_metadata_in_database(tmp_path, monkeypatch):
+    path = tmp_path / "external.md"
+    path.write_text("original\n", encoding="utf-8")
+    script = _script(path)
+    assert script._load_external_file() is True
+    script.document_editor.setPlainText("changed\n")
+    stored = []
+    monkeypatch.setattr(
+        NchantdOfficeDocument,
+        "save",
+        lambda self, *a, **k: stored.append(self.document.content) or self,
+    )
+
+    script.save()
+
+    assert path.read_text(encoding="utf-8") == "changed\n"
+    assert stored
+    assert stored[0]["content"]["file_path"] == str(path)
+
+
 def test_external_script_save_refuses_to_write_before_successful_load(tmp_path, monkeypatch):
     path = tmp_path / "existing.md"
     original = "do not truncate\n"

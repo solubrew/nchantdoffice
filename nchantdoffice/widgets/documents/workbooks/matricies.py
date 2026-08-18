@@ -1251,8 +1251,41 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         return None
 
     def get_content(self) -> dict[str, Any]:
-        """"""
-        return {"content": {"file_path": self.file_path}, "data": self.document.data}
+        """Return the canonical content envelope for the Matrix document.
+
+        T-NEW-149 (slice 3): the parent ``NchantdOfficeDocument.save()``
+        chain (documents.py:661) calls ``self.get_content()`` and then
+        ``self.document.set_content(widget_content)`` -- which
+        **overwrites** ``document.content``.  The previous implementation
+        returned the stripped envelope
+        ``{"content": {"file_path": self.file_path}, "data": ...}``,
+        so the grid + formulas that ``Matrix.save()`` just wrote onto
+        ``document.content`` were silently dropped before
+        ``add_document_content`` (models.py:646) base64-encoded the
+        payload into ``doc_media_content.content_enc64_txt``.
+
+        The fixed envelope carries the grid, the parallel formulas
+        grid, and the dimensions alongside ``file_path`` so that the
+        full DB round-trip preserves the Matrix's exact state.  The
+        reader side (``populate_document``) accepts both the canonical
+        envelope (``content['content']['grid']``) and the legacy
+        flat shape (``content['grid']``).
+        """
+        envelope: dict[str, Any] = {"file_path": self.file_path}
+        try:
+            if hasattr(self, "document") and self.document is not None:
+                content = getattr(self.document, "content", None) or {}
+                if not isinstance(content, dict):
+                    content = {}
+                nested = content.get("content")
+                if isinstance(nested, dict):
+                    content = nested
+                for key in ("grid", "formulas", "num_rows", "num_cols"):
+                    if key in content:
+                        envelope[key] = content[key]
+        except Exception as e:  # pragma: no cover - defensive
+            logma.error(f"[matricies] get_content envelope build failed: {e}", exc_info=True)
+        return {"content": envelope, "data": getattr(self.document, "data", None)}
 
     def get_current_address(self) -> str:
         """Get the currently selected cell address"""
@@ -1930,12 +1963,28 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         ``self.document.cell_layout`` (when present) and applied
         to the table widget via setColumnWidth / setRowHeight /
         setFont.
+
+        T-NEW-149 (slice 3): accepts the canonical content envelope
+        shape produced by ``Matrix.get_content`` (the
+        ``content['content']['grid']`` form) and falls back to the
+        legacy flat shape (``content['grid']``) for documents that
+        were saved before the canonical-envelope fix landed.  The
+        formulas grid and ``num_rows`` / ``num_cols`` are read from
+        the same envelope shape with the same fallback.
         """
         logma.info(f"[matricies] Populate worksheet {self.file_path}")
         content = getattr(self.document, "content", None) or {}
         if isinstance(content, dict) and isinstance(content.get("content"), dict):
-            content = content["content"]
-        grid = content.get("grid") if isinstance(content, dict) else None
+            envelope = content["content"]
+        else:
+            envelope = content if isinstance(content, dict) else {}
+        # Canonical envelope: envelope["grid"]; legacy flat: content["grid"].
+        grid = envelope.get("grid") if isinstance(envelope, dict) else None
+        if not isinstance(grid, list):
+            grid = content.get("grid") if isinstance(content, dict) else None
+        formulas = envelope.get("formulas") if isinstance(envelope, dict) else None
+        if not isinstance(formulas, list):
+            formulas = content.get("formulas") if isinstance(content, dict) else None
         data = grid if isinstance(grid, list) else getattr(self.document, "data", None)
         if isinstance(data, dict):
             nested = data.get("content", data)
