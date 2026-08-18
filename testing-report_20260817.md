@@ -9,6 +9,10 @@
 - need to identify ways to speed up new document creation process
 - fix NchantdOfficeMatrix to store entered values internally and restore when no external file has been opened
 - deactivate NchantdOfficeMatrix formula entry in toolbar until 0.0.3
+
+
 ## Issues Found:
+
+
 
 ## Bugs:
