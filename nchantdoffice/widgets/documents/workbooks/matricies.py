@@ -44,6 +44,10 @@ logma = Logma(__name__)
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "matricies.yaml")
 
+# T-NEW-150: formula actions remain implemented but are hidden
+# from the Matrix toolbar until the 0.0.3 release.
+_FORMULA_TOOLBAR_ENABLED = False
+
 
 class NchantdOfficeCellBorderFormats(NchantdWidget):
     """"""
@@ -2037,11 +2041,13 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.toolbar.addAction("Italic", self.toggle_italic)
         self.toolbar.addSeparator()
 
-        # Formula operations from formula toolbar
-        if hasattr(self, "cmd_formula_entrybox"):
-            self.toolbar.addAction("Apply Formula", self.cmd_formula_entrybox)
-        self.toolbar.addAction("Auto Calculate", self.cmd_auto_calculate)
-        self.toolbar.addSeparator()
+        # Formula operations remain implemented for 0.0.3, but are
+        # intentionally absent from the current toolbar.
+        if _FORMULA_TOOLBAR_ENABLED:
+            if hasattr(self, "cmd_formula_entrybox"):
+                self.toolbar.addAction("Apply Formula", self.cmd_formula_entrybox)
+            self.toolbar.addAction("Auto Calculate", self.cmd_auto_calculate)
+            self.toolbar.addSeparator()
 
         # Insert operations
         self.toolbar.addAction("Insert Row", self.insert_row)
