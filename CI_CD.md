@@ -1,12 +1,13 @@
 # CI/CD Documentation
 
-> **Reality anchor (2026-08-16, gamma `5b6397e`):** This file
-> describes the *intended* CI/CD pipeline. As of this writing,
-> nchantdoffice has the `.github/workflows/` directory checked in
-> (`ci.yml` + `docs.yml`) but **no remote CI is wired up** — the
-> `origin` is `file:///mnt/overse/SBST01/vein/GitVein/nchantdoffice.git`
-> (a local GitVein mirror), not a hosted Git provider. Validation
-> runs locally per the "Local Validation" section below.
+> **Reality anchor (2026-08-17, gamma `07fc18b`):** This file
+> describes the intended CI/CD pipeline. The repository currently
+> uses a local GitVein mirror rather than a hosted CI provider, so
+> validation is local. T-NEW-122 removed 21 module-level Qt
+> QApplication construction sites and added a collection guard, but
+> the full suite still has native Qt SIGSEGV blockers in
+> `test_per_doc_type_settings_pane.py`; do not claim a green full
+> suite until those tests are isolated.
 
 ## Overview
 

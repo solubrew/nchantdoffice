@@ -9,17 +9,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-> **Reality anchor (2026-08-16, gamma `5b6397e`):** This block
-> consolidates work from T-NEW-110 through T-NEW-137 (all shipped
-> 2026-08-10 → 2026-08-15) plus the filed-but-open cards
-> T-NEW-138 through T-NEW-147. The T-NEW-049 through T-NEW-109
-> cards have their own entries in the prior `[Unreleased]` block
-> below this one — kept intact for traceability. See
-> [`TODOs.md`](./TODOs.md) for the canonical card index and
-> commit hashes.
+> **Reality anchor (2026-08-17, gamma `07fc18b`):** This block
+> consolidates work from T-NEW-110 through T-NEW-147 (all shipped
+> 2026-08-10 → 2026-08-17) plus the filed-but-open cards
+> T-NEW-118 / T-NEW-119 / T-NEW-121 / T-NEW-144b. The
+> T-NEW-049 through T-NEW-109 cards have their own entries in
+> the prior `[Unreleased]` block below this one — kept intact
+> for traceability. See [`TODOs.md`](./TODOs.md) for the
+> canonical card index and commit hashes. The four 2026-08-17
+> commits (`260886a` / `419a317` / `899962c` / `07fc18b`) close
+> T-NEW-122 / T-NEW-117 / T-NEW-037-followup / pyof-bare-parent
+> respectively — see the new entries at the top of "Added" /
+> "Fixed" below.
 
-### Added (T-NEW-110..137)
+### Added (T-NEW-110..147)
 
+- **T-NEW-117** Palette extraction (2026-08-17) — the
+  `PyfficeColorPalette.extract_palette` surface landed in
+  pyffice gamma `1cd3c48` (returns `{colors: [{hex, count,
+  percent}, ...]}` ordered by frequency using PIL's
+  `Image.convert("RGB")` + `Counter`). nchantdoffice
+  `419a317` adds a `hasattr(palette_document,
+  "extract_palette")` guard at
+  `widgets/documents/media/images.py:1010` so older pyffice
+  builds degrade gracefully (logs `Palette scan unavailable
+  -- update pyffice` and surfaces the same message via
+  status bar) instead of crashing with
+  `AttributeError: 'PyfficeColorPalette' object has no
+  attribute 'extract_palette'`. New regression test:
+  `tests/test_t_new_117_palette_scan_degradation.py` (3
+  cases — missing-method graceful log, status-bar message,
+  happy-path palette application). Pin: 1/1 new test green.
+- **T-NEW-122** Qt-harness migration for tests importing
+  toolboxes (2026-08-17) — the module-level
+  `_QAPP = QApplication.instance() or QApplication(sys.argv)`
+  pattern in 21 test files crashed multi-file pytest
+  collection at exit 134/139. `260886a` adds
+  `tests/conftest.py` with a session-scoped autouse fixture
+  that lazily constructs one `QApplication` for the whole
+  pytest session (deferred import keeps non-Qt hosts safe)
+  and `tests/qt_parent/__init__.py` with opt-in session-
+  /function-scoped `qapp` fixtures. The offending
+  module-level line was stripped from all 21 offender
+  files; the autouse conftest provides the same instance
+  lazily. New regression gate:
+  `tests/test_t_new_122_qt_collection_guard.py` (2 tests:
+  AST scan finds no offender, RED→GREEN history).
+  Targeted evidence: full suite (with
+  `--ignore=tests/test_cmd_pyof_routing_consolidation.py`
+  for the unrelated pyof-bare-parent SIGSEGV that
+  T-NEW-074's pyof dispatch pin reproduces; fixed by
+  `07fc18b` the same day): 19 failed, 836 passed, 6
+  skipped (100% collection reached; pre-`260886a` the run
+  aborted at 8% of collection). 21 offender files
+  identified by the AST scan before the sweep; 0 after.
 - **T-NEW-110** Packaging + ruff config (`678e59e`) — real
   `pyproject.toml` description, `MANIFEST.in`, ruff lint config;
   closes the "[Unreleased] Added" entry that referenced a
@@ -316,12 +359,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   explanation comments documenting the existing
   contract or the deferred-work rationale. Remaining
   embedded TODOs (`models.py:3040` correction-position,
-  `panes/charts.py:186/214` T-NEW-029 segfaults, the
-  `analytics.py:887` docstring reference,
-  `models.py:3412` PyfficeDocument version increment)
-  documented inline. No test surface added -- all 4
-  fixes are documentation / explanation comments
-  around code that is already correct. 28 regression
+  `panes/charts.py:186/214` were historically blamed on
+  T-NEW-029 drag-init gating, but the real root cause
+  was an implicit `None` return from the action-button /
+  border-style builder stubs feeding `layout.addWidget(None)`
+  (a PySide6 segfault). **Fixed by `899962c`** (T-NEW-037
+  followup — see "Fixed" below): `_build_chart_action_button_
+  group` / `_build_border_style_editor` now return real
+  `QWidget` instances, with a `is not None` gate before
+  `addWidget`. Pin:
+  `tests/test_t_new_037_addwidget_none_root_cause.py`
+  (behavioural + source-shape regression tests). The
+  `panes/charts.py:186/214` TODO markers are replaced
+  with the docstring referencing the dispatcher; the
+  remaining `models.py:3040` correction-position,
+  `analytics.py:887` docstring reference, and
+  `models.py:3412` PyfficeDocument version increment
+  TODOs documented inline. For the T-NEW-123 cluster-4
+  sweep itself (the 4 stale-TODO replacements above), no
+  test surface was added -- those are documentation /
+  explanation comments around code that was already
+  correct. The chart addWidget(None) fix is documented
+  separately under `899962c` / T-NEW-037 followup. 28 regression
   tests pass across the journal test surface
   (`test_t_new_138_journal_scroll_and_populate.py` +
   `test_journal_always_save.py` +
@@ -358,8 +417,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   across `NchantdOfficeDocumentCatalogItem`, `NchantdOfficeSourceCatalogItem`,
   `NchantdOfficeTreeNode` to prevent shadowing `QTreeWidgetItem.parent()`
 
-### Fixed (T-NEW-110..137)
+### Fixed (T-NEW-110..147)
 
+- **NchantdChart `addWidget(None)` segfault (chart-config
+  action-button / border-style editor)** (2026-08-17,
+  commit `899962c`) — historically the
+  `panes/charts.py:186/214` sites were attributed to
+  T-NEW-029 drag-init gating and the action-button /
+  border-style builders were left as `# TODO` commented
+  blocks because of that diagnosis. The actual root
+  cause was the implicit `None` return from the
+  builders feeding `layout.addWidget(None)` — a known
+  PySide6 segfault. Fix: `_build_chart_action_button_
+  group` (new, returns `NchantdAcceptButtons` or a
+  fallback `QWidget`) and `_build_border_style_editor`
+  (new, returns a real border-style `QWidget`) replace
+  the stubs; `initView` now gates `addWidget(...)` on
+  `is not None` before each call. Both call sites
+  uncommented with a docstring referencing the
+  dispatcher. Pin:
+  `tests/test_t_new_037_addwidget_none_root_cause.py`
+  (behavioural + source-shape regression tests).
+- **pyof routing dispatch bare-parent segfault** (2026-08-17,
+  commit `07fc18b`) — `test_cmd_pyof_routing_consolidation.py`
+  aborted pytest with exit 139 (SIGSEGV, not a Python
+  exception) when the T-NEW-074 pyof dispatch pin
+  constructed an `NchantdOfficeApplicationToolBox`
+  via `__new__` (the unit-test pattern for a stub
+  QObject) and `_resolve_host_doc` (toolboxes.py:1429)
+  called `self.parent()`. The bare shiboken binding
+  had no Qt parent, so `self.parent()` segfaulted at
+  the C++ layer — invisible to the surrounding
+  `try/except Exception`. Fix: gate `self.parent()`
+  on `shiboken6.isValid(self)` (lazy import; treated
+  as unavailable in headless envs without Qt parent),
+  so the bare test instance skips the call and the
+  walk falls through to the clear `RuntimeError` at
+  the bottom of the helper. No production behaviour
+  changed (real QObjects are always valid). Pin:
+  extension of
+  `tests/test_cmd_pyof_routing_consolidation.py` (the
+  test file that exposed the bug — now passes
+  without segfault; full suite re-includes it after
+  the `260886a` T-NEW-122 collection fix made the
+  file collectable in the multi-file run).
 - **H25 — Catalog Tab Wrong Child Count** (`nchantdoffice` consumer of `nchantrs fa05530`):
   Root cause was in parent library `NchantdNode.loadChildren()` which inconsistently
   used `parentid` vs `pid_txt` for parent filtering. Fix standardized on `pid_txt`.
@@ -400,79 +501,112 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Incorrect super().__init__() calls in toolbar classes
 - 4 inline TODOs in `widgets/items/items.py` resolved (2026-07-11)
 
-### Filed (open as of 2026-08-16) — NOT YET SHIPPED
+### Filed (open as of 2026-08-17) — NOT YET SHIPPED
 
 These T-NEW cards are filed in `TODOs.md` and awaiting
 implementation. They are listed here so the unreleased-block
 mirror stays truthful about outstanding work; do **not** move
-them to "Added"/"Fixed" until they ship.
+them to "Added"/"Fixed" until they ship. (Cards marked
+✅ were filed here but have since shipped — their entries
+are also in "Added" above; the marker is preserved for
+traceability.)
 
-- **T-NEW-115** Creating new Nodes at the top level is blocked
-  (filed from `testing-report_20260815.md`).
-- **T-NEW-116** Jupyter server default working directory
-  (`~/Documents/NchantdLibrary`) (filed from
-  `testing-report_20260810.md`).
-- **T-NEW-117** Palette scan crashes:
-  `PyfficeColorPalette.extract_palette` missing (filed from
-  `testing-report_20260810_001.md`; verified still broken
-  2026-08-15).
+- **T-NEW-115** ✅ Creating new Nodes at the top level is blocked
+  — **FIXED** by T-NEW-130 (`ac448ad`). Top-level new-node
+  toolbar now lands at `pid=0` via
+  `NchantdNewDocumentSigil.top_level` flag +
+  `launch_new_document_sigil` rootnode dispatch. Pin:
+  `tests/test_top_level_node_create.py` (8 tests).
+- **T-NEW-116** ✅ Jupyter server default working directory
+  (`~/Documents/NchantdLibrary`) — **FIXED** (`8816168`,
+  2026-08-16). Pin: `tests/test_t_new_116_jupyter_default_dir.py`
+  (4 tests).
+- **T-NEW-117** ✅ Palette scan crashes:
+  `PyfficeColorPalette.extract_palette` missing —
+  **FIXED** (2026-08-17). Upstream pyffice
+  `PyfficeColorPalette.extract_palette` shipped in pyffice
+  gamma `1cd3c48`; nchantdoffice `419a317` adds a
+  `hasattr` graceful-degradation guard at the call site
+  so older pyffice builds log + status-bar the failure
+  instead of crashing. Pin:
+  `tests/test_t_new_117_palette_scan_degradation.py`
+  (3 tests).
 - **T-NEW-118** Journal PII detector + redacted view with PIN
   copy (re-filed, was orphaned by the T-NEW-066/067/068 number
   collision inside T-NEW-065's deferred-work section).
 - **T-NEW-119** Journal content growth: timestamp column +
   retention policy + `delete_marked` (re-filed, same number
   collision orphaning).
-- **T-NEW-120** Script save/restore aspirational tests fail at
-  the `5d80f92` contract (5 RED tests are the acceptance gate
-  after the `822b32e` revert).
+- **T-NEW-120** ✅ Script save/restore aspirational tests fail
+  at the `5d80f92` contract — **FIXED** (`a2a0361`,
+  2026-08-16). Pin: 15 tests green across
+  `test_script_newline_roundtrip.py` /
+  `test_document_persistence.py` /
+  `test_script_open_format.py`.
 - **T-NEW-121** em-dash sweep + encoding-declaration
-  placement — partial; see "Changed" above for what shipped.
-  Full sweep still open.
-- **T-NEW-122** Qt-harness migration for tests importing
-  toolboxes (filed after `test_cmd_pyof_routing_consolidation
-  .py` batch-crash — T-NEW-114 follow-up).
-- **T-NEW-123** Embedded-TODO sweep: implement-method stubs and
-  config wiring — covers the 21 uncovered TODO markers
-  (embedded_todos audit dim 58%). Partial — T-NEW-138/139/140/
-  141 ship the inside-nchantdoffice subset.
-- **T-NEW-138** Journal editor followups: always-scroll to
-  bottom + refactor to standard populate (covers `journal.py
-  :132, 422`).
-- **T-NEW-139** Toolbar signature cleanup: combine `add_tab` +
-  `add_document` shared cfg/wiring (`toolbars.py:216`).
-- **T-NEW-140** Free-user right-side tab: lock default to Ad
-  tab (`settings.py:1209`).
-- **T-NEW-141** Inside-nchantdoffice TODO sweep: 10 remaining
-  markers (images palette drawer, notebook stubs, catalog
-  tab-None, config features pane, 3 stub methods,
-  `users.has_pro` service truth).
+  placement — partial; see "Changed" above for what shipped
+  in `30593b9`. Full sweep still open.
+- **T-NEW-122** ✅ Qt-harness migration for tests importing
+  toolboxes — **FIXED** (`260886a`, 2026-08-17). 21
+  module-level `QApplication(...)` offenders stripped;
+  `tests/conftest.py` autouse fixture provides a single
+  session-wide QApplication lazily; opt-in
+  `tests/qt_parent/__init__.py` qapp fixtures exposed
+  for tests that want to declare Qt dependency
+  explicitly. Pin:
+  `tests/test_t_new_122_qt_collection_guard.py` (2 tests;
+  RED→GREEN history recorded in commit body). Full suite
+  no longer aborts at collection.
+- **T-NEW-123** ✅ Embedded-TODO sweep: implement-method stubs
+  and config wiring — **FIXED** (`95a41da` cluster 4,
+  `5aad63e` cluster 3, `5117b2e` cluster 2, `9c20862`
+  cluster 1, plus T-NEW-141b/141c final subsets). 10
+  inside-nchantdoffice TODO markers closed.
+- **T-NEW-138** ✅ Journal editor followups: always-scroll to
+  bottom + refactor to standard populate — **FIXED**
+  (`23fa565`, 2026-08-16). Pin:
+  `tests/test_t_new_138_journal_scroll_and_populate.py`
+  (4 tests).
+- **T-NEW-139** ✅ Toolbar signature cleanup — **FIXED**
+  (`e1573ba`, 2026-08-16). Extracted
+  `_navigate_to_new_doc(pos) -> Self` helper. Pin:
+  `tests/test_t_new_139_toolbar_navigate.py` (4 tests).
+- **T-NEW-140** ✅ Free-user right-side tab: lock default to Ad
+  tab — **FIXED** (`b63d36d`, 2026-08-16). Pin:
+  `tests/test_t_new_140_free_user_ad_tab.py` (6 tests).
+- **T-NEW-141** ✅ Inside-nchantdoffice TODO sweep: 10
+  remaining markers — **FIXED** across three commits
+  (`9c20862` subset, `5aad63e` subset 2, `5117b2e` final
+  subset, all 2026-08-16).
 - **T-NEW-142** ✅ Tab Delete broken from document toolbar +
   `NchantdTabPane` (filed from `testing-report_20260815.md`
-  Issue 2). **FIXED** in the T-NEW-142 commit; see "Added"
-  above. **Note: 100-node cap popup superseded by T-NEW-135
-  redirect per user direction 2026-08-16; no T-NEW for popup.**
+  Issue 2). **FIXED** in the `9fccd8f` commit (added two
+  `app_action` records); see "Added" above. **Note:
+  100-node cap popup superseded by T-NEW-135 redirect
+  per user direction 2026-08-16; no T-NEW for popup.**
 - **T-NEW-143** ✅ `.pyof` import excludes `DELETE_BIT=1` rows
   (filed from `testing-report_20260815.md` Issue 3).
-  **FIXED** in the T-NEW-143 commit; see "Added" above.
+  **FIXED** in the `c4f6cd3` commit; see "Added" above.
 - **T-NEW-144** `file_details` toolbox redirects to internal
   data when tab is an internal document + external file
   becomes editor (not viewer) -- filed from
   `testing-report_20260815.md` Issues 4 & 5; split into
-  T-NEW-144a/144b if scope balloons.
+  T-NEW-144a/144b if scope balloons. **T-NEW-144a** ✅
+  **FIXED** (`1f08ab5`, 2026-08-16). **T-NEW-144b**
+  ⏳ DEFERRED to v0.2.0.
 - **T-NEW-145** ✅ `Ctrl+S` wired to save button logic (filed from
   `testing-report_20260815.md` Issue 6). **FIXED** in the
-  T-NEW-145 commit; see "Added" above.
-- **T-NEW-146** `bootstrap_app_user` regression: cannot pickle
+  `c4f6cd3` commit; see "Added" above.
+- **T-NEW-146** ✅ `bootstrap_app_user` regression: cannot pickle
   'generator' object — post-T-NEW-129 live traceback
-  2026-08-15 22:19:02; the `user` dict passed to
-  `store_app_user` contains a generator value that
-  `squirl.deepcopy` cannot serialise. **FIXED** in the
-  T-NEW-146/147 commit; see "Added" above.
-- **T-NEW-147** `get_app_user` AttributeError:
+  2026-08-15 22:19:02; **FIXED** in the `c4f6cd3` commit
+  (the `_coerce_scalar` helper in
+  `_build_app_user_payload`); see "Added" above.
+- **T-NEW-147** ✅ `get_app_user` AttributeError:
   `'NchantdOfficeCloakModel' object has no attribute
-  'get_table'` — post-T-NEW-129 live traceback 2026-08-15
-  22:19:02; `model.get_table` does not exist on the cloak
-  model. **FIXED** in the T-NEW-146/147 commit.
+  'get_table'` — **FIXED** in the `c4f6cd3` commit
+  (routes through `self.store.get_table`); see "Added"
+  above.
 
 ### Security
 - Added CI security scanning with bandit and safety

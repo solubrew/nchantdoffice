@@ -168,8 +168,10 @@ is a sibling repo in the same `/home/solubrew/.hermes/projects/`
 directory; the older `gitlab.example.com` URL was a placeholder
 that did not resolve and has been retired.
 
-Latest commit on `gamma`:
-[`5b6397e docs(todos): file T-NEW-142..148 from 2026-08-15 testing-report sweep`]
+Latest verified local commit on `gamma`:
+[`07fc18b fix(pyof): guard bare Qt parent access`]. The branch also
+contains the 2026-08-17 T-NEW-117, T-NEW-122, and chart-segfault
+fixes documented in `CHANGES.md`.
 
 For a repo-local cross-reference of every shipped + filed
 T-NEW card with commit SHAs, see
