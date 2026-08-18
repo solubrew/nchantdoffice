@@ -36,6 +36,7 @@ from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.tables.lists import NchantdList, NchantdListWidget
 from nchantrs.widgets.browsers.profiles import NchantdWebProfile
+from nchantdoffice.widgets.documents.atnrg.pages import NchantdOfficeWebPage
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -45,7 +46,7 @@ if not log:
     logma.off()
 
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", "browsers.yaml")
+PXCFG = join(here, "_data_", "browsers.yaml")
 HOMEPAGE = "https://www.nchantdoffice.com/"
 
 
@@ -54,7 +55,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__("Nchantd Browser", parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebBrowser").override(cfg))
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeWebBrowser").override(cfg))
         self.document_type = "browser"
         self.active_url = None
         self.library = None
@@ -89,11 +90,10 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # need to connect to the active page aligned with PyfficeBrowser
 
         cfg = {}
-        self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
+        self.active_page = NchantdOfficeWebPage(self.document.active_page, self, cfg)
         cfg = {}
         self.active_url.init_document(self.document.get_active_page().get_url_document(), cfg)
-        # self.library = self.document.library
-        # self.profiles = self.document.profile_manager
+
         self.get_current_profile()
         return self
 
@@ -103,7 +103,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             cfg = {}
         url = self.active_url.get_url()
         cfg["url"] = url
-        self.browser = NchantdOfficeWebViewer(self, cfg)
+        self.browser = NchantdWebViewer(self, cfg)
         self.browser.is_simple = False
         cfg["buttons"] = self.build_toolbar()
         cfg["fill"] = True
@@ -1464,7 +1464,7 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
         """ """
         logma.info(f"NchantdOfficeSlimTabSearch init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSlimTabSearch").override(cfg))
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeSlimTabSearch").override(cfg))
 
     def initModel(self, cfg=None) -> Self:
         """"""
@@ -1491,110 +1491,6 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
         return content
 
 
-class NchantdOfficeWebViewer(NchantdWebViewer):
-    """"""
-
-    def __init__(self, parent=None, cfg=None) -> None:
-        """ """
-        logma.info(f"NchantdOfficeWebViewer init: parent={type(parent).__name__}")
-        super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebViewer").override(cfg))
-        # T-NEW-069 — URL history cap (most-recent-first, deduped).
-        # The history is persisted via config.dikt["url_history"]
-        # and read back at build_toolbar time so the dropdown
-        # survives app restart.
-        self._url_history_max = 50
-
-    def initModel(self, cfg=None) -> Self:
-        """"""
-        super().initModel(cfg)
-        return self
-
-    def initView(self, cfg=None) -> Self:
-        """"""
-        super().initView(cfg)
-        return self
-
-    def initWidget(self) -> Self:
-        """"""
-        self.initModel()
-        self.initView()
-        return self
-
-    def get_content(self) -> Dict[str, Any]:
-        """"""
-        content = self.document.active_page.to_dict()
-        return content
-
-    def populate_document(self, url) -> Self:
-        """"""
-        super().populate_document(url)
-        return self
-
-    def save(self) -> Self:
-        """"""
-        return self
-
-    def set_url_path(self, url=None) -> Self:
-        """T-NEW-069 — navigate to ``url`` and sync the dropdown.
-
-        Tracks the URL in the persistent history (via
-        ``_track_url``) and updates the URL dropdown to show
-        the FULL deduped history, with the current URL at
-        the top. Previously this method called
-        ``update_options([url], False, False)`` which appended
-        the URL to existing options without dedup — every
-        navigation added a duplicate. New implementation
-        uses ``replace=True`` and seeds with the deduped
-        history.
-        """
-        super().set_url_path(url)
-        if url is not None:
-            if isinstance(url, pyqt.QUrl):
-                url = url.toString()
-            if self.url_select_entry is None:
-                return self
-            history = self._track_url(url)
-            self.url_select_entry.combobox.setCurrentText(url)
-            self.url_select_entry.update_options(
-                history,
-                replace=True,
-                sort=False,
-            )
-        # self.save()
-        # self.parent.document.add_page({"url": url})
-        return self
-
-    def _clear_url_history(self) -> None:
-        """Wipe the URL history list (dropdown-only)."""
-        self.config.dikt["url_history"] = []
-
-    def _get_url_history(self) -> List[str]:
-        """Return the URL history list (most-recent-first)."""
-        return list(self.config.dikt.get("url_history", []) or [])
-
-    # T-NEW-069 — URL dropdown history helpers (live on the
-    # WebViewer because that's where set_url_path lives).
-
-    def _track_url(self, url) -> List[str]:
-        """Add ``url`` to the persistent URL history.
-
-        Maintains ``config.dikt["url_history"]`` as a
-        most-recent-first list, deduped (case-sensitive),
-        capped at ``_url_history_max`` entries. No-op when
-        ``url`` is None or empty. Returns the resulting
-        history list (most-recent-first).
-        """
-        if not url or not isinstance(url, str):
-            return list(self.config.dikt.get("url_history", []) or [])
-        history = list(self.config.dikt.get("url_history", []) or [])
-        history = [u for u in history if u != url]
-        history.insert(0, url)
-        history = history[: max(1, int(self._url_history_max))]
-        self.config.dikt["url_history"] = history
-        return history
-
-
 class NchantdOfficeAdTab(NchantdOfficeDocument):
     """"""
 
@@ -1602,7 +1498,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         """ """
         super().__init__("NchantdOfficeAdTab", parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAdTab").override(cfg))
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeAdTab").override(cfg))
         self.active_url = None
         self.library = None
         self.pinned = False
@@ -1823,6 +1719,60 @@ class NchantdOfficeWebProfile(NchantdWebProfile):
         """Update the zip_code_entry Qt widget from an external change."""
         if hasattr(self, "zip_code_entry") and self.zip_code_entry is not None:
             self.zip_code_entry.setText(str(zipcode))
+        return self
+
+
+class NchantdOfficeWebBrowserSettingsManager(NchantdOfficeDocument):
+    """"""
+
+    def __init__(self, parent=None, cfg=None):
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeWebBrowserSettingsManager").override(cfg))
+        self.document = None
+        self.library = None
+        self.profiles = None
+
+    def initModel(self, cfg=None):
+        """"""
+        super().initModel(cfg)
+        document = {"document": self.config.override(cfg).get("document", {})}
+        self.document = self.app.model.codex.init_web_config(document)
+        self.document.load_document()
+        self.library = self.document.library  # store the library as an app_media document
+        self.profiles = self.document.profile_manager  # store the profile_manager as an app_media document
+        return self
+
+    def initView(self, cfg=None):
+        """"""
+        super().initView(cfg)
+        return self
+
+    def initWidget(self, cfg=None):
+        """"""
+        self.initModel(cfg)
+        self.initView(cfg)
+        return self
+
+    def save(self) -> Self:
+        """Save the browser document.
+
+        Delegates to the parent ``save()`` (the line-843 form which
+        calls ``get_content()`` -> ``set_content()`` -> the line-467
+        unconditional form which writes both the doc_media row and
+        the doc_media_content.content_enc64_txt blob).
+
+        The previous override also called ``self.document.save()``
+        directly (the pyffice file-side save) AND ``super().save()``
+        -- but never went through ``get_content()`` / ``set_content()``,
+        so ``self.document.content`` stayed empty and the saved
+        ``content_enc64_txt`` ended up with ``{}``. Mirroring the
+        NchantdImage pattern (which is just ``super().save()``) lets
+        the parent flow do the right thing.
+        """
+        if self.pinned:
+            return self
+        self.file_path = self.get_active_url()
+        super().save()
         return self
 
 
