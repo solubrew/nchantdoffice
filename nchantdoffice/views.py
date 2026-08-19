@@ -56,11 +56,9 @@ class NchantdOfficeCloakView(NchantdCloakView):
     def switch_to_account_tab(self) -> Self:
         """Switch the center tabset to the user's account tab.
 
-        Sprint 20: previously a stub with a "PUSH to 0.0.3" marker
-        that wasn't in the canonical PUSH list. Looks up the
-        account tab via ``self.app.user`` (when present) and
-        routes the center tabset to it. Falls back to no-op
-        when the user or account tab isn't available.
+        Looks up the account tab via ``self.app.user`` (when present) and
+        routes the center tabset to it. Falls back to no-op when the user
+        or account tab isn't available.
         """
         try:
             user = getattr(self.app, "user", None)
@@ -88,12 +86,8 @@ class NchantdOfficeCloakView(NchantdCloakView):
     def on_window_move(self, event) -> Self:
         """Propagate a window-move event to visible notes.
 
-        Sprint 20: previously a stub with a "PUSH to 0.0.3" marker
-        that wasn't in the canonical PUSH list. The original
-        intent (per the comment) was to move any visible notes
-        at the same time as the main application. Iterates the
-        center tabset's open tabs and forwards the event to
-        any tab that exposes ``on_window_move``.
+        Iterates the center tabset's open tabs and forwards the
+        event to any tab that exposes ``on_window_move``.
         """
         try:
             center = self.panes.get("center")

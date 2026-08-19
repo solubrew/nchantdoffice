@@ -136,9 +136,9 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
         return self
 
     def initView(self, cfg=None) -> Self:
-        # PUSH 0.0.3: long_method >150 audit false-positive.
-        # The body is over the 150-line threshold because it holds
-        # the legacy commented-out blocks for the checkbox list
+        # T-NEW-166: long_method >150 audit false-positive. The body is
+        # over the 150-line threshold because it holds the legacy
+        # commented-out blocks for the checkbox list
         # (show_journal / show_settings / enable_automation /
         # show_left_pane / show_quick_toolbar / show_right_side_tab
         # etc.) that re-activate in the 0.0.3 release. The active
