@@ -26,6 +26,16 @@ from nchantrs.libraries import pyqt
 # alt-tab back to the main window when they need a tool.
 
 
+# T-NEW-170 WIRE-5: module-level registry of open FloatedTab
+# instances. Populated in __init__ (each new FloatedTab
+# appends itself), drained by the aboutToQuit hook (iterated
+# + re-attach invoked), and pruned by closeEvent (closed
+# dialogs are removed so the on-quit iteration doesn't
+# double-process an already-closed dialog).
+_FLOATED_TABS_REGISTRY: list = []
+_APP_QUIT_HOOK_INSTALLED: bool = False
+
+
 class FloatedTab(pyqt.QDialog):
     """T-NEW-170 \u2014 popup dialog hosting one pulled-out document tab.
 
@@ -126,6 +136,118 @@ class FloatedTab(pyqt.QDialog):
         except Exception:
             doc_name = "Document"
         self.setWindowTitle(f"Pulled out: {doc_name}")
+
+        # T-NEW-170 WIRE-5: register this FloatedTab in the
+        # module-level registry and ensure the
+        # QApplication.aboutToQuit hook is installed. Both
+        # are best-effort (log + skip if Qt isn't fully
+        # wired); the dialog is still functional without
+        # the hook -- the dialog-close path (closeEvent,
+        # T-NEW-170 WIRE-1) still re-attaches individually.
+        try:
+            FloatedTab._ensure_app_quit_hook_installed()
+        except Exception as _install_err:
+            logma.info(
+                f"[FloatedTab] app-quit hook install failed "
+                f"(non-blocking): {_install_err!r}"
+            )
+        try:
+            _FLOATED_TABS_REGISTRY.append(self)
+        except Exception:
+            pass
+
+    @staticmethod
+    def _ensure_app_quit_hook_installed() -> None:
+        """T-NEW-170 WIRE-5 -- idempotently install the
+        ``aboutToQuit`` hook on the live QApplication.
+
+        The first call wires the connection. Subsequent
+        calls (from later FloatedTab constructions) are a
+        no-op -- the flag ``_APP_QUIT_HOOK_INSTALLED``
+        prevents duplicate installations.
+
+        Best-effort: if QApplication.instance() returns
+        None (e.g. in a test without a Qt event loop), the
+        function logs and returns -- the dialog is still
+        functional in isolation.
+        """
+        global _APP_QUIT_HOOK_INSTALLED
+        if _APP_QUIT_HOOK_INSTALLED:
+            return
+        app = None
+        try:
+            app = pyqt.QApplication.instance()
+        except Exception:
+            app = None
+        if app is None:
+            # Fall back to pyqt.QApplication without a
+            # live instance binding -- some Qt bindings
+            # accept a static aboutToQuit.
+            try:
+                app = pyqt.QApplication
+            except Exception:
+                return
+        try:
+            about_to_quit = getattr(app, "aboutToQuit", None)
+            if about_to_quit is None:
+                return
+            try:
+                about_to_quit.connect(FloatedTab._on_app_quit)
+            except Exception:
+                return
+            _APP_QUIT_HOOK_INSTALLED = True
+            logma.info(
+                "[FloatedTab] installed aboutToQuit hook "
+                "for app-shutdown re-attach"
+            )
+        except Exception:
+            return
+
+    @staticmethod
+    def _on_app_quit() -> None:
+        """T-NEW-170 WIRE-5 -- iterate the registry and
+        re-attach every open FloatedTab to its home tabset.
+
+        Connects to ``QApplication.aboutToQuit`` (set up by
+        ``_ensure_app_quit_hook_installed``). On the app-quit
+        signal, this static method iterates the module-level
+        ``_FLOATED_TABS_REGISTRY`` and calls
+        ``home_tabset.re_attach_tab(floated_tab)`` on each
+        entry.
+
+        Best-effort: each entry's re-attach is wrapped in a
+        try/except so a single failure doesn't block the
+        others. The registry is cleared after iteration
+        (the dialogs are going away anyway).
+        """
+        try:
+            # Snapshot the registry so iteration + close
+            # coupling don't mutate the list mid-loop.
+            snapshot = list(_FLOATED_TABS_REGISTRY)
+            for ftab in snapshot:
+                try:
+                    home_tabset = getattr(
+                        ftab, "home_tabset", None
+                    )
+                    if home_tabset is not None:
+                        home_tabset.re_attach_tab(ftab)
+                except Exception as e:
+                    logma.warning(
+                        f"[FloatedTab._on_app_quit] "
+                        f"re_attach_tab failed: {e!r}"
+                    )
+            # Clear the registry post-iteration. The dialogs
+            # themselves are about to be torn down by Qt;
+            # we don't want stale entries.
+            try:
+                _FLOATED_TABS_REGISTRY.clear()
+            except Exception:
+                pass
+        except Exception as e:
+            logma.warning(
+                f"[FloatedTab._on_app_quit] top-level failure "
+                f"(swallowed): {e!r}"
+            )
 
     def closeEvent(self, event) -> None:
         """T-NEW-170 DECIDE-1 (a): re-attach on dialog close.
