@@ -32,6 +32,24 @@ from nchantrs.libraries import pyqt
 from pycurity.pyvice import Device
 from nchantdoffice.utilities.users import NchantdOfficeUser
 
+# T-NEW-169 WIRE-3: the 4 high-value NchantdOffice* document
+# classes are imported lazily inside
+# NchantdDocumentStandaloneWindow.initView (rather than at
+# module load) because importing some of them (e.g.
+# NchantdOfficeForm via forms.py) drags in the full app
+# module graph (Qt + paths + sibling tests). The dispatch
+# is read late -- at the standalone-boot site -- so the
+# import work happens once per standalone launch, not at
+# module-import time. This keeps the test environment
+# (and any non-app context that imports nchantdoffice.py)
+# free of the heavyweight transitive imports.
+_DOC_TYPE_DISPATCH_BY_NAME: dict[str, str] = {
+    "script": "nchantdoffice.widgets.documents.media.scripts.NchantdOfficeScript",
+    "notebook": "nchantdoffice.widgets.documents.workbooks.notebooks.NchantdOfficeNotebook",
+    "image": "nchantdoffice.widgets.documents.media.images.NchantdOfficeImage",
+    "form": "nchantdoffice.widgets.documents.media.forms.NchantdOfficeForm",
+}
+
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
@@ -473,15 +491,18 @@ def run_update_process(dbupdate, update_checker, main_window=None) -> dict:
 # without a fresh import path.
 
 
-# T-NEW-169 WIRE-2 placeholder dispatch. WIRE-3 fills these in
-# with the real NchantdOffice* concrete classes. We use None
-# as the value so a typo or missing-class update surfaces as
-# a clean TypeError at runtime rather than a silent fallthrough.
-DOCUMENT_TYPE_DISPATCH = {
-    "script": None,    # WIRE-3: NchantdOfficeScript
-    "notebook": None,  # WIRE-3: NchantdOfficeNotebook
-    "image": None,     # WIRE-3: NchantdOfficeImage
-    "form": None,      # WIRE-3: NchantdOfficeForm
+# T-NEW-169 WIRE-3: 4 high-value document types wired into
+# the dispatch dict. The dict's values are dotted import
+# paths (strings) rather than the concrete classes because
+# importing some of the NchantdOffice* widgets at module
+# load time pulls in the full app module graph (Qt,
+# paths, sibling tests). Lazy lookup happens inside
+# NchantdDocumentStandaloneWindow.initView via importlib.
+DOCUMENT_TYPE_DISPATCH: dict[str, str] = {
+    "script": "nchantdoffice.widgets.documents.media.scripts.NchantdOfficeScript",
+    "notebook": "nchantdoffice.widgets.documents.workbooks.notebooks.NchantdOfficeNotebook",
+    "image": "nchantdoffice.widgets.documents.media.images.NchantdOfficeImage",
+    "form": "nchantdoffice.widgets.documents.media.forms.NchantdOfficeForm",
 }
 
 
@@ -581,26 +602,105 @@ class NchantdDocumentStandaloneWindow(pyqt.QMainWindow):
         correct and the operator can drop the docked pane
         anywhere as expected.
         """
-        # T-NEW-169 WIRE-2: dispatch placeholder. WIRE-3 will
-        # replace this with the real document-widget lookup.
-        # For now we set a placeholder central widget so the
-        # QMainWindow has SOMETHING to render.
-        placeholder_central = pyqt.QWidget(self)
-        placeholder_layout = pyqt.QVBoxLayout(placeholder_central)
-        placeholder_layout.setContentsMargins(8, 8, 8, 8)
-        placeholder_label = pyqt.QLabel(
-            f"[WIRE-2] {self.document_type} standalone shell \u2014 "
-            f"document widget lands in T-NEW-169 WIRE-3"
-        )
-        placeholder_label.setWordWrap(True)
-        placeholder_layout.addWidget(placeholder_label)
-        self.setCentralWidget(placeholder_central)
+        # T-NEW-169 WIRE-3: dispatch-driven construction. The
+        # placeholder central widget from WIRE-2 is replaced
+        # with a real document widget constructed via
+        # DOCUMENT_TYPE_DISPATCH. The dispatch values are
+        # dotted import paths (strings); we resolve them
+        # lazily via importlib so the heavyweight
+        # NchantdOffice* transitive imports only fire on a
+        # real standalone boot, not on every nchantdoffice.py
+        # import.
+        import importlib
+        doc_path = DOCUMENT_TYPE_DISPATCH.get(self.document_type)
+        doc_cls = None
+        if doc_path is not None:
+            try:
+                _module_path, _, _class_name = doc_path.rpartition(".")
+                _mod = importlib.import_module(_module_path)
+                doc_cls = getattr(_mod, _class_name)
+            except Exception as _import_err:
+                logma.warning(
+                    f"[NchantdDocumentStandaloneWindow] "
+                    f"{self.document_type} -> {doc_path} "
+                    f"failed to import: {_import_err!r}; "
+                    f"falling back to placeholder"
+                )
+        if doc_cls is not None:
+            try:
+                document_widget = doc_cls(parent=self)
+                self._document_widget = document_widget
+                # Run the nchantrs lifecycle hooks if available
+                # -- the 4 NchantdOffice* classes all expose
+                # initModel / initView (the convention) but
+                # new ones might not, so `hasattr` guards the
+                # sequence.
+                if hasattr(document_widget, "initModel"):
+                    try:
+                        document_widget.initModel()
+                    except Exception as _m_err:
+                        logma.warning(
+                            f"[NchantdDocumentStandaloneWindow] "
+                            f"{doc_cls.__name__}.initModel raised: {_m_err!r}"
+                        )
+                if hasattr(document_widget, "initView"):
+                    try:
+                        document_widget.initView()
+                    except Exception as _v_err:
+                        logma.warning(
+                            f"[NchantdDocumentStandaloneWindow] "
+                            f"{doc_cls.__name__}.initView raised: {_v_err!r}"
+                        )
+                self.setCentralWidget(document_widget)
+                # If a preload_path was passed and the constructed
+                # class has an open_file method, thread it through.
+                # Tolerant best-effort -- open_file is the canonical
+                # entry point across the 4 NchantdOffice* classes
+                # but errors are caught so a bad preload path
+                # doesn't crash the standalone boot.
+                if self.preload_path is not None and hasattr(
+                    document_widget, "open_file"
+                ):
+                    try:
+                        document_widget.open_file(self.preload_path)
+                    except Exception as _open_err:
+                        logma.warning(
+                            f"[NchantdDocumentStandaloneWindow] "
+                            f"preload open_file failed: {_open_err!r}"
+                        )
+            except Exception as _ctor_err:
+                logma.warning(
+                    f"[NchantdDocumentStandaloneWindow] "
+                    f"{self.document_type} dispatch -> "
+                    f"{doc_cls.__name__} construction failed: "
+                    f"{_ctor_err!r}; "
+                    f"falling back to placeholder"
+                )
+                document_widget = None
+        else:
+            document_widget = None
+
+        # If dispatch failed OR the constructor failed, fall
+        # back to the WIRE-2 placeholder central widget so
+        # the QMainWindow still has SOMETHING to render.
+        if document_widget is None:
+            placeholder_central = pyqt.QWidget(self)
+            placeholder_layout = pyqt.QVBoxLayout(placeholder_central)
+            placeholder_layout.setContentsMargins(8, 8, 8, 8)
+            placeholder_label = pyqt.QLabel(
+                f"[WIRE-2] {self.document_type} standalone shell \u2014 "
+                f"document widget lands in T-NEW-169 WIRE-3"
+            )
+            placeholder_label.setWordWrap(True)
+            placeholder_layout.addWidget(placeholder_label)
+            self.setCentralWidget(placeholder_central)
 
         # T-NEW-169 WIRE-2: dock placeholder. The right-dock
-        # is where the toolbox lives once WIRE-3 fills in the
-        # dispatch. Until then we wire the dock + titlebar so
-        # the operator can move/dock the pane as they would
-        # the final layout.
+        # is where the toolbox lives once a future card wires
+        # the per-document toolbox class (per
+        # DOCUMENT_TYPE_DISPATCH keys). Until then the dock
+        # holds a placeholder widget so the layout geometry
+        # is correct and the operator can move/dock the pane.
         placeholder_dock = pyqt.QDockWidget(
             f"{self.document_type} toolbox (WIRE-2 placeholder)",
             self,
@@ -612,7 +712,7 @@ class NchantdDocumentStandaloneWindow(pyqt.QMainWindow):
         placeholder_dock_layout = pyqt.QVBoxLayout(placeholder_dock_inner)
         placeholder_dock_label = pyqt.QLabel(
             "[WIRE-2] Right-dock placeholder \u2014 toolbox lands "
-            "in T-NEW-169 WIRE-3"
+            "in a future toolbox-card per T-NEW-169 plan"
         )
         placeholder_dock_label.setWordWrap(True)
         placeholder_dock_layout.addWidget(placeholder_dock_label)
@@ -622,9 +722,6 @@ class NchantdDocumentStandaloneWindow(pyqt.QMainWindow):
         )
         self._toolbox_dock = placeholder_dock
 
-        # T-NEW-169 WIRE-2: default size. 1280x800 mirrors
-        # NchantdOfficeMainWindow's startup hint and gives a
-        # usable work area on most monitors.
         self.resize(1280, 800)
         return self
 
