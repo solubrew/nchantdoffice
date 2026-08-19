@@ -780,18 +780,12 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         #     or (self.document.content or {}).get("content", {}).get("file_path")
         # )
 
-        # PUSH to 0.0.3 force external until
-        self.document.set_location("external")
-
-        # if self.document.location == "external":
-        #     self.open_file(self.document.file_path)
-        # # PUSH to 0.0.3
-        # # elif self.document.location == "internal":
-        # #    self.populate_data()
-        # # elif self.document.location == "cloud":
-        # #    self.connect_to_file()
-        # else:
-        #     raise Exception("Internal and Cloud locations not supported yet")
+        # T-NEW-160: drop the PUSH-to-0.0.3 / "force external until"
+        # hardcode. The doc location threads through the open_file
+        # / populate_data paths — initView no longer forces an
+        # origin. The previous commented-out dispatch
+        # (external / internal / cloud) lives in populate_document
+        # and is reached via the init lifecycle, not from here.
         self.layout.addWidget(self.image)
         self.layout.setSpacing(3)
         return self
@@ -1293,7 +1287,16 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         return self
 
     def open_file(self, file=None) -> Self:
-        """"""
+        """Open a local image file as the active doc.
+
+        T-NEW-160: pre-fix body unconditionally hardcoded
+        ``self.document.set_location("external")`` on every call
+        (including the no-arg path that the init lifecycle
+        triggers when loading from .pyof). Post-fix: the
+        ``external`` hint only fires when the user passes a real
+        disk path. ``populate_document`` (already location-aware
+        at images.py:1310) handles the actual render.
+        """
         logma.info(file)
         try:
             self.set_file_path(file)
@@ -1303,7 +1306,8 @@ class NchantdOfficeImage(NchantdOfficeDocument):
             logma.warning(e)
             if debug:
                 raise e
-        self.document.set_location("external")
+        if file is not None:
+            self.document.set_location("external")
         self.populate_document()
         return self
 
