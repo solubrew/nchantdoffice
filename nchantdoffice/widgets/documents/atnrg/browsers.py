@@ -950,35 +950,39 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #     cnt += 1
     #     return items
 
-    # PUSH to version 0.0.3
-    # def init_drawer_source_inspection(self):
-    #     """"""
-    #     items = self.toolbox_config[400].get("items", {})
-    #     cnt = 0
-    #     if cnt not in items:
-    #         items[cnt] = {"action": "insert_generic_action", "type": "custom", "handler": self.cmd_launch_source_tab}
-    #     cfg = {"text": "Launch Source Tab of Current Page"}
-    #     self.source_document_launch_button = NchantdButtonWidget(self, cfg)
-    #     items[cnt]["widget"] = self.source_document_launch_button
-    #     cnt += 1
-    #     if cnt not in items:
-    #         items[cnt] = {"action": "insert_generic_action", "type": "custom", "handler": self.cmd_scan_source}
-    #     cfg = {"text": "Scan Source for Resources"}
-    #     self.crawl_current_page_button = NchantdButtonWidget(self, cfg)
-    #     items[cnt]["widget"] = self.crawl_current_page_button
-    #     cnt += 1
-    #     if cnt not in items:
-    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-    #     data = ["Images", "CSS", "JS", "HTML", "JSON", "XML", "Text", "All"]
-    #     cfg = {
-    #         "text": "Select Resource",
-    #         "data": data,
-    #         "handler": self.cmd_on_resource_select,
-    #     }
-    #     self.page_resource_list = NchantdListWidget(self, cfg)
-    #     items[cnt]["widget"] = self.page_resource_list
-    #     cnt += 1
-    #     return items
+    # T-NEW-161 — Source-inspection drawer. The body was a PUSH 0.0.3
+    # marker (line 953); the wire-up is small enough to ship now.
+    # cmd_scan_source stays deferred to T-NEW-162 (browser profile +
+    # paid-feature surface) — the other two handlers are real.
+    def init_drawer_source_inspection(self):
+        """"""
+        items = self.toolbox_config[400].get("items", {})
+        cnt = 0
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom", "handler": self.cmd_launch_source_tab}
+        cfg = {"text": "Launch Source Tab of Current Page"}
+        self.source_document_launch_button = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.source_document_launch_button
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom", "handler": self.cmd_scan_source}
+        cfg = {"text": "Scan Source for Resources"}
+        self.crawl_current_page_button = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.crawl_current_page_button
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        data = ["Images", "CSS", "JS", "HTML", "JSON", "XML", "Text", "All"]
+        cfg = {
+            "text": "Select Resource",
+            "data": data,
+            "handler": self.cmd_on_resource_select,
+        }
+        self.page_resource_list = NchantdListWidget(self, cfg)
+        items[cnt]["widget"] = self.page_resource_list
+        cnt += 1
+        return items
+
     def init_drawer_quickstart(self) -> Dict[int, Any]:
         """Build the quickstart drawer with bookmarks + quick-app links.
 
@@ -1010,10 +1014,11 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_url_inspection()
         self.toolbox_config[200]["items"] = self.init_drawer_browser_config()
-        # PUSH until 0.0.3
-        # self.toolbox_config[300]["items"] = self.init_drawer_form_control()
-        # self.toolbox_config[400]["items"] = self.init_drawer_source_inspection()
-        # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
+        # T-NEW-161 — activate the source-inspection + quickstart drawers.
+        # The form_control activation (slot 300) stays deferred to T-NEW-162
+        # (browser profile + paid-feature surface, per DECIDE-1 matrix).
+        self.toolbox_config[400]["items"] = self.init_drawer_source_inspection()
+        self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
     def open_new_tab(self, url=None) -> Self:
         """Open a new tab loading the current (or given) URL."""
