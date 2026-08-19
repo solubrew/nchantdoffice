@@ -5869,3 +5869,66 @@ Today the codebase has zero tear-off / float / detach plumbing — no `QTabBar.s
 - Manual: open a tab, right-click "Pull to screen", drag dialog to second monitor, navigate the tree to a different node — dialog closes and the tab re-attaches to its original position.
 - Regression: tabs never close unexpectedly; node changes don't drop tabs they didn't detach.
 - Test: `pytest tests/test_t_new_170_*.py` GREEN.
+
+### T-NEW-171 — Performance campaign: identify slow points + design speed-ups (2026-08-19)
+
+**Context.** Operator requested (2026-08-19): "need to add a card for a campaign to identify slow points in the code and design speed ups for each."
+
+This is a **campaign card**, not a single fix. The goal is to (a) survey the live desktop app for measurable slow points, (b) prioritize them by impact × cost, (c) design a speed-up approach for each (database indexing, batched writes, eager-load gating, lazy wiring, render-cache, etc.), (d) close each one with the per-speed-up TDD card. The T-NEW-154 add_tab instrumentation committed earlier (`535178a`) is the **first** speed-up target's instrumentation; this card scopes the campaign that follows it.
+
+**Why now:** the live app boot at `cmds/runNchantdOffice.py:120` does a tree-refresh + 8-tab initial load + toolbox build, and operators report "slow first-open, especially with multi-screen rigs". The testing report referenced in `testing-report_20260817.md` already flagged "Identify and reduce bottlenecks in new-document creation" — T-NEW-154 ships the timing hook; this card scopes the rest of the perf review.
+
+**Affected sites (TBD — surveyed by T-NEW-171.SURVEY):**
+- `cmds/runNchantdOffice.py:120` — `run(args)` boot path
+- `nchantdoffice/nchantdoffice.py` — `NchantdOfficeCloak` constructor + `initView` (the boot cascade)
+- `nchantdoffice/views.py` — `NchantdOfficeCloakView.initView` (pane construction: toolbar, tree, center, right)
+- `nchantdoffice/widgets/panes/documents.py` — `add_tab` (T-NEW-154 instrumented; need to profile)
+- `nchantdoffice/widgets/documents/documents.py` — `buildTabSet` (T-NEW-157 area; lazy-loading tab construction)
+- `nchantdoffice/models.py` — `load_tab` + `load_tab_set` (per-tab widget construction, the dominant cost on a multi-tab document)
+- `nchantdoffice/widgets/controls/tabs.py` / `widgets.py` — `NchantdOfficeTabs` + `NchantdOfficeTabSet` (the `QTabWidget` chrome, refresh events)
+- `nchantdoffice/utilities/` — tree refresh paths called on every node change
+- `nchantrs/widgets/items/nodes.py:485` — `sortChildren` cascade (T-NEW-156 threaded comparator; per-subtree sort is expensive on large trees)
+
+**Migration plan (no priority / low priority — design decision first):**
+
+1. **SURVEY-1**: Run the live app with `time.monotonic()` instrumentation ALREADY in place at:
+   - the boot path (`runNchantdOffice.run` -> `NchantdOfficeCloak.__init__` -> `initView` cascade)
+   - the add_tab call site (T-NEW-154 already shipped the elapsed-ms line)
+   - the buildTabSet + load_tab cascade (`panes/documents.py:1018+`, `models.py:4858+`)
+   Capture the per-phase timing for a representative multi-tab document open + a tree-refresh + a node-switch. Pin the timings to a `tests/perf_baselines.py` file so future regressions are catchable.
+
+2. **PRIORITIZE-1**: Build a decision matrix:
+   - **Row per phase** with: typical elapsed ms (e.g. add_tab ~85ms, tree refresh ~210ms, full boot ~3.2s)
+   - **Columns**: impact (operator-visible: yes/no), cost (effort to fix: S/M/L), risk (correctness risk: low/med/high), compile against the canonical "3s is the user-perceived ceiling" rule from the testing report
+   - Fill in concrete recommendation per row
+
+3. **DESIGN-1**: For each priority-1 / -2 row, write a 1-page design note: what technique (batched DB write / lazy-init tab widget / cache last-rendered tree branch / thread off the long search queries / etc.), what the TDD-able contract change would be, what regression-test should pin the speed-up.
+
+4. **SHIP-1 per speed-up**: Each DESIGN-1 page becomes its own T-NEW-NNN card (e.g. T-NEW-172, T-NEW-173, etc.) using the standard TDD cycle (RED timing-test that exceeds the baseline, GREEN impl, regression confirms no behavioral change). **One commit per speed-up.** The umbrella rule (one commit per atomic change) applies here: even if 6 speed-ups land, no grouped commit.
+
+5. **VERIFY-1**: After each speed-up ships, rerun SURVEY-1's timing capture and confirm elapsed-ms dropped (or stayed flat in non-impact paths). Update `tests/perf_baselines.py` with the new numbers.
+
+6. **DOC-1**: Add a section to `CHANGES.md` per shipped speed-up; update this card's body with the speed-up roll-up (one-liner per shipped card).
+
+**Steps:**
+- [ ] SURVEY-1: timing capture across the boot + tree-refresh + node-switch flows (T-NEW-171)
+- [ ] PRIORITIZE-1: decision matrix per phase (T-NEW-171)
+- [ ] DESIGN-1: 1-page design note per priority row (T-NEW-171)
+- [ ] SHIP-1 per speed-up: each becomes its own T-NEW card (T-NEW-172+)
+- [ ] VERIFY-1: rerun timing capture post-ship (T-NEW-171)
+- [ ] DOC-1: roll-up entries in CHANGES.md (T-NEW-171)
+
+**Refs:**
+- T-NEW-154 — the stage-timing instrumentation (`535178a`) that ships the baseline hook for `add_tab`
+- T-NEW-156 — `sortChildren` cascade already instrumented via T-NEW-133; T-NEW-171 may surface an O(n²) issue there
+- T-NEW-157 — `active_tab_position` clamp in `buildTabSet`; the lazy-load cascade lives here
+- `testing-report_20260817.md` "Identify and reduce bottlenecks in new-document creation" — the operator's original ask
+
+**Verification:**
+- `tests/perf_baselines.py` ships a frozen snapshot of the per-phase elapsed-ms numbers; the file is read-only text so future regressions are visible to anyone reviewing git diff
+- Each spawned T-NEW-NNN child card has a RED timing test that fails on the pre-fix baseline and passes on the post-fix impl
+- Manual: the 3s open-on-multi-screen-rig ceiling is met; the operator notices — no specific metric gate, operator eyeball
+
+**Comparison vs existing perf work:**
+- T-NEW-154 is a single-method instrumentation; T-NEW-171 is the *campaign* that consumes 154's output plus surveys the rest of the app
+- T-NEW-133 (tab-cascade sorting) and T-NEW-156 (underscore priority) are already instrumentation-shaped; T-NEW-171 follows their pattern across the rest of the app
