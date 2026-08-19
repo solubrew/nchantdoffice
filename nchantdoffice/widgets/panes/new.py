@@ -251,7 +251,7 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
                 widgdata["widget_code"] = override
         # T-NEW-154: stage timing — total elapsed.
         logma.info(
-            f"[panes.new] T-NEW-154 add_tab total: "
+            f"[panes.new] T-NEW-154 / T-NEW-171 add_tab total: "
             f"{(time.monotonic() - _t154_start) * 1000:.1f}ms"
         )
         return self

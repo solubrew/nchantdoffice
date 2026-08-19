@@ -18,6 +18,7 @@ import datetime as dt
 import os
 import shutil
 import sys
+import time
 from os.path import dirname, join
 from pathlib import Path
 from sys import argv
@@ -210,10 +211,25 @@ def run(args: dict[str, Any]) -> None:
 if __name__ == "__main__":
 
     start = dt.datetime.now()
+    # T-NEW-171 SURVEY-1: monotonic-clock boot anchor.
+    # dt.datetime.now() is wall-clock (could skip backward
+    # on NTP adjust); time.monotonic() is what operators
+    # want for performance measurement. The End Duration
+    # line below stays as the human-readable hh:mm:ss.sss,
+    # but the SURVEY-1 line gives the precise elapsed-ms
+    # for performance triage.
+    _t171_boot_start = time.monotonic()
     logma.info("Start")
+    logma.info(
+        f"[T-NEW-171 SURVEY] nchantdoffice boot start: pid={os.getpid()}"
+    )
     run(_build_dispatch(argv))
     end = dt.datetime.now()
     logma.info(f"End Duration {end - start}")
+    logma.info(
+        f"[T-NEW-171 SURVEY] nchantdoffice boot total: "
+        f"{(time.monotonic() - _t171_boot_start) * 1000:.1f}ms"
+    )
 
 
 # ====================================================================================================================||

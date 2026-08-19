@@ -17,6 +17,7 @@ from __future__ import annotations
 from os.path import dirname, join, exists
 import json as j
 import datetime as dt
+import time
 from dateutil import parser
 from urllib.parse import urlsplit
 from typing import Any, Dict, Iterator, List, Optional, Self
@@ -4742,10 +4743,26 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         out-of-bounds saved positions don't silently jump
         operators to the first tab. See the inline comment
         at the clamping site for the bug history.
+
+        T-NEW-171 SURVEY-1: stage timing. Snapshots
+        ``time.monotonic()`` at function entry so operators
+        can identify the bottleneck phase (DB fetch /
+        sorting / building / dispatch). Zero behavioural
+        effect; emissions are logma.info lines tagged
+        ``T-NEW-171``.
         """
+        # T-NEW-171 SURVEY-1: function-entry monotonic snapshot.
+        _t171_buildtabset_start = time.monotonic()
         if hasattr(self, "_building") and self._building:
             return self
         self._building = True
+        try:
+            logma.info(
+                f"[T-NEW-171 SURVEY] NchantdOfficeCloakModel.buildTabSet "
+                f"start: tabset={tabset!r}"
+            )
+        except Exception:
+            pass
         active_tab_position = 0
         try:
             self.parent.blockSignals(True)
@@ -4819,6 +4836,20 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             if hasattr(self.parent, "on_tab_focus"):
                 self.parent.on_tab_focus(active_tab_position)
             self._building = False
+            # T-NEW-171 SURVEY-1: elapsed-ms log on return.
+            # The function-exit timing is what operators
+            # scan when an add-tab feels sluggish -- it gives
+            # a per-call timing distribution that the
+            # T-NEW-154 add_tab instrumentation cannot (since
+            # add_tab is a sibling call into a different
+            # method).
+            try:
+                logma.info(
+                    f"[T-NEW-171 SURVEY] NchantdOfficeCloakModel.buildTabSet "
+                    f"total: {(time.monotonic() - _t171_buildtabset_start) * 1000:.1f}ms"
+                )
+            except Exception:
+                pass
         return self
 
     def convert_db_to_doc(self, document_) -> Dict[str, Any]:
@@ -4989,7 +5020,23 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         return self
 
     def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0) -> Self:
-        """"""
+        """Load a single tab into the tabset.
+
+        T-NEW-171 SURVEY-1: stage timing. Snapshots
+        ``time.monotonic()`` at function entry and emits
+        an elapsed-ms log on return, alongside the
+        ``T-NEW-171 SURVEY`` umbrella marker. Zero
+        behavioural effect.
+        """
+        # T-NEW-171 SURVEY-1: function-entry monotonic snapshot.
+        _t171_loadtab_start = time.monotonic()
+        try:
+            logma.info(
+                f"[T-NEW-171 SURVEY] NchantdOfficeCloakModel.load_tab "
+                f"start: tabn={tabn}, tabset={tabset!r}"
+            )
+        except Exception:
+            pass
         # Workaround for bug in nchantrs.models.tabsetmodels.NchantdTabSetModel.load_tab
         # which uses 'tabn in self.tab_widgets' incorrectly for a list.
         if tabn < len(self.tab_widgets):
@@ -5001,7 +5048,25 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         # super().load_tab calls self.load_widget, which we override.
         # Ensure we pass the converted document if needed, but nchantrs' load_tab
         # expects the 'tab' dict which it then passes to parse_widget_data.
-        super().load_tab(tab, tabn, tabset, active_tab_position)
+        try:
+            super().load_tab(tab, tabn, tabset, active_tab_position)
+        except Exception as _e:
+            try:
+                logma.warning(
+                    f"[T-NEW-171 SURVEY] load_tab super() raised: {_e!r}"
+                )
+            except Exception:
+                pass
+            raise
+        finally:
+            # T-NEW-171 SURVEY-1: elapsed-ms log on return.
+            try:
+                logma.info(
+                    f"[T-NEW-171 SURVEY] NchantdOfficeCloakModel.load_tab "
+                    f"total: {(time.monotonic() - _t171_loadtab_start) * 1000:.1f}ms"
+                )
+            except Exception:
+                pass
         return self
 
     def load_widget(self, cfg, tabset="center", document=None, tab_type="custom_widget") -> Any:
