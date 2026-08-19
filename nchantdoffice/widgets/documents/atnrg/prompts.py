@@ -285,9 +285,10 @@ class NchantdOfficePrompt(NchantdOfficeDocument):
         self.pane = NchantdOfficeSuperPromptPane(self, cfg).initWidget()
         self.layout.addWidget(self.pane)
 
-        # PUSH to 0.0.3 force external until
-        self.document.set_location("external")
-
+        # T-NEW-160b/8: drop the PUSH-to-0.0.3 / "force external until"
+        # hardcode. The doc location threads through the caller;
+        # the location-aware dispatch below reads the caller-set
+        # location.
         if self.document.location == "external":
             self.open_file(self.document.file_path)
         # PUSH to 0.0.3
