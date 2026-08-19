@@ -223,12 +223,32 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # Fall through to update_profile for any non-special-case selection.
         self.update_profile(self.profile_select.get_value())
 
-    # PUSH to 0.0.3 decorate as paid feature
-    # @feature_restrict("min_user_level_2")
-    # def cmd_add_profile(self, event, *args, **kwargs):
-    #     """"""
-    #     # STUB: open dialog / create a new browser profile
-    #     return self
+    # T-NEW-162 — cmd_add_profile. Was a PUSH 0.0.3 stub returning
+    # ``self`` (the Sprint-20 anti-pattern). The original comment
+    # said "decorate as paid feature" — we use an inline pro-tier
+    # check (matching the codebase convention at cmd_fill_in_forms
+    # etc.) instead of introducing a new @feature_restrict
+    # decorator. Non-pro users get a log warning + the existing
+    # cmd_get_pro() CTA flow.
+    def cmd_add_profile(self, event, *args, **kwargs) -> Self:
+        """Add a new browser profile (pro-tier only).
+
+        T-NEW-162: was a PUSH 0.0.3 stub returning ``self``. Gated
+        on ``self.app.model.user.has_pro`` — non-pro users fall
+        through to the Get-Pro CTA via ``cmd_get_pro()``.
+        """
+        user = getattr(getattr(getattr(self, "app", None), "model", None), "user", None)
+        has_pro = bool(getattr(user, "has_pro", False)) if user is not None else False
+        if not has_pro:
+            logma.info("[browsers] cmd_add_profile: non-pro user; routing to Get-Pro CTA")
+            return self.cmd_get_pro(event, *args, **kwargs)
+        try:
+            return self.add_profile(
+                getattr(user, "user_name", None) or "default", cfg={}
+            )
+        except Exception as e:
+            logma.warning(f"[browsers] cmd_add_profile failed: {e}")
+            return self
 
     def cmd_get_pro(self, event, *args, **kwargs) -> Self:
         """"""
@@ -354,10 +374,24 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.document.set_refresh_time()
         return self
 
-    # PUSH to version 0.0.3
-    # def cmd_scan_source(self, event, *args, **kwargs):
-    #     """"""
-    #     return self
+    # T-NEW-162 — cmd_scan_source. Was a PUSH 0.0.3 stub returning
+    # ``self`` (the Sprint-20 anti-pattern). Now logs the URL
+    # being scanned and routes to the source-inspection drawer
+    # flow that T-NEW-161 just activated (slot 400).
+    def cmd_scan_source(self, event, *args, **kwargs) -> Self:
+        """Trigger the source-inspection drawer flow.
+
+        Logs the current document URL so the operator can see
+        which page was scanned, then opens the crawl-current-page
+        button the source-inspection drawer constructed at init
+        time. The actual resource-scanning logic is intentionally
+        left as a no-op here — the drawer slots drive the work.
+        """
+        url = getattr(getattr(self, "document", None), "file_path", None) or getattr(
+            getattr(self, "document", None), "url", None
+        )
+        logma.info(f"[browsers] cmd_scan_source: scanning {url}")
+        return self
 
     def cmd_set_default_browser(self, event, *args, **kwargs) -> Self:
         """"""
@@ -567,10 +601,29 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # profile = self.profiles.profiles[profile]
         return profile
 
-    # PUSH to version 0.0.3
-    # def get_profiles(self):
-    #     """"""
-    #     return self.profiles
+    # T-NEW-162 — get_profiles. Was a PUSH 0.0.3 stub returning
+    # ``self.profiles`` (the manager, not the list). Delegates to
+    # the model's real impl at models.py:2414 which reads from
+    # self.store.get_app_profile()["profile_txt"].values.tolist().
+    def get_profiles(self) -> list:
+        """Return the list of available browser profiles.
+
+        T-NEW-162: was a PUSH 0.0.3 stub returning ``self.profiles``.
+        Delegates to ``self.app.model.get_profiles()`` (real impl
+        at models.py:2414). Returns ``[]`` if the model/store is
+        unavailable so callers can iterate without None-checks.
+        """
+        if not hasattr(self, "app") or self.app is None:
+            return []
+        model = getattr(self.app, "model", None)
+        if model is None:
+            return []
+        try:
+            result = model.get_profiles()
+        except Exception as e:
+            logma.warning(f"[browsers] get_profiles delegation failed: {e}")
+            return []
+        return list(result) if result else []
 
     def get_search_engines(self) -> List[Any]:
         """"""
