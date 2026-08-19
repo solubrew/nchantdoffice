@@ -10,6 +10,25 @@ Internal projects will not ever be import or used as option packages
 - Every Package work session should begin with an update to the projects STATE.md
 - Always write CHANGES-<PROJECT>.md files for changes needed in other projects
 
+### Closed-card cleanup (operator-set 2026-08-19)
+**When a T-NEW card closes:**
+- The card body (Context / Affected sites / Migration plan / Tasks /
+  Verifications / Refs) is **deleted from `TODOs.md` wholesale** — no
+  "DONE @ `<commit-hash>`" one-liners left behind.
+- `CHANGES.md` gets a paragraph-per-card entry under the next
+  `[Unreleased]` anchor carrying the same Context / Affected sites /
+  Migration plan / Verifications.
+- This is a doc-only commit; no source changes.
+- **Two files, two purposes:** `TODOs.md` is the *open work* index.
+  `CHANGES.md` is the *shipping log*. Future archeology reads
+  `git log` + `CHANGES.md` — they don't read TODOs.md for closed work.
+- Cards filed-but-not-yet-closed (whether superseded by a future card
+  or still open work) stay in `TODOs.md` until they themselves close.
+- Worked example: T-NEW-160 (closed by commit `f499b7c`) — the body
+  is removed from `TODOs.md`; the same Context / Affected sites /
+  Migration plan / Verifications paragraphs land in `CHANGES.md`'s
+  next `[Unreleased]` anchor.
+
 ---
 
 ## 1. Project Structure & Workspace
