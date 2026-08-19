@@ -11,15 +11,18 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
-# ======================================Standard Library Modules======================================================||
+# -*- coding: utf-8 -*-
+# ======================================Standard Library Modules======================================================|
+import argparse
 import datetime as dt
 import os
 import shutil
 import sys
+import time
 from os.path import dirname, join
 from pathlib import Path
 from sys import argv
+from typing import Any
 
 # ---- QtWebEngine render diagnostics + software-render lever -------------------
 # These MUST be set before nchantrs (and therefore Qt/QtWebEngine) is imported
@@ -117,27 +120,116 @@ def restart() -> None:
         logma.info("Removal Failed")
 
 
-def run(args: list[str]) -> None:
-    """Run individual tabs with mock data for development purposes
+def _build_dispatch(argv: list[str]) -> dict[str, Any]:
+    """T-NEW-169 WIRE-1: parse argv into a dispatch dict.
 
-    python runNchantdOffice.py scratch setup - create new file
-    python runNchantdOffice.py scratch - continue file
-    python runNchantdOffice.py - use the wizard to setup
+    Two modes:
+    - `argv` contains `document --type <name> [--path <file>]`:
+      return `{"mode": "document", "type": <name>, "path": <path>}`.
+    - `argv` is empty / has unrecognised args:
+      return `{"mode": "main", "type": None, "path": None}` for the
+      default main-app boot.
+
+    The dict shape is what `run(args)` expects (per the
+    operator-approved T-NEW-169 dispatch design -- a dict literal
+    rather than an if/elif chain, so future per-type wire-ups
+    (WIRE-3) can read `args["type"]` and look up the class).
     """
-    # if len(args) > 2:
-    # restart()
-    app = NchantdOfficeCloak
-    wizard = NchantdOfficeApplicationStartupWizard
-    nchantment("NchantdOffice", args, app, None, wizard)
+    parser = argparse.ArgumentParser(prog="runNchantdOffice", add_help=True)
+    subparsers = parser.add_subparsers(dest="mode")
+
+    # The default subcommand is `main`. argparse's standard idiom is
+    # to require an explicit subcommand; we relax that to keep
+    # `python runNchantdOffice.py` (no args) booting the full main
+    # app unchanged.
+    parser.set_defaults(mode="main", type=None, path=None)
+
+    # The standalone-document subcommand: `document --type <name>`
+    document = subparsers.add_parser(
+        "document",
+        help="boot a standalone 2-pane minimal shell for one document type",
+    )
+    document.add_argument(
+        "--type",
+        required=True,
+        choices=["script", "notebook", "image", "form"],
+        help="document type to instantiate",
+    )
+    document.add_argument(
+        "--path",
+        default=None,
+        help="optional pre-load path (.pyof for notebook, file for "
+        "image/script/form)",
+    )
+
+    parsed = parser.parse_args(argv)
+    return {
+        "mode": parsed.mode,
+        "type": getattr(parsed, "type", None),
+        "path": getattr(parsed, "path", None),
+    }
+
+
+def run(args: dict[str, Any]) -> None:
+    """T-NEW-169 WIRE-1: dispatch the launch based on `args["mode"]`.
+
+    `args["mode"] == "main"` (the default when no subcommand is
+    passed) boots the full NchantdOfficeCloak application. This is
+    the unchanged pre-fix behaviour; the `nchantment()` entry
+    point is preserved.
+
+    `args["mode"] == "document"` boots a standalone 2-pane
+    minimal shell for one document type (T-NEW-169 WIRE-2 +
+    WIRE-3). WIRE-1 only ships the routing; the WIRE-2 class
+    `NchantdDocumentStandaloneWindow` lands in the next commit.
+    Until WIRE-2 ships, the standalone branch logs an info-level
+    "not yet implemented" message and exits cleanly so operators
+    see the routing is taking effect (the argparser exit code
+    is 0; the standalone boot is the responsibility of WIRE-2).
+    """
+    mode = args.get("mode", "main")
+    if mode == "main":
+        app = NchantdOfficeCloak
+        wizard = NchantdOfficeApplicationStartupWizard
+        nchantment("NchantdOffice", args, app, None, wizard)
+        return
+    if mode == "document":
+        logma.info(  # noqa: F821  # logma module-level placeholder pattern
+            f"[runNchantdOffice] document subcommand: "
+            f"type={args.get('type')!r} path={args.get('path')!r}"
+        )
+        logma.info(  # noqa: F821  # logma module-level placeholder pattern
+            "[runNchantdOffice] standalone 2-pane boot: "
+            "T-NEW-169 WIRE-2 (NchantdDocumentStandaloneWindow class) "
+            "lands next. Until WIRE-2 ships, this subcommand logs "
+            "the request and exits cleanly."
+        )
+        return
+    raise ValueError(f"unknown mode {mode!r}")
 
 
 if __name__ == "__main__":
 
     start = dt.datetime.now()
+    # T-NEW-171 SURVEY-1: monotonic-clock boot anchor.
+    # dt.datetime.now() is wall-clock (could skip backward
+    # on NTP adjust); time.monotonic() is what operators
+    # want for performance measurement. The End Duration
+    # line below stays as the human-readable hh:mm:ss.sss,
+    # but the SURVEY-1 line gives the precise elapsed-ms
+    # for performance triage.
+    _t171_boot_start = time.monotonic()
     logma.info("Start")
-    run(argv)
+    logma.info(
+        f"[T-NEW-171 SURVEY] nchantdoffice boot start: pid={os.getpid()}"
+    )
+    run(_build_dispatch(argv))
     end = dt.datetime.now()
     logma.info(f"End Duration {end - start}")
+    logma.info(
+        f"[T-NEW-171 SURVEY] nchantdoffice boot total: "
+        f"{(time.monotonic() - _t171_boot_start) * 1000:.1f}ms"
+    )
 
 
 # ====================================================================================================================||
