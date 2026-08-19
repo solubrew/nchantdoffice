@@ -5772,3 +5772,100 @@ false-positive so future sweeps don't re-investigate it.**
 - Sasquatch `long_method` dimension — the auditor being addressed
 - `T-NEW-161` (drawer surface for remaining widgets) — sibling card for the line-1157 real marker
 - In-code marker audit summary
+
+### T-NEW-169 — Per-document standalone entry point (2-pane single-doc app) (2026-08-19)
+
+**Context.** Operator requested (2026-08-19): "create a separate entry point to launch individual NchantdDocument types as their own application will need to be a 2-pane setup with the main document pane and a right side toolbox."
+
+Today the desktop has a single entry point — `cmds/runNchantdOffice.py` boots `NchantdOfficeCloak` (the full main app: tree + center + right panes + toolbars). Each document subclass (e.g. `NchantdOfficeNotebook`, `NchantdOfficeScript`, `NchantdOfficeImage`) only runs **inside** the parent main window. Operators who want a focused workflow on a single document — or who want to dedicate a screen to one widget — must boot the full main app.
+
+This card adds a **secondary entry point** that:
+1. Accepts a `--document-type <ClassName>` argument (and optional `--path <file>` to pre-load).
+2. Boots a 2-pane minimal shell: left = the document widget itself; right = the right-side toolbox (the existing tabset from `documents.py`).
+3. Reuses the existing `NchantdOffice*` document subclasses + the right-side toolbox plumbing — no widget rewrites.
+4. Loads/saves via the canonical document contract (`set_content` / `get_content` / `populate_document`).
+
+**Affected sites (TBD pending the per-pane-class decision):**
+- `cmds/runNchantdOffice.py` — add argparse subcommands (`run-document`, `run-main`) or rename to dispatcher entry
+- `nchantdoffice/nchantdoffice.py` — new minimal shell class `NchantdDocumentStandaloneWindow` (2-pane setup: doc widget + right toolbox)
+- `nchantdoffice/widgets/controls/tabs.py` — possibly add a minimal tabset shell that doesn't carry the tree pane
+- `cmds/runNchantdOffice.py:120` `run(args)` — branch on `args` to choose main-app vs standalone boot
+- `nchantdoffice/__main__.py` — entry point forwarding
+
+**Migration plan (no priority / low priority — design decision first):**
+
+1. **DECIDE-1**: Confirm the entry-point shape — argparse subcommands (`runNchantdOffice.py document --type notebook [--path foo.pyof]`) or separate entry file (`runStandalone.py`). The argparse option keeps all boots in one file but requires every operator who wants main-app to type a subcommand or default; the separate-file option leaves `runNchantdOffice.py` unchanged but adds a new file to maintain. Recommendation: argparse with sensible defaults (`runNchantdOffice.py` → main app; `runNchantdOffice.py document --type notebook` → standalone).
+2. **DECIDE-2**: Confirm the 2-pane layout target. The operator said "main document pane and a right side toolbox". Implementation choices: (a) drop the tree pane + the tabset chrome and just show the doc widget spanning the full window (one pane effectively), (b) keep the tabset chrome but only the one tab (document tab, no siblings — gives the right-toolbox-ready chrome), (c) add a minimal tabset that can grow if the operator opens related tabs. Recommendation: (b) — keeps the right-toolbox routing intact, no surprise behavior changes.
+3. **WIRE-1**: Add `--document-type` + `--path` argparse to `run(args)` at `cmds/runNchantdOffice.py`. The dispatch table maps `--type <name>` → the corresponding `NchantdOffice*` class.
+4. **WIRE-2**: New class `NchantdDocumentStandaloneWindow` in `nchantdoffice/nchantdoffice.py` with `initView` that builds the 2-pane shell (left: document widget instance; right: toolbox). Override `get_node` + `get_tab` to return the document itself as the active "node" so the right toolbox hooks work the same.
+5. **WIRE-3**: For each document type the operator wants to support (start with the four high-value types: Script, Notebook, Image, Form), wire `--type script → NchantdOfficeScript`, etc.
+6. **TEST-1**: Add 1 test per supported `--type` value: argparse parses the type, the chosen document class instantiates, the standalone window builds, the right-toolbox attach hooks to the right widget. 4 tests total.
+7. **DOC-1**: Add a usage line to `cmds/runNchantdOffice.py`'s docstring + a section in `CLI.md`.
+
+**Steps:**
+- [ ] DECIDE-1: argparse vs separate entry (T-NEW-169)
+- [ ] DECIDE-2: 2-pane layout shape (T-NEW-169)
+- [ ] WIRE-1: argparse dispatch (T-NEW-169)
+- [ ] WIRE-2: NchantdDocumentStandaloneWindow class (T-NEW-169)
+- [ ] WIRE-3: 4 high-value document types (T-NEW-169)
+- [ ] TEST-1: 4 tests for the 4 types (T-NEW-169)
+- [ ] DOC-1: doc updates (T-NEW-169)
+
+**Verification:**
+- Manual boot: `python3 cmds/runNchantdOffice.py document --type script` → a 2-pane window opens with the script editor on the left, right toolbox on the right; saving writes to the expected path.
+- Regression: `python3 cmds/runNchantdOffice.py` (no subcommand) still boots the full main app unchanged.
+- Test: `pytest tests/test_t_new_169_*.py` GREEN; broader desktop suite unchanged.
+
+---
+
+### T-NEW-170 — Pull a tab out to a standalone dialog (multi-screen support) (2026-08-19)
+
+**Context.** Operator requested (2026-08-19): "create a feature in the NchantdOffice main application that allows a user to pull a document tab out to an independant dialog box for use on a second screen, etc but the tab goes back into the correct place in the tabset on change of node, navigation."
+
+Today every document tab lives inside the parent's center-pane tabset. Operators on multi-screen setups want to **detach** a tab into its own `QDialog` (move to second monitor), work on it there, then have it **re-attach** automatically when the operator navigates to a different node in the tree (i.e. the operator leaves the tab's "home node" — re-attach fires; the operator comes back to the home node — re-detach is optional / not auto-fired; the user's mental model is "detached tab is portable until I navigate away from its home").
+
+Today the codebase has zero tear-off / float / detach plumbing — no `QTabBar.setTabsClosable` + tear-off, no `QMdiArea`, no popup-dialog-per-tab. This card is **architectural** (new UI primitive: a `QDialog` shell that hosts a single document widget + its right-toolbox, with re-attach logic on navigation).
+
+**Affected sites:**
+- `nchantdoffice/widgets/tabs.py` — `NchantdOfficeTabs` (line 66) — the per-tabset tab lifecycle; re-attach hook goes here
+- `nchantdoffice/widgets/widgets.py` — `NchantdOfficeTabSet` (line 43) — the parent tabset plumbing; may need a `pop_out_tab(widget_id)` method
+- `nchantdoffice/widgets/documents/documents.py` — `NchantdOfficeDocumentPane.openDocument` / `cmd_*_document` handlers — fire detach on user action (right-click "pull to screen", toolbar button, or shortcut)
+- `nchantdoffice/views.py` — `on_window_move` + tabset navigation hooks — fire re-attach when active node changes (operator's stated trigger)
+- `nchantdoffice/widgets/documents/documents.py` — `buildTabSet` (line 1017+) — re-add the tab to its original position when re-attaching
+- New file likely needed: `nchantdoffice/widgets/controls/floated_tab.py` — the detached-widget dialog shell
+
+**Migration plan (no priority / low priority — design decision first):**
+
+1. **DECIDE-1**: Confirm the trigger for re-attach. Operator wrote: "the tab goes back into the correct place in the tabset on change of node, navigation". Implementation choice: (a) re-attach **only** when the operator navigates to a node other than the tab's home node (one-way trip), (b) re-attach on every navigation event with a "remember last-detached" flag so re-visiting the home node re-prompts, (c) re-attach is manual only (close button on the dialog → re-attach). The operator's wording implies (a) — re-attach is automatic on "leave the home node", no re-detach on return. Recommendation: (a).
+2. **DECIDE-2**: Confirm the visual model for the detached dialog. Options: (i) full standalone 2-pane shell (reuse `NchantdDocumentStandaloneWindow` from T-NEW-169), (ii) minimal one-pane dialog (just the document widget, no right toolbox — operator moves between dialog and main window when they need the toolbox), (iii) full standalone shell that fades out the parent's right toolbox to avoid duplication. Recommendation: (ii) — minimal dialog matches the operator's "use on a second screen" intent; the dialog is a focused workspace.
+3. **WIRE-1**: New class `FloatedTab` (file: `nchantdoffice/widgets/controls/floated_tab.py`) — `QDialog` shell hosting one document widget. Constructor: `(parent, document_widget, home_node_id, home_position) → FloatedTab`. Stores the home coordinates for re-attach.
+4. **WIRE-2**: New method on `NchantdOfficeTabSet`: `pop_out_tab(tab_widget) → FloatedTab`. Removes the tab from its current parent tabset and builds the `FloatedTab` dialog. Stores the home coordinates (parent tabset + position).
+5. **WIRE-3**: Re-attach hook on the parent tabset: `re_attach_tab(floated_tab) → None`. Adds the widget back to its recorded parent at its recorded position. Called automatically on `on_window_move` / active-node-change (per DECIDE-1 result).
+6. **WIRE-4**: User-action trigger: right-click context menu on the tab or a "Pop Out" toolbar button on each tab. Calls `tabset.pop_out_tab(tab)`. The `FloatedTab`'s close button calls `tabset.re_attach_tab(self)` (one-way trip).
+7. **WIRE-5**: Active-node-change detection: hook `go_to_previous_node` / `cmd_delete_node` / node-switch in `panes.py:documents.py:127-159` (T-NEW-152 site) to fire `re_attach_tab` if the detached tab's home node no longer matches the new node. The hook is opt-in per detached tab.
+8. **TEST-1**: 4+ AST-source structural tests in `tests/test_t_new_170_floated_tab.py`:
+   - The `FloatedTab` class exists with the right constructor signature
+   - `pop_out_tab` exists on `NchantdOfficeTabSet`
+   - `re_attach_tab` exists with re-positioning logic
+   - The node-change detection hook (wherever it lands) tests GREEN
+   - The "remember home coordinates" contract pin
+   - The user-action trigger wires `pop_out_tab`
+
+**Steps:**
+- [ ] DECIDE-1: re-attach trigger (T-NEW-170)
+- [ ] DECIDE-2: visual model for detached dialog (T-NEW-170)
+- [ ] WIRE-1: FloatedTab dialog class (T-NEW-170)
+- [ ] WIRE-2: pop_out_tab on tabset (T-NEW-170)
+- [ ] WIRE-3: re_attach_tab on tabset (T-NEW-170)
+- [ ] WIRE-4: user-action trigger (right-click / toolbar) (T-NEW-170)
+- [ ] WIRE-5: node-change re-attach hook (T-NEW-170)
+- [ ] TEST-1: AST tests for the 5 wiring points (T-NEW-170)
+
+**Refs:**
+- T-NEW-169 (per-document standalone entry point) — sibling card; the `FloatedTab` dialog could share the 2-pane shell or be minimal per DECIDE-2
+- T-NEW-152 (Refresh ToolBox after node deletion) — `cmd_delete_node` is the canonical node-change hook site
+
+**Verification:**
+- Manual: open a tab, right-click "Pull to screen", drag dialog to second monitor, navigate the tree to a different node — dialog closes and the tab re-attaches to its original position.
+- Regression: tabs never close unexpectedly; node changes don't drop tabs they didn't detach.
+- Test: `pytest tests/test_t_new_170_*.py` GREEN.
