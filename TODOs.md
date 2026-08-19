@@ -5932,3 +5932,78 @@ This is a **campaign card**, not a single fix. The goal is to (a) survey the liv
 **Comparison vs existing perf work:**
 - T-NEW-154 is a single-method instrumentation; T-NEW-171 is the *campaign* that consumes 154's output plus surveys the rest of the app
 - T-NEW-133 (tab-cascade sorting) and T-NEW-156 (underscore priority) are already instrumentation-shaped; T-NEW-171 follows their pattern across the rest of the app
+
+### T-NEW-172 — Async methods + secondary background processes (pyularity integration) (2026-08-19)
+
+**Context.** Operator requested (2026-08-19): "add a card to start a design for async methods and secondary background processes. there is a project at /home/solubrew/.hermes/projects/pyularity that is a process monitor stub. add this feature as a card with the supervisory features being built into the pyluarity project".
+
+Today `nchantdoffice` runs nearly all desktop work on the **main UI thread** (QObject + QThread wherever thread-affinity matters, but most ops like tree-refresh, search, file-load, content-archive run inline). The T-NEW-154 instrumentation just established that the boot cascade + add_tab are the hot paths; T-NEW-171 will spawn the speed-up fixes. **This card is the meta-architectural question** behind the speed-up fixes: can we get off the UI thread for the slow ops at all, and if so, what's the supervisory shape (process restart on crash, lifecycle, health checks)?
+
+`pyularity` (external project at `/home/solubrew/.hermes/projects/pyularity`, version `0.0.1.0.1.2`, single module `pyularity/pyularity.py`, beta stage) is a process-monitor stub. The operator's direction is to **add the supervisory features** to pyularity (the dedicated project) rather than build them inside nchantdoffice. nchantdoffice then becomes a client of pyularity — spawning background subprocesses for the slow ops, with pyularity watching them.
+
+This is the right architectural split: pyularity owns the supervisor lifecycle (process model, restart, health, metrics emission, log aggregation, signal handling); nchantdoffice owns the work payloads (the actual async ops). Each spawn = a `pyularity` child-process with a defined payload protocol; each crash = a pyularity-restart; each metric = a pyularity-emitted event. The two-projects sit in monorepo siblings (nchantdoffice + pyularity both under `/home/solubrew/.hermes/projects/`) with a planned PyPI-publishable contract.
+
+**Affected sites:**
+- `/home/solubrew/.hermes/projects/pyularity/pyularity/pyularity.py` — main work site for supervisory features (to be added)
+- `/home/solubrew/.hermes/projects/pyularity/pyproject.toml` — package metadata (version, deps); pyularity becomes `pip install pyularity` once published
+- `/home/solubrew/.hermes/projects/pyularity/README.rst` — add usage docs once features land
+- `nchantdoffice/nchantdoffice.py` — `NchantdOfficeCloak.__init__`; the place that boots the supervisor (if pyularity becomes the boot supervisor) or spawns async ops
+- `nchantdoffice/widgets/documents/workbooks/notebooks.py:1042` — example: kernel-restart is a "secondary background process" candidate
+- `nchantdoffice/widgets/panes/new.py:178` — `add_tab` (T-NEW-154) is the largest candidate for off-thread work via pyularity
+- `nchantdoffice/widgets/documents/documents.py:1018` — `buildTabSet` (T-NEW-157) is a candidate
+- `nchantdoffice/utilities/user_config.py` — add a `pyularity` config block (timeout, restart policy, log level) read at app boot
+- New client: `nchantdoffice/pyularity_client.py` — thin wrapper that talks to pyularity's protocol
+
+**Migration plan (no priority / low priority — design decision first):**
+
+1. **DECIDE-1**: Architectural shape. Options:
+   - (a) **Child process per async op**: each op (file-load, archive, search) = a `pyularity` child process; the parent nchantdoffice process IPCs via stdin/stdout JSON-lines. Heavy isolation, clean crash semantics, but high spawn cost (~50ms per op).
+   - (b) **Long-lived worker pool**: a single `pyularity` daemon process holds a worker pool; nchantdoffice submits tasks to it via JSON-RPC over a unix socket. Lower spawn cost, but harder to restart-on-crash (worker pool restart requires the daemon to survive).
+   - (c) **Hybrid**: daemon for the pool (option b), with pyularity-managed subprocess-spawn capability for the long-running ops that need full isolation (notebook kernel, content archive). Operators get the lightest weight for the common case + isolation for the dangerous cases.
+   The operator's wording ("async methods and secondary background processes") suggests a **hybrid**: short-lived async ops use lightweight async (the daemon / pool), long-lived ops get a dedicated pyularity-managed subprocess. **Recommendation: option (c) — hybrid.**
+2. **DECIDE-2**: IPC protocol. Three real choices:
+   - JSON-lines over stdin/stdout (simplest, works for subprocess-shaped child)
+   - msgpack over unix socket (faster, structured)
+   - gRPC / protobuf (overkill for SB-stack; deferred)
+   Recommendation: JSON-lines for v1; document the upgrade path to msgpack over socket in pyularity's README.
+3. **DECIDE-3**: Process-model supervisor features to land FIRST in pyularity (the order T-NEW-172 moves through them is set by this decision):
+   - **Crash-detect + restart**: child process emits heartbeat; supervisor detects crash via missed heartbeat; auto-restart with backoff (1s, 5s, 30s, 5min cap). MUST-HAVE.
+   - **Lifecycle hooks**: `on_start`, `on_ready`, `on_heartbeat_missed`, `on_kill`, `on_restart` callbacks the child can register. MUST-HAVE.
+   - **Health check protocol**: child emits `{status: ok|degraded|err, ...}`; supervisor consumes + emits metric. MUST-HAVE.
+   - **Log aggregation**: child's stdout/stderr forwarded to a supervisor log dir (`pyularity/logs/<child_id>.log`). NICE-TO-HAVE.
+   - **Metrics emission**: child emits typed metrics; supervisor exposes Prometheus-text endpoint. NICE-TO-HAVE.
+   - **Process tree UI**: standalone CLI to dump the supervisor's child tree (status, uptime, restarts). NICE-TO-HAVE.
+   Recommendation: ship crash-detect + restart + lifecycle hooks + health-check protocol first; the others as follow-ups.
+4. **WIRE-1 (pyularity side)**: Implement DECIDE-3's MUST-HAVE set in `pyularity/pyularity/pyularity.py` + a new `pyularity/protocol.py` for the JSON-lines schema. Tests in `pyularity/tests/test_pyularity.py`. **This is the primary work.** Docstring-class hooks rather than dataclasses — keep the framework dependency-free.
+5. **WIRE-2 (nchantdoffice side)**: Add `nchantdoffice/pyularity_client.py`. Thin wrapper: `PyularityClient.spawn(payload) -> FutureResult`, `PyularityClient.daemon_proxy() -> DaemonProxy`. Provides the async / supervisor abstraction that the nchantdoffice widgets call.
+6. **WIRE-3 (nchantdoffice side)**: Wire the first candidate async op. The largest is **add_tab** (T-NEW-154 / T-NEW-171 family). Sketch the cost: 1 daemon, 1 worker, async-submit for `add_tab` calls; the UI receives a `FutureResult` and updates the tab as it lands. This is a single TDD-able cycle.
+7. **WIRE-4 (pyularity side)**: Add a metrics-endpoint piece (Prometheus-text) to pyularity. NICE-TO-HAVE; can defer to a follow-up card.
+8. **DOC-1**: Update both `pyularity/README.rst` and `nchantdoffice/TODOs.md` "Internal-project stack" table to reflect the dependency (pyularity moves from "bundled" to "PyPI pip install -e").
+9. **TEST-1**: pyularity side — 5+ tests per must-have feature (heartbeat-missed crash → supervisor restarts child with backoff; lifecycle hooks fire in order; health-check protocol accepts ok/degraded/err; protocol round-trips). nchantdoffice side — 3+ integration tests with the qt_parent harness (proves the wired client doesn't crash on import; proves the async-submit-then-await pattern returns the right FutureResult).
+
+**Steps:**
+- [ ] DECIDE-1: child-process-per-op vs long-lived-pool vs hybrid (T-NEW-172)
+- [ ] DECIDE-2: IPC protocol (JSON-lines vs msgpack) (T-NEW-172)
+- [ ] DECIDE-3: must-have feature order in pyularity (T-NEW-172)
+- [ ] WIRE-1: pyularity must-have supervisory features (crash-detect, lifecycle, health-check) (T-NEW-172)
+- [ ] WIRE-2: nchantdoffice/pyularity_client.py wrapper (T-NEW-172)
+- [ ] WIRE-3: wire first async op (add_tab) to daemon (T-NEW-172)
+- [ ] WIRE-4: metrics endpoint (deferred to follow-up card) (T-NEW-172)
+- [ ] DOC-1: pyularity README + desktop stack table (T-NEW-172)
+- [ ] TEST-1: pyularity side + nchantdoffice integration (T-NEW-172)
+
+**Refs:**
+- `/home/solubrew/.hermes/projects/pyularity/pyularity/pyularity.py` — work site (the stub)
+- `/home/solubrew/.hermes/projects/pyularity/pyproject.toml` — package metadata
+- T-NEW-154 (`535178a`) — the timing instrumentation that revealed the boot cascade + `add_tab` are the hottest spots; the natural first target for off-thread work
+- T-NEW-171 — the perf-campaign parent card; T-NEW-172 is the architectural-question sibling
+- nchantdoffice widgets with multi-second ops: notebook kernel restart, content archive, large file loads, search-across-all-nodes (T-NEW-033), tree refresh on large trees
+
+**Verification:**
+- pyularity: `pytest tests/test_pyularity.py` GREEN with the must-have features shipped
+- nchantdoffice: `pytest tests/test_pyularity_client.py` GREEN
+- Manual: launch a long-running notebook kernel via `pyularity_client.daemon().spawn(kernel=...)`; the kernel runs in pyularity's supervision tree; `kill -9` the child and confirm pyularity restarts it within the configured backoff window
+- Manual: boot nchantdoffice with `nchantdoffice.yaml` `pyularity.enabled: true`; the daemon comes up alongside the main app; `add_tab` ops are dispatched via the daemon and the UI stays responsive
+
+**Architectural note:**
+This is **not a quick fix**. The hybrid pattern + JSON-lines IPC + must-have supervisory set + first-wired async op is realistic as 6-12 commits across the two repos. Each spawned T-NEW (173, 174, 175, etc.) is a single TDD step in this card. Implementation resumes after the operator designates which step is the smallest viable first commit (recommendation: **WIRE-1's crash-detect + restart + lifecycle** — that's a single-week-equivalent, and nchantdoffice can land WIRE-2 once that ships).
