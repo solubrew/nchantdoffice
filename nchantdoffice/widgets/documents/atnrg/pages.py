@@ -245,18 +245,15 @@ class NchantdOfficeURL(NchantdURL):
         super().__init__(url, parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeURL").override(cfg))
         self.set_url(self.config.get("url", self.config.get("homepage", "https://www.nchantdoffice.com/")))
-        self.document = None
+        self.unit = None
 
-    def init_document(self, document=None, cfg=None) -> None:
+    def init_unit(self, cfg=None) -> None:
         """"""
         cfg = cfg or {}
         self.config.override(cfg)
-        if document is None:
-            document = {"document": self.config.get("document", {})}
-            self.document = self.app.model.codex.init_url(document)
-        else:
-            self.document = document
-        self.document.load_unit()
+        self.unit = self.app.model.codex.init_url({"document": self.config.get("document", {})})
+        self.unit.load_unit()
+        return self
 
 
 # ====================================================================================================================||

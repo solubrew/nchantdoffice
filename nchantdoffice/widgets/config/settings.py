@@ -54,7 +54,7 @@ log = True
 logma = Logma(__name__)
 
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", "settings.yaml")
+PXCFG = join(here, "_data_", "settings.yaml")
 
 
 class NchantdOfficeSettingsWidget(NchantdSettingsWidget):
@@ -63,7 +63,7 @@ class NchantdOfficeSettingsWidget(NchantdSettingsWidget):
     def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSettingsWidget").override(cfg))
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeSettingsWidget").override(cfg))
 
     def initModel(self, cfg=None) -> Self:
         """ """
@@ -88,7 +88,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
     def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeInterfaceSettings").override(cfg))
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeInterfaceSettings").override(cfg))
         self.primary_settings_group = None
 
     def initModel(self, cfg=None) -> Self:
@@ -475,10 +475,8 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             if value is not None and value != AD_TAB_DEFAULT:
                 try:
                     from nchantdoffice.utilities.upgrades import is_pro_user
-                    user = (
-                        getattr(getattr(self, "app", None), "model", None)
-                        and getattr(self.app.model, "user", None)
-                    )
+
+                    user = getattr(getattr(self, "app", None), "model", None) and getattr(self.app.model, "user", None)
                     if user is not None and not is_pro_user(user):
                         logma.info(
                             "[settings] cmd_on_change_right_side_tab_select: "
@@ -657,9 +655,7 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
                 return self
             self.check_update_interval_hours = value
             self.config.dikt["check_update_interval_hours"] = value
-            logma.info(
-                f"[settings] check_update_interval_hours set to {value}"
-            )
+            logma.info(f"[settings] check_update_interval_hours set to {value}")
         except Exception as e:
             logma.error(
                 f"[settings] cmd_on_change_check_update_interval_hours failed: {e}",
@@ -824,7 +820,9 @@ class NchantdOfficeInterfaceSettings(NchantdInterfaceSettings):
             )
             return list(RIGHT_PANE_TAB_FALLBACK)
 
-    def cmd_on_change_visible_right_tab(settings, tid, app_data_type, visible) -> "NchantdOfficeInterfaceSettings" | None:
+    def cmd_on_change_visible_right_tab(
+        settings, tid, app_data_type, visible
+    ) -> "NchantdOfficeInterfaceSettings" | None:
         """Toggle ``visible_bit`` for a right-side tab row.
 
         T-NEW-028 handler wired into the Interface Tab right-side
@@ -1422,7 +1420,7 @@ class NchantdOfficeThemeSettings(NchantdThemeSettings):
     def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeThemeSettings").override(cfg))
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeThemeSettings").override(cfg))
 
     def initModel(self, cfg=None) -> Self:
         """"""
@@ -1441,54 +1439,80 @@ class NchantdOfficeThemeSettings(NchantdThemeSettings):
         return self
 
 
-# T-DESK: NchantdOfficeAffiliateManager (the old placeholder that just
-# rendered an external /affiliate_marketing webview) was replaced by
-# ``NchantdOfficeReferralPanel`` (see ``widgets/config/referral_panel.py``).
-# The class name is preserved here as a re-export so any existing
-# registry/init code that references ``NchantdOfficeAffiliateManager``
-# keeps working without changes.
-try:
-    from nchantdoffice.widgets.config.referral_panel import NchantdOfficeReferralPanel
+class NchantdOfficeWebBrowserSettingsManager(NchantdSettingsWidget):
+    """"""
 
-    NchantdOfficeAffiliateManager = NchantdOfficeReferralPanel
-except ImportError:
+    def __init__(self, parent=None, cfg=None):
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeWebBrowserSettingsManager").override(cfg))
+        self.document = None
+        self.library = None
+        self.profiles = None
 
-    class NchantdOfficeAffiliateManager(NchantdOfficeDocumentManager):  # noqa: F811
-        """Fallback shim if referral_panel.py cannot be imported.
+    def initModel(self, cfg=None):
+        """"""
+        super().initModel(cfg)
+        document = {"document": self.config.override(cfg).get("document", {})}
+        self.document = self.app.model.codex.init_web_config(document)
+        self.document.load_document()
+        self.load_library()
+        self.load_profiles()
+        # self.library = self.document.library  # store the library as an app_media document
+        # self.profiles = self.document.profile_manager  # store the profile_manager as an app_media document
+        return self
 
-        Renders a minimal stub webview pointing at the affiliate
-        marketing page so the app doesn't crash if the new panel
-        module has an import error.
+    def initView(self, cfg=None):
+        """"""
+        super().initView(cfg)
+        return self
+
+    def initWidget(self, cfg=None):
+        """"""
+        self.initModel(cfg)
+        self.initView(cfg)
+        return self
+
+    def get_url_library_data(self):
+        """"""
+        return self.app.model.get_urls()
+
+    def get_profiles_data(self):
+        """"""
+        return self.app.model.get_profiles("web")
+
+    def load_library(self):
+        """"""
+        data = self.get_url_library_data()
+        self.document.load_library(data)
+        self.library = self.document.library
+
+    def load_profiles(self):
+        """"""
+        data = self.get_profiles_data()
+        self.document.load_profiles(data)
+        self.profiles = self.document.profile_manager
+
+    def save(self) -> Self:
+        """Save the browser document.
+
+        Delegates to the parent ``save()`` (the line-843 form which
+        calls ``get_content()`` -> ``set_content()`` -> the line-467
+        unconditional form which writes both the doc_media row and
+        the doc_media_content.content_enc64_txt blob).
+
+        The previous override also called ``self.document.save()``
+        directly (the pyffice file-side save) AND ``super().save()``
+        -- but never went through ``get_content()`` / ``set_content()``,
+        so ``self.document.content`` stayed empty and the saved
+        ``content_enc64_txt`` ended up with ``{}``. Mirroring the
+        NchantdImage pattern (which is just ``super().save()``) lets
+        the parent flow do the right thing.
         """
-
-        def __init__(self, parent=None, cfg=None) -> None:
-            super().__init__(parent, cfg)
-            self.name = "NchantdOffice Affiliate Manager (fallback)"
-            self.user = pyqt.QApplication.instance().model.user
-            self.canvas = None
-            self.data_series = None
-
-        def initModel(self) -> Self:
-            super().initModel()
+        if self.pinned:
             return self
-
-        def initView(self, cfg=None) -> Any:
-            super().initView(cfg or {})
-            layout = pyqt.QHBoxLayout()
-            url_cfg = {
-                "url": "https://www.nchantdoffice.com/affiliate_marketing",
-                "size": [1600, 750],
-                "is_simple": True,
-            }
-            self.browser = NchantdWebViewer(self, url_cfg).initWidget()
-            layout.addWidget(self.browser)
-            self.layout.addLayout(layout)
-            return cfg
-
-        def initWidget(self) -> Self:
-            self.initModel()
-            self.initView()
-            return self
+        self.file_path = self.get_active_url()
+        super().save()
+        return self
 
 
 # ====================================================================================================================||
