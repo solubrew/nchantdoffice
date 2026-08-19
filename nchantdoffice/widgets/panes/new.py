@@ -19,6 +19,7 @@ from typing import Any, Optional, Self
 from os.path import abspath, dirname, join
 import datetime as dt
 import json as j
+import time
 
 # ======================================3rd Party Library Modules=====================================================||
 
@@ -184,9 +185,21 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         user-supplied name before creating the tab. When the
         flag is False (default), use the active_item's name
         unchanged. Cancellation aborts the create.
+
+        T-NEW-154: stage timing instrumentation. Snapshots
+        ``time.monotonic()`` at function entry, after the
+        name-entry dialog, after widget_code/load_strategy
+        resolution, and at return. Each phase emits a
+        ``logma.info`` line with elapsed-ms so operators can
+        identify the bottleneck phase without re-running
+        the test. The instrumentation is always-on and adds
+        zero behavioural effect.
         """
         from nchantrs.libraries import pyqt
         from pyqt import QtWidgets
+
+        # T-NEW-154: stage timing — function entry.
+        _t154_start = time.monotonic()
 
         if widgdata is None:
             widgdata = {}
@@ -236,6 +249,11 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             override = getattr(self.active_item, "widget_code_override", None)
             if override:
                 widgdata["widget_code"] = override
+        # T-NEW-154: stage timing — total elapsed.
+        logma.info(
+            f"[panes.new] T-NEW-154 add_tab total: "
+            f"{(time.monotonic() - _t154_start) * 1000:.1f}ms"
+        )
         return self
 
     def add_research_subtree(self, topic) -> None:
