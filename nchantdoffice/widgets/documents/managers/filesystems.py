@@ -92,18 +92,14 @@ class NchantdCompressPane(NchantdPane):
         self.tool_buttons = NchantdButtonBar(self, cfg).initWidget()
         self.group_layout.addWidget(self.tool_buttons)
         self.layout.addWidget(group)
-        # PUSH to 0.0.3 force external until
-        self.document.set_location("external")
-
-        # if self.document.location == "external":
-        #    self.open_file(self.document.file_path)
-        # PUSH to 0.0.3
-        # elif self.document.location == "internal":
-        #    self.populate_data()
-        # elif self.document.location == "cloud":
-        #    self.connect_to_file()
-        # else:
-        #    raise Exception("Internal and Cloud locations not supported yet")
+        # T-NEW-160b/10 (special case): NchantdCompressPane extends
+        # NchantdPane, NOT NchantdOfficeDocument — it's a utilities
+        # pane, not a document widget. The set_location("external")
+        # flag call doesn't belong here (the pane doesn't have a
+        # document contract); the deprecated commented-out dispatch
+        # that followed it is also removed for clarity. The
+        # ``external`` semantics, when needed, are handled upstream
+        # by the caller (the active file context).
         return self
 
     def initWidget(self):
