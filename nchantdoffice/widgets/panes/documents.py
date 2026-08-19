@@ -125,12 +125,18 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         return self
 
     def cmd_delete_node(self, event=None, *args, **kwargs) -> Self:
-        """Delete the current node (T-NEW-004).
+        """Delete the current node (T-NEW-004, T-NEW-152).
 
         Refuses to delete locked app nodes (Home, Journal,
         Settings). The UI can still call this handler, but
         the model + cmd must refuse so the canonical
         application top-level entries survive.
+
+        T-NEW-152: after the tree refresh, also refresh the
+        center-pane ToolBox so the deleted node's contents
+        clear immediately. Pre-fix the ToolBox continued to
+        show the deleted node's view until something else
+        triggered a refresh.
         """
         node = self.get_node()
         # T-NEW-004: refuse to delete locked app nodes (Home,
@@ -155,6 +161,15 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         tree = self.app.view.panes["left"].tree
         tree.view.go_to_previous_node()
         tree.refresh()
+        # T-NEW-152: refresh the document ToolBox so the
+        # deleted node's contents clear immediately. Guarded
+        # so non-app contexts (tests, drafts) don't crash.
+        try:
+            center = self.app.view.panes.get("center")
+            if center is not None and hasattr(center, "toolbox"):
+                center.toolbox.refresh()
+        except Exception as e:
+            logma.debug(f"[documents] cmd_delete_node: toolbox refresh skipped: {e}")
 
         return self
 
