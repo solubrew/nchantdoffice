@@ -192,6 +192,82 @@ windows can be detached onto a second monitor without code
 changes (T-NEW-170's `FloatedTab` composes the standalone
 window directly).
 
+### Closed (T-NEW-170 — shipped 2026-08-19)
+
+**T-NEW-170** *Pull a tab out to a standalone dialog
+(multi-screen support)* — closed 2026-08-19, gamma `367819d`.
+Operator DECIDE-1 (a) / DECIDE-2 (ii) approved earlier the
+same day; the operator-refined trigger wording was "re-attach
+only on dialog close **or application close**" (the `OR`
+variant). Shipped as 5 commits over the WIRE-1..WIRE-5
+sequence:
+
+- `794afc8` — **WIRE-1**: `nchantdoffice/widgets/controls/floated_tab.py`
+  ships the `FloatedTab(pyqt.QDialog)` class. Constructor
+  takes `(parent, standalone_window, document_widget,
+  home_node_id, home_position, home_tabset)`. `closeEvent`
+  reads those coordinates and calls `home_tabset.re_attach_tab(self)`
+  so dialog close → tab returns to its home tabset.
+  9 AST-source structural tests pin the contracts.
+
+- `e7fc469` — **WIRE-2**: `pop_out_tab(tab_index)` on
+  `NchantdOfficeTabSet` (in `widgets/widgets.py`). Reads the
+  document widget from the center pane, records home coords,
+  constructs a `NchantdDocumentStandaloneWindow` (T-NEW-169
+  WIRE-2's QMainWindow 2-pane shell), wraps it in a `FloatedTab`,
+  removes the original tab from the center pane, and shows
+  the dialog. 8 AST-source structural tests pin the contracts.
+
+- `0673a82` — **WIRE-3**: `re_attach_tab(floated_tab)` on
+  `NchantdOfficeTabSet`. Called from `FloatedTab.closeEvent`;
+  reads `floated_tab.home_position` + `document_widget`,
+  calls `center.insertTab(home_position, document_widget)`,
+  and `setCurrentIndex(home_position)`. Best-effort (any Qt
+  re-insert failure is logged + swallowed). 6 AST-source
+  structural tests pin the contracts.
+
+- `5ba7c08` — **WIRE-4**: `_wire_pop_out_triggers()` helper
+  on `NchantdOfficeTabSet`. Two operator-visible triggers:
+  right-click context menu on a tab (QMenu → "Detach to
+  window" → fires `pop_out_tab(tab_bar.tabAt(pos))`) and a
+  toolbar action (↗ glyph → fires
+  `pop_out_tab(self.currentIndex())`). Best-effort everywhere
+  (stripped-down envs log + skip). `initView` invokes the
+  helper. 6 AST-source structural tests pin the contracts.
+
+- `367819d` — **WIRE-5**: `QApplication.aboutToQuit` hook on
+  the `FloatedTab` class. Module-level `_FLOATED_TABS_REGISTRY`
+  lists open instances; `_ensure_app_quit_hook_installed`
+  is idempotent and wires the hook on first dialog
+  construction; `_on_app_quit` iterates the registry and
+  calls `home_tabset.re_attach_tab(ftab)` on each open
+  dialog. Best-effort (missing-Qt envs log + skip; the
+  WIRE-1 closeEvent path still re-attaches individually).
+  5 AST-source structural tests pin the contracts.
+
+**Migration plan (recorded for archeology):** the T-NEW card
+body that lived in TODOs.md has been removed wholesale per the
+operator-set 2026-08-19 closed-card cleanup rule (encoded in
+`CODING_STANDARDS.md` line ~14, commit `735dfde`; the T-NEW-170
+body was swept during the bulk roll-up at commit `65525f4`).
+The 5 shipped-commit references above are the canonical link
+from CHANGES.md back to the implementation; `git log --grep='T-NEW-170'`
+returns the full history for future archeology.
+
+**Verifications:** 9 + 8 + 6 + 6 + 5 = 34 new AST-source structural
+tests across 5 test files (one per WIRE-n + the T-NEW-170
+closure pin). All green. Full `pytest tests/test_t_new_*.py`
+baseline: 376/376 GREEN (was 316 before T-NEW-169 / T-NEW-170
+work started; net +60 tests across the umbrella work). No
+broader test surface changes.
+
+**Refs:** T-NEW-170 composes T-NEW-169's
+`NchantdDocumentStandaloneWindow` as the FloatedTab body per
+DECIDE-2 (ii). The pull-out + re-attach lifecycle now spans
+the full nchantdoffice app, with 5 well-tested wiring points.
+Future cards that add further document-tab lifecycle (e.g.
+multi-monitor drag, tab pinning) build on this same primitive.
+
 ## [Unreleased] Catch-up card roll-up (2026-08-19, gamma `735dfde`)
 
 > **Reality anchor:** this is the bulk roll-up of **78 T-NEW cards**
