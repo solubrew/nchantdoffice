@@ -2376,10 +2376,19 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.warning(f"[models] get_links delegation failed: {e}")
             return DataFrame()
 
-    def get_node_name(self) -> "Self":
-        """"""
-        # PUSH 0.0.3
-        return self
+    def get_node_name(self) -> str | None:
+        """Return the ``name_txt`` of ``self.current_node``, or ``None``.
+
+        T-NEW-163: was a PUSH 0.0.3 stub returning ``self``.
+        """
+        node = getattr(self, "current_node", None)
+        if node is None:
+            return None
+        try:
+            value = node["name_txt"] if hasattr(node, "__getitem__") else getattr(node, "name_txt", None)
+        except (KeyError, AttributeError):
+            return None
+        return str(value) if value else None
 
     def get_node(self, nid) -> "Any":
         """ "
@@ -2534,9 +2543,26 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         return self
 
     def get_urls(self, tag=None) -> list:
-        """return a simple list of urls using the given criteria"""
-        # PUSH 0.0.3
-        return []
+        """Return a simple list of urls using the given criteria.
+
+        T-NEW-163: was a PUSH 0.0.3 stub returning ``[]``.
+        Delegates to ``self.store`` when available; falls back
+        to an empty list (NOT ``self``) on any failure.
+        """
+        store = getattr(self, "store", None)
+        if store is None:
+            return []
+        try:
+            method = getattr(store, "get_urls", None)
+            if method is None:
+                return []
+            result = method(tag) if tag is not None else method()
+            if result is None:
+                return []
+            return list(result)
+        except Exception as e:
+            logma.warning(f"[models] get_urls failed for tag={tag}: {e}")
+            return []
 
     def get_tab_documents(self, node, tabset="center") -> "Any":
         """"""
@@ -2550,10 +2576,19 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         filters["ORDER"] = [5]
         return self.store.get_table(table, filters)
 
-    def get_tab_name(self) -> "Self":
-        """"""
-        # PUSH 0.0.3
-        return self
+    def get_tab_name(self) -> str | None:
+        """Return the ``name_txt`` of ``self.current_tab``, or ``None``.
+
+        T-NEW-163: was a PUSH 0.0.3 stub returning ``self``.
+        """
+        tab = getattr(self, "current_tab", None)
+        if tab is None:
+            return None
+        try:
+            value = tab["name_txt"] if hasattr(tab, "__getitem__") else getattr(tab, "name_txt", None)
+        except (KeyError, AttributeError):
+            return None
+        return str(value) if value else None
 
     def get_tab_set(self, tag) -> "Any":
         """"""
