@@ -193,9 +193,10 @@ class NchantdOfficePromptManager(NchantdManager):
         # put in a catalog here with specialized catalog items composing an image and its prompt
         left_layout.addWidget(recent_list)
         self.layout.addLayout(left_layout)
-        # PUSH to 0.0.3 force external until
-        self.document.set_location("external")
-
+        # T-NEW-160b/7: drop the PUSH-to-0.0.3 / "force external until"
+        # hardcode. The doc location threads through the caller;
+        # the location-aware dispatch below reads the caller-set
+        # location.
         if self.document.location == "external":
             self.open_file(self.document.file_path)
         # PUSH to 0.0.3
