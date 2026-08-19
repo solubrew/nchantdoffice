@@ -13,19 +13,21 @@
 
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-# ======================================Standard Library Modules======================================================||
+
+# ======================================Standard Library Modules======================================================|
 from os.path import abspath, dirname, join
 import datetime as dt
 
-# ======================================3rd Party Library Modules=====================================================||
-
-# ======================================Solutions Brewer Library Modules==============================================||
+# ======================================3rd Party Library Modules======================================================|
 from kahndor import kahndor
 from kahndor.logma import Logma
+from nchantrs.libraries import pyqt
 from nchantrs.widgets.tabsets import NchantdTabSet
 from nchantrs.libraries.pyqt import QTimer
 from nchantdoffice.models import NchantdOfficeTabSetModel
 from nchantdoffice.widgets.controls.toolboxes import NchantdOfficeApplicationToolBox
+from nchantdoffice.widgets.controls.floated_tab import FloatedTab
+from nchantdoffice.nchantdoffice import NchantdDocumentStandaloneWindow
 from typing import Any, Self
 
 # from nchantdoffice.widgets.documents.media.notes import NchantdOfficeNote
@@ -123,6 +125,155 @@ class NchantdOfficeTabSet(NchantdTabSet):
             self.app.view.panes["center"].setCurrentIndex(max(0, current - 1))
         except Exception:
             pass
+
+    def pop_out_tab(self, tab_index: int) -> FloatedTab:
+        """T-NEW-170 WIRE-2 -- detach the tab at `tab_index` into
+        a FloatedTab dialog.
+
+        The operator right-clicks a tab (or clicks the toolbar
+        `↗` button -- T-NEW-170 WIRE-4) → pop_out_tab fires →
+        the tab is detached into a FloatedTab dialog (T-NEW-170
+        WIRE-1, the QDialog subclass) wrapping a
+        NchantdDocumentStandaloneWindow (T-NEW-169 WIRE-2, the
+        QMainWindow 2-pane shell) → the dialog is shown.
+
+        LOCKED DESIGN (operator-approved 2026-08-19):
+          DECIDE-1 (a) — re-attach only on dialog close / app
+            close. pop_out_tab does NOT register any
+            node-change hook that would re-attach on
+            navigation events; the tab stays detached for
+            the entire dialog lifetime.
+          DECIDE-2 (ii) — full standalone 2-pane shell that
+            reuses the T-NEW-169 standalone window. The
+            FloatedTab dialog composes the standalone
+            window as its body.
+
+        What pop_out_tab does:
+          1. Reads the document widget from the center pane
+             at `tab_index`.
+          2. Reads the home node id from the model (or a
+             sensible default if the model doesn't expose one).
+          3. Records home_node_id, home_position, home_tabset
+             so re_attach_tab can put the tab back later.
+          4. Constructs a NchantdDocumentStandaloneWindow with
+             the document widget + type + path.
+          5. Constructs a FloatedTab dialog wrapping the
+             standalone window + the home coordinates.
+          6. Shows the dialog.
+          7. Removes the tab from the center pane (it now
+             lives in the dialog).
+
+        Returns the FloatedTab instance so callers can keep
+        a reference if they want to.
+
+        Failure modes:
+          - tab_index out of bounds → returns None, logs a
+            warning, does NOT show a dialog.
+          - widget at index has no `.open_file()` and no
+            standalone-shell support → best-effort: wraps
+            the bare widget in a generic placeholder.
+        """
+        try:
+            center = self.app.view.panes["center"]
+            document_widget = center.widget(tab_index)
+        except Exception as e:
+            logma.warning(
+                f"[pop_out_tab] could not read widget at "
+                f"index {tab_index}: {e!r}"
+            )
+            return None  # type: ignore[return-value]
+        if document_widget is None:
+            logma.warning(
+                f"[pop_out_tab] no widget at index {tab_index}"
+            )
+            return None  # type: ignore[return-value]
+
+        # T-NEW-170 WIRE-2: home coordinates for re-attach.
+        # The center tabset is `center` itself; the home
+        # position is the supplied tab_index; the home node
+        # id is read from the model (best-effort — fall back
+        # to a stringly-typed sentinel if the model doesn't
+        # expose `current_node.nid`).
+        home_tabset = center
+        home_position = tab_index
+        try:
+            home_node_id = (
+                self.app.model.current_node.nid  # type: ignore[attr-defined]
+                if self.app.model.current_node is not None
+                else "unknown-node"
+            )
+        except Exception:
+            home_node_id = "unknown-node"
+
+        # T-NEW-170 WIRE-2: dispatch the document_type for
+        # the standalone shell. Read the dispatched type
+        # from the document widget's own name or default to
+        # "script". The standalone window's
+        # DOCUMENT_TYPE_DISPATCH applies downstream.
+        document_type = (
+            getattr(document_widget, "PYTYPE", None) or "script"
+        )
+
+        # T-NEW-170 WIRE-2: construct the standalone shell
+        # (T-NEW-169 WIRE-2) wrapping the document widget.
+        # Per DECIDE-2 (ii), the body of the FloatedTab is
+        # the full 2-pane shell, not a minimal stripped-down
+        # editor.
+        standalone_window = NchantdDocumentStandaloneWindow(
+            parent=None,
+            document_type=document_type,
+            preload_path=getattr(document_widget, "file_path", None),
+        )
+        # T-NEW-170 WIRE-2: after the constructor the
+        # standalone window's initView builds a placeholder
+        # central widget (since we don't pass a real document
+        # type lookup). For the pop-out use case we want the
+        # REAL document_widget rendered. Swap the central
+        # widget to the actual document — best-effort,
+        # silently fall back if not possible.
+        try:
+            if hasattr(standalone_window, "setCentralWidget"):
+                standalone_window.setCentralWidget(document_widget)
+        except Exception as e:
+            logma.warning(
+                f"[pop_out_tab] setCentralWidget swap failed: {e!r}"
+            )
+
+        # T-NEW-170 WIRE-2: construct the FloatedTab dialog
+        # (T-NEW-170 WIRE-1) wrapping the standalone window
+        # + the home coordinates. The dialog's
+        # closeEvent will read those coordinates and call
+        # `home_tabset.re_attach_tab(self)` (T-NEW-170
+        # WIRE-3, the next commit).
+        floated_tab = FloatedTab(
+            parent=self,
+            standalone_window=standalone_window,
+            document_widget=document_widget,
+            home_node_id=home_node_id,
+            home_position=home_position,
+            home_tabset=home_tabset,
+        )
+
+        # T-NEW-170 WIRE-2: remove the original tab from the
+        # center pane. The tab now lives in the FloatedTab
+        # dialog; showing it again in the tabset would
+        # double-display.
+        try:
+            center.removeTab(tab_index)
+        except Exception as e:
+            logma.warning(
+                f"[pop_out_tab] center.removeTab({tab_index}) "
+                f"failed: {e!r}"
+            )
+
+        # T-NEW-170 WIRE-2: show the dialog. FloatedTab
+        # inherits QDialog's show() method.
+        floated_tab.show()
+        logma.info(
+            f"[pop_out_tab] detached tab {tab_index} ({document_type}) "
+            f"to standalone dialog"
+        )
+        return floated_tab
 
     def setTabText(self, position, text, store=True) -> None:
         """ """
