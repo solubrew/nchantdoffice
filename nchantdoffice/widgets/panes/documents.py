@@ -397,11 +397,20 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         the Python override -- so each call writes per-child
         ``position_int`` to ``doc_tree_node``. Persistence
         cascades naturally across every recursion level.
+
+        T-NEW-156: threads the underscore-priority
+        ``sort_key`` so ``_system`` / ``_template`` /
+        similar internal subtrees always sort to the top,
+        regardless of ascending/descending direction.
         """
         if node is None:
             return
         try:
-            node.sortChildren(0, order=direction)
+            node.sortChildren(
+                0,
+                order=direction,
+                sort_key=NchantdOfficeNodeEditPane._underscore_priority_key,
+            )
         except TypeError:
             # Older Qt nodes that don't accept the order= kwarg.
             node.sortChildren(0)
@@ -420,6 +429,31 @@ class NchantdOfficeNodeEditPane(NchantdPane):
             except Exception:
                 continue
             NchantdOfficeNodeEditPane._sort_subtree(child, direction)
+
+    @staticmethod
+    def _underscore_priority_key(node) -> tuple:
+        """T-NEW-156 sort-key: underscore-prefixed names get
+        priority group (-1), then ascending/descending for
+        the rest (0).
+
+        The tuple structure makes the priority group stable
+        regardless of which secondary order (ascending/
+        descending) the operator selects. Names starting with
+        ``_`` (operators keep a few "internal" subtrees like
+        ``_system`` / ``_template``) always sort to the top.
+
+        Compatible with upstream
+        ``NchantdOfficeTreeNode.sortChildren(sort_key=...)``:
+        returns ``(priority, lower_name)``.
+        """
+        try:
+            name = getattr(node, "item", None) or getattr(node, "name", "") or ""
+        except Exception:
+            name = ""
+        name_str = str(name).lower()
+        if name_str.startswith("_"):
+            return (-1, name_str)
+        return (0, name_str)
 
     def cmd_take_snapshot(self) -> Self:
         """"""
