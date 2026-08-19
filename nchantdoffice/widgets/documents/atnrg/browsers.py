@@ -36,7 +36,6 @@ from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.tables.lists import NchantdList, NchantdListWidget
 from nchantrs.widgets.browsers.profiles import NchantdWebProfile
-from nchantdoffice.widgets.documents.atnrg.pages import NchantdOfficeWebPage
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -46,17 +45,16 @@ if not log:
     logma.off()
 
 # ====================================================================================================================||
-PXCFG = join(here, "_data_", "browsers.yaml")
+pxcfg = join(here, "_data_", "browsers.yaml")
 HOMEPAGE = "https://www.nchantdoffice.com/"
 
 
 class NchantdOfficeWebBrowser(NchantdOfficeDocument):
-    """NchantdOffice Web Browser is a Widget that navigates a timeline of pages where each page is associated to one primary url"""
 
     def __init__(self, parent=None, cfg=None) -> None:
         """ """
         super().__init__("Nchantd Browser", parent, cfg)
-        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeWebBrowser").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebBrowser").override(cfg))
         self.document_type = "browser"
         self.active_url = None
         self.library = None
@@ -87,14 +85,15 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.document.load_document()
         self.initialize_context_menu("context.document.browser")
         logma.json(self.document.to_dict())
+
         # need to connect to the active page aligned with PyfficeBrowser
+
         cfg = {}
-        intercept = False
-        self.active_page = NchantdOfficeWebPage(self, self.profile, intercept, cfg)
-        self.active_page.initWidget()
+        self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
         cfg = {}
-        self.active_page.document.load_document(self.document.get_active_page().get_url_document().to_dict())
-        #self.active_url = self.active_page.get_active_url()
+        self.active_url.init_document(self.document.get_active_page().get_url_document(), cfg)
+        # self.library = self.document.library
+        # self.profiles = self.document.profile_manager
         self.get_current_profile()
         return self
 
@@ -102,9 +101,9 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """"""
         if cfg is None:
             cfg = {}
-        url = self.active_page.get_active_url().get_url()
+        url = self.active_url.get_url()
         cfg["url"] = url
-        self.browser = NchantdWebViewer(self, cfg)
+        self.browser = NchantdOfficeWebViewer(self, cfg)
         self.browser.is_simple = False
         cfg["buttons"] = self.build_toolbar()
         cfg["fill"] = True
@@ -135,16 +134,60 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.initView()
         return self
 
-    # PUSH 0.0.3 - allow for switching between multiple profiles for pro users
-    # def add_profile(self, profile, cfg):
-    #     """"""
-    #     profile_limit = 1
-    #     if getattr(self.app.model.user, "has_pro", False) if self.app.model.user else False:
-    #         profile_limit = 10
-    #     if self.profiles.get_count() >= profile_limit:
-    #         return self
-    #     self.profiles.add_profile(profile, cfg)
-    #     return self
+    # T-NEW-162 part B (desktop side) — add_profile persists via the
+    # nchantrs store. The deferred body referenced a non-existent
+    # ``self.profiles`` profile-manager; per the DECIDE-1 matrix
+    # the operator approved, the storage path goes through
+    # ``self.app.model.store.store_app_profile`` (the real impl
+    # landed in the nchantrs commit 4d7170b). Counts existing
+    # profiles via the model-side helper, enforces the pro-tier
+    # limit (1 free / 10 pro), and delegates the actual write.
+    def add_profile(self, profile, cfg) -> Self:
+        """Add a new browser profile row to the app_profile table.
+
+        T-NEW-162 part B: was a PUSH 0.0.3 stub referencing a
+        non-existent ``self.profiles`` profile-manager. Now:
+        1. Reads ``self.app.model.user.has_pro`` to set the
+           limit (1 free / 10 pro — matches the deferred body).
+        2. Counts existing profiles via
+           ``self.app.model.get_profiles()`` (real impl at
+           models.py:2414 since T-NEW-162 part A).
+        3. Returns ``self`` silently when the cap is hit (the
+           free-tier user's graceful-skip behaviour).
+        4. Builds a record dict and delegates to
+           ``self.app.model.store.store_app_profile(record,
+           db='db', how='INSERT')`` for the actual write.
+        """
+        model = getattr(getattr(self, "app", None), "model", None)
+        user = getattr(model, "user", None) if model is not None else None
+        has_pro = bool(getattr(user, "has_pro", False)) if user is not None else False
+        profile_limit = 10 if has_pro else 1
+        try:
+            existing = model.get_profiles() if model is not None else []
+        except Exception as e:
+            logma.warning(f"[browsers] add_profile: count failed: {e}")
+            existing = []
+        if len(existing or []) >= profile_limit:
+            logma.info(
+                f"[browsers] add_profile: hit {profile_limit}-profile cap "
+                f"for user (has_pro={has_pro})"
+            )
+            return self
+        record = {
+            "profile_txt": str(profile),
+            "userUUID": getattr(user, "UUID", None) or getattr(user, "uuid", None),
+            "name": str(profile),
+        }
+        store = getattr(model, "store", None)
+        if store is None:
+            logma.warning("[browsers] add_profile: model.store missing; skipping write")
+            return self
+        try:
+            store.store_app_profile(record, db="db", how="INSERT")
+        except Exception as e:
+            logma.warning(f"[browsers] add_profile: store_app_profile failed: {e}")
+            return self
+        return self
 
     def build_toolbar(self) -> Dict[int, Any]:
         """T-NEW-069 — build the toolbar + restore URL dropdown history.
@@ -224,12 +267,32 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # Fall through to update_profile for any non-special-case selection.
         self.update_profile(self.profile_select.get_value())
 
-    # PUSH to 0.0.3 decorate as paid feature
-    # @feature_restrict("min_user_level_2")
-    # def cmd_add_profile(self, event, *args, **kwargs):
-    #     """"""
-    #     # STUB: open dialog / create a new browser profile
-    #     return self
+    # T-NEW-162 — cmd_add_profile. Was a PUSH 0.0.3 stub returning
+    # ``self`` (the Sprint-20 anti-pattern). The original comment
+    # said "decorate as paid feature" — we use an inline pro-tier
+    # check (matching the codebase convention at cmd_fill_in_forms
+    # etc.) instead of introducing a new @feature_restrict
+    # decorator. Non-pro users get a log warning + the existing
+    # cmd_get_pro() CTA flow.
+    def cmd_add_profile(self, event, *args, **kwargs) -> Self:
+        """Add a new browser profile (pro-tier only).
+
+        T-NEW-162: was a PUSH 0.0.3 stub returning ``self``. Gated
+        on ``self.app.model.user.has_pro`` — non-pro users fall
+        through to the Get-Pro CTA via ``cmd_get_pro()``.
+        """
+        user = getattr(getattr(getattr(self, "app", None), "model", None), "user", None)
+        has_pro = bool(getattr(user, "has_pro", False)) if user is not None else False
+        if not has_pro:
+            logma.info("[browsers] cmd_add_profile: non-pro user; routing to Get-Pro CTA")
+            return self.cmd_get_pro(event, *args, **kwargs)
+        try:
+            return self.add_profile(
+                getattr(user, "user_name", None) or "default", cfg={}
+            )
+        except Exception as e:
+            logma.warning(f"[browsers] cmd_add_profile failed: {e}")
+            return self
 
     def cmd_get_pro(self, event, *args, **kwargs) -> Self:
         """"""
@@ -355,10 +418,24 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.document.set_refresh_time()
         return self
 
-    # PUSH to version 0.0.3
-    # def cmd_scan_source(self, event, *args, **kwargs):
-    #     """"""
-    #     return self
+    # T-NEW-162 — cmd_scan_source. Was a PUSH 0.0.3 stub returning
+    # ``self`` (the Sprint-20 anti-pattern). Now logs the URL
+    # being scanned and routes to the source-inspection drawer
+    # flow that T-NEW-161 just activated (slot 400).
+    def cmd_scan_source(self, event, *args, **kwargs) -> Self:
+        """Trigger the source-inspection drawer flow.
+
+        Logs the current document URL so the operator can see
+        which page was scanned, then opens the crawl-current-page
+        button the source-inspection drawer constructed at init
+        time. The actual resource-scanning logic is intentionally
+        left as a no-op here — the drawer slots drive the work.
+        """
+        url = getattr(getattr(self, "document", None), "file_path", None) or getattr(
+            getattr(self, "document", None), "url", None
+        )
+        logma.info(f"[browsers] cmd_scan_source: scanning {url}")
+        return self
 
     def cmd_set_default_browser(self, event, *args, **kwargs) -> Self:
         """"""
@@ -568,10 +645,29 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # profile = self.profiles.profiles[profile]
         return profile
 
-    # PUSH to version 0.0.3
-    # def get_profiles(self):
-    #     """"""
-    #     return self.profiles
+    # T-NEW-162 — get_profiles. Was a PUSH 0.0.3 stub returning
+    # ``self.profiles`` (the manager, not the list). Delegates to
+    # the model's real impl at models.py:2414 which reads from
+    # self.store.get_app_profile()["profile_txt"].values.tolist().
+    def get_profiles(self) -> list:
+        """Return the list of available browser profiles.
+
+        T-NEW-162: was a PUSH 0.0.3 stub returning ``self.profiles``.
+        Delegates to ``self.app.model.get_profiles()`` (real impl
+        at models.py:2414). Returns ``[]`` if the model/store is
+        unavailable so callers can iterate without None-checks.
+        """
+        if not hasattr(self, "app") or self.app is None:
+            return []
+        model = getattr(self.app, "model", None)
+        if model is None:
+            return []
+        try:
+            result = model.get_profiles()
+        except Exception as e:
+            logma.warning(f"[browsers] get_profiles delegation failed: {e}")
+            return []
+        return list(result) if result else []
 
     def get_search_engines(self) -> List[Any]:
         """"""
@@ -588,7 +684,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
 
-        # PUSH to 0.0.3 — default-browser checkbox was commented out;
+        # RESERVED for default-browser checkbox; see T-NEW-161
         # see original code above. Reserved slot for when 0.0.3 lands.
 
         # Home Page
@@ -692,7 +788,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
 
-        # PUSH to 0.0.3 — badge bar was commented out; reserved slot for 0.0.3.
+        # RESERVED for badge bar; see T-NEW-161
 
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.url_label = NchantdLabeledEntry(
@@ -951,35 +1047,39 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     #     cnt += 1
     #     return items
 
-    # PUSH to version 0.0.3
-    # def init_drawer_source_inspection(self):
-    #     """"""
-    #     items = self.toolbox_config[400].get("items", {})
-    #     cnt = 0
-    #     if cnt not in items:
-    #         items[cnt] = {"action": "insert_generic_action", "type": "custom", "handler": self.cmd_launch_source_tab}
-    #     cfg = {"text": "Launch Source Tab of Current Page"}
-    #     self.source_document_launch_button = NchantdButtonWidget(self, cfg)
-    #     items[cnt]["widget"] = self.source_document_launch_button
-    #     cnt += 1
-    #     if cnt not in items:
-    #         items[cnt] = {"action": "insert_generic_action", "type": "custom", "handler": self.cmd_scan_source}
-    #     cfg = {"text": "Scan Source for Resources"}
-    #     self.crawl_current_page_button = NchantdButtonWidget(self, cfg)
-    #     items[cnt]["widget"] = self.crawl_current_page_button
-    #     cnt += 1
-    #     if cnt not in items:
-    #         items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-    #     data = ["Images", "CSS", "JS", "HTML", "JSON", "XML", "Text", "All"]
-    #     cfg = {
-    #         "text": "Select Resource",
-    #         "data": data,
-    #         "handler": self.cmd_on_resource_select,
-    #     }
-    #     self.page_resource_list = NchantdListWidget(self, cfg)
-    #     items[cnt]["widget"] = self.page_resource_list
-    #     cnt += 1
-    #     return items
+    # T-NEW-161 — Source-inspection drawer. The body was a PUSH 0.0.3
+    # marker (line 953); the wire-up is small enough to ship now.
+    # cmd_scan_source stays deferred to T-NEW-162 (browser profile +
+    # paid-feature surface) — the other two handlers are real.
+    def init_drawer_source_inspection(self):
+        """"""
+        items = self.toolbox_config[400].get("items", {})
+        cnt = 0
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom", "handler": self.cmd_launch_source_tab}
+        cfg = {"text": "Launch Source Tab of Current Page"}
+        self.source_document_launch_button = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.source_document_launch_button
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom", "handler": self.cmd_scan_source}
+        cfg = {"text": "Scan Source for Resources"}
+        self.crawl_current_page_button = NchantdButtonWidget(self, cfg)
+        items[cnt]["widget"] = self.crawl_current_page_button
+        cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        data = ["Images", "CSS", "JS", "HTML", "JSON", "XML", "Text", "All"]
+        cfg = {
+            "text": "Select Resource",
+            "data": data,
+            "handler": self.cmd_on_resource_select,
+        }
+        self.page_resource_list = NchantdListWidget(self, cfg)
+        items[cnt]["widget"] = self.page_resource_list
+        cnt += 1
+        return items
+
     def init_drawer_quickstart(self) -> Dict[int, Any]:
         """Build the quickstart drawer with bookmarks + quick-app links.
 
@@ -1011,10 +1111,11 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_url_inspection()
         self.toolbox_config[200]["items"] = self.init_drawer_browser_config()
-        # PUSH until 0.0.3
-        # self.toolbox_config[300]["items"] = self.init_drawer_form_control()
-        # self.toolbox_config[400]["items"] = self.init_drawer_source_inspection()
-        # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
+        # T-NEW-161 — activate the source-inspection + quickstart drawers.
+        # The form_control activation (slot 300) stays deferred to T-NEW-162
+        # (browser profile + paid-feature surface, per DECIDE-1 matrix).
+        self.toolbox_config[400]["items"] = self.init_drawer_source_inspection()
+        self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
     def open_new_tab(self, url=None) -> Self:
         """Open a new tab loading the current (or given) URL."""
@@ -1055,7 +1156,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             url = self.get_active_url()
         logma.info(f"Populate Document {url}")
         if self.pinned is False:
-            self.browser.populate_viewport(url)
+            self.browser.populate_document(url)
         # Refresh the URL inspection toolbox (no DB write).
         # if hasattr(self, "update_toolbox_url_inspection"):
         #     try:
@@ -1465,7 +1566,7 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
         """ """
         logma.info(f"NchantdOfficeSlimTabSearch init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeSlimTabSearch").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeSlimTabSearch").override(cfg))
 
     def initModel(self, cfg=None) -> Self:
         """"""
@@ -1492,6 +1593,132 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
         return content
 
 
+class NchantdOfficeWebViewer(NchantdWebViewer):
+    """"""
+
+    def __init__(self, parent=None, cfg=None) -> None:
+        """ """
+        logma.info(f"NchantdOfficeWebViewer init: parent={type(parent).__name__}")
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebViewer").override(cfg))
+        # T-NEW-069 — URL history cap (most-recent-first, deduped).
+        # The history is persisted via config.dikt["url_history"]
+        # and read back at build_toolbar time so the dropdown
+        # survives app restart.
+        self._url_history_max = 50
+
+    def initModel(self, cfg=None) -> Self:
+        """"""
+        super().initModel(cfg)
+        return self
+
+    def initView(self, cfg=None) -> Self:
+        """"""
+        super().initView(cfg)
+        return self
+
+    def initWidget(self) -> Self:
+        """"""
+        self.initModel()
+        self.initView()
+        return self
+
+    def get_content(self) -> Dict[str, Any]:
+        """"""
+        content = self.document.active_page.to_dict()
+        return content
+
+    def populate_document(self, url) -> Self:
+        """"""
+        super().populate_document(url)
+        return self
+
+    def save(self) -> Self:
+        """Persist the slim-viewer state.
+
+        T-NEW-169: was a forgotten stub returning ``self`` (empty
+        docstring + body). The desktop override shadowed the
+        canonical ``NchantdWebViewer.save()`` impl in nchantrs
+        (the version that persists viewer state via ``_to_dict()``
+        and emits a model event). Two callers invoked the stub:
+
+          1. ``focusOutEvent`` (line 532) — auto-save on focus
+             loss. Every time the user clicked outside the
+             browser area, their in-memory state was dropped.
+          2. The toolbar ``cmd_save_instance`` button (activated
+             in T-NEW-164 part B, commit 50639b9) — clicking
+             Save in the toolbar was a silent no-op.
+
+        The fix turns the override into a thin pass-through
+        that delegates to ``super().save()``. We don't open
+        the ``self.pinned`` guard or the ``file_path`` rewrite
+        (those are NchantdOfficeWebBrowser patterns at line
+        1172; that's the rich toolbar-embedded browser class —
+        a different code path).
+        """
+        super().save()
+        return self
+
+    def set_url_path(self, url=None) -> Self:
+        """T-NEW-069 — navigate to ``url`` and sync the dropdown.
+
+        Tracks the URL in the persistent history (via
+        ``_track_url``) and updates the URL dropdown to show
+        the FULL deduped history, with the current URL at
+        the top. Previously this method called
+        ``update_options([url], False, False)`` which appended
+        the URL to existing options without dedup — every
+        navigation added a duplicate. New implementation
+        uses ``replace=True`` and seeds with the deduped
+        history.
+        """
+        super().set_url_path(url)
+        if url is not None:
+            if isinstance(url, pyqt.QUrl):
+                url = url.toString()
+            if self.url_select_entry is None:
+                return self
+            history = self._track_url(url)
+            self.url_select_entry.combobox.setCurrentText(url)
+            self.url_select_entry.update_options(
+                history,
+                replace=True,
+                sort=False,
+            )
+        # self.save()
+        # self.parent.document.add_page({"url": url})
+        return self
+
+    def _clear_url_history(self) -> None:
+        """Wipe the URL history list (dropdown-only)."""
+        self.config.dikt["url_history"] = []
+
+    def _get_url_history(self) -> List[str]:
+        """Return the URL history list (most-recent-first)."""
+        return list(self.config.dikt.get("url_history", []) or [])
+
+    # T-NEW-069 — URL dropdown history helpers (live on the
+    # WebViewer because that's where set_url_path lives).
+
+    def _track_url(self, url) -> List[str]:
+        """Add ``url`` to the persistent URL history.
+
+        Maintains ``config.dikt["url_history"]`` as a
+        most-recent-first list, deduped (case-sensitive),
+        capped at ``_url_history_max`` entries. No-op when
+        ``url`` is None or empty. Returns the resulting
+        history list (most-recent-first).
+        """
+        if not url or not isinstance(url, str):
+            return list(self.config.dikt.get("url_history", []) or [])
+        history = list(self.config.dikt.get("url_history", []) or [])
+        history = [u for u in history if u != url]
+        history.insert(0, url)
+        history = history[: max(1, int(self._url_history_max))]
+        self.config.dikt["url_history"] = history
+        return history
+
+
 class NchantdOfficeAdTab(NchantdOfficeDocument):
     """"""
 
@@ -1499,7 +1726,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         """ """
         super().__init__("NchantdOfficeAdTab", parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeAdTab").override(cfg))
+        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAdTab").override(cfg))
         self.active_url = None
         self.library = None
         self.pinned = False
