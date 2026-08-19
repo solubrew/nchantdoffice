@@ -25,11 +25,70 @@ python __main__.py [arguments]
 python cmds/runNchantdOffice.py [arguments]
 # or the convenience wrappers at repo root:
 ./runNchantdOffice.py [arguments]
-# (Standalone per-document launchers ship under T-NEW-169
-# — see TODOs.md. Before T-NEW-169 ships, `nchantdoffice
-# document --type <name>` exits with an "unrecognized
-# subcommand" error.)
+# All of the above (no subcommand) boot the full NchantdOffice
+# main app unchanged. To boot a SINGLE-document 2-pane shell
+# use the new `document` subcommand (T-NEW-169, shipped 2026-08-19):
+./runNchantdOffice.py document --type <doc-type> [--path <file>]
+# See the `document` Subcommand section below for details.
 ```
+
+## `document` Subcommand (T-NEW-169, 2026-08-19)
+
+The `document` subcommand boots a **standalone 2-pane minimal
+shell** for a single document type — useful when the operator
+wants a focused workspace without the full main-app chrome, or
+when dragging the standalone shell onto a second monitor (via
+T-NEW-170 once that card ships).
+
+**Usage:**
+
+```bash
+runNchantdOffice.py document --type <name> [--path <file>]
+```
+
+**Arguments:**
+
+| Argument | Type | Required | Choices | Default | Description |
+|----------|------|----------|---------|---------|-------------|
+| `--type` | TEXT | Yes | `script`, `notebook`, `image`, `form` | — | Document type to instantiate. The dispatch maps each name to the matching `NchantdOffice*` class. |
+| `--path` | TEXT | No | file path | None | Optional pre-load path. Threaded through the document's `open_file()` (best-effort; errors are logged, not raised). For notebook this can be a `.pyof` file path. |
+
+**Document types (operator-approved priority order, T-NEW-169 WIRE-3):**
+
+| Type       | Opens                                       |
+|------------|---------------------------------------------|
+| `script`   | A `NchantdOfficeScript` editor window       |
+| `notebook` | A `NchantdOfficeNotebook` Jupyter window    |
+| `image`    | A `NchantdOfficeImage` viewer window        |
+| `form`     | A `NchantdOfficeForm` editor window         |
+
+**Examples:**
+
+```bash
+# Boot a Script editor standalone
+./runNchantdOffice.py document --type script
+
+# Boot a Notebook standalone pre-loaded with a .pyof file
+./runNchantdOffice.py document --type notebook --path ~/my_session.pyof
+
+# Boot an Image viewer standalone
+./runNchantdOffice.py document --type image --path ~/photo.png
+```
+
+**Behaviour:** When `--type` matches a known document class, the
+standalone shell constructs that class lazily (via
+`importlib.import_module` + `getattr`) inside the new
+`NchantdDocumentStandaloneWindow.initView` (in
+`nchantdoffice/nchantdoffice.py`). The class is mounted as the
+central widget and a placeholder right-side dock is attached so
+the operator gets the full 2-pane shell layout. If the dispatch
+fails (unknown `--type` or import error), the standalone shell
+falls back to a placeholder central widget with a logged
+warning.
+
+**Default behaviour (no subcommand):** the launch boots the
+full `NchantdOfficeCloak` main app — unchanged from before
+T-NEW-169. The `document` subcommand is additive.
 
 ## Arguments
 
