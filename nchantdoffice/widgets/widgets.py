@@ -57,8 +57,21 @@ class NchantdOfficeTabSet(NchantdTabSet):
         return self
 
     def initView(self) -> Self:
-        """ """
+        """Wire the tabset UI.
+
+        T-NEW-170 WIRE-4: also call ``_wire_pop_out_triggers``
+        so the right-click menu + toolbar 'detach tab' trigger
+        come up alongside the rest of the tabset.
+        """
         super().initView()
+        try:
+            self._wire_pop_out_triggers()
+        except Exception as e:
+            logma.warning(
+                f"[NchantdOfficeTabSet.initView] "
+                f"_wire_pop_out_triggers failed (non-blocking): "
+                f"{e!r}"
+            )
         return self
 
     def initWidget(self, cfg=None) -> Self:
@@ -274,6 +287,168 @@ class NchantdOfficeTabSet(NchantdTabSet):
             f"to standalone dialog"
         )
         return floated_tab
+
+    def _wire_pop_out_triggers(self) -> None:
+        """T-NEW-170 WIRE-4 -- install the operator triggers
+        that fire ``pop_out_tab``.
+
+        Two trigger surfaces:
+
+        1. **Right-click context menu** on a tab. The QTabBar
+           exposes ``tab_bar`` after the tabset is
+           constructed (we rely on Qt's tab-bar default).
+           Right-clicking builds a small ``QMenu`` whose
+           'Detach to window' action calls
+           ``self.pop_out_tab(indexAt(event.pos()))``.
+
+        2. **Toolbar 'detach tab' button**. The toolbar
+           mirrors the right-click action. When triggered
+           we call ``self.pop_out_tab(currentIndex())`` so
+           the operator gets the same detach UX whether
+           they right-click or click the toolbar button.
+
+        Best-effort: if a trigger surface is missing (e.g.
+        in a stripped-down test environment) the helper
+        logs the absence and moves on. The T-NEW-170
+        feature is still reachable via the direct API.
+
+        LOCKED DESIGN:
+          DECIDE-1 (a) -- the wire helper has NO node-change
+            hook. The tab stays detached for the entire
+            dialog lifetime; re-attach only on close.
+        """
+        try:
+            # --- Right-click context menu on the tab bar ---
+            tab_bar = getattr(self, "tabBar", lambda: None)()
+            if tab_bar is not None and hasattr(
+                tab_bar, "setContextMenuPolicy"
+            ):
+                try:
+                    tab_bar.setContextMenuPolicy(
+                        pyqt.Qt.CustomContextMenu
+                    )
+                except Exception:
+                    # Some Qt bindings need the module-level
+                    # Qt enum; fall back to the integer value
+                    # (Qt.CustomContextMenu = 3).
+                    try:
+                        tab_bar.setContextMenuPolicy(3)
+                    except Exception as _inner:
+                        logma.warning(
+                            f"[_wire_pop_out_triggers] "
+                            f"setContextMenuPolicy failed: {_inner!r}"
+                        )
+
+                def _show_pop_out_menu(pos):
+                    try:
+                        index = tab_bar.tabAt(pos)
+                        if index < 0:
+                            return
+                        try:
+                            menu = pyqt.QMenu(tab_bar)
+                        except Exception:
+                            return
+                        try:
+                            action = menu.addAction("Detach to window")
+                        except Exception:
+                            return
+                        try:
+                            triggered = menu.exec_(
+                                tab_bar.mapToGlobal(pos)
+                            )
+                        except Exception:
+                            triggered = None
+                        if triggered is not None:
+                            self.pop_out_tab(index)
+                    except Exception as e:
+                        logma.warning(
+                            f"[_wire_pop_out_triggers] "
+                            f"right-click handler failed: {e!r}"
+                        )
+
+                try:
+                    tab_bar.customContextMenuRequested.connect(
+                        _show_pop_out_menu
+                    )
+                except Exception as e:
+                    logma.warning(
+                        f"[_wire_pop_out_triggers] "
+                        f"customContextMenuRequested.connect "
+                        f"failed: {e!r}"
+                    )
+            else:
+                logma.info(
+                    "[_wire_pop_out_triggers] no QTabBar available; "
+                    "right-click trigger skipped (toolbar trigger "
+                    "still operational)"
+                )
+        except Exception as e:
+            logma.warning(
+                f"[_wire_pop_out_triggers] right-click setup "
+                f"failed (best-effort): {e!r}"
+            )
+
+        try:
+            # --- Toolbar 'detach tab' button ---
+            # The toolbar comes from the app's main window's
+            # toolbars collection. Read it best-effort via
+            # the app.view.panes["center"] / app.toolbar
+            # access paths the rest of the codebase uses.
+            toolbar = None
+            try:
+                toolbar = getattr(self.app, "toolbar", None)
+            except Exception:
+                toolbar = None
+            if toolbar is None:
+                # Last-ditch: look for an `app.toolbars` attr.
+                toolbars = getattr(self.app, "toolbars", None)
+                if toolbars:
+                    toolbar = next(iter(toolbars), None)
+            if toolbar is None:
+                logma.info(
+                    "[_wire_pop_out_triggers] no toolbar available; "
+                    "toolbar trigger skipped"
+                )
+                return
+
+            try:
+                detach_action = pyqt.QAction("\u2197", toolbar)
+            except Exception:
+                detach_action = None
+            if detach_action is None:
+                return
+            try:
+                detach_action.setToolTip(
+                    "Detach the current tab to a separate dialog"
+                )
+                detach_action.setStatusTip(
+                    "Pop out the current tab into a standalone window"
+                )
+            except Exception:
+                pass
+
+            def _on_detach_clicked():
+                try:
+                    self.pop_out_tab(self.currentIndex())
+                except Exception as e:
+                    logma.warning(
+                        f"[_wire_pop_out_triggers] "
+                        f"toolbar detach click failed: {e!r}"
+                    )
+
+            try:
+                detach_action.triggered.connect(_on_detach_clicked)
+                toolbar.addAction(detach_action)
+            except Exception as e:
+                logma.warning(
+                    f"[_wire_pop_out_triggers] toolbar addAction "
+                    f"failed: {e!r}"
+                )
+        except Exception as e:
+            logma.warning(
+                f"[_wire_pop_out_triggers] toolbar setup "
+                f"failed (best-effort): {e!r}"
+            )
 
     def re_attach_tab(self, floated_tab) -> None:
         """T-NEW-170 WIRE-3 -- re-attach a FloatedTab to its
