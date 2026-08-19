@@ -275,6 +275,68 @@ class NchantdOfficeTabSet(NchantdTabSet):
         )
         return floated_tab
 
+    def re_attach_tab(self, floated_tab) -> None:
+        """T-NEW-170 WIRE-3 -- re-attach a FloatedTab to its
+        home tabset at its home position.
+
+        Called by ``FloatedTab.closeEvent`` (T-NEW-170 WIRE-1).
+        The dialog carries the home coordinates
+        (`home_node_id`, `home_position`, `home_tabset`) and
+        the `document_widget` to be re-parented. ``re_attach_tab``
+        reads those values, calls ``insertTab(home_position,
+        document_widget)`` on the center tabset, and logs the
+        re-attach.
+
+        Best-effort: any Qt re-insert failure (the model is
+        gone, the widget is already mounted, etc.) is logged
+        and swallowed. The dialog's closeEvent must not raise
+        an unhandled exception -- Qt treats that as a Qt
+        crash.
+
+        LOCKED DESIGN (operator-approved 2026-08-19):
+          DECIDE-1 (a) -- re-attach only on dialog close /
+            app close. This is the canonical receiver for the
+            dialog-close path; the app-quit path (T-NEW-170
+            WIRE-5) re-uses this same method via the
+            ``aboutToQuit`` signal.
+        """
+        try:
+            home_position = getattr(floated_tab, "home_position", None)
+            document_widget = getattr(
+                floated_tab, "document_widget", None
+            )
+            if home_position is None or document_widget is None:
+                logma.warning(
+                    f"[re_attach_tab] missing home_position or "
+                    f"document_widget on floated_tab; skipping"
+                )
+                return
+            try:
+                self.app.view.panes["center"].insertTab(
+                    home_position, document_widget
+                )
+                # T-NEW-170 WIRE-3: select the freshly
+                # re-attached tab so the operator lands
+                # where they expect.
+                self.app.view.panes["center"].setCurrentIndex(
+                    home_position
+                )
+            except Exception as e:
+                logma.warning(
+                    f"[re_attach_tab] insertTab({home_position}, "
+                    f"...) failed: {e!r}; tab left orphaned"
+                )
+                return
+            logma.info(
+                f"[re_attach_tab] re-attached document to "
+                f"position {home_position}"
+            )
+        except Exception as e:
+            logma.warning(
+                f"[re_attach_tab] top-level failure (swallowed): "
+                f"{e!r}"
+            )
+
     def setTabText(self, position, text, store=True) -> None:
         """ """
         super().setTabText(position, text)

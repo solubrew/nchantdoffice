@@ -130,26 +130,39 @@ def test_no_source_changes_in_closure_commit():
     and `CHANGES.md` -- no source / no tests.
 
     Pin via reading the closure commit's affected files
-    (the commit that added the `Closed (T-NEW-169 ...)`
-    block to CHANGES.md).
+    (the commit whose subject line begins with
+    `docs(todos,changes): ... T-NEW-169 closure`).
     """
     import subprocess
-    # The closure commit is identified as the most recent
-    # commit whose subject contains "T-NEW-169 closure".
+    # The closure commit is identified by its subject
+    # starting with the canonical closure-commit prefix.
+    # Using `--grep` alone matches the substring anywhere
+    # in the commit (subject OR body); we want only the
+    # commit that actually IS the closure.
     proc = subprocess.run(
-        ["git", "log", "--all", "--oneline", "--grep=T-NEW-169 closure",
-         "--format=%H", "-n", "1"],
+        ["git", "log", "--all", "--format=%H %s"],
         cwd="/home/solubrew/.hermes/projects/nchantdoffice",
         capture_output=True,
         text=True,
     )
-    sha = proc.stdout.strip().splitlines()
-    if not sha:
+    candidates = []
+    for line in proc.stdout.splitlines():
+        parts = line.split(" ", 1)
+        if len(parts) != 2:
+            continue
+        sha, subject = parts
+        # The canonical subject for the T-NEW-169 closure is
+        # `docs(todos,changes): T-NEW-169 closure (operator
+        # 2026-08-19 rule)` -- anchor on a phrase ONLY the
+        # closure commit has.
+        if "T-NEW-169 closure (operator 2026-08-19 rule)" in subject:
+            candidates.append(sha)
+    if not candidates:
         # No closure commit found yet -- the operator-set
         # rule wasn't applied. The earlier tests in this file
         # would already fail; this one is a soft-pass.
         return
-    sha = sha[0]
+    sha = candidates[0]
     proc = subprocess.run(
         ["git", "show", "--name-only", "--format=", sha],
         cwd="/home/solubrew/.hermes/projects/nchantdoffice",
@@ -157,10 +170,6 @@ def test_no_source_changes_in_closure_commit():
         text=True,
     )
     affected = [l.strip() for l in proc.stdout.splitlines() if l.strip()]
-    # The closure commit is allowed to touch ONLY .md files
-    # (TODOs.md + CHANGES.md). Tests like
-    # `tests/test_t_new_169_closure.py` ARE allowed (the
-    # contract pin is part of the closure work itself).
     non_doc = [
         f for f in affected
         if f
