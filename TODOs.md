@@ -243,10 +243,36 @@ bodies remain below for traceability, but do not override this list.
 
 ### In-code marker audit
 
-The production marker sweep found 23 TODO-family hits across 11 files.
-All except `models.py:3039` and `referral_panel.py:395` are historical
-closeout comments or deliberate abstract/delegated behavior; they are not
-new backlog items.
+The 2026-08-18 PUSH-to-0.0.3 sweep found **91 PUSH-to-0.0.3 markers across
+22 files**. They cluster into five themes; six new cards (T-NEW-161 →
+T-NEW-166) cover the deferred work, and T-NEW-160 already books the
+next umbrella child (Image external save). The markers themselves are
+left in place — they document the deferred scope at the call site so
+the next implementer doesn't re-discover the contract.
+
+**Theme summary (91 markers / 22 files):**
+
+| Theme | Markers | New card |
+|---|---:|---|
+| `set_location("external")` hardcode + commented `populate_data`/`connect_to_file` blocks — internal-blob seam missing on 13 widgets | 14 | folded into T-NEW-144b umbrella (T-NEW-160 next) |
+| Commented-out `init_drawer_*` slots (form_control / source_inspection / quickstart / sources / etc.) across 11 widgets | 14 | T-NEW-161 (drawer surface for remaining widgets) |
+| Browser `cmd_scan_source` / `get_profiles` / `add_profile` / `@feature_restrict` commented paid-feature gate | 5 | T-NEW-162 (browser profile + paid-feature surface) |
+| `get_node_name` / `get_tab_name` / `get_urls` / `import_filetree` / `import_sessions` / `_import_nchantdoffice_*` no-op stubs | 7 | T-NEW-163 (models.py no-op stubs) |
+| One-off deferrals: `cmd_save_instance` mirror pop-dialog, `cmd_take_snapshot`/`cmd_create_dataset`/`cmd_export_document`/`cmd_import_file`, `launch_note`, `on_window_move`, `switch_to_account_tab`, `open_cloud`, journal layout cfg block, settings long-method marker, document_type "note" default, content_version archive policy | 12 | T-NEW-164 (misc PUSH-to-0.0.3 deferred items) |
+| `init_drawer_thumbnail` — actual shippable enhancement (not just a comment) | 1 | T-NEW-165 (Matrix cell-content thumbnail preview) |
+| T-NEW-013 cipher wiring | 4 | T-NEW-013 (already tracked) |
+
+The audit prose replaces the prior "23 TODO-family hits" line which was
+stale against the 2026-08-18 sweep. **Marker count source:**
+`grep -rn '# PUSH.*0\.0\.3' nchantdoffice/` over 22 source files (excludes
+tests). File list (markers per file): analytics.py (3), atnrg/browsers.py (10),
+atnrg/contacts.py (4), atnrg/prompts.py (6), catalogs.py (1),
+config/settings.py (2), config/source_config.py (2), controls/toolboxes.py (2),
+documents.py (3), journal.py (1), managers/calendars.py (3),
+managers/filesystems.py (3), media/forms.py (4), media/images.py (4),
+media/pdfs.py (3), media/scripts.py (4), media/sketches.py (2),
+models.py (8), panes/documents.py (7), widgets.py (1),
+workbooks/matricies.py (3), workbooks/notebooks.py (2).
 
 ### Historical live-open section (superseded)
 
@@ -5367,3 +5393,350 @@ for clean parallel work, not by feature:
 For each: write a failing test that exercises the intended
 behaviour, implement the minimum to pass, refactor, commit,
 push, update ``TODOs.md`` ``Document Changes``.
+
+---
+
+## Filed from the 2026-08-18 PUSH-to-0.0.3 marker sweep
+
+The six cards below were filed from the in-code marker audit
+(`PUSH to 0.0.3` sweep, 91 markers across 22 files). Each card
+inherits the standard format (bold headline + one-paragraph
+context + Affected sites + Migration plan + numbered steps).
+No source patches landed in this commit — markers remain at
+their call sites so the next implementer sees the deferred
+contract.
+
+### T-NEW-161 — Drawer surface for remaining widgets (2026-08-18)
+
+**Context:** 14 commented-out `init_drawer_*` slots are parked
+under `# PUSH to 0.0.3` markers across 11 widget files.
+`T-NEW-148` (Script) and `T-NEW-159` (PDF) shipped the canonical
+pattern for atomic external save + internal blob support;
+**drawers that pre-date that work were deferred** because they
+add UX (form fields, quickstart wizards, source inspector
+panels) that depends on the underlying location routing being
+solid. Now that 0.0.3 work is in scope, these drawer slots
+need to be wired.
+
+**Affected sites:**
+- `nchantdoffice/widgets/config/settings.py:1157` — `# PUSH to 0.0.3` show-journal / show-settings / enable-automation / show-left-pane / show-quick-toolbar checkbox list (commented block after `cnt = 0`)
+- `nchantdoffice/widgets/config/source_config.py:727, 730` — `init_drawer_sources` (200) + `init_drawer_exploratory_data_analysis` (400) + `init_drawer_quickstart` (500)
+- `nchantdoffice/widgets/documents/analytics/analytics.py:745` — `init_drawer_connections` (300) + `init_drawer_quickstart` (400)
+- `nchantdoffice/widgets/documents/atnrg/browsers.py:760` — `init_drawer_form_control` (300, lower-case `# Push to 0.0.3`)
+- `nchantdoffice/widgets/documents/atnrg/browsers.py:953` — `init_drawer_source_inspection` (400)
+- `nchantdoffice/widgets/documents/atnrg/browsers.py:1013` — `init_drawer_form_control` (300) + `init_drawer_source_inspection` (400) + `init_drawer_quickstart` (500)
+- `nchantdoffice/widgets/documents/managers/calendars.py:952` — `init_drawer_external_calendar_config` (300) + `init_drawer_quickstart` (400)
+- `nchantdoffice/widgets/documents/managers/filesystems.py:1350` — `init_drawer_tools_config` (200) + `init_drawer_storage_config` (300) + `init_drawer_quickstart` (400)
+- `nchantdoffice/widgets/documents/media/images.py:1275, 1288, 1291` — `init_drawer_quickstart` (400) + `init_drawer_image_tools` (200)
+- `nchantdoffice/widgets/documents/media/pdfs.py:326` — `init_drawer_document_tools` (200) + `init_drawer_quickstart` (300)
+- `nchantdoffice/widgets/documents/media/scripts.py:673, 835` — text justification / bulleting / spacing buttons + `init_drawer_selection_config` (200) + `init_drawer_object_config` (300) + `init_drawer_quickstart` (400)
+- `nchantdoffice/widgets/documents/workbooks/matricies.py:1653, 1680` — `init_drawer_quickstart` (500)
+- `nchantdoffice/widgets/documents/workbooks/notebooks.py:1041` — `init_drawer_selection_config` (200) + `init_drawer_object_config` (300) + `init_drawer_quickstart` (400)
+
+**Migration plan (no priority / low priority — design decision first):**
+
+1. **DECIDE-1**: For each widget, decide whether the drawer slot
+   should be **wired with a real handler** or **demoted to a
+   "reserved" placeholder** (cf. the `browsers.py:694` "badge
+   bar was commented out" pattern). File a per-widget decision
+   row in the migration plan so the next implementer doesn't
+   have to re-derive the intent from `# PUSH to 0.0.3` alone.
+2. **WIRE-1**: For drawers that wire, implement `init_drawer_*`
+   per the canonical pattern (cf. `init_drawer_chart_config` /
+   `init_drawer_cell_config` in `matricies.py`); add a 1-test
+   regression asserting the slot ends up populated.
+3. **DEMOTE-1**: For drawers that demote, replace the
+   `# PUSH to 0.0.3` comment with `# RESERVED for <feature>; see
+   T-NEW-161` so the catalog search surfaces the card.
+4. **AUDIT-1**: Re-run `grep -rn '# PUSH.*0\.0\.3' nchantdoffice/`
+   and confirm the drawer count dropped from 14 → 0 (or to
+   whatever the demoted count is).
+
+**Tasks:**
+- [ ] DECIDE-1: per-widget decision matrix (T-NEW-161)
+- [ ] WIRE-1: implement wired drawers (T-NEW-161)
+- [ ] DEMOTE-1: relabel demoted drawers (T-NEW-161)
+- [ ] AUDIT-1: re-run marker grep (T-NEW-161)
+
+**Refs:**
+- `tests/test_unimplemented_features.py::test_settings_stubs_have_implementations` — pins the live impl requirement for the `settings.py:1157` checkbox list.
+- `tests/test_encrypt_decrypt_push_tag.py` — pattern for "marker must be labelled with the deferred card id" regressions.
+- In-code marker audit summary, `TODOs.md` §"In-code marker audit".
+
+### T-NEW-162 — Browser profile + paid-feature surface (2026-08-18)
+
+**Context:** 5 PUSH-to-0.0.3 markers in `atnrg/browsers.py`
+defer profile-switching (`add_profile`), profile discovery
+(`get_profiles`), the source-scan action (`cmd_scan_source`),
+and the `@feature_restrict("min_user_level_2")` gate on
+profile creation. Multi-profile is a Pro-tier feature per the
+comment at `browsers.py:226`; the rest are post-0.0.3 plumbing
+that the free tier doesn't need. Per the operator's "explain
+before architectural changes" rule, this card is design-decision
+first — profile-switching UX is a behavior change, not a refactor.
+
+**Affected sites:**
+- `nchantdoffice/widgets/documents/atnrg/browsers.py:137` — `add_profile(self, profile, cfg)` (commented); profile-limit guard for pro users
+- `nchantdoffice/widgets/documents/atnrg/browsers.py:226` — `@feature_restrict("min_user_level_2")` decorator (commented) on `cmd_add_profile`
+- `nchantdoffice/widgets/documents/atnrg/browsers.py:357` — `cmd_scan_source(self, event, *args, **kwargs)` (commented)
+- `nchantdoffice/widgets/documents/atnrg/browsers.py:570` — `get_profiles(self)` (commented); returns `self.profiles`
+- `nchantdoffice/widgets/documents/atnrg/browsers.py:1013` — `init_drawer_form_control` + `init_drawer_source_inspection` + `init_drawer_quickstart` (also filed under T-NEW-161)
+
+**Migration plan (no priority / low priority — design decision first):**
+
+1. **DECIDE-1**: Confirm whether `cmd_add_profile` ships as
+   Pro-only at 0.0.3 or rolls out free-tier first (the
+   comment block at `browsers.py:226` implies Pro-only; confirm
+   with operator before implementing).
+2. **WIRE-1**: `get_profiles()` — read profile rows from the
+   `app_options` table (or wherever profile metadata lives;
+   grep `app_profile` / `profile_select` in `browsers.py` to
+   confirm the storage shape before coding).
+3. **WIRE-2**: `add_profile(profile, cfg)` — implement the
+   profile-limit guard (profile_limit = 1 for free, N for pro;
+   consult `users.has_pro` truth-from-service, T-NEW-141c).
+4. **WIRE-3**: `cmd_scan_source(event, *args, **kwargs)` —
+   bind to a sidebar action; redirect to `_scan_source` (the
+   underlying helper should already exist; if not, file as
+   a separate card).
+5. **WIRE-4**: `@feature_restrict("min_user_level_2")` — apply
+   the existing nchantrs decorator (verify it's the right
+   symbol — `feature_restrict` may live upstream in nchantrs).
+6. **TEST-1**: Add regression tests: profile-add under free
+   limit denies, profile-add under pro limit allows, scan-source
+   fires the configured handler, profile-list returns the
+   expected count.
+
+**Tasks:**
+- [ ] DECIDE-1: confirm Pro-only rollout (T-NEW-162)
+- [ ] WIRE-1: get_profiles impl (T-NEW-162)
+- [ ] WIRE-2: add_profile impl (T-NEW-162)
+- [ ] WIRE-3: cmd_scan_source impl (T-NEW-162)
+- [ ] WIRE-4: feature_restrict decorator (T-NEW-162)
+- [ ] TEST-1: profile/scan regressions (T-NEW-162)
+
+**Refs:**
+- `widgets/config/referral_panel.py` — pattern for Pro-tier UX gating
+- `T-NEW-141c` (has_pro truth-from-service) — blocks WIRE-2
+- In-code marker audit summary
+
+### T-NEW-163 — models.py no-op stubs (2026-08-18)
+
+**Context:** 7 PUSH-to-0.0.3 markers in `nchantdoffice/models.py`
+label methods that return `self` or `[]` without doing real work:
+`get_node_name`, `get_tab_name`, `get_urls` (returns `[]`),
+`import_filetree`, `import_sessions`, and three
+`_import_nchantdoffice_*` helpers. The `test_get_view_link.py`
+test pins that `get_links` must NOT return `self` (it was
+re-implemented at `models.py:1830`); the same pattern should
+hold for these siblings. **The `import_filetree` /
+`import_sessions` / `_import_nchantdoffice_*` are genuinely
+deferred ETL work** — those are 0.0.3 features, not forgotten
+stubs. `get_node_name` / `get_tab_name` / `get_urls` look more
+like forgotten stubs (returning `self` / `[]` is the Sprint-20
+anti-pattern per `test_unimplemented_features.py`).
+
+**Affected sites:**
+- `nchantdoffice/models.py:624` — `document["document_type"] = "doc"` (PUSH to 0.0.3: should be `"note"` but needs `note` plumbing across all doctype routing)
+- `nchantdoffice/models.py:2381` — `get_node_name(self) -> Self`: returns `self`
+- `nchantdoffice/models.py:2518` — `get_sources` integration-of-local-sources commented block
+- `nchantdoffice/models.py:2538` — `get_urls(self, tag=None) -> list`: returns `[]`
+- `nchantdoffice/models.py:2555` — `get_tab_name(self) -> Self`: returns `self`
+- `nchantdoffice/models.py:2872` — `import_filetree(self, file) -> Self`: blank body
+- `nchantdoffice/models.py:2920` — `import_sessions(self, file) -> Self`: only-checks-file-exists
+- `nchantdoffice/models.py:3641` — `_import_nchantdoffice_node(self, node, pid, pos)`: blank
+- `nchantdoffice/models.py:3645` — `_import_nchantdoffice_nodes(self, node, pid, pos)`: blank
+- `nchantdoffice/models.py:3649` — `_import_nchantdoffice_tabs(self, node, pid, pos)`: blank
+
+**Migration plan (no priority / low priority — design decision first):**
+
+1. **DECIDE-1**: Confirm which of these are *deferred features*
+   (`import_filetree`, `import_sessions`, the three
+   `_import_nchantdoffice_*`, the `note` doctype default) vs
+   *forgotten stubs* (`get_node_name`, `get_tab_name`,
+   `get_urls`).
+2. **FIX-1**: Forgotten stubs (`get_node_name`, `get_tab_name`,
+   `get_urls`) — implement the contract (query the node/tab
+   row, return the actual name); add a regression test that
+   pins the new return value.
+3. **DEFER-1**: Confirmed-deferred — leave the body blank but
+   replace the `# PUSH to 0.0.3` comment with
+   `# DEFERRED to T-NEW-163` so the catalog surfaces the card.
+4. **NOTE-1**: `document_type = "note"` (`models.py:624`) — this
+   needs the **note doctype plumbing across all of
+   `panes/documents.py`**, which is a separate card. File as
+   follow-up `T-NEW-163a` or roll into T-NEW-165 (one-offs).
+5. **TEST-1**: Add regression for the three FIX-1 methods;
+   assert the new return values match the canonical name from
+   the underlying store.
+
+**Tasks:**
+- [ ] DECIDE-1: forgotten-vs-deferred matrix (T-NEW-163)
+- [ ] FIX-1: get_node_name / get_tab_name / get_urls impl (T-NEW-163)
+- [ ] DEFER-1: relabel deferred markers (T-NEW-163)
+- [ ] NOTE-1: note-doctype plumbing (T-NEW-163 followup)
+- [ ] TEST-1: name/url regressions (T-NEW-163)
+
+**Refs:**
+- `tests/test_get_view_link.py` — pins the "no `return self`" anti-pattern (analogous contract for `get_node_name` / `get_tab_name`).
+- `tests/test_unimplemented_features.py` — Sprint 20 forgotten-stub catalog.
+- In-code marker audit summary
+
+### T-NEW-164 — Misc PUSH-to-0.0.3 deferred items (2026-08-18)
+
+**Context:** The remaining 12 PUSH-to-0.0.3 markers are
+one-off deferrals that don't cluster cleanly enough to warrant
+their own card but DO need to be tracked so the operator
+doesn't have to re-discover them next sweep. Items include:
+`launch_note` (widgets.py:70 — temporarily disabled due to Note
+object failures), `on_window_move` (views.py — Sprint 20
+regression-pinned but still has marker), `switch_to_account_tab`
+(views.py — Sprint 20 regression-pinned), `open_cloud`
+(documents.py:1146 — cloud documents like `.gsheet`),
+`cmd_save_instance` mirror pop-dialog (toolboxes.py:942),
+journal layout cfg block (journal.py:118), settings
+long-method marker (settings.py:139 — auditor false-positive
+but worth documenting), document_type note default (models.py:624
+— see T-NEW-163 NOTE-1), content_version archive policy
+(models.py:4310 — non-blocking archive runner).
+
+**Affected sites:**
+- `nchantdoffice/widgets/widgets.py:70` — `launch_note` (commented; was causing Note object failures)
+- `nchantdoffice/views.py:59, 91` — `switch_to_account_tab`, `on_window_move` (Sprint 20 closeout markers)
+- `nchantdoffice/widgets/documents/documents.py:1146` — `open_cloud(self, path)` (blank; `.gsheet` etc.)
+- `nchantdoffice/widgets/controls/toolboxes.py:942` — `cmd_save_instance` mirror pop-dialog
+- `nchantdoffice/widgets/documents/journal.py:118` — journal layout cfg block (date-picker + sort selector)
+- `nchantdoffice/widgets/config/settings.py:139` — `# PUSH 0.0.3: long_method >150 audit false-positive` doc comment
+- `nchantdoffice/models.py:624` — `document_type = "doc"` (note default deferred)
+- `nchantdoffice/models.py:4310` — content_version archive policy (move to non-blocking process)
+- `nchantdoffice/widgets/documents/panes/documents.py:77, 781` — `cmd_import_file`, `cmd_export_document`, `cmd_take_snapshot`, `cmd_create_dataset` (commented cmd_* handlers)
+- `nchantdoffice/widgets/documents/atnrg/browsers.py:590, 694` — default-browser checkbox + badge bar (commented; "reserved slot")
+- `nchantdoffice/widgets/documents/media/scripts.py:183` — page-view / select-document-format toolbar buttons
+- `nchantdoffice/widgets/catalogs.py:182` — `note_edit_pane` fallback (commented)
+- `nchantdoffice/widgets/documents/documents.py:549` — same `note_edit_pane` fallback (duplicated)
+- `nchantdoffice/widgets/documents/documents.py:1039` — `elif self.document.location == "cloud"` (raises "not supported yet" — same theme as T-NEW-144b)
+
+**Migration plan (no priority / low priority — design decision first):**
+
+1. **DECIDE-1**: For each item, decide: (a) **ship in 0.0.3**,
+   (b) **demote to reserved slot**, or (c) **drop entirely**
+   (e.g. if the underlying feature was redesigned). The
+   `launch_note` failure is the highest-priority re-investigate:
+   the Sprint 20 commit said "Note object failures" but didn't
+   capture the actual exception — file a reproduction first
+   before deciding.
+2. **SHIP-1**: Items shipped — implement + test + commit per
+   the established TDD pattern.
+3. **DEMOTE-1**: Items demoted — replace `# PUSH to 0.0.3`
+   with `# RESERVED for <feature>; see T-NEW-164`.
+4. **DROP-1**: Items dropped — remove the commented block,
+   file a one-line entry in `CHANGES.md` so future archeology
+   sees why it was removed.
+5. **NOTE-1**: `document_type = "note"` (`models.py:624`) — see
+   T-NEW-163 NOTE-1; this is the same item and rolls up there.
+6. **NOTE-2**: `documents.py:1039` cloud-location `raise` — same
+   theme as T-NEW-144b internal-blob seam; rolls up there.
+
+**Tasks:**
+- [ ] DECIDE-1: per-item decision matrix (T-NEW-164)
+- [ ] SHIP-1: implement + test shipped items (T-NEW-164)
+- [ ] DEMOTE-1: relabel demoted markers (T-NEW-164)
+- [ ] DROP-1: drop decided-to-remove items (T-NEW-164)
+- [ ] NOTE-1: confirm roll-up into T-NEW-163 (T-NEW-164)
+- [ ] NOTE-2: confirm roll-up into T-NEW-144b (T-NEW-164)
+
+**Refs:**
+- `tests/test_unimplemented_features.py::test_views_switch_to_account_tab_is_implemented` + `::test_views_on_window_move_is_implemented` — Sprint 20 pins
+- `tests/test_unimplemented_features.py::test_toolboxes_cmd_save_instance_has_body` — Sprint 20 pin
+- `nchantdoffice/widgets/documents/journal.py` save_app contract — see T-NEW-079 / T-NEW-119 for the "don't change journal full-text" rule
+- In-code marker audit summary
+
+### T-NEW-165 — Matrix cell-content thumbnail preview (2026-08-18)
+
+**Context:** A single PUSH-to-0.0.3 marker at
+`nchantdoffice/widgets/documents/workbooks/matricies.py:1650`
+labels a real, shippable enhancement (not just a comment):
+**thumbnail preview of the selected cell's content**. The
+comment lives inside the `init_drawer_*` builder chain for
+the Matrix widget. Unlike the other 90 markers (which are
+deferred-feature placeholders or forgotten stubs), this one
+describes a concrete user-facing improvement that can land
+without depending on the umbrella work.
+
+**Affected sites:**
+- `nchantdoffice/widgets/documents/workbooks/matricies.py:1650` — `# PUSH 0.0.3 — Thumbnail preview of selected cell content` (inside `init_drawer_*` builder)
+- `nchantdoffice/widgets/documents/workbooks/matricies.py:1653-1680` — sibling `init_drawer_quickstart` deferred slot (rolled into T-NEW-161)
+
+**Migration plan (no priority / low priority — design decision first):**
+
+1. **DECIDE-1**: Confirm whether the thumbnail is **inline
+   in the cell-config drawer** (cheap) or **a pop-out pane**
+   (richer UX, more layout work). File the choice before
+   implementing.
+2. **WIRE-1**: Add `init_drawer_thumbnail(self)` returning
+   the configured thumbnail widget; bind it under
+   `toolbox_config[400]` (between `cell_config` at 300 and
+   `quickstart` at 500).
+3. **WIRE-2**: Hook the `currentCellChanged` signal to push
+   the active cell's content (string / number / formula) into
+   the thumbnail widget.
+4. **TEST-1**: Add a regression test that asserts the
+   thumbnail widget is constructed and updates on
+   `setCurrentCell(...)`.
+5. **CLEANUP-1**: Remove the `# PUSH 0.0.3 — Thumbnail preview
+   ...` comment once `init_drawer_thumbnail` is wired.
+
+**Tasks:**
+- [ ] DECIDE-1: inline-vs-popout decision (T-NEW-165)
+- [ ] WIRE-1: init_drawer_thumbnail impl (T-NEW-165)
+- [ ] WIRE-2: currentCellChanged signal hook (T-NEW-165)
+- [ ] TEST-1: thumbnail regression (T-NEW-165)
+- [ ] CLEANUP-1: drop PUSH-to-0.0.3 comment (T-NEW-165)
+
+**Refs:**
+- `nchantdoffice/widgets/documents/workbooks/matricies.py:1650` (deferred marker)
+- `T-NEW-150` (Matrix formula toolbar disabled until 0.0.3) — adjacent Matrix UI gate
+- `T-NEW-149` (Matrix internal value persistence) — adjacent Matrix contract
+- In-code marker audit summary
+
+### T-NEW-166 — settings.initView long-method marker is an auditor false-positive (2026-08-18)
+
+**Context:** Two PUSH-to-0.0.3 markers in
+`nchantdoffice/widgets/config/settings.py` are NOT
+deferred-feature placeholders — they are auditor-flag
+documentation. The marker at line 139 (`# PUSH 0.0.3:
+long_method >150 audit false-positive.`) explicitly
+documents that the `initView` body length is intentional
+(legacy commented-out checkbox blocks raise the LOC count
+without adding live cyclomatic complexity). The marker at
+line 1157 (`# PUSH 0.0.3:`) IS a real deferred-feature
+marker (the show-journal / show-settings / etc. checkbox
+list) and rolls up into T-NEW-161. **This card captures the
+false-positive so future sweeps don't re-investigate it.**
+
+**Affected sites:**
+- `nchantdoffice/widgets/config/settings.py:139` — `# PUSH 0.0.3: long_method >150 audit false-positive.` doc comment in `initView`
+- `nchantdoffice/widgets/config/settings.py:1157` — real deferred marker (rolled into T-NEW-161)
+
+**Migration plan (no priority / low priority — design decision first):**
+
+1. **DOC-1**: Move the line 139 doc comment into the
+   per-card migration plan so the auditor's future re-runs
+   see the explanation attached to the file.
+2. **REF-1**: Consider moving the legacy commented-out
+   checkbox blocks into a separate `settings_legacy_cfg.md`
+   doc (or strip them entirely) so `initView` stops tripping
+   the long_method heuristic. Out of scope for the marker
+   sweep itself; flag for follow-up.
+3. **LINK-1**: Update the comment at line 139 to reference
+   this card: `# PUSH to 0.0.3: long_method >150 audit false-positive. See T-NEW-166.`
+
+**Tasks:**
+- [ ] DOC-1: file auditor explanation in migration plan (T-NEW-166)
+- [ ] REF-1: file follow-up for legacy-block extraction (T-NEW-166)
+- [ ] LINK-1: update line-139 comment with T-NEW-166 reference (T-NEW-166)
+
+**Refs:**
+- Sasquatch `long_method` dimension — the auditor being addressed
+- `T-NEW-161` (drawer surface for remaining widgets) — sibling card for the line-1157 real marker
+- In-code marker audit summary
