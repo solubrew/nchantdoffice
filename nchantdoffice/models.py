@@ -4735,7 +4735,14 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         return self
 
     def buildTabSet(self, node, tabset="center", toolbox=None) -> Self:
-        """"""
+        """Build the tab set for the given node.
+
+        T-NEW-157: clamp the active_tab_position fallback
+        to ``len(tabsdata) - 1`` (the nearest valid tab) so
+        out-of-bounds saved positions don't silently jump
+        operators to the first tab. See the inline comment
+        at the clamping site for the bug history.
+        """
         if hasattr(self, "_building") and self._building:
             return self
         self._building = True
@@ -4768,8 +4775,17 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 active_tab_position = 0
 
             if tabsdata:
+                # T-NEW-157: clamp to the last valid tab when the
+                # saved position is out-of-bounds (e.g. the
+                # operator deleted tabs and the parameter still
+                # points at the old index). Pre-fix the fallback
+                # was `active_tab_position = 0` which silently
+                # jumped to the first tab — operators lost
+                # context. Post-fix we clamp to the nearest
+                # valid position so the operator stays near
+                # where they were.
                 if active_tab_position >= len(tabsdata):
-                    active_tab_position = 0
+                    active_tab_position = len(tabsdata) - 1
 
                 # H9: Delegate to the office load_tab_set override, which builds
                 # the tab set lazily (active tab loaded, others left as dummy
