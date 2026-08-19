@@ -134,16 +134,60 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.initView()
         return self
 
-    # PUSH 0.0.3 - allow for switching between multiple profiles for pro users
-    # def add_profile(self, profile, cfg):
-    #     """"""
-    #     profile_limit = 1
-    #     if getattr(self.app.model.user, "has_pro", False) if self.app.model.user else False:
-    #         profile_limit = 10
-    #     if self.profiles.get_count() >= profile_limit:
-    #         return self
-    #     self.profiles.add_profile(profile, cfg)
-    #     return self
+    # T-NEW-162 part B (desktop side) — add_profile persists via the
+    # nchantrs store. The deferred body referenced a non-existent
+    # ``self.profiles`` profile-manager; per the DECIDE-1 matrix
+    # the operator approved, the storage path goes through
+    # ``self.app.model.store.store_app_profile`` (the real impl
+    # landed in the nchantrs commit 4d7170b). Counts existing
+    # profiles via the model-side helper, enforces the pro-tier
+    # limit (1 free / 10 pro), and delegates the actual write.
+    def add_profile(self, profile, cfg) -> Self:
+        """Add a new browser profile row to the app_profile table.
+
+        T-NEW-162 part B: was a PUSH 0.0.3 stub referencing a
+        non-existent ``self.profiles`` profile-manager. Now:
+        1. Reads ``self.app.model.user.has_pro`` to set the
+           limit (1 free / 10 pro — matches the deferred body).
+        2. Counts existing profiles via
+           ``self.app.model.get_profiles()`` (real impl at
+           models.py:2414 since T-NEW-162 part A).
+        3. Returns ``self`` silently when the cap is hit (the
+           free-tier user's graceful-skip behaviour).
+        4. Builds a record dict and delegates to
+           ``self.app.model.store.store_app_profile(record,
+           db='db', how='INSERT')`` for the actual write.
+        """
+        model = getattr(getattr(self, "app", None), "model", None)
+        user = getattr(model, "user", None) if model is not None else None
+        has_pro = bool(getattr(user, "has_pro", False)) if user is not None else False
+        profile_limit = 10 if has_pro else 1
+        try:
+            existing = model.get_profiles() if model is not None else []
+        except Exception as e:
+            logma.warning(f"[browsers] add_profile: count failed: {e}")
+            existing = []
+        if len(existing or []) >= profile_limit:
+            logma.info(
+                f"[browsers] add_profile: hit {profile_limit}-profile cap "
+                f"for user (has_pro={has_pro})"
+            )
+            return self
+        record = {
+            "profile_txt": str(profile),
+            "userUUID": getattr(user, "UUID", None) or getattr(user, "uuid", None),
+            "name": str(profile),
+        }
+        store = getattr(model, "store", None)
+        if store is None:
+            logma.warning("[browsers] add_profile: model.store missing; skipping write")
+            return self
+        try:
+            store.store_app_profile(record, db="db", how="INSERT")
+        except Exception as e:
+            logma.warning(f"[browsers] add_profile: store_app_profile failed: {e}")
+            return self
+        return self
 
     def build_toolbar(self) -> Dict[int, Any]:
         """T-NEW-069 — build the toolbar + restore URL dropdown history.

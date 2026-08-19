@@ -15,17 +15,15 @@ markers in ``atnrg/browsers.py``. Three are 5-line forgotten stubs:
      delegates to ``self.app.model.get_profiles()`` which is a
      real implementation at models.py:2414.
 
-The fourth deferred method (``add_profile``) is NOT shipped in
-this commit because the body references ``self.profiles.get_count``
-/ ``self.profiles.add_profile`` on a profile-manager abstraction
-that doesn't exist (``self.profiles = None`` at line 62). That
-needs a small design decision (which storage shape the profile
-manager uses) — filed as ``add_profile_followup`` in this card's
-migration plan rather than auto-implemented.
+The fourth deferred method (``add_profile``) was deferred in
+this commit and shipped in T-NEW-162 part B (companion commit).
+Part B wires ``add_profile`` to delegate to
+``self.app.model.store.store_app_profile`` — the real
+persistence impl landed in nchantrs commit 4d7170b.
 
 ``init_drawer_form_control`` (line 760, the fourth deferred block)
-is also NOT shipped here; it lands as part of this card's WIRE-4
-once ``add_profile`` has a real impl to call.
+remains deferred; it lands as part of this card's WIRE-4 once
+the operator confirms the form-control UI shape.
 
 Tests are AST-source structural (mirroring the established
 Qt-bound-module pattern from T-NEW-117 / T-NEW-161 / T-NEW-165)
@@ -166,23 +164,27 @@ def test_get_profiles_delegates_to_model():
     )
 
 
-def test_add_profile_remains_deferred_for_followup():
-    """``add_profile`` stays commented — it's the followup card.
+def test_add_profile_now_wired_via_store():
+    """``add_profile`` is no longer deferred — T-NEW-162 part B shipped.
 
-    The body references ``self.profiles.get_count()`` /
-    ``self.profiles.add_profile()`` on a profile-manager that
-    doesn't exist (``self.profiles = None`` at line 62). Pinning
-    here so a sibling subagent doesn't accidentally land the
-    wrong-shape impl.
+    Pre-fix: the body was commented with ``# PUSH 0.0.3`` and
+    referenced a non-existent ``self.profiles`` profile-manager.
+    T-NEW-162 part B (this card's followup commit) wired it to
+    delegate to ``self.app.model.store.store_app_profile`` — see
+    tests/test_t_new_162_add_profile.py for the contract tests.
+
+    This test is a regression guard: a future sweep that re-adds
+    the ``# PUSH 0.0.3`` marker should fail this test so the
+    catalog catches the rollback.
     """
     src = BROWSERS_PATH.read_text()
     lines = src.splitlines()
     matches = [i for i, ln in enumerate(lines) if "def add_profile" in ln]
     assert matches, "add_profile not found"
     target = lines[matches[0]]
-    assert target.lstrip().startswith("#"), (
-        f"add_profile must stay commented — the body references "
-        f"self.profiles.get_count()/add_profile() on a non-existent "
-        f"profile-manager abstraction. T-NEW-162 followup decides "
-        f"the storage shape. Got {target!r}"
+    assert not target.lstrip().startswith("#"), (
+        f"add_profile was re-commented out (PUSH 0.0.3 marker "
+        f"restored) at line {matches[0] + 1}: {target!r}. "
+        f"T-NEW-162 part B landed a real impl — do not roll "
+        f"back to a deferred stub."
     )
