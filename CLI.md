@@ -1,570 +1,177 @@
-2026-07-31 21:30:11,356 - nchantrs.widgets.widgets                 1038: INFO
+# CLI Reference
 
-\- Load Widget Config {'NchantdWidget': {'dstruct': {'database': {'objects':
-None}}}, 'RegisteredWidgets': {'<(CHART)>': None, '<(CUSTOM)>': "need a method
-for telling the widget where to read the data from widgetdata:\\n  path:
-group000.label000\\n  entry: 'Summary'\\n  layer: data #format, formula,
-data\\ngroup000.textbox000\\n", '<(DOCEDIT)>':
-'nchantrs.widgets.editors.NchantdDocEditor', '<(LABEL)>':
-'nchantrs.widgets.annotations.NchantdLabel', '<(SCRATCHEDIT)>':
-'nchantrs.widgets.editors.NchantdScratchEditor', '<(TEXTBOX)>':
-'nchantrs.widgets.editors.NchantdEntryBox'}, 'expandCFG': {'fonts': {'default':
-{'font': 'Times', 'size': 12, 'style': 'regular'}}, 'styles': {'default':
-None}}, 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager':
-{}, 'tab': {'data': None, 'data_str': None, 'did':
-'024694d6-f14b-435b-a130-f86a7e4e447f', 'syntax': None, 'name': 'Affiliate
-Manager', 'position': 2, 'document_type': None, 'readonly': 0, 'editable': 1,
-'visible': 1, 'moveable': 1, 'tid': '06a6cee9-0cd1-757a-8000-6b4eb942dba7',
-'pid': '066a7cf6-5aca-79a2-8000-f4b5405a0427', 'widget':
-'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager',
-'widgdata': '{}', 'version': None, 'tab_type': 'custom_widget', 'location':
-None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon':
-None, 'modon': None}}, 'file_path': '', 'widget':
-'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager', 'tid':
-'06a6cee9-0cd1-757a-8000-6b4eb942dba7', 'document': {'data': None, 'data_str':
-None, 'did': '024694d6-f14b-435b-a130-f86a7e4e447f', 'syntax': None, 'name':
-'Affiliate Manager', 'position': 2, 'document_type': None, 'readonly': 0,
-'editable': 1, 'visible': 1, 'moveable': 1, 'tid':
-'06a6cee9-0cd1-757a-8000-6b4eb942dba7', 'pid':
-'066a7cf6-5aca-79a2-8000-f4b5405a0427', 'widget':
-'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager',
-'widgdata': '{}', 'version': None, 'tab_type': 'custom_widget', 'location':
-None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon':
-None, 'modon': None}}, 'apps': ['nchantrs', 'nchantdoffice'], 'app':
-'nchantdoffice', 'pos': 'center'} 2026-07-31 21:30:11,356 -
-nchantrs.widgets.widgets                 1044: INFO     -
-nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager Master
-passphrase: 2026-07-31 21:30:50,122 - pycurity.pykey
+## Purpose
 
-548: INFO     - Connecting to
-/home/solubrew/.local/share/pycurity/secure_store.db 2026-07-31 21:30:50,124 -
-pycurity.pykey                            548: INFO     - Connecting to
-/home/solubrew/.local/share/pycurity/secure_store.db 2026-07-31 21:30:50,124 -
-pycurity.pykey                            548: INFO     - Connecting to
-/home/solubrew/.local/share/pycurity/secure_store.db 2026-07-31 21:30:50,125 -
-pycurity.pykey                            548: INFO     - Connecting to
-/home/solubrew/.local/share/pycurity/secure_store.db 2026-07-31 21:30:50,125 -
-nchantdoffice.widgets.config.referral_panel  335: INFO     - \[referral_panel]
-PyKeyStore.get(affiliate_id) failed: 'No key found for service: affiliate_id'
-2026-07-31 21:30:50,125 - nchantdoffice.utilities.referral          105: INFO
+NchantdOffice is a GUI-based office suite application providing
+document, spreadsheet, presentation, and drawing tools — built on
+the Qt framework and integrated with the broader nChantrs /
+shieldface ecosystem. The CLI exists primarily to launch the GUI
+in development or test mode, and to provide a programmatic entry
+point via `python -m nchantdoffice`.
 
-\- ReferralCode created: value='NB-Z5C-1WFD' 2026-07-31 21:30:55,189 -
-nchantdoffice.utilities.referral          312: WARNING  - \[referral_api] GET 
-<https://nchantdoffice.com/api/affiliate/earnings> failed:
-HTTPSConnectionPool(host='nchantdoffice.com', port=443): Max retries exceeded
-with url: /api/affiliate/earnings (Caused by
-ConnectTimeoutError(\<HTTPSConnection(host='nchantdoffice.com', port=443) at
-0x7ce700c83980>, 'Connection to nchantdoffice.com timed out. (connect
-timeout=5.0)')) 2026-07-31 21:30:55,189 -
-nchantdoffice.widgets.config.referral_panel  447: INFO     - \[referral_panel]
-using local fallback dashboard 2026-07-31 21:30:55,209 - squirl.orgnql.sonql
+For everyday interaction, prefer launching the GUI. The CLI is
+suitable for headless CI runs (smoke tests), debugging, and
+embedding the application in scripts.
 
-2845: WARNING  - SQLT Read Failed due to no such column: position_int using
-this cmd SELECT \[app_action_PK], \[code_group_txt], \[lookup_code_txt],
-\[name_txt], \[description_ltxt], \[UUID], \[icon_txt], \[short_cut_txt],
-\[tip_txt], \[advanced_tip_txt], \[widget_txt], \[parameters_dict] FROM
-"app_action"  WHERE app_action.code_group_txt = 'base' ORDER BY position_int
-Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/widgets.py", line 149, in on_tab_focus
-self.model.load_tab(self.model.tabsdata\[tabn], tabn, self.pane_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 4093, in load_tab super().load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 244, in load_tab
-self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab),
-tabset, tab)) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 4129, in load_widget tabW.initWidget() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 147, in initWidget
-self.initView() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/config/referral_panel.py", line 95, in initView cfg =
-super().initView() ^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 1018, in initView
-super().initView(cfg) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 140, in initView
-self.init_toolbar(cfg) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 449, in init_toolbar
-self.document_toolbar = NchantdButtonBar(self, cfg).initWidget(buttons)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/controls/toolbars.py", line 124, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/controls/toolbars.py", line 90, in
-initView action_cfg = kahndor.Instruct(lookup(self.app,
-action)).override(self.config) ^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/utilities/utils.py", line 115, in lookup raise
-Exception(f"Action Lookup Config is Empty {cfg}") Exception: Action Lookup
-Config is Empty {} 2026-07-31 21:30:55,316 - nchantrs.widgets.widgets
+## Usage
 
-414: INFO     - Focus Out
+```bash
+# Launch the GUI (recommended for day-to-day use)
+python -m nchantdoffice [arguments]
+# or
+python __main__.py [arguments]
+# or, from the cmds/ directory (legacy launchers with extra
+# QtWebEngine render diagnostics + software-render lever):
+python cmds/runNchantdOffice.py [arguments]
+# or the convenience wrappers at repo root:
+./runNchantdOffice.py [arguments]
+# All of the above (no subcommand) boot the full NchantdOffice
+# main app unchanged. To boot a SINGLE-document 2-pane shell
+# use the new `document` subcommand (T-NEW-169, shipped 2026-08-19):
+./runNchantdOffice.py document --type <doc-type> [--path <file>]
+# See the `document` Subcommand section below for details.
+```
 
-n': None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon':
-None, 'modon': None}}, 'apps': ['nchantrs', 'nchantdoffice'], 'app':
-'nchantdoffice', 'pos': 'center'} 2026-07-31 00:58:08,458 -
-nchantrs.widgets.widgets                 1044: INFO     -
-nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager 2026-07-31
-00:58:08,468 - nchantdoffice.utilities.referral          105: INFO     -
-ReferralCode created: value='NB-Z5C-1WFD' 2026-07-31 00:58:13,579 -
-nchantdoffice.utilities.referral          312: WARNING  - \[referral_api] GET 
-<https://nchantdoffice.com/api/affiliate/earnings> failed:
-HTTPSConnectionPool(host='nchantdoffice.com', port=443): Max retries exceeded
-with url: /api/affiliate/earnings (Caused by
-ConnectTimeoutError(\<HTTPSConnection(host='nchantdoffice.com', port=443) at
-0x7e0d5b6cdb50>, 'Connection to nchantdoffice.com timed out. (connect
-timeout=5.0)')) 2026-07-31 00:58:13,580 -
-nchantdoffice.widgets.config.referral_panel  355: INFO     - \[referral_panel]
-using local fallback dashboard 2026-07-31 00:58:13,604 - squirl.orgnql.conql
+## `document` Subcommand (T-NEW-169, 2026-08-19)
 
-143: INFO     - Cache cleanup completed 2026-07-31 00:58:13,609 -
-squirl.orgnql.sonql                      2845: WARNING  - SQLT Read Failed due
-to no such column: position_int using this cmd SELECT \[app_action_PK],
-\[code_group_txt], \[lookup_code_txt], \[name_txt], \[description_ltxt],
-\[UUID], \[icon_txt], \[short_cut_txt], \[tip_txt], \[advanced_tip_txt],
-\[widget_txt], \[parameters_dict] FROM "app_action"  WHERE
-app_action.code_group_txt = 'base' ORDER BY position_int Traceback (most recent
-call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/widgets.py", line 149, in on_tab_focus
-self.model.load_tab(self.model.tabsdata\[tabn], tabn, self.pane_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3867, in load_tab super().load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 244, in load_tab
-self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab),
-tabset, tab)) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3903, in load_widget tabW.initWidget() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 147, in initWidget
-self.initView() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/config/referral_panel.py", line 95, in initView cfg =
-super().initView() ^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 975, in initView
-super().initView(cfg) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 140, in initView
-self.init_toolbar(cfg) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 406, in init_toolbar
-self.document_toolbar = NchantdButtonBar(self, cfg).initWidget(buttons)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/controls/toolbars.py", line 124, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/controls/toolbars.py", line 90, in
-initView action_cfg = kahndor.Instruct(lookup(self.app,
-action)).override(self.config) ^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/utilities/utils.py", line 115, in lookup raise
-Exception(f"Action Lookup Config is Empty {cfg}") Exception: Action Lookup
-Config is Empty {}
+The `document` subcommand boots a **standalone 2-pane minimal
+shell** for a single document type — useful when the operator
+wants a focused workspace without the full main-app chrome, or
+when dragging the standalone shell onto a second monitor (via
+T-NEW-170 once that card ships).
 
-2026-07-31 00:35:28,896 - nchantdoffice.widgets.config.settings     211: INFO
+**Usage:**
 
-\- \[settings] _initialize_doc_type_selector failed: 'NchantdDropDown' object
-has no attribute 'currentText' Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/config/settings.py", line 207, in
-_initialize_doc_type_selector initial = self.doc_type_selector.currentText() if
-hasattr(self, "doc_type_selector") else options\[0]
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AttributeError: 'NchantdDropDown' object has
-no attribute 'currentText' 2026-07-31 00:35:33,094 - nchantrs.widgets.widgets
+```bash
+runNchantdOffice.py document --type <name> [--path <file>]
+```
 
-414: INFO     - Focus Out
+**Arguments:**
 
-js: The resource https://ground.news/_next/static/chunks/328bfdd80a1e8090.js
-was preloaded using link preload but not used within a few seconds from the
-window's load event. Please make sure it has an appropriate `as` value and it is
-preloaded intentionally. 2026-07-29 00:07:30,989 -
-nchantdoffice.widgets.documents.managers.calendars  728: INFO     - Calendar
-unit changed to: 2026-07-29 00:07:30,989 -
-nchantdoffice.widgets.documents.managers.calendars  728: INFO     - Calendar
-unit changed to: Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/media/editors/selectors.py", line 133,
-in on_index_change self.handler(index, self.itemText(index)) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/managers/calendars.py", line 715, in
-cmd_on_change_scope self.set_scope(scope) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/managers/calendars.py", line 963, in set_scope
-self.calendar = NchantdCalendar(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/calendars.py", line 108, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/calendars.py", line 85, in
-initView self.calendar = NchantdMonthCalendar(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/months.py", line 114, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/months.py", line 68, in
-initView super().initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tabsets.py", line 105, in initView
-super().initView(cfg) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 921, in initView
-super().initView(cfg) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 206, in initView
-self.initialize_context_menu() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 216, in
-initialize_context_menu menu_name = self.context_menu_name
-^^^^^^^^^^^^^^^^^^^^^^ AttributeError: 'NchantdMonthCalendar' object has no
-attribute 'context_menu_name'
+| Argument | Type | Required | Choices | Default | Description |
+|----------|------|----------|---------|---------|-------------|
+| `--type` | TEXT | Yes | `script`, `notebook`, `image`, `form` | — | Document type to instantiate. The dispatch maps each name to the matching `NchantdOffice*` class. |
+| `--path` | TEXT | No | file path | None | Optional pre-load path. Threaded through the document's `open_file()` (best-effort; errors are logged, not raised). For notebook this can be a `.pyof` file path. |
 
-js: The resource https://ground.news/_next/static/chunks/328bfdd80a1e8090.js
-was preloaded using link preload but not used within a few seconds from the
-window's load event. Please make sure it has an appropriate `as` value and it is
-preloaded intentionally. 2026-07-29 00:07:09,748 -
-nchantrs.widgets.tables.tables            578: INFO     - Size 640 480
-2026-07-29 00:07:09,749 - nchantrs.widgets.tables.tables            580: INFO
+**Document types (operator-approved priority order, T-NEW-169 WIRE-3):**
 
-\- Size \[58, 160] Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/media/editors/selectors.py", line 133,
-in on_index_change self.handler(index, self.itemText(index)) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/managers/calendars.py", line 715, in
-cmd_on_change_scope self.set_scope(scope) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/managers/calendars.py", line 963, in set_scope
-self.calendar = NchantdCalendar(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/calendars.py", line 108, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/calendars.py", line 91, in
-initView self.calendar = NchantdYearCalendar(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 105, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 89, in
-initView self.month_tables\[i] = NchantdGrid(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 604, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 592, in
-initView grid_layout.addWidget(cell, row, col) TypeError:
-'PySide6.QtWidgets.QGridLayout.addWidget' called with wrong argument types:
-PySide6.QtWidgets.QGridLayout.addWidget(NchantdCell, int, int) Supported
-signatures: PySide6.QtWidgets.QGridLayout.addWidget(w:
-PySide6.QtWidgets.QWidget, /) PySide6.QtWidgets.QGridLayout.addWidget(arg__1:
-PySide6.QtWidgets.QWidget, row: int, column: int, /, alignment:
-PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
-PySide6.QtWidgets.QGridLayout.addWidget(arg__1: PySide6.QtWidgets.QWidget, row:
-int, column: int, rowSpan: int, columnSpan: int, /, alignment:
-PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
+| Type       | Opens                                       |
+|------------|---------------------------------------------|
+| `script`   | A `NchantdOfficeScript` editor window       |
+| `notebook` | A `NchantdOfficeNotebook` Jupyter window    |
+| `image`    | A `NchantdOfficeImage` viewer window        |
+| `form`     | A `NchantdOfficeForm` editor window         |
 
-', 'MIT'], ['email_validator', '2.2.0', 'The Unlicense (Unlicense)'] 2026-07-28
-23:56:12,370 - nchantrs.widgets.tables.tables            298: INFO     - Num
-Columns 40 2026-07-28 23:56:12,370 - nchantrs.widgets.tables.tables
+**Examples:**
 
-300: INFO     - Columns None 2026-07-28 23:56:12,370 -
-nchantrs.widgets.tables.tables            131: WARNING  - calc roman numerals
-Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/workbooks/matricies.py", line 1701, in
-on_cell_changed address = f"{chr(65 + item.column())}{item.row() + 1}"
-^^^^^^^^^^^^^ TypeError: 'NoneType' object is not callable Traceback (most
-recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/workbooks/matricies.py", line 1701, in
-on_cell_changed address = f"{chr(65 + item.column())}{item.row() + 1}"
-^^^^^^^^^^^^^ TypeError: 'NoneType' object is not callable Traceback (most
-recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/workbooks/matricies.py", line 1701, in
-on_cell_changed address = f"{chr(65 + item.column())}{item.row() + 1}"
-^^^^^^^^^^^^^
+```bash
+# Boot a Script editor standalone
+./runNchantdOffice.py document --type script
 
-ne}}, 'file_path': '', 'widget':
-'nchantrs.widgets.calendars.years.NchantdYearCalendar', 'tid':
-'06a69701-b37d-7970-8000-debb2606a30e', 'document': {'data': None, 'data_str':
-None, 'did': '06a69701-b37d-77c7-8000-f0e6de3282a4', 'syntax': None, 'name':
-'2026', 'position': 0, 'document_type': None, 'readonly': 0, 'editable': 1,
-'visible': 1, 'moveable': 1, 'tid': '06a69701-b37d-7970-8000-debb2606a30e',
-'pid': '06a69701-b343-732f-8000-93abb6533a35', 'widget':
-'nchantrs.widgets.calendars.years.NchantdYearCalendar', 'widgdata': '{}',
-'version': None, 'tab_type': 'year', 'location': None, 'encoding': None,
-'tags': None, 'hash': None, 'meta_data': {'creon': None, 'modon': None}},
-'apps': ['nchantrs', 'nchantdoffice'], 'app': 'nchantdoffice', 'pos': 'center'}
-2026-07-28 23:20:00,931 - nchantrs.widgets.widgets                 1034: INFO
+# Boot a Notebook standalone pre-loaded with a .pyof file
+./runNchantdOffice.py document --type notebook --path ~/my_session.pyof
 
-\- nchantrs.widgets.calendars.years.NchantdYearCalendar 2026-07-28 23:20:00,938
-\- nchantrs.widgets.tables.tables            578: INFO     - Size 640 480
-2026-07-28 23:20:00,938 - nchantrs.widgets.tables.tables
+# Boot an Image viewer standalone
+./runNchantdOffice.py document --type image --path ~/photo.png
+```
 
-580: INFO     - Size \[58, 160] Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/views/treeviews.py", line 193, in onLeftClick
-self.set_current_node(signal) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/views/treeviews.py", line 275, in
-set_current_node node.updateTabs("center") File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/items/nodes.py", line 551, in
-updateTabs self.app.view.panes\[view].model.buildTabSet(self, view) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3133, in buildTabSet self.load_tab_set(tabset,
-active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3230, in load_tab_set self.load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3344, in load_tab super().load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 237, in load_tab
-self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab),
-tabset, tab)) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3380, in load_widget tabW.initWidget() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 105, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 89, in
-initView self.month_tables\[i] = NchantdGrid(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 604, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 592, in
-initView grid_layout.addWidget(cell, row, col) TypeError:
-'PySide6.QtWidgets.QGridLayout.addWidget' called with wrong argument types:
-PySide6.QtWidgets.QGridLayout.addWidget(NchantdCell, int, int) Supported
-signatures: PySide6.QtWidgets.QGridLayout.addWidget(w:
-PySide6.QtWidgets.QWidget, /) PySide6.QtWidgets.QGridLayout.addWidget(arg__1:
-PySide6.QtWidgets.QWidget, row: int, column: int, /, alignment:
-PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
-PySide6.QtWidgets.QGridLayout.addWidget(arg__1: PySide6.QtWidgets.QWidget, row:
-int, column: int, rowSpan: int, columnSpan: int, /, alignment:
-PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
+**Behaviour:** When `--type` matches a known document class, the
+standalone shell constructs that class lazily (via
+`importlib.import_module` + `getattr`) inside the new
+`NchantdDocumentStandaloneWindow.initView` (in
+`nchantdoffice/nchantdoffice.py`). The class is mounted as the
+central widget and a placeholder right-side dock is attached so
+the operator gets the full 2-pane shell layout. If the dispatch
+fails (unknown `--type` or import error), the standalone shell
+falls back to a placeholder central widget with a logged
+warning.
 
-During handling of the above exception, another exception occurred:
+**Default behaviour (no subcommand):** the launch boots the
+full `NchantdOfficeCloak` main app — unchanged from before
+T-NEW-169. The `document` subcommand is additive.
 
-Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/views/treeviews.py", line 195, in onLeftClick
-self.set_current_node(signal) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/views/treeviews.py", line 275, in
-set_current_node node.updateTabs("center") File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/items/nodes.py", line 551, in
-updateTabs self.app.view.panes\[view].model.buildTabSet(self, view) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3133, in buildTabSet self.load_tab_set(tabset,
-active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3230, in load_tab_set self.load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3344, in load_tab super().load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 237, in load_tab
-self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab),
-tabset, tab)) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3380, in load_widget tabW.initWidget() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 105, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 89, in
-initView self.month_tables\[i] = NchantdGrid(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 604, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 592, in
-initView grid_layout.addWidget(cell, row, col) TypeError:
-'PySide6.QtWidgets.QGridLayout.addWidget' called with wrong argument types:
-PySide6.QtWidgets.QGridLayout.addWidget(NchantdCell, int, int) Supported
-signatures: PySide6.QtWidgets.QGridLayout.addWidget(w:
-PySide6.QtWidgets.QWidget, /) PySide6.QtWidgets.QGridLayout.addWidget(arg__1:
-PySide6.QtWidgets.QWidget, row: int, column: int, /, alignment:
-PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
-PySide6.QtWidgets.QGridLayout.addWidget(arg__1: PySide6.QtWidgets.QWidget, row:
-int, column: int, rowSpan: int, columnSpan: int, /, alignment:
-PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
+## Arguments
 
-2026-07-28 23:19:14,162 - nchantrs.widgets.widgets                 1028: INFO
+| Argument | Type | Required | Description | Default |
+|----------|------|----------|-------------|---------|
+| `tab_name` | TEXT | No | Specific tab to open | None |
+| `mode` | TEXT | No | Mode: 'scratch' or 'continue' | wizard |
 
-\- Load Widget Config {'NchantdWidget': {'dstruct': {'database': {'objects':
-None}}}, 'RegisteredWidgets': {'<(CHART)>': None, '<(CUSTOM)>': "need a method
-for telling the widget where to read the data from widgetdata:\\n  path:
-group000.label000\\n  entry: 'Summary'\\n  layer: data #format, formula,
-data\\ngroup000.textbox000\\n", '<(DOCEDIT)>':
-'nchantrs.widgets.editors.NchantdDocEditor', '<(LABEL)>':
-'nchantrs.widgets.annotations.NchantdLabel', '<(SCRATCHEDIT)>':
-'nchantrs.widgets.editors.NchantdScratchEditor', '<(TEXTBOX)>':
-'nchantrs.widgets.editors.NchantdEntryBox'}, 'expandCFG': {'fonts': {'default':
-{'font': 'Times', 'size': 12, 'style': 'regular'}}, 'styles': {'default':
-None}}, 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager':
-{}, 'tab': {'data': None, 'data_str': None, 'did':
-'024694d6-f14b-435b-a130-f86a7e4e447f', 'syntax': None, 'name': 'Affiliate
-Manager', 'position': 2, 'document_type': None, 'readonly': 0, 'editable': 1,
-'visible': 1, 'moveable': 1, 'tid': '06a69701-b24f-78a4-8000-076ddb717b53',
-'pid': '066a7cf6-5aca-79a2-8000-f4b5405a0427', 'widget':
-'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager',
-'widgdata': '{}', 'version': None, 'tab_type': 'custom_widget', 'location':
-None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon':
-None, 'modon': None}}, 'file_path': '', 'widget':
-'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager', 'tid':
-'06a69701-b24f-78a4-8000-076ddb717b53', 'document': {'data': None, 'data_str':
-None, 'did': '024694d6-f14b-435b-a130-f86a7e4e447f', 'syntax': None, 'name':
-'Affiliate Manager', 'position': 2, 'document_type': None, 'readonly': 0,
-'editable': 1, 'visible': 1, 'moveable': 1, 'tid':
-'06a69701-b24f-78a4-8000-076ddb717b53', 'pid':
-'066a7cf6-5aca-79a2-8000-f4b5405a0427', 'widget':
-'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager',
-'widgdata': '{}', 'version': None, 'tab_type': 'custom_widget', 'location':
-None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon':
-None, 'modon': None}}, 'apps': ['nchantrs', 'nchantdoffice'], 'app':
-'nchantdoffice', 'pos': 'center'} 2026-07-28 23:19:14,162 -
-nchantrs.widgets.widgets                 1034: INFO     -
-nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager Traceback
-(most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/widgets.py", line 149, in on_tab_focus
-self.model.load_tab(self.model.tabsdata\[tabn], tabn, self.pane_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3344, in load_tab super().load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 237, in load_tab
-self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab),
-tabset, tab)) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3380, in load_widget tabW.initWidget() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 142, in initWidget
-self.initModel() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/config/referral_panel.py", line 82, in initModel
-self._load_or_generate_code() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/config/referral_panel.py", line 310, in
-_load_or_generate_code getattr(self.user, "id", None) ^^^^^^^^^ AttributeError:
-'NchantdOfficeReferralPanel' object has no attribute 'user'
+## Commands
 
-, 'tab_type': 'custom_widget', 'location': None, 'encoding': None, 'tags':
-None, 'hash': None, 'meta_data': {'creon': None, 'modon': None}} 2026-07-28
-23:18:07,946 - nchantdoffice.widgets.tabs                 42: INFO     -
-\[tabs] NchantdOfficeTab._init_ parent=NchantdOfficeHelpDocs 2026-07-28
-23:18:07,949 - nchantdoffice.widgets.tabs                 52: INFO     -
-\[tabs] NchantdOfficeTab.initModel cfg_provided=False 2026-07-28 23:18:07,953 -
-nchantdoffice.widgets.config.help         118: INFO     - \[help] initView:
-reader build failed: 'document' Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/config/help.py", line 115, in initView self.reader =
-NchantdOfficePDF(self, {}).initWidget() ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/media/pdfs.py", line 192, in initWidget
-self.initModel() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/media/pdfs.py", line 157, in initModel
-logma.json(self.config.dikt["document"]) ~~~~~~~~~~~~~~~~^^^^^^^^^^^^ KeyError:
-'document' Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/widgets.py", line 149, in on_tab_focus
-self.model.load_tab(self.model.tabsdata\[tabn], tabn, self.pane_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3344, in load_tab super().load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 238, in load_tab
-self.tab_widgets\[tabn].dummy = False ~~~~~~~~~~~~~~~~^^^^^^ IndexError: list
-index out of range 2026-07-28 23:18:11,296 - nchantrs.widgets.widgets
+### Development Modes
 
-414: INFO     - Focus Out
+| Mode | Description |
+|------|-------------|
+| `scratch` | Create new file |
+| `continue` | Continue existing file |
+| (default) | Use wizard to setup |
 
-2026-07-28 22:52:27,642 - nchantrs.widgets.widgets                  446: INFO
+## Examples
 
-\- Mouse Press Event 2026-07-28 22:52:27,642 - nchantrs.widgets.widgets
+```bash
+# Launch with setup wizard
+python -m nchantdoffice
 
-466: INFO     - Left Click \<PySide6.QtGui.QMouseEvent(MouseButtonPress
-LeftButton pos=295,292 scn=641,361 gbl=641,387
-dev=QInputDevice(QPointingDevice("Virtual core pointer" Mouse id=2 seat=30002
-caps=Position|Scroll|Hover buttonCount=32))> 2026-07-28 22:52:27,642 -
-nchantrs.widgets.widgets                  467: INFO     - Left Click Traceback
-(most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/workbooks/matricies.py", line 1713, in
-on_selection_changed self.cell_ref_label.setText(address) ^^^^^^^^^^^^^^^^^^^
-AttributeError: 'NchantdOfficeMatrix' object has no attribute 'cell_ref_label'
+# Open specific tab in scratch mode (create new)
+python -m nchantdoffice scratch
 
-2026-07-27 19:45:49,937 - nchantdoffice.models                      391: INFO
+# Continue existing file
+python -m nchantdoffice continue
 
-\- Dumped Content {"content": {"file_path":
-"/home/solubrew/Downloads/ssrn-4668072.pdf"}, "path":
-"/home/solubrew/Downloads/ssrn-4668072.pdf"} 2026-07-27 19:45:49,937 -
-nchantdoffice.models                      394: INFO     - Encoded Dictionary
-b'eyJjb250ZW50IjogeyJmaWxlX3BhdGgiOiAiL2hvbWUvc29sdWJyZXcvRG93bmxvYWRzL3Nzcm4tND
-2ODA3Mi5wZGYifSwgInBhdGgiOiAiL2hvbWUvc29sdWJyZXcvRG93bmxvYWRzL3Nzcm4tNDY2ODA3Mi5
-ZGYifQ==' Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/controls/buttons.py", line 177, in
+# Open specific tab
+python -m nchantdoffice scratch documents
+```
 
-## `TODOs.md`
+## Architecture
 
-`TODOs.md`  `TODOs.md → Sprint 1 + Sprint 2 (2026-07-28) — persistence + safety
-pass` `45 passed, 2 skipped`
+NchantdOffice uses a modular architecture:
+- **Widgets**: Document views, workbooks, tabs
+- **Wizards**: Application startup wizard
+- **Cloak**: Application wrapper for initialization
+  (`NchantdOfficeCloakModel` in `nchantdoffice/nchantdoffice.py`)
 
-`T-NEW-015T-NEW-022`
+## Environment
 
-## `BUGs.md`
+The application requires no env vars at runtime since the
+**T-NEW-070 hard-break** (2026-08-11). All runtime config now
+comes from a single user config file:
 
-||                                                           |
+- **Global**: `~/.config/nchantdoffice/config.yaml` (XDG default)
+- **Per-project override**: `./nchantdoffice.yaml` (cwd)
 
-|
-||-----------------------------------------------------------|------------------
-\--------------------| ||`nchantrs.widgets.calendars.months.py:114`
+Config keys: `dev_mode`, `server.{url,timeout}`, `cache.dir`,
+`webengine.software_render`, `user.uuid`. See
+[`README.md`](./README.md) §"Pointing at a local test server"
+and `tests/test_user_config.py` for the contract pin (10 tests).
 
-|`context_menu_name`                    | ||`
-nchantrs.widgets.tables.tables.py:592`                    |`
-QGridLayout.addWidget(NchantdCell, ...)`| ||`
-nchantdoffice/widgets/documents/workbooks/matricies.py:1701`|`chr(None)`
+**The PyKeyStore passphrase is the one env-var bypass** that
+remains in the codebase (per the user's working agreement): set
+`PYKEY_PASSPHRASE` for non-TTY deploys; for TTY-bound runs the
+prompt is deliberate (and `EOFError` is the correct non-TTY
+behaviour).
 
-| ||`matricies.py:1713`
+**Deprecated env vars (removed by T-NEW-070):**
+`NCHANT_API_BASE`, `NCHANT_DATA_DIR`, `NCHANT_REFERRAL_SALT`,
+`NCHANT_WEBENGINE_SOFTWARE`. Setting them has no effect.
 
-|`cell_ref_label`                       | ||`
-nchantdoffice/widgets/config/referral_panel.py:310`       |`self.user`
+## Test runner
 
-| ||`pdfs.py:157`                                              |` KeyError:
-'document'`                 | ||`nchantrs/models/tabsetmodels.py:238` |`
-tab_widgets\\\\\\\\\\\\\\\[tabn]`                   | ||`
-nchantdoffice/widgets/documents/atnrg/browsers.py:348`    |`store_link(tag=...)`
-|
+```bash
+# Full pytest (headless Qt6)
+QT_QPA_PLATFORM=offscreen /home/solubrew/ENVs/sasquatch/bin/python \
+  -m pytest tests/ --continue-on-collection-errors -q
+```
 
-`.pyof`
+Or via the legacy `cmds/runTest.py` wrapper for the same
+flags + extra sasquatch-falcon hooks.
 
+## Update check
+
+The `UpdateChecker` runs on the user-configurable interval
+(T-NEW-059, default 6 hours). Set
+`force_ad_tab_free_hours` / `dismiss_version` via the
+`Settings/Interface` tab, or programmatically via
+`nchantdoffice.updates.checker.dismiss_version(days=7)` and
+the `set_ad_tab_free_hours` helper. See T-NEW-058/059/060 in
+[`CHANGES.md`](./CHANGES.md) for the full commit trail.
