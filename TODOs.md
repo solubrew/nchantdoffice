@@ -160,9 +160,12 @@ bodies remain below for traceability, but do not override this list.
    remain defined for 0.0.3 re-enable. 5 tests in
    `tests/test_t_new_150_matrix_formula_toolbar_disable.py`.
 4. **T-NEW-151 -- Fix nchantrs password verifier mismatch.**
-   `NchantdUser.get_password()` calls missing `verify_password`; the
-   available method is `verify_pword`. Upstream nchantrs fix tracked
-   here because it breaks NchantdOffice first-boot app_user bootstrap.
+   ✅ FIXED in `5e1999d` (upstream nchantrs). Added a single-line
+   alias `verify_password = verify_pword` inside `NchantdUser`
+   so both names resolve to the same impl. The operator's
+   first-boot `app_user` bootstrap now finds the method the
+   caller asks for. 4 new AST-source tests in
+   `tests/unit/nchantrs/utilities/test_verify_password.py`.
 
 ### P0.b -- T-NEW-144b phase 2 completed (2026-08-18)
 
