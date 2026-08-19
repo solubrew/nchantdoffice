@@ -232,10 +232,51 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         return self
 
     def initWidget(self) -> Self:
-        """ """
+        """Init lifecycle.
+
+        T-NEW-155: wire the per-widget Ctrl+D shortcut to
+        ``cmd_add_date`` so operators can insert today's date
+        from the keyboard when the script widget has focus.
+        Uses the canonical Qt pattern (QShortcut bound to
+        ``self`` with WidgetWithChildrenShortcut context).
+        """
         self.initModel()
         self.initView()
+        # T-NEW-155: per-widget registry. The QShortcut is
+        # bound to self; Qt fires it only when this widget or
+        # any of its children has focus. Other widgets'
+        # Ctrl+D (if any) are independent.
+        self._register_shortcut("Ctrl+D", self.cmd_add_date)
         return self
+
+    def _register_shortcut(self, keysequence: str, handler) -> Any:
+        """T-NEW-155 helper: bind a Qt shortcut to this widget.
+
+        Creates a QShortcut with the given ``keysequence``
+        (parsed via QKeySequence) and connects its
+        ``activated`` signal to ``handler``. The shortcut
+        uses ``WidgetWithChildrenShortcut`` context so it
+        fires when this widget or any of its children has
+        focus. The shortcut instance is stored on ``self``
+        (e.g. ``self._shortcuts`` list) to prevent GC.
+
+        The per-widget registry is reusable for future
+        shortcut bindings (the operator's deliberate
+        per-widget design — see T-NEW-155). Other widgets
+        may register their own shortcuts independently.
+        """
+        shortcut = pyqt.QShortcut(
+            pyqt.QKeySequence(keysequence),
+            self,
+        )
+        shortcut.setContext(pyqt.Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        shortcut.activated.connect(handler)
+        # Pin the shortcut so it isn't garbage collected
+        # while the widget is alive.
+        if not hasattr(self, "_shortcuts"):
+            self._shortcuts = []
+        self._shortcuts.append(shortcut)
+        return shortcut
 
     # T-insert-helpers: each cmd_add_<object> creates a real,
     # minimal placeholder for that object type directly in the
