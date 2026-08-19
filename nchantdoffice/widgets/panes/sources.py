@@ -786,15 +786,49 @@ class NchantdDataSetConfigPane(NchantdPane):
 
         return self
 
-    def cmd_on_description_change(self) -> Self:
-        """"""
+    def cmd_on_description_change(self, event, *args, **kwargs) -> Self:
+        """Persist the data-source-description change.
 
-        return self
+        T-NEW-167: was a forgotten stub returning ``self`` —
+        the body's docstring was empty (no PUSH marker) and
+        typing in the Data Source Description input field was
+        silently dropped. Mirrors the canonical ``charts.py:635``
+        pattern: read value from event, persist via the
+        model first, fall back to ``self.config.dikt`` on
+        read failure or missing helper, wrap in try/except so
+        a transient model error doesn't crash the field.
+        """
+        try:
+            value = getattr(event, "text", None) if event is not None else None
+            logma.info(f"[sources] cmd_on_description_change: len={len(value) if value else 0}")
+            if hasattr(self, "model") and hasattr(self.model, "set_source_description"):
+                self.model.set_source_description(value)
+            elif hasattr(self, "config") and hasattr(self.config, "dikt"):
+                self.config.dikt["source_description"] = value
+            return self
+        except Exception as e:
+            logma.error(f"[sources] cmd_on_description_change failed: {e}", exc_info=True)
+            return self
 
-    def cmd_on_name_change(self) -> Self:
-        """"""
+    def cmd_on_name_change(self, event, *args, **kwargs) -> Self:
+        """Persist the data-source-name change.
 
-        return self
+        T-NEW-167: was a forgotten stub returning ``self`` —
+        typing in the Data Source Name input field was silently
+        dropped. Mirrors the canonical ``charts.py:616``
+        pattern (same signature, same chart/sources shape).
+        """
+        try:
+            value = getattr(event, "text", None) if event is not None else None
+            logma.info(f"[sources] cmd_on_name_change: value={value!r}")
+            if hasattr(self, "model") and hasattr(self.model, "set_source_name"):
+                self.model.set_source_name(value)
+            elif hasattr(self, "config") and hasattr(self.config, "dikt"):
+                self.config.dikt["source_name"] = value
+            return self
+        except Exception as e:
+            logma.error(f"[sources] cmd_on_name_change failed: {e}", exc_info=True)
+            return self
 
 
 class NchantdSourceDefaultPane(NchantdWidget):
