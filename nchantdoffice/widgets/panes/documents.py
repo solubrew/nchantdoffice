@@ -1008,16 +1008,60 @@ class NchantdOfficeTabEditPane(NchantdPane):
         return notes
 
     def get_save_options(self) -> list[str]:
-        """"""
-        # PUSH to 0.0.3 - createion options in database app_options - in-sync maintains copies in all places and syncronizes them
-        return [
-            "Local File System"
-        ]  # , "NchantdOffice Primary", "NchantdOffice Instance", "Cloud File System", "In-Sync"]
+        """Return the canonical T-NEW-003 save-mode options.
+
+        T-NEW-003 closeout: was a PUSH 0.0.3 stub returning
+        ``["Local File System"]`` (the obsolete pre-T-NEW-003
+        5-backend schema). The canonical toggle shipped in
+        commit b3d8ff8 with three modes:
+
+          - ``file_path`` — on-disk file is the source of truth
+            (default for new documents, per ``documents.py:84``).
+          - ``to_dict`` — canonical Pyffice serialization persisted;
+            the on-disk file is unchanged.
+          - ``both`` — both file and DB are written.
+
+        The selected mode round-trips through
+        ``self.document.config.dikt["save_mode"]`` so it
+        persists across ``cmd_open_local_file``.
+        """
+        return ["file_path", "to_dict", "both"]
 
     def get_save_value(self) -> str:
-        """"""
-        # PUSHT to 0.0.3 need to pull current config for the document/tab from the database
-        return "Local File System"
+        """Return the persisted ``save_mode`` value with fallback.
+
+        T-NEW-003 closeout: was a PUSH 0.0.3 stub returning
+        the hardcoded ``"Local File System"`` (obsolete schema).
+        Mirrors the persistence order at ``documents.py:106-119``:
+
+          1. ``self.document.config.dikt["save_mode"]`` if the
+             Pyffice document carries a persisted value.
+          2. ``self.config.dikt["save_mode"]`` for new documents
+             whose Pyffice config hasn't been written yet.
+          3. Default ``"file_path"`` for legacy documents that
+             pre-date the toggle (matching ``documents.py:84``).
+
+        Defensive: any uncaught failure falls back to
+        ``"file_path"`` so the dropdown always shows a valid mode.
+        """
+        try:
+            doc_cfg = getattr(getattr(self, "document", None), "config", None)
+            doc_save_mode = None
+            if doc_cfg is not None and hasattr(doc_cfg, "dikt"):
+                doc_save_mode = doc_cfg.dikt.get("save_mode")
+            cfg_save_mode = (
+                self.config.dikt.get("save_mode")
+                if getattr(self, "config", None)
+                and hasattr(self.config, "dikt")
+                else None
+            )
+            return doc_save_mode or cfg_save_mode or "file_path"
+        except Exception as e:
+            logma.warning(
+                f"[documents] get_save_value: save_mode read failed: {e}; "
+                f"defaulting to file_path"
+            )
+            return "file_path"
 
     def get_tab(self) -> Any:
         """"""
