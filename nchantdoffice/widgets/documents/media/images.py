@@ -741,7 +741,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
                 # 600 px (matches the default tab body height
                 # in NchantdOfficeMainWindow).
                 parent_h = None
-                parent = self.parent()
+                parent = self.parent
                 if parent is not None and hasattr(parent, "height"):
                     try:
                         parent_h = int(parent.height())

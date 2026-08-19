@@ -87,14 +87,14 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.document.load_document()
         self.initialize_context_menu("context.document.browser")
         logma.json(self.document.to_dict())
-
         # need to connect to the active page aligned with PyfficeBrowser
-
         cfg = {}
-        self.active_page = NchantdOfficeWebPage(self.document.active_page, self, cfg)
+        intercept = False
+        self.active_page = NchantdOfficeWebPage(self, self.profile, intercept, cfg)
+        self.active_page.initWidget()
         cfg = {}
-        self.active_url.init_document(self.document.get_active_page().get_url_document(), cfg)
-
+        self.active_page.document.load_document(self.document.get_active_page().get_url_document().to_dict())
+        #self.active_url = self.active_page.get_active_url()
         self.get_current_profile()
         return self
 
@@ -102,7 +102,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """"""
         if cfg is None:
             cfg = {}
-        url = self.active_url.get_url()
+        url = self.active_page.get_active_url().get_url()
         cfg["url"] = url
         self.browser = NchantdWebViewer(self, cfg)
         self.browser.is_simple = False
@@ -1055,7 +1055,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             url = self.get_active_url()
         logma.info(f"Populate Document {url}")
         if self.pinned is False:
-            self.browser.populate_document(url)
+            self.browser.populate_viewport(url)
         # Refresh the URL inspection toolbox (no DB write).
         # if hasattr(self, "update_toolbox_url_inspection"):
         #     try:

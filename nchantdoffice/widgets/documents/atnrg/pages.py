@@ -73,12 +73,16 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
     def __init__(self, parent=None, profile=None, intercept=False, cfg=None) -> None:
         """Initialize the NchantdOfficeWebPage."""
         super().__init__(parent, profile, intercept, cfg)
-        self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeWebPage").override(cfg))
+        self.document = None
 
-    def initModel(self) -> Self:
+    def initModel(self, cfg=None) -> Self:
         """Initialize the model and return self for method chaining."""
-        super().initModel()
+        super().initModel(cfg)
+        document = {"document": self.config.override(cfg).get("document", {})}
+        self.document = self.app.model.codex.init_web_page(document)
+        self.document.load_document()
+        self.initialize_context_menu("context.document.browser.page")
         return self
 
     def initView(self) -> Self:
@@ -98,24 +102,22 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
         # self.parent.update_toolbox_url_inspection()
         return super().acceptNavigationRequest(url, request_type, is_main_frame)
 
-    def _execute_javascript(self, script, success_message=None) -> None:
-        """Execute JavaScript code in the web page.
-
-        Args:
-            script (str): JavaScript code to execute
-            success_message (str, optional): Message to log on successful execution
-        """
-        self.page().runJavaScript(script)
-        if success_message:
-            logma.info(f"JS success: {success_message}")
-
     def autofill_form(self) -> None:
         """Inject JavaScript to autofill HTML form fields with predefined data."""
         self._execute_javascript(self.AUTOFILL_SCRIPT, "Form autofilled successfully")
+        return self
 
     def clear_form(self) -> None:
         """Inject JavaScript to clear all form input fields."""
         self._execute_javascript(self.CLEAR_FORM_SCRIPT, "Form cleared successfully")
+        return self
+
+    def get_active_url(self) -> NchantdURL:
+        """"""
+        cfg = {}
+        url = None
+        url = NchantdURL(url, self, cfg).initModel()
+        return url
 
     def open_new_tab(self) -> Self:
         """Open a new browser tab."""
@@ -133,6 +135,18 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
         input_text = self.text_input.text()
         js_code = f"document.getElementById('{element_name}').value = '{input_text}';"
         self._execute_javascript(js_code, f"Text submitted to element '{element_name}'")
+        return self
+
+    def _execute_javascript(self, script, success_message=None) -> None:
+        """Execute JavaScript code in the web page.
+
+        Args:
+            script (str): JavaScript code to execute
+            success_message (str, optional): Message to log on successful execution
+        """
+        self.page().runJavaScript(script)
+        if success_message:
+            logma.info(f"JS success: {success_message}")
 
 
 class NchantdOfficeDevPage(NchantdOfficeWebPage):

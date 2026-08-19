@@ -165,17 +165,11 @@ class NchantdOfficeDocumentMixin:
         # Normalize: strip whitespace, pass through verbatim
         # (Qt accepts both CSS named colors and hex literals).
         css_color = color.strip()
-        stylesheet = (
-            f"QPushButton {{ background-color: {css_color}; "
-            f"color: white; }}"
-        )
+        stylesheet = f"QPushButton {{ background-color: {css_color}; " f"color: white; }}"
         try:
             button.setStyleSheet(stylesheet)
         except Exception as e:
-            logma.warning(
-                f"[documents] _apply_bg_color: setStyleSheet "
-                f"failed for color={css_color!r}: {e}"
-            )
+            logma.warning(f"[documents] _apply_bg_color: setStyleSheet " f"failed for color={css_color!r}: {e}")
 
     def initView(self, cfg=None) -> Self:
         """"""
@@ -1204,7 +1198,7 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         """"""
         self.document = self.document or PyfficeDocument({})
         if self.document.location is None:
-            self.document.set_location("external")
+            self.document.set_location("internal")
         content = self.get_content()
         if content and content != self.document.content:
             self.document.set_content(content)

@@ -13,10 +13,12 @@
 
 # -*- coding: utf-8 -*
 from __future__ import annotations
+
 # ======================================Standard Library Modules======================================================||
 from os.path import abspath, dirname, join, exists
 
 # ======================================3rd Party Library Modules=====================================================||
+from pandas import DataFrame
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
@@ -240,12 +242,12 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         logma.info(f"Document {document}")
         self.document = self.app.model.codex.init_matrix(document)
         self.document.load_document()
-        self.file_path = (
-            self.document.file_path
-            or self.config.dikt.get("file_path")
-            or (self.document.content or {}).get("file_path")
-            or (self.document.content or {}).get("content", {}).get("file_path")
-        )
+        # self.file_path = (
+        #     self.document.file_path
+        #     or self.config.dikt.get("file_path")
+        #     or (self.document.content or {}).get("file_path")
+        #     or (self.document.content or {}).get("content", {}).get("file_path")
+        # )
         self.context_menu_name = "context.document.matrix"
         self.initialize_context_menu(self.context_menu_name)
         return self
@@ -264,6 +266,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # if self.file_path is None or not exists(self.file_path):
         cfg = {"buttons": {49: "_insert_stretch"}, "layout": "vertical"}
 
+        # PUSH to 0.0.3
         # dscfg = {
         #     "label": "Select Data Set: ",
         #     "layout": "horizontal",
@@ -272,23 +275,27 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # }
         # self.dataset_select = NchantdDropDown(self.parent, dscfg)
         # cfg["buttons"][10] = {"action": "select_data_set", "widget": self.dataset_select}
-        cfg["buttons"][11] = {
-            "action": "formula_bar",
-            "name": "formula_bar",
-            "type": "entry_editor",
-            "widget": self.formula_bar,
-        }
+        # cfg["buttons"][11] = {
+        #     "action": "formula_bar",
+        #     "name": "formula_bar",
+        #     "type": "entry_editor",
+        #     "widget": self.formula_bar,
+        # }
         # if self.document.is_saved:  # is_data_set
         #     cfg["buttons"][200] = {"action": "show_data_set"}
         table_cfg = {"num_rows": 100, "num_columns": 40, "min_column_width": 30, "handler": self.cmd_cell_change}
         self.table = NchantdOfficeTable(self.parent, self.config.override(table_cfg)).initWidget()
+        self.file_path = self.document.file_path
         super().initView(cfg)
         self.layout.addWidget(self.table, stretch=1)
         self.layout.setSpacing(3)
         # self.layout.setContentsMargins(0, 0, 0, 0)
         logma.info(f"[ INITIALIZE NCHANTD OFFICE MATRIX VIEW ] - populate document")
-        # self.populate_document()
         self.formula_input = pyqt.QLineEdit()
+        if self.document.location == "external":
+            self.open_file(self.document.file_path)
+        elif self.document.location == "internal":
+            self.load_data(self.document.data)
         return self
 
     def initWidget(self) -> Self:
@@ -1729,6 +1736,10 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.insert_row(position)
         return self
 
+    def load_data(self, content):
+        """"""
+        self.populate_document()
+
     def move_cell(self, addrow, addcol) -> Self:
         """Move the active cell within the worksheet"""
         if self.table:
@@ -1785,29 +1796,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # Emit signal
         self.dataChanged.emit({"address": address, "value": value})
 
-    def _mirror_cell_to_document(self, row, column, value) -> None:
-        """Mirror one edited cell into the internal document grid."""
-        document = getattr(self, "document", None)
-        if document is None:
-            return
-        content = getattr(document, "content", None)
-        if not isinstance(content, dict):
-            content = {}
-            document.content = content
-        grid = content.get("grid")
-        if not isinstance(grid, list):
-            grid = []
-        while len(grid) <= row:
-            width = max(column + 1, max((len(r) for r in grid if isinstance(r, list)), default=0))
-            grid.append([""] * width)
-        for existing_row in grid:
-            if isinstance(existing_row, list) and len(existing_row) <= column:
-                existing_row.extend([""] * (column + 1 - len(existing_row)))
-        if not isinstance(grid[row], list):
-            grid[row] = [""] * (column + 1)
-        grid[row][column] = value
-        content["grid"] = grid
-
     def on_selection_changed(self) -> None:
         """Handle selection change"""
         address = self.get_current_address()
@@ -1848,18 +1836,11 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
         self.set_cell_value(address, formula)
 
-    def open_file(self, file=None) -> Self:
+    def open_file(self, file=None, _populate_document=False, _save=True) -> Self:
         """Open a spreadsheet using the Pyffice matrix importer."""
-        if file is None:
-            file = self.file_path
-        if not file:
-            return self
         self._show_unsupported_feature_message()
-        self.set_file_path(file)
-        self.document.open_file(file)
-        self.document.set_location("external")
+        super().open_file(file, _populate_document, _save)
         self.populate_document()
-        self.save()
         return self
 
     def recalculate_all_formulas(self) -> Self:
@@ -1994,25 +1975,12 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         the same envelope shape with the same fallback.
         """
         logma.info(f"[matricies] Populate worksheet {self.file_path}")
-        content = getattr(self.document, "content", None) or {}
-        if isinstance(content, dict) and isinstance(content.get("content"), dict):
-            envelope = content["content"]
-        else:
-            envelope = content if isinstance(content, dict) else {}
-        # Canonical envelope: envelope["grid"]; legacy flat: content["grid"].
-        grid = envelope.get("grid") if isinstance(envelope, dict) else None
-        if not isinstance(grid, list):
-            grid = content.get("grid") if isinstance(content, dict) else None
-        formulas = envelope.get("formulas") if isinstance(envelope, dict) else None
-        if not isinstance(formulas, list):
-            formulas = content.get("formulas") if isinstance(content, dict) else None
-        data = grid if isinstance(grid, list) else getattr(self.document, "data", None)
+        data = self.document.data
         if isinstance(data, dict):
-            nested = data.get("content", data)
-            if isinstance(nested, dict):
-                data = nested.get("grid", [])
+            data = DataFrame(data).values.tolist()
         if data is None:
             data = []
+        logma.info(f"Data {data}")
         self.table.update_data(data)
         self._apply_cell_sizes()
         self.connect_signals()
@@ -2416,39 +2384,62 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         return items[cnt]
 
-    def _open_file(self, path) -> Self:
-        """Load a spreadsheet file from disk into the table.
+    def _mirror_cell_to_document(self, row, column, value) -> None:
+        """Mirror one edited cell into the internal document grid."""
+        document = getattr(self, "document", None)
+        if document is None:
+            return
+        content = getattr(document, "content", None)
+        if not isinstance(content, dict):
+            content = {}
+            document.content = content
+        grid = content.get("grid")
+        if not isinstance(grid, list):
+            grid = []
+        while len(grid) <= row:
+            width = max(column + 1, max((len(r) for r in grid if isinstance(r, list)), default=0))
+            grid.append([""] * width)
+        for existing_row in grid:
+            if isinstance(existing_row, list) and len(existing_row) <= column:
+                existing_row.extend([""] * (column + 1 - len(existing_row)))
+        if not isinstance(grid[row], list):
+            grid[row] = [""] * (column + 1)
+        grid[row][column] = value
+        content["grid"] = grid
 
-        Uses ``pyffice`` (the Excel-equivalent backing library) when
-        available to parse ``path``. Updates ``self.file_path`` and
-        triggers a UI refresh. Returns ``self`` for chainable callers.
-        """
-        if not path:
-            return self
-        try:
-            from pyffice.workbooks.spreadsheets import load_workbook
-        except ImportError:
-            logma.warning("[matricies] pyffice not available; cannot open file")
-            return self
-        try:
-            workbook = load_workbook(path, data_only=True)
-            sheet = workbook.active if hasattr(workbook, "active") else None
-            if sheet is None:
-                return self
-            rows = list(sheet.iter_rows(values_only=True))
-            if not rows:
-                return self
-            self.table.setRowCount(len(rows))
-            self.table.setColumnCount(max(len(r) for r in rows))
-            for r_idx, row in enumerate(rows):
-                for c_idx, value in enumerate(row):
-                    self.table.setItem(r_idx, c_idx, pyqt.QTableWidgetItem(str(value) if value is not None else ""))
-            self.file_path = path
-            self.num_rows = len(rows)
-            self.num_cols = max(len(r) for r in rows) if rows else 0
-        except Exception as e:
-            logma.error(f"[matricies] _open_file failed: {e}", exc_info=True)
-        return self
+    # def _open_file(self, path) -> Self:
+    #     """Load a spreadsheet file from disk into the table.
+    #
+    #     Uses ``pyffice`` (the Excel-equivalent backing library) when
+    #     available to parse ``path``. Updates ``self.file_path`` and
+    #     triggers a UI refresh. Returns ``self`` for chainable callers.
+    #     """
+    #     if not path:
+    #         return self
+    #     try:
+    #         from pyffice.workbooks.spreadsheets import load_workbook
+    #     except ImportError:
+    #         logma.warning("[matricies] pyffice not available; cannot open file")
+    #         return self
+    #     try:
+    #         workbook = load_workbook(path, data_only=True)
+    #         sheet = workbook.active if hasattr(workbook, "active") else None
+    #         if sheet is None:
+    #             return self
+    #         rows = list(sheet.iter_rows(values_only=True))
+    #         if not rows:
+    #             return self
+    #         self.table.setRowCount(len(rows))
+    #         self.table.setColumnCount(max(len(r) for r in rows))
+    #         for r_idx, row in enumerate(rows):
+    #             for c_idx, value in enumerate(row):
+    #                 self.table.setItem(r_idx, c_idx, pyqt.QTableWidgetItem(str(value) if value is not None else ""))
+    #         self.file_path = path
+    #         self.num_rows = len(rows)
+    #         self.num_cols = max(len(r) for r in rows) if rows else 0
+    #     except Exception as e:
+    #         logma.error(f"[matricies] _open_file failed: {e}", exc_info=True)
+    #     return self
 
     def _read_table_to_grid(self) -> tuple[list[list[str]], list[list[str]]]:
         """T-083 helper - walk the table and return (grid, formulas).
@@ -2525,15 +2516,17 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         ``self.config.dikt['user_messages']`` so the UI can
         display it in the cell-info / status bar.
         """
-        self.user_messages = [
-            "Some Excel features aren't supported by the spreadsheet widget:",
-            "  - Pivot tables and macros are stubbed",
-            "  - Charts embedded in cells are not rendered",
-            "  - Conditional formatting is approximated",
-            "Multi-sheet workbooks are loaded as a single tab.",
-        ]
-        if hasattr(self, "config"):
-            self.config.dikt["user_messages"] = list(self.user_messages)
+        user_message = """
+            Some Excel features aren't supported by the spreadsheet widget:
+            - Pivot tables and macros are stubbed
+            - Charts embedded in cells are not rendered
+            - Conditional formatting is approximated
+            Multi-sheet workbooks are loaded as multiple tabs.
+            Saving over the original file is not supported no loss will occur to original file.
+        """
+        # TODO implement popup dialog to display message with options to cancel or continue
+        # if hasattr(self, "config"):
+        #    self.config.dikt["user_messages"] = list(self.user_messages)
 
 
 # ====================================================================================================================||
