@@ -307,7 +307,21 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
         return self
 
     def show_checkboxes(self) -> Self:
-        """"""
+        """Stub removed — folded into ``show_multiple_options``.
+
+        T-NEW-168 history: this method was a forgotten stub
+        (empty docstring + ``return self``) that the
+        ``update_checkboxes`` dispatcher called instead of
+        ``show_multiple_options`` — the real impl that
+        constructs the NchantdCheckboxGroup. The dispatcher
+        was renamed to call ``show_multiple_options``; this
+        stub stays as a thin alias for back-compat (any
+        external caller that invokes ``show_checkboxes``
+        forwards to the real impl). The real impl returns
+        ``None`` so the alias wraps in ``return self`` for
+        chainable callers.
+        """
+        self.show_multiple_options()
         return self
 
     def show_file_path(self) -> Self:
@@ -452,9 +466,18 @@ class NchantdOfficeNewDocumentPane(NchantdNewNodePane):
             self.multiple_options = None
 
     def update_checkboxes(self) -> Self:
-        """"""
+        """Render the multi-options checkbox group for the active item.
+
+        T-NEW-168: pre-fix body called ``self.show_checkboxes()``
+        which is a forgotten stub (docstring + ``return self``).
+        The real impl is ``self.show_multiple_options()`` (line 388)
+        which constructs the NchantdCheckboxGroup for
+        ``self.active_item.multi_options``. The dispatcher was
+        wired to the wrong (stale) name; this commit renames
+        the call target.
+        """
         if self.active_item.has_multiple_options:
-            self.show_checkboxes()
+            self.show_multiple_options()
         return self
 
     def update_file_buttons(self) -> Self:
