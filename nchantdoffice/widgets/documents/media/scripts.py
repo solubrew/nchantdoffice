@@ -18,6 +18,7 @@ from __future__ import annotations
 from os.path import dirname, join, exists
 import json as j
 from bs4 import BeautifulSoup
+import os
 
 # ======================================3rd Party Library Modules=====================================================||
 from pygments import highlight
@@ -216,7 +217,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             self.set_note_view()
         else:
             raise Exception("view_type must be 'page_view' or 'note_view'")
-        self.populate_document()
+        if self.document.location == "external":
+            self.open_file(self.document.file_path)
+        elif self.document.location == "internal":
+            self.load_data(self.document.data)
+        # self.populate_document()
         # PUSH to 0.0.3 force external until
         # self.document.set_location("external")
         #
@@ -347,6 +352,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         else:
             if debug:
                 raise Exception(f"local_file is None: {self.local_file}")
+        # TODO need to handle cancel event
         return self
 
     def cmd_pretty_print_selected_text(self, event, *args, **kwargs) -> Self:
@@ -1096,6 +1102,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             cursor.insertImage(image_format)
         return self
 
+    def load_data(self, content):
+        """"""
+        self.populate_document()
+
     def onEnterEvent(self) -> Self:
         """Run a save of the doc editor data to the database"""
         return self
@@ -1136,50 +1146,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
           everything else -> plain-text
         """
         super().open_file(file, _populate_document, _save)
-        detected_syntax = self._apply_extension_syntax(file)
-        doc = getattr(self, "document", None)
-        doc_id = getattr(doc, "did", None) if doc is not None else None
-        if detected_syntax and doc_id:
-            model = getattr(self, "app", None) and getattr(self.app, "model", None)
-            if model is not None and hasattr(model, "update_doc_media_syntax"):
-                model.update_doc_media_syntax(doc_id, detected_syntax)
-        self._initial_load = True
         self.populate_document()
-        self._initial_load = False
-
-        # try:
-        #     self.set_file_path(file)
-        #     if file is not None:
-        #         # T-NEW-024: derive the syntax from the file extension
-        #         # so the reopen dispatch picks the right editor API.
-        #         detected_syntax = self._apply_extension_syntax(file)
-        #         self.document.open_file(file)
-        #         # T-NEW-024 followup: the in-memory document.syntax
-        #         # is correct, but the doc_media row in the DB
-        #         # still carries the "html" default written at
-        #         # tab-creation time. On the next reopen, the
-        #         # loaded tab reads syntax="html" from the DB
-        #         # and the dispatch falls through to setPlainText.
-        #         # Push the detected syntax to the doc_media row
-        #         # so the next reopen reads the correct value.
-        #         doc = getattr(self, "document", None)
-        #         doc_id = getattr(doc, "did", None) if doc is not None else None
-        #         if detected_syntax and doc_id:
-        #             model = getattr(self, "app", None) and getattr(self.app, "model", None)
-        #             if model is not None and hasattr(model, "update_doc_media_syntax"):
-        #                 model.update_doc_media_syntax(doc_id, detected_syntax)
-        # except Exception as e:
-        #     logma.warning(e)
-        #     logma.debug(f"[scripts] open_file traceback: {e}", exc_info=True)
-        # self.document.set_location("external")
-        # # T-NEW-023 marker: this open_file() call is the *initial*
-        # # file-open path (cmd_open_local_file) and must run the
-        # # syntax dispatcher; populate_document() reloads (called
-        # # from initView on tab-return) honour the raw-bytes
-        # # contract instead.
-        # self._initial_load = True
-        # self.populate_document()
-        # self._initial_load = False
         return self
 
     def populate_data(self) -> None:
@@ -1212,63 +1179,40 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         disk; the editor's HTML is preserved verbatim.
         """
         logma.info(f"Populating Document")
-
-        # T-NEW-024: on reopen, re-derive the syntax from the file
-        # extension so the dispatch picks the right editor API
-        # even when the DB config.dikt carries a stale
-        # "plaintext" (the saved config predates the extension
-        # detection). The on-disk file is the source of truth.
         logma.info(f"\n[ NchantdOfficeScript ] - File Path {self.file_path}")
-        if getattr(self, "file_path", None):
-            detected = self._apply_extension_syntax(self.file_path)
-            if detected and detected != "plain-text":
-                self.format_type = detected
-        if self.document.location == "external":
-            # External file loading: if the document has a file_path set
-            # (e.g. the user opened an external .py / .js / .md / .txt
-            # file via cmd_open_local_file), load its contents into the
-            # editor. Returns True when a file was loaded.
-            loaded_from_disk = self._load_external_file()
+        # if self.document.location == "external":
+        #     if getattr(self, "file_path", None):
+        #         detected = self._apply_extension_syntax(self.file_path)
+        #         if detected and detected != "plain-text":
+        #             self.format_type = detected
+        # text = self.document.text
+        # loaded_from_disk = self._load_external_file()
+        # style = f"background-color: #FFFFFF;"
+        # self.document_editor.setStyleSheet(style)
+        # if loaded_from_disk:
+        #     if getattr(self, "_initial_load", False):
+        #         try:
+        #             path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path", None)
+        #             if path:
+        #                 path = os.path.abspath(path)
+        #                 with open(path, "r", encoding="utf-8", errors="replace") as f:
+        #                     text = f.read()
+        #                 # Apply the dispatcher for the initial
+        #                 # file-open so syntax highlighting works.
+        #                 self._apply_syntax_highlighting(text)
+        #         except Exception as e:
+        #             logma.error(
+        #                 f"[scripts] populate_document: on-disk dispatch failed: {e}",
+        #                 exc_info=True,
+        #             )
+        #         return self
+        #     # Reload from a different tabset: preserve raw bytes.
+        #     return self
 
-            style = f"background-color: #FFFFFF;"
-            self.document_editor.setStyleSheet(style)
-
-            # T-NEW-023 (user-stated contract): the on-disk file is the
-            # source-of-truth. On an *initial* file-open
-            # (cmd_open_local_file -> open_file), apply the syntax
-            # dispatcher so markdown / python / pygments / html render
-            # with their proper editor APIs. On a *reload* (returning to
-            # the tab from a different tabset), mirror the raw bytes via
-            # the setPlainText call already made by
-            # ``_load_external_file`` — running pygments / markdown
-            # / html conversion drops the leading whitespace (verified:
-            # ``setMarkdown('# Hello\n\n    - indented bullet\n')``
-            # followed by ``toPlainText()`` returns
-            # ``'Hello\n- indented bullet'``).
-            if loaded_from_disk:
-                if getattr(self, "_initial_load", False):
-                    try:
-                        import os
-
-                        path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path", None)
-                        if path:
-                            path = os.path.abspath(path)
-                            with open(path, "r", encoding="utf-8", errors="replace") as f:
-                                text = f.read()
-                            # Apply the dispatcher for the initial
-                            # file-open so syntax highlighting works.
-                            self._apply_syntax_highlighting(text)
-                    except Exception as e:
-                        logma.error(
-                            f"[scripts] populate_document: on-disk dispatch failed: {e}",
-                            exc_info=True,
-                        )
-                    return self
-                # Reload from a different tabset: preserve raw bytes.
-                return self
-
-        text = self._resolve_document_text()
-
+        # text = self._resolve_document_text()
+        text = self.document.text.value
+        logma.info(f"Syntax {self.document.syntax}")
+        logma.info(f"File Format {self.document.file_format}")
         # if self.document is None:
         #    self.document_editor.convert_urls_to_links(text)
         #    return self
@@ -1333,72 +1277,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self.view_type = self.config.dikt.get("view_type", "note_view")
         return self
 
-
-    def _export_editor_payload(self) -> str:
-        """Return the text payload that matches the editor's current syntax."""
-        editor = getattr(self, "document_editor", None)
-        if editor is None:
-            return ""
-        syntax = getattr(getattr(self, "document", None), "syntax", None) or "plain-text"
-        try:
-            if syntax == "html":
-                return editor.toHtml()
-            if syntax == "markdown":
-                try:
-                    return editor.toMarkdown()
-                except Exception:
-                    return editor.toPlainText()
-            if syntax in ("plain-text", "plaintext"):
-                return editor.toPlainText()
-            if syntax in ("xml", "latex", "tex", "rmd", "rst", "texinfo"):
-                return editor.toPlainText()
-            return editor.toPlainText()
-        except Exception:
-            return editor.toPlainText()
-
-    def _legacy_export_editor_payload(self) -> str:
-        """Return the text payload that matches the editor's current syntax.
-
-        Used by external-file save so the bytes on disk mirror the
-        syntax the user sees. Each syntax maps to the editor API
-        that produces its native representation:
-
-            * html  -> document_editor.toHtml()
-            * markdown -> document_editor.toMarkdown()
-            * plain-text / plaintext -> document_editor.toPlainText()
-            * python / javascript / json / yaml / toml / css / r /
-              bash / ruby / c / cpp / cs / qss -> toPlainText() then
-              highlightable lexer mapping matches the editor's
-              syntax; pygments-produced payloads still come from the
-              editor via setHtml, so a round-trip to source text uses
-              toPlainText() (the source the user actually edits).
-            * xml / latex / tex / rmd / rst / texinfo -> toPlainText()
-              (those syntaxes do not round-trip via setHtml).
-
-        Returns an empty string when the editor is missing.
-        """
-        editor = getattr(self, "document_editor", None)
-        if editor is None:
-            return ""
-        syntax = getattr(getattr(self, "document", None), "syntax", None) or "plain-text"
-        try:
-            if syntax == "html":
-                return editor.toHtml()
-            if syntax == "markdown":
-                try:
-                    return editor.toMarkdown()
-                except Exception:
-                    return editor.toPlainText()
-            if syntax in ("plain-text", "plaintext"):
-                return editor.toPlainText()
-            if syntax in ("xml", "latex", "tex", "rmd", "rst", "texinfo"):
-                return editor.toPlainText()
-            # highlightable languages: editor holds a setHtml() payload;
-            # the source text the user edits is the plain text.
-            return editor.toPlainText()
-        except Exception:
-            return editor.toPlainText()
-
     def save(self) -> Self:
         """Capture the current editor contents and persist them.
 
@@ -1414,53 +1292,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         content = self.get_content()
         if content != self.document.content:
             self.document.set_content(content)
-        if (
-            getattr(self.document, "location", None) == "external"
-            and getattr(self, "file_path", None)
-        ):
+        if getattr(self.document, "location", None) == "external" and getattr(self, "file_path", None):
             self._write_external_file()
         super().save()
         return self
-
-    def _write_external_file(self) -> None:
-        """Atomically save the editor payload to ``self.file_path``.
-
-        Only runs when ``self.document.location == "external"`` and
-        ``self.file_path`` is set. Uses the syntax-aware exporter so
-        the bytes on disk match what the user sees in the editor
-        (HTML for HTML documents, plain text for code, etc.).
-        """
-        path = getattr(self, "file_path", None)
-        if not path:
-            return
-        text = self._export_editor_payload()
-        if not text:
-            return
-        encoding = "utf-8"
-        try:
-            cfg_encoding = (
-                getattr(getattr(self, "config", None), "dikt", {}) or {}
-            ).get("encoding")
-            if cfg_encoding:
-                encoding = cfg_encoding
-        except Exception:
-            pass
-        directory = dirname(path) or "."
-        tmp_path = f"{path}.tmp"
-        try:
-            from os import makedirs, replace
-
-            makedirs(directory, exist_ok=True)
-            with open(tmp_path, "w", encoding=encoding) as f:
-                f.write(text)
-            replace(tmp_path, path)
-        except Exception:
-            try:
-                if exists(tmp_path):
-                    from os import remove
-                    remove(tmp_path)
-            except Exception:
-                pass
 
     def set_page_view(self) -> None:
         """"""
@@ -1553,23 +1388,20 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         ext = os.path.splitext(path or "")[1].lower()
         syntax = ext_map.get(ext, "plain-text")
         self.format_type = syntax
-        # Mirror onto the config so get_document_syntax() picks it
-        # up before the document is opened.
-        if hasattr(self, "config") and hasattr(self.config, "dikt"):
-            self.config.dikt["document_syntax"] = syntax
-            self.config.dikt["syntax"] = syntax
-            # T-NEW-024 followup: also write to the nested
-            # ``document.syntax`` dict that the
-            # ``_apply_syntax_highlighting`` dispatch reads via
-            # ``config.dikt["document"]["syntax"]``. Without this,
-            # the dispatch silently downgrades ``document.syntax``
-            # back to the stale ``plain-text`` default and the
-            # markdown / python / pygments branches never fire.
-            doc_cfg = self.config.dikt.get("document")
-            if not isinstance(doc_cfg, dict):
-                doc_cfg = {}
-                self.config.dikt["document"] = doc_cfg
-            doc_cfg["syntax"] = syntax
+        self.config.dikt["document_syntax"] = syntax
+        self.config.dikt["syntax"] = syntax
+        # T-NEW-024 followup: also write to the nested
+        # ``document.syntax`` dict that the
+        # ``_apply_syntax_highlighting`` dispatch reads via
+        # ``config.dikt["document"]["syntax"]``. Without this,
+        # the dispatch silently downgrades ``document.syntax``
+        # back to the stale ``plain-text`` default and the
+        # markdown / python / pygments branches never fire.
+        doc_cfg = self.config.dikt.get("document")
+        if not isinstance(doc_cfg, dict):
+            doc_cfg = {}
+            self.config.dikt["document"] = doc_cfg
+        doc_cfg["syntax"] = syntax
         # Push to document so the in-memory doc carries the right
         # syntax for the docs that read self.document.syntax.
         if getattr(self, "document", None) is not None:
@@ -1608,14 +1440,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # fingerprint is the strict DTD URL; matching on it (case-
         # insensitive) tolerates whitespace/quote variants.
         _DOCTYPE_FINGERPRINT = "rec-html40/strict.dtd"
-        if (
-            isinstance(text, str)
-            and _DOCTYPE_FINGERPRINT in text[:2048].lower()
-        ):
+        if isinstance(text, str) and _DOCTYPE_FINGERPRINT in text[:2048].lower():
             logma.info(
                 "[scripts] doctype guard: strict-dtd payload -> "
-                "setHtml (syntax=%r overridden)"
-                % (self.document.syntax,)
+                "setHtml (syntax=%r overridden)" % (self.document.syntax,)
             )
             self.document_editor.setHtml(text)
             return
@@ -1629,14 +1457,26 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # until the rename completes across the app.
         if self.document.syntax is None or isinstance(self.document.syntax, float):  # NaN guard
             self.document.syntax = "plain-text"
-        if hasattr(self.document, "file_format"):
-            self.document.file_format = self.document.syntax
+        # if hasattr(self.document, "file_format"):
+        #     self.document.file_format = self.document.syntax
         logma.info(f"Document Format: {self.document.file_format}")
         logma.info(f"Syntax {self.document.syntax}")
 
         # 1:1 setters — no transformation
         if self.document.syntax == "markdown":
-            self.document_editor.setMarkdown(text)
+            # Markdown is edited as SOURCE, not rendered WYSIWYG. Using
+            # setMarkdown() here parses the markup into rich text; the
+            # matching save path (_export_editor_payload) would then
+            # round-trip it through Qt's toMarkdown(), which backslash-
+            # escapes every literal '#', '-', '`', … The two together
+            # form a feedback loop: each save/reload cycle re-escapes
+            # the markers ('#' -> '\#' -> '\\#' …) until the file is a
+            # wall of escaped literals that setMarkdown renders as plain
+            # text. Loading the raw source with setPlainText keeps the
+            # markers verbatim and pairs with a toPlainText() save so the
+            # bytes on disk are stable across reopens.
+            logma.info("Markdown (source, plain-text)")
+            self.document_editor.setPlainText(text)
             return
         if self.document.syntax in ("plain-text", "plaintext"):
             logma.info("PlainText")
@@ -1712,6 +1552,30 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             items[cnt] = {"action": "insert_generic_action", "type": "custom"}
         return items[cnt]
 
+    def _export_editor_payload(self) -> str:
+        """Return the text payload that matches the editor's current syntax."""
+        editor = getattr(self, "document_editor", None)
+        if editor is None:
+            return ""
+        syntax = getattr(getattr(self, "document", None), "syntax", None) or "plain-text"
+        try:
+            if syntax == "html":
+                return editor.toHtml()
+            if syntax == "markdown":
+                # Save markdown as raw SOURCE. toMarkdown() escapes
+                # literal markup ('#' -> '\#'), which the setPlainText
+                # load path would then show verbatim — corrupting the
+                # file a little more on every save. toPlainText() writes
+                # exactly what the user typed.
+                return editor.toPlainText()
+            if syntax in ("plain-text", "plaintext"):
+                return editor.toPlainText()
+            if syntax in ("xml", "latex", "tex", "rmd", "rst", "texinfo"):
+                return editor.toPlainText()
+            return editor.toPlainText()
+        except Exception:
+            return editor.toPlainText()
+
     def _insert_object_placeholder(self, label, marker, html=None) -> Self:
         """Insert a real object placeholder at the current cursor.
 
@@ -1749,6 +1613,48 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 inserts = self.document.object_inserts
             inserts.append({"label": label, "marker": marker, "html": html})
         return self
+
+    def _legacy_export_editor_payload(self) -> str:
+        """Return the text payload that matches the editor's current syntax.
+
+        Used by external-file save so the bytes on disk mirror the
+        syntax the user sees. Each syntax maps to the editor API
+        that produces its native representation:
+
+            * html  -> document_editor.toHtml()
+            * markdown -> document_editor.toMarkdown()
+            * plain-text / plaintext -> document_editor.toPlainText()
+            * python / javascript / json / yaml / toml / css / r /
+              bash / ruby / c / cpp / cs / qss -> toPlainText() then
+              highlightable lexer mapping matches the editor's
+              syntax; pygments-produced payloads still come from the
+              editor via setHtml, so a round-trip to source text uses
+              toPlainText() (the source the user actually edits).
+            * xml / latex / tex / rmd / rst / texinfo -> toPlainText()
+              (those syntaxes do not round-trip via setHtml).
+
+        Returns an empty string when the editor is missing.
+        """
+        editor = getattr(self, "document_editor", None)
+        if editor is None:
+            return ""
+        syntax = getattr(getattr(self, "document", None), "syntax", None) or "plain-text"
+        try:
+            if syntax == "html":
+                return editor.toHtml()
+            if syntax == "markdown":
+                # Markdown is edited as source; toMarkdown() would
+                # escape the literal markup. Save the raw text.
+                return editor.toPlainText()
+            if syntax in ("plain-text", "plaintext"):
+                return editor.toPlainText()
+            if syntax in ("xml", "latex", "tex", "rmd", "rst", "texinfo"):
+                return editor.toPlainText()
+            # highlightable languages: editor holds a setHtml() payload;
+            # the source text the user edits is the plain text.
+            return editor.toPlainText()
+        except Exception:
+            return editor.toPlainText()
 
     def _load_external_file(self) -> bool:
         """Load an external script file into the document editor.
@@ -1888,7 +1794,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
 
         # if text is None:
         content = self.document.content
-        logma.info(f"[NCHANTDSCRIPT._resolve_document_text]\nCONTENT {content}")
+        logma.info(f"[NCHANTDSCRIPT._resolve_document_text]\nCONTENT {content}\n{type(content)}")
         if isinstance(content, str):
             text = content
         elif isinstance(content, dict):
@@ -1901,7 +1807,19 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             # ``content`` dict and the subsequent
             # ``text.get("value", "")`` returned "" -- the test
             # round-trip silently dropped all script text.
-            text = content.get("content", {}).get("text", {})
+            text = content.get("content", {}).get("text", None)
+
+        if text is None:
+            # T-NEW-120 (replay of reverted fix 85e809e):
+            # walk the get_content() payload shape. The
+            # top-level ``content["text"]`` is the wrong key
+            # (the inner ``content`` dict has a ``"text"`` key
+            # whose value IS the payload). The previous
+            # ``content.get("text", {})`` would reach the inner
+            # ``content`` dict and the subsequent
+            # ``text.get("value", "")`` returned "" -- the test
+            # round-trip silently dropped all script text.
+            text = content.get("text", None)
 
         # if text is None:
         #     content = self.get_content()
@@ -1924,6 +1842,45 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         logma.info(f"Type: {type(text)}")
         logma.info(f"Syntax {getattr(self.document, 'syntax', None) if self.document is not None else None}")
         return text
+
+    def _write_external_file(self) -> None:
+        """Atomically save the editor payload to ``self.file_path``.
+
+        Only runs when ``self.document.location == "external"`` and
+        ``self.file_path`` is set. Uses the syntax-aware exporter so
+        the bytes on disk match what the user sees in the editor
+        (HTML for HTML documents, plain text for code, etc.).
+        """
+        path = getattr(self, "file_path", None)
+        if not path:
+            return
+        text = self._export_editor_payload()
+        if not text:
+            return
+        encoding = "utf-8"
+        try:
+            cfg_encoding = (getattr(getattr(self, "config", None), "dikt", {}) or {}).get("encoding")
+            if cfg_encoding:
+                encoding = cfg_encoding
+        except Exception:
+            pass
+        directory = dirname(path) or "."
+        tmp_path = f"{path}.tmp"
+        try:
+            from os import makedirs, replace
+
+            makedirs(directory, exist_ok=True)
+            with open(tmp_path, "w", encoding=encoding) as f:
+                f.write(text)
+            replace(tmp_path, path)
+        except Exception:
+            try:
+                if exists(tmp_path):
+                    from os import remove
+
+                    remove(tmp_path)
+            except Exception:
+                pass
 
 
 # ====================================================================================================================||

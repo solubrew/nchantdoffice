@@ -1,43 +1,80 @@
-# TODAY is 2026-08-18:
-- the following issues were found to existing testing the NchantdOffice Desktop Application with all its most updated internal dependencies.
+\# TODAY is 2026-08-17
 
-## Document Changes:
+This report combines the latest operator testing from \`origin/gamma` with the
 
-## Issues Found:
-## Bugs:
-2026-08-18 12:34:01,486 - nchantrs.widgets.widgets                  549: INFO     - Left Click
-2026-08-18 12:34:01,778 - nchantrs.widgets.widgets                  499: INFO     - Focus Out
-Traceback (most recent call last):
-  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/controls/buttons.py", line 162, in <lambda>
-    self.clicked.connect(lambda checked: self.on_click(checked, handler, params))
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/widgets/controls/buttons.py", line 154, in on_click
-    handler(signal, params)
-  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/widgets/documents/media/scripts.py", line 349, in cmd_open_local_file
-    raise Exception(f"local_file is None: {self.local_file}")
-Exception: local_file is None: None
-2026-08-18 12:34:05,309 - nchantrs.widgets.widgets                  494: INFO     - Focus In
-2026-08-18 12:34:12,788 - nchantrs.widgets.widgets                  499: INFO     - Focus Out
+local verification work completed on 2026-08-17/18.
 
+\## Document Changes / Requested Work
 
+\- Add a date/time insert button to the NchantdOfficeScript toolbar with the 
 
+  \`Ctrl+D` hotkey.
 
+\- Sort node names beginning with \`_` to the top.
 
-2026-08-18 13:11:40,340 - nchantdoffice.models                      257: WARNING  - [models] bootstrap_app_user failed: 'NchantdUser' object has no attribute 'verify_password'
-Traceback (most recent call last):
-  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 2110, in bootstrap_app_user
-    self.store_app_user(user, db="db")
-  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 3483, in store_app_user
-    payload = _build_app_user_payload(user)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 4636, in _build_app_user_payload
-    payload["password_txt"] = _coerce_scalar(pword)
-                              ^^^^^^^^^^^^^^^^^^^^^
-  File "/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/nchantdoffice/models.py", line 4622, in _coerce_scalar
-    return _coerce_scalar(next(value))
-                          ^^^^^^^^^^^
-  File "/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNchantrs/1_DELTA/nchantrs/nchantrs/utilities/users.py", line 102, in get_password
-    if self.verify_password(password):
-       ^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'NchantdUser' object has no attribute 'verify_password'. Did you mean: 'verify_pword'?
-2026-08-18 13:11:40,342 - nchantdoffice.updates.db                   79: INFO     - Updating pyffice document
+\- Refresh the ToolBox after node deletion.
+
+\- After node deletion, navigate to the previous node; fall back to a sibling,
+
+  then to the parent.
+
+\- Identify and reduce bottlenecks in new-document creation.
+
+\- Fix NchantdOfficeMatrix so internally stored matrix values persist and
+
+  restore when no external file is open.
+
+\- Disable the NchantdOfficeMatrix toolbar formula entry until 0.0.3.
+
+\- Fix NchantdOfficeScript external documents so Save writes back to the
+
+  external file. Internal script saving already works and must remain unchanged.
+
+\## Journal Scope Clarification
+
+\- Full journal text save/restore and journal retention already work. Do not
+
+  change those paths.
+
+\- Remaining journal work is parsing, including PII parsing and redaction
+
+  integration.
+
+\- Pycurity already provides PII tools. NchantdOffice should integrate those
+
+  tools; any expansion of base PII functionality belongs in pycurity.
+
+\## Newly Reported Bug
+
+\`bootstrap_app_user` fails because nchantrs \`NchantdUser.get_password` calls a
+
+missing \`verify_password` method; the available method appears to be `
+
+verify_pword`. The complete operator traceback is preserved in git history at `
+
+origin/gamma` commit \`3799b3f`.
+
+\## Verification State
+
+\- Qt collection guard: 2 passed.
+
+\- Palette extraction: 30 upstream tests passed; 9 downstream tests passed.
+
+\- Chart native-crash regression: 16 tests passed.
+
+\- Max-node cap + redirect: 35 tests passed.
+
+\- Journal tab-focus restore regression: 7 tests passed. This does not change
+
+  journal storage or retention.
+
+\- User-tier compatibility: 7 tests passed.
+
+\- Pyof worker native-abort guards: 2 tests passed.
+
+The latest safe suite before this report consolidation reached 833 passed with
+
+19 failures. Those failure clusters were subsequently addressed, but a final
+
+full-suite count must be rerun after the merge.
+
