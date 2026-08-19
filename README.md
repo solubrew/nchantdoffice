@@ -173,6 +173,20 @@ Latest verified local commit on `gamma`:
 contains the 2026-08-17 T-NEW-117, T-NEW-122, and chart-segfault
 fixes documented in `CHANGES.md`.
 
+**Reality-anchor update (2026-08-19, gamma `655f36b`):** the
+2026-08-18 / 2026-08-19 sweep closed the **T-NEW-144b umbrella**
+(12 children, multi-format `set_location` cleanup across
+13 widget classes) and shipped **T-NEW-152 / 154 / 155 / 156 /
+157 / 158** (P1 operator-asks: ToolBox refresh, add_tab
+timing, Ctrl+D date shortcut, underscore priority sort,
+active_tab_position clamp, T-NEW-XXX → T-NEW-158 marker fix).
+Plus **T-NEW-169 / 170 / 171 / 172** filed 2026-08-19 (standalone
+2-pane boot, pullable-tab dialog, performance campaign,
+async via pyularity). See [`CHANGES.md`](./CHANGES.md) for the
+new `[Unreleased]` anchor that consolidates these 16+
+commits between `18336e5` and `655f36b`. T-NEW-only test files
+report **307 passed / 0 failed** at this branch tip.
+
 For a repo-local cross-reference of every shipped + filed
 T-NEW card with commit SHAs, see
 [`CHANGES.md`](./CHANGES.md) `[Unreleased]` block.

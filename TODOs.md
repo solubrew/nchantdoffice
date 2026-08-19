@@ -113,6 +113,7 @@
 | `pyffice` | Document model (`PyfficeDocument` etc.) | `pip install -e /home/solubrew/.hermes/projects/pyffice --no-deps` |
 | `kahndor` | Config / instruct / logma | `pip install -e /home/solubrew/.hermes/projects/kahndor --no-deps` |
 | `pycurity` | Secrets, encryption, hash, key management | `pip install -e /home/solubrew/.hermes/projects/pycurity --no-deps` |
+| `pyularity` | **NEW (T-NEW-172):** process supervisor (crash-detect + restart + lifecycle hooks + health-check protocol). Stub repo today; first useful version ships in T-NEW-172's WIRE-1 step. | `pip install -e /home/solubrew/.hermes/projects/pyularity --no-deps` (planned — repo exists at the path but no install lane is wired into the desktop yet) |
 | `subtrix` | UUID generator | `pip install -e /home/solubrew/.hermes/projects/subtrix --no-deps` |
 | `falcon` | CLI / scaffolding engine | `pip install -e /home/solubrew/.hermes/projects/falcon --no-deps` |
 | `sasquatch` | Audit + test pipeline | bundled with sasquatch venv |

@@ -9,6 +9,136 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> **Reality anchor (2026-08-19, gamma `655f36b`):** This is
+> the SECOND release-block summary. The first anchor
+> (2026-08-17, gamma `07fc18b`, immediately below) covered
+> T-NEW-110..147 plus the pyof-bare-parent SIGSEGV fix.
+>
+> **This anchor** consolidates work between 2026-08-18
+> and 2026-08-19 inclusive (16+ commits, gamma `18336e5`
+> → `655f36b`). The headline deliverables:
+>
+> - **T-NEW-144b umbrella CLOSED** (`13ff2f1`) — multi-format
+>   external editing across 13 widget classes. 12 children
+>   shipped (T-NEW-148 / 159 / 160 / 160a / 160b/1..12). The
+>   umbrella's full sweep of `set_location("external")`
+>   hardcodes is done; remaining work is recorded in
+>   T-NEW-162 cards B/C-suffix for future bookmarks.
+>   Headline commits: `f499b7c` (Image), `7bc68dc` (Notebook),
+>   `a1c5932` (Sketch), `54fbedc` (Form), `ab0307b`
+>   (FormManager), `883373c` (Contact), `41fb641` (Rolodex),
+>   `01194b9` / `a9e56c3` / `cb3c607` (prompts trio), `73dd4fd`
+>   (Chart), `47a0c6e` (CompressPane), `4ba2cd9` (FileSystem
+>   survey ack), `2347a53` (Matrix survey ack).
+> - **T-NEW-152** Refresh ToolBox after node deletion
+>   (`be0c224`) — `cmd_delete_node` now also calls
+>   `panes['center'].toolbox.refresh()` after the tree
+>   refresh. Pre-fix the ToolBox still showed the deleted
+>   node's contents; post-fix the open-deleted-node state
+>   clears immediately.
+> - **T-NEW-151** nchantrs `NchantdUser.verify_password`
+>   alias (`5e1999d` in nchantrs gamma + `bf99122` desktop
+>   doc-only) — single-line `verify_password = verify_pword`
+>   in upstream `nchantrs/utilities/users.py:182`. Closes the
+>   AttributeError on first-boot `bootstrap_app_user` that the
+>   2026-08-17 testing report surfaced.
+> - **T-NEW-154** Stage timing on `add_tab` (`535178a`) —
+>   `time.monotonic()` snapshot at function entry +
+>   `logma.info(f"[panes.new] T-NEW-154 add_tab total: Xms")`
+>   at return. Instrumentation-only; future per-phase
+>   breakdowns layer on this baseline. Test:
+>   `tests/test_t_new_154_add_tab_stage_timing.py` (3 tests).
+> - **T-NEW-155** Per-widget Ctrl+D date-insert shortcut
+>   (`18336e5`) — `NchantdOfficeScript._register_shortcut`
+>   helper creates a `QShortcut(pyqt.QKeySequence('Ctrl+D'),
+>   self)` with `WidgetWithChildrenShortcut` context,
+>   connected to `cmd_add_date`. Per-widget registry
+>   (operator-chosen over global) lets each widget own its
+>   own shortcut bindings; future Ctrl+T (time-insert) etc.
+>   can call the same helper without a new framework.
+> - **T-NEW-156** Underscore-prefix sort comparator
+>   (`5da752b`) — `NchantdOfficeNodeEditPane._underscore_priority_key`
+>   staticmethod returns `(-1, lower_name)` for `_`-prefixed
+>   names; `_sort_subtree` threads it through
+>   `node.sortChildren(0, order=direction, sort_key=...)`.
+>   Operators' `_system` / `_template` internal subtrees
+>   always sort to the top regardless of asc/desc.
+> - **T-NEW-157** active_tab_position clamp
+>   (`22a413b`) — `models.py:4768` now clamps an
+>   out-of-bounds `active_tab_position` to
+>   `len(tabsdata) - 1` instead of silently forcing 0.
+>   Operators no longer lose context on tab delete. (Note:
+>   the testing report referenced 3039 — that line is the
+>   `get_rolling_summary` return, not the search-correction
+>   code; corrected to the real site in this card.)
+> - **T-NEW-158** Referral passphrase marker (`caa806c`)
+>   — `widgets/config/referral_panel.py:395` replaces the
+>   unnumbered `# T-NEW-XXX:` marker with the canonical
+>   `T-NEW-158` number. The Qt-masked-passphrase guard impl
+>   (`_qt_passphrase_prompt` at line 453 + `_pykey_prompt`
+>   sentinel injection) is unchanged.
+>
+> Plus the **T-NEW-163 / 164 family** (umbrella sweep during
+> the same window — models.py 3 no-op stubs + misc
+> PUSH-to-0.0.3 marker demotes) covered earlier.
+>
+> Plus **three new cards filed 2026-08-19** that establish
+> the next-quarter roadmap:
+>
+> - **T-NEW-169 / T-NEW-170** — standalone 2-pane boot +
+>   pullable-tab dialog (multi-screen support).
+> - **T-NEW-171** — performance campaign (SURVEY → PRIORITIZE
+>   → DESIGN → SHIP-per-speed-up).
+> - **T-NEW-172** — async methods + secondary background
+>   processes via the `pyularity` supervisor project
+>   (`/home/solubrew/.hermes/projects/pyularity`). Hybrid
+>   pattern (daemon pool + dedicated subprocesses); JSON-lines
+>   IPC for v1.
+>
+> Test surface at this anchor (T-NEW-only test files):
+> 307 passed / 0 failed / 16 warnings (mock_use_standalone_module
+> is the warning, set in pyproject.toml). Full desktop
+> suite unchanged from the 2026-08-17 anchor
+> (the 19 pre-existing functional failures + 6 Qt SIGSEGV skips
+> in `widgets.py:193` / `document_settings.py:158` are NOT in
+> any T-NEW test file; they sit in `nchantdoffice/widgets.py`
+> and are unrelated to this anchor's scope). Pyright-clean.
+> Branch HEAD: `655f36b`. See TODOs.md card index.
+
+### Added (T-NEW-169 / 170 / 171 / 172 — filed 2026-08-19)
+
+- **T-NEW-169** Per-document standalone entry point
+  (`3c9ed0e` — doc-only). Plan to add
+  `runNchantdOffice.py document --type <name> [--path ...]`
+  argparse dispatch that boots a 2-pane minimal shell
+  (left = `NchantdOffice*` widget, right = toolbox). 7 steps,
+  DECIDE-1 (argparse vs separate entry file) +
+  DECIDE-2 (2-pane layout target) first.
+- **T-NEW-170** Pull-a-tab dialog (multi-screen support)
+  (`3c9ed0e` — doc-only). Plan to add `FloatedTab` `QDialog`
+  shell + `tabset.pop_out_tab()` + `tabset.re_attach_tab()`.
+  Re-attach fires automatically on active-node change
+  (one-way trip — operators explicitly designed this).
+  8 steps, DECIDE-1 (re-attach trigger) + DECIDE-2 (dialog
+  visual model: minimal vs 2-pane reuse from T-NEW-169)
+  first.
+- **T-NEW-171** Performance campaign (`36ba852` — doc-only).
+  Survey → prioritize → design → ship-per-speed-up pattern
+  (each speed-up becomes its own T-NEW card; one commit
+  per speed-up). First SURVEY target is the boot cascade +
+  `add_tab` (T-NEW-154 already instrumented).
+- **T-NEW-172** Async + background processes via pyularity
+  (`655f36b` — doc-only). Pyularity owns the supervisor
+  lifecycle (crash-detect + restart + lifecycle hooks +
+  health-check protocol); nchantdoffice grows a thin client
+  wrapper (`pyularity_client.py`). 9 steps, DECIDE-1
+  (hybrid pattern) + DECIDE-2 (JSON-lines IPC) + DECIDE-3
+  (must-have feature order in pyularity) first.
+
+---
+
+## [Unreleased]
+
 > **Reality anchor (2026-08-17, gamma `07fc18b`):** This block
 > consolidates work from T-NEW-110 through T-NEW-147 (all shipped
 > 2026-08-10 → 2026-08-17) plus the filed-but-open cards

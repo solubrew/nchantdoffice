@@ -25,7 +25,10 @@ python __main__.py [arguments]
 python cmds/runNchantdOffice.py [arguments]
 # or the convenience wrappers at repo root:
 ./runNchantdOffice.py [arguments]
-./runNchantdDocument.py [arguments]
+# (Standalone per-document launchers ship under T-NEW-169
+# — see TODOs.md. Before T-NEW-169 ships, `nchantdoffice
+# document --type <name>` exits with an "unrecognized
+# subcommand" error.)
 ```
 
 ## Arguments
