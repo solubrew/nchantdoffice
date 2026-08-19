@@ -742,7 +742,7 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_chart_config()
         self.toolbox_config[200]["items"] = self.init_drawer_data_sources()
-        # PUSH to 0.0.3
+        # RESERVED for live-data-source connections; see T-NEW-161
         # self.toolbox_config[300]["items"] = self.init_drawer_connections()
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 

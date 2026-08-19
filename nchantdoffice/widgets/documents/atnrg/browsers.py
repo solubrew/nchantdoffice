@@ -587,7 +587,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         items = self.toolbox_config[200].get("items", {})
         cnt = 0
 
-        # PUSH to 0.0.3 — default-browser checkbox was commented out;
+        # RESERVED for default-browser checkbox; see T-NEW-161
         # see original code above. Reserved slot for when 0.0.3 lands.
 
         # Home Page
@@ -691,7 +691,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
 
-        # PUSH to 0.0.3 — badge bar was commented out; reserved slot for 0.0.3.
+        # RESERVED for badge bar; see T-NEW-161
 
         slot = self._ensure_drawer_item(items, cnt)
         slot["widget"] = self.url_label = NchantdLabeledEntry(

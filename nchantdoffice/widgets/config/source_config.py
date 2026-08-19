@@ -724,10 +724,10 @@ class NchantdOfficeSourceManager(NchantdOfficeDocumentManager):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_source_config()
-        # PUSH to 0.0.3
+        # RESERVED for sources wizard; see T-NEW-161
         # self.toolbox_config[200]["items"] = self.init_drawer_sources()
         self.toolbox_config[300]["items"] = self.init_drawer_connections()
-        # PUSH to 0.0.3
+        # RESERVED for exploratory_data_analysis wizard; see T-NEW-161
         # self.toolbox_config[400]["items"] = self.init_drawer_exploratory_data_analysis()
         # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 

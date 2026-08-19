@@ -1657,7 +1657,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
         return items
 
-    # PUSH to 0.0.3
+    # RESERVED for matrix quickstart (obsolete document_compatability pattern); see T-NEW-161
     # def init_drawer_quickstart(self):
     #     """"""
     #     items = self.toolbox_config[500].get("items", {})
@@ -1684,7 +1684,7 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
         self.toolbox_config[200]["items"] = self.init_drawer_formula()
         self.toolbox_config[300]["items"] = self.init_drawer_cell_config()
-        # PUSH to 0.0.3
+        # RESERVED for matrix quickstart activation; see T-NEW-161
         # self.toolbox_config[500]["items"] = self.init_drawer_quickstart()
 
     def insert_chart(self) -> Self:

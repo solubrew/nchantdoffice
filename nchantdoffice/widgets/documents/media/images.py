@@ -1272,7 +1272,7 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         cnt += 1
         return items
 
-    # PUSH to 0.0.3
+    # RESERVED for image quickstart pane; see T-NEW-161
     # def init_drawer_quickstart(self):
     #     """"""
     #     items = self.toolbox_config[400].get("items", {})
@@ -1285,10 +1285,10 @@ class NchantdOfficeImage(NchantdOfficeDocument):
         """"""
         super().init_toolbox()
         self.toolbox_config[100]["items"] = self.init_drawer_document_config()
-        # PUSH to 0.0.3
+        # RESERVED for image-tools pane; see T-NEW-161
         # self.toolbox_config[200]["items"] = self.init_drawer_image_tools()
         self.toolbox_config[300]["items"] = self.init_drawer_palette()
-        # PUSH to 0.0.3
+        # RESERVED for image quickstart pane (duplicate); see T-NEW-161
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
         return self
 
