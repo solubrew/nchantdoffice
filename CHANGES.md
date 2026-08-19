@@ -135,6 +135,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (hybrid pattern) + DECIDE-2 (JSON-lines IPC) + DECIDE-3
   (must-have feature order in pyularity) first.
 
+### Closed (T-NEW-169 — shipped 2026-08-19)
+
+**T-NEW-169** *Per-document standalone entry point (2-pane
+single-doc app)* — closed 2026-08-19, gamma `c21c243`. Operator
+DECIDE-1 (a) / DECIDE-2 (b) approved earlier the same day.
+Shipped as 4 commits over 4 working hours:
+
+- `257af54` — **WIRE-1**: `cmds/runNchantdOffice.py` argparse
+  dispatch. New subcommand `document --type <name> [--path <file>]`
+  parses into `{mode: 'document', type: <name>, path: <path>}`;
+  no subcommand boots the unchanged main app. Pre-fix bug fixed
+  (the old `run(argv: list[str])` passed the raw argv to
+  `nchantment` which expects a dict — `'instance' in <list>` was
+  always False, so the dispatch never actually fired despite
+  the docstring's claims).
+
+- `ec05e6d` — **WIRE-2**: `NchantdDocumentStandaloneWindow` class
+  in `nchantdoffice/nchantdoffice.py`. New `QMainWindow`
+  subclass with central-widget + right-dock layout (2-pane
+  shell per DECIDE-2 (b): keep tabset chrome with one tab).
+  Carries a placeholder central widget + placeholder right-dock
+  while the dispatch wiring (WIRE-3) lands.
+
+- `24b0967` — **WIRE-3**: `DOCUMENT_TYPE_DISPATCH` dict wires
+  the 4 high-value `NchantdOffice*` types (script / notebook /
+  image / form). Lazy import resolution via `importlib` keeps
+  the heavyweight transitive imports (e.g. `forms.py` -> the
+  missing `panes.forms` module) out of module-load time. The
+  fall-back placeholder central widget remains as the safety
+  net for failed import / construction.
+
+- `c21c243` — **DOC-1**: `CLI.md` updated with the new
+  `document` subcommand section (usage / arguments / 4 type
+  names / 3 worked examples / behaviour / default-behaviour-
+  unchanged notes). Doc-only commit; no source changes.
+
+**Migration plan (recorded for archeology):** the T-NEW card
+body that lived in TODOs.md has been removed wholesale per the
+operator-set 2026-08-19 closed-card cleanup rule (encoded in
+`CODING_STANDARDS.md` line ~14, commit `735dfde`). The 4
+shipped-commit references above are the canonical link from
+CHANGES.md back to the implementation; `git log --grep='T-NEW-169'`
+returns the full history for future archeology.
+
+**Verifications:** 4 + 10 + 10 + 5 = 29 new AST-source structural
+tests across 4 test files (one per WIRE-n + DOC-1). All green.
+Full `pytest tests/test_t_new_*.py` baseline: 347/347 GREEN
+(was 316 before T-NEW-169 started; net +31 tests). No broader
+test surface changes.
+
+**Refs:** T-NEW-170 (pull-out tab dialog) reuses
+`NchantdDocumentStandaloneWindow` as the body of the pulled-out
+FloatedTab; once T-NEW-170 ships, `document --type <name>`
+windows can be detached onto a second monitor without code
+changes (T-NEW-170's `FloatedTab` composes the standalone
+window directly).
 
 ## [Unreleased] Catch-up card roll-up (2026-08-19, gamma `735dfde`)
 
