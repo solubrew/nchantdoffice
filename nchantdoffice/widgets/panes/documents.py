@@ -11,12 +11,13 @@
         <(WT)>: -32
 """
 
-# -*- coding: utf-8 -*
+# -*- coding: utf-8 -*-
 from __future__ import annotations
 
-# ======================================Standard Library Modules======================================================||
+# ======================================Standard Library Modules======================================================|
 from os.path import dirname, join
 import json as j
+import time
 from typing import Any, Self
 
 # ======================================3rd Party Library Modules=====================================================||
@@ -311,11 +312,32 @@ class NchantdOfficeNodeEditPane(NchantdPane):
 
         Returns ``self`` for chainable call sites.
         """
+        # T-NEW-171 SURVEY-1 step 5: snapshot time.monotonic()
+        # at the operator-visible sort entry point. Sibling
+        # to the _sort_subtree timer so we can see both the
+        # per-click latency AND the per-cascade breakdown in
+        # the same operator grep.
+        _t171_sortcmd_start = time.monotonic()
         direction = self._resolve_sort_direction(event, args, kwargs)
         node = self.get_node()
         if node is None:
+            try:
+                logma.info(
+                    f"[T-NEW-171 SURVEY] cmd_sort_children: no node selected "
+                    f"({(time.monotonic() - _t171_sortcmd_start) * 1000:.1f}ms)"
+                )
+            except Exception:
+                pass
             return self
         self._sort_subtree(node, direction)
+        try:
+            logma.info(
+                f"[T-NEW-171 SURVEY] cmd_sort_children total: "
+                f"{(time.monotonic() - _t171_sortcmd_start) * 1000:.1f}ms "
+                f"(direction={direction!r})"
+            )
+        except Exception:
+            pass
         return self
 
     @staticmethod
@@ -403,6 +425,13 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         similar internal subtrees always sort to the top,
         regardless of ascending/descending direction.
         """
+        # T-NEW-171 SURVEY-1 step 5: snapshot time.monotonic()
+        # at the recursive cascade entry. The same timestamp
+        # tracks the cumulative cascade time across every
+        # recursion level. We log once per call (not per
+        # recursion) so the noise floor is one line per
+        # cmd_sort_children click rather than N lines.
+        _t171_sortsubtree_start = time.monotonic()
         if node is None:
             return
         try:
@@ -415,6 +444,14 @@ class NchantdOfficeNodeEditPane(NchantdPane):
             # Older Qt nodes that don't accept the order= kwarg.
             node.sortChildren(0)
         except Exception as e:
+            try:
+                logma.warning(
+                    f"[T-NEW-171 SURVEY] _sort_subtree: node sort failed "
+                    f"after {(time.monotonic() - _t171_sortsubtree_start) * 1000:.1f}ms "
+                    f"({e!r})"
+                )
+            except Exception:
+                pass
             logma.warning(
                 f"[documents] _sort_subtree: node sort failed: {e}"
             )
@@ -422,13 +459,24 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         try:
             count = node.childCount()
         except Exception:
-            return
-        for i in range(count):
+            count = None
+        for i in range(count or 0):
             try:
                 child = node.child(i)
             except Exception:
                 continue
             NchantdOfficeNodeEditPane._sort_subtree(child, direction)
+        # T-NEW-171 SURVEY-1 step 5: log elapsed-ms at the
+        # cascade's natural exit point. Fires once per
+        # recursion level (operator sees a per-depth entry).
+        try:
+            logma.info(
+                f"[T-NEW-171 SURVEY] _sort_subtree cascade total: "
+                f"{(time.monotonic() - _t171_sortsubtree_start) * 1000:.1f}ms "
+                f"(direction={direction!r}, children={count})"
+            )
+        except Exception:
+            pass
 
     @staticmethod
     def _underscore_priority_key(node) -> tuple:
