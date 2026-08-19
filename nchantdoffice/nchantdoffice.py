@@ -455,3 +455,178 @@ def run_update_process(dbupdate, update_checker, main_window=None) -> dict:
 
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
+
+# ======================================T-NEW-169 WIRE-2===============================================================|
+
+# T-NEW-169 (DESK / 2026-08-19): NchantdDocumentStandaloneWindow.
+# LOCKED DESIGN (operator-approved 2026-08-19):
+#   DECIDE-1 (a) -- argparse subcommand
+#   DECIDE-2 (ii) -- full standalone 2-pane shell (this class)
+#   DECIDE-DOCK -- right-side dock for the toolbox
+#
+# The class lives in nchantdoffice/nchantdoffice.py (next to
+# NchantdOfficeCloak + NchantdOfficeMainWindow) so future
+# dispatch wiring in cmds/runNchantdOffice.py can resolve
+# `nchantdoffice.nchantdoffice.NchantdDocumentStandaloneWindow`
+# without a fresh import path.
+
+
+# T-NEW-169 WIRE-2 placeholder dispatch. WIRE-3 fills these in
+# with the real NchantdOffice* concrete classes. We use None
+# as the value so a typo or missing-class update surfaces as
+# a clean TypeError at runtime rather than a silent fallthrough.
+DOCUMENT_TYPE_DISPATCH = {
+    "script": None,    # WIRE-3: NchantdOfficeScript
+    "notebook": None,  # WIRE-3: NchantdOfficeNotebook
+    "image": None,     # WIRE-3: NchantdOfficeImage
+    "form": None,      # WIRE-3: NchantdOfficeForm
+}
+
+
+class NchantdDocumentStandaloneWindow(pyqt.QMainWindow):
+    """T-NEW-169 WIRE-2 -- standalone 2-pane minimal shell.
+
+    Hosts ONE document on the left (the central widget) and a
+    right-side dock for the matching toolbox. Sized to a
+    usable default (1280x800) since this shell is intended for
+    operator-driven per-document workflows on a single screen
+    or a focused second monitor.
+
+    Lifecycle (mirrors NchantdOfficeMainWindow):
+
+        standalone = NchantdDocumentStandaloneWindow(
+            parent=None,
+            document_type="script",
+            preload_path=None,
+        )
+        standalone.initWidget()    # initModel -> initView
+        standalone.show()          # QMainWindow standard
+
+    The constructor does NOT launch Qt -- it's safe to call
+    inside a test that has only the QApplication set up via
+    the shieldface conftest. `show()` is what triggers the
+    display; construction is pure attribute binding.
+
+    T-NEW-170 reuse: T-NEW-170's `FloatedTab` class accepts
+    a `NchantdDocumentStandaloneWindow` instance as the
+    `standalone_window` parameter (per its construction
+    contract committed at T-NEW-170 WIRE-1). The standalone
+    shell that lives in a pulled-out dialog IS this class.
+    """
+
+    def __init__(
+        self,
+        parent: Any = None,
+        document_type: str = "script",
+        preload_path: str | None = None,
+    ) -> None:
+        """Build the standalone shell; do NOT show it.
+
+        Args:
+            parent: optional parent widget (typically None for
+                top-level windows).
+            document_type: one of the keys in
+                DOCUMENT_TYPE_DISPATCH (`script`, `notebook`,
+                `image`, `form`). The actual document-widget
+                instantiation lands in WIRE-3 via the dispatch
+                dict. For WIRE-2 the value is stored verbatim
+                so initView can branch on it.
+            preload_path: optional path to preload on first
+                document open. WIRE-2 only stores the value;
+                WIRE-3 opens the document via
+                `dispatch[document_type].open(preload_path)`.
+        """
+        super().__init__(parent)
+        self.document_type = document_type
+        self.preload_path = preload_path
+        self._document_widget = None
+        self._toolbox_dock = None
+
+        # T-NEW-169 WIRE-2: window title shows the dispatched
+        # doc type so operators running multiple standalone
+        # windows have a recognizable title bar.
+        self.setWindowTitle(f"Standalone {document_type} document")
+
+    def initWidget(self) -> Self:
+        """initWidget -- the nchantrs lifecycle bridge.
+
+        Per the project's convention, initWidget chains
+        initModel + initView. For the standalone shell the
+        initModel step is a no-op (no model -- the document
+        manages its own state); the initView step is where
+        the central widget + dock layout comes together.
+        """
+        self.initView()
+        return self
+
+    def initView(self) -> Self:
+        """initView -- wire the central widget and right dock.
+
+        The 2-pane layout per DECIDE-2 (b):
+
+            +------------------------------------------+
+            |        document (central widget)          |
+            |                                          |
+            |     (left pane, fills via doc_widget)     |
+            |                                          |
+            +------------------------------------------+
+
+        The right-side toolbox is mounted via
+        `addDockWidget(Qt.RightDockWidgetArea, dock)`. WIRE-3
+        swaps in the matching toolbox class per
+        `document_type`; for WIRE-2 the dock holds a
+        placeholder QDockWidget so the layout geometry is
+        correct and the operator can drop the docked pane
+        anywhere as expected.
+        """
+        # T-NEW-169 WIRE-2: dispatch placeholder. WIRE-3 will
+        # replace this with the real document-widget lookup.
+        # For now we set a placeholder central widget so the
+        # QMainWindow has SOMETHING to render.
+        placeholder_central = pyqt.QWidget(self)
+        placeholder_layout = pyqt.QVBoxLayout(placeholder_central)
+        placeholder_layout.setContentsMargins(8, 8, 8, 8)
+        placeholder_label = pyqt.QLabel(
+            f"[WIRE-2] {self.document_type} standalone shell \u2014 "
+            f"document widget lands in T-NEW-169 WIRE-3"
+        )
+        placeholder_label.setWordWrap(True)
+        placeholder_layout.addWidget(placeholder_label)
+        self.setCentralWidget(placeholder_central)
+
+        # T-NEW-169 WIRE-2: dock placeholder. The right-dock
+        # is where the toolbox lives once WIRE-3 fills in the
+        # dispatch. Until then we wire the dock + titlebar so
+        # the operator can move/dock the pane as they would
+        # the final layout.
+        placeholder_dock = pyqt.QDockWidget(
+            f"{self.document_type} toolbox (WIRE-2 placeholder)",
+            self,
+        )
+        placeholder_dock.setObjectName(
+            f"{self.document_type}ToolboxDock"
+        )
+        placeholder_dock_inner = pyqt.QWidget(placeholder_dock)
+        placeholder_dock_layout = pyqt.QVBoxLayout(placeholder_dock_inner)
+        placeholder_dock_label = pyqt.QLabel(
+            "[WIRE-2] Right-dock placeholder \u2014 toolbox lands "
+            "in T-NEW-169 WIRE-3"
+        )
+        placeholder_dock_label.setWordWrap(True)
+        placeholder_dock_layout.addWidget(placeholder_dock_label)
+        placeholder_dock.setWidget(placeholder_dock_inner)
+        self.addDockWidget(
+            pyqt.Qt.RightDockWidgetArea, placeholder_dock
+        )
+        self._toolbox_dock = placeholder_dock
+
+        # T-NEW-169 WIRE-2: default size. 1280x800 mirrors
+        # NchantdOfficeMainWindow's startup hint and gives a
+        # usable work area on most monitors.
+        self.resize(1280, 800)
+        return self
+
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
