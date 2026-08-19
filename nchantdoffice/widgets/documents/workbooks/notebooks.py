@@ -233,18 +233,13 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         if last_path and self._looks_like_ipynb_path(last_path):
             logma.info(f"[notebook] initView: scheduling reload of {last_path}")
             QTimer.singleShot(1000, self._make_reload_handler(last_path))
-        # PUSH to 0.0.3 force external until
-        self.document.set_location("external")
-
-        # if self.document.location == "external":
-        #     self.open_file(self.document.file_path)
-        # PUSH to 0.0.3
-        # elif self.document.location == "internal":
-        #    self.populate_data()
-        # elif self.document.location == "cloud":
-        #    self.connect_to_file()
-        # else:
-        #     raise Exception("Internal and Cloud locations not supported yet")
+        # T-NEW-160a: drop the PUSH-to-0.0.3 / "force external until"
+        # hardcode. The doc location threads through the
+        # open_file / populate_data paths — initView no longer
+        # forces an origin. The previous commented-out dispatch
+        # (external / internal / cloud) lives in populate_document
+        # (called downstream) and is reached via the init
+        # lifecycle, not from here.
         return self
 
     def initWidget(self) -> Self:
@@ -1160,7 +1155,16 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         return self
 
     def open_file(self, file=None) -> Self:
-        """"""
+        """Open a local notebook file as the active doc.
+
+        T-NEW-160a: pre-fix body unconditionally hardcoded
+        ``self.document.set_location("external")`` on every call
+        (including the no-arg init-lifecycle path that loads from
+        .pyof internal-blob). Post-fix: the ``external`` hint
+        only fires when a real disk path is passed. The
+        ``populate_document`` flow downstream reads the
+        already-set location.
+        """
         logma.info(file)
         try:
             self.set_file_path(file)
@@ -1169,7 +1173,8 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         except Exception as e:
             logma.warning(e)
             logma.debug(f"[notebooks] open_file traceback: {e}", exc_info=True)
-        self.document.set_location("external")
+        if file is not None:
+            self.document.set_location("external")
         self.populate_document()
         return self
 
