@@ -120,7 +120,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         super().initModel()
         self.document = self.app.model.codex.init_script({"document": self.config.get("document", {})})
         self.document.load_document()
-        self.restore_formatting_from_metadata()
+        # self.restore_formatting_from_metadata()
         logma.info(f"[scripts] initModel: loaded script document with restored formatting")
         if self.context_menu_name is not None:
             self.initialize_context_menu("context.document.script")
@@ -1180,44 +1180,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """
         logma.info(f"Populating Document")
         logma.info(f"\n[ NchantdOfficeScript ] - File Path {self.file_path}")
-        # if self.document.location == "external":
-        #     if getattr(self, "file_path", None):
-        #         detected = self._apply_extension_syntax(self.file_path)
-        #         if detected and detected != "plain-text":
-        #             self.format_type = detected
-        # text = self.document.text
-        # loaded_from_disk = self._load_external_file()
-        # style = f"background-color: #FFFFFF;"
-        # self.document_editor.setStyleSheet(style)
-        # if loaded_from_disk:
-        #     if getattr(self, "_initial_load", False):
-        #         try:
-        #             path = getattr(self, "file_path", None) or getattr(self, "current_notebook_path", None)
-        #             if path:
-        #                 path = os.path.abspath(path)
-        #                 with open(path, "r", encoding="utf-8", errors="replace") as f:
-        #                     text = f.read()
-        #                 # Apply the dispatcher for the initial
-        #                 # file-open so syntax highlighting works.
-        #                 self._apply_syntax_highlighting(text)
-        #         except Exception as e:
-        #             logma.error(
-        #                 f"[scripts] populate_document: on-disk dispatch failed: {e}",
-        #                 exc_info=True,
-        #             )
-        #         return self
-        #     # Reload from a different tabset: preserve raw bytes.
-        #     return self
-
-        # text = self._resolve_document_text()
         text = self.document.text.value
         logma.info(f"Syntax {self.document.syntax}")
         logma.info(f"File Format {self.document.file_format}")
-        # if self.document is None:
-        #    self.document_editor.convert_urls_to_links(text)
-        #    return self
         self._apply_syntax_highlighting(text)
-        # elif self.document.location == 'internal':
         return self
 
     def restore_formatting_from_metadata(self) -> Self:

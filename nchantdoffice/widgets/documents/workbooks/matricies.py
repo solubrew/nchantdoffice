@@ -18,6 +18,7 @@ from __future__ import annotations
 from os.path import abspath, dirname, join, exists
 
 # ======================================3rd Party Library Modules=====================================================||
+from pandas import DataFrame
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
@@ -284,13 +285,17 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         #     cfg["buttons"][200] = {"action": "show_data_set"}
         table_cfg = {"num_rows": 100, "num_columns": 40, "min_column_width": 30, "handler": self.cmd_cell_change}
         self.table = NchantdOfficeTable(self.parent, self.config.override(table_cfg)).initWidget()
+        self.file_path = self.document.file_path
         super().initView(cfg)
         self.layout.addWidget(self.table, stretch=1)
         self.layout.setSpacing(3)
         # self.layout.setContentsMargins(0, 0, 0, 0)
         logma.info(f"[ INITIALIZE NCHANTD OFFICE MATRIX VIEW ] - populate document")
-        # self.populate_document()
         self.formula_input = pyqt.QLineEdit()
+        if self.document.location == "external":
+            self.open_file(self.document.file_path)
+        elif self.document.location == "internal":
+            self.load_data(self.document.data)
         return self
 
     def initWidget(self) -> Self:
@@ -1724,6 +1729,10 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
             self.insert_row(position)
         return self
 
+    def load_data(self, content):
+        """"""
+        self.populate_document()
+
     def move_cell(self, addrow, addcol) -> Self:
         """Move the active cell within the worksheet"""
         if self.table:
@@ -1808,16 +1817,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
 
     def open_file(self, file=None, _populate_document=False, _save=True) -> Self:
         """Open a spreadsheet using the Pyffice matrix importer."""
-        # if file is None:
-        #     file = self.file_path
-        # if not file:
-        #     return self
-        # self.set_file_path(file)
-        # self.document.open_file(file)
-        # self.document.set_location("external")
-        # self.populate_document()
-        # self.save()
-
         self._show_unsupported_feature_message()
         super().open_file(file, _populate_document, _save)
         self.populate_document()
@@ -1955,25 +1954,12 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         the same envelope shape with the same fallback.
         """
         logma.info(f"[matricies] Populate worksheet {self.file_path}")
-        content = getattr(self.document, "content", None) or {}
-        if isinstance(content, dict) and isinstance(content.get("content"), dict):
-            envelope = content["content"]
-        else:
-            envelope = content if isinstance(content, dict) else {}
-        # Canonical envelope: envelope["grid"]; legacy flat: content["grid"].
-        grid = envelope.get("grid") if isinstance(envelope, dict) else None
-        if not isinstance(grid, list):
-            grid = content.get("grid") if isinstance(content, dict) else None
-        formulas = envelope.get("formulas") if isinstance(envelope, dict) else None
-        if not isinstance(formulas, list):
-            formulas = content.get("formulas") if isinstance(content, dict) else None
-        data = grid if isinstance(grid, list) else getattr(self.document, "data", None)
+        data = self.document.data
         if isinstance(data, dict):
-            nested = data.get("content", data)
-            if isinstance(nested, dict):
-                data = nested.get("grid", [])
+            data = DataFrame(data).values.tolist()
         if data is None:
             data = []
+        logma.info(f"Data {data}")
         self.table.update_data(data)
         self._apply_cell_sizes()
         self.connect_signals()
