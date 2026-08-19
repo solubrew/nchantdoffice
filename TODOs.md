@@ -216,25 +216,54 @@ bodies remain below for traceability, but do not override this list.
 
 ### Active umbrella sequencing
 
-- **T-NEW-144b -- Multi-format external editing:** active umbrella.
-  Work proceeds one document type at a time. The phased children
-  completed so far:
+- **T-NEW-144b -- Multi-format external editing:** ✅ CLOSED 2026-08-19.
+  Work proceeded one widget at a time per the umbrella rule.
+  All 12 children shipped:
 
     * **T-NEW-148 / NchantdOfficeScript** -- DONE (`9f18e30`).
       Syntax-aware atomic external save, internal save untouched.
     * **T-NEW-159 / NchantdOfficePDF** -- DONE (`cbec5b3` +
       `4a7914c`). Internal binary storage via blob; external path
       remains file-only because the widget is read-only.
-    * **NchantdOfficeImage** -- internal blob works; external
-      load-only because ``initModel`` hardcodes
-      ``set_location("external")``. Needs the same external-save
-      seam as Script before external edits round-trip back to disk.
-    * **NchantdOfficeNotebook** -- both internal (notebook_bytes)
-      and external (.ipynb write) work; the default origin is still
-      hardcoded to external in `initModel`.
+    * **T-NEW-160 / NchantdOfficeImage** -- DONE (`f499b7c`).
+      Drop the `set_location("external")` hardcode in `initView` +
+      guard the hint in `open_file`. The .pyof internal-blob load
+      path now works. (Image external-save seam requires upstream
+      `NchantdImage.pixmap()` or `self.document.to_bytes()` —
+      tracked separately, not in this card.)
+    * **T-NEW-160a / NchantdOfficeNotebook** -- DONE (`7bc68dc`).
+      Same routing fix as Image: drop initView hardcode + guard
+      `open_file`. `save()` was already correct (handles external
+      `.ipynb` write + to_dict/both save modes).
+    * **T-NEW-160b/1-9 (Sketch, Form, FormManager, Contact,
+      Rolodex, ContextListPane, PromptManager, Prompt, Chart)**
+      -- DONE (`a1c5932`, `54fbedc`, `ab0307b`, `883373c`,
+      `41fb641`, `01194b9`, `a9e56c3`, `cb3c607`, `73dd4fd`).
+      Each card removed the umbrella hardcode on one widget,
+      kept the location-aware dispatch intact, and added
+      3 AST-source structural regression guards.
+    * **T-NEW-160b/10 / NchantdCompressPane** -- DONE (`47a0c6e`,
+      special case). Pane extends `NchantdPane` (not a document);
+      the flag-only `set_location("external")` and its dead
+      commented-out dispatch were both removed.
+    * **T-NEW-160b/11 / NchantdOfficeFileSystem** -- DONE (`4ba2cd9`,
+      survey ack). The 2 sites at `filesystems.py:1372 + 1431`
+      are correctly guarded defaults (open_file fires only with
+      a real disk path; save falls back to external when
+      location is unset). No source patch shipped; the test
+      file documents the conclusion with 3 regression guards.
+    * **T-NEW-160b/12 / NchantdOfficeMatrix +
+      NchantdOfficeCellBorderFormats** -- DONE (`2347a53`,
+      survey ack). Sites at `matricies.py:171 + 1860` are
+      either commented-out (cell-border utility pane) or
+      properly guarded (`open_file` early-return).
 
-  Next child: T-NEW-160 NchantdOfficeImage external save (mirror the
-  Script seam). No two formats move forward in parallel.
+  No two formats moved forward in parallel. The umbrella's
+  full sweep of 13 widget classes is closed. Remaining work
+  is in **future cards** (e.g. NchantdImage save-seam,
+  NchantdChart populate_data streaming, populate_data vs
+  populate_document design language per operator guidance):
+  these are separate T-NEW numbers, not umbrella children.
 
 ### Closed / demoted by operator clarification
 
