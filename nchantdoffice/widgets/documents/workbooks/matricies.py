@@ -1647,7 +1647,14 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         )
         cnt += 1
 
-        # PUSH 0.0.3 — Thumbnail preview of selected cell content
+        # T-NEW-165 — Thumbnail preview of selected cell content
+        slot = self._ensure_drawer_item(items, cnt)
+        slot["widget"] = self.cell_thumbnail = NchantdLabel(
+            self,
+            {"label": "Cell Preview", "text": "", "size": ["stretch", "auto"]},
+        )
+        cnt += 1
+
         return items
 
     # PUSH to 0.0.3
@@ -1816,6 +1823,20 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         else:
             logma.warning(f"[matricies] on_selection_changed: cell_ref_label missing for {address}")
         self.formula_input.setText(value or "")
+
+        # T-NEW-165 — Thumbnail preview of selected cell content.
+        # Same selection signal that drives the formula bar pushes
+        # the active cell's text into the cell_thumbnail slot
+        # constructed by init_drawer_cell_config.
+        if hasattr(self, "cell_thumbnail") and self.cell_thumbnail is not None:
+            try:
+                self.cell_thumbnail.setText(value or "")
+            except AttributeError:
+                # NchantdLabel is a QLabel; setText is the Qt
+                # native API. If the widget was constructed via
+                # a different primitive in a sibling drawer, the
+                # fallback below keeps the signal silent.
+                pass
 
         # Emit signal
         self.cellSelected.emit(address, value)
