@@ -221,9 +221,12 @@ class NchantdOfficeChart(NchantdOfficeDocument):
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
 
-        # PUSH to 0.0.3 force external until
-        self.document.set_location("external")
-
+        # T-NEW-160b/9: drop the PUSH-to-0.0.3 / "force external until"
+        # hardcode. The doc location threads through the caller;
+        # the location-aware dispatch below reads the caller-set
+        # location. (Note: Chart is a prime populate_data candidate —
+        # the chart holds the snapshot + chart-type metadata while
+        # the stream updates; future card wires populate_data.)
         if self.document.location == "external":
             self.open_file(self.document.file_path)
         # PUSH to 0.0.3
