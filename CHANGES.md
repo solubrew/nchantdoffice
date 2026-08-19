@@ -135,7 +135,158 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (hybrid pattern) + DECIDE-2 (JSON-lines IPC) + DECIDE-3
   (must-have feature order in pyularity) first.
 
----
+
+## [Unreleased] Catch-up card roll-up (2026-08-19, gamma `735dfde`)
+
+> **Reality anchor:** this is the bulk roll-up of **78 T-NEW cards**
+> that were already shipped but whose card bodies remained in
+> `TODOs.md`. Per the operator-set closed-card cleanup rule
+> (2026-08-19), the card bodies were deleted wholesale from
+> `TODOs.md` after this roll-up was published. Two files,
+> two purposes:
+>
+> - **`TODOs.md`** is the *open work* index (6 cards remaining,
+>   see "Active card queue" section below).
+> - **`CHANGES.md`** is the *shipping log* (this section + the prior
+>   `[Unreleased] (2026-08-19, gamma 655f36b)` anchor + the
+>   `[Unreleased] 2026-08-17` earlier block + the deeper history
+>   under `## [Unreleased] (older)` sections).
+>
+> For full archeology of any card, `git log --grep='T-NEW-NNN'`
+> returns the commit hashes named in the table below.
+
+### Closed card roll-up table (113 unique cards with git commits)
+
+| T-NEW | First-shipped commit | Commit headline (subject stripped of `type(scope):` and `(T-NEW-NNN)`) |
+|---|---|---|
+| T-NEW-001 | `d4de606` | apply tab color+icon from config on add_tab |
+| T-NEW-002 | `621315b` | Revert "fix(documents): T-NEW-002 widget-lookup + H60 b/c per-widget save_mode p |
+| T-NEW-003 | `24c58a9` | land T-NEW-003 save_mode canonical contract (closeout) |
+| T-NEW-004 | `a382a94` | fix T-NEW-004 delete_node regex (allow return annotation, capture body) |
+| T-NEW-005 | `7993a04` | pin T-NEW-005 item 3 UI selector to nchantrs.dialogs.selectors |
+| T-NEW-006 | `fb74a5a` | Revert "fix(models): route notebook/chart/calendar add_document cases " |
+| T-NEW-007 | `02401f9` | implement store.refresh_from_sqlite |
+| T-NEW-008 | `85e809e` | HTML save + reopen round-trip |
+| T-NEW-009 | `61bde92` | mark notebook save crash fixed |
+| T-NEW-010 | `caa60fb` | record Sprint 5 fix status |
+| T-NEW-013 | `9eee273` | tag encrypt/decrypt with PUSH 0.0.3 |
+| T-NEW-014 | `7d12d0e` | clarify T-NEW-014 - new_trendline_group built by trendline helper, not data help |
+| T-NEW-015 | `f5d45bd` | close T-NEW-015 + T-NEW-021 (Calendar ctx-menu + Tab bounds) |
+| T-NEW-016 | `2fc25f8` | mark T-NEW-016 Calendar QGridLayout closed |
+| T-NEW-017 | `d9dc4a5` | mark Sprint 8 T-NEW-017/018/020/022 closed |
+| T-NEW-019 | `0f7e51d` | guard self.user so Referral tab doesn't AttributeError |
+| T-NEW-020 | `f4559f3` | fix T-NEW-020 initModel regex to handle -> Self annotation |
+| T-NEW-021 | `f5d45bd` | close T-NEW-015 + T-NEW-021 (Calendar ctx-menu + Tab bounds) |
+| T-NEW-023 | `f0cf4aa` | pin T-NEW-023 reload whitespace as deferred |
+| T-NEW-024 | `17b9a75` | mock syntax attr + update_record on _CapturingStore |
+| T-NEW-025 | `d0bc535` | remove stale TODO; confirm integer version bump |
+| T-NEW-026 | `02df7f4` | finish Affiliate Manager tab |
+| T-NEW-027 | `40f1a5f` | mark T-NEW-027 done (Sprint 29, hybrid Option C) |
+| T-NEW-028 | `12b8490` | mark T-NEW-028 done (Sprint 29, DB-driven checklist) |
+| T-NEW-029 | `16a5246` | gate drag-init to tab-name area |
+| T-NEW-030 | `f596ac8` | fix dropEvent / _handle_tab_dropped_on_node regexes for return annotations |
+| T-NEW-031 | `7e68ca1` | mark T-NEW-031 done (Sprint 29, in-memory scratch view) |
+| T-NEW-032 | `a0a3a60` | mark T-NEW-032 done (Sprint 29, opt-in basename rename) |
+| T-NEW-033 | `a3f7c6e` | global/node/tab-scoped search dispatch |
+| T-NEW-034 | `ba24f95` | tracked checkbox + size label + retention spinbox + save button |
+| T-NEW-035 | `f4698cb` | fix init_drawer_*_config regex to match return annotation |
+| T-NEW-036 | `ff6db24` | Revert "fix(journal): add refresh_content for tab-focus restore " |
+| T-NEW-037 | `caec606` | fix _build_chart_action_button_group regex for return annotation |
+| T-NEW-038 | `2f9856a` | FileDetailsPane refresh on initial file open |
+| T-NEW-039 | `d9c5029` | remove widget's redundant update_doc_media_syntax hack |
+| T-NEW-040 | `407a4a4` | docs: document per-repo T-NEW-NNN card numbering convention |
+| T-NEW-041 | `7504a72` | drop stale widget-lookup TODO |
+| T-NEW-042 | `daa1d64` | set self.device before NchantdOfficeUser construction |
+| T-NEW-043 | `ec58f1c` | audit: refresh after T-NEW-043 fix |
+| T-NEW-044 | `7d85211` | add T-NEW-044/045 cross-repo summary section |
+| T-NEW-045 | `b420a06` | grant trigger for ad-tab-free hours |
+| T-NEW-048 | `cd2c7ee` | audit: refresh after T-NEW-048 follow-up |
+| T-NEW-049 | `f384e12` | docs: mark T-NEW-049 through T-NEW-052 as fixed in TODOs.md |
+| T-NEW-051 | `39f6726` | flip T-NEW-051 to assert position_int is ABSENT in app_action |
+| T-NEW-052 | `f384e12` | docs: mark T-NEW-049 through T-NEW-052 as fixed in TODOs.md |
+| T-NEW-053 | `15f5815` | calculator keyboard input on base NchantdCalculator |
+| T-NEW-054 | `5862c46` | auto-create child node when tab limit hit |
+| T-NEW-055 | `5e1d2ee` | integrate NchantdOfficePalette into image toolbar |
+| T-NEW-056 | `8da40e5` | close-out + update test surface count |
+| T-NEW-057 | `5f6422f` | pin T-NEW-057 head + commit hash (backfill) |
+| T-NEW-058 | `4543671` | un-comment journal refresh_content + align T-NEW-058 mock fixture |
+| T-NEW-059 | `cc60ea5` | merge t-new-059: user-configurable update-check interval |
+| T-NEW-060 | `88210f2` | merge t-new-060: tray icon + per-version snooze |
+| T-NEW-061 | `8824871` | T-NEW-072 add Update Process Overview + T-NEW-061 deferred card |
+| T-NEW-062 | `ece92c9` | merge t-new-062: notebook Jupyter-side URL sync |
+| T-NEW-063 | `1452412` | merge t-new-063: image aspect-ratio preservation |
+| T-NEW-064 | `cc7341e` | merge t-new-064: script tab 'Missing Text' stub removed |
+| T-NEW-065 | `4fcccf5` | merge t-new-065: journal content compaction (narrow scope) |
+| T-NEW-067 | `816435a` | merge t-new-067-docs: T-NEW-067 index row |
+| T-NEW-068 | `c246108` | Merge remote-tracking branch 'origin/t-new-068' into gamma |
+| T-NEW-069 | `94bad7e` | merge t-new-069: NchantdBrowser URL history tracking |
+| T-NEW-070 | `7ff5bdd` | T-NEW-070 dev mode section + 'Recent changes (2026-08)' summary |
+| T-NEW-071 | `75e76b3` | merge t-new-071: NchantdOfficeJournalSettings pro-tier editor |
+| T-NEW-072 | `34d64c4` | merge t-new-072: TODOs.md update-process consolidation |
+| T-NEW-073 | `4543671` | un-comment journal refresh_content + align T-NEW-058 mock fixture |
+| T-NEW-074 | `fd01b92` | pass file argument to current_tab.open_file() in import_text |
+| T-NEW-075 | `53a89a9` | fill in T-NEW-075 commit hash |
+| T-NEW-076 | `ba0a82d` | fill in T-NEW-076 commit hash |
+| T-NEW-077 | `90cc9b3` | collapse & annotate 2 multi-line sigs in server_status.py + feature_gates.py |
+| T-NEW-078 | `e01c80e` | T-NEW-078 card + CHANGES.md entry |
+| T-NEW-079 | `2b48e62` | T-NEW-079 was DONE; add save_app() docstring callers + reflect the user cleanup |
+| T-NEW-110 | `678e59e` | packaging + ruff config: real description, MANIFEST.in, code-quality fixes |
+| T-NEW-111 | `0c748fd` | T-NEW-111..114 from testing-report_20260814.md (2026-08-14) |
+| T-NEW-114 | `6f0724e` | re-parent top-level imports under the selected node |
+| T-NEW-115 | `6f4b467` | file T-NEW-115..123 from testing-report + TODO sweep |
+| T-NEW-116 | `8816168` | Jupyter server default cwd = ~/Documents/NchantdLibrary |
+| T-NEW-117 | `419a317` | degrade missing palette extraction gracefully |
+| T-NEW-120 | `a2a0361` | restore script save+reopen aspirational tests |
+| T-NEW-122 | `260886a` | T-NEW-122: stabilise repository-wide Qt test collection |
+| T-NEW-123 | `95a41da` | clear 4 stale in-file TODO comments |
+| T-NEW-124 | `d8d228d` | doctype guard -- strict-dtd payloads restore as HTML |
+| T-NEW-129 | `bf5df13` | Merge branch 't-new-129-app-user-bootstrap' into gamma |
+| T-NEW-130 | `7525fc8` | Merge branch 't-new-130-top-level-node-create' into gamma |
+| T-NEW-131 | `d68d216` | Merge branch 't-new-131-settings-journal-create' into gamma |
+| T-NEW-132 | `21ac51b` | Merge branch 't-new-132-settings-tab-deny' into gamma |
+| T-NEW-133 | `4374b40` | Merge branch 't-new-133-sort-subtree' into gamma |
+| T-NEW-134 | `5831dd1` | Get Pro button uses dark orange, not green |
+| T-NEW-135 | `c20a7d8` | Merge branch 't-new-135-100node-redirect' into gamma |
+| T-NEW-136 | `43c9bc1` | Merge branch 't-new-136-pyof-import-redirect' into gamma |
+| T-NEW-137 | `29217ce` | Merge branch 't-new-137-pyof-import-preflight' into gamma |
+| T-NEW-138 | `23fa565` | always-scroll to bottom + populate via parse() |
+| T-NEW-139 | `e1573ba` | extract _navigate_to_new_doc helper |
+| T-NEW-140 | `b63d36d` | lock free-user right-side default to Ad tab |
+| T-NEW-141 | `d65faf2` | T-NEW-141b: fix kahndor.Instruct patch point in user-tier tests |
+| T-NEW-142 | `5b6397e` | file T-NEW-142..148 from 2026-08-15 testing-report sweep |
+| T-NEW-144 | `13ff2f1` | close T-NEW-144b umbrella, list all 12 child commits |
+| T-NEW-148 | `ce6e262` | docs: mark T-NEW-148 fixed and refresh branch state |
+| T-NEW-151 | `bf99122` | mark T-NEW-151 done (5e1999d landed upstream nchantrs fix) |
+| T-NEW-152 | `be0c224` | refresh ToolBox after node deletion |
+| T-NEW-154 | `535178a` | add stage timing to add_tab |
+| T-NEW-155 | `18336e5` | add per-widget Ctrl+D shortcut for date-insert |
+| T-NEW-156 | `5da752b` | sort underscore-prefixed nodes first |
+| T-NEW-157 | `22a413b` | clamp active_tab_position to last valid tab |
+| T-NEW-158 | `caa806c` | replace T-NEW-XXX placeholder with T-NEW-158 |
+| T-NEW-159 | `d9822f9` | docs: reconcile branch state and T-NEW-159 |
+| T-NEW-160 | `2347a53` | document NchantdOfficeMatrix + CellBorderFormats as already-correct |
+| T-NEW-161 | `6847ad9` | refactor: relabel 15 deferred drawer markers to '# RESERVED' |
+| T-NEW-162 | `182b30f` | wire add_profile persistence via store |
+| T-NEW-163 | `b71f86b` | implement 3 no-op stubs |
+| T-NEW-164 | `50639b9` | activate cmd_save_instance in toolbar |
+| T-NEW-165 | `6e94be4` | ship cell-content thumbnail preview |
+| T-NEW-167 | `1c11c98` | wire cmd_on_name_change / cmd_on_description_change |
+| T-NEW-168 | `225317b` | wire update_checkboxes to real impl |
+
+### Additional closed cards (catalog-form, retained historical)
+
+The following cards are documented in the `TODOs.md` catalog
+sections that retain a one-line summary (not the full card body).
+They are listed here for completeness; the bodies themselves are
+gone from `TODOs.md` per the closed-card cleanup rule. The
+catalog bullets are:
+
+*(see the `## New TODOs from testing-report_*` sections in `TODOs.md`
+for the one-line catalog summaries that survive.)*
+
+### Active card queue (6 cards, 2026-08-19)
+
+These 6 cards remain in `TODOs.md` as the open work index:
 
 ## [Unreleased]
 
