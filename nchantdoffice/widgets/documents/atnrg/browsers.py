@@ -1634,7 +1634,29 @@ class NchantdOfficeWebViewer(NchantdWebViewer):
         return self
 
     def save(self) -> Self:
-        """"""
+        """Persist the slim-viewer state.
+
+        T-NEW-169: was a forgotten stub returning ``self`` (empty
+        docstring + body). The desktop override shadowed the
+        canonical ``NchantdWebViewer.save()`` impl in nchantrs
+        (the version that persists viewer state via ``_to_dict()``
+        and emits a model event). Two callers invoked the stub:
+
+          1. ``focusOutEvent`` (line 532) — auto-save on focus
+             loss. Every time the user clicked outside the
+             browser area, their in-memory state was dropped.
+          2. The toolbar ``cmd_save_instance`` button (activated
+             in T-NEW-164 part B, commit 50639b9) — clicking
+             Save in the toolbar was a silent no-op.
+
+        The fix turns the override into a thin pass-through
+        that delegates to ``super().save()``. We don't open
+        the ``self.pinned`` guard or the ``file_path`` rewrite
+        (those are NchantdOfficeWebBrowser patterns at line
+        1172; that's the rich toolbar-embedded browser class —
+        a different code path).
+        """
+        super().save()
         return self
 
     def set_url_path(self, url=None) -> Self:
