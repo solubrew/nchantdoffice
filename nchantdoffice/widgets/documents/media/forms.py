@@ -73,9 +73,11 @@ class NchantdOfficeForm(NchantdForm):
     def initView(self) -> Self:
         """"""
         super().initView()
-        # PUSH to 0.0.3 force external until
-        self.document.set_location("external")
-
+        # T-NEW-160b/2: drop the PUSH-to-0.0.3 / "force external until"
+        # hardcode. The doc location threads through the caller
+        # (open_file when the user opens from disk; populate_data
+        # when load comes from .pyof). The location-aware dispatch
+        # below reads the caller-set location.
         if self.document.location == "external":
             self.open_file(self.document.file_path)
         # PUSH to 0.0.3
