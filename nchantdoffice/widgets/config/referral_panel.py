@@ -392,7 +392,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
             # import path (matches the rest of the project).
             from pycurity.pykey import PyKeyStore
 
-            # T-NEW-XXX: never let the desktop fall through to
+            # T-NEW-158: never let the desktop fall through to
             # PyKeyStore's CLI ``getpass.getpass`` prompt. The
             # desktop must surface a Qt masked-entry dialog before
             # the keystore is opened. Tests inject a sentinel
