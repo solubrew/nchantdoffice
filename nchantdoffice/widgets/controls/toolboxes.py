@@ -926,12 +926,12 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             "actions": {
                 1: {"action": "open_instance", "type": "", "handler": self.cmd_open_local_file},
                 2: {"action": "import_instance", "type": "", "handler": self.cmd_import_local_file},
-                # PUSH to 0.0.3
-                # 3: {"action": "duplicate_instance", "type": "", "handler": self.cmd_duplicate_instance},
-                # implement a mirror instance so user can work on two different nodes in two differenct screens from the
-                # same document
-                # 3: {"action": "save_instance", "type": "", "handler": self.cmd_save_instance},
-                # 5: {"action": "export_instance", "type": "", "handler": self.cmd_export_instance},
+                # T-NEW-164 part B — activate cmd_save_instance in the
+                # toolbar. The handler was wired in Sprint 20; only
+                # the toolbar button was deferred. Duplicate_instance
+                # and export_instance stay deferred to 0.0.3+ (the
+                # mirror-instance UX is a separate feature).
+                3: {"action": "save_instance", "type": "", "handler": self.cmd_save_instance},
             },
         }
         if self.app.model.user.has_pro:
@@ -939,7 +939,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 "action": "new_instance",
                 "type": "",
                 "handler": self.cmd_create_new_instance,
-            }  # PUSH to 0.0.3 change a pop dialog for instance selection/open/new
+            }
         self.document_buttonbar = NchantdButtonBar(self, cfg)
         items[cnt]["widget"] = self.document_buttonbar
         cnt += 1
