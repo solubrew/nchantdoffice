@@ -868,7 +868,40 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.initModel(cfg)
         self.initView(cfg)
         return self
+    def cmd_add_storage(self, event=None, *args, **kwargs):
+        """Add cloud storage configuration"""
+        try:
+            # Get storage configuration from storage_edit_pane
+            if not hasattr(self, "storage_edit_pane"):
+                logma.warning("Storage edit pane not initialized")
+                return self
 
+            # NOTE: Implement actual storage configuration
+            # This would involve:
+            # 1. Get storage type (Google Drive, Dropbox, OneDrive, etc.)
+            # 2. Get authentication credentials
+            # 3. Test connection
+            # 4. Save configuration to self.clouds dictionary
+            # 5. Update storage_list widget
+
+            logma.info("Adding cloud storage configuration...")
+
+            # Example placeholder structure:
+            # storage_config = {
+            #     'type': 'google_drive',  # or 'dropbox', 'onedrive', etc.
+            #     'name': 'My Google Drive',
+            #     'credentials': {...},
+            #     'root_path': '/',
+            # }
+            # self.clouds[storage_config['type']] = storage_config
+            # self.storage_list.add_item(storage_config['name'])
+
+            logma.info("Cloud storage configuration requires API setup")
+
+        except Exception as e:
+            logma.error(f"Error adding storage: {e}")
+
+        return self
     def cmd_display_file_info(self, event=None, *args, **kwargs):
         """"""
         logma.info(f"Command Display File Info")
@@ -913,7 +946,21 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[filesystems] cmd_flatten_files failed: {e}", exc_info=True)
         return self
+    def cmd_go_home(self, event=None, path=None, *args, **kwargs):
+        """T-NEW-068 — navigate to a "home" directory.
 
+        Default ``path`` is ``expanduser("~")``. Accepts an
+        explicit ``path`` kwarg so callers / tests can override
+        without patching. Mirrors the new interface contract
+        requested by the user (testing-report_20260810.md
+        line 27: "need to nailed down the interface inputs").
+
+        Returns self for chainable callers.
+        """
+        if path is None or path == "":
+            path = expanduser("~")
+        self.fs_tree.current_level_path = path
+        return self.cmd_set_root(path=path)
     def cmd_on_file_search_method_change(self, event=None, *args, **kwargs):
         """Record the file-search method change on the config.
 
@@ -1012,24 +1059,6 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
                 self.populate_table_two()
         return self
 
-
-
-    def cmd_go_home(self, event=None, path=None, *args, **kwargs):
-        """T-NEW-068 — navigate to a "home" directory.
-
-        Default ``path`` is ``expanduser("~")``. Accepts an
-        explicit ``path`` kwarg so callers / tests can override
-        without patching. Mirrors the new interface contract
-        requested by the user (testing-report_20260810.md
-        line 27: "need to nailed down the interface inputs").
-
-        Returns self for chainable callers.
-        """
-        if path is None or path == "":
-            path = expanduser("~")
-        self.fs_tree.current_level_path = path
-        return self.cmd_set_root(path=path)
-
     def cmd_set_root(self, event=None, *args, **kwargs):
         """T-NEW-068 — navigate to ``path`` (or the current
         ``fs_tree.current_level_path`` when None).
@@ -1054,41 +1083,6 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
     def cmd_toggle_compare_directory(self, event=None, *args, **kwargs):
         """"""
         self.compare_fs = not self.compare_fs
-        return self
-
-    def cmd_add_storage(self, event=None, *args, **kwargs):
-        """Add cloud storage configuration"""
-        try:
-            # Get storage configuration from storage_edit_pane
-            if not hasattr(self, "storage_edit_pane"):
-                logma.warning("Storage edit pane not initialized")
-                return self
-
-            # NOTE: Implement actual storage configuration
-            # This would involve:
-            # 1. Get storage type (Google Drive, Dropbox, OneDrive, etc.)
-            # 2. Get authentication credentials
-            # 3. Test connection
-            # 4. Save configuration to self.clouds dictionary
-            # 5. Update storage_list widget
-
-            logma.info("Adding cloud storage configuration...")
-
-            # Example placeholder structure:
-            # storage_config = {
-            #     'type': 'google_drive',  # or 'dropbox', 'onedrive', etc.
-            #     'name': 'My Google Drive',
-            #     'credentials': {...},
-            #     'root_path': '/',
-            # }
-            # self.clouds[storage_config['type']] = storage_config
-            # self.storage_list.add_item(storage_config['name'])
-
-            logma.info("Cloud storage configuration requires API setup")
-
-        except Exception as e:
-            logma.error(f"Error adding storage: {e}")
-
         return self
 
     def create_data_source(self):
