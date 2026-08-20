@@ -16,7 +16,7 @@
 from os.path import dirname, join, getsize, expanduser
 import datetime as dt
 from os import stat
-
+from typing import Any
 # ======================================3rd Party Library Modules=====================================================||
 from pandas import DataFrame
 
@@ -811,8 +811,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
     def initModel(self, cfg=None):
         """"""
         super().initModel(cfg)
-        document = {"document": self.config.dikt.get("document", {})}
-        self.document = self.app.model.codex.init_files(document)
+        self.document = self.app.model.codex.init_files({"document": self.config.dikt.get("document", {})})
         self.document.load_document()
         self.context_menu_name = "context.document.files"
         if self.context_menu_name is not None:
@@ -825,7 +824,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             cfg = {}
         cfg["buttons"] = {
             10: {"action": "set_home_fs", "handler": self.cmd_go_home},
-            11: {"action": "show_compare_directory", "handler": self.cmd_toggle_compare_directory},
+            #PUSH to 0.0.3 11: {"action": "show_compare_directory", "handler": self.cmd_toggle_compare_directory},
             12: {"action": "set_root", "handler": self.cmd_set_root},
             # add flatten option with a depth control to show all files flattened to a specific depth
             49: "_insert_stretch",
@@ -852,23 +851,14 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         logma.info(f"Initialize File System")
         self.fs_tree = NchantdFileSystem(self, fs_cfg).initWidget()
         super().initView(cfg)
-
         self.fs_tree.itemExpanded.connect(self.cmd_on_node_expansion)
         self.fs_tree.itemPressed.connect(self.cmd_on_node_selection)  # may need to move to the underlieing widget
         self.fs_tree.setFixedWidth(self.width() * 0.15)
         self.fs_tree.setMinimumWidth(200)
         self.table_layout.addWidget(self.fs_tree)
-        # T-NEW-068 — restore last-visited directory on re-open.
-        # ``last_root_path`` was set by the previous session's
-        # ``show_tree`` call (or by an explicit ``cmd_set_root``).
-        # Falling back to ``self.document.file_path`` preserves
-        # the pre-existing behaviour for first-launch / no-history.
-        # ``last_root_path`` takes precedence because the user
-        # may have navigated to a sub-directory and saved that
-        # explicitly via ``cmd_set_root`` (which doesn't update
-        # ``self.document.file_path``).
-        restore_path = self._resolve_restore_path()
-        self.show_tree(restore_path)
+        self.open_file(self.document.file_path)
+        #restore_path = self._resolve_restore_path()
+        #self.show_tree(restore_path)
         self.layout.addLayout(self.table_layout)
         self.cmd_on_node_selection()
         return self
@@ -891,10 +881,11 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.file_pane.get_access_date(path)
         self.file_pane.get_created_date(path)
         self.file_pane.get_modified_date(path)
-        self.import_pane.set_file_path(path)
-        self.rename_pane.set_file_path(path)
-        self.move_pane.set_file_path(path)
-        self.compress_pane.set_file_path(path)
+        #PUSH to 0.0.3 
+        # self.import_pane.set_file_path(path)
+        # self.rename_pane.set_file_path(path)
+        # self.move_pane.set_file_path(path)
+        # self.compress_pane.set_file_path(path)
 
         return self
 
@@ -1021,23 +1012,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
                 self.populate_table_two()
         return self
 
-    def _resolve_restore_path(self):
-        """T-NEW-068 — pick the path ``initView`` should restore on re-open.
 
-        Returns ``config.dikt["last_root_path"]`` when it is a
-        non-empty string; otherwise falls back to
-        ``self.document.file_path``. Pure function over
-        ``self.config.dikt`` + ``self.document.file_path`` —
-        no Qt state — so it's directly unit-testable.
-
-        Whitespace-only strings (e.g. ``"   "``) are treated
-        as unset so a previous bad write doesn't break
-        restoration.
-        """
-        last_root = self.config.dikt.get("last_root_path")
-        if last_root and isinstance(last_root, str) and last_root.strip():
-            return last_root
-        return getattr(self.document, "file_path", None)
 
     def cmd_go_home(self, event=None, path=None, *args, **kwargs):
         """T-NEW-068 — navigate to a "home" directory.
@@ -1055,7 +1030,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.fs_tree.current_level_path = path
         return self.cmd_set_root(path=path)
 
-    def cmd_set_root(self, event=None, path=None, *args, **kwargs):
+    def cmd_set_root(self, event=None, *args, **kwargs):
         """T-NEW-068 — navigate to ``path`` (or the current
         ``fs_tree.current_level_path`` when None).
 
@@ -1066,14 +1041,14 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
         Returns self for chainable callers.
         """
-        if path is None or path == "":
-            path = getattr(self.fs_tree, "current_level_path", None)
+        path = getattr(self.fs_tree, "current_level_path", None)
         logma.info(f"[filesystems] Command Set Root path={path!r}")
         if path:
             self.fs_tree.current_level_path = path
             # T-NEW-068 — persist so the next initView restores
             # this directory.
             self.config.dikt["last_root_path"] = path
+        self.document.open_file(path)
         return self.show_tree(path)
 
     def cmd_toggle_compare_directory(self, event=None, *args, **kwargs):
@@ -1347,28 +1322,10 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         # self.toolbox_config[300]["items"] = self.init_drawer_storage_config()
         # self.toolbox_config[400]["items"] = self.init_drawer_quickstart()
 
-    def open_file(self, file=None):
-        """Open a file-system path inside the file-nav document.
-
-        T-041: this is intentionally a navigation-only operation
-        (the document IS the file nav window, not a file editor).
-        We align the populate + config state and reset the
-        file-table contents so the user sees the new directory
-        rather than stale data.
-        """
-        logma.info(f"[filesystems] open_file {file}")
-        self.file_path = file
-        if file is None:
-            file = getattr(self, "current_path", None)
-        if file is not None:
-            self.config.dikt["current_path"] = file
-            if hasattr(self, "document") and self.document is not None:
-                if hasattr(self.document, "set_location"):
-                    self.document.set_location("external")
-                if hasattr(self.document, "set_file_path"):
-                    self.document.set_file_path(file)
-        if hasattr(self, "clear_table_views"):
-            self.clear_table_views()
+    def open_file(self, file=None, _populate_document=False, _save=True) -> Any:
+        """"""
+        super().open_file(file, _populate_document, _save)
+        self.document.open_file(path)
         self.populate_document()
         return self
 
@@ -1418,29 +1375,11 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         Returns ``self`` for chainable call sites.
         """
         logma.info("[filesystems] save")
-        if not hasattr(self, "document") or self.document is None:
-            return self
-        try:
-            if getattr(self.document, "location", None) is None:
-                if hasattr(self.document, "set_location"):
-                    self.document.set_location("external")
-            location = getattr(self.document, "location", "external")
-            if location == "external":
-                content = getattr(self.document, "content", None) or {}
-                if isinstance(content, dict):
-                    content["file_path"] = getattr(self.document, "file_path", None)
-                if hasattr(self.document, "set_content"):
-                    self.document.set_content(content)
-            elif location == "internal":
-                binary = self.get_binary() if hasattr(self, "get_binary") else None
-                if binary and hasattr(self.document, "set_binary"):
-                    self.document.set_binary(binary)
-        except Exception as e:
-            logma.error(f"[filesystems] save: doc-state persist failed: {e}", exc_info=True)
-        try:
-            super().save()
-        except Exception as e:
-            logma.error(f"[filesystems] save: super().save() failed: {e}", exc_info=True)
+        self.document.set_file_path(self.file_path)
+        content = self.get_content()
+        if content != self.document.content:
+            self.document.set_content(content)
+        super().save()
         return self
 
     def clear_table_views(self):
@@ -1469,9 +1408,9 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         super().save()
         return self
 
-    def get_binary(self):
-        """Return the stored value of get_binary."""
-        return self.config.dikt.get("file_binary", b"") or b""
+    # def get_binary(self):
+    #     """Return the stored value of get_binary."""
+    #     return self.config.dikt.get("file_binary", b"") or b""
 
     def show_tree(self, file=None):
         """T-NEW-068 — show the file tree at ``file``.
@@ -1491,12 +1430,29 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             # direct callers (and the initView restoration path)
             # all converge on the same persisted state.
             self.config.dikt["last_root_path"] = file
+        self.file_path = file
         self.document.open_file(file)
         self.fs_tree.set_root(file)
         self.populate_document()
         return self
 
+    def _resolve_restore_path(self):
+        """T-NEW-068 — pick the path ``initView`` should restore on re-open.
 
+        Returns ``config.dikt["last_root_path"]`` when it is a
+        non-empty string; otherwise falls back to
+        ``self.document.file_path``. Pure function over
+        ``self.config.dikt`` + ``self.document.file_path`` —
+        no Qt state — so it's directly unit-testable.
+
+        Whitespace-only strings (e.g. ``"   "``) are treated
+        as unset so a previous bad write doesn't break
+        restoration.
+        """
+        last_root = self.config.dikt.get("last_root_path")
+        if last_root and isinstance(last_root, str) and last_root.strip():
+            return last_root
+        return getattr(self.document, "file_path", None)
 # ====================================================================================================================||
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||

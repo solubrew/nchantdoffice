@@ -102,7 +102,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self.view_type = None
         self.scene = None
 
-    def initModel(self) -> Self:
+    def initModel(self, cfg=None) -> Self:
         """Initialise the script-document model (T-082).
 
         T-082: previously left a TODO about documents being
@@ -117,7 +117,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
              (font bold / italic / underline / color) and
              re-applies them on top of the text-restore.
         """
-        super().initModel()
+        super().initModel(cfg)
         self.document = self.app.model.codex.init_script({"document": self.config.get("document", {})})
         self.document.load_document()
         # self.restore_formatting_from_metadata()
@@ -479,8 +479,8 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # view port change
         return self
 
-    def connect_to_file(self) -> None:
-        """"""
+    # def connect_to_file(self) -> None:
+    #     """"""
 
     def extract_images(self) -> None:
         """Extract all images from the QTextEdit's HTML content."""

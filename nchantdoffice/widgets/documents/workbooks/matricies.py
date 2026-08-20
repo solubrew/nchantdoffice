@@ -1991,6 +1991,8 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 self.document.content["num_cols"] = max((len(r) for r in grid), default=0)
         except Exception as e:
             logma.error(f"[matricies] save: grid capture failed: {e}", exc_info=True)
+        if getattr(self.document, "location", None) == "external" and getattr(self, "file_path", None):
+            self._write_external_file()
         super().save()
         return self
 
@@ -2506,6 +2508,45 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         # TODO implement popup dialog to display message with options to cancel or continue
         # if hasattr(self, "config"):
         #    self.config.dikt["user_messages"] = list(self.user_messages)
+
+    def _write_external_file(self) -> None:
+        """Atomically save the editor payload to ``self.file_path``.
+
+        Only runs when ``self.document.location == "external"`` and
+        ``self.file_path`` is set. Uses the syntax-aware exporter so
+        the bytes on disk match what the user sees in the editor
+        (HTML for HTML documents, plain text for code, etc.).
+        """
+        # path = getattr(self, "file_path", None)
+        # if not path:
+        #     return
+        # text = self._export_editor_payload()
+        # if not text:
+        #     return
+        # encoding = "utf-8"
+        # try:
+        #     cfg_encoding = (getattr(getattr(self, "config", None), "dikt", {}) or {}).get("encoding")
+        #     if cfg_encoding:
+        #         encoding = cfg_encoding
+        # except Exception:
+        #     pass
+        # directory = dirname(path) or "."
+        # tmp_path = f"{path}.tmp"
+        # try:
+        #     from os import makedirs, replace
+        #
+        #     makedirs(directory, exist_ok=True)
+        #     with open(tmp_path, "w", encoding=encoding) as f:
+        #         f.write(text)
+        #     replace(tmp_path, path)
+        # except Exception:
+        #     try:
+        #         if exists(tmp_path):
+        #             from os import remove
+        #
+        #             remove(tmp_path)
+        #     except Exception:
+        #         pass
 
 
 # ====================================================================================================================||

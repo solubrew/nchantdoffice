@@ -148,6 +148,8 @@ external docs (backward compat with T-NEW-038).
         """"""
         logma.debug(f"[files] get_access_date: path={path!r}")
         path = path or self.file_path or Path("")
+        if isinstance(path, str):
+            path = Path(path)
         if not exists(path):
             logma.warning(f"[files] get_access_date: path missing, using '0': {path!r}")
             date = "0"
@@ -166,6 +168,8 @@ external docs (backward compat with T-NEW-038).
     def get_created_date(self, path=None) -> str:
         """"""
         path = path or self.file_path or Path("")
+        if isinstance(path, str):
+            path = Path(path)
 
         logma.debug(f"[files] get_created_date: path={path!r}")
         if not exists(path):
@@ -208,6 +212,8 @@ external docs (backward compat with T-NEW-038).
         str); we report the byte length so the user can see
         the actual stored size."""
         path = path or self.file_path or Path("")
+        if isinstance(path, str):
+            path = Path(path)
         logma.debug(f"[files] get_file_size: path={path!r}")
         if not path or not path.name or not exists(path):
             tab_content = (
@@ -259,6 +265,8 @@ external docs (backward compat with T-NEW-038).
         when no file_path is set. Internal tabs store the
         modification timestamp in the doc_media row."""
         path = path or self.file_path or Path("")
+        if isinstance(path, str):
+            path = Path(path)
         logma.debug(f"[files] get_modified_date: path={path!r}")
         if not path or not path.name or not exists(path):
             tab_modon = (
@@ -291,6 +299,8 @@ external docs (backward compat with T-NEW-038).
         so internal tabs render a meaningful file_name field.
         """
         path = path or self.file_path or Path("")
+        if isinstance(path, str):
+            path = Path(path)
         name = path.name if path.name else (
             getattr(self.tab, "name", None) if self.tab is not None else None
         ) or "(unnamed)"
