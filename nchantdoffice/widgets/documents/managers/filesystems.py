@@ -17,6 +17,7 @@ from os.path import dirname, join, getsize, expanduser
 import datetime as dt
 from os import stat
 from typing import Any
+
 # ======================================3rd Party Library Modules=====================================================||
 from pandas import DataFrame
 
@@ -814,6 +815,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         super().initModel(cfg)
         self.document = self.app.model.codex.init_files({"document": self.config.dikt.get("document", {})})
         self.document.load_document()
+        self.document.set_location("internal")
         self.context_menu_name = "context.document.files"
         if self.context_menu_name is not None:
             self.initialize_context_menu(self.context_menu_name)
@@ -825,7 +827,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             cfg = {}
         cfg["buttons"] = {
             10: {"action": "set_home_fs", "handler": self.cmd_go_home},
-            #PUSH to 0.0.3 11: {"action": "show_compare_directory", "handler": self.cmd_toggle_compare_directory},
+            # PUSH to 0.0.3 11: {"action": "show_compare_directory", "handler": self.cmd_toggle_compare_directory},
             12: {"action": "set_root", "handler": self.cmd_set_root},
             # add flatten option with a depth control to show all files flattened to a specific depth
             49: "_insert_stretch",
@@ -858,8 +860,8 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.fs_tree.setMinimumWidth(200)
         self.table_layout.addWidget(self.fs_tree)
         self.open_file(self.document.file_path)
-        #restore_path = self._resolve_restore_path()
-        #self.show_tree(restore_path)
+        # restore_path = self._resolve_restore_path()
+        # self.show_tree(restore_path)
         self.layout.addLayout(self.table_layout)
         self.cmd_on_node_selection()
         return self
@@ -917,7 +919,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.file_pane.get_access_date(path)
         self.file_pane.get_created_date(path)
         self.file_pane.get_modified_date(path)
-        #PUSH to 0.0.3 
+        # PUSH to 0.0.3
         # self.import_pane.set_file_path(path)
         # self.rename_pane.set_file_path(path)
         # self.move_pane.set_file_path(path)
@@ -1403,7 +1405,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         #     self.document.set_content(content)
         #     logma.info(f"Content {self.document.content}")
         # logma.info(f"Document {self.document.to_dict()}")
-        #super().save()
+        # super().save()
         return self
 
     def show_tree(self, file=None):
@@ -1447,6 +1449,8 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         if last_root and isinstance(last_root, str) and last_root.strip():
             return last_root
         return getattr(self.document, "file_path", None)
+
+
 # ====================================================================================================================||
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
