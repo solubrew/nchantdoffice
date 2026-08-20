@@ -548,28 +548,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         returns ``None`` and the editor falls through to
         ``setPlainText``, dropping the rich text).
         """
-        syntax = (
-            getattr(self, "compatibility", None)
-            or (self.config.dikt.get("compatibility") if hasattr(self, "config") else None)
-            or getattr(self.document, "syntax", None)
-            or "html"
-        )
-        if syntax == "html":
-            # T-NEW-120 (replay of reverted fix 85e809e):
-            # pass editor_html through directly. The previous
-            # templated-envelope code (``html.replace(...)``)
-            # collapsed to "" when the template body was
-            # commented out, which silently dropped all HTML
-            # text. The editor HTML is the canonical payload.
-            editor_html = self.document_editor.toHtml()
-            text = editor_html
-            # Mirror the editor HTML into the Pyffice unit so
-            # reopen can restore formatting (see _preserved_unit_html).
-            text_attr = getattr(self.document, "text", None)
-            if text_attr is not None and hasattr(text_attr, "html"):
-                text_attr.html = editor_html
-        else:
-            text = self.document_editor.toPlainText()
+        text = self._export_editor_payload()
         logma.info(f"File Path {self.file_path}")
         content = {"content": {"file_path": self.file_path}, "text": text}
         logma.info(f"CONTENT {content}")
@@ -1181,6 +1160,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         logma.info(f"Syntax {self.document.syntax}")
         logma.info(f"File Format {self.document.file_format}")
         self._apply_syntax_highlighting(text)
+        super().populate_document()
         return self
 
     def restore_formatting_from_metadata(self) -> Self:
@@ -1250,11 +1230,8 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         preserved. Internal-origin scripts save only to the database
         -- the on-disk file path is left untouched.
         """
-        if self.document is None:
-            self.new_document()
-        content = self.get_content()
-        if content != self.document.content:
-            self.document.set_content(content)
+        # if self.document is None:
+        #     self.new_document()
         if getattr(self.document, "location", None) == "external" and getattr(self, "file_path", None):
             self._write_external_file()
         super().save()
@@ -1486,6 +1463,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             "toml": IniLexer,
             "r": RLexer,
             "bash": BashLexer,
+            "scad": CLexer
         }
         lexer_cls = lexer_map.get(self.document.syntax)
         if lexer_cls is not None:
@@ -1500,8 +1478,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         if self.document.syntax in ("rmd", "rst", "tex", "texinfo"):
             self.document_editor.setPlainText(text)
             return
-
-        raise Exception(f"unknown syntax {self.document.syntax}")
+        if debug:
+            raise Exception(f"unknown syntax {self.document.syntax}")
+        logma.warning(f"Unknown syntax open as plain text")
+        self.document_editor.setPlainText(text)
+        return
 
     def _ensure_drawer_item(self, items, cnt) -> dict[str, str]:
         """Lazily create a default drawer-item slot.
@@ -1577,47 +1558,47 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             inserts.append({"label": label, "marker": marker, "html": html})
         return self
 
-    def _legacy_export_editor_payload(self) -> str:
-        """Return the text payload that matches the editor's current syntax.
-
-        Used by external-file save so the bytes on disk mirror the
-        syntax the user sees. Each syntax maps to the editor API
-        that produces its native representation:
-
-            * html  -> document_editor.toHtml()
-            * markdown -> document_editor.toMarkdown()
-            * plain-text / plaintext -> document_editor.toPlainText()
-            * python / javascript / json / yaml / toml / css / r /
-              bash / ruby / c / cpp / cs / qss -> toPlainText() then
-              highlightable lexer mapping matches the editor's
-              syntax; pygments-produced payloads still come from the
-              editor via setHtml, so a round-trip to source text uses
-              toPlainText() (the source the user actually edits).
-            * xml / latex / tex / rmd / rst / texinfo -> toPlainText()
-              (those syntaxes do not round-trip via setHtml).
-
-        Returns an empty string when the editor is missing.
-        """
-        editor = getattr(self, "document_editor", None)
-        if editor is None:
-            return ""
-        syntax = getattr(getattr(self, "document", None), "syntax", None) or "plain-text"
-        try:
-            if syntax == "html":
-                return editor.toHtml()
-            if syntax == "markdown":
-                # Markdown is edited as source; toMarkdown() would
-                # escape the literal markup. Save the raw text.
-                return editor.toPlainText()
-            if syntax in ("plain-text", "plaintext"):
-                return editor.toPlainText()
-            if syntax in ("xml", "latex", "tex", "rmd", "rst", "texinfo"):
-                return editor.toPlainText()
-            # highlightable languages: editor holds a setHtml() payload;
-            # the source text the user edits is the plain text.
-            return editor.toPlainText()
-        except Exception:
-            return editor.toPlainText()
+    # def _legacy_export_editor_payload(self) -> str:
+    #     """Return the text payload that matches the editor's current syntax.
+    #
+    #     Used by external-file save so the bytes on disk mirror the
+    #     syntax the user sees. Each syntax maps to the editor API
+    #     that produces its native representation:
+    #
+    #         * html  -> document_editor.toHtml()
+    #         * markdown -> document_editor.toMarkdown()
+    #         * plain-text / plaintext -> document_editor.toPlainText()
+    #         * python / javascript / json / yaml / toml / css / r /
+    #           bash / ruby / c / cpp / cs / qss -> toPlainText() then
+    #           highlightable lexer mapping matches the editor's
+    #           syntax; pygments-produced payloads still come from the
+    #           editor via setHtml, so a round-trip to source text uses
+    #           toPlainText() (the source the user actually edits).
+    #         * xml / latex / tex / rmd / rst / texinfo -> toPlainText()
+    #           (those syntaxes do not round-trip via setHtml).
+    #
+    #     Returns an empty string when the editor is missing.
+    #     """
+    #     editor = getattr(self, "document_editor", None)
+    #     if editor is None:
+    #         return ""
+    #     syntax = getattr(getattr(self, "document", None), "syntax", None) or "plain-text"
+    #     try:
+    #         if syntax == "html":
+    #             return editor.toHtml()
+    #         if syntax == "markdown":
+    #             # Markdown is edited as source; toMarkdown() would
+    #             # escape the literal markup. Save the raw text.
+    #             return editor.toPlainText()
+    #         if syntax in ("plain-text", "plaintext"):
+    #             return editor.toPlainText()
+    #         if syntax in ("xml", "latex", "tex", "rmd", "rst", "texinfo"):
+    #             return editor.toPlainText()
+    #         # highlightable languages: editor holds a setHtml() payload;
+    #         # the source text the user edits is the plain text.
+    #         return editor.toPlainText()
+    #     except Exception:
+    #         return editor.toPlainText()
 
     def _load_external_file(self) -> bool:
         """Load an external script file into the document editor.

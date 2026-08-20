@@ -429,7 +429,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         document["file_name"] = tab.get("file_path", None)
         document["description"] = ""
         document["path"] = tab.get("file_path", None)
-        document["location"] = tab.get("location", "external")
+        document["location"] = tab.get("location", "internal")
         document["encoding"] = tab.get("encoding", "utf-8")
         document["tags"] = tags
         document["context"] = context

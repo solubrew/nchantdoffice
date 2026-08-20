@@ -1184,9 +1184,12 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         used by other doc subclasses (scripts, pdfs, images,
         etc.) but is not consumed here -- the document's own
         state is the source of truth.
+
+        TODO: refactor
+
         """
-        self.document.set_location("internal")
-        self.save()
+        # self.document.set_location("internal")
+        # self.save()
         return self
 
     def populate_document(self, file=None) -> Self:
@@ -1199,9 +1202,7 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         self.document = self.document or PyfficeDocument({})
         if self.document.location is None:
             self.document.set_location("internal")
-        content = self.get_content()
-        if content and content != self.document.content:
-            self.document.set_content(content)
+        self.document.set_content(self.get_content())
         super().save()
         return self
 
