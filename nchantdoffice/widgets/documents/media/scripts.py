@@ -1149,9 +1149,6 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         self.populate_document()
         return self
 
-    def populate_data(self) -> None:
-        """"""
-
     def populate_document(self) -> Self:
         """T-scripts-populate: route a freshly-opened script document.
 
@@ -1817,6 +1814,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         the bytes on disk match what the user sees in the editor
         (HTML for HTML documents, plain text for code, etc.).
         """
+        # TODO move to Pyffice as that is where file handling should occur
         path = getattr(self, "file_path", None)
         if not path:
             return

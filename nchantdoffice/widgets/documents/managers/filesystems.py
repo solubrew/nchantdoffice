@@ -807,6 +807,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.file_table_two = None
         self.file_table_two_changed = True
         self.clouds = {}
+        self.custom_root = None
 
     def initModel(self, cfg=None):
         """"""
@@ -847,7 +848,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         #     "handler": self.cmd_on_file_search_method_change,
         # }
         self.table_layout = pyqt.QHBoxLayout()
-        fs_cfg = {}
+        fs_cfg = {"root": self.document.file_path}
         logma.info(f"Initialize File System")
         self.fs_tree = NchantdFileSystem(self, fs_cfg).initWidget()
         super().initView(cfg)
@@ -868,6 +869,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         self.initModel(cfg)
         self.initView(cfg)
         return self
+
     def cmd_add_storage(self, event=None, *args, **kwargs):
         """Add cloud storage configuration"""
         try:
@@ -902,6 +904,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             logma.error(f"Error adding storage: {e}")
 
         return self
+
     def cmd_display_file_info(self, event=None, *args, **kwargs):
         """"""
         logma.info(f"Command Display File Info")
@@ -946,7 +949,8 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         except Exception as e:
             logma.error(f"[filesystems] cmd_flatten_files failed: {e}", exc_info=True)
         return self
-    def cmd_go_home(self, event=None, path=None, *args, **kwargs):
+
+    def cmd_go_home(self, event=None, *args, **kwargs):
         """T-NEW-068 — navigate to a "home" directory.
 
         Default ``path`` is ``expanduser("~")``. Accepts an
@@ -957,10 +961,10 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
         Returns self for chainable callers.
         """
-        if path is None or path == "":
-            path = expanduser("~")
+        path = self.custom_root or expanduser("~")
         self.fs_tree.current_level_path = path
         return self.cmd_set_root(path=path)
+
     def cmd_on_file_search_method_change(self, event=None, *args, **kwargs):
         """Record the file-search method change on the config.
 
@@ -1319,7 +1323,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
     def open_file(self, file=None, _populate_document=False, _save=True) -> Any:
         """"""
         super().open_file(file, _populate_document, _save)
-        self.document.open_file(path)
+        self.file_path = self.document.file_path
         self.populate_document()
         return self
 
@@ -1368,7 +1372,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             effort)
         Returns ``self`` for chainable call sites.
         """
-        logma.info("[filesystems] save")
+        logma.info(f"[filesystems] save {self.file_path}")
         self.document.set_file_path(self.file_path)
         content = self.get_content()
         if content != self.document.content:
@@ -1399,12 +1403,8 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         #     self.document.set_content(content)
         #     logma.info(f"Content {self.document.content}")
         # logma.info(f"Document {self.document.to_dict()}")
-        super().save()
+        #super().save()
         return self
-
-    # def get_binary(self):
-    #     """Return the stored value of get_binary."""
-    #     return self.config.dikt.get("file_binary", b"") or b""
 
     def show_tree(self, file=None):
         """T-NEW-068 — show the file tree at ``file``.
