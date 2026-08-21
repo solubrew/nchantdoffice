@@ -121,10 +121,10 @@ class NchantdOfficeCloak(NchantdCloak):
         # call every launch. Wrapped in try/except inside the
         # method itself -- a missing store or table never blocks
         # app boot.
-        try:
-            self.model.bootstrap_app_user()
-        except Exception as e:
-            logma.warning(f"[nchantdoffice] run_on_launch: " f"bootstrap_app_user raised: {e}")
+        # try:
+        #     self.model.bootstrap_app_user()
+        # except Exception as e:
+        #     logma.warning(f"[nchantdoffice] run_on_launch: " f"bootstrap_app_user raised: {e}")
         # Restore last selected node or default to Home
         self.select_initial_node()
         # T-NEW-058 §2.4 — delegate to the testable module-level

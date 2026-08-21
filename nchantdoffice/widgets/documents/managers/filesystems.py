@@ -815,7 +815,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         super().initModel(cfg)
         self.document = self.app.model.codex.init_files({"document": self.config.dikt.get("document", {})})
         self.document.load_document()
-        self.document.set_location("internal")
+        self.document.set_location("external")
         self.context_menu_name = "context.document.files"
         if self.context_menu_name is not None:
             self.initialize_context_menu(self.context_menu_name)

@@ -47,7 +47,8 @@ if not log:
 
 # ====================================================================================================================||
 PXCFG = join(here, "_data_", "browsers.yaml")
-HOMEPAGE = "https://www.nchantdoffice.com/"
+HOMEPAGE = {"url": "https://www.nchantdoffice.com/"}
+HOMEURL = HOMEPAGE.get("url")
 
 
 class NchantdOfficeWebBrowser(NchantdOfficeDocument):
@@ -58,17 +59,13 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         super().__init__("Nchantd Browser", parent, cfg)
         self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeWebBrowser").override(cfg))
         self.document_type = "browser"
-        self.active_url = None
-        self.library = None
+        self.active_page = None
         self.pinned = False
-        self.profiles = None
-        self.profile = None
+        self.active_profile = None
         self.document = None
-        self.page = None
         self.did = None
         self.browser = None
         self.pin = False
-        self.url_select_entry = None
 
     def initModel(self, cfg=None) -> Self:
         """"""
@@ -82,27 +79,29 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         if self.config.get("url_code", None) is not None:
             cfg["document"]["data"]["unit"]["original_path"] = self.app.model.get_link(name=self.config.get("url_code"))
         document = {"document": self.config.override(cfg).get("document", {})}
+        document["document"]["home_url"] = HOMEURL
         logma.json(document)
         self.document = self.app.model.codex.init_browser(document)
         self.document.load_document()
         self.initialize_context_menu("context.document.browser")
         logma.json(self.document.to_dict())
         # need to connect to the active page aligned with PyfficeBrowser
-        cfg = {}
+        cfg = {"document": self.document.active_page.to_dict()}
         intercept = False
-        self.active_page = NchantdOfficeWebPage(self, self.profile, intercept, cfg)
-        self.active_page.initWidget()
-        cfg = {}
-        self.active_page.document.load_document(self.document.get_active_page().get_url_document().to_dict())
-        #self.active_url = self.active_page.get_active_url()
         self.get_current_profile()
+        # self.profile = self.app.web_config.get_profile()
+        self.active_page = NchantdOfficeWebPage(self, self.current_profile, intercept, cfg)
+        self.active_page.initWidget()
+        self.active_page.document.load_document(self.document.get_active_page().get_url_document().to_dict())
+        # # self.active_url = self.active_page.get_active_url()
+        # self.get_current_profile()
         return self
 
     def initView(self, cfg=None) -> Self:
         """"""
         if cfg is None:
             cfg = {}
-        url = self.active_page.get_active_url().get_url()
+        url = self.get_active_url()
         cfg["url"] = url
         self.browser = NchantdWebViewer(self, cfg)
         self.browser.is_simple = False
@@ -115,18 +114,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(3)
         self.populate_document(url)
-        # PUSH to 0.0.3 force external until
-        # self.document.set_location("external")
-        #
-        # if self.document.location == "external":
-        #     self.open_file(self.document.file_path)
-        # PUSH to 0.0.3
-        # elif self.document.location == "internal":
-        #    self.populate_data()
-        # elif self.document.location == "cloud":
-        #    self.connect_to_file()
-        # else:
-        #     raise Exception("Internal and Cloud locations not supported yet")
         return self
 
     def initWidget(self) -> Self:
@@ -156,24 +143,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         on every re-open.
         """
         buttons = self.browser.build_toolbar()
-        self.browser.url_select_entry.config.dikt["handler"] = self.cmd_goto_page
-        # T-NEW-069 — restore URL history into the dropdown. The
-        # viewer owns the helpers; we delegate to it so the
-        # persisted state is the single source of truth.
-        if self.url_select_entry is not None and hasattr(self.browser, "_get_url_history"):
-            try:
-                history = self.browser._get_url_history()
-                self.url_select_entry.update_options(
-                    history,
-                    replace=True,
-                    sort=False,
-                )
-            except Exception as e:
-                logma.warning(
-                    f"[browsers] build_toolbar: URL history " f"restore failed: {e}",
-                    exc_info=True,
-                )
-
         buttons[17] = {"action": "web_page_pin", "handler": self.cmd_pin_page, "value": self.cmd_check_is_pinned}
         buttons[100] = "_skip"
         buttons[150] = "_skip"
@@ -460,10 +429,10 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def get_active_url(self) -> Optional[str]:
         """"""
-        if self.document.active_page.active_url.active_url is None:
+        if self.active_page.document.active_url.active_url is None:
             logma.info("No active url")
             return None
-        url = self.document.active_page.active_url.active_url
+        url = self.active_page.document.active_url.active_url
         logma.info(f"URL {url}")
         return url
 
@@ -577,6 +546,15 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """"""
         search_engines = self.app.model.get_search_engines()
         return search_engines
+
+    def get_url_history(self):
+        """"""
+        urls = self.browser.get_url_history()
+        urls += self.document.active_page.history
+        urls.insert(0, self.document.get_active_url())
+        logma.info(f"[NCHANTD OFFICE WEB BROWSER]\nURLs {urls}")
+
+        return urls
 
     def init_drawer_browser_config(self) -> Dict[int, Any]:
         """Build the browser-configuration drawer.
@@ -1054,19 +1032,17 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         if url is None:
             url = self.get_active_url()
         logma.info(f"Populate Document {url}")
+        self.browser.url_select_entry.update_options(self.get_url_history())
+        self.browser.url_select_entry.set_value(url)
         if self.pinned is False:
             self.browser.populate_viewport(url)
-        # Refresh the URL inspection toolbox (no DB write).
-        # if hasattr(self, "update_toolbox_url_inspection"):
-        #     try:
-        #         self.update_toolbox_url_inspection()
-        #     except Exception as e:
-        #         logma.error(f"[browsers] populate_document: update_toolbox_url_inspection failed: {e}", exc_info=True)
         return self
 
     def get_content(self) -> Dict[str, Any]:
         """Return the complete browser profile under the canonical content key."""
-        return {"content": self.document.active_page.to_dict()}
+        content = {"content": self.document.active_page.to_dict()}
+        content["content"]["file_path"] = self.get_active_url()
+        return content
 
     def save(self) -> Self:
         """Save the browser document.

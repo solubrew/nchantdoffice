@@ -125,10 +125,11 @@ def run(args: list[str]) -> None:
     python runNchantdOffice.py - use the wizard to setup
     """
     # if len(args) > 2:
-    # restart()
+    restart()
     app = NchantdOfficeCloak
     wizard = NchantdOfficeApplicationStartupWizard
-    nchantment("NchantdOffice", args, app, None, wizard)
+    cfg = {"website_override": {"https://nchantdoffice.com": "http://192.168.1.67:8081"}}
+    nchantment("NchantdOffice", args, app, cfg, wizard)
 
 
 if __name__ == "__main__":
