@@ -477,7 +477,8 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """"""
         if url is None:
             logma.info(f"Instance {self.app.model.instance}")
-            url = self.app.model.instance.browser.home_page
+            # url = self.app.model.instance.browser.home_page
+            url = None  # TODO need to wrap everything up in an instance config document
         if url is None:
             url = self.config.dikt.get("default_home_page", "https://www.duckduckgo.com")
         return url
