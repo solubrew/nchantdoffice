@@ -171,148 +171,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
     # deletion when the node is locked.
     LOCKED_NODE_NAMES = frozenset({"home", "journal", "settings"})
 
-    def is_locked_node(self, node) -> bool:
-        """Return True when ``node`` is one of the app-locked
-        nodes (T-NEW-004). Case-insensitive comparison against
-        ``LOCKED_NODE_NAMES``.
-
-        Defensive: missing node, missing name attribute, or
-        non-string name -> returns False (not locked).
-        """
-        if node is None:
-            return False
-        try:
-            name = getattr(node, "name", None)
-        except Exception:
-            return False
-        if not isinstance(name, str) or not name:
-            return False
-        try:
-            return name.strip().lower() in self.LOCKED_NODE_NAMES
-        except Exception:
-            return False
-
-    def is_locked_pid(self, pid) -> bool:
-        """T-NEW-131: return True when the node identified by
-        ``pid`` (UUID or nid_txt) is one of the app-locked
-        names (home, journal, settings).
-
-        Resolves the pid against the active
-        ``doc_tree_node`` table via
-        ``store._sqlite_connection`` (one-per-app-instance
-        guarantee). Case-insensitive match against
-        ``LOCKED_NODE_NAMES``. Defensive: missing pid,
-        missing store, missing table, missing row, or any
-        exception -> returns False (treat as not locked so
-        we never *accidentally* block legitimate creates).
-        """
-        try:
-            if pid is None:
-                return False
-            pid_str = str(pid).strip()
-            if not pid_str:
-                return False
-            conn = getattr(getattr(self, "store", None), "_sqlite_connection", None)
-            if conn is None:
-                return False
-            try:
-                cur = conn.execute(
-                    "SELECT name_txt FROM doc_tree_node " "WHERE nid_txt = ? LIMIT 1",
-                    (pid_str,),
-                )
-            except Exception:
-                # Table doesn't exist or schema differs
-                # (column may be nid vs nid_txt). Try nid.
-                try:
-                    cur = conn.execute(
-                        "SELECT name_txt FROM doc_tree_node " "WHERE nid = ? LIMIT 1",
-                        (pid_str,),
-                    )
-                except Exception:
-                    return False
-            row = cur.fetchone()
-            if row is None:
-                return False
-            name = row[0]
-            if not isinstance(name, str) or not name:
-                return False
-            return name.strip().lower() in self.LOCKED_NODE_NAMES
-        except Exception:
-            return False
-
-    def is_locked_parent(self, pid) -> bool:
-        """T-NEW-131: return True when the *parent* of a node
-        create is a locked app node.
-
-        Root pids (None, '', '0', 0) return False --
-        top-level creates are governed separately by the
-        T-NEW-130 follow-up (the user wants top-level creates
-        blocked for all users, not via this helper). For any
-        other pid the function defers to ``is_locked_pid``.
-        """
-        try:
-            if pid is None:
-                return False
-            pid_str = str(pid).strip()
-            if not pid_str or pid_str == "0":
-                return False
-        except Exception:
-            return False
-        return self.is_locked_pid(pid_str)
-
-    def is_locked_tab_parent(self, pid) -> bool:
-        """T-NEW-132: return True when the *parent* of a tab
-        create/delete is the Settings node.
-
-        Narrower than ``is_locked_node``: only Settings
-        (case-insensitive) is tab-terminal. Home and Journal
-        remain tab-mutable -- only the Settings tree is
-        treated as a fixed app-settings container whose
-        tab set is curated by the app, not the user.
-
-        Root pids (None, '', '0', 0) return False -- top-level
-        tab creates are governed separately. For any other
-        pid the function resolves to ``doc_tree_node.name_txt``
-        via the active ``store._sqlite_connection`` and
-        returns True iff that name equals ``settings``.
-
-        Defensive: missing pid, missing store, missing table,
-        missing row, or any exception -> returns False (treat
-        as not locked so we never accidentally block
-        legitimate tab operations).
-        """
-        try:
-            if pid is None:
-                return False
-            pid_str = str(pid).strip()
-            if not pid_str or pid_str == "0":
-                return False
-            conn = getattr(getattr(self, "store", None), "_sqlite_connection", None)
-            if conn is None:
-                return False
-            try:
-                cur = conn.execute(
-                    "SELECT name_txt FROM doc_tree_node " "WHERE nid_txt = ? LIMIT 1",
-                    (pid_str,),
-                )
-            except Exception:
-                try:
-                    cur = conn.execute(
-                        "SELECT name_txt FROM doc_tree_node " "WHERE nid = ? LIMIT 1",
-                        (pid_str,),
-                    )
-                except Exception:
-                    return False
-            row = cur.fetchone()
-            if row is None:
-                return False
-            name = row[0]
-            if not isinstance(name, str) or not name:
-                return False
-            return name.strip().lower() == "settings"
-        except Exception:
-            return False
-
     def __init__(self, name, instance=None, parent=None, cfg=None):
         """ """
         super().__init__(parent, cfg)
@@ -339,6 +197,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # on the next reload, so the tab "springs back" to its
         # original tabset without any DB write.
         self._right_scratch_tabs = {}
+        self.MODEL_OBJECTS = self.config.get("dstruct", {}).get("database", {}).get("objects")
 
     def initModel(self, reset=None) -> Self:
         """"""
@@ -1013,199 +872,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self._apply_tab_style(tab)
         return tab
 
-    def _resolve_pid_for_max_tabs(self, pid, tabset=None) -> Any:
-        """Return the pid to use for a new tab (T-NEW-054).
-
-        Reads ``self.config.dikt["max_tabs_per_node"]`` (default 35).
-        If the current tab count for ``pid`` is below the limit,
-        returns ``pid`` unchanged. When the limit is reached,
-        auto-creates a child node under ``pid`` and returns the new
-        child's nid -- so the user keeps their flow and the tree
-        grows by one level.
-
-        Returns ``None`` when the limit is hit AND a child node
-        cannot be created (store error, etc.).
-
-        Best-effort: any exception returns the original ``pid`` so
-        the hot path never blocks tab creation on a config/store error.
-        """
-        try:
-            limit = self.config.dikt.get("max_tabs_per_node", 35)
-            if not isinstance(limit, (int, float)) or limit <= 0:
-                return pid
-            df = self.get_documents(pid, tabset or "center")
-            if df is None or df.empty:
-                return pid
-            if len(df) < int(limit):
-                return pid
-            # Limit hit -- auto-create child node.
-            new_pid = self._create_child_node(pid)
-            if new_pid is None:
-                return None
-            logma.info(f"[models] max_tabs_per_node ({limit}) hit at pid={pid}; " f"auto-created child pid={new_pid}")
-            return new_pid
-        except Exception as e:
-            logma.warning(f"[models] _resolve_pid_for_max_tabs failed: {e}")
-            return pid
-
-    def _create_child_node(self, pid) -> Any:
-        """Create a generic child node under ``pid`` and return its nid.
-
-        T-NEW-054: auto-creates a child node when the tab limit for
-        ``pid`` is hit. The child name is ``<parent>_<n>`` where ``n``
-        is the next free index under the parent. Returns the new
-        nid, or None on failure.
-
-        Defensive: missing store, missing app, or any exception
-        returns None so the caller can decide whether to fall back
-        to the original pid.
-        """
-        try:
-            parent_name = self._get_node_name(pid) or "node"
-            existing = self._count_children_of(pid)
-            child_name = f"{parent_name}_{existing + 1}"
-            new_pid = self.add_node(
-                name=child_name,
-                ntype="auto_child",
-                pid=pid,
-                pos=existing + 1,
-                parameters=None,
-                tabset=None,
-                return_node=False,
-            )
-            return new_pid
-        except Exception as e:
-            logma.warning(f"[models] _create_child_node failed for pid={pid}: {e}")
-            return None
-
-    def _get_node_name(self, pid) -> Any:
-        """Best-effort lookup of a node's name by nid (T-NEW-054 helper)."""
-        try:
-            store = getattr(self, "store", None)
-            if store is None:
-                return None
-            df = store.get_table("doc_tree_node", {"WHERE": {"EQUAL": {"nid_txt": str(pid)}}})
-            if df is None or df.empty:
-                return None
-            row = df.iloc[0]
-            for col in ("name_txt", "name", "label_txt"):
-                if col in df.columns:
-                    val = row.get(col)
-                    if val:
-                        return str(val)
-        except Exception as e:
-            logma.warning(f"[models] _get_node_name failed for pid={pid}: {e}")
-        return None
-
-    def _count_children_of(self, pid) -> Any:
-        """Count the direct children of ``pid`` (T-NEW-054 helper)."""
-        try:
-            df = self.get_nodes()
-            if df is None or df.empty or "pid_txt" not in df.columns:
-                return 0
-            return int((df["pid_txt"].astype(str) == str(pid)).sum())
-        except Exception as e:
-            logma.warning(f"[models] _count_children_of failed for pid={pid}: {e}")
-            return 0
-
-    def _check_max_nodes_for_user(self, user=None) -> bool:
-        """Whether the user can create another node (T-NEW-056).
-
-        Reads ``self.config.dikt["max_nodes_per_user"]`` (default 100).
-        Returns True if total node count is below the limit.
-        Pro users (``user.has_pro is True``) bypass the limit.
-        Returns True if the limit is 0 or negative (disabled).
-        Best-effort: any exception returns True so the hot path
-        never blocks node creation on a config/store error.
-
-        Args:
-            user: optional user object (typically ``self.user``).
-                Pulled from the model attribute when not supplied.
-        """
-        try:
-            if user is None:
-                user = getattr(self, "user", None)
-            # Pro bypass
-            try:
-                from nchantdoffice.utilities.upgrades import is_pro_user
-
-                if is_pro_user(user):
-                    return True
-            except Exception as e:
-                logma.warning(e)
-            # T-NEW-135: the early ``return True`` that lived
-            # here was dead code -- it short-circuited the
-            # 100-node limit check before ``get_nodes()`` ever
-            # ran, so non-pro users at the cap were never
-            # denied. Removed so the limit actually fires;
-            # the bug is what made T-NEW-056 silent for so
-            # long. Best-effort: the outer ``except`` still
-            # returns True so a config / store hiccup never
-            # blocks creation.
-            limit = self.config.dikt.get("max_nodes_per_user", 100)
-            if not isinstance(limit, (int, float)) or limit <= 0:
-                return True
-            df = self.get_nodes()
-            if df is None:
-                return True
-            return len(df) < int(limit)
-        except Exception as e:
-            logma.warning(f"[models] _check_max_nodes_for_user failed: {e}")
-            return True
-
-    def _apply_tab_style(self, tab) -> Any:
-        """Apply the user-selected tab color / icon (T-NEW-001).
-
-        Reads ``self.config.dikt["tab_color"]`` and
-        ``self.config.dikt["tab_icon"]`` (set by
-        ``NchantdOfficeNewPane.cmd_color_select`` /
-        ``cmd_icon_select``) and applies them to the tab
-        widget:
-          - ``tab_color``: applied as a ``background-color``
-            stylesheet on the tab widget.
-          - ``tab_icon``: applied via
-            ``tab.parent().setTabIcon(tab.position, path)``.
-
-        Defensive: missing tab, missing config, missing
-        parent, or any Qt exception is logged + swallowed
-        rather than crashing the add_tab hot path. Returns
-        the tab (or None when tab is None) for chainable
-        call sites.
-
-        Args:
-            tab: the tab widget returned by add_tab, or
-                None when no tab is available.
-
-        Returns:
-            The tab argument unchanged, or None when tab
-            was None.
-        """
-        if tab is None:
-            return None
-        try:
-            config = getattr(self, "config", None)
-            if config is None:
-                return tab
-            dikt = getattr(config, "dikt", None) or {}
-            tab_color = dikt.get("tab_color")
-            if isinstance(tab_color, str) and tab_color:
-                try:
-                    tab.setStyleSheet(f"background-color: {tab_color};")
-                except Exception as e:
-                    logma.warning(f"[models] _apply_tab_style: " f"setStyleSheet failed ({type(e).__name__}: {e})")
-            tab_icon = dikt.get("tab_icon")
-            if isinstance(tab_icon, str) and tab_icon:
-                try:
-                    parent = tab.parent()
-                    position = getattr(tab, "position", None)
-                    if parent is not None and position is not None:
-                        parent.setTabIcon(position, tab_icon)
-                except Exception as e:
-                    logma.warning(f"[models] _apply_tab_style: " f"setTabIcon failed ({type(e).__name__}: {e})")
-        except Exception as e:
-            logma.warning(f"[models] _apply_tab_style failed: {e}")
-        return tab
-
     def add_day_node(self, day, month, year, pid=None) -> Any:
         """"""
         self.get_today_node()
@@ -1762,48 +1428,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return self
 
-    def _register_widget_in_app_type_registry(self, widget, doc_type=None, db="db") -> bool:
-        """Register a widget class in the app_document_type registry.
-
-        T-002: inserts a single row per unique widget class so
-        downstream code (add_tab, get_document_types, etc.) can
-        look up the widget-to-document-type mapping without
-        ad-hoc string lookups. Updates ``registered_bit`` to 1
-        on existing rows; inserts a new row otherwise.
-
-        No-op when ``widget`` is empty or when the store isn't
-        reachable. Returns ``True`` on success, ``False`` otherwise.
-        """
-        if not widget:
-            return False
-        try:
-            if not hasattr(self, "store") or self.store is None:
-                return False
-            doc_type = doc_type or "generic"
-            existing = self.store.get_table(
-                "app_document_type",
-                {"WHERE": {"EQUAL": {"widget_class_txt": widget}}},
-                db,
-            )
-            payload = {
-                "widget_class_txt": widget,
-                "document_type_txt": doc_type,
-                "registered_bit": 1,
-            }
-            if existing is not None and not getattr(existing, "empty", True):
-                self.store.update_record(
-                    {"table": {"app_document_type": {"data": {"registered_bit": 1}}}},
-                    "widget_class_txt",
-                    widget,
-                )
-            else:
-                self.store._store("app_document_type", [payload])
-            logma.info(f"[models] _register_widget_in_app_type_registry: {widget} -> {doc_type}")
-            return True
-        except Exception as e:
-            logma.error(f"[models] _register_widget_in_app_type_registry failed: {e}", exc_info=True)
-            return False
-
     def delete_document(self, did) -> "NchantdOfficeCloakModel":
         """"""
         logma.info(f"Document {did} will be deleted")
@@ -2144,60 +1768,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                 return recovered
         return df
 
-    def _handle_document_not_found(self, doc_action=None, did=None, db="db") -> Any:
-        """Recover a missing document via the loader, if possible.
-
-        T-004: instead of returning an empty DataFrame, asks the
-        document loader (model.codex) to materialise a canonical
-        ``Document`` object for the requested action or id. The
-        loader can rebuild from disk, regenerate from a template,
-        or return ``None`` when no recovery is possible.
-
-        Returns the recovered ``Document`` (or pandas DataFrame) on
-        success, ``None`` when no recovery path applies.
-        """
-        try:
-            if not hasattr(self, "codex") or self.codex is None:
-                return None
-            # Try the action-keyed loader first
-            if doc_action is not None and hasattr(self.codex, f"init_{doc_action}"):
-                from pandas import DataFrame
-
-                doc = getattr(self.codex, f"init_{doc_action}")({"did": did or uuid()})
-                if doc is not None:
-                    logma.info(f"[models] _handle_document_not_found: recovered {doc_action} via codex loader")
-                    # Return wrapped in a single-row DataFrame for
-                    # callers that expect a tabular result
-                    return doc
-            # Fall back to a generic recovery: insert a placeholder
-            # row in doc_media so the next call finds it
-            if hasattr(self, "store") and self.store is not None and did is not None:
-                try:
-                    self.store._store(
-                        "doc_media",
-                        [
-                            {
-                                "did": did,
-                                "document_type": doc_action or "unknown",
-                                "name": f"Recovered {doc_action or did}",
-                                "compatibility": "pyffice",
-                                "type": doc_action or "unknown",
-                                "syntax": "plain-text",
-                                "description": "auto-recovered",
-                                "store_location": "internal",
-                                "encoding": "utf-8",
-                                "meta_data": {},
-                                "widget": "RecoveredPane",
-                            }
-                        ],
-                    )
-                    logma.info(f"[models] _handle_document_not_found: created placeholder for did={did}")
-                except Exception as e:
-                    logma.error(f"[models] _handle_document_not_found placeholder insert failed: {e}", exc_info=True)
-        except Exception as e:
-            logma.error(f"[models] _handle_document_not_found failed: {e}", exc_info=True)
-        return None
-
     def get_documents(self, node, tabset) -> "DataFrame":
         """Get documents for a node + tabset."""
         if node is None:
@@ -2463,31 +2033,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.store_rss_entries(df)
         return df
 
-    def _filter_recent_rss_entries(self, df, days_back=None) -> "DataFrame":
-        """Filter an RSS-entries DataFrame to recent published dates.
-
-        Uses ``days_back`` (defaults to 3) to compute the cutoff. The
-        cutoff is ``dt.datetime.now() - dt.timedelta(days=days_back)``.
-        Any entry with ``published_dttm`` after the cutoff is kept.
-
-        Falls back to returning the unfiltered DataFrame if the
-        ``published_dttm`` column is missing or non-parsable.
-        """
-        try:
-            import datetime as _dt
-            import pandas as _pd
-
-            if "published_dttm" not in df.columns:
-                return df
-            cutoff = _dt.datetime.now() - _dt.timedelta(days=days_back if days_back is not None else 3)
-            # Parse to datetime; coerce errors to NaT
-            parsed = _pd.to_datetime(df["published_dttm"], errors="coerce")
-            mask = parsed.notna() & (parsed >= cutoff)
-            return df.loc[mask]
-        except Exception as e:
-            logma.error(f"[models] _filter_recent_rss_entries failed: {e}", exc_info=True)
-            return df
-
     def get_search_engines(self, db="db") -> "Any":
         """"""
         cfg = {"WHERE": {"EQUAL": {"table_txt": "search", "key": "external", "label": "web"}}}
@@ -2668,79 +2213,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # (T-007 migration). The model no longer owns the
         # vec0 schema.
         return self
-
-    def _ensure_referral_code(self) -> None:
-        """Generate and persist a referral code for the current user.
-
-        T-DESK: idempotent — only generates a code if the user doesn't
-        already have one. The code is derived deterministically from
-        the user's identifier so it survives across reinstalls of
-        the same user.
-
-        Also persists ``device_id`` (ATNRG spec §8 anti-abuse) so
-        the server can reject self-referrals when the same device
-        clicks its own code.
-        """
-        try:
-            user = getattr(self, "user", None)
-            if user is None:
-                # user is wired in later; nothing to persist here.
-                return
-            user_cfg = getattr(user, "config", None)
-            cfg_dikt = getattr(user_cfg, "dikt", None) if user_cfg else None
-            if cfg_dikt is None or not isinstance(cfg_dikt, dict):
-                return
-
-            existing = cfg_dikt.get("referral_code")
-            if existing:
-                valid, _ = _validate_referral_code(existing)
-                if valid:
-                    logma.debug(f"[models] existing referral code ok: {existing}")
-                    self._ensure_device_id()
-                    return
-                logma.warning(f"[models] stored referral code {existing!r} invalid; regenerating")
-
-            user_id = (
-                getattr(user, "id", None)
-                or getattr(user, "user_name", None)
-                or getattr(user, "email", None)
-                or "anonymous"
-            )
-            new_code = _generate_referral_code(str(user_id))
-            cfg_dikt["referral_code"] = new_code
-            logma.info(f"[models] generated referral code for user {user_id}: {new_code}")
-
-            # Best-effort persistence; ignore save errors so a missing
-            # config layer doesn't break startup.
-            save = getattr(user_cfg, "_save", None) or getattr(user_cfg, "save", None)
-            if callable(save):
-                try:
-                    save()
-                except Exception as e:
-                    logma.warning(f"[models] could not persist referral code: {e}")
-
-            self._ensure_device_id()
-        except Exception as e:
-            logma.error(f"[models] _ensure_referral_code failed: {e}", exc_info=True)
-
-    def _ensure_device_id(self) -> None:
-        """Persist the device fingerprint in user config (ATNRG spec §8).
-
-        Best-effort — if the device_id module isn't importable or the
-        config layer is read-only, skip silently.
-        """
-        try:
-            from nchantdoffice.utilities.device_id import get_device_id
-
-            device_id = get_device_id()
-            user = getattr(self, "user", None)
-            user_cfg = getattr(user, "config", None)
-            cfg_dikt = getattr(user_cfg, "dikt", None) if user_cfg else None
-            if cfg_dikt is not None and isinstance(cfg_dikt, dict):
-                cfg_dikt["device_id"] = device_id
-                logma.debug(f"[models] device_id persisted: {device_id[:8]}...")
-        except Exception as e:
-            logma.warning(f"[models] _ensure_device_id failed: {e}")
 
     def initialize_instance(self, instance_object=None) -> None:
         """"""
@@ -2975,34 +2447,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] import_web_sessions failed: {e}", exc_info=True)
             return None
 
-    def _roll_up_sessions(self, sessions) -> dict[str, dict[str, int]]:
-        """Build a per-day activity summary from parsed sessions.
-
-        For each session, walks the window/tab list and counts
-        visits to each domain. Returns a dict of
-        ``{date_iso: {domain: visit_count}}``.
-        """
-        rolled = {}
-        try:
-            for session in sessions or []:
-                windows = session.get("windows", []) if isinstance(session, dict) else []
-                for window in windows:
-                    tabs = window.get("tabs", []) if isinstance(window, dict) else []
-                    for tab in tabs:
-                        if not isinstance(tab, dict):
-                            continue
-                        domain = tab.get("domain") or "unknown"
-                        date = tab.get("last_visit") or tab.get("created_at") or session.get("created_at")
-                        if not date:
-                            continue
-                        # Keep just the date portion for the bucket
-                        date_key = str(date)[:10]
-                        rolled.setdefault(date_key, {})
-                        rolled[date_key][domain] = rolled[date_key].get(domain, 0) + 1
-        except Exception as e:
-            logma.error(f"[models] _roll_up_sessions failed: {e}", exc_info=True)
-        return rolled
-
     def get_rolling_summary(self, days=30, db="db") -> list[dict[str, Any]]:
         """Return the rolling activity summary for the last ``days`` days.
 
@@ -3079,48 +2523,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """
         return self.import_text(file)
 
-    def import_image(self, file):
-        """"""
-        if file is not None:
-            if exists(file):
-                current_tab = self.get_current_tab()
-                if current_tab.document.doc_type != "image":
-                    logma.info(f"File Type {current_tab.document.file_type}")
-                    logma.info(f"File Type {current_tab.document.doc_type}")
-                    logma.info(f"Create New Tab for Document{file}")
-                    document = self.codex.init_image(self._file_open_cfg(file))
-                    document.open_file()
-                    self.add_document(document, self.get_current_node().nid, current_tab.pos + 1)
-                else:
-                    current_tab.open_file(file)
-                    current_tab.save()
-        return self
-
-    def _file_open_cfg(self, file) -> dict[str, Any]:
-        """Build the cfg dict for ``codex.init_*`` from a local file path
-        (T-NEW-032). Always passes ``file_path``; passes ``name`` from
-        ``os.path.basename(file)`` only when the
-        ``update_tab_name_to_file_name`` config flag is True.
-
-        Default behaviour (flag False): the tab keeps whatever name it
-        had at add-tab time. When the flag is True, the new tab is
-        named after the opened file's basename.
-
-        Defensive: missing ``self.config`` / ``config.dikt`` is treated
-        as flag-False (no rename) rather than raising -- so this
-        helper works in off-screen test mocks that skip ``__init__``.
-        """
-        cfg = {"file_path": file}
-        try:
-            flag = bool(self.config.dikt.get("update_tab_name_to_file_name", False))
-        except Exception:
-            flag = False
-        if flag:
-            import os
-
-            cfg["name"] = os.path.basename(file)
-        return cfg
-
     def import_matrix(self, file) -> Self:
         """Import a spreadsheet file as a new Matrix tab.
 
@@ -3185,6 +2587,148 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         """
         logma.info("[models] import_evernote: stub - not yet wired")
         return None
+
+    def is_locked_node(self, node) -> bool:
+        """Return True when ``node`` is one of the app-locked
+        nodes (T-NEW-004). Case-insensitive comparison against
+        ``LOCKED_NODE_NAMES``.
+
+        Defensive: missing node, missing name attribute, or
+        non-string name -> returns False (not locked).
+        """
+        if node is None:
+            return False
+        try:
+            name = getattr(node, "name", None)
+        except Exception:
+            return False
+        if not isinstance(name, str) or not name:
+            return False
+        try:
+            return name.strip().lower() in self.LOCKED_NODE_NAMES
+        except Exception:
+            return False
+
+    def is_locked_pid(self, pid) -> bool:
+        """T-NEW-131: return True when the node identified by
+        ``pid`` (UUID or nid_txt) is one of the app-locked
+        names (home, journal, settings).
+
+        Resolves the pid against the active
+        ``doc_tree_node`` table via
+        ``store._sqlite_connection`` (one-per-app-instance
+        guarantee). Case-insensitive match against
+        ``LOCKED_NODE_NAMES``. Defensive: missing pid,
+        missing store, missing table, missing row, or any
+        exception -> returns False (treat as not locked so
+        we never *accidentally* block legitimate creates).
+        """
+        try:
+            if pid is None:
+                return False
+            pid_str = str(pid).strip()
+            if not pid_str:
+                return False
+            conn = getattr(getattr(self, "store", None), "_sqlite_connection", None)
+            if conn is None:
+                return False
+            try:
+                cur = conn.execute(
+                    "SELECT name_txt FROM doc_tree_node " "WHERE nid_txt = ? LIMIT 1",
+                    (pid_str,),
+                )
+            except Exception:
+                # Table doesn't exist or schema differs
+                # (column may be nid vs nid_txt). Try nid.
+                try:
+                    cur = conn.execute(
+                        "SELECT name_txt FROM doc_tree_node " "WHERE nid = ? LIMIT 1",
+                        (pid_str,),
+                    )
+                except Exception:
+                    return False
+            row = cur.fetchone()
+            if row is None:
+                return False
+            name = row[0]
+            if not isinstance(name, str) or not name:
+                return False
+            return name.strip().lower() in self.LOCKED_NODE_NAMES
+        except Exception:
+            return False
+
+    def is_locked_parent(self, pid) -> bool:
+        """T-NEW-131: return True when the *parent* of a node
+        create is a locked app node.
+
+        Root pids (None, '', '0', 0) return False --
+        top-level creates are governed separately by the
+        T-NEW-130 follow-up (the user wants top-level creates
+        blocked for all users, not via this helper). For any
+        other pid the function defers to ``is_locked_pid``.
+        """
+        try:
+            if pid is None:
+                return False
+            pid_str = str(pid).strip()
+            if not pid_str or pid_str == "0":
+                return False
+        except Exception:
+            return False
+        return self.is_locked_pid(pid_str)
+
+    def is_locked_tab_parent(self, pid) -> bool:
+        """T-NEW-132: return True when the *parent* of a tab
+        create/delete is the Settings node.
+
+        Narrower than ``is_locked_node``: only Settings
+        (case-insensitive) is tab-terminal. Home and Journal
+        remain tab-mutable -- only the Settings tree is
+        treated as a fixed app-settings container whose
+        tab set is curated by the app, not the user.
+
+        Root pids (None, '', '0', 0) return False -- top-level
+        tab creates are governed separately. For any other
+        pid the function resolves to ``doc_tree_node.name_txt``
+        via the active ``store._sqlite_connection`` and
+        returns True iff that name equals ``settings``.
+
+        Defensive: missing pid, missing store, missing table,
+        missing row, or any exception -> returns False (treat
+        as not locked so we never accidentally block
+        legitimate tab operations).
+        """
+        try:
+            if pid is None:
+                return False
+            pid_str = str(pid).strip()
+            if not pid_str or pid_str == "0":
+                return False
+            conn = getattr(getattr(self, "store", None), "_sqlite_connection", None)
+            if conn is None:
+                return False
+            try:
+                cur = conn.execute(
+                    "SELECT name_txt FROM doc_tree_node " "WHERE nid_txt = ? LIMIT 1",
+                    (pid_str,),
+                )
+            except Exception:
+                try:
+                    cur = conn.execute(
+                        "SELECT name_txt FROM doc_tree_node " "WHERE nid = ? LIMIT 1",
+                        (pid_str,),
+                    )
+                except Exception:
+                    return False
+            row = cur.fetchone()
+            if row is None:
+                return False
+            name = row[0]
+            if not isinstance(name, str) or not name:
+                return False
+            return name.strip().lower() == "settings"
+        except Exception:
+            return False
 
     def register_document(self, document_type, actions) -> None:
         """"""
@@ -3467,42 +3011,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             payload = _build_app_user_payload(user.to_dict())
         else:
             payload = _build_app_user_payload(user)
-        store = getattr(self, "store", None)
-        if store is None:
-            logma.warning("[models] store_app_user: no store; skip")
-            return self
-        store.store_app_user(payload, db=db)
+        self.store.store_app_user(payload, db=db)
         return self
-
-    def _resolve_widget_from_registry(self, lookup_code, fallback=None) -> Any:
-        """Resolve a widget class path from the app_document_type registry.
-
-        T-063 (helper): queries ``self.store.get_table("app_document_type", ...)``
-        matching ``document_type_txt == lookup_code``. Returns the
-        ``widget_class_txt`` (or legacy ``widget_txt``) column when
-        the registry has a row, falling back to ``fallback`` when
-        the store is unreachable or the lookup misses.
-
-        Returns ``fallback`` (or ``None``) when no resolution is
-        available. Used by both models.py (per-tab widget lookup
-        during tab rebuild) and toolbars.py (the new-document
-        toolbar's ``add_document`` button).
-        """
-        try:
-            store = getattr(self, "store", None)
-            if store is not None and hasattr(store, "get_table"):
-                df = store.get_table(
-                    "app_document_type",
-                    {"WHERE": {"EQUAL": {"document_type_txt": lookup_code}}},
-                )
-                if df is not None and not getattr(df, "empty", True):
-                    row = df.iloc[0].to_dict()
-                    widget = row.get("widget_class_txt") or row.get("widget_txt")
-                    if widget:
-                        return widget
-        except Exception as e:
-            logma.error(f"[models] _resolve_widget_from_registry failed: {e}", exc_info=True)
-        return fallback
 
     def store_node(self) -> Self:
         """Persist the current node tree to the database.
@@ -3622,6 +3132,341 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.error(f"[models] store_tab failed: {e}", exc_info=True)
         return self
 
+    def _apply_tab_style(self, tab) -> Any:
+        """Apply the user-selected tab color / icon (T-NEW-001).
+
+        Reads ``self.config.dikt["tab_color"]`` and
+        ``self.config.dikt["tab_icon"]`` (set by
+        ``NchantdOfficeNewPane.cmd_color_select`` /
+        ``cmd_icon_select``) and applies them to the tab
+        widget:
+          - ``tab_color``: applied as a ``background-color``
+            stylesheet on the tab widget.
+          - ``tab_icon``: applied via
+            ``tab.parent().setTabIcon(tab.position, path)``.
+
+        Defensive: missing tab, missing config, missing
+        parent, or any Qt exception is logged + swallowed
+        rather than crashing the add_tab hot path. Returns
+        the tab (or None when tab is None) for chainable
+        call sites.
+
+        Args:
+            tab: the tab widget returned by add_tab, or
+                None when no tab is available.
+
+        Returns:
+            The tab argument unchanged, or None when tab
+            was None.
+        """
+        if tab is None:
+            return None
+        try:
+            config = getattr(self, "config", None)
+            if config is None:
+                return tab
+            dikt = getattr(config, "dikt", None) or {}
+            tab_color = dikt.get("tab_color")
+            if isinstance(tab_color, str) and tab_color:
+                try:
+                    tab.setStyleSheet(f"background-color: {tab_color};")
+                except Exception as e:
+                    logma.warning(f"[models] _apply_tab_style: " f"setStyleSheet failed ({type(e).__name__}: {e})")
+            tab_icon = dikt.get("tab_icon")
+            if isinstance(tab_icon, str) and tab_icon:
+                try:
+                    parent = tab.parent()
+                    position = getattr(tab, "position", None)
+                    if parent is not None and position is not None:
+                        parent.setTabIcon(position, tab_icon)
+                except Exception as e:
+                    logma.warning(f"[models] _apply_tab_style: " f"setTabIcon failed ({type(e).__name__}: {e})")
+        except Exception as e:
+            logma.warning(f"[models] _apply_tab_style failed: {e}")
+        return tab
+
+    def _create_child_node(self, pid) -> Any:
+        """Create a generic child node under ``pid`` and return its nid.
+
+        T-NEW-054: auto-creates a child node when the tab limit for
+        ``pid`` is hit. The child name is ``<parent>_<n>`` where ``n``
+        is the next free index under the parent. Returns the new
+        nid, or None on failure.
+
+        Defensive: missing store, missing app, or any exception
+        returns None so the caller can decide whether to fall back
+        to the original pid.
+        """
+        try:
+            parent_name = self._get_node_name(pid) or "node"
+            existing = self._count_children_of(pid)
+            child_name = f"{parent_name}_{existing + 1}"
+            new_pid = self.add_node(
+                name=child_name,
+                ntype="auto_child",
+                pid=pid,
+                pos=existing + 1,
+                parameters=None,
+                tabset=None,
+                return_node=False,
+            )
+            return new_pid
+        except Exception as e:
+            logma.warning(f"[models] _create_child_node failed for pid={pid}: {e}")
+            return None
+
+    def _count_children_of(self, pid) -> Any:
+        """Count the direct children of ``pid`` (T-NEW-054 helper)."""
+        try:
+            df = self.get_nodes()
+            if df is None or df.empty or "pid_txt" not in df.columns:
+                return 0
+            return int((df["pid_txt"].astype(str) == str(pid)).sum())
+        except Exception as e:
+            logma.warning(f"[models] _count_children_of failed for pid={pid}: {e}")
+            return 0
+
+    def _check_max_nodes_for_user(self, user=None) -> bool:
+        """Whether the user can create another node (T-NEW-056).
+
+        Reads ``self.config.dikt["max_nodes_per_user"]`` (default 100).
+        Returns True if total node count is below the limit.
+        Pro users (``user.has_pro is True``) bypass the limit.
+        Returns True if the limit is 0 or negative (disabled).
+        Best-effort: any exception returns True so the hot path
+        never blocks node creation on a config/store error.
+
+        Args:
+            user: optional user object (typically ``self.user``).
+                Pulled from the model attribute when not supplied.
+        """
+        try:
+            if user is None:
+                user = getattr(self, "user", None)
+            # Pro bypass
+            try:
+                from nchantdoffice.utilities.upgrades import is_pro_user
+
+                if is_pro_user(user):
+                    return True
+            except Exception as e:
+                logma.warning(e)
+            # T-NEW-135: the early ``return True`` that lived
+            # here was dead code -- it short-circuited the
+            # 100-node limit check before ``get_nodes()`` ever
+            # ran, so non-pro users at the cap were never
+            # denied. Removed so the limit actually fires;
+            # the bug is what made T-NEW-056 silent for so
+            # long. Best-effort: the outer ``except`` still
+            # returns True so a config / store hiccup never
+            # blocks creation.
+            limit = self.config.dikt.get("max_nodes_per_user", 100)
+            if not isinstance(limit, (int, float)) or limit <= 0:
+                return True
+            df = self.get_nodes()
+            if df is None:
+                return True
+            return len(df) < int(limit)
+        except Exception as e:
+            logma.warning(f"[models] _check_max_nodes_for_user failed: {e}")
+            return True
+
+    def _ensure_referral_code(self) -> None:
+        """Generate and persist a referral code for the current user.
+
+        T-DESK: idempotent — only generates a code if the user doesn't
+        already have one. The code is derived deterministically from
+        the user's identifier so it survives across reinstalls of
+        the same user.
+
+        Also persists ``device_id`` (ATNRG spec §8 anti-abuse) so
+        the server can reject self-referrals when the same device
+        clicks its own code.
+        """
+        try:
+            user = getattr(self, "user", None)
+            if user is None:
+                # user is wired in later; nothing to persist here.
+                return
+            user_cfg = getattr(user, "config", None)
+            cfg_dikt = getattr(user_cfg, "dikt", None) if user_cfg else None
+            if cfg_dikt is None or not isinstance(cfg_dikt, dict):
+                return
+
+            existing = cfg_dikt.get("referral_code")
+            if existing:
+                valid, _ = _validate_referral_code(existing)
+                if valid:
+                    logma.debug(f"[models] existing referral code ok: {existing}")
+                    self._ensure_device_id()
+                    return
+                logma.warning(f"[models] stored referral code {existing!r} invalid; regenerating")
+
+            user_id = (
+                getattr(user, "id", None)
+                or getattr(user, "user_name", None)
+                or getattr(user, "email", None)
+                or "anonymous"
+            )
+            new_code = _generate_referral_code(str(user_id))
+            cfg_dikt["referral_code"] = new_code
+            logma.info(f"[models] generated referral code for user {user_id}: {new_code}")
+
+            # Best-effort persistence; ignore save errors so a missing
+            # config layer doesn't break startup.
+            save = getattr(user_cfg, "_save", None) or getattr(user_cfg, "save", None)
+            if callable(save):
+                try:
+                    save()
+                except Exception as e:
+                    logma.warning(f"[models] could not persist referral code: {e}")
+
+            self._ensure_device_id()
+        except Exception as e:
+            logma.error(f"[models] _ensure_referral_code failed: {e}", exc_info=True)
+
+    def _ensure_device_id(self) -> None:
+        """Persist the device fingerprint in user config (ATNRG spec §8).
+
+        Best-effort — if the device_id module isn't importable or the
+        config layer is read-only, skip silently.
+        """
+        try:
+            from nchantdoffice.utilities.device_id import get_device_id
+
+            device_id = get_device_id()
+            user = getattr(self, "user", None)
+            user_cfg = getattr(user, "config", None)
+            cfg_dikt = getattr(user_cfg, "dikt", None) if user_cfg else None
+            if cfg_dikt is not None and isinstance(cfg_dikt, dict):
+                cfg_dikt["device_id"] = device_id
+                logma.debug(f"[models] device_id persisted: {device_id[:8]}...")
+        except Exception as e:
+            logma.warning(f"[models] _ensure_device_id failed: {e}")
+
+    def _file_open_cfg(self, file) -> dict[str, Any]:
+        """Build the cfg dict for ``codex.init_*`` from a local file path
+        (T-NEW-032). Always passes ``file_path``; passes ``name`` from
+        ``os.path.basename(file)`` only when the
+        ``update_tab_name_to_file_name`` config flag is True.
+
+        Default behaviour (flag False): the tab keeps whatever name it
+        had at add-tab time. When the flag is True, the new tab is
+        named after the opened file's basename.
+
+        Defensive: missing ``self.config`` / ``config.dikt`` is treated
+        as flag-False (no rename) rather than raising -- so this
+        helper works in off-screen test mocks that skip ``__init__``.
+        """
+        cfg = {"file_path": file}
+        try:
+            flag = bool(self.config.dikt.get("update_tab_name_to_file_name", False))
+        except Exception:
+            flag = False
+        if flag:
+            import os
+
+            cfg["name"] = os.path.basename(file)
+        return cfg
+
+    def _filter_recent_rss_entries(self, df, days_back=None) -> "DataFrame":
+        """Filter an RSS-entries DataFrame to recent published dates.
+
+        Uses ``days_back`` (defaults to 3) to compute the cutoff. The
+        cutoff is ``dt.datetime.now() - dt.timedelta(days=days_back)``.
+        Any entry with ``published_dttm`` after the cutoff is kept.
+
+        Falls back to returning the unfiltered DataFrame if the
+        ``published_dttm`` column is missing or non-parsable.
+        """
+        try:
+            import datetime as _dt
+            import pandas as _pd
+
+            if "published_dttm" not in df.columns:
+                return df
+            cutoff = _dt.datetime.now() - _dt.timedelta(days=days_back if days_back is not None else 3)
+            # Parse to datetime; coerce errors to NaT
+            parsed = _pd.to_datetime(df["published_dttm"], errors="coerce")
+            mask = parsed.notna() & (parsed >= cutoff)
+            return df.loc[mask]
+        except Exception as e:
+            logma.error(f"[models] _filter_recent_rss_entries failed: {e}", exc_info=True)
+            return df
+
+    def _get_node_name(self, pid) -> Any:
+        """Best-effort lookup of a node's name by nid (T-NEW-054 helper)."""
+        try:
+            store = getattr(self, "store", None)
+            if store is None:
+                return None
+            df = store.get_table("doc_tree_node", {"WHERE": {"EQUAL": {"nid_txt": str(pid)}}})
+            if df is None or df.empty:
+                return None
+            row = df.iloc[0]
+            for col in ("name_txt", "name", "label_txt"):
+                if col in df.columns:
+                    val = row.get(col)
+                    if val:
+                        return str(val)
+        except Exception as e:
+            logma.warning(f"[models] _get_node_name failed for pid={pid}: {e}")
+        return None
+
+    def _handle_document_not_found(self, doc_action=None, did=None, db="db") -> Any:
+        """Recover a missing document via the loader, if possible.
+
+        T-004: instead of returning an empty DataFrame, asks the
+        document loader (model.codex) to materialise a canonical
+        ``Document`` object for the requested action or id. The
+        loader can rebuild from disk, regenerate from a template,
+        or return ``None`` when no recovery is possible.
+
+        Returns the recovered ``Document`` (or pandas DataFrame) on
+        success, ``None`` when no recovery path applies.
+        """
+        try:
+            if not hasattr(self, "codex") or self.codex is None:
+                return None
+            # Try the action-keyed loader first
+            if doc_action is not None and hasattr(self.codex, f"init_{doc_action}"):
+                from pandas import DataFrame
+
+                doc = getattr(self.codex, f"init_{doc_action}")({"did": did or uuid()})
+                if doc is not None:
+                    logma.info(f"[models] _handle_document_not_found: recovered {doc_action} via codex loader")
+                    # Return wrapped in a single-row DataFrame for
+                    # callers that expect a tabular result
+                    return doc
+            # Fall back to a generic recovery: insert a placeholder
+            # row in doc_media so the next call finds it
+            if hasattr(self, "store") and self.store is not None and did is not None:
+                try:
+                    self.store._store(
+                        "doc_media",
+                        [
+                            {
+                                "did": did,
+                                "document_type": doc_action or "unknown",
+                                "name": f"Recovered {doc_action or did}",
+                                "compatibility": "pyffice",
+                                "type": doc_action or "unknown",
+                                "syntax": "plain-text",
+                                "description": "auto-recovered",
+                                "store_location": "internal",
+                                "encoding": "utf-8",
+                                "meta_data": {},
+                                "widget": "RecoveredPane",
+                            }
+                        ],
+                    )
+                    logma.info(f"[models] _handle_document_not_found: created placeholder for did={did}")
+                except Exception as e:
+                    logma.error(f"[models] _handle_document_not_found placeholder insert failed: {e}", exc_info=True)
+        except Exception as e:
+            logma.error(f"[models] _handle_document_not_found failed: {e}", exc_info=True)
+        return None
+
     def _import_nchantdoffice_node(self, node, pid=None, pos=0) -> None:
         """"""
         # PUSH 0.0.3
@@ -3633,6 +3478,141 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
     def _import_nchantdoffice_tabs(self, node, pid, pos=0) -> None:
         """"""
         # PUSH 0.0.3
+
+    def _register_widget_in_app_type_registry(self, widget, doc_type=None, db="db") -> bool:
+        """Register a widget class in the app_document_type registry.
+
+        T-002: inserts a single row per unique widget class so
+        downstream code (add_tab, get_document_types, etc.) can
+        look up the widget-to-document-type mapping without
+        ad-hoc string lookups. Updates ``registered_bit`` to 1
+        on existing rows; inserts a new row otherwise.
+
+        No-op when ``widget`` is empty or when the store isn't
+        reachable. Returns ``True`` on success, ``False`` otherwise.
+        """
+        if not widget:
+            return False
+        try:
+            if not hasattr(self, "store") or self.store is None:
+                return False
+            doc_type = doc_type or "generic"
+            existing = self.store.get_table(
+                "app_document_type",
+                {"WHERE": {"EQUAL": {"widget_class_txt": widget}}},
+                db,
+            )
+            payload = {
+                "widget_class_txt": widget,
+                "document_type_txt": doc_type,
+                "registered_bit": 1,
+            }
+            if existing is not None and not getattr(existing, "empty", True):
+                self.store.update_record(
+                    {"table": {"app_document_type": {"data": {"registered_bit": 1}}}},
+                    "widget_class_txt",
+                    widget,
+                )
+            else:
+                self.store._store("app_document_type", [payload])
+            logma.info(f"[models] _register_widget_in_app_type_registry: {widget} -> {doc_type}")
+            return True
+        except Exception as e:
+            logma.error(f"[models] _register_widget_in_app_type_registry failed: {e}", exc_info=True)
+            return False
+
+    def _resolve_pid_for_max_tabs(self, pid, tabset=None) -> Any:
+        """Return the pid to use for a new tab (T-NEW-054).
+
+        Reads ``self.config.dikt["max_tabs_per_node"]`` (default 35).
+        If the current tab count for ``pid`` is below the limit,
+        returns ``pid`` unchanged. When the limit is reached,
+        auto-creates a child node under ``pid`` and returns the new
+        child's nid -- so the user keeps their flow and the tree
+        grows by one level.
+
+        Returns ``None`` when the limit is hit AND a child node
+        cannot be created (store error, etc.).
+
+        Best-effort: any exception returns the original ``pid`` so
+        the hot path never blocks tab creation on a config/store error.
+        """
+        try:
+            limit = self.config.dikt.get("max_tabs_per_node", 35)
+            if not isinstance(limit, (int, float)) or limit <= 0:
+                return pid
+            df = self.get_documents(pid, tabset or "center")
+            if df is None or df.empty:
+                return pid
+            if len(df) < int(limit):
+                return pid
+            # Limit hit -- auto-create child node.
+            new_pid = self._create_child_node(pid)
+            if new_pid is None:
+                return None
+            logma.info(f"[models] max_tabs_per_node ({limit}) hit at pid={pid}; " f"auto-created child pid={new_pid}")
+            return new_pid
+        except Exception as e:
+            logma.warning(f"[models] _resolve_pid_for_max_tabs failed: {e}")
+            return pid
+
+    def _resolve_widget_from_registry(self, lookup_code, fallback=None) -> Any:
+        """Resolve a widget class path from the app_document_type registry.
+
+        T-063 (helper): queries ``self.store.get_table("app_document_type", ...)``
+        matching ``document_type_txt == lookup_code``. Returns the
+        ``widget_class_txt`` (or legacy ``widget_txt``) column when
+        the registry has a row, falling back to ``fallback`` when
+        the store is unreachable or the lookup misses.
+
+        Returns ``fallback`` (or ``None``) when no resolution is
+        available. Used by both models.py (per-tab widget lookup
+        during tab rebuild) and toolbars.py (the new-document
+        toolbar's ``add_document`` button).
+        """
+        try:
+            store = getattr(self, "store", None)
+            if store is not None and hasattr(store, "get_table"):
+                df = store.get_table(
+                    "app_document_type",
+                    {"WHERE": {"EQUAL": {"document_type_txt": lookup_code}}},
+                )
+                if df is not None and not getattr(df, "empty", True):
+                    row = df.iloc[0].to_dict()
+                    widget = row.get("widget_class_txt") or row.get("widget_txt")
+                    if widget:
+                        return widget
+        except Exception as e:
+            logma.error(f"[models] _resolve_widget_from_registry failed: {e}", exc_info=True)
+        return fallback
+
+    def _roll_up_sessions(self, sessions) -> dict[str, dict[str, int]]:
+        """Build a per-day activity summary from parsed sessions.
+
+        For each session, walks the window/tab list and counts
+        visits to each domain. Returns a dict of
+        ``{date_iso: {domain: visit_count}}``.
+        """
+        rolled = {}
+        try:
+            for session in sessions or []:
+                windows = session.get("windows", []) if isinstance(session, dict) else []
+                for window in windows:
+                    tabs = window.get("tabs", []) if isinstance(window, dict) else []
+                    for tab in tabs:
+                        if not isinstance(tab, dict):
+                            continue
+                        domain = tab.get("domain") or "unknown"
+                        date = tab.get("last_visit") or tab.get("created_at") or session.get("created_at")
+                        if not date:
+                            continue
+                        # Keep just the date portion for the bucket
+                        date_key = str(date)[:10]
+                        rolled.setdefault(date_key, {})
+                        rolled[date_key][domain] = rolled[date_key].get(domain, 0) + 1
+        except Exception as e:
+            logma.error(f"[models] _roll_up_sessions failed: {e}", exc_info=True)
+        return rolled
 
 
 class NchantdOfficeStore(NchantdStore):
