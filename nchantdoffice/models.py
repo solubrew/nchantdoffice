@@ -3441,20 +3441,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.store.store_app_event(state, action, cfg, db)
         return self
 
-    def store_instance(self, instance) -> Self:
-        """Save the in-memory instance dict to the ``app_instance`` table."""
-        self.instance = instance
-        instance = instance.to_dict()
-
-        self.store.store_app_instance(instance)
-        return self
-
-    def store_instances(self) -> Self:
-        """Save every in-memory instance dict to ``app_instance``."""
-        for instance in self.instances:
-            self.store_instance(instance)
-        return self
-
     def store_user(self, user) -> Self:
         """T-NEW-129: save the in-memory user to ``app_user``.
 
@@ -4180,7 +4166,8 @@ class NchantdOfficeStore(NchantdStore):
 
     def store_app_instance(self, instance, db="db") -> None:
         """Build payload from instance dict and dispatch. Delegates to the free function."""
-        self._store("app_instance", [_build_app_instance_payload(instance)], db)
+        super().store_app_instance(instance, db)
+        # self._store("app_instance", [_build_app_instance_payload(instance)], db)
 
     def store_app_user(self, user, db="db") -> None:
         """T-NEW-129: store primitive for ``app_user`` rows.
@@ -4193,12 +4180,13 @@ class NchantdOfficeStore(NchantdStore):
         direct call exists for tests and for callers that have
         already materialised the payload.
         """
-        if isinstance(user, dict) and "UUID" in user and "user_nm_txt" not in user:
-            # Already a payload dict -- pass through unchanged.
-            payload = user
-        else:
-            payload = _build_app_user_payload(user)
-        self._store("app_user", [payload], db)
+        # if isinstance(user, dict) and "UUID" in user and "user_nm_txt" not in user:
+        #     # Already a payload dict -- pass through unchanged.
+        #     payload = user
+        # else:
+        #     payload = _build_app_user_payload(user)
+        # self._store("app_user", [payload], db)
+        super().store_app_user(user, db)
 
     def store_doc_media(self, document, db="db", how="INSERT") -> str:
         """

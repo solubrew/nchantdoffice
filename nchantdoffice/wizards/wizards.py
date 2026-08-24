@@ -116,9 +116,11 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         """Initialize the pycurity vault during first-time setup, then create config file."""
         # Initialize the nchantdoffice pycurity vault if it doesn't exist
         from nchantdoffice.utilities.credentials import vault_exists, init_vault
+
         if not vault_exists():
             # Import getpass here to avoid issues in non-interactive environments
             import getpass
+
             try:
                 # Prompt for a master password to initialize the vault
                 # In a real wizard, this would be a proper UI prompt
@@ -127,6 +129,14 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
             except Exception as e:
                 logma.warning(f"[wizards] Vault init skipped: {e}")
         super().create_config_file()
+
+    def create_instance(self):
+        """"""
+        super().create_instance()
+
+    def create_user(self):
+        """"""
+        super().create_user()
 
     def create_database_application(self) -> Self:
         """"""
