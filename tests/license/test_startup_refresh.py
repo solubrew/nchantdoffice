@@ -507,3 +507,148 @@ def test_failed_refresh_sets_stale_flag(
 
     # Stale flag must be set so the next launch retries.
     assert prefs.get("entitlement_stale") is True
+
+
+# -----------------------------------------------------------------------------
+# DESK T-NEW-051 — bug-fix coverage for 2026-08-25 testing report.
+#
+# The production caller in :mod:`nchantdoffice.views` wires
+# ``preferences_db`` from ``self.config.dikt["preferences"]`` which
+# is a plain dict — not a ``MockPreferencesDB``. The orchestrator
+# must therefore tolerate a bare dict (writes become
+# ``__setitem__``/subscript-assignment, reads become
+# ``Mapping.get``).
+#
+# Network errors (DNS, refused connection, asyncio.TimeoutError)
+# on the bootstrap path must NOT propagate to the caller — the
+# desktop MUST still boot when the user is offline on first
+# launch. The orchestrator should return
+# ``{action: "skipped", reason: "offline"}`` and persist
+# ``entitlement_stale=True`` so the next launch retries.
+# -----------------------------------------------------------------------------
+
+
+def test_dict_preferences_db_is_accepted_for_get_and_set(
+    install_store: InstallStore,
+    entitlement_cache: EntitlementCache,
+    remote: MockLicenseRemote,
+) -> None:
+    """A plain ``dict`` for ``preferences_db`` works as the production caller wires.
+
+    Regression: 2026-08-25 startup log showed::
+
+        startup_refresh: could not write entitlement_stale=True to
+        preferences_db: 'dict' object has no attribute 'set'
+
+    because :func:`startup_refresh._set_stale` was calling
+    ``preferences_db.set(key, value)`` (a SQLite-/PreferencesDB-style
+    API) on a Python dict. Fix: duck-type ``get`` and ``__setitem__``.
+    The orchestrator must accept either shape without raising.
+    """
+    record = install_store.get_or_create()
+    # First-launch path forces the bootstrap branch where _set_stale runs.
+    assert record["api_key"] is None
+
+    plain_dict: dict = {}
+    result = startup_refresh.refresh_if_needed(
+        install_store=install_store,
+        entitlement_cache=entitlement_cache,
+        license_remote=remote,
+        preferences_db=plain_dict,
+    )
+
+    # The dict must have been mutated to record the fresh-stale bit.
+    assert plain_dict.get("entitlement_stale") is False
+    # And the orchestrator must have taken the bootstrap path.
+    assert result["action"] == "bootstrap"
+    assert result["reason"] == "first_launch"
+
+
+def test_offline_first_launch_bootstrap_returns_skipped_not_raises(
+    install_store: InstallStore,
+    entitlement_cache: EntitlementCache,
+    remote: MockLicenseRemote,
+    prefs: MockPreferencesDB,
+) -> None:
+    """DNS / network failure on first-launch bootstrap is NOT fatal.
+
+    Regression: 2026-08-25 startup log showed the desktop crashing
+    on launch with::
+
+        startup_refresh: bootstrap failed (
+            Cannot connect to host api.nchantdoffice.com:443 ssl:default
+            [Name or service not known]
+        ); cannot continue
+
+    The original code's ``except Exception as exc: ... raise`` re-
+    raised the OSError out of ``refresh_if_needed`` and out of
+    ``NchantdOfficeCloakView.__init__`` — the whole desktop boot
+    died. The desktop MUST still boot when the user is offline
+    on first launch (the cached envelope simply isn't available
+    yet, so the tier gate falls back to free; the stale flag is
+    persisted so the next launch retries).
+    """
+    install_store.get_or_create()
+    assert prefs.get("entitlement_stale") is None  # starts unset
+
+    # ``aiohttp.ClientConnectorDNSError`` subclasses OSError; this
+    # is the same exception class aiohttp raises when DNS fails.
+    class FakeDNSError(OSError):
+        pass
+
+    def _raise_dns(*args, **kwargs):
+        raise FakeDNSError("Name or service not known")
+
+    remote.sync_bootstrap = _raise_dns  # type: ignore[assignment]
+
+    # Must NOT raise.
+    result = startup_refresh.refresh_if_needed(
+        install_store=install_store,
+        entitlement_cache=entitlement_cache,
+        license_remote=remote,
+        preferences_db=prefs,
+    )
+
+    # The orchestrator must report skipped/offline so the widget
+    # layer can fall through to the free tier.
+    assert result["action"] == "skipped"
+    assert result["reason"] == "offline"
+    # Stale flag must be persisted so the next launch retries the
+    # bootstrap when the network is back.
+    assert prefs.get("entitlement_stale") is True
+
+
+def test_offline_first_launch_bootstrap_with_dict_prefs_works(
+    install_store: InstallStore,
+    entitlement_cache: EntitlementCache,
+    remote: MockLicenseRemote,
+) -> None:
+    """Dict-prefs + offline-bootstrap end-to-end: no exception escapes.
+
+    Combines the two regressions above: production wiring
+    (``dict`` prefs) + production failure mode (DNS failure on
+    first launch). Verifies the full happy path of the new
+    fail-soft behavior.
+    """
+    install_store.get_or_create()
+
+    class FakeDNSError(OSError):
+        pass
+
+    def _raise_dns(*args, **kwargs):
+        raise FakeDNSError("Name or service not known")
+
+    remote.sync_bootstrap = _raise_dns  # type: ignore[assignment]
+
+    plain_dict: dict = {}
+    result = startup_refresh.refresh_if_needed(
+        install_store=install_store,
+        entitlement_cache=entitlement_cache,
+        license_remote=remote,
+        preferences_db=plain_dict,
+    )
+
+    assert result["action"] == "skipped"
+    assert result["reason"] == "offline"
+    # The dict was updated to mark stale=True.
+    assert plain_dict.get("entitlement_stale") is True

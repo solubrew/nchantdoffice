@@ -542,5 +542,24 @@ pass` `45 passed, 2 skipped`
 ||`nchantrs/models/tabsetmodels.py:238`                      |`tab_widgets\[tabn]`                   |
 ||`nchantdoffice/widgets/documents/atnrg/browsers.py:348`    |`store_link(tag=...)`                  |
 
- `.pyof`  
+ |`.pyof`  
+
+ ---
+
+ ## [Unreleased] — 2026-08-25
+
+ #### Card: DESK T-NEW-051 — fix(license): tolerate dict prefs + fail-soft bootstrap on offline
+
+ Fix two production crashes observed in `testing-report_20260825.md`:
+
+ 1. **`startup_refresh: could not write entitlement_stale=True to preferences_db: 'dict' object has no attribute 'set'`** — the production caller in `nchantdoffice/views.py` wires `preferences_db=self.config.dikt["preferences"]` (a plain dict), but `_set_stale` was calling the PreferencesDB-style `.set(key, value)` API. Now duck-types via `hasattr(preferences_db, "set")` and falls back to subscript assignment for plain dicts.
+
+ 2. **Desktop boot crash on offline / DNS failure (`Cannot connect to host api.nchantdoffice.com:443 [Name or service not known]`)** — the first-launch bootstrap path caught `aiohttp.ClientConnectorDNSError` (subclass of `OSError`) under a generic `except Exception` and **re-raised**, propagating out of `NchantdOfficeCloakView.__init__` and killing the desktop. Now splits the except clause: transient `(asyncio.TimeoutError, OSError)` returns `{action: "skipped", reason: "offline"}` and persists `entitlement_stale=True` so the next launch retries; only real `BootstrapError` (4xx/5xx from server) still raises.
+
+ Same fail-soft treatment applied to the bootstrap-fallback-after-`RefreshRevokedError` path.
+
+ - `nchantdoffice/license/startup_refresh.py` — duck-type `_set_stale`; split bootstrap except clauses; update docstrings.
+ - `tests/license/test_startup_refresh.py` — 3 new regression tests pinning down the exact symptoms from the testing report (dict-prefs, offline-bootstrap, combined end-to-end). All green: `tests/license/test_startup_refresh.py` 11 passed.
+
+ **Validation:** 11/11 startup_refresh tests green, 55/55 license module green, full suite shows the same 33 pre-existing unrelated failures as before the patch (909 → 912 passed = +3 new tests; no new failures).
 

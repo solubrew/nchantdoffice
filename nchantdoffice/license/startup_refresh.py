@@ -82,13 +82,16 @@ production caller wires the desktop's YAML config dict via
 
 Raises
 ======
-
 :meth:`refresh_if_needed` raises :class:`BootstrapError` when
-the bootstrap fallback ALSO fails (the desktop cannot function
-without a registered install — the user must intervene or the
-install is unrecoverable). Transient failures during refresh do
-NOT raise; they are swallowed and surfaced as a ``skipped``
-result so the desktop still boots.
+the bootstrap fails with a real server error (4xx/5xx) —
+the server told us something we cannot ignore and the user
+must intervene. **Transient failures during both bootstrap
+and refresh are swallowed**: DNS failures, refused
+connections, :class:`asyncio.TimeoutError` on first launch
+return ``{action: 'skipped', reason: 'offline'}`` so the
+desktop still boots. The persistent ``entitlement_stale``
+flag is set so the next launch retries the network call when
+the user is back online.
 """
 from __future__ import annotations
 
@@ -212,11 +215,16 @@ def refresh_if_needed(
     Raises
     ------
     BootstrapError
-        When even the bootstrap fallback fails (the desktop
-        cannot function without a registered install). Transient
-        failures during :meth:`sync_refresh` do NOT raise — they
-        are surfaced as a ``skipped`` result so the desktop
-        still boots.
+        When bootstrap fails with a real server error (4xx/5xx)
+        — the server told us something we cannot ignore and
+        the user must intervene. **Transient failures during
+        both bootstrap and refresh are swallowed**: DNS
+        failures, refused connections, and
+        :class:`asyncio.TimeoutError` return ``{action:
+        'skipped', reason: 'offline'}`` so the desktop still
+        boots. The persistent ``entitlement_stale`` flag is
+        set so the next launch retries the network call when
+        the user is back online.
     """
     # Lazy import keeps the orchestrator usable from test contexts
     # where the full tier_gate stack isn't initialised. Also avoids
@@ -244,9 +252,37 @@ def refresh_if_needed(
                 os=_detect_os(),
                 app_version=_app_version(),
             )
+        except (asyncio.TimeoutError, OSError) as exc:
+            # Transient network failure on first launch (DNS
+            # failure, refused connection, timeout) — the desktop
+            # MUST still boot. We log the failure, persist the
+            # stale flag so the next launch retries, and return a
+            # ``skipped/offline`` result so the tier gate falls
+            # through to free.
+            #
+            # Bug-fix (DESK T-NEW-051): previously this case was
+            # caught by a generic ``except Exception`` and re-
+            # raised, which propagated the OSError out of
+            # :meth:`NchantdOfficeCloakView.__init__` and crashed
+            # the desktop boot on every offline launch.
+            _set_stale(preferences_db, True)
+            _logger.warning(
+                "startup_refresh: first-launch bootstrap failed (%s); "
+                "booting offline, will retry next launch",
+                exc,
+            )
+            return {
+                "action": "skipped",
+                "reason": "offline",
+                "tier": _tier_or_none(None),
+            }
         except Exception as exc:
-            # Bootstrap is the recovery path — if it ALSO fails,
-            # the desktop cannot function. Mark stale, log, raise.
+            # Bootstrap raised a non-network error (a real
+            # :class:`BootstrapError` from a 4xx/5xx server
+            # response, or any other unexpected failure). The
+            # server told us something we can't ignore — log,
+            # mark stale, and re-raise so the widget layer can
+            # surface "license server rejected this install".
             _set_stale(preferences_db, True)
             _logger.error(
                 "startup_refresh: bootstrap failed (%s); cannot continue", exc,
@@ -310,7 +346,26 @@ def refresh_if_needed(
                 os=_detect_os(),
                 app_version=_app_version(),
             )
+        except (asyncio.TimeoutError, OSError) as exc:
+            # Network failure on the bootstrap fallback after a
+            # RefreshRevokedError — same fail-soft treatment as
+            # the first-launch path. The desktop still boots;
+            # the next launch will retry.
+            _set_stale(preferences_db, True)
+            _logger.warning(
+                "startup_refresh: bootstrap-fallback-after-revoke "
+                "failed (%s); booting offline, will retry next launch",
+                exc,
+            )
+            return {
+                "action": "skipped",
+                "reason": "offline",
+                "tier": _tier_or_none(None),
+            }
         except Exception as exc:
+            # Real bootstrap failure on the fallback — log, mark
+            # stale, re-raise so the caller surfaces a license
+            # error UI.
             _set_stale(preferences_db, True)
             _logger.error(
                 "startup_refresh: bootstrap fallback failed (%s); "
@@ -375,14 +430,35 @@ def _refresh_reason(
 def _set_stale(preferences_db: Optional[Any], value: bool) -> None:
     """Persist ``entitlement_stale=value`` to the preferences shim.
 
-    Duck-typed: any object with ``.set(key, value)`` will do.
+    Duck-typed: tolerates both shapes the desktop's wiring can
+    pass —
+
+      * a PreferencesDB-style object with ``.set(key, value)``
+        (used by the desktop's future real preferences store);
+      * a plain ``dict`` (the production caller in
+        :mod:`nchantdoffice.views` reads
+        ``self.config.dikt["preferences"]``, which is a plain
+        YAML config dict — dicts have no ``.set`` method, only
+        ``__setitem__``).
+
+    The two are disambiguated by ``hasattr(preferences_db, "set")``
+    — a duck-typed preference for the explicit ``set`` method
+    when present (preserves the SQLite-style API), falling back
+    to subscript assignment for plain dicts.
+
     ``None`` is a no-op (the production caller always provides
-    one, but tests may skip it).
+    one, but tests may skip it). All write failures are logged
+    as warnings and swallowed (preferences failures are
+    non-fatal — the orchestrator must never block app boot on a
+    config write).
     """
     if preferences_db is None:
         return
     try:
-        preferences_db.set(_ENTITLEMENT_STALE_KEY, value)
+        if hasattr(preferences_db, "set"):
+            preferences_db.set(_ENTITLEMENT_STALE_KEY, value)
+        else:
+            preferences_db[_ENTITLEMENT_STALE_KEY] = value
     except Exception as exc:  # noqa: BLE001 — preferences failures are non-fatal
         _logger.warning(
             "startup_refresh: could not write %s=%s to preferences_db: %s",
