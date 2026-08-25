@@ -653,6 +653,30 @@ Same fix applied to the bootstrap-fallback-after-`RefreshRevokedError` path (the
 
 ---
 
+#### Card: DESK T-NEW-056 — refactor(urls): collapse dev profile to single port (LAN deploy uses one Flask port)
+
+The DESK T-NEW-053 dev profile split API and marketing across
+two ports (`8081` for the API, `8080` for the marketing site).
+That was a wrong assumption: the nchantdoffice_com Flask app
+serves BOTH `/api/desktop/*` and `/`, `/registration`, etc. on
+a single port (the LAN deploy `cluster-up.lan.sh` binds Flask
+port 5000 to host port 8081). Splitting them left the desktop
+hitting `192.168.1.67:8080` (which wasn't running) for the
+marketing pages.
+
+**Fix:** both DEV_API_BASE and DEV_WEB_BASE now resolve to
+`http://192.168.1.67:8081`. The constants `DEV_INTERNAL_HOST`
+and `DEV_INTERNAL_PORT` are the single source of truth; if the
+operator's LAN deploy uses a different port they edit those
+two constants (no env vars per the T-NEW-070 directive).
+
+**Tests:** updated `test_set_run_mode_to_dev_flips_all_accessors`
+and `test_update_affiliate_links_dev_url_constructs_correctly` to
+expect the new single-port dev URLs. 80/80 license+utilities
+tests pass.
+
+---
+
 #### Card: DESK T-NEW-055 — fix(links): stop doubling the affiliate API URL path
 
 Live launch regression (2026-08-25 18:18:15) — after the operator moved to `run-mode: dev`, the affiliate sync path hit:

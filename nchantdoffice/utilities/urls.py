@@ -117,8 +117,12 @@ _BUNDLED_YAML_PATH = Path(__file__).parent / "_data_" / "urls.yaml"
 #   - ``prod`` — external production cloud (nchantdoffice.com).
 #     The default. Every accessor returns the bundled YAML
 #     / XDG-override value.
-#   - ``dev``  — internal docker stack on the operator's LAN
-#     (192.168.1.67:8081 for the API, :8080 for the website).
+#   - ``dev``  — internal docker stack on the operator's LAN.
+#     The nchantdoffice_com Flask app serves BOTH the marketing
+#     site and the API on a single port (no separate web
+#     frontend in the LAN-deploy path). The default
+#     ``DEV_INTERNAL_PORT`` is 8081 to match
+#     ``scripts/dev/cluster-up.lan.sh`` on the server side.
 #     Switched on by ``run-mode: dev`` at launch.
 #
 # Both tables use the same keys as ``_BUNDLED_DEFAULTS`` /
@@ -129,10 +133,18 @@ _BUNDLED_YAML_PATH = Path(__file__).parent / "_data_" / "urls.yaml"
 # upgrade prompts, etc. all point at the internal site. Operators
 # who only want to flip the API endpoint should leave run-mode at
 # prod and use the XDG ``urls:`` block instead.
-
-DEV_INTERNAL_BASE = "http://192.168.1.67"
-DEV_API_BASE = f"{DEV_INTERNAL_BASE}:8081"
-DEV_WEB_BASE = f"{DEV_INTERNAL_BASE}:8080"
+#
+# Override the port by editing these constants if your LAN
+# deploy uses a different host port. Both marketing and API
+# MUST live on the same port — the nchantdoffice_com Flask app
+# serves both on its single port (e.g. 5000 inside the
+# container, mapped to LAN_WEB_PORT on the host via
+# docker-compose.lan.yml). Per T-NEW-070, no env-var reads —
+# the operator edits these constants to retarget the dev box.
+DEV_INTERNAL_HOST = "http://192.168.1.67"
+DEV_INTERNAL_PORT = "8081"
+DEV_API_BASE = f"{DEV_INTERNAL_HOST}:{DEV_INTERNAL_PORT}"
+DEV_WEB_BASE = f"{DEV_INTERNAL_HOST}:{DEV_INTERNAL_PORT}"
 
 DEV_URLS: Dict[str, str] = {
     "server_base_url":          f"{DEV_API_BASE}",

@@ -124,11 +124,17 @@ def test_update_affiliate_links_uses_correct_api_url(
 def test_update_affiliate_links_dev_url_constructs_correctly(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """In dev mode, the URL must be ``http://192.168.1.67:8080/api/affiliate/links/``.
+    """In dev mode, the URL must be ``http://192.168.1.67:8081/api/affiliate/links/``.
 
     Same contract as the prod test, just with the dev profile
     active. Confirms the run-mode profile flows through to the
     affiliate URL correctly AND that the path isn't doubled.
+
+    COM T-NEW-053 follow-up: dev mode used to split API and
+    marketing across 8081/8080 ports. The actual LAN deploy
+    serves both on a single port (the nchantdoffice_com Flask
+    app handles /api/* and /* on port 5000), so both URLs now
+    point at the same host:port.
     """
     from nchantdoffice.utilities import links
     from nchantdoffice.utilities import urls
@@ -153,7 +159,7 @@ def test_update_affiliate_links_dev_url_constructs_correctly(
         assert len(mock.calls) == 1
         captured_url = mock.calls[0]["url"]
         assert captured_url == (
-            "http://192.168.1.67:8080/api/affiliate/links/"
+            "http://192.168.1.67:8081/api/affiliate/links/"
         ), (
             f"dev-mode URL construction failed: got {captured_url!r}. "
             f"Expected the canonical ``/api/affiliate/links/`` path "
