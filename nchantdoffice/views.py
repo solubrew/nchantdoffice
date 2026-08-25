@@ -44,6 +44,42 @@ class NchantdOfficeCloakView(NchantdCloakView):
         super().__init__(parent, None)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCloakView").override(cfg))
+        # DESK T-NEW-050: wire the license-startup orchestrator.
+        # Lazy-import + try/except so a missing aiohttp / license
+        # module cannot block the desktop boot path. The
+        # orchestrator itself swallows transient refresh failures
+        # (so the desktop still boots when offline); this guard
+        # only protects against the import + construction stage.
+        try:
+            from nchantdoffice.license.install_store import InstallStore
+            from nchantdoffice.license.entitlement_cache import EntitlementCache
+            from nchantdoffice.license.remote import LicenseRemote
+            from nchantdoffice.license import startup_refresh
+
+            _install_store = InstallStore()
+            _entitlement_cache = EntitlementCache()
+            _remote = LicenseRemote(
+                _install_store,
+                _entitlement_cache,
+                server_base_url="https://api.nchantdoffice.com",
+            )
+            _prefs: dict = {}
+            try:
+                _parent_config = getattr(self.parent, "config", None)
+                if _parent_config is not None:
+                    _prefs = getattr(_parent_config, "dikt", {}).get(
+                        "preferences", {}
+                    ) or {}
+            except Exception:
+                _prefs = {}
+            startup_refresh.refresh_if_needed(
+                install_store=_install_store,
+                entitlement_cache=_entitlement_cache,
+                license_remote=_remote,
+                preferences_db=_prefs,
+            )
+        except ImportError as exc:
+            logma.warning(f"[views] license refresh unavailable: {exc}")
 
     def initView(self, cfg=None) -> Self:
         """"""
