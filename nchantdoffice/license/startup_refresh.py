@@ -238,6 +238,21 @@ def refresh_if_needed(
     hardware_key = record["hardware_key"]
     api_key = record.get("api_key")
 
+    # DESK T-NEW-058: startup banner so the operator can
+    # immediately see (a) what install this is, (b) whether
+    # an api_key is already on file, and (c) what mode
+    # startup_refresh is about to take. This is the single
+    # most important log line for diagnosing "the affiliate
+    # sync keeps getting 401" — pair it with the
+    # `update_affiliate_links` log line and you can see
+    # whether the install is bootstrapped yet.
+    _logger.info(
+        f"[startup_refresh] BEGIN: install_id={install_id!r} "
+        f"api_key_present={bool(api_key)} "
+        f"entitlement_cached={entitlement_cache.load() is not None} "
+        f"refresh_threshold={refresh_threshold_seconds}s"
+    )
+
     # ---- decision ----------------------------------------------------------
 
     if not api_key:
@@ -295,6 +310,19 @@ def refresh_if_needed(
                 "tier": _tier_or_none(None),
             }
 
+        # DESK T-NEW-058: bootstrap success — log the api_key
+        # fragment so the operator can confirm the key is
+        # on file and the next-launch affiliate sync will
+        # succeed. We log only the prefix (first 12 chars) for
+        # security; the full key is in install.bin.
+        _issued_key = bootstrap_body.get("api_key", "") if isinstance(
+            bootstrap_body, dict
+        ) else ""
+        _logger.info(
+            f"[startup_refresh] bootstrap OK: minted api_key="
+            f"{_issued_key[:12]!r}... (saved to InstallStore); "
+            f"affiliate sync will succeed on next launch"
+        )
         _set_stale(preferences_db, False)
         return {
             "action": "bootstrap",

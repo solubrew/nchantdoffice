@@ -733,6 +733,50 @@ unchanged — it was correct, the desktop was wrong.
 
 ---
 
+#### Card: DESK T-NEW-058 — fix(links): skip affiliate sync until install has an api_key (sequencing fix)
+
+The operator reported that the affiliate sync fired IMMEDIATELY
+after `Nchantment Initialized` with no api_key yet — returning
+401. The bootstrap (`startup_refresh.refresh_if_needed`) runs
+synchronously in `NchantdOfficeCloakView.__init__`, but the
+model init (which calls `update_affiliate_links`) can fire
+before the bootstrap's HTTP call has completed. Sending a
+network call without credentials is wasted bandwidth and a
+noisy 401.
+
+**Fix:** `update_affiliate_links` now checks
+`InstallStore().get_or_create()["api_key"]` upfront. If
+`api_key` is None (fresh install, install bootstrap returned
+4xx/5xx and was swallowed fail-soft, or `install.bin` is
+missing), the function returns zeros immediately and logs a
+clear `INFO` line naming the install_id and the bootstrap
+path. The next launch will retry once the bootstrap has
+minted an api_key.
+
+**Debug logging added (also DESK T-NEW-058):**
+
+- `[startup_refresh] BEGIN: install_id=… api_key_present=True/False entitlement_cached=…`
+  — single banner that tells the operator whether the
+  install is bootstrapped at function entry
+- `[startup_refresh] bootstrap OK: minted api_key='nk_test_…' (saved to InstallStore)`
+  — fired on successful first-launch bootstrap, so the
+  operator can confirm the key is on file
+- `[links] update_affiliate_links: using api_key for install_id=… against <url>`
+  — confirms the api_key was sourced from InstallStore and
+  which server the call is heading to
+- `[links] skip affiliate sync: no api_key in InstallStore yet (install_id=…)`
+  — explains WHY the affiliate call is silent (correlates
+  with the bootstrap banner)
+
+**Tests:** 1 updated test (the "no api_key → still make the
+call" test was inverted to "no api_key → skip the call
+entirely"). 85/85 license+utilities tests pass. The
+regression-guard test uses an `AssertionError` mock so any
+future code that re-introduces a network call in the skip
+path will fail loudly.
+
+---
+
 #### Card: DESK T-NEW-055 — fix(links): stop doubling the affiliate API URL path
 
 Live launch regression (2026-08-25 18:18:15) — after the operator moved to `run-mode: dev`, the affiliate sync path hit:

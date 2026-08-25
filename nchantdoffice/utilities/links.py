@@ -69,11 +69,18 @@ def update_affiliate_links(model, last_affiliate_update_dttm: str = "2025-01-01 
     # DESK T-NEW-057: the server's @require_desktop_api_key
     # decorator reads ``x-api-key`` (NOT Authorization: Bearer).
     # Read the install's api_key from the global InstallStore
-    # so the header is present on affiliate requests. If the
-    # install hasn't bootstrapped yet (api_key is None) the
-    # call returns 401 and the outer try/except logs it
-    # without crashing the desktop.
+    # so the header is present on affiliate requests.
+    #
+    # DESK T-NEW-058: if the install hasn't bootstrapped yet
+    # (api_key is None because the desktop just started and
+    # the install-bootstrap HTTP call hasn't completed — or
+    # returned 4xx/5xx and was swallowed by the fail-soft
+    # orchestrator), SKIP the network call entirely. Sending
+    # a request without credentials is wasted bandwidth + a
+    # noisy 401 in the log. The next launch — once the
+    # bootstrap has minted an api_key — will retry.
     api_key: Optional[str] = None
+    install_id: Optional[str] = None
     try:
         from nchantdoffice.license.install_store import (
             InstallStore as _InstallStore,
@@ -81,12 +88,40 @@ def update_affiliate_links(model, last_affiliate_update_dttm: str = "2025-01-01 
         try:
             _record = _InstallStore().get_or_create()
             api_key = _record.get("api_key")
+            install_id = _record.get("install_id")
         except Exception as _exc:
-            log.info(
+            log.warning(
                 f"[links] api_key lookup failed (non-blocking): {_exc}"
             )
     except ImportError:
-        pass
+        log.info("[links] InstallStore module not importable; skipping affiliate sync")
+
+    if not api_key:
+        # DESK T-NEW-058: pre-bootstrap skip. Log clearly so the
+        # operator can correlate with the bootstrap log lines
+        # in the same session and understand WHY the affiliate
+        # sync is silent. Common reasons:
+        #   - Fresh install, install-bootstrap hasn't completed yet
+        #   - Install bootstrap returned 4xx/5xx and was
+        #     swallowed fail-soft by startup_refresh
+        #   - install.bin was deleted / corrupted
+        # In all cases the next launch will retry once the
+        # bootstrap has minted a valid api_key.
+        log.info(
+            f"[links] skip affiliate sync: no api_key in InstallStore "
+            f"yet (install_id={install_id!r}). The next launch will "
+            f"retry once the install bootstrap completes. "
+            f"Set run-mode=prod if you want to bypass the LAN docker."
+        )
+        return {
+            "affiliate_count": 0,
+            "non_affiliate_count": 0,
+        }
+
+    log.info(
+        f"[links] update_affiliate_links: using api_key for "
+        f"install_id={install_id!r} against {API_URL}"
+    )
     client = APIClient(API_URL, api_key=api_key)
     if reload:
         last_affiliate_update_dttm = "2025-01-01 00:00:00"

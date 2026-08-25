@@ -387,14 +387,21 @@ def test_update_affiliate_links_passes_api_key_as_x_api_key_header(
     assert "Authorization" not in session.headers
 
 
-def test_update_affiliate_links_handles_no_api_key(
+def test_update_affiliate_links_skips_when_no_api_key(
     monkeypatch: pytest.MonkeyPatch,
     fake_install_store,
 ) -> None:
-    """If the install has no api_key yet (pre-bootstrap), the
-    call still runs (no header set) and gets a 401. The
-    outer try/except swallows the 401 and the call returns
-    zeros. The desktop doesn't crash.
+    """If the install has no api_key yet (pre-bootstrap), skip
+    the affiliate call entirely. The next launch — once the
+    bootstrap has minted an api_key — will retry.
+
+    DESK T-NEW-058: this is a sequencing fix. The bootstrap
+    runs synchronously in NchantdOfficeCloakView.__init__,
+    but the model init (which calls update_affiliate_links)
+    can fire before the bootstrap has completed. The fix is
+    NOT to make the affiliate call wait (that would require a
+    callback chain) — the fix is to skip when there's no key
+    and let the next launch retry once the key is on file.
     """
     from nchantdoffice.utilities import links
     from nchantdoffice.utilities import urls
@@ -403,25 +410,26 @@ def test_update_affiliate_links_handles_no_api_key(
     urls.reload()
     fake_install_store["set"](None)  # pre-bootstrap state
 
-    session = _MockSession(
-        body={"error": "API key is missing"}, status_code=401
+    # The session SHOULD NOT be created at all when api_key is
+    # None. Set up a session that would explode if invoked.
+    def _should_not_be_called(*args, **kwargs):
+        raise AssertionError(
+            "update_affiliate_links must NOT construct a "
+            "requests.Session when no api_key is available "
+            "(DESK T-NEW-058)"
+        )
+
+    monkeypatch.setattr(
+        links.requests, "Session", _should_not_be_called
     )
-
-    def _fake_session_factory(*args, **kwargs):
-        return session
-
-    monkeypatch.setattr(links.requests, "Session", _fake_session_factory)
 
     class _FakeModel:
         def remove_affiliate_links(self) -> None:
             pass
 
-    # Must NOT raise.
+    # Must NOT raise — just return zeros.
     result = links.update_affiliate_links(model=_FakeModel(), reload=False)
     assert result == {"affiliate_count": 0, "non_affiliate_count": 0}, (
         f"update_affiliate_links must return zeros when the install "
-        f"has no api_key. Got: {result!r}"
+        f"has no api_key (skip path, not network call). Got: {result!r}"
     )
-    # And the session had no x-api-key header (since api_key was None).
-    assert "x-api-key" not in session.headers
-    assert "Authorization" not in session.headers
