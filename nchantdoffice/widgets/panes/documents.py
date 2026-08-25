@@ -389,7 +389,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
             node.sortChildren(0, order=direction)
         except TypeError:
             # Older Qt nodes that don't accept the order= kwarg.
-            node.sortChildren(0)
+            node.sortChildren(0, direction)
         except Exception as e:
             logma.warning(
                 f"[documents] _sort_subtree: node sort failed: {e}"
