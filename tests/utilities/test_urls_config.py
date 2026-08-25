@@ -148,6 +148,133 @@ def test_reload_invalidates_cache() -> None:
 
 
 # -----------------------------------------------------------------------------
+# DESK T-NEW-053: run-mode profiles (dev / prod).
+# -----------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def reset_run_mode():
+    """Reset the active run-mode to ``prod`` between tests.
+
+    The module-level ``_run_mode`` persists across tests, so
+    a test that flips to ``dev`` would leak state into the
+    next test. The fixture calls :func:`urls.set_run_mode`
+    before AND after the test body to guarantee a clean slate.
+
+    ``autouse=True`` so every test in this module starts in
+    ``prod`` mode without having to declare the fixture.
+    The cost is one cache invalidation per test — negligible.
+    """
+    urls.set_run_mode("prod")
+    urls.reload()
+    yield
+    urls.set_run_mode("prod")
+    urls.reload()
+
+
+def test_run_mode_defaults_to_prod() -> None:
+    """On a fresh import, the active run-mode is ``prod``.
+
+    The launch entrypoint flips this before any accessor is
+    called, but a default of ``prod`` means accessor calls
+    before the entrypoint runs are still safe (they return
+    production URLs).
+    """
+    assert urls.get_run_mode() == "prod"
+
+
+def test_set_run_mode_to_dev_flips_all_accessors() -> None:
+    """``set_run_mode("dev")`` swaps every accessor to the internal
+    docker stack at ``http://192.168.1.67``.
+
+    Regression guard for DESK T-NEW-053 — the operator launched
+    the desktop with ``run-mode: dev`` and expects every URL
+    surface (license bootstrap, embedded browser, account tab,
+    upgrade prompts, ad CTAs) to point at the internal site.
+    """
+    urls.set_run_mode("dev")
+    assert urls.server_base_url() == "http://192.168.1.67:8081"
+    assert urls.affiliate_api_base() == "http://192.168.1.67:8080/api/affiliate"
+    assert urls.feature_gates_url() == "http://192.168.1.67:8080"
+    assert urls.updates_url() == "http://192.168.1.67:8080"
+    assert urls.sync_url() == "http://192.168.1.67:8080"
+    assert urls.home_page() == "http://192.168.1.67:8080/"
+    assert urls.upgrade_compare_url() == "http://192.168.1.67:8080/compare"
+    assert urls.share_landing_url() == "http://192.168.1.67:8080"
+    assert (
+        urls.registration_url()
+        == "http://192.168.1.67:8080/registration"
+    )
+    assert urls.whats_new_url() == "http://192.168.1.67:8080/whats_new"
+    assert (
+        urls.affiliate_marketing_url()
+        == "http://192.168.1.67:8080/affiliate_marketing"
+    )
+    assert urls.marketing_base_url() == "http://192.168.1.67:8080"
+
+
+def test_set_run_mode_back_to_prod_reverts_all_accessors() -> None:
+    """``set_run_mode("prod")`` after ``dev`` reverts every accessor
+    to the bundled / production URLs.
+
+    Symmetric with the dev case above — switching modes is a
+    wholesale replace, not a partial overlay.
+    """
+    urls.set_run_mode("dev")
+    assert urls.server_base_url() == "http://192.168.1.67:8081"
+    urls.set_run_mode("prod")
+    assert urls.server_base_url() == "https://api.nchantdoffice.com"
+    assert urls.home_page() == "https://www.nchantdoffice.com/"
+
+
+def test_set_run_mode_invalid_value_raises() -> None:
+    """Unknown run-mode values fail loud (ValueError) at the
+    launch entrypoint — no silent fallback to production.
+
+    Catches typos like ``run-mode: Development`` or
+    ``run-mode: testing`` before they ship to the operator.
+    """
+    with pytest.raises(ValueError):
+        urls.set_run_mode("Development")
+    with pytest.raises(ValueError):
+        urls.set_run_mode("")
+    with pytest.raises(ValueError):
+        urls.set_run_mode(123)  # type: ignore[arg-type]
+
+
+def test_set_run_mode_is_idempotent() -> None:
+    """Setting the same mode twice is a no-op (besides logging).
+
+    The launch entrypoint may call :func:`set_run_mode` defensively
+    on every startup; re-flipping to ``prod`` when already ``prod``
+    must not invalidate the cache.
+    """
+    urls.set_run_mode("prod")  # already default
+    urls.server_base_url()  # populate cache
+    assert urls._resolve.cache_info().currsize == 1
+    urls.set_run_mode("prod")  # no-op
+    assert urls._resolve.cache_info().currsize == 1, (
+        "re-setting the same run-mode must not invalidate the cache"
+    )
+
+
+def test_set_run_mode_invalidates_resolver_cache() -> None:
+    """``set_run_mode`` clears the resolver cache so the next
+    accessor call returns values from the new profile.
+
+    Without this, switching modes mid-process would silently
+    keep returning stale values from the old profile.
+    """
+    urls.set_run_mode("prod")
+    urls.server_base_url()  # populate cache
+    assert urls._resolve.cache_info().currsize == 1
+    urls.set_run_mode("dev")
+    assert urls._resolve.cache_info().currsize == 0
+    # Next accessor repopulates with dev values.
+    assert urls.server_base_url() == "http://192.168.1.67:8081"
+
+
+# -----------------------------------------------------------------------------
 # XDG override tests (user_config layer)
 # -----------------------------------------------------------------------------
 

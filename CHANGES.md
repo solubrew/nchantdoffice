@@ -589,3 +589,44 @@ Move every hardcoded `nchantdoffice.com` / `api.nchantdoffice.com` URL in the de
 
 **To switch to internal docker:** operator edits `~/.config/nchantdoffice/config.yaml` and sets the `urls:` block per the example in `utilities/user_config.py` — no code change required.
 
+---
+
+#### Card: DESK T-NEW-053 — feat(urls): run-mode launch profile (dev=internal docker, prod=cloud)
+
+Launch-time URL profile selector. The operator picks a complete URL set at startup — no config file editing required.
+
+**New module surface (`nchantdoffice/utilities/urls.py`):**
+- `DEV_URLS` table — 12 internal-host URLs (`http://192.168.1.67:8081` for the API, `:8080` for the marketing site).
+- `PROD_URLS` table — empty (the resolver uses bundled defaults).
+- `get_run_mode() -> str` — current mode (default `"prod"`).
+- `set_run_mode("dev" | "prod")` — flips the active profile, invalidates the resolver cache. Idempotent. Invalid values raise `ValueError`.
+
+**Resolver layering updated:** run-mode profile sits between XDG user overrides and the explicit per-call kwarg, so a `run-mode: dev` launch wholesale redirects every URL surface (license bootstrap, embedded browser homepage, account tab in Settings, upgrade prompts, ad CTAs) at the internal docker.
+
+**Launch entrypoint wired (`cmds/runNchantdOffice.py`):**
+- `_parse_run_mode(args, cfg)` reads run-mode from (highest first):
+  1. `cfg["run-mode"]` (primary — what `nchantment()` callers pass)
+  2. `--run-mode=dev` / `--run-mode prod` CLI flag
+  3. `NCHANTDOFFICE_RUN_MODE` env var (escape hatch for test harnesses)
+  4. Default `"prod"`
+- Calls `urls.set_run_mode(...)` BEFORE any URL accessor, so the very first call returns the right value.
+- Backward compat: legacy `cfg["website_override"]` still works — when present but `run-mode` unset, run-mode infers to `"dev"` so existing launch scripts don't break.
+
+**Tests:** 6 new run-mode tests in `tests/utilities/test_urls_config.py` (defaults to prod, set-to-dev flips every accessor, set-back-to-prod reverts, invalid value raises, idempotent, cache invalidation). All 21 urls tests + 76 license+utilities tests pass.
+
+**Operator workflow:**
+```python
+# Production / end-user launch
+cfg = {"run-mode": "prod"}     # default; explicit for clarity
+nchantment("NchantdOffice", args, app, cfg, wizard)
+
+# Operator's LAN docker launch
+cfg = {"run-mode": "dev"}
+nchantment("NchantdOffice", args, app, cfg, wizard)
+
+# OR via CLI flag (no code change at call site):
+python cmds/runNchantdOffice.py --run-mode=dev
+```
+
+Both modes ship the same binary — no rebuild required to flip environments.
+

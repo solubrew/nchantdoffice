@@ -29,11 +29,17 @@ binary.
 
 Layering (highest priority last in the merge):
 
-  1. Hardcoded ``_BUNDLED_DEFAULTS`` in this module (the
+  1. Explicit per-access kwarg (``server_base_url=...`` on the
+     constructors that accept one) — call-site pin.
+  2. ``run-mode`` profile (DESK T-NEW-053) — set via
+     :func:`set_run_mode` at process startup. Either the
+     dev profile (internal docker) or the prod profile
+     (external cloud). Default is ``prod``.
+  3. Hardcoded ``_BUNDLED_DEFAULTS`` in this module (the
      fallback if ``_data_/urls.yaml`` is missing or unparseable).
-  2. Bundled YAML ``nchantdoffice/utilities/_data_/urls.yaml``
+  4. Bundled YAML ``nchantdoffice/utilities/_data_/urls.yaml``
      (shipped with the package — the canonical defaults).
-  3. XDG user config ``urls:`` block (the per-deploy override).
+  5. XDG user config ``urls:`` block (the per-deploy override).
 
 Per the T-NEW-070 directive: no env-var reads. The XDG YAML
 file is the only source of operator-overridable values.
@@ -96,6 +102,125 @@ KNOWN_URL_KEYS = frozenset(_BUNDLED_DEFAULTS.keys())
 
 
 _BUNDLED_YAML_PATH = Path(__file__).parent / "_data_" / "urls.yaml"
+
+
+# -----------------------------------------------------------------------------
+# run-mode profiles (DESK T-NEW-053)
+# -----------------------------------------------------------------------------
+#
+# Two named profiles let the operator pick a complete URL set
+# at launch without editing any config file. The launch entrypoint
+# (cmds/runNchantdOffice.py) reads the ``run-mode`` value from
+# the cfg dict and calls :func:`set_run_mode` BEFORE any caller
+# invokes a ``urls.*`` accessor.
+#
+#   - ``prod`` — external production cloud (nchantdoffice.com).
+#     The default. Every accessor returns the bundled YAML
+#     / XDG-override value.
+#   - ``dev``  — internal docker stack on the operator's LAN
+#     (192.168.1.67:8081 for the API, :8080 for the website).
+#     Switched on by ``run-mode: dev`` at launch.
+#
+# Both tables use the same keys as ``_BUNDLED_DEFAULTS`` /
+# ``urls.yaml`` so swapping profiles is a wholesale replace.
+#
+# The dev profile intentionally overwrites EVERY key — including
+# marketing deep-links — so the embedded browser, account tab,
+# upgrade prompts, etc. all point at the internal site. Operators
+# who only want to flip the API endpoint should leave run-mode at
+# prod and use the XDG ``urls:`` block instead.
+
+DEV_INTERNAL_BASE = "http://192.168.1.67"
+DEV_API_BASE = f"{DEV_INTERNAL_BASE}:8081"
+DEV_WEB_BASE = f"{DEV_INTERNAL_BASE}:8080"
+
+DEV_URLS: Dict[str, str] = {
+    "server_base_url":          f"{DEV_API_BASE}",
+    "affiliate_api_base":       f"{DEV_WEB_BASE}/api/affiliate",
+    "feature_gates_url":        DEV_WEB_BASE,
+    "updates_url":              DEV_WEB_BASE,
+    "sync_url":                 DEV_WEB_BASE,
+    "home_page":                f"{DEV_WEB_BASE}/",
+    "upgrade_compare_url":      f"{DEV_WEB_BASE}/compare",
+    "share_landing_url":        DEV_WEB_BASE,
+    "registration_url":         f"{DEV_WEB_BASE}/registration",
+    "whats_new_url":            f"{DEV_WEB_BASE}/whats_new",
+    "affiliate_marketing_url":  f"{DEV_WEB_BASE}/affiliate_marketing",
+    "marketing_base_url":       DEV_WEB_BASE,
+}
+
+# ``prod`` is the empty-override marker — the resolver falls
+# through to the bundled YAML / XDG block. Keeping an explicit
+# table makes the contract symmetric and gives the resolver
+# one place to look up the active profile.
+PROD_URLS: Dict[str, str] = {}  # empty = "no override; use bundled"
+
+
+_VALID_RUN_MODES = frozenset({"prod", "dev"})
+
+
+# Module-level state — the active run-mode. Set once at
+# process startup by :func:`set_run_mode`. Defaults to ``prod``
+# so accessor calls before ``set_run_mode`` are still safe.
+_run_mode: str = "prod"
+
+
+def get_run_mode() -> str:
+    """Return the currently-active run-mode (``"prod"`` or ``"dev"``).
+
+    The default is ``"prod"``. The launch entrypoint flips this
+    to ``"dev"`` when the operator launches with
+    ``run-mode: dev`` in the cfg dict.
+    """
+    return _run_mode
+
+
+def set_run_mode(mode: str) -> None:
+    """Switch the active run-mode profile.
+
+    Called once at process startup by
+    :func:`cmds.runNchantdOffice.run`. Idempotent — re-setting
+    the same mode is a no-op (besides logging). Invalid modes
+    raise :class:`ValueError` (fail loud; the launch entrypoint
+    should have validated the value before passing it in).
+
+    Side effect: invalidates the resolver cache so the next
+    accessor call returns values from the new profile.
+
+    Args:
+        mode: ``"prod"`` for external cloud defaults, ``"dev"``
+            for the operator's internal docker stack.
+    """
+    global _run_mode
+    if not isinstance(mode, str):
+        raise ValueError(
+            f"run-mode must be a string, got {type(mode).__name__}: {mode!r}"
+        )
+    mode = mode.strip().lower()
+    if mode not in _VALID_RUN_MODES:
+        raise ValueError(
+            f"invalid run-mode {mode!r}; expected one of {sorted(_VALID_RUN_MODES)}"
+        )
+    if mode == _run_mode:
+        logma.info(f"[urls] run-mode unchanged: {mode}")
+        return
+    logma.info(f"[urls] run-mode: {_run_mode} -> {mode}")
+    _run_mode = mode
+    # Invalidate the resolver cache so accessor calls pick up the
+    # new profile values on the next call.
+    _resolve.cache_clear()
+
+
+def _active_profile() -> Dict[str, str]:
+    """Return the URL table for the currently-active run-mode.
+
+    ``prod`` returns ``PROD_URLS`` (empty — the resolver uses the
+    bundled defaults instead). ``dev`` returns ``DEV_URLS`` which
+    contains a complete URL set pointing at the internal docker.
+    """
+    if _run_mode == "dev":
+        return DEV_URLS
+    return PROD_URLS
 
 
 # -----------------------------------------------------------------------------
@@ -171,11 +296,24 @@ def _load_user_overrides() -> Dict[str, str]:
 
 @lru_cache(maxsize=1)
 def _resolve() -> Dict[str, str]:
-    """Layered URL resolver: bundled → user override → strip slashes.
+    """Layered URL resolver: profile → bundled → user override → strip slashes.
 
     Cached for process lifetime so we don't re-read yaml on every
-    call. To pick up runtime changes (e.g. a settings-tab edit),
-    call :func:`reload` to invalidate the cache.
+    call. To pick up runtime changes (e.g. a settings-tab edit
+    or a run-mode flip via :func:`set_run_mode`), call
+    :func:`reload` to invalidate the cache.
+
+    Layer order (lowest to highest priority):
+
+      1. ``_BUNDLED_DEFAULTS`` (defensive fallback).
+      2. Bundled YAML ``_data_/urls.yaml``.
+      3. XDG user config ``urls:`` block.
+      4. The active run-mode profile (DESK T-NEW-053): when
+         ``run-mode == "dev"``, the ``DEV_URLS`` table wholesale
+         replaces the merged dict so the operator's internal
+         docker wins for every key. When ``run-mode == "prod"``
+         the profile is empty (``PROD_URLS = {}``) and the
+         merged dict survives unchanged.
     """
     merged: Dict[str, Any] = dict(_BUNDLED_DEFAULTS)
     bundled = _load_bundled_yaml()
@@ -185,6 +323,12 @@ def _resolve() -> Dict[str, str]:
                 merged[k] = bundled[k]
     overrides = _load_user_overrides()
     merged.update(overrides)
+    # DESK T-NEW-053: run-mode profile wins over everything except
+    # an explicit per-call kwarg (call-site pin). ``prod`` is a
+    # no-op (PROD_URLS is empty); ``dev`` replaces the entire dict.
+    profile = _active_profile()
+    if profile:
+        merged.update(profile)
     # Normalise: strip trailing slashes so callers can do
     # ``f"{base}{path}"`` without doubled ``//``. Exception:
     # ``home_page`` keeps its trailing slash because some Qt
@@ -200,7 +344,8 @@ def _resolve() -> Dict[str, str]:
             v = v.rstrip("/")
         out[k] = v
     logma.info(
-        f"[urls] resolved: server_base_url={out['server_base_url']} "
+        f"[urls] resolved: run-mode={_run_mode} "
+        f"server_base_url={out['server_base_url']} "
         f"home_page={out['home_page']}"
     )
     return out

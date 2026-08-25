@@ -117,18 +117,113 @@ def restart() -> None:
         logma.info("Removal Failed")
 
 
+def _parse_run_mode(args: list, cfg: dict) -> str:
+    """Extract the ``run-mode`` value from CLI args / cfg / env / defaults.
+
+    Precedence (highest first):
+      1. ``cfg["run-mode"]`` — what the launcher or test harness passed in.
+      2. ``--run-mode=<value>`` CLI flag.
+      3. ``NCHANTDOFFICE_RUN_MODE`` env var (legacy escape hatch;
+         not used by the launch entrypoint — only honoured here
+         so external test harnesses can flip the mode without
+         rewriting the cfg dict).
+      4. ``prod`` (default).
+
+    No-op for the actual :func:`urls.set_run_mode` call — the
+    launch entrypoint calls that after parsing.
+    """
+    # 1. cfg dict (primary path — the launch entrypoint passes
+    #    cfg={"run-mode": "dev"} into nchantment).
+    raw = cfg.get("run-mode") if isinstance(cfg, dict) else None
+    if raw is None and isinstance(args, (list, tuple)):
+        for a in args:
+            if isinstance(a, str) and a.startswith("--run-mode="):
+                raw = a.split("=", 1)[1]
+                break
+            if (
+                isinstance(a, str)
+                and a in ("--run-mode", "--run_mode")
+                and args.index(a) + 1 < len(args)
+            ):
+                raw = args[args.index(a) + 1]
+                break
+    if raw is None:
+        raw = os.environ.get("NCHANTDOFFICE_RUN_MODE")
+    if raw is None:
+        return "prod"
+    norm = str(raw).strip().lower()
+    return norm or "prod"
+
+
 def run(args: list[str]) -> None:
     """Run individual tabs with mock data for development purposes
 
     python runNchantdOffice.py scratch setup - create new file
     python runNchantdOffice.py scratch - continue file
     python runNchantdOffice.py - use the wizard to setup
+
+    ``run-mode`` (DESK T-NEW-053) selects the URL profile at
+    launch. The two supported values are:
+
+      ``run-mode: prod`` (default) — external cloud URLs
+        (``https://api.nchantdoffice.com``, etc.). The binary
+        that ships to end users.
+
+      ``run-mode: dev`` — internal docker stack on the operator's
+        LAN (``http://192.168.1.67:8081`` for the API and
+        ``http://192.168.1.67:8080`` for the marketing site).
+        License bootstrap, embedded browsers, account tab,
+        upgrade prompts, ad CTAs all flip to the internal site
+        automatically — no config-file editing required.
+
+    The mode can be set via (in order of precedence):
+      1. ``cfg["run-mode"]`` passed into this function
+      2. ``--run-mode=dev`` CLI flag
+      3. ``NCHANTDOFFICE_RUN_MODE`` env var
+
+    Backward compat: the historical ``website_override`` cfg
+    key still works — when present, ``run-mode`` defaults to
+    ``dev`` if not explicitly set, so existing launch scripts
+    that hand-roll the override keep functioning.
     """
+    # Parse run-mode BEFORE any URL access. The resolver
+    # caches its result on first call; flipping later still
+    # works (it invalidates the cache) but doing it here
+    # means the very first accessor call already returns the
+    # right values.
+    cfg = {"website_override": {"https://nchantdoffice.com": "http://192.168.1.67:8081"}}
+    run_mode = _parse_run_mode(args, cfg)
+    # Legacy: when ``website_override`` is set but ``run-mode``
+    # isn't, infer ``dev`` so the existing launch script
+    # pattern keeps working without a code change at the
+    # call site.
+    if (
+        run_mode == "prod"
+        and isinstance(cfg, dict)
+        and cfg.get("website_override")
+        and "run-mode" not in cfg
+    ):
+        run_mode = "dev"
+
+    try:
+        from nchantdoffice.utilities.urls import set_run_mode
+        set_run_mode(run_mode)
+        logma.info(
+            f"[runNchantdOffice] run-mode: {run_mode} "
+            f"(server_base_url will resolve accordingly)"
+        )
+    except ValueError as exc:
+        logma.warning(
+            f"[runNchantdOffice] invalid run-mode {run_mode!r}: {exc}; "
+            f"falling back to prod"
+        )
+        from nchantdoffice.utilities.urls import set_run_mode
+        set_run_mode("prod")
+
     # if len(args) > 2:
     restart()
     app = NchantdOfficeCloak
     wizard = NchantdOfficeApplicationStartupWizard
-    cfg = {"website_override": {"https://nchantdoffice.com": "http://192.168.1.67:8081"}}
     nchantment("NchantdOffice", args, app, cfg, wizard)
 
 
