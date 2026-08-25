@@ -68,7 +68,18 @@ from kahndor.logma import Logma
 
 logma = Logma(__name__)
 
-# Canonical defaults
+# Canonical defaults. These are written to
+# ``~/.config/nchantdoffice/config.yaml`` on first launch
+# via :func:`write_default_config`; operators override any
+# of them per-deploy.
+#
+# ``urls`` (DESK T-NEW-052) is seeded as an empty dict so
+# the operator's config file already has a place for
+# ``urls.server_base_url: http://192.168.1.67`` (or any
+# other internal host) without needing to invent the key.
+# The resolver falls through to the bundled
+# ``_data_/urls.yaml`` defaults when the operator leaves the
+# section empty.
 DEFAULTS: Dict[str, Any] = {
     "dev_mode": False,
     "server": {
@@ -81,6 +92,14 @@ DEFAULTS: Dict[str, Any] = {
     "webengine": {
         "software_render": False,
     },
+    # DESK T-NEW-052: per-host URL overrides (production
+    # defaults come from the bundled
+    # ``nchantdoffice/utilities/_data_/urls.yaml`` — leave
+    # empty for production, or set one or more keys here to
+    # point the desktop at an internal docker). See
+    # ``urls.py`` for the full list of recognised keys
+    # and the XDG config example in this module's docstring.
+    "urls": {},
     # T-NEW-042 (DESK-0): per-install user UUID. Empty by
     # default — NchantdOfficeUser.persist_uuid() generates
     # one on first launch and writes it here so it survives
