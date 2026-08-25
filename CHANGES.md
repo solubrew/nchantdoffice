@@ -675,6 +675,15 @@ and `test_update_affiliate_links_dev_url_constructs_correctly` to
 expect the new single-port dev URLs. 80/80 license+utilities
 tests pass.
 
+Also demoted the `requests.exceptions.RequestException` (DNS,
+connection refused, etc.) log level in `links.py::APIClient.get`
+from ERROR to WARNING: when `run-mode: dev` is active and the
+operator is mid-setup on a docker stack that hasn't deployed
+the affiliate service yet, "connection refused" is expected
+state, not a bug. `HTTPError` (4xx/5xx from a reachable server)
+stays at ERROR because that IS actionable. `Timeout` was
+already WARNING.
+
 ---
 
 #### Card: DESK T-NEW-055 — fix(links): stop doubling the affiliate API URL path

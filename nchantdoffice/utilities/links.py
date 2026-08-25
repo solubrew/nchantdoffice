@@ -176,15 +176,34 @@ class APIClient:
             return response.json()
 
         except requests.exceptions.Timeout:
+            # Timeout is informational — the operator may be
+            # mid-setup on a docker stack that hasn't deployed
+            # the endpoint yet. Demoted from ERROR in T-NEW-056.
             logma.warning("[links] request timed out")
             return None
         except requests.exceptions.HTTPError as e:
+            # 4xx/5xx server response — a real problem (server
+            # up but endpoint missing or bug). Keep at ERROR so
+            # the operator notices it.
             logma.error(f"[links] HTTP error: {e}", exc_info=True)
             return None
         except requests.exceptions.RequestException as e:
-            logma.error(f"[links] request error: {e}", exc_info=True)
+            # Network-level failure: DNS, connection refused,
+            # connection reset, etc. Demoted from ERROR to
+            # WARNING in T-NEW-056: when ``run-mode: dev`` is
+            # active and the operator is mid-setup on a docker
+            # stack, the affiliate service may not be deployed
+            # yet. ERRORS here are noise — the desktop is doing
+            # the right thing (catching + logging + moving on
+            # with 0 affiliates). HTTPError (above) remains
+            # ERROR because that means the server IS reachable
+            # but rejected the request, which IS actionable.
+            logma.warning(f"[links] request error: {e}")
             return None
         except json.JSONDecodeError:
+            # Server reachable but body isn't JSON — likely a
+            # proxy/load-balancer returning HTML. ERROR-worthy:
+            # the endpoint isn't speaking the expected protocol.
             logma.error("[links] invalid JSON response")
             return None
 
