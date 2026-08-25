@@ -686,6 +686,53 @@ already WARNING.
 
 ---
 
+#### Card: DESK T-NEW-057 — fix(links): use x-api-key header + read api_key from InstallStore (401 fix)
+
+Live launch regression (2026-08-25 18:39) after the operator
+brought up the LAN cluster. The desktop's affiliate sync hit:
+
+```
+GET http://192.168.1.67:8081/api/affiliate/links/
+→ 401 Unauthorized
+```
+
+Two bugs in the same code path:
+
+1. `APIClient.__init__` was setting `Authorization: Bearer
+   <api_key>` — the FAB-User auth convention. The
+   server's `@require_desktop_api_key` decorator reads
+   `request.headers.get("x-api-key")` and ignores the
+   `Authorization` header. The two are visually similar in
+   the browser dev tools but the server treats them as
+   distinct.
+
+2. `update_affiliate_links` was constructing
+   `APIClient(API_URL)` with no api_key, so the call had
+   no credentials at all. The install's api_key lives in
+   `InstallStore` (populated by the install bootstrap) and
+   the affiliate sync wasn't reading it.
+
+**Fix:** `APIClient` now sets `x-api-key: <key>` (not
+Authorization). `update_affiliate_links` lazy-imports
+`InstallStore` and passes `record.get("api_key")` to the
+client. If the install hasn't bootstrapped yet (api_key is
+None), the call still runs (no header set) and gets a 401,
+which the outer try/except logs and swallows. The desktop
+keeps 0 affiliates instead of crashing.
+
+**Tests:** 5 new tests in `tests/utilities/test_links_url.py`
+covering: x-api-key header (not Bearer), no-auth sends no
+auth header, 401 returns zeros (not crash), end-to-end api_key
+flows from InstallStore to x-api-key header, and the
+no-api_key-yet pre-bootstrap path. 85/85 license+utilities
+tests pass.
+
+**Cross-repo note:** the server's
+`@require_desktop_api_key` in `app/apis/updates.py:93` is
+unchanged — it was correct, the desktop was wrong.
+
+---
+
 #### Card: DESK T-NEW-055 — fix(links): stop doubling the affiliate API URL path
 
 Live launch regression (2026-08-25 18:18:15) — after the operator moved to `run-mode: dev`, the affiliate sync path hit:

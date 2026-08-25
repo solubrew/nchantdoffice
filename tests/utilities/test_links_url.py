@@ -1,4 +1,4 @@
-"""Tests for nchantdoffice.utilities.links (DESK T-NEW-055).
+"""Tests for nchantdoffice.utilities.links (DESK T-NEW-055 / T-NEW-057).
 
 The affiliate-link sync path constructs a URL from the
 ``affiliate_api_base`` resolver plus a hardcoded resource
@@ -10,15 +10,22 @@ a wildcard route; dev mode (run-mode: dev) surfaced it with
 a connection-refused because no docker stack would handle the
 doubled path.
 
-These tests pin the URL construction so the bug can't
-regress. We mock ``requests.Session.get`` so the assertion
-runs without any network.
+DESK T-NEW-057 added the auth contract: the server's
+@require_desktop_api_key decorator reads ``x-api-key``, NOT
+``Authorization: Bearer``. The original APIClient was using
+the FAB-User ``Bearer`` convention, so live calls returned
+401 even with a valid api_key.
+
+These tests pin URL construction + auth header + the
+fail-soft 401 behavior so the bugs can't regress.
 """
 from __future__ import annotations
 
 from typing import Any, Dict, Optional
+from unittest.mock import patch
 
 import pytest
+import requests  # for the HTTPError exception class
 
 
 # -----------------------------------------------------------------------------
@@ -27,16 +34,21 @@ import pytest
 
 
 class _MockSession:
-    """Captures the URL passed to ``Session.get`` and returns a canned body.
+    """Captures the URL + headers passed to ``Session.get`` and returns a canned body.
 
-    Used to verify URL construction without hitting the network.
-    The mock returns a 200 with an empty JSON body so the
-    ``update_affiliate_links`` caller exits cleanly via its
-    ``response.json()`` call.
+    Used to verify URL construction and auth header behavior
+    without hitting the network. The mock returns a configurable
+    status code so we can simulate 200 (success), 401 (auth
+    failure), etc.
     """
 
-    def __init__(self, body: Any = []) -> None:
-        self.body = body
+    def __init__(
+        self,
+        body: Any = None,
+        status_code: int = 200,
+    ) -> None:
+        self.body = body if body is not None else []
+        self.status_code = status_code
         self.calls: list[Dict[str, Any]] = []
         # ``APIClient.__init__`` does
         # ``self.session.headers.update(...)`` — provide a
@@ -47,18 +59,65 @@ class _MockSession:
     def get(self, url: str, params: Optional[Dict[str, Any]] = None,
             timeout: Any = None) -> "_MockResponse":
         self.calls.append({"url": url, "params": params, "timeout": timeout})
-        return _MockResponse(self.body)
+        return _MockResponse(self.body, status_code=self.status_code)
 
 
 class _MockResponse:
-    def __init__(self, body: Any) -> None:
+    def __init__(self, body: Any, status_code: int = 200) -> None:
         self._body = body
+        self.status_code = status_code
 
     def raise_for_status(self) -> None:
-        pass
+        if 400 <= self.status_code < 600:
+            # Mimic requests' HTTPError signature. The mock
+            # doesn't need a real Response object — passing
+            # ``self`` is enough for the .response attribute.
+            raise requests.exceptions.HTTPError(
+                f"{self.status_code} HTTP Error", response=self  # type: ignore[arg-type]
+            )
 
     def json(self) -> Any:
         return self._body
+
+
+# Fake InstallStore so the lazy import in update_affiliate_links
+# finds a deterministic api_key. We patch the symbol at the
+# location where it's looked up: inside
+# ``nchantdoffice.license.install_store``.
+class _FakeInstallStore:
+    def __init__(self, api_key: Optional[str] = "nk_test_default") -> None:
+        self._api_key = api_key
+
+    def get_or_create(self) -> Dict[str, Any]:
+        return {
+            "install_id": "test-install-id",
+            "hardware_key": "test-hardware-key",
+            "api_key": self._api_key,
+            "desktop_uuid": "test-uuid",
+        }
+
+
+@pytest.fixture
+def fake_install_store():
+    """Patch InstallStore to return a controllable api_key.
+
+    The default api_key is ``nk_test_default``; tests that want
+    to verify the no-api_key / 401 path can call
+    ``fake_install_store["set"](None)``.
+    """
+    state: Dict[str, Any] = {"api_key": "nk_test_default"}
+
+    def _factory(*args, **kwargs):
+        return _FakeInstallStore(api_key=state["api_key"])
+
+    with patch(
+        "nchantdoffice.license.install_store.InstallStore",
+        _factory,
+    ):
+        def _set(v: Optional[str]) -> None:
+            state["api_key"] = v
+        state["set"] = _set
+        yield state
 
 
 # -----------------------------------------------------------------------------
@@ -68,6 +127,7 @@ class _MockResponse:
 
 def test_update_affiliate_links_uses_correct_api_url(
     monkeypatch: pytest.MonkeyPatch,
+    fake_install_store,
 ) -> None:
     """``update_affiliate_links`` must hit ``{affiliate_api_base}/links/`` —
 
@@ -78,7 +138,6 @@ def test_update_affiliate_links_uses_correct_api_url(
     The test is run-mode agnostic — it just verifies the URL
     construction contract, not which specific host is hit.
     """
-    import requests  # noqa: F401  (the mock duck-types it)
     from nchantdoffice.utilities import links
     from nchantdoffice.utilities import urls
 
@@ -95,9 +154,6 @@ def test_update_affiliate_links_uses_correct_api_url(
 
     monkeypatch.setattr(links.requests, "Session", _fake_session_factory)
 
-    # Fake model — only ``remove_affiliate_links`` is called when
-    # ``reload=True``; the rest of the body just iterates over the
-    # empty response list and is a no-op.
     class _FakeModel:
         def remove_affiliate_links(self) -> None:
             pass
@@ -123,6 +179,7 @@ def test_update_affiliate_links_uses_correct_api_url(
 
 def test_update_affiliate_links_dev_url_constructs_correctly(
     monkeypatch: pytest.MonkeyPatch,
+    fake_install_store,
 ) -> None:
     """In dev mode, the URL must be ``http://192.168.1.67:8081/api/affiliate/links/``.
 
@@ -170,3 +227,201 @@ def test_update_affiliate_links_dev_url_constructs_correctly(
         # starts clean.
         urls.set_run_mode("prod")
         urls.reload()
+
+
+# -----------------------------------------------------------------------------
+# DESK T-NEW-057 — APIClient must use x-api-key header, not Bearer.
+# -----------------------------------------------------------------------------
+
+
+def test_apiclient_uses_x_api_key_header_not_bearer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """APIClient must attach the api_key as ``x-api-key``, not
+    ``Authorization: Bearer``.
+
+    Regression for DESK T-NEW-057 — the server's
+    @require_desktop_api_key decorator reads
+    ``request.headers.get("x-api-key")`` and returns 401 when
+    the header is missing or named differently.
+    """
+    from nchantdoffice.utilities.links import APIClient
+
+    session = _MockSession()
+    monkeypatch.setattr(
+        "nchantdoffice.utilities.links.requests.Session",
+        lambda: session,
+    )
+
+    APIClient(
+        base_url="http://192.168.1.67:8081",
+        api_key="nk_test_DESKTOP_KEY_abc123",
+    )
+
+    # After construction, the session should have x-api-key set
+    # and NOT Authorization.
+    assert session.headers.get("x-api-key") == "nk_test_DESKTOP_KEY_abc123", (
+        f"APIClient did not set x-api-key header. "
+        f"Got headers: {session.headers!r}"
+    )
+    assert "Authorization" not in session.headers, (
+        f"APIClient should NOT set Authorization header (FAB-User "
+        f"convention). The desktop-install API uses x-api-key. "
+        f"Got headers: {session.headers!r}"
+    )
+
+
+def test_apiclient_no_auth_sends_no_auth_headers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When constructed without an api_key, APIClient sends NO
+    auth header at all (so unauth endpoints like ``/health``
+    still work without spurious credentials).
+    """
+    from nchantdoffice.utilities.links import APIClient
+
+    session = _MockSession()
+    monkeypatch.setattr(
+        "nchantdoffice.utilities.links.requests.Session",
+        lambda: session,
+    )
+
+    APIClient(base_url="http://192.168.1.67:8081")
+
+    # No auth header should be set on the session.
+    assert session.headers.get("x-api-key") is None
+    assert session.headers.get("Authorization") is None
+
+
+def test_401_response_returns_zeros_not_crash(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_install_store,
+) -> None:
+    """A 401 from the affiliate endpoint must NOT crash the boot
+    (it just means the install hasn't bootstrapped yet, or the
+    api_key is stale). The desktop should log the failure,
+    persist 0 affiliates, and move on.
+
+    DESK T-NEW-057 contract: even with the x-api-key header
+    fix, a 401 can still happen transiently (e.g. the desktop
+    is mid-bootstrap and the api_key hasn't been written to
+    InstallStore yet). The affiliate sync must fail soft.
+    """
+    from nchantdoffice.utilities import links
+    from nchantdoffice.utilities import urls
+
+    urls.set_run_mode("prod")
+    urls.reload()
+
+    # Mock the session to return 401 Unauthorized (the real
+    # response from the live server when the desktop is in a
+    # pre-bootstrap state).
+    session = _MockSession(
+        body={"error": "API key is missing"}, status_code=401
+    )
+
+    def _fake_session_factory(*args, **kwargs):
+        return session
+
+    monkeypatch.setattr(links.requests, "Session", _fake_session_factory)
+
+    class _FakeModel:
+        def remove_affiliate_links(self) -> None:
+            pass
+
+    # Must NOT raise.
+    result = links.update_affiliate_links(model=_FakeModel(), reload=False)
+    assert result == {"affiliate_count": 0, "non_affiliate_count": 0}, (
+        f"update_affiliate_links must return zeros on 401, not "
+        f"propagate the error. Got: {result!r}"
+    )
+
+
+def test_update_affiliate_links_passes_api_key_as_x_api_key_header(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_install_store,
+) -> None:
+    """End-to-end: ``update_affiliate_links`` reads the install's
+    api_key from InstallStore and sends it as the
+    ``x-api-key`` header on the affiliate GET.
+
+    Regression for DESK T-NEW-057 — the live launch was
+    failing with 401 because APIClient was setting
+    ``Authorization: Bearer`` (FAB-User convention) instead
+    of ``x-api-key`` (Desktop-Install convention), AND because
+    ``update_affiliate_links`` wasn't reading the api_key
+    from InstallStore at all (the client was constructed
+    with ``api_key=None``).
+
+    This test pins both: the api_key is read from
+    InstallStore AND it reaches the request as ``x-api-key``.
+    """
+    from nchantdoffice.utilities import links
+    from nchantdoffice.utilities import urls
+
+    urls.set_run_mode("prod")
+    urls.reload()
+    fake_install_store["set"]("nk_test_DESKTOP_KEY_xyz")
+
+    # The session captures the headers attached at construction
+    # time. We verify them post-construction.
+    session = _MockSession(body=[])
+
+    def _fake_session_factory(*args, **kwargs):
+        return session
+
+    monkeypatch.setattr(links.requests, "Session", _fake_session_factory)
+
+    class _FakeModel:
+        def remove_affiliate_links(self) -> None:
+            pass
+
+    links.update_affiliate_links(model=_FakeModel(), reload=False)
+
+    # The api_key from InstallStore must have reached the
+    # request as x-api-key (not as Authorization: Bearer).
+    assert session.headers.get("x-api-key") == "nk_test_DESKTOP_KEY_xyz", (
+        f"update_affiliate_links did not pass the install's "
+        f"api_key as x-api-key. Got headers: {session.headers!r}"
+    )
+    assert "Authorization" not in session.headers
+
+
+def test_update_affiliate_links_handles_no_api_key(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_install_store,
+) -> None:
+    """If the install has no api_key yet (pre-bootstrap), the
+    call still runs (no header set) and gets a 401. The
+    outer try/except swallows the 401 and the call returns
+    zeros. The desktop doesn't crash.
+    """
+    from nchantdoffice.utilities import links
+    from nchantdoffice.utilities import urls
+
+    urls.set_run_mode("prod")
+    urls.reload()
+    fake_install_store["set"](None)  # pre-bootstrap state
+
+    session = _MockSession(
+        body={"error": "API key is missing"}, status_code=401
+    )
+
+    def _fake_session_factory(*args, **kwargs):
+        return session
+
+    monkeypatch.setattr(links.requests, "Session", _fake_session_factory)
+
+    class _FakeModel:
+        def remove_affiliate_links(self) -> None:
+            pass
+
+    # Must NOT raise.
+    result = links.update_affiliate_links(model=_FakeModel(), reload=False)
+    assert result == {"affiliate_count": 0, "non_affiliate_count": 0}, (
+        f"update_affiliate_links must return zeros when the install "
+        f"has no api_key. Got: {result!r}"
+    )
+    # And the session had no x-api-key header (since api_key was None).
+    assert "x-api-key" not in session.headers
+    assert "Authorization" not in session.headers

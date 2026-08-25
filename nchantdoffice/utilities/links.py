@@ -66,7 +66,28 @@ def update_affiliate_links(model, last_affiliate_update_dttm: str = "2025-01-01 
     # mode surfaced the bug with a hard 404/connection-refused.
     from nchantdoffice.utilities.urls import affiliate_api_base as _aab
     API_URL = _aab()
-    client = APIClient(API_URL)
+    # DESK T-NEW-057: the server's @require_desktop_api_key
+    # decorator reads ``x-api-key`` (NOT Authorization: Bearer).
+    # Read the install's api_key from the global InstallStore
+    # so the header is present on affiliate requests. If the
+    # install hasn't bootstrapped yet (api_key is None) the
+    # call returns 401 and the outer try/except logs it
+    # without crashing the desktop.
+    api_key: Optional[str] = None
+    try:
+        from nchantdoffice.license.install_store import (
+            InstallStore as _InstallStore,
+        )
+        try:
+            _record = _InstallStore().get_or_create()
+            api_key = _record.get("api_key")
+        except Exception as _exc:
+            log.info(
+                f"[links] api_key lookup failed (non-blocking): {_exc}"
+            )
+    except ImportError:
+        pass
+    client = APIClient(API_URL, api_key=api_key)
     if reload:
         last_affiliate_update_dttm = "2025-01-01 00:00:00"
         try:
@@ -153,7 +174,19 @@ def _collect_known_affiliate_ids(model) -> Set[Any]:
 
 
 class APIClient:
-    """A reusable API client class"""
+    """A reusable API client class.
+
+    Auth convention (DESK T-NEW-057): the server's
+    @require_desktop_api_key decorator reads
+    ``request.headers.get("x-api-key")`` and returns 401 when
+    the header is missing or named differently. APIClient
+    used to set ``Authorization: Bearer <key>`` which is the
+    FAB-User convention; the desktop-install API uses a
+    different header (``x-api-key``). The two look the same in
+    the browser dev tools but the server treats them as
+    distinct — this is the standard confusion between
+    FAB-User auth and Desktop-Install auth.
+    """
 
     def __init__(self, base_url: str, api_key: Optional[str] = None) -> None:
         self.base_url = base_url.rstrip("/")
@@ -162,9 +195,11 @@ class APIClient:
         # Set default headers
         self.session.headers.update({"User-Agent": "MyApp/1.0", "Accept": "application/json"})
 
-        # Add API key if provided
+        # Attach the install's api_key as ``x-api-key`` (NOT
+        # Authorization: Bearer — that header is for FAB-User
+        # auth and the desktop-install endpoint ignores it).
         if api_key:
-            self.session.headers["Authorization"] = f"Bearer {api_key}"
+            self.session.headers["x-api-key"] = api_key
 
     def get(self, endpoint: str, params: Optional[Dict] = None) -> Optional[Dict[str, Any]]:
         """Make a GET request to the API"""
