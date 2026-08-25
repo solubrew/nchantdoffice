@@ -55,8 +55,17 @@ def update_affiliate_links(model, last_affiliate_update_dttm: str = "2025-01-01 
     # DESK T-NEW-052: routes through the unified URL config so
     # the operator can redirect the affiliate API at an internal
     # endpoint without code edits.
+    #
+    # DESK T-NEW-055: ``affiliate_api_base()`` returns just the
+    # API root (``/api/affiliate``); the resource path
+    # ``links/`` is appended below. The pre-T-NEW-052 code
+    # hardcoded ``.../api/affiliate/links/`` here AND passed
+    # ``"affiliate/links/"`` to ``client.get()``, producing a
+    # doubled path (``/api/affiliate/links/affiliate/links/``).
+    # Production was masking this with a wildcard route; dev
+    # mode surfaced the bug with a hard 404/connection-refused.
     from nchantdoffice.utilities.urls import affiliate_api_base as _aab
-    API_URL = f"{_aab()}/links/"
+    API_URL = _aab()
     client = APIClient(API_URL)
     if reload:
         last_affiliate_update_dttm = "2025-01-01 00:00:00"
@@ -69,7 +78,12 @@ def update_affiliate_links(model, last_affiliate_update_dttm: str = "2025-01-01 
     affiliate_count = 0
     non_affiliate_count = 0
     try:
-        response = client.get("affiliate/links/", params=params)
+        # DESK T-NEW-055: was ``"affiliate/links/"`` (doubled with
+        # the ``/api/affiliate`` already in the base). Now just
+        # ``"links/"`` — the base + path resolves to
+        # ``{affiliate_api_base}/links/`` which is the canonical
+        # endpoint for fetching affiliate link rows.
+        response = client.get("links/", params=params)
         # Normalise the response shape: a list/tuple goes straight
         # through, a dict is unwrapped via "links", and anything else
         # (None when the API is unreachable, an unexpected type)

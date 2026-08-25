@@ -651,3 +651,22 @@ Same fix applied to the bootstrap-fallback-after-`RefreshRevokedError` path (the
 
 **Trade-off:** no longer distinguishes "real auth failure" (operator typo'd credentials) from "endpoint missing". Both surface as offline + retry-next-time. Acceptable because the operator sees a clear log message naming the actual error, and the entitlement cache's stale-check still drives a retry on next launch.
 
+---
+
+#### Card: DESK T-NEW-055 — fix(links): stop doubling the affiliate API URL path
+
+Live launch regression (2026-08-25 18:18:15) — after the operator moved to `run-mode: dev`, the affiliate sync path hit:
+
+```
+HTTPConnectionPool(host='192.168.1.67', port=8080):
+  /api/affiliate/links/affiliate/links/
+```
+
+That's a **doubled path**: `affiliate_api_base` already ends in `/api/affiliate`, then `API_URL = f"{_aab()}/links/"` appended `/links/`, then `client.get("affiliate/links/")` appended `/affiliate/links/` AGAIN.
+
+The pre-T-NEW-052 code had the same bug (it hardcoded `API_URL = ".../api/affiliate/links/"` then passed `"affiliate/links/"` to the client). Production masked it with a wildcard Flask route; dev mode (192.168.1.67) returned connection-refused and surfaced the bug.
+
+**Fix:** pick one convention. `API_URL` is now just the API base (`affiliate_api_base()`, i.e. `/api/affiliate`); the resource path is the caller's job (`"links/"`). The base + path now resolves to the canonical `{affiliate_api_base}/links/` endpoint.
+
+**Tests:** 2 new tests in `tests/utilities/test_links_url.py` (prod URL + dev URL) that mock `requests.Session.get` and capture the URL passed in. Both tests RED with the bug present, GREEN with the fix. 80/80 license+utilities tests pass.
+
