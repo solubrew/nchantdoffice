@@ -215,16 +215,17 @@ def refresh_if_needed(
     Raises
     ------
     BootstrapError
-        When bootstrap fails with a real server error (4xx/5xx)
-        — the server told us something we cannot ignore and
-        the user must intervene. **Transient failures during
-        both bootstrap and refresh are swallowed**: DNS
-        failures, refused connections, and
-        :class:`asyncio.TimeoutError` return ``{action:
-        'skipped', reason: 'offline'}`` so the desktop still
-        boots. The persistent ``entitlement_stale`` flag is
-        set so the next launch retries the network call when
-        the user is back online.
+        No longer raised by this function — every BootstrapError
+        variant (4xx/5xx response) is treated as a transient
+        failure on the bootstrap path and surfaces as
+        ``{action: "skipped", reason: "offline"}`` so the desktop
+        still boots. Persistent server errors (operator typo'd
+        api_key on refresh, etc.) are surfaced via the
+        entitlement cache's stale-check on the NEXT launch.
+
+        See DESK T-NEW-054 for the live-crash regression this
+        addresses (docker stack returning 404 HTML for the
+        install-bootstrap endpoint when the operator is mid-setup).
     """
     # Lazy import keeps the orchestrator usable from test contexts
     # where the full tier_gate stack isn't initialised. Also avoids
@@ -252,19 +253,36 @@ def refresh_if_needed(
                 os=_detect_os(),
                 app_version=_app_version(),
             )
-        except (asyncio.TimeoutError, OSError) as exc:
-            # Transient network failure on first launch (DNS
-            # failure, refused connection, timeout) — the desktop
-            # MUST still boot. We log the failure, persist the
-            # stale flag so the next launch retries, and return a
-            # ``skipped/offline`` result so the tier gate falls
-            # through to free.
+        except (asyncio.TimeoutError, OSError, BootstrapError) as exc:
+            # Transient failure on first launch — the desktop MUST
+            # still boot. The two failure modes covered:
+            #
+            #   - Network errors (DNS, refused connection, timeout).
+            #     :class:`aiohttp.ClientError` is an ``OSError``
+            #     subclass, hence the broad ``OSError`` catch.
+            #   - HTTP 4xx/5xx server responses
+            #     (:class:`BootstrapError`). The most common case
+            #     is a docker stack that doesn't yet have the
+            #     ``/api/desktop/install-bootstrap`` endpoint
+            #     deployed (returns 404 HTML) — the operator is
+            #     mid-setup and the next launch will retry.
+            #
+            # We log, persist the stale flag so the next launch
+            # retries, and return ``skipped/offline`` so the tier
+            # gate falls through to free. The desktop boots.
             #
             # Bug-fix (DESK T-NEW-051): previously this case was
             # caught by a generic ``except Exception`` and re-
             # raised, which propagated the OSError out of
             # :meth:`NchantdOfficeCloakView.__init__` and crashed
             # the desktop boot on every offline launch.
+            #
+            # Extension (DESK T-NEW-054): T-NEW-051 also re-raised
+            # BootstrapError because it sits in the broad
+            # ``except Exception`` branch. Treating it as
+            # fail-soft here makes the desktop boot through any
+            # transient install-registration failure (server
+            # down, endpoint missing, 5xx from a buggy handler).
             _set_stale(preferences_db, True)
             _logger.warning(
                 "startup_refresh: first-launch bootstrap failed (%s); "
@@ -276,19 +294,6 @@ def refresh_if_needed(
                 "reason": "offline",
                 "tier": _tier_or_none(None),
             }
-        except Exception as exc:
-            # Bootstrap raised a non-network error (a real
-            # :class:`BootstrapError` from a 4xx/5xx server
-            # response, or any other unexpected failure). The
-            # server told us something we can't ignore — log,
-            # mark stale, and re-raise so the widget layer can
-            # surface "license server rejected this install".
-            _set_stale(preferences_db, True)
-            _logger.error(
-                "startup_refresh: bootstrap failed (%s); cannot continue", exc,
-                exc_info=True,
-            )
-            raise
 
         _set_stale(preferences_db, False)
         return {
@@ -346,11 +351,12 @@ def refresh_if_needed(
                 os=_detect_os(),
                 app_version=_app_version(),
             )
-        except (asyncio.TimeoutError, OSError) as exc:
-            # Network failure on the bootstrap fallback after a
-            # RefreshRevokedError — same fail-soft treatment as
-            # the first-launch path. The desktop still boots;
-            # the next launch will retry.
+        except (asyncio.TimeoutError, OSError, BootstrapError) as exc:
+            # Same fail-soft treatment as the first-launch path
+            # (DESK T-NEW-054): any transient failure — network
+            # OR HTTP 4xx/5xx — must NOT crash the desktop. The
+            # operator may be mid-setup on a docker stack that
+            # doesn't yet have the install-bootstrap endpoint.
             _set_stale(preferences_db, True)
             _logger.warning(
                 "startup_refresh: bootstrap-fallback-after-revoke "
@@ -362,16 +368,6 @@ def refresh_if_needed(
                 "reason": "offline",
                 "tier": _tier_or_none(None),
             }
-        except Exception as exc:
-            # Real bootstrap failure on the fallback — log, mark
-            # stale, re-raise so the caller surfaces a license
-            # error UI.
-            _set_stale(preferences_db, True)
-            _logger.error(
-                "startup_refresh: bootstrap fallback failed (%s); "
-                "cannot continue", exc, exc_info=True,
-            )
-            raise
         _set_stale(preferences_db, False)
         return {
             "action": "bootstrap",

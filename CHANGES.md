@@ -630,3 +630,24 @@ python cmds/runNchantdOffice.py --run-mode=dev
 
 Both modes ship the same binary — no rebuild required to flip environments.
 
+---
+
+#### Card: DESK T-NEW-054 — fix(license): swallow BootstrapError on first-launch bootstrap (was crashing on docker 404)
+
+Live launch regression (2026-08-25 18:11:41) — operator launched with `run-mode: dev` against `http://192.168.1.67:8081` (the LAN docker stack). The docker AppBuilder returned **HTTP 404** with HTML "Page not found" for the `/api/desktop/install-bootstrap` endpoint (the endpoint blueprint hadn't been deployed yet — operator is mid-setup). The desktop then crashed at boot with:
+
+```
+nchantdoffice.license.remote.BootstrapError:
+  install-bootstrap returned HTTP 404: '<!DOCTYPE html>...'
+```
+
+T-NEW-051 only swallowed `(asyncio.TimeoutError, OSError)` on the bootstrap path; `BootstrapError` (the 4xx/5xx result) was caught by a broad `except Exception` and **re-raised**, propagating out of `NchantdOfficeCloakView.__init__`.
+
+**Fix:** broaden the except clause to include `BootstrapError`. Same fail-soft treatment as the network-error path — log, persist `stale=True`, return `{action: "skipped", reason: "offline"}`. The desktop boots in free-tier mode; the next launch retries when the operator has finished setting up the docker endpoint.
+
+Same fix applied to the bootstrap-fallback-after-`RefreshRevokedError` path (the other place the same bug lurked).
+
+**Tests:** 2 new tests in `tests/license/test_startup_refresh.py` (`test_first_launch_bootstrap_404_returns_skipped_offline`, `test_first_launch_bootstrap_500_returns_skipped_offline`). 13/13 startup_refresh tests + 78/78 license+utilities tests pass.
+
+**Trade-off:** no longer distinguishes "real auth failure" (operator typo'd credentials) from "endpoint missing". Both surface as offline + retry-next-time. Acceptable because the operator sees a clear log message naming the actual error, and the entitlement cache's stale-check still drives a retry on next launch.
+

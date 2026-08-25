@@ -652,3 +652,102 @@ def test_offline_first_launch_bootstrap_with_dict_prefs_works(
     assert result["reason"] == "offline"
     # The dict was updated to mark stale=True.
     assert plain_dict.get("entitlement_stale") is True
+
+
+# -----------------------------------------------------------------------------
+# DESK T-NEW-054 — bootstrap path must be fail-soft on 4xx/5xx
+# server responses, not just network failures.
+#
+# Regression: testing-report_20260825.md + live launch log
+# 2026-08-25 18:11:41 showed:
+#
+#   nchantdoffice.license.remote.BootstrapError:
+#     install-bootstrap returned HTTP 404: '<!DOCTYPE html>...'
+#
+# T-NEW-051 swallowed ``(asyncio.TimeoutError, OSError)`` (network
+# failures) but re-raised everything else via the broad
+# ``except Exception`` — including a 404 from a docker
+# stack that doesn't yet have the install-bootstrap endpoint
+# deployed. The desktop then died at boot. The right behavior
+# for a FIRST-LAUNCH bootstrap is to treat any server-side error
+# the same as offline: log, persist stale=True, return
+# ``skipped/offline``. The next launch retries when the operator
+# has finished setting up the docker endpoint.
+# -----------------------------------------------------------------------------
+
+
+def test_first_launch_bootstrap_404_returns_skipped_offline(
+    install_store: InstallStore,
+    entitlement_cache: EntitlementCache,
+    remote: MockLicenseRemote,
+    prefs: MockPreferencesDB,
+) -> None:
+    """BootstrapError (HTTP 404) on first launch must NOT crash the boot.
+
+    Regression for the live launch failure: the internal docker
+    server is up and reachable but hasn't deployed the
+    ``/api/desktop/install-bootstrap`` blueprint yet, so it
+    returns 404 with an HTML AppBuilder "Page not found" body.
+    The orchestrator must NOT propagate this — the desktop
+    should boot offline and retry on the next launch.
+    """
+    install_store.get_or_create()
+    assert prefs.get("entitlement_stale") is None
+
+    def _raise_404(*args, **kwargs):
+        raise BootstrapError(
+            status=404,
+            body="<!DOCTYPE html>...Page not found...",
+            message="install-bootstrap returned HTTP 404",
+        )
+
+    remote.sync_bootstrap = _raise_404  # type: ignore[assignment]
+
+    # Must NOT raise.
+    result = startup_refresh.refresh_if_needed(
+        install_store=install_store,
+        entitlement_cache=entitlement_cache,
+        license_remote=remote,
+        preferences_db=prefs,
+    )
+
+    assert result["action"] == "skipped"
+    assert result["reason"] == "offline"
+    # Stale flag must be set so the next launch retries.
+    assert prefs.get("entitlement_stale") is True
+
+
+def test_first_launch_bootstrap_500_returns_skipped_offline(
+    install_store: InstallStore,
+    entitlement_cache: EntitlementCache,
+    remote: MockLicenseRemote,
+    prefs: MockPreferencesDB,
+) -> None:
+    """BootstrapError (HTTP 500) on first launch is also fail-soft.
+
+    The server is reachable but its handler blew up. Same
+    fail-soft treatment as 404 — desktop boots offline, next
+    launch retries. We don't want a transient server outage
+    to brick the operator's desktop.
+    """
+    install_store.get_or_create()
+
+    def _raise_500(*args, **kwargs):
+        raise BootstrapError(
+            status=500,
+            body={"error": "internal server error"},
+            message="install-bootstrap returned HTTP 500",
+        )
+
+    remote.sync_bootstrap = _raise_500  # type: ignore[assignment]
+
+    result = startup_refresh.refresh_if_needed(
+        install_store=install_store,
+        entitlement_cache=entitlement_cache,
+        license_remote=remote,
+        preferences_db=prefs,
+    )
+
+    assert result["action"] == "skipped"
+    assert result["reason"] == "offline"
+    assert prefs.get("entitlement_stale") is True
