@@ -965,6 +965,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
         """
         path = self.custom_root or expanduser("~")
         self.fs_tree.current_level_path = path
+        self.save()
         return self.cmd_set_root(path=path)
 
     def cmd_on_file_search_method_change(self, event=None, *args, **kwargs):
@@ -1084,6 +1085,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             # this directory.
             self.config.dikt["last_root_path"] = path
         self.document.open_file(path)
+        self.save()
         return self.show_tree(path)
 
     def cmd_toggle_compare_directory(self, event=None, *args, **kwargs):
