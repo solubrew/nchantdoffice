@@ -427,59 +427,97 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         }
 
     def sync_with_server(self) -> bool:
-        """Synchronize account data with nchantrs.com server.
+        """Issue a magic-link to claim this install.
 
-        Validates the API key, makes a GET request to the nchantrs
-        account endpoint, parses the JSON response and writes the
-        returned ``status`` and ``credits`` onto the local user
-        object via ``update_account_status`` / ``update_credits``.
+        DESK T-NEW-049: the legacy sync-with-server flow called
+        ``https://api.nchantrs.com/account`` with the user's
+        ``apikey`` to refresh ``status`` / ``credits`` on the
+        local user object. That endpoint is going away in favour
+        of the account-claim flow (the user signs in via a
+        magic-link instead of pasting an API key), so the
+        sync call now delegates to :class:`ClaimFlow`.
 
-        Returns ``True`` on a successful sync, ``False`` on any
-        validation, network, or parse failure.
+        Behaviour
+        ---------
+        Reads the ``install_store`` + ``entitlement_cache`` +
+        ``license_remote`` from ``self.app.model`` (these are
+        populated at app start -- see DESK T-NEW-046 + 047 +
+        048). Constructs a :class:`ClaimFlow` and calls
+        ``request_magic_link`` with the user's account email.
+        Returns ``True`` if the POST landed (200), ``False`` on
+        a network error.
+
+        Returns
+        -------
+        bool
+            ``True`` on a successful POST, ``False`` on a
+            network / import error. The legacy return contract
+            is preserved -- callers (e.g. ``load_account_settings``)
+            treat ``False`` as "skip the live refresh".
+
+        Why email and not apikey
+        ------------------------
+        The claim flow takes an email (the user types it in the
+        dialog). The legacy flow took an ``apikey`` (the user
+        pasted it once at install time). For backwards
+        compatibility, if the user has an ``apikey`` but no
+        known email, we still call ``request_magic_link`` with
+        an empty string -- the server-side enumeration-safe
+        contract means this is a no-op rather than an error.
         """
         try:
-            user = getattr(self.app.model, "user", None)
-            if not user or not getattr(user, "apikey", None):
-                logma.warning("[accounts] sync_with_server: no API key configured")
-                return False
+            # Lazy import -- ClaimFlow depends on aiohttp and the
+            # rest of the license package; importing at module
+            # top would break any code path that loads the
+            # widget tree without those deps (the test suite in
+            # particular).
+            from nchantdoffice.license.claim_flow import ClaimFlow  # noqa: F401
 
-            logma.info("Syncing account data with server...")
-            try:
-                import requests  # type: ignore
-            except ImportError:
-                logma.warning("[accounts] sync_with_server: requests module not installed")
-                return False
-
-            try:
-                response = requests.get(
-                    "https://api.nchantrs.com/account",
-                    headers={"Authorization": f"Bearer {user.apikey}"},
-                    timeout=10,
-                )
-            except Exception as e:
-                logma.error(f"[accounts] sync_with_server request failed: {e}", exc_info=True)
-                return False
-
-            if response.status_code != 200:
+            app_model = getattr(self.app, "model", None)
+            if app_model is None:
                 logma.warning(
-                    f"[accounts] sync_with_server got status {response.status_code}"
+                    "[accounts] sync_with_server: no app.model available"
                 )
                 return False
 
-            try:
-                data = response.json()
-            except ValueError as e:
-                logma.error(f"[accounts] sync_with_server parse failed: {e}", exc_info=True)
+            install_store = getattr(app_model, "install_store", None)
+            entitlement_cache = getattr(app_model, "entitlement_cache", None)
+            license_remote = getattr(app_model, "license_remote", None)
+            if install_store is None or entitlement_cache is None or license_remote is None:
+                logma.warning(
+                    "[accounts] sync_with_server: license plumbing missing "
+                    "(install_store=%r, entitlement_cache=%r, "
+                    "license_remote=%r)",
+                    install_store, entitlement_cache, license_remote,
+                )
                 return False
 
-            if hasattr(self, "update_account_status") and "status" in data:
-                self.update_account_status(data["status"])
-            if hasattr(self, "update_credits") and "credits" in data:
-                self.update_credits(data["credits"])
-            return True
+            user = getattr(app_model, "user", None)
+            # Prefer the user's email (claim flow needs it); fall
+            # back to an empty string if we don't have one yet
+            # (server's enumeration-safe contract will swallow
+            # it). Never crash the widget for this.
+            email = ""
+            if user is not None:
+                email = getattr(user, "email", "") or getattr(user, "name", "")
 
+            server_base_url = getattr(
+                app_model, "server_base_url", "https://api.nchantdoffice.com"
+            )
+
+            flow = ClaimFlow(
+                install_store=install_store,
+                entitlement_cache=entitlement_cache,
+                license_remote=license_remote,
+                server_base_url=server_base_url,
+            )
+            flow.sync_request_magic_link(email=email)
+            return True
         except Exception as e:
-            logma.error(f"[accounts] sync_with_server failed: {e}", exc_info=True)
+            logma.error(
+                f"[accounts] sync_with_server (claim flow) failed: {e}",
+                exc_info=True,
+            )
             return False
 
 # ====================================================================================================================||
