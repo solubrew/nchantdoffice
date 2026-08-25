@@ -36,6 +36,8 @@ logma = Logma(__name__)
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "pages.yaml")
+HOMEPAGE = {"url": "https://www.nchantdoffice.com/"}
+HOMEURL = HOMEPAGE.get("url")
 
 
 class NchantdOfficeWebPage(NchantdWebEnginePage):
@@ -258,7 +260,7 @@ class NchantdOfficeURL(NchantdURL):
         """ """
         super().__init__(url, parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeURL").override(cfg))
-        self.set_url(self.config.get("url", self.config.get("homepage", "https://www.nchantdoffice.com/")))
+        self.set_url(self.config.get("url", self.config.get("homepage", HOMEURL)))
         self.unit = None
 
     def init_unit(self, cfg=None) -> None:

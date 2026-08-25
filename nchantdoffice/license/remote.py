@@ -120,7 +120,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 from typing import Any, Awaitable, Callable, Dict, Optional, Tuple
 
 import aiohttp
@@ -128,6 +127,42 @@ import aiohttp
 from nchantdoffice.license.entitlement_cache import EntitlementCache
 from nchantdoffice.license.install_store import InstallStore
 from nchantdoffice.license import tier_gate
+#!/usr/bin/env python3
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
+"""
+---
+<(META)>:
+        docid:
+        name:
+        description: >
+        version: 0.0.0.0.0.0
+        authority: filesystem
+        security: seclvl2
+        <(WT)>: -32
+"""
+
+# -*- coding: utf-8 -*
+# ======================================Standard Library Modules======================================================||
+from os.path import abspath, dirname, join
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Union
+
+# ======================================3rd Party Library Modules=====================================================||
+
+
+# ======================================Solutions Brewer Library Modules==============================================||
+from kahndor import kahndor
+from kahndor.logma import Logma
+
+# ====================================================================================================================||
+HERE = join(dirname(__file__), "")  # ||
+log = True
+logma = Logma(__name__)
+if not log:
+    logma.off()
+# ====================================================================================================================||
+PXCFG = join(HERE, "_data_", ".yaml")
+
 
 
 __all__ = [
@@ -136,15 +171,6 @@ __all__ = [
     "RefreshError",
     "RefreshRevokedError",
 ]
-
-
-# Module-level logger so caplog can pick up warnings in tests.
-_logger = logging.getLogger("nchantdoffice.license.remote")
-if not _logger.handlers:
-    _handler = logging.StreamHandler()
-    _handler.setFormatter(logging.Formatter("%(name)s %(levelname)s %(message)s"))
-    _logger.addHandler(_handler)
-    _logger.setLevel(logging.INFO)
 
 
 # Markers the server includes in the ``error`` field of a 401/410
@@ -534,7 +560,11 @@ class LicenseRemote:
         inside an existing event loop — that's a programmer
         error and we want it to fail loudly.
         """
-        return asyncio.run(self.bootstrap(*args, **kwargs))
+        try:
+            return asyncio.run(self.bootstrap(*args, **kwargs))
+        except Exception as e:
+            logma.warning(f"[ Sync Boostrap ] failed due to\n{e}")
+
 
     def sync_refresh(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         """``asyncio.run`` wrapper around :meth:`refresh`."""
@@ -611,3 +641,6 @@ __all__ = [
     "RefreshError",
     "RefreshRevokedError",
 ]
+# ====================================================================================================================||
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||

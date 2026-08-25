@@ -64,7 +64,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.active_profile = None
         self.document = None
         self.did = None
-        self.browser = None
+        self.viewer = None
         self.pin = False
 
     def initModel(self, cfg=None) -> Self:
@@ -103,14 +103,14 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             cfg = {}
         url = self.get_active_url()
         cfg["url"] = url
-        self.browser = NchantdWebViewer(self, cfg)
-        self.browser.is_simple = False
+        self.viewer = NchantdWebViewer(self, cfg)
+        self.viewer.is_simple = False
         cfg["buttons"] = self.build_toolbar()
         cfg["fill"] = True
         super().initView(cfg)
         self.init_toolbox()
-        self.browser.initWidget()
-        self.layout.addWidget(self.browser)
+        self.viewer.initWidget()
+        self.layout.addWidget(self.viewer)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(3)
         self.populate_document(url)
@@ -142,7 +142,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         re-seeded with the persisted history (most-recent-first)
         on every re-open.
         """
-        buttons = self.browser.build_toolbar()
+        buttons = self.viewer.build_toolbar()
         buttons[17] = {"action": "web_page_pin", "handler": self.cmd_pin_page, "value": self.cmd_check_is_pinned}
         buttons[100] = "_skip"
         buttons[150] = "_skip"
@@ -214,8 +214,8 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """
         try:
             form_data = self.config.dikt.get("form_fill_data", {}) or {}
-            if hasattr(self, "browser") and self.browser is not None:
-                submit = getattr(self.browser, "submit_form", None)
+            if hasattr(self, "browser") and self.viewer is not None:
+                submit = getattr(self.viewer, "submit_form", None)
                 if callable(submit):
                     submit(form_data)
         except Exception as e:
@@ -231,8 +231,8 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """
         try:
             self.config.dikt["form_fill_data"] = {}
-            if hasattr(self, "browser") and self.browser is not None:
-                clear = getattr(self.browser, "clear_form", None)
+            if hasattr(self, "browser") and self.viewer is not None:
+                clear = getattr(self.viewer, "clear_form", None)
                 if callable(clear):
                     clear()
         except Exception as e:
@@ -285,7 +285,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def cmd_next_page(self, url=None, *args, **kwargs) -> Self:
         """"""
-        self.browser.cmd_next_page(url, args, kwargs)
+        self.viewer.cmd_next_page(url, args, kwargs)
         self.document.set_refresh_time()
         return self
 
@@ -300,16 +300,16 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             url = getattr(event, "url", None) or getattr(event, "text", None)
         if url is None and hasattr(self, "resource_select"):
             url = getattr(self.resource_select, "currentText", lambda: None)()
-        if url and hasattr(self, "browser") and self.browser is not None:
+        if url and hasattr(self, "browser") and self.viewer is not None:
             try:
-                self.browser.setUrl(pyqt.QUrl(url))
+                self.viewer.setUrl(pyqt.QUrl(url))
             except Exception as e:
                 logma.error(f"[browsers] cmd_on_resource_select failed: {e}", exc_info=True)
         return self
 
     def cmd_previous_page(self, url=None, *args, **kwargs) -> Self:
         """"""
-        self.browser.cmd_previous_page(url, args, kwargs)
+        self.viewer.cmd_previous_page(url, args, kwargs)
         self.document.set_refresh_time()
         return self
 
@@ -418,7 +418,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         """"""
         super().defocus()
         logma.debug(f"LifecycleState: {dir(pyqt.QWebEnginePage.LifecycleState)}")
-        self.browser.page.setLifecycleState(pyqt.QWebEnginePage.LifecycleState.Frozen)
+        self.viewer.page.setLifecycleState(pyqt.QWebEnginePage.LifecycleState.Frozen)
         return self
 
     def focusOutEvent(self, event) -> Self:
@@ -480,7 +480,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             # url = self.app.model.instance.browser.home_page
             url = None  # TODO need to wrap everything up in an instance config document
         if url is None:
-            url = self.config.dikt.get("default_home_page", "https://www.duckduckgo.com")
+            url = self.config.dikt.get("default_home_page", HOMEURL)
         return url
 
     def get_current_page(self, url=None) -> str:
@@ -496,7 +496,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         cfg = cfg or {}
         intercept = False
         name = "DEFAULT_PROFILE"
-        self.current_profile = NchantdOfficeWebProfile(name, self.browser, intercept, self, cfg)
+        self.current_profile = NchantdOfficeWebProfile(name, self.viewer, intercept, self, cfg)
         return self.current_profile
 
     def get_current_parameters(self) -> Optional[Any]:
@@ -550,7 +550,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def get_url_history(self):
         """"""
-        urls = self.browser.get_url_history()
+        urls = self.viewer.get_url_history()
         urls += self.document.active_page.history
         urls.insert(0, self.document.get_active_url())
         logma.info(f"[NCHANTD OFFICE WEB BROWSER]\nURLs {urls}")
@@ -1033,10 +1033,10 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         if url is None:
             url = self.get_active_url()
         logma.info(f"Populate Document {url}")
-        self.browser.url_select_entry.update_options(self.get_url_history())
-        self.browser.url_select_entry.set_value(url)
+        self.viewer.url_select_entry.update_options(self.get_url_history())
+        self.viewer.url_select_entry.set_value(url)
         if self.pinned is False:
-            self.browser.populate_viewport(url)
+            self.viewer.populate_viewport(url)
         return self
 
     def get_content(self) -> Dict[str, Any]:
@@ -1485,7 +1485,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self.document = None
         self.page = None
         self.did = None
-        self.browser = None
+        self.viewer = None
         self.pin = False
 
     def initModel(self, cfg=None) -> Self:
@@ -1494,7 +1494,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             cfg = {}
         if cfg.get("document", None) is None:
             cfg["document"] = {"data": {"unit": {}}}
-        cfg["url"] = self.config.dikt.get("url", self.config.dikt.get("default_url", "http://www.duckduckgo.com/"))
+        cfg["url"] = self.config.dikt.get("url", self.config.dikt.get("default_url", HOMEURL))
         self.config.override(cfg)
         super().initModel(self.config.dikt)
 
@@ -1520,8 +1520,8 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     def initView(self, cfg=None) -> Self:
         """"""
         cfg = cfg or {}
-        self.browser = NchantdOfficeWebViewer(self, {"url": self.active_url})
-        self.browser.is_simple = False
+        self.viewer = NchantdOfficeWebViewer(self, {"url": self.active_url})
+        self.viewer.is_simple = False
         # cfg["buttons"] = self.build_toolbar()
         # Host of a single expanding web view: opt this container's layout out of
         # the base AlignTop|AlignLeft so the viewer fills the pane instead of
@@ -1529,8 +1529,8 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         cfg["fill"] = True
         cfg["default_toolbar"] = False
         super().initView(cfg)
-        self.browser.initWidget()
-        self.layout.addWidget(self.browser)
+        self.viewer.initWidget()
+        self.layout.addWidget(self.viewer)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(3)
         self.populate_document()
@@ -1562,7 +1562,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             url = self.get_active_url()
         logma.info(f"Populate Document {url}")
         if self.pinned is False:
-            self.browser.populate_document(url)
+            self.viewer.populate_document(url)
         self.save()
         self.document.save()
         return self

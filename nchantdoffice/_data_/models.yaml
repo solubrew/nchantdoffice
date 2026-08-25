@@ -9,6 +9,7 @@ NchantdOfficeCloakModel:
   dstruct:
     database:
       objects:
+        index:
         table:
           app_action: &app_action
             description: >
@@ -222,6 +223,37 @@ NchantdOfficeTabSetModel:
   dstruct:
     database:
       objects:
+        index:
+          idx_app_tree_node_delete:
+            cmd: >
+              CREATE INDEX idx_app_tree_node_delete ON app_tree_node (DELETE_BIT)
+          idx_app_tree_node_archive:
+            cmd: >
+              CREATE INDEX idx_app_tree_node_archive ON app_tree_node (ARCHIVE_BIT)
+          idx_app_tree_node_active:
+            cmd: >
+              CREATE INDEX idx_app_tree_node_active ON app_tree_node (ACTIVE_BIT)
+          idx_app_tree_node_nid:
+            cmd: >
+              CREATE INDEX idx_app_tree_node_nid ON app_tree_node (nid_txt)
+          idx_app_tree_node_pid:
+            cmd: >
+              CREATE INDEX idx_app_tree_node_pid ON app_tree_node (pid_txt)
+          idx_doc_tree_node_delete:
+            cmd: >
+              CREATE INDEX idx_doc_tree_node_delete ON doc_tree_node (DELETE_BIT)
+          idx_doc_tree_node_archive:
+            cmd: >
+              CREATE INDEX idx_doc_tree_node_archive ON doc_tree_node (ARCHIVE_BIT)
+          idx_doc_tree_node_active:
+            cmd: >
+              CREATE INDEX idx_doc_tree_node_active ON doc_tree_node (ACTIVE_BIT)
+          idx_doc_tree_node_nid:
+            cmd: >
+              CREATE INDEX idx_doc_tree_node_nid ON doc_tree_node (nid_txt)
+          idx_doc_tree_node_pid:
+            cmd: >
+              CREATE INDEX idx_doc_tree_node_pid ON doc_tree_node (pid_txt)
         table:
           #TODO: details commented out as they are currently defined in package nchantrs and need to be moved here but there is a configuration refactor in creating db objects on initialization
           'app_tab':
