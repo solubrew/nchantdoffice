@@ -52,7 +52,11 @@ def update_affiliate_links(model, last_affiliate_update_dttm: str = "2025-01-01 
     """
     from kahndor.logma import Logma
     log = Logma(__name__)
-    API_URL = "https://nchantdoffice.com/api/affiliate/links/"
+    # DESK T-NEW-052: routes through the unified URL config so
+    # the operator can redirect the affiliate API at an internal
+    # endpoint without code edits.
+    from nchantdoffice.utilities.urls import affiliate_api_base as _aab
+    API_URL = f"{_aab()}/links/"
     client = APIClient(API_URL)
     if reload:
         last_affiliate_update_dttm = "2025-01-01 00:00:00"
@@ -219,7 +223,12 @@ def example_with_client() -> None:
 # from anywhere a quicklink UI item is invoked (catalog item, browser,
 # quickstart pane, etc.).
 
-DEFAULT_AFFILIATE_API_BASE = "https://nchantdoffice.com/api/affiliate"
+# DESK T-NEW-052: the constant now mirrors the
+# ``urls.affiliate_api_base()`` resolver. The bundled default
+# stays the production URL; operators override via XDG
+# ``urls.affiliate_api_base`` (typically ``http://<internal>/api/affiliate``).
+from nchantdoffice.utilities.urls import affiliate_api_base as _aab
+DEFAULT_AFFILIATE_API_BASE = _aab()
 
 
 def track_quicklink_click(offer_id: Optional[int] = None,

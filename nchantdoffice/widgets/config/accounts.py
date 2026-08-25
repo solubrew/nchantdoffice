@@ -212,15 +212,18 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         # profile_layout.addWidget(self.profile_label)
         # profile_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
         # layout.addLayout(profile_layout)
+        # DESK T-NEW-052: URLs route through the unified config
+        # resolver — no hardcoded hostnames.
+        from nchantdoffice.utilities import urls as _urls
         cfg = {
-            "url": "https://www.nchantdoffice.com/registration",
+            "url": _urls.registration_url(),
             "size": [1600, 750],
             "is_simple": True,
         }
         if self.user.has_pro:
-            cfg["url"] = "https://www.nchantdoffice.com/whats_new"
+            cfg["url"] = _urls.whats_new_url()
         elif self.user.has_account:
-            cfg["url"] = "https://www.nchantdoffice.com/compare"
+            cfg["url"] = _urls.upgrade_compare_url()
         # T-NEW-135: when the redirect_to_get_pro helper fired
         # with a reason (e.g. ``hit_100_nodes``), the model
         # stashed it on ``app.model.get_pro_redirect_reason``.
@@ -235,9 +238,9 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
                 "get_pro_redirect_reason",
                 None,
             )
-            if stash and cfg["url"].startswith(
-                "https://www.nchantdoffice.com/compare"
-            ):
+            # DESK T-NEW-052: compare URL comes from the resolver.
+            from nchantdoffice.utilities import urls as _urls
+            if stash and cfg["url"] == _urls.upgrade_compare_url():
                 cfg["url"] = self._append_url_param(
                     cfg["url"], "reason", str(stash)
                 )
@@ -394,12 +397,15 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
                 return self
 
             # Determine appropriate URL based on user status
+            # DESK T-NEW-052: URLs route through the unified config
+            # resolver.
+            from nchantdoffice.utilities import urls as _urls
             if self.user.has_pro:
-                url = "https://www.nchantdoffice.com/whats_new"
+                url = _urls.whats_new_url()
             elif self.user.has_account:
-                url = "https://www.nchantdoffice.com/compare"
+                url = _urls.upgrade_compare_url()
             else:
-                url = "https://www.nchantdoffice.com/registration"
+                url = _urls.registration_url()
 
             # Update browser
             if hasattr(self.browser, "load_url"):
@@ -502,8 +508,14 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
                 email = getattr(user, "email", "") or getattr(user, "name", "")
 
             server_base_url = getattr(
-                app_model, "server_base_url", "https://api.nchantdoffice.com"
+                app_model, "server_base_url", None
             )
+            if not server_base_url:
+                # DESK T-NEW-052: resolve from the unified URL
+                # config so the operator can switch between
+                # production and internal docker without code edits.
+                from nchantdoffice.utilities import urls
+                server_base_url = urls.server_base_url()
 
             flow = ClaimFlow(
                 install_store=install_store,

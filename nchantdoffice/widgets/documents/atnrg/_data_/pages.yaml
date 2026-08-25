@@ -2,4 +2,8 @@ NchantdOfficeWebPage:
 NchantdOfficeDevPage:
 NchantdOfficeSidePage:
 NchantdOfficeURL:
-  homepage: "https://www.nchantdoffice.com/"
+  homepage: null   # DESK T-NEW-052: home_page now comes from
+                    # nchantdoffice/utilities/urls.py (urls.home_page()).
+                    # This yaml key is kept as a structural placeholder;
+                    # the actual value is resolved at module import
+                    # from the unified URL config.

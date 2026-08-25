@@ -90,7 +90,11 @@ class NchantdOfficeBrowserConfig(PyfficeConfig):
         """"""
         super().__init__(cfg, parent)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeBrowserConfig").override(cfg))
-        self.home_page = self.config.get("home_page", "https://www.nchantdoffice.com")
+        # DESK T-NEW-052: home_page comes from the unified URL
+        # config — operator overrides flow through the XDG
+        # ``urls.home_page`` key.
+        from nchantdoffice.utilities.urls import home_page as _home_page
+        self.home_page = self.config.get("home_page", _home_page())
         logma.info(f"[config] NchantdOfficeBrowserConfig.__init__: home_page={self.home_page!r}")
 
     def get_home_page(self) -> Optional[str]:

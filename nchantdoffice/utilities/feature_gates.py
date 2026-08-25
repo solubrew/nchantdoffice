@@ -189,8 +189,17 @@ class FeatureGate:
     """
 
     def __init__(
-        self, base_url: str = "https://nchantdoffice.com", config_path: str = DEFAULT_VERSION_CONFIG_PATH, timeout: float = HTTP_TIMEOUT,
+        self,
+        base_url: Optional[str] = None,
+        config_path: str = DEFAULT_VERSION_CONFIG_PATH,
+        timeout: float = HTTP_TIMEOUT,
     ) -> None:
+        # DESK T-NEW-052: resolve from the unified URL config when
+        # the caller doesn't pin a base_url. Operators can switch
+        # the feature-gates endpoint via XDG ``urls.feature_gates_url``.
+        if base_url is None:
+            from nchantdoffice.utilities.urls import feature_gates_url
+            base_url = feature_gates_url()
         self.base_url = base_url.rstrip("/")
         self.config_path = config_path.lstrip("/")
         self.timeout = timeout

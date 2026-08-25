@@ -193,8 +193,10 @@ def _show_upgrade_prompt(prompt_key: str, state: dict) -> None:
         # Open the upgrade page if user clicks "Go Pro"
         result = box.exec()
         if result == pyqt.QMessageBox.StandardButton.Yes:
+            # DESK T-NEW-052: route through the unified URL config.
+            from nchantdoffice.utilities.urls import upgrade_compare_url
             pyqt.QDesktopServices.openUrl(
-                pyqt.QUrl("https://www.nchantdoffice.com/compare")
+                pyqt.QUrl(upgrade_compare_url())
             )
         elif result == pyqt.QMessageBox.StandardButton.Close:
             state["prompt_dismissed"][prompt_key] = True

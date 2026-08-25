@@ -467,6 +467,14 @@ class ProInternalSlot(RotationSlot):
 # pro_internal) will eventually source from here; until the
 # server integration lands in DESK-2, this is the only
 # source.
+#
+# DESK T-NEW-052: CTA URLs compose from
+# ``urls.marketing_base_url()`` so the operator can point the
+# whole ad catalog at an internal site by overriding that one
+# key (or each individual ``cta_url`` via the server response
+# when DESK-2 lands).
+from nchantdoffice.utilities.urls import marketing_base_url as _mbu
+_MBU = _mbu()
 PRO_INTERNAL_PROMOS: list = [
     {
         "title": "nchantdoffice Pro — Remove ads + unlimited nodes",
@@ -475,7 +483,7 @@ PRO_INTERNAL_PROMOS: list = [
             "for $50/mo."
         ),
         "cta_text": "Upgrade to Pro",
-        "cta_url": "https://nchantdoffice.com/compare",
+        "cta_url": f"{_MBU}/compare",
         "background": "#0F172A",
         "foreground": "#FACC15",
     },
@@ -486,7 +494,7 @@ PRO_INTERNAL_PROMOS: list = [
             "power users."
         ),
         "cta_text": "Upgrade to ProData",
-        "cta_url": "https://nchantdoffice.com/compare#prodata",
+        "cta_url": f"{_MBU}/compare#prodata",
         "background": "#1E3A8A",
         "foreground": "#FFFFFF",
     },
@@ -497,7 +505,7 @@ PRO_INTERNAL_PROMOS: list = [
             "Talk to us about a B2B deal."
         ),
         "cta_text": "Talk to us",
-        "cta_url": "https://nchantdoffice.com/contact",
+        "cta_url": f"{_MBU}/contact",
         "background": "#7C3AED",
         "foreground": "#FFFFFF",
     },
@@ -1123,7 +1131,9 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                 f"[ad_tab] redirect_to_get_pro: stash failed: {e}"
             )
 
-        target_url = "https://www.nchantdoffice.com/compare"
+        # DESK T-NEW-052: route through the unified URL config.
+        from nchantdoffice.utilities.urls import upgrade_compare_url
+        target_url = upgrade_compare_url()
         try:
             view = getattr(app, "view", None) if app is not None else None
             if view is None:

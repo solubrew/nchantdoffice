@@ -515,7 +515,9 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
             code = getattr(self, "referral_code", None)
             if pane is None or code is None:
                 return
-            url = f"https://nchantdoffice.com/download?ref={code}"
+            # DESK T-NEW-052: routes through the unified URL config.
+            from nchantdoffice.utilities.urls import share_landing_url
+            url = f"{share_landing_url()}/download?ref={code}"
             if hasattr(pane, "show_referral_url"):
                 try:
                     pane.show_referral_url(url)
@@ -661,8 +663,10 @@ class NchantdOfficeAffiliateManager(NchantdOfficeDocumentManager):  # noqa: F811
     def initView(self, cfg=None) -> Any:
         super().initView(cfg or {})
         layout = pyqt.QHBoxLayout()
+        # DESK T-NEW-052: route through the unified URL config.
+        from nchantdoffice.utilities.urls import affiliate_marketing_url
         url_cfg = {
-            "url": "https://www.nchantdoffice.com/affiliate_marketing",
+            "url": affiliate_marketing_url(),
             "size": [1600, 750],
             "is_simple": True,
         }

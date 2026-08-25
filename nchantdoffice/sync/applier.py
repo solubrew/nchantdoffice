@@ -132,9 +132,15 @@ class ContentUpdateSync:
     def __init__(
         self,
         store=None,
-        base_url: str = "https://nchantdoffice.com",
+        base_url: Optional[str] = None,
         timeout: float = _HTTP_TIMEOUT,
     ) -> None:
+        # DESK T-NEW-052: resolve from the unified URL config when
+        # the caller doesn't pin a base_url. Operators can switch
+        # the content-sync endpoint via XDG ``urls.sync_url``.
+        if base_url is None:
+            from nchantdoffice.utilities.urls import sync_url
+            base_url = sync_url()
         self.store = store
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout

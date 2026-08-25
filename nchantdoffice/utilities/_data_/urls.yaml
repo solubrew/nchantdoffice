@@ -1,0 +1,47 @@
+# DESK T-NEW-052: canonical URL config for the desktop.
+#
+# Every external hostname the desktop talks to is centralised here
+# so the same binary can run against the production cloud, the
+# operator's local docker stack, or any other internal environment
+# without recompiling. The XDG user-config layer
+# (``nchantdoffice.utilities.user_config.load_config()``) can
+# override these at runtime via ``urls:`` keys, so a developer
+# pointing the desktop at ``http://192.168.1.67`` does it by
+# editing ``~/.config/nchantdoffice/config.yaml`` (or
+# ``./nchantdoffice.yaml`` for project-local), not the source.
+#
+# Conventions:
+#   * Every key here MUST end in ``_url`` so it's grep-discoverable.
+#   * Trailing slashes are stripped at the resolver layer (callers
+#     do ``f"{base}{path}"`` and don't want doubled ``//``).
+#   * When a new external call site lands, ADD IT HERE — never
+#     hardcode a hostname in a module-level constant. The grep
+#     guard at the bottom of ``urls.py`` catches regressions.
+#
+# Profiles (use by editing the keys, or by overriding via XDG):
+#   * PRODUCTION  — what ships to end users (nchantdoffice.com).
+#   * INTERNAL    — operator's LAN docker stack (192.168.1.67).
+#                   Flip each ``_url`` to the local server.
+
+# API base URLs (the server backend)
+server_base_url:      "https://api.nchantdoffice.com"   # license bootstrap / refresh / claim
+affiliate_api_base:   "https://nchantdoffice.com/api/affiliate"   # affiliate quicklinks + dashboard
+feature_gates_url:    "https://nchantdoffice.com"        # /api/version-config
+updates_url:          "https://nchantdoffice.com"        # /api/check-update
+sync_url:             "https://nchantdoffice.com"        # /api/updates (content sync)
+
+# Marketing / informational URLs (deep links into the website)
+home_page:            "https://www.nchantdoffice.com/"   # embedded browser homepage
+upgrade_compare_url:  "https://www.nchantdoffice.com/compare"    # Pro upsell deep-link
+share_landing_url:    "https://nchantdoffice.com"        # /download?ref=<code> referral landing
+
+# Marketing BASE (used to compose deep-links with appended paths).
+# Most ad/promo CTA URLs append a fragment like ``/compare#prodata``
+# or ``/contact`` — those are built at call site as
+# ``f"{marketing_base_url}{path}"``.
+marketing_base_url:   "https://nchantdoffice.com"        # base for ad CTAs (compare, contact, etc.)
+
+# Web-app subpages (rendered inside the embedded account/affiliate browsers)
+registration_url:     "https://www.nchantdoffice.com/registration"   # sign-up page
+whats_new_url:        "https://www.nchantdoffice.com/whats_new"      # changelog for paid users
+affiliate_marketing_url: "https://www.nchantdoffice.com/affiliate_marketing"  # affiliate dashboard

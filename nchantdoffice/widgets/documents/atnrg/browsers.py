@@ -47,7 +47,10 @@ if not log:
 
 # ====================================================================================================================||
 PXCFG = join(here, "_data_", "browsers.yaml")
-HOMEPAGE = {"url": "https://www.nchantdoffice.com/"}
+# DESK T-NEW-052: route through the unified URL config so the
+# operator can point the embedded browser at an internal site.
+from nchantdoffice.utilities.urls import home_page as _home_page
+HOMEPAGE = {"url": _home_page()}
 HOMEURL = HOMEPAGE.get("url")
 
 

@@ -563,3 +563,29 @@ pass` `45 passed, 2 skipped`
 
  **Validation:** 11/11 startup_refresh tests green, 55/55 license module green, full suite shows the same 33 pre-existing unrelated failures as before the patch (909 → 912 passed = +3 new tests; no new failures).
 
+---
+
+#### Card: DESK T-NEW-052 — refactor(urls): route every nchantdoffice.com reference through YAML config
+
+Move every hardcoded `nchantdoffice.com` / `api.nchantdoffice.com` URL in the desktop to a single YAML-driven resolver so the operator can switch between production and internal docker without code edits.
+
+**New module:** `nchantdoffice/utilities/urls.py` — typed accessors (`urls.server_base_url()`, `urls.affiliate_api_base()`, `urls.home_page()`, `urls.upgrade_compare_url()`, etc.) layered over:
+  1. Hardcoded fallback dict (shipped with package).
+  2. Bundled YAML `nchantdoffice/utilities/_data_/urls.yaml` (production defaults).
+  3. XDG user config `urls:` block (per-deploy overrides).
+
+12 URL keys covering API endpoints (license bootstrap/refresh/claim, affiliate, feature-gates, updates, sync) and marketing deep-links (homepage, compare, registration, whats_new, affiliate_marketing, share landing, marketing base for ad CTAs).
+
+**Call sites updated (15 files):**
+- License: `views.py`, `widgets/config/accounts.py`
+- Affiliate/referral: `utilities/referral.py`, `utilities/links.py`, `widgets/config/referral_panel.py`
+- Updates/sync/feature-gates: `updates/checker.py`, `sync/applier.py`, `utilities/feature_gates.py`
+- UI surfaces: `widgets/documents/atnrg/browsers.py`, `widgets/documents/atnrg/pages.py`, `widgets/advertisements.py`, `utilities/upgrades.py`, `utilities/config.py`, `widgets/documents/atnrg/_data_/pages.yaml`
+- Config schema: `utilities/user_config.py` (added `urls:` block docs + dev-mode example pointing at `192.168.1.67`)
+
+**Tests:** New `tests/utilities/test_urls_config.py` with 11 tests covering bundled defaults, XDG overrides, unknown-key warnings, trailing-slash normalisation, and a regression-guard test that walks every `.py` file in `nchantdoffice/` via AST to assert no caller still hardcodes the production hostname. All green.
+
+**Validation:** 11/11 urls tests green, 66/66 license+utilities tests green, full suite shows same 33 pre-existing failures as before the patch (no new regressions).
+
+**To switch to internal docker:** operator edits `~/.config/nchantdoffice/config.yaml` and sets the `urls:` block per the example in `utilities/user_config.py` — no code change required.
+

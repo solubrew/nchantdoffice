@@ -701,8 +701,17 @@ class ReferralAPIClient:
 
     @staticmethod
     def build_share_link(code: ReferralCode,
-                         base_url: str = "https://nchantdoffice.com") -> str:
-        """Build the shareable referral landing link (ATNRG spec §3)."""
+                         base_url: Optional[str] = None) -> str:
+        """Build the shareable referral landing link (ATNRG spec §3).
+
+        DESK T-NEW-052: the default ``base_url`` is now resolved
+        from the unified URL config (``urls.share_landing_url()``)
+        so operators can point the share landing at an internal
+        site without code edits. Callers may still override.
+        """
+        if base_url is None:
+            from nchantdoffice.utilities.urls import share_landing_url
+            base_url = share_landing_url()
         return f"{base_url}/download?ref={code}"
 
 
@@ -744,8 +753,13 @@ def payout_eligible(dash: EarningsDashboard,
 
 def build_share_urls(code: ReferralCode,
                      *,
-                     base_url: str = "https://nchantdoffice.com") -> Dict[str, str]:
-    """Build one-click share URLs for each platform (ATNRG spec §5)."""
+                     base_url: Optional[str] = None) -> Dict[str, str]:
+    """Build one-click share URLs for each platform (ATNRG spec §5).
+
+    DESK T-NEW-052: ``base_url`` defaults to the unified URL
+    config (``urls.share_landing_url()``); callers can still
+    override explicitly.
+    """
     link = ReferralAPIClient.build_share_link(code, base_url=base_url)
     encoded = urlencode({"url": link, "text": f"Try nchantd Office — {code}"})
     return {

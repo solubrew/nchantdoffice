@@ -207,11 +207,17 @@ class UpdateChecker:
 
     def __init__(
         self,
-        base_url: str = "https://nchantdoffice.com",
+        base_url: Optional[str] = None,
         check_path: str = DEFAULT_CHECK_UPDATE_PATH,
         timeout: float = HTTP_TIMEOUT,
         cfg: Optional[Dict[str, Any]] = None,
     ) -> None:
+        # DESK T-NEW-052: resolve from the unified URL config when
+        # the caller doesn't pin a base_url. Operators can switch
+        # the update endpoint via XDG ``urls.updates_url``.
+        if base_url is None:
+            from nchantdoffice.utilities.urls import updates_url
+            base_url = updates_url()
         self.base_url = base_url.rstrip("/")
         self.check_path = check_path.lstrip("/")
         self.timeout = timeout

@@ -55,13 +55,14 @@ class NchantdOfficeCloakView(NchantdCloakView):
             from nchantdoffice.license.entitlement_cache import EntitlementCache
             from nchantdoffice.license.remote import LicenseRemote
             from nchantdoffice.license import startup_refresh
+            from nchantdoffice.utilities import urls as _urls
 
             _install_store = InstallStore()
             _entitlement_cache = EntitlementCache()
             _remote = LicenseRemote(
                 _install_store,
                 _entitlement_cache,
-                server_base_url="https://api.nchantdoffice.com",
+                server_base_url=_urls.server_base_url(),
             )
             _prefs: dict = {}
             try:

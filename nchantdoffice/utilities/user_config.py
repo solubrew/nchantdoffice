@@ -17,6 +17,32 @@ Schema (T-NEW-070):
     dir: str          # default: ~/.local/share/nchantdoffice
   webengine:
     software_render: bool  # default: false
+  urls:               # DESK T-NEW-052 — per-host URL overrides
+    server_base_url: str          # default: "https://api.nchantdoffice.com"
+    affiliate_api_base: str       # default: "https://nchantdoffice.com/api/affiliate"
+    feature_gates_url: str        # default: "https://nchantdoffice.com"
+    updates_url: str              # default: "https://nchantdoffice.com"
+    sync_url: str                 # default: "https://nchantdoffice.com"
+    home_page: str                # default: "https://www.nchantdoffice.com/"
+    upgrade_compare_url: str      # default: "https://www.nchantdoffice.com/compare"
+    share_landing_url: str        # default: "https://nchantdoffice.com"
+    registration_url: str         # default: "https://www.nchantdoffice.com/registration"
+    whats_new_url: str            # default: "https://www.nchantdoffice.com/whats_new"
+    affiliate_marketing_url: str  # default: "https://www.nchantdoffice.com/affiliate_marketing"
+
+Example ~/.config/nchantdoffice/config.yaml (dev mode):
+
+  dev_mode: true
+  server:
+    url: "http://localhost:5000"
+    timeout: 3
+  urls:
+    server_base_url: "http://192.168.1.67"   # internal docker server
+    affiliate_api_base: "http://192.168.1.67/api/affiliate"
+    feature_gates_url: "http://192.168.1.67"
+    updates_url: "http://192.168.1.67"
+    sync_url: "http://192.168.1.67"
+    home_page: "http://192.168.1.67"
 
 Example ~/.config/nchantdoffice/config.yaml (dev mode):
 
