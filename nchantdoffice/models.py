@@ -183,7 +183,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.registered_documents = {}
         self.enable_journal_focus = None
         self.enable_settings_focus = None
-        self.enable_automation = Nonenchantdimage e7984
+        self.enable_automation = None
         self.enable_datasources = None
         self.show_quick_launch_toolbar = None
         self.today = self.store.time.get_current_datetime_str()
