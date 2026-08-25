@@ -23,10 +23,12 @@ construction (or the default ``~/.local/share/nchantdoffice``):
                         shape::
 
                             {
-                                "install_id":   "<uuid4>",
-                                "hardware_key": "<hex>",
-                                "app_version":  "<version>",
+                                "install_id":    "<uuid4>",
+                                "hardware_key":  "<hex>",
+                                "app_version":   "<version>",
                                 "first_seen_at": "<iso8601>",
+                                "api_key":       "<str|null>",
+                                "desktop_uuid":  "<str|null>",
                             }
 
                         ``hardware_key`` is the OS-specific machine-
@@ -34,6 +36,14 @@ construction (or the default ``~/.local/share/nchantdoffice``):
                         it is round-tripped in the install.bin because
                         the InstallStore must hand the SAME value to
                         the server on every bootstrap.
+
+                        ``api_key`` and ``desktop_uuid`` are populated
+                        by :class:`nchantdoffice.license.remote.LicenseRemote`
+                        after a successful bootstrap. They start as
+                        ``None`` and are populated once. The
+                        corruption-recovery path (:meth:`_load_or_create_install`)
+                        treats missing keys as ``None`` so old records
+                        written before DESK T-NEW-048 stay readable.
 
 Both files are written atomically — see :meth:`InstallStore._atomic_write`
 for the temp-file + ``fsync`` + ``rename`` pattern.
@@ -153,7 +163,7 @@ class InstallStore:
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
     def get_or_create(self) -> Dict[str, Any]:
-        """Return ``{install_id, hardware_key, salt}`` from disk.
+        """Return the install record from disk.
 
         On the first launch, generates a fresh salt + install_id
         + hardware_key, persists them, and returns the dict.
@@ -163,6 +173,22 @@ class InstallStore:
         ``install.bin`` are treated as missing — the InstallStore
         re-mints the affected file, logs a warning, and returns a
         fully consistent record.
+
+        Returned dict keys (DESK T-NEW-046 + DESK T-NEW-048)::
+
+            {
+                "install_id":    "<uuid4>",
+                "hardware_key":  "<hex>",
+                "salt":          <bytes>,
+                "api_key":       "<str>" or None,
+                "desktop_uuid":  "<str>" or None,
+            }
+
+        ``api_key`` and ``desktop_uuid`` are populated by the
+        LicenseRemote bootstrap flow. They default to ``None`` for
+        fresh records and for records written before DESK T-NEW-048
+        landed (corruption-recovery normalizes missing keys to
+        ``None``).
 
         The salt is always exactly 32 bytes. The hardware_key is
         always 64 lowercase hex chars. The install_id is always
@@ -174,6 +200,56 @@ class InstallStore:
             "install_id": record["install_id"],
             "hardware_key": record["hardware_key"],
             "salt": salt,
+            "api_key": record.get("api_key"),
+            "desktop_uuid": record.get("desktop_uuid"),
+        }
+
+    def save_api_credentials(
+        self, api_key: Optional[str], desktop_uuid: Optional[str]
+    ) -> Dict[str, Any]:
+        """Persist ``api_key`` + ``desktop_uuid`` into install.bin.
+
+        Called by :class:`LicenseRemote.bootstrap` after a
+        successful POST to ``/api/desktop/install-bootstrap``.
+        Reads the existing install record, merges the two
+        credentials into it, and rewrites install.bin atomically.
+
+        The hardware_key is NOT re-derived — the salt stays the
+        same so the existing api_key keeps working. If install.bin
+        is missing or corrupt, this method RE-MINTS the record
+        (same behaviour as :meth:`get_or_create`) so the desktop
+        can recover from disk loss without crashing the bootstrap
+        flow. In that re-mint case ``api_key`` and ``desktop_uuid``
+        are persisted with the fresh record.
+
+        Parameters
+        ----------
+        api_key : str | None
+            The opaque api_key issued by the server. ``None`` is
+            accepted (the server may, in theory, return a key-less
+            bootstrap response for some legacy code paths; we still
+            persist whatever it gave us).
+        desktop_uuid : str | None
+            The server's stable UUID for this install. Same
+            semantics as ``api_key``.
+
+        Returns
+        -------
+        dict
+            The merged record as it was just written to disk.
+        """
+        salt = self._load_or_create_salt()
+        record = self._load_or_create_install(salt)
+        record["api_key"] = api_key
+        record["desktop_uuid"] = desktop_uuid
+        install_path = self.data_dir / "install.bin"
+        self._atomic_write(install_path, self._encrypt_json(record))
+        return {
+            "install_id": record["install_id"],
+            "hardware_key": record["hardware_key"],
+            "salt": salt,
+            "api_key": record.get("api_key"),
+            "desktop_uuid": record.get("desktop_uuid"),
         }
 
     # ---------- KDF -----------------------------------------------------------
@@ -248,7 +324,7 @@ class InstallStore:
                 blob = install_path.read_bytes()
                 record = self._decrypt_blob(blob)
                 if self._is_valid_record(record):
-                    return record
+                    return self._normalize_record(record)
                 _logger.warning(
                     "install.bin decrypt returned invalid shape; re-minting"
                 )
@@ -265,14 +341,45 @@ class InstallStore:
             "hardware_key": hardware_key,
             "app_version": _app_version(),
             "first_seen_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+            # DESK T-NEW-048: api_key + desktop_uuid are populated by
+            # LicenseRemote.bootstrap. They start as None on a fresh
+            # install so corruption-recovery also produces a record
+            # with these keys present (None-valued) — older records
+            # pre-DESK-T-NEW-048 are upgraded via .setdefault() in
+            # _normalize_record() below.
+            "api_key": None,
+            "desktop_uuid": None,
         }
         self._atomic_write(install_path, self._encrypt_json(record))
+        return record
+
+    @staticmethod
+    def _normalize_record(record: Dict[str, Any]) -> Dict[str, Any]:
+        """Upgrade an older record to the DESK T-NEW-048 shape.
+
+        Older records (pre-DESK-T-NEW-048) lack ``api_key`` and
+        ``desktop_uuid``. The corruption-recovery path and the
+        validation path both run records through this function so
+        downstream code can assume the keys exist (with a ``None``
+        default) without sprinkling ``.get`` everywhere.
+
+        This is intentionally NOT a schema migration — we do not
+        rewrite the on-disk blob here. The next write
+        (``save_api_credentials`` / re-mint) will persist the
+        upgraded shape atomically.
+        """
+        record.setdefault("api_key", None)
+        record.setdefault("desktop_uuid", None)
         return record
 
     @staticmethod
     def _is_valid_record(record: Any) -> bool:
         """A persisted install.bin decrypts to a dict with the
         required keys and the right shape (uuid4 + 64-hex key).
+
+        ``api_key`` and ``desktop_uuid`` are NOT required — older
+        records written before DESK T-NEW-048 still validate, and
+        ``_normalize_record`` upgrades them on read.
         """
         if not isinstance(record, dict):
             return False

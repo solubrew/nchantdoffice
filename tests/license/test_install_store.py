@@ -226,6 +226,87 @@ def test_install_id_is_uuid4(tmp_path, monkeypatch):
     assert parsed.version == 4
 
 
+def test_install_record_has_api_key_and_desktop_uuid_fields(tmp_path, monkeypatch):
+    """DESK T-NEW-048: get_or_create returns a record that always
+    carries the ``api_key`` and ``desktop_uuid`` fields (currently
+    ``None`` — the LicenseRemote fills them in after a successful
+    bootstrap).
+
+    The corruption-recovery path also yields a record with these
+    keys present so callers never need ``.get`` with a default.
+    """
+    store = _make_store(tmp_path, monkeypatch)
+
+    record = store.get_or_create()
+
+    assert "api_key" in record, (
+        f"expected api_key key in record; got {sorted(record.keys())}"
+    )
+    assert "desktop_uuid" in record, (
+        f"expected desktop_uuid key in record; got {sorted(record.keys())}"
+    )
+    assert record["api_key"] is None
+    assert record["desktop_uuid"] is None
+
+
+def test_corruption_recovery_returns_record_with_null_api_key(
+    tmp_path, monkeypatch, caplog
+):
+    """DESK T-NEW-048: when install.bin is corrupt and the store
+    re-mints a fresh record, the new record still carries
+    ``api_key=None`` and ``desktop_uuid=None`` — never KeyError.
+
+    Mirrors test_corrupt_install_bin_triggers_recreate but adds
+    the field-presence assertion specific to DESK T-NEW-048.
+    """
+    store = _make_store(tmp_path, monkeypatch)
+    salt_bytes = b"\xab" * 32
+    (store.data_dir / "salt.bin").write_bytes(salt_bytes)
+    # Garbage bytes — Fernet will reject this and trigger a re-mint.
+    (store.data_dir / "install.bin").write_bytes(b"\xff\xff\xff garbage")
+
+    import logging
+    with caplog.at_level(logging.WARNING, logger="nchantdoffice.license.install_store"):
+        record = store.get_or_create()
+
+    # Fresh record with the new DESK T-NEW-048 fields present and
+    # set to None (no API credentials yet — that comes from the
+    # bootstrap flow, not from corruption recovery).
+    assert "api_key" in record
+    assert "desktop_uuid" in record
+    assert record["api_key"] is None
+    assert record["desktop_uuid"] is None
+    # Sanity: the install_id is freshly minted (not corrupted in).
+    assert _UUID4_RE.match(record["install_id"])
+
+
+def test_save_api_credentials_round_trips(tmp_path, monkeypatch):
+    """DESK T-NEW-048: after save_api_credentials(api_key,
+    desktop_uuid) the next get_or_create() must return those
+    values, and the install_id + hardware_key must NOT have
+    changed (the api_key is tied to a stable install).
+    """
+    store = _make_store(tmp_path, monkeypatch)
+    baseline = store.get_or_create()
+
+    api_key = "nk_test_" + "a" * 32
+    desktop_uuid = "11111111-2222-4333-8444-555555555555"
+    result = store.save_api_credentials(api_key, desktop_uuid)
+
+    assert result["api_key"] == api_key
+    assert result["desktop_uuid"] == desktop_uuid
+    # install_id + hardware_key unchanged — salt wasn't rotated.
+    assert result["install_id"] == baseline["install_id"]
+    assert result["hardware_key"] == baseline["hardware_key"]
+
+    # And a fresh store instance sees the same values.
+    store_2 = InstallStore(data_dir=store.data_dir)
+    again = store_2.get_or_create()
+    assert again["api_key"] == api_key
+    assert again["desktop_uuid"] == desktop_uuid
+    assert again["install_id"] == baseline["install_id"]
+
+
 @pytest.mark.xfail(
     reason=(
         "Atomic-write crash simulation is hard to make deterministic "
