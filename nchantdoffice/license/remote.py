@@ -116,6 +116,7 @@ Error hierarchy
     The caller can catch it specifically to drive a re-bootstrap
     flow.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -127,6 +128,7 @@ import aiohttp
 from nchantdoffice.license.entitlement_cache import EntitlementCache
 from nchantdoffice.license.install_store import InstallStore
 from nchantdoffice.license import tier_gate
+
 #!/usr/bin/env python3
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
 """
@@ -162,7 +164,6 @@ if not log:
     logma.off()
 # ====================================================================================================================||
 PXCFG = join(HERE, "_data_", ".yaml")
-
 
 
 __all__ = [
@@ -223,9 +224,7 @@ class BootstrapError(Exception):
     def __init__(self, status: int, body: Any, message: str = "") -> None:
         self.status = status
         self.body = body
-        self._message = message or (
-            f"bootstrap failed: HTTP {status}: {body!r}"
-        )
+        self._message = message or (f"bootstrap failed: HTTP {status}: {body!r}")
         super().__init__(self._message)
 
 
@@ -240,9 +239,7 @@ class RefreshError(Exception):
     def __init__(self, status: int = 0, body: Any = None, message: str = "") -> None:
         self.status = status
         self.body = body
-        self._message = message or (
-            f"refresh failed: HTTP {status}: {body!r}"
-        )
+        self._message = message or (f"refresh failed: HTTP {status}: {body!r}")
         super().__init__(self._message)
 
 
@@ -381,10 +378,7 @@ class LicenseRemote:
             raise BootstrapError(
                 status=status,
                 body=body,
-                message=(
-                    f"install-bootstrap returned HTTP {status}: "
-                    f"{body!r}"
-                ),
+                message=(f"install-bootstrap returned HTTP {status}: " f"{body!r}"),
             )
 
         # Validate the response shape — server-side bugs (a missing
@@ -404,28 +398,20 @@ class LicenseRemote:
             raise BootstrapError(
                 status=201,
                 body=body,
-                message=(
-                    "install-bootstrap response missing api_key or "
-                    "desktop_uuid"
-                ),
+                message=("install-bootstrap response missing api_key or " "desktop_uuid"),
             )
         if not isinstance(token, str) or not isinstance(envelope, dict):
             raise BootstrapError(
                 status=201,
                 body=body,
-                message=(
-                    "install-bootstrap response missing entitlement_token "
-                    "or entitlements envelope"
-                ),
+                message=("install-bootstrap response missing entitlement_token " "or entitlements envelope"),
             )
 
         # Persist in this order: install store first (credentials
         # are the hard thing to lose — if we crash after this
         # point the cache will be repopulated by the next refresh),
         # then entitlement cache.
-        self._install_store.save_api_credentials(
-            api_key=api_key, desktop_uuid=desktop_uuid
-        )
+        self._install_store.save_api_credentials(api_key=api_key, desktop_uuid=desktop_uuid)
         self._entitlement_cache.store(token=token, envelope=envelope)
 
         # Wire the tier-getter so widgets immediately pick up the
@@ -485,9 +471,7 @@ class LicenseRemote:
             "x-api-key": api_key,
             "x-install-hardware-key": hardware_key,
         }
-        status, body = await self._http_post(
-            self._REFRESH_PATH, payload, headers=headers
-        )
+        status, body = await self._http_post(self._REFRESH_PATH, payload, headers=headers)
 
         if status == 200:
             if not isinstance(body, dict):
@@ -502,10 +486,7 @@ class LicenseRemote:
                 raise RefreshError(
                     status=200,
                     body=body,
-                    message=(
-                        "entitlement/refresh response missing "
-                        "entitlement_token or entitlements envelope"
-                    ),
+                    message=("entitlement/refresh response missing " "entitlement_token or entitlements envelope"),
                 )
             self._entitlement_cache.store(token=token, envelope=envelope)
             # Re-install the tier-getter in case the cache was
@@ -520,10 +501,7 @@ class LicenseRemote:
             raise RefreshRevokedError(
                 status=status,
                 body=body,
-                message=(
-                    f"entitlement/refresh returned HTTP 410 (revoked): "
-                    f"{body!r}"
-                ),
+                message=(f"entitlement/refresh returned HTTP 410 (revoked): " f"{body!r}"),
             )
 
         if status == 401 and _body_indicates_revoked(body):
@@ -533,10 +511,7 @@ class LicenseRemote:
             raise RefreshRevokedError(
                 status=status,
                 body=body,
-                message=(
-                    f"entitlement/refresh returned HTTP 401 with revoked "
-                    f"marker: {body!r}"
-                ),
+                message=(f"entitlement/refresh returned HTTP 401 with revoked " f"marker: {body!r}"),
             )
 
         # Everything else (5xx, network errors that didn't raise,
@@ -544,9 +519,7 @@ class LicenseRemote:
         raise RefreshError(
             status=status,
             body=body,
-            message=(
-                f"entitlement/refresh returned HTTP {status}: {body!r}"
-            ),
+            message=(f"entitlement/refresh returned HTTP {status}: {body!r}"),
         )
 
     # ---------- sync wrappers ------------------------------------------------
@@ -560,11 +533,10 @@ class LicenseRemote:
         inside an existing event loop — that's a programmer
         error and we want it to fail loudly.
         """
-        try:
-            return asyncio.run(self.bootstrap(*args, **kwargs))
-        except Exception as e:
-            logma.warning(f"[ Sync Boostrap ] failed due to\n{e}")
-
+        # try:
+        return asyncio.run(self.bootstrap(*args, **kwargs))
+        # except Exception as e:
+        #    logma.warning(f"[ Sync Boostrap ] failed due to\n{e}")
 
     def sync_refresh(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         """``asyncio.run`` wrapper around :meth:`refresh`."""
@@ -597,9 +569,7 @@ class LicenseRemote:
 
         timeout = aiohttp.ClientTimeout(total=self._http_timeout_seconds)
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.post(
-                url, json=payload, headers=request_headers
-            ) as response:
+            async with session.post(url, json=payload, headers=request_headers) as response:
                 text = await response.text()
                 # Try to parse JSON; fall back to the raw body so the
                 # caller can still surface a meaningful error

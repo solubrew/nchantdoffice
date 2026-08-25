@@ -140,11 +140,7 @@ def _parse_run_mode(args: list, cfg: dict) -> str:
             if isinstance(a, str) and a.startswith("--run-mode="):
                 raw = a.split("=", 1)[1]
                 break
-            if (
-                isinstance(a, str)
-                and a in ("--run-mode", "--run_mode")
-                and args.index(a) + 1 < len(args)
-            ):
+            if isinstance(a, str) and a in ("--run-mode", "--run_mode") and args.index(a) + 1 < len(args):
                 raw = args[args.index(a) + 1]
                 break
     if raw is None:
@@ -197,31 +193,23 @@ def run(args: list[str]) -> None:
     # isn't, infer ``dev`` so the existing launch script
     # pattern keeps working without a code change at the
     # call site.
-    if (
-        run_mode == "prod"
-        and isinstance(cfg, dict)
-        and cfg.get("website_override")
-        and "run-mode" not in cfg
-    ):
+    if run_mode == "prod" and isinstance(cfg, dict) and cfg.get("website_override") and "run-mode" not in cfg:
         run_mode = "dev"
 
     try:
         from nchantdoffice.utilities.urls import set_run_mode
+
         set_run_mode(run_mode)
-        logma.info(
-            f"[runNchantdOffice] run-mode: {run_mode} "
-            f"(server_base_url will resolve accordingly)"
-        )
+        logma.info(f"[runNchantdOffice] run-mode: {run_mode} " f"(server_base_url will resolve accordingly)")
     except ValueError as exc:
-        logma.warning(
-            f"[runNchantdOffice] invalid run-mode {run_mode!r}: {exc}; "
-            f"falling back to prod"
-        )
+        logma.warning(f"[runNchantdOffice] invalid run-mode {run_mode!r}: {exc}; " f"falling back to prod")
         from nchantdoffice.utilities.urls import set_run_mode
+
         set_run_mode("prod")
 
     # if len(args) > 2:
     restart()
+    cfg = {"run-mode": "dev"}
     app = NchantdOfficeCloak
     wizard = NchantdOfficeApplicationStartupWizard
     nchantment("NchantdOffice", args, app, cfg, wizard)
