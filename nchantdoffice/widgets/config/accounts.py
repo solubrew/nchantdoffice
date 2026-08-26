@@ -61,9 +61,13 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
         self.account_settings = self.app.model.settings.account_settings
         return self
 
-    def initView(self) -> "NchantdOfficeAccountOverview":
+    def initView(self, cfg=None) -> "NchantdOfficeAccountOverview":
         """"""
-        super().initView()
+        cfg = cfg or {}
+        if not cfg.get("buttons", None):
+            cfg["buttons"] = {}
+        cfg["buttons"][100] = "_skip"
+        super().initView(cfg)
         # Account name
         cfg = {"text": f"Account: {self.app.model.user.name}", "size": ["auto", "auto"]}
         self.account_name_label = NchantdLabel(self, cfg).initWidget()
@@ -89,9 +93,7 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
                 storage_quota = getattr(user, "storage_quota_gb", None)
                 storage_used = getattr(user, "storage_used_gb", None)
         except Exception as exc:
-            logma.warning(
-                f"[accounts] storage query failed: {exc}"
-            )
+            logma.warning(f"[accounts] storage query failed: {exc}")
         if storage_quota is None:
             storage_text = "Storage: unknown"
         else:
@@ -105,21 +107,15 @@ class NchantdOfficeAccountOverview(NchantdAccountOverview):
         # fall back to 0.
         document_count = 0
         try:
-            counter = getattr(
-                self.app.model, "get_document_count", None
-            )
+            counter = getattr(self.app.model, "get_document_count", None)
             if callable(counter):
                 document_count = int(counter())
             else:
-                counter = getattr(
-                    self.app.model, "documents_count", None
-                )
+                counter = getattr(self.app.model, "documents_count", None)
                 if isinstance(counter, int):
                     document_count = counter
         except Exception as exc:
-            logma.warning(
-                f"[accounts] document count query failed: {exc}"
-            )
+            logma.warning(f"[accounts] document count query failed: {exc}")
         cfg = {"text": f"Documents: {document_count}", "size": ["auto", "auto"]}
         self.documents_label = NchantdLabel(self, cfg).initWidget()
         self.layout.addWidget(self.documents_label)
@@ -189,9 +185,14 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         self.account = self.app.model.settings.account_settings
         return self
 
-    def initView(self) -> "NchantdOfficeAccountSettings":
+    def initView(self, cfg=None) -> "NchantdOfficeAccountSettings":
         """"""
-        super().initView()
+        cfg = cfg or {}
+        if not cfg.get("buttons", None):
+            cfg["buttons"] = {}
+        cfg["buttons"][100] = "_skip"
+        cfg["buttons"][101] = {"action": "refresh", "handler": self.cmd_refresh}
+        super().initView(cfg)
         # T-removed: a large block of commented-out account-UI scaffolding
         # was here (L157-204). It referenced attributes that don't exist
         # (self.user.no_ads, self.scrolling_ad, NchantdEntryEditor)
@@ -215,6 +216,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         # DESK T-NEW-052: URLs route through the unified config
         # resolver — no hardcoded hostnames.
         from nchantdoffice.utilities import urls as _urls
+
         cfg = {
             "url": _urls.registration_url(),
             "size": [1600, 750],
@@ -240,20 +242,16 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             )
             # DESK T-NEW-052: compare URL comes from the resolver.
             from nchantdoffice.utilities import urls as _urls
+
             if stash and cfg["url"] == _urls.upgrade_compare_url():
-                cfg["url"] = self._append_url_param(
-                    cfg["url"], "reason", str(stash)
-                )
+                cfg["url"] = self._append_url_param(cfg["url"], "reason", str(stash))
             if hasattr(
                 getattr(self.app, "model", None),
                 "get_pro_redirect_reason",
             ):
                 self.app.model.get_pro_redirect_reason = None
         except Exception as e:
-            logma.warning(
-                f"[accounts] initView: reason-param append "
-                f"failed: {e}"
-            )
+            logma.warning(f"[accounts] initView: reason-param append " f"failed: {e}")
         self.browser = NchantdWebViewer(self, cfg).initWidget()
         layout.addWidget(self.browser)
         self.layout.addLayout(layout)
@@ -270,6 +268,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         never a security boundary.
         """
         from urllib.parse import urlencode, urlparse, urlunparse
+
         try:
             parsed = urlparse(url)
             existing: dict = {}
@@ -297,6 +296,10 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         self.initModel()
         self.initView()
         return self
+
+    def cmd_refresh(self, event=None, *args, **kwargs):
+        """"""
+        super().cmd_refresh(event, args, kwargs)
 
     def save_account_settings(self) -> bool:
         """Save account settings to user model"""
@@ -400,6 +403,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             # DESK T-NEW-052: URLs route through the unified config
             # resolver.
             from nchantdoffice.utilities import urls as _urls
+
             if self.user.has_pro:
                 url = _urls.whats_new_url()
             elif self.user.has_account:
@@ -481,9 +485,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
 
             app_model = getattr(self.app, "model", None)
             if app_model is None:
-                logma.warning(
-                    "[accounts] sync_with_server: no app.model available"
-                )
+                logma.warning("[accounts] sync_with_server: no app.model available")
                 return False
 
             install_store = getattr(app_model, "install_store", None)
@@ -494,7 +496,9 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
                     "[accounts] sync_with_server: license plumbing missing "
                     "(install_store=%r, entitlement_cache=%r, "
                     "license_remote=%r)",
-                    install_store, entitlement_cache, license_remote,
+                    install_store,
+                    entitlement_cache,
+                    license_remote,
                 )
                 return False
 
@@ -507,14 +511,13 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             if user is not None:
                 email = getattr(user, "email", "") or getattr(user, "name", "")
 
-            server_base_url = getattr(
-                app_model, "server_base_url", None
-            )
+            server_base_url = getattr(app_model, "server_base_url", None)
             if not server_base_url:
                 # DESK T-NEW-052: resolve from the unified URL
                 # config so the operator can switch between
                 # production and internal docker without code edits.
                 from nchantdoffice.utilities import urls
+
                 server_base_url = urls.server_base_url()
 
             flow = ClaimFlow(
@@ -531,6 +534,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
                 exc_info=True,
             )
             return False
+
 
 # ====================================================================================================================||
 
