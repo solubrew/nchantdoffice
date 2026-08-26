@@ -777,6 +777,62 @@ path will fail loudly.
 
 ---
 
+#### Card: DESK T-NEW-060 — fix(ad-tab): route base-layer feed + affiliate rotation through URL resolver (run-mode honors dev/prod)
+
+The right-side Ad tab's ad rotation has two server-driven
+sources:
+
+1. **Base-layer feed** — `GET /api/ads/base-layer`. Sourced
+   via `nchantdoffice/utilities/base_layer.py`. The client
+   previously used `user_config.get_server_url()` which
+   returned `http://localhost:5000` when `dev_mode: true` —
+   that URL only works if the desktop runs on the docker
+   host. On the operator's LAN (where docker is at
+   `192.168.1.67:8081`), the base-layer fetch silently
+   fell through to a stale cache or empty list.
+2. **Affiliate quicklinks rotation** —
+   `GET /api/v1/quicklinks/?ad_rotation_categories=...`.
+   The `_load_affiliate_rotation` helper accepted an
+   `api_base_url` kwarg but the AdTab's `models.yaml`
+   entry didn't set it, so the call went out as a
+   relative URL — never reaching the LAN docker's
+   quicklinks catalog.
+
+**Fix:**
+
+- `base_layer.py` now reads the server URL via the
+  unified `urls.server_base_url()` resolver. The
+  `_DEFAULT_API_BASE` constant is now a function
+  (`_default_api_base()`) so the run-mode flip in
+  `cmds/runNchantdOffice.py` (`urls.set_run_mode("dev")`)
+  takes effect on the very next `get_base_layer_ads()`
+  call — not on the next process restart.
+- `_load_affiliate_rotation` in `advertisements.py`
+  falls back to `urls.server_base_url()` when called
+  without an explicit `api_base_url`. Existing tests that
+  pin the API base explicitly still work.
+
+**Verification:**
+
+- New tests in `tests/utilities/test_base_layer_uses_resolver.py`
+  pin the URL hit in both prod and dev modes.
+- New tests in `tests/utilities/test_advertisements_rotation_uses_resolver.py`
+  pin the same for the affiliate quicklinks fetch.
+- End-to-end smoke (against the live LAN docker at
+  `192.168.1.67:8081`): dev profile returns 3 ads from
+  the operator's curated base-layer catalog
+  (Notion / Railway / Supabase); prod profile returns
+  the resolver default `https://api.nchantdoffice.com`.
+- 90/90 license+utilities tests pass.
+
+**Operator workflow:** pull this commit + restart the
+desktop with `cfg = {"run-mode": "dev"}`. The right-side
+Ad tab will now rotate through ads from the LAN docker's
+`/api/ads/base-layer` endpoint (curated by the operator
+on `192.168.1.67`) instead of empty / stale cache.
+
+---
+
 #### Card: DESK T-NEW-055 — fix(links): stop doubling the affiliate API URL path
 
 Live launch regression (2026-08-25 18:18:15) — after the operator moved to `run-mode: dev`, the affiliate sync path hit:

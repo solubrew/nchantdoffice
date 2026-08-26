@@ -549,10 +549,16 @@ def _load_affiliate_rotation(api_base_url: str = "") -> list:
 
     Args:
         api_base_url: base URL of the server (e.g.,
-            ``https://api.nchantdoffice.com``). Defaults to
-            an empty string which means ``urllib`` uses the
-            relative path. The desktop typically injects the
-            configured base from ``self.config``.
+            ``https://api.nchantdoffice.com``). When empty
+            (the typical case — the AdTab's models.yaml
+            entry doesn't carry a base), the unified URL
+            resolver's ``server_base_url()`` is consulted.
+            DESK T-NEW-060: prior to this fix the function
+            sent a relative URL (``/api/v1/quicklinks/...``)
+            when called with ``api_base_url=""``, which
+            silently fell through to whatever Flask route the
+            embedded browser was rendering — never the LAN
+            docker's quicklinks catalog.
 
     Returns:
         List of banner dicts (each becomes one
@@ -561,6 +567,26 @@ def _load_affiliate_rotation(api_base_url: str = "") -> list:
     T-NEW-040 DESK-2.
     """
     import json
+    # DESK T-NEW-060: when no explicit base is passed, source
+    # from the unified URL resolver so the run-mode profile
+    # (dev / prod) determines the server. This is the
+    # fix that makes the right-side Ad tab rotate from the
+    # operator's LAN docker when ``run-mode: dev`` is active.
+    if not api_base_url:
+        try:
+            from nchantdoffice.utilities.urls import (
+                server_base_url as _sbu,
+            )
+            api_base_url = _sbu()
+        except Exception as _exc:
+            logma.warning(
+                f"[ad_tab] resolver server_base_url() failed: "
+                f"{_exc}; falling back to FALLBACK_BANNERS"
+            )
+            return [
+                {**banner, "source": "external"}
+                for banner in load_fallback_banners()
+            ]
     try:
         from urllib.request import urlopen, Request
         from urllib.parse import urlencode
