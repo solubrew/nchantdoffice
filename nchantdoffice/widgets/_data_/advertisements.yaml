@@ -1,7 +1,8 @@
 NchantdOfficeAdTab:
-  # T-DESK-066 (paired with nchantdofficeATNRG/T-NEW-029):
-  # the rotation interval in milliseconds. One slot advances
-  # per tick (tip → substack → pro_cta → affiliate). Default
-  # is 12000 ms (12 s) when this key is absent — see
-  # ``DEFAULT_INTERVAL_MS`` in advertisements.py.
-  interval_ms: 12000
+  # DESK T-NEW-061: replaced the previous local-slot rotation
+  # (12 s) with a server-driven rotation that re-asks the
+  # server every ``surface_interval_ms``. The server picks
+  # the ad; the desktop just renders whatever comes back.
+  # Default is 300_000 ms (5 minutes) when this key is absent
+  # — see ``DEFAULT_SURFACE_INTERVAL_MS`` in advertisements.py.
+  surface_interval_ms: 300000

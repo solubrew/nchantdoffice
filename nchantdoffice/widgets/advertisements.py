@@ -52,9 +52,16 @@ pxcfg = join(here, "_data_", "advertisements.yaml")
 # four-slot Ad tab rotation: tip → substack → pro_cta → affiliate
 # ---------------------------------------------------------------------------
 
-# Default rotation interval (ms) — operator can override via
-# advertisements.yaml: ``NchantdOfficeAdTab: { interval_ms: 12000 }``.
-DEFAULT_INTERVAL_MS = 12000
+# Surface cadence (ms) — the Ad tab re-asks the server for
+# the next ad every 5 minutes. Operator-overridable via
+# ``advertisements.yaml``: ``NchantdOfficeAdTab: { surface_interval_ms: 300000 }``.
+#
+# DESK T-NEW-061: replaced the previous ``DEFAULT_INTERVAL_MS = 12000``
+# (12-second local slot rotation) which caused UI lockups when the
+# timer callback raced with the in-flight HTTP fetches. The new
+# design is server-driven: the server picks the ad, the desktop
+# just renders whatever comes back, every 5 minutes.
+DEFAULT_SURFACE_INTERVAL_MS = 5 * 60 * 1000
 
 
 # ---------------------------------------------------------------------------
@@ -709,10 +716,9 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         except Exception:
             self._user = None
 
-        # If Pro, render nothing — caller will hide the tab
-        # (and crucially, we never start the rotation timer
-        # for Pro users, even though initModel already loaded
-        # the slots — the slots exist but never animate).
+        # If Pro, render nothing — caller will hide the tab.
+        # (We also don't start the surface timer — Pro users
+        # never see ads at all, so the timer would just spin.)
         if not self._is_visible_for_user():
             logma.info("[ad_tab] hidden: user is Pro tier")
             return cfg
@@ -727,37 +733,38 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         header.setStyleSheet("color: #6b7280; font-size: 9pt;")
         layout.addWidget(header)
 
-        # T-DESK-066: single visible-slot container.
-        # The QTimer in ``_start_rotation`` advances
-        # ``current_slot_index`` and re-renders this container.
+        # DESK T-NEW-061: single visible-ad container. The
+        # server picks the ad (GET /api/ads/rotation/next);
+        # the desktop just renders whatever came back. The
+        # QTimer in ``_start_surface_timer`` re-asks every
+        # 5 minutes. No local slot rotation.
         self._slot_container = NchantdVScrollGroupBox(self)
         self._slot_container.setTitle("")
-        if not self.slots:
-            placeholder = NchantdLabel(self._slot_container)
-            placeholder.setText("<i>No ads available right now.</i>")
-            self._slot_container.addWidget(placeholder)
-        else:
-            self._render_current_slot()
+        # Show the empty state until the first fetch completes.
+        placeholder = NchantdLabel(self._slot_container)
+        placeholder.setText("<i>Loading ad…</i>")
+        self._slot_container.addWidget(placeholder)
         layout.addWidget(self._slot_container)
 
-        # Manual advance button (lets the user cycle without
-        # waiting for the timer — a common UX nicety for
-        # rotation-style ad panels).
+        # Manual refresh button — lets the operator force a
+        # refresh without waiting 5 minutes (common UX nicety
+        # for ad panels). Doesn't bypass the cadence — the
+        # next tick still runs at its scheduled time.
         adv_row = pyqt.QHBoxLayout()
         adv_row.setContentsMargins(0, 0, 0, 0)
         adv_row.setSpacing(6)
-        next_btn = NchantdButton(self)
-        next_btn.setText("Next \u203a")
-        next_btn.clicked.connect(self._advance_slot)
-        adv_row.addWidget(next_btn)
+        refresh_btn = NchantdButton(self)
+        refresh_btn.setText("Refresh \u21bb")
+        refresh_btn.clicked.connect(self._fetch_and_render)
+        adv_row.addWidget(refresh_btn)
         adv_row.addStretch(1)
         layout.addLayout(adv_row)
 
         self.layout.addLayout(layout)
 
-        # Start the rotation timer (Free users only — the
+        # Start the surface timer (Free users only — the
         # Pro short-circuit above returned early).
-        self._start_rotation()
+        self._start_surface_timer()
         return cfg
 
     def _render_current_slot(self) -> None:
@@ -813,47 +820,155 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                 f"[ad_tab] render slot[{idx}] ({slot.kind}) failed: {e}"
             )
 
-    def _advance_slot(self) -> None:
-        """QTimer callback + manual advance handler.
+    def _fetch_and_render(self) -> None:
+        """Fetch the next ad from the server and render it.
 
-        Increments ``current_slot_index`` and wraps to 0 after
-        the last slot. Re-renders the visible-slot container.
+        DESK T-NEW-061: replaces the previous local-slot
+        rotation. The server picks which ad to show
+        (deterministic bucket based on time + interval),
+        the desktop just renders whatever comes back.
 
-        T-DESK-066 step 5.
+        Called by the surface QTimer every 5 minutes and
+        by the manual Refresh button. Fail-soft: any
+        network/HTTP/JSON error renders the empty state
+        and the next tick retries.
         """
-        if not self.slots:
-            return
-        # Wrap with modulo so the rotation is cyclic. ``%`` on
-        # the post-increment value avoids an off-by-one when
-        # ``current_slot_index`` is incremented from len-1.
-        self.current_slot_index = (self.current_slot_index + 1) % len(self.slots)
+        from nchantdoffice.utilities.urls import (
+            server_base_url as _sbu,
+        )
+        from nchantdoffice.widgets.ad_rotation_client import (
+            fetch_rotation_ad,
+        )
         try:
-            self._render_current_slot()
+            ad = fetch_rotation_ad(_sbu())
         except Exception as e:
-            logma.warning(f"[ad_tab] _advance_slot re-render failed: {e}")
+            logma.warning(f"[ad_tab] _fetch_and_render failed: {e}")
+            ad = None
+        self._render_ad(ad)
 
-    def _start_rotation(self) -> None:
-        """Start the QTimer that drives the slot rotation.
+    def _render_ad(self, ad: Optional[dict]) -> None:
+        """Render a single ad dict (or None for the empty state).
 
-        T-DESK-066 step 5. The interval is configurable via
-        ``advertisements.yaml`` (key: ``interval_ms``,
-        default ``DEFAULT_INTERVAL_MS`` = 12000). Pro users
-        never reach this code path (initView returns early).
+        Pulled out of ``_fetch_and_render`` so tests can drive
+        the renderer directly without mocking the network.
+        """
+        if not getattr(self, "_slot_container", None):
+            return  # initView hasn't run yet
+        # Clear the container (the old "Loading ad…" or the
+        # previously-rendered ad).
+        layout_box = self._slot_container.layout_box
+        try:
+            for i in reversed(range(layout_box.count())):
+                item = layout_box.takeAt(i)
+                w = item.widget() if item is not None else None
+                if w is not None:
+                    w.setParent(None)
+                    w.deleteLater()
+        except Exception as e:
+            logma.warning(f"[ad_tab] _render_ad clear failed: {e}")
+        if not ad:
+            placeholder = NchantdLabel(self._slot_container)
+            placeholder.setText("<i>No ads right now.</i>")
+            self._slot_container.addWidget(placeholder)
+            return
+        try:
+            # Render the same card shape the previous
+            # ``AffiliateSlot`` rendered (title, subtitle,
+            # CTA button). Reusing the renderer keeps the
+            # operator's ad design intact — they only need
+            # to update the server-side ad catalog.
+            card = NchantdGridScrollGroupBox(self._slot_container)
+            card.setTitle("")
+            bg = ad.get("background", "#0F172A")
+            fg = ad.get("foreground", "#FFFFFF")
+            title = NchantdLabel(card)
+            title.setText(
+                f"<b style='color: {fg};'>{ad.get('title', '')}</b>"
+            )
+            title.setStyleSheet(
+                f"color: {fg}; font-size: 14pt; "
+                f"background-color: {bg}; padding: 6px;"
+            )
+            title.setWordWrap(True)
+            card.addWidget(title)
+            sub_text = ad.get("subtitle") or ad.get("description")
+            if sub_text:
+                sub = NchantdLabel(card)
+                sub.setText(sub_text)
+                sub.setStyleSheet(
+                    f"color: {fg}; background-color: {bg}; padding: 6px;"
+                )
+                sub.setWordWrap(True)
+                card.addWidget(sub)
+            cta_text = ad.get("cta_text") or "Learn more"
+            cta_url = ad.get("cta_url") or ""
+            if cta_url:
+                cta = NchantdButton(card)
+                cta.setText(cta_text)
+                cta.clicked.connect(
+                    NchantdOfficeAdTab._make_open_url_handler_static(
+                        cta_url,
+                        event_name="affiliate_click",
+                        event_properties={
+                            "ad_id": ad.get("id"),
+                            "ad_slug": ad.get("slug"),
+                            "destination_url": cta_url,
+                            "rotation_source": "server",
+                        },
+                    )
+                )
+                card.addWidget(cta)
+            card.setStyleSheet(
+                f"QGroupBox {{ background-color: {bg}; "
+                f"border-radius: 8px; padding: 6px; }}"
+            )
+            self._slot_container.addWidget(card)
+        except Exception as e:
+            logma.warning(f"[ad_tab] _render_ad failed: {e}")
+            placeholder = NchantdLabel(self._slot_container)
+            placeholder.setText("<i>No ads right now.</i>")
+            self._slot_container.addWidget(placeholder)
+
+    def _start_surface_timer(self) -> None:
+        """Start the QTimer that re-asks the server for the
+        next ad every ``surface_interval_ms``.
+
+        DESK T-NEW-061: replaces the previous 12-second
+        local-slot rotation. The surface cadence is
+        operator-overridable via ``advertisements.yaml``
+        (key ``surface_interval_ms``, default 300_000 ms =
+        5 minutes). The manual Refresh button calls
+        ``_fetch_and_render`` directly; this timer's job
+        is just the 5-minute cadence.
+
+        Pro users never reach this code path (initView
+        returns early).
         """
         try:
-            interval_ms = int(
-                self.config.dikt.get("interval_ms", DEFAULT_INTERVAL_MS)
+            surface_ms = int(
+                self.config.dikt.get(
+                    "surface_interval_ms", DEFAULT_SURFACE_INTERVAL_MS,
+                )
             )
         except Exception:
-            interval_ms = DEFAULT_INTERVAL_MS
+            surface_ms = DEFAULT_SURFACE_INTERVAL_MS
         self._timer = pyqt.QTimer(self)
-        self._timer.setInterval(interval_ms)
-        self._timer.timeout.connect(self._advance_slot)
+        self._timer.setInterval(surface_ms)
+        self._timer.timeout.connect(self._fetch_and_render)
         self._timer.start()
         logma.info(
-            f"[ad_tab] rotation started (interval={interval_ms}ms, "
-            f"slots={len(self.slots)})"
+            f"[ad_tab] surface timer started (interval="
+            f"{surface_ms}ms)"
         )
+        # Fire the first fetch immediately so the operator
+        # sees an ad on launch instead of the "Loading ad…"
+        # placeholder for 5 minutes.
+        try:
+            self._fetch_and_render()
+        except Exception as e:
+            logma.warning(
+                f"[ad_tab] initial fetch failed (non-blocking): {e}"
+            )
 
     # ------------------------------------------------------------------
     # Helpers

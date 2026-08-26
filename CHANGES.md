@@ -794,3 +794,97 @@ The pre-T-NEW-052 code had the same bug (it hardcoded `API_URL = ".../api/affili
 
 **Tests:** 2 new tests in `tests/utilities/test_links_url.py` (prod URL + dev URL) that mock `requests.Session.get` and capture the URL passed in. Both tests RED with the bug present, GREEN with the fix. 80/80 license+utilities tests pass.
 
+---
+
+#### Card: DESK T-NEW-061 — fix(ad-tab): server-driven rotation, desktop just surfaces every 5 minutes
+
+**The problem:** DESK T-NEW-060 routed the Ad tab through
+the unified URL resolver — that fixed the URL, but the
+desktop was still doing ALL the rotation logic locally:
+a 5-slot type registry (Tip / Substack / ProCta /
+Affiliate / ProInternal), a 12-second QTimer, an
+`_advance_slot()` callback that raced with the in-flight
+HTTP fetches. The operator reported the application
+**locking up** on launch (2026-08-25). The lockup was
+the timer firing while `_load_banners` / `_load_affiliate_rotation`
+were still mid-flight from a previous fetch — classic
+re-entrancy deadlock.
+
+**The new design (operator-mandated):**
+
+- The **server** picks the ad. New endpoint
+  `GET /api/ads/rotation/next` on `nchantdoffice_com`
+  returns ONE ad, rotated server-side via a deterministic
+  time-bucket (floor(epoch_seconds / interval_seconds) %
+  len(active_ads)). Two desktops on the same LAN see the
+  same ad at the same time.
+- The **desktop** just surfaces the tab every 5 minutes.
+  Single QTimer at 300_000 ms, fires `_fetch_and_render`
+  which calls the server and renders whatever came back.
+  No local slot rotation, no 5-slot type registry, no
+  `_advance_slot` race. The manual Refresh button calls
+  `_fetch_and_render` directly.
+- The previous `PRO_INTERNAL_PROMOS` list, the
+  `RotationSlot` subclasses, the `TipSlot` / `SubstackSlot`
+  / `ProCtaSlot` / `AffiliateSlot` / `ProInternalSlot` are
+  kept around (backward-compat for any imports) but the
+  AdTab no longer uses them. All ad content is owned by
+  the operator via the server's admin UI.
+
+**Server-side endpoint** (`nchantdoffice_com`):
+
+- `GET /api/ads/rotation/next?interval_seconds=NNN` returns
+  200 + `{"ad": {...}, "as_of": "...", "bucket": N, "rotation_interval_seconds": NNN}`
+- `GET /api/ads/rotation/health` returns 200 + `{"status": "ok", "count": N, "rotation_interval_seconds": 300}`
+- `interval_seconds` clamps to `[60, 86400]` so a typo or
+  malicious probe can't make every desktop caller spin
+  through thousands of ads per second.
+- Returns 204 No Content when the operator's catalog is
+  empty (desktop renders its empty state).
+
+**Desktop-side changes** (`nchantdoffice`):
+
+- New module `nchantdoffice/widgets/ad_rotation_client.py`
+  with a single `fetch_rotation_ad(server_base_url)`
+  function — fail-soft, returns `None` on any error.
+- `DEFAULT_INTERVAL_MS = 12000` replaced with
+  `DEFAULT_SURFACE_INTERVAL_MS = 300_000` (5 minutes).
+- `advertisements.yaml` key renamed from `interval_ms`
+  to `surface_interval_ms` (the old key is silently
+  ignored if present, so the rename is forward-compatible).
+- The "Next" button in the UI is now a "Refresh" button
+  (next button would imply local cycling).
+
+**Tests:**
+
+- Server: 10 new tests in
+  `nchantdoffice_com/tests/test_ad_rotation_endpoint.py`
+  (endpoint exists, 200 happy path, 204 empty state,
+  response shape, deterministic per-bucket, interval
+  clamping, health endpoint).
+- Desktop: 8 new tests in
+  `nchantdoffice/tests/utilities/test_ad_rotation_client.py`
+  (200 happy path, 204 empty, connection-refused fail-soft,
+  500 fail-soft, malformed response fail-soft, invalid JSON
+  fail-soft, surface-interval-is-5-minutes regression
+  guard, custom interval).
+
+End-to-end smoke against the live LAN docker:
+```
+GET /api/ads/rotation/next?interval_seconds=60
+→ {"ad": {"id": 3, "slug": "supabase-default", "title": "Supabase..."},
+   "bucket": 29795174, "rotation_interval_seconds": 60}
+```
+
+85 license+utilities desktop tests + 16 nchantdoffice_com
+route tests pass. The lockup cause (12-second timer racing
+with HTTP fetches) is structurally removed — there are no
+more concurrent fetches, only one fetch every 5 minutes.
+
+**Operator workflow:** pull both repos, rebuild the web
+image (`docker compose build web`), recreate the container
+(`LAN_PORT=8081 bash /home/solubrew/docker-data/nchantdoffice/scripts/cluster-up.sh`),
+restart the desktop. The Ad tab now surfaces an ad from
+the LAN docker on launch and re-surfaces every 5 minutes
+with whatever the server's time-bucket rotation has picked.
+
