@@ -1017,7 +1017,7 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         )
         super().initModel(cfg)
         self.document = self.app.model.codex.init_document({"document": self.config.get("document", {})})
-        self.document.location = "internal"
+        self.document.set_location("internal")
         logma.json({"document": self.config.dikt.get("document", {})})
         return self
 
