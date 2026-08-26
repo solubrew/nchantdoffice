@@ -38,45 +38,17 @@ REFRESH_INTERVAL_SECONDS = 6 * 60 * 60
 
 # T-NEW-070 (DESK-2 + DESK-3 hard-break): both
 # NCHANT_API_BASE and NCHANT_DATA_DIR env vars removed.
-# The API base URL + cache dir now come from the unified URL
-# resolver (DESK T-NEW-052 + DESK T-NEW-060). ``urls.server_base_url()``
-# reads the ``server_base_url`` key from the resolver, which
-# is itself sourced from:
-#   1. The bundled ``urls.yaml`` defaults (production hosts)
-#   2. The ``run-mode`` launch profile (dev → LAN docker)
-#   3. The XDG ``urls:`` override block (per-deploy)
-# When the operator runs ``cfg = {"run-mode": "dev"}`` at
-# launch, this returns ``http://192.168.1.67:8081`` (the
-# LAN docker on the operator's host). Without this change
-# the legacy ``user_config.get_server_url()`` returned
-# ``http://localhost:5000`` in dev mode — which only works
-# if the desktop runs on the docker host. The resolver
-# makes the desktop follow the operator's run-mode config
-# regardless of which host it runs on.
-from nchantdoffice.utilities.urls import server_base_url as _resolver_server_url  # noqa: E402
+# The API base URL + cache dir now come from the user
+# config file (~/.config/nchantdoffice/config.yaml).
+# When dev_mode is true, get_server_url() returns
+# http://localhost:5000 by default (the
+# nchantdoffice_com cmds/serve_detached.py port).
 from nchantdoffice.utilities.user_config import (  # noqa: E402
     get_cache_dir,
     get_server_timeout,
+    get_server_url,
 )
-
-# DESK T-NEW-060: ``_DEFAULT_API_BASE`` is now a callable (not a
-# module-level constant) so the run-mode profile swap that
-# happens between import time and ``get_base_layer_ads()`` is
-# reflected on the very next fetch. The previous shape
-# (constant computed at import time) meant that a desktop
-# launched with ``cfg = {"run-mode": "dev"}`` would still hit
-# the prod URL because the prod value was frozen at module
-# import — before the launch entrypoint called
-# ``urls.set_run_mode("dev")``.
-def _default_api_base() -> str:
-    """Return the current run-mode-resolved server base URL.
-
-    Read on each call so the dev/prod profile flip that
-    happens at launch (``urls.set_run_mode`` in
-    ``cmds/runNchantdOffice.py``) takes effect immediately
-    for the very next ``get_base_layer_ads()`` call.
-    """
-    return _resolver_server_url().rstrip("/")
+_DEFAULT_API_BASE = get_server_url()
 _CACHE_DIR = get_cache_dir()
 _CACHE_PATH = _CACHE_DIR / "base_layer_cache.json"
 
@@ -200,7 +172,7 @@ def get_base_layer_ads(
         unavailable (the ad tab handles this by falling
         back to its own hardcoded list).
     """
-    base = api_base or _default_api_base()
+    base = api_base or _DEFAULT_API_BASE
 
     # Step 1: Check cache.
     cache = _read_cache()
