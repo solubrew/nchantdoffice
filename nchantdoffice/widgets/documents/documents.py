@@ -1000,6 +1000,7 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeDocument").override(cfg))
         self.name = name
+        self.document = None
         self.did = None
         self.notes = None
 
@@ -1015,6 +1016,8 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
             {"settings": self.app.model.settings.document.get(self.document_type, self.get_default_settings())}
         )
         super().initModel(cfg)
+        self.document = self.app.model.codex.init_document({"document": self.config.get("document", {})})
+        self.document.location = "internal"
         logma.json({"document": self.config.dikt.get("document", {})})
         return self
 
@@ -1034,7 +1037,11 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         # elif self.document.location == "cloud":
         #    self.connect_to_file()
         else:
-            raise Exception("Internal and Cloud locations not supported yet")
+            logma.info(f"Location {self.document.location}")
+            if debug:
+                raise Exception("Internal and Cloud locations not supported yet")
+            self.document.location = "internal"
+            self.populate_data()
         return self
 
     def initWidget(self) -> Self:
