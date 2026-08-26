@@ -326,6 +326,15 @@ dependencies = [
     "pydantic-core==2.46.4",  # via pydantic
     "typing-extensions==4.16.0",  # via pydantic, anyio, beautifulsoup4
     "typing-inspection==0.4.2",  # via pydantic
+    "nchantrs==0.0.1",
+    "pyffice==0.0.1",
+    "kahndor==0.0.1",
+    "subtrix==0.0.1",
+    "micromole==0.0.1",
+    "squirl==0.0.1",
+    "pycurity==0.0.1",
+    "thingery==0.0.1",
+    "pyside6pandas==0.0.1",
 ]
 
 [project.optional-dependencies]
@@ -342,15 +351,7 @@ spreadsheet = [
 # Internal projects (peer SB packages). Install with:
 #   pip install nchantdoffice[internal]
 internal = [
-    "nchantrs @ file:///mnt/overse/SBST01/vein/GitVein/nchantrs.git@gamma",
-    "pyffice @ file:///mnt/overse/SBST01/vein/GitVein/pyffice.git@gamma",
-    "kahndor @ file:///mnt/overse/SBST01/vein/GitVein/kahndor.git@gamma",
-    "subtrix @ file:///mnt/overse/SBST01/vein/GitVein/subtrix.git@gamma",
-    "micromole @ file:///mnt/overse/SBST01/vein/GitVein/micromole.git@gamma",
-    "squirl @ file:///mnt/overse/SBST01/vein/GitVein/squirl.git@gamma",
-    "pycurity @ file:///mnt/overse/SBST01/vein/GitVein/pycurity.git@gamma",
-    "thingery @ file:///mnt/overse/SBST01/vein/GitVein/thingery.git@gamma",
-    "pyside6pandas @ file:///mnt/overse/SBST01/vein/GitVein/pyside6pandas.git@gamma",
+
     #"metrologic @ file:///mnt/overse/SBST01/vein/GitVein/metrologic.git@gamma", # PUSH to 0.1.0 NchantdAnalytics
 ]
 # All optional dependencies
