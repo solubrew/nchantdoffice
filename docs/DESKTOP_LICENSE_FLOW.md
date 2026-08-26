@@ -9,7 +9,9 @@
 
 **Repo:** `nchantdoffice/` (PySide6 desktop app)
 **Module:** `nchantdoffice/license/`
-**Shipped:** 2026-08-24/25, 5 commits DESK T-NEW-046 through DESK T-NEW-050
+**Shipped:** 2026-08-24/25, commits DESK T-NEW-046 through
+DESK T-NEW-061 (16+ cards across install / entitlement /
+ad rotation / URL resolver / run-mode launch profile)
 
 ## Where the authoritative docs live
 
@@ -17,10 +19,11 @@
 |---|---|---|
 | Server-side **operator manual** | `nchantdoffice_com/docs/OPERATOR_DESKTOP_INSTALL.md` (sister repo) | Deployment, key rotation, revoke, debugging, smoke harness, rollback |
 | Server-side **user guide** | `nchantdoffice_com/docs/USER_DOWNLOAD_INSTALL.md` (sister repo) | Download + install + claim walkthrough for end users |
-| Server-side **integration plan** | `nchantdoffice_com/docs/desktop-integration-plan.md` (sister repo, §10) | The full endpoint + table + module reference for the new surface |
+| Server-side **integration plan** | `nchantdoffice_com/docs/desktop-integration-plan.md` (sister repo) | The full endpoint + table + module reference; includes §0.1 Extensions since the original plan (LAN deploy, URL resolver, run-mode, ad rotation) |
+| Server-side **LAN deploy runbook** | `nchantdoffice_com/docs/deploy-lan.md` (sister repo, new) | LAN-only docker stack on `192.168.1.67:8081` for desktop-dev iteration; no Caddy, no public DNS |
 | **Master plan** | `nchantdoffice_com/.hermes/plans/2026-08-24_1200-desktop-install-entitlement-flow.md` | The 7-phase plan that drove the milestone (Phase A–G, server + desktop) |
-| **Commit trail (server)** | `nchantdoffice_com/CHANGES.md` `[Unreleased] — 2026-08-24` | 14 feature commits (COM T-NEW-046 → COM T-NEW-052) + 3 docs |
-| **Commit trail (desktop, this repo)** | `git log --oneline 9021f33^..64f5a9e` | 5 feature commits (DESK T-NEW-046 → DESK T-NEW-050) |
+| **Commit trail (server)** | `nchantdoffice_com/CHANGES.md` `[Unreleased] — 2026-08-24 / 25` | Feature commits (COM T-NEW-046 → COM T-NEW-052, plus the COM T-NEW-058 follow-up + DESK T-NEW-061 part 1 server-side commits) |
+| **Commit trail (desktop, this repo)** | `git log --oneline 9021f33^..HEAD` | Feature commits DESK T-NEW-046 through DESK T-NEW-061 |
 
 ## Desktop-side module map
 
