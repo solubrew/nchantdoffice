@@ -7,6 +7,14 @@
 
 ---
 
+> **Round 2 (post-2026-08-26 ~15:00 UTC):** Two regressions caught
+> by the agent's live smoke test of `192.168.1.67:8081` against
+> the LAN docker. Fixed in commit `3c16c3b` (COM T-NEW-058
+> follow-up round 3). Both pages now render the canonical nav +
+> purple-gradient theme via the marketing partials pattern.
+
+---
+
 ## Pass Criteria for This Session
 
 All three flows MUST work end-to-end before operator sign-off:
@@ -31,12 +39,13 @@ All three flows MUST work end-to-end before operator sign-off:
 | Time (approx) | Symptom | Card | Cause | Fix |
 |---|---|---|---|---|
 | 18:08 | `POST /api/desktop/install-bootstrap` returned "Page not found" (HTML) | DESK T-NEW-054 | `BootstrapError` from a 4xx re-raised to the desktop layer | Broadened `except (OSError, BootstrapError)` so transient install failures boot the desktop offline |
-| 18:39 | `[links] HTTPError: 401` from `/api/affiliate/links/` | DESK T-NEW-057 | `APIClient` sent `Authorization: Bearer <key>` but the server's `@require_desktop_api_key` reads `x-api-key` | Switched header name; `update_affiliate_links` now reads api_key from `InstallStore` |
+| 18:39 | `[links] HTTPError: 401` from `/api/affiliate/links/` | DESK T-NEW-057 | `APIClient` sent `Authorization: Bearer *** but the server's `@require_desktop_api_key` reads `x-api-key` | Switched header name; `update_affiliate_links` now reads api_key from `InstallStore` |
 | 18:44 | 401 fired every launch because bootstrap hadn't minted api_key yet | DESK T-NEW-058 | Affiliate sync raced the bootstrap | Skip the call entirely when api_key is None (boot race); log clearly with debug-banner lines |
 | 18:49 | `'NoneType' has no attribute 'set_value'` crash on Account tab | nchantrs #db95b58 (operator-fixed before session) | `populate_viewport` dereferences `url_select_entry` before `initView` populates it | Defensive check in `NchantdWebViewer`; upstream fixed in operator's image |
 | 18:54 | `Page not found` on `/registration` | COM T-NEW-058 follow-up | Marketing `_MARKETING_PAGES` whitelist missing the key | Added `compare`/`registration`/`whats_new` to whitelist + created the two new templates |
 | 18:58 | SystemTray URL stuck on production | DESK T-NEW-056 | `DEV_API_BASE` and `DEV_WEB_BASE` were split across 8080/8081 | Collapsed to single port `http://192.168.1.67:8081` (the LAN docker serves both) |
 | ~21:00 | App lockup on launch (operator report) | DESK T-NEW-061 | 12-second QTimer raced with in-flight HTTP fetches | Stripped local rotation; server picks ad, desktop surfaces every 5 min |
+| **15:00** | `GET /compare` → 500 (`UndefinedError: 'base_template' is undefined`); `GET /download` → 500 (same cause, pre-existing) | **COM T-NEW-058 follow-up round 3** (commit `3c16c3b`) | v1.50 theme unification (commits `32a4ddf` + `bef64b6`) migrated only templates under `templates/marketing/`; `compare.html` + `download.html` at templates/ root were missed and still extended `appbuilder/base.html`. The marketing blueprint's `render_template()` does not inject `base_template` (that's an AppBuilder context variable), so both 500'd | Migrated both templates to use `{% include "marketing/_nav.html" %}` + `{% include "marketing/_theme_css.html" %}` + `.page-body-gradient` body class. Added a Jinja context processor that exposes `current_version` + `current_release_date` from `version_gates` to every template (no more per-view kwarg plumbing). 3 regression tests added to `tests/test_marketing_routes_render.py`: 1) `test_compare_canonical_nav` (pins /compare 200 + canonical nav), 2) `test_download_renders_cleanly` (never 500), 3) `test_no_marketing_page_extends_appbuilder_base` (class-level guard — walks every `_MARKETING_PAGES` template and fails if any extends `appbuilder/base.html`) |
 
 ---
 
