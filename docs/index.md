@@ -59,6 +59,28 @@ test fails.
 See [Reference](reference.md) for auto-generated API documentation
 (regenerate with `mkdocstrings` against `nchantdoffice/`).
 
+## Embedded-browser page consistency
+
+The desktop's embedded browser (`nchantrs_webviewer`) opens the
+following URLs from the LAN docker / production site:
+
+- `/registration` — Account tab in Settings
+- `/whats_new` — changelog shown to paid users
+- `/compare` — Pro upsell deep-link (the desktop's "Compare Plans" CTA)
+- `/download` — desktop-binary download (email-gated)
+- `/` — embedded-browser homepage (when the operator clicks "Home")
+- `/marketing/cookies.html` etc. — footer links from the embedded
+  pages (privacy, terms, cookies)
+
+For all of these to render with the same nav, palette, and layout,
+the server-side `nchantdoffice_com` site must use a single theme
+for these pages. The current state (Marketing / Landing / FAB
+coexisting) is documented in the sister repo's audit:
+[`nchantdoffice_com/docs/theme-consolidation-audit_20260826.md`](https://github.com/solubrew/nchantdoffice_com/blob/gamma/docs/theme-consolidation-audit_20260826.md).
+The first consolidation step (commit `3c16c3b`, 2026-08-26) migrated
+`/compare` + `/download` off the FAB default. The remaining
+landing-page migration is a follow-up task.
+
 ## Cross-repo card index
 
 The card IDs prefixed `DESK T-NEW-NNN` (this repo) and `COM T-NEW-NNN`
