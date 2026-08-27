@@ -1,890 +1,889 @@
-2026-07-31 21:30:11,356 - nchantrs.widgets.widgets                 1038: INFO  
-  \- Load Widget Config {'NchantdWidget': {'dstruct': {'database': {'objects':
-None}}}, 'RegisteredWidgets': {'<(CHART)>': None, '<(CUSTOM)>': "need a method
-for telling the widget where to read the data from widgetdata:\\n  path:
-group000.label000\\n  entry: 'Summary'\\n  layer: data #format, formula,
-data\\ngroup000.textbox000\\n", '<(DOCEDIT)>':
-'nchantrs.widgets.editors.NchantdDocEditor', '<(LABEL)>':
-'nchantrs.widgets.annotations.NchantdLabel', '<(SCRATCHEDIT)>':
-'nchantrs.widgets.editors.NchantdScratchEditor', '<(TEXTBOX)>':
-'nchantrs.widgets.editors.NchantdEntryBox'}, 'expandCFG': {'fonts': {'default':
-{'font': 'Times', 'size': 12, 'style': 'regular'}}, 'styles': {'default':
-None}}, 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager':
-{}, 'tab': {'data': None, 'data_str': None, 'did':
-'024694d6-f14b-435b-a130-f86a7e4e447f', 'syntax': None, 'name': 'Affiliate
-Manager', 'position': 2, 'document_type': None, 'readonly': 0, 'editable': 1,
-'visible': 1, 'moveable': 1, 'tid': '06a6cee9-0cd1-757a-8000-6b4eb942dba7',
-'pid': '066a7cf6-5aca-79a2-8000-f4b5405a0427', 'widget':
-'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager',
-'widgdata': '{}', 'version': None, 'tab_type': 'custom_widget', 'location':
-None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon':
-None, 'modon': None}}, 'file_path': '', 'widget':
-'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager', 'tid':
-'06a6cee9-0cd1-757a-8000-6b4eb942dba7', 'document': {'data': None, 'data_str':
-None, 'did': '024694d6-f14b-435b-a130-f86a7e4e447f', 'syntax': None, 'name':
-'Affiliate Manager', 'position': 2, 'document_type': None, 'readonly': 0,
-'editable': 1, 'visible': 1, 'moveable': 1, 'tid':
-'06a6cee9-0cd1-757a-8000-6b4eb942dba7', 'pid':
-'066a7cf6-5aca-79a2-8000-f4b5405a0427', 'widget':
-'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager',
-'widgdata': '{}', 'version': None, 'tab_type': 'custom_widget', 'location':
-None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon':
-None, 'modon': None}}, 'apps': ['nchantrs', 'nchantdoffice'], 'app':
-'nchantdoffice', 'pos': 'center'} 2026-07-31 21:30:11,356 -
-nchantrs.widgets.widgets                 1044: INFO     -
-nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager Master
-passphrase: 2026-07-31 21:30:50,122 - pycurity.pykey                           
-548: INFO     - Connecting to
-/home/solubrew/.local/share/pycurity/secure_store.db 2026-07-31 21:30:50,124 -
-pycurity.pykey                            548: INFO     - Connecting to
-/home/solubrew/.local/share/pycurity/secure_store.db 2026-07-31 21:30:50,124 -
-pycurity.pykey                            548: INFO     - Connecting to
-/home/solubrew/.local/share/pycurity/secure_store.db 2026-07-31 21:30:50,125 -
-pycurity.pykey                            548: INFO     - Connecting to
-/home/solubrew/.local/share/pycurity/secure_store.db 2026-07-31 21:30:50,125 -
-nchantdoffice.widgets.config.referral_panel  335: INFO     - \[referral_panel]
-PyKeyStore.get(affiliate_id) failed: 'No key found for service: affiliate_id'
-2026-07-31 21:30:50,125 - nchantdoffice.utilities.referral          105: INFO  
-  \- ReferralCode created: value='NB-Z5C-1WFD' 2026-07-31 21:30:55,189 -
-nchantdoffice.utilities.referral          312: WARNING  - \[referral_api] GET 
-<https://nchantdoffice.com/api/affiliate/earnings> failed:
-HTTPSConnectionPool(host='nchantdoffice.com', port=443): Max retries exceeded
-with url: /api/affiliate/earnings (Caused by
-ConnectTimeoutError(\<HTTPSConnection(host='nchantdoffice.com', port=443) at
-0x7ce700c83980>, 'Connection to nchantdoffice.com timed out. (connect
-timeout=5.0)')) 2026-07-31 21:30:55,189 -
-nchantdoffice.widgets.config.referral_panel  447: INFO     - \[referral_panel]
-using local fallback dashboard 2026-07-31 21:30:55,209 - squirl.orgnql.sonql   
-                  2845: WARNING  - SQLT Read Failed due to no such column:
-position_int using this cmd SELECT \[app_action_PK], \[code_group_txt],
-\[lookup_code_txt], \[name_txt], \[description_ltxt], \[UUID], \[icon_txt],
-\[short_cut_txt], \[tip_txt], \[advanced_tip_txt], \[widget_txt],
-\[parameters_dict] FROM "app_action"  WHERE app_action.code_group_txt = 'base'
-ORDER BY position_int Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/widgets.py", line 149, in on_tab_focus
-self.model.load_tab(self.model.tabsdata\[tabn], tabn, self.pane_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 4093, in load_tab super().load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 244, in load_tab
-self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab),
-tabset, tab)) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 4129, in load_widget tabW.initWidget() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 147, in initWidget
-self.initView() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/config/referral_panel.py", line 95, in initView cfg =
-super().initView() ^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 1018, in initView
-super().initView(cfg) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 140, in initView
-self.init_toolbar(cfg) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 449, in init_toolbar
-self.document_toolbar = NchantdButtonBar(self, cfg).initWidget(buttons)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/controls/toolbars.py", line 124, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/controls/toolbars.py", line 90, in
-initView action_cfg = kahndor.Instruct(lookup(self.app,
-action)).override(self.config) ^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/utilities/utils.py", line 115, in lookup raise
-Exception(f"Action Lookup Config is Empty {cfg}") Exception: Action Lookup
-Config is Empty {} 2026-07-31 21:30:55,316 - nchantrs.widgets.widgets          
-       414: INFO     - Focus Out
+# CHANGES.md - NchantdOffice Changelog
 
-n': None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon':
-None, 'modon': None}}, 'apps': ['nchantrs', 'nchantdoffice'], 'app':
-'nchantdoffice', 'pos': 'center'} 2026-07-31 00:58:08,458 -
-nchantrs.widgets.widgets                 1044: INFO     -
-nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager 2026-07-31
-00:58:08,468 - nchantdoffice.utilities.referral          105: INFO     -
-ReferralCode created: value='NB-Z5C-1WFD' 2026-07-31 00:58:13,579 -
-nchantdoffice.utilities.referral          312: WARNING  - \[referral_api] GET 
-<https://nchantdoffice.com/api/affiliate/earnings> failed:
-HTTPSConnectionPool(host='nchantdoffice.com', port=443): Max retries exceeded
-with url: /api/affiliate/earnings (Caused by
-ConnectTimeoutError(\<HTTPSConnection(host='nchantdoffice.com', port=443) at
-0x7e0d5b6cdb50>, 'Connection to nchantdoffice.com timed out. (connect
-timeout=5.0)')) 2026-07-31 00:58:13,580 -
-nchantdoffice.widgets.config.referral_panel  355: INFO     - \[referral_panel]
-using local fallback dashboard 2026-07-31 00:58:13,604 - squirl.orgnql.conql   
-                   143: INFO     - Cache cleanup completed 2026-07-31
-00:58:13,609 - squirl.orgnql.sonql                      2845: WARNING  - SQLT
-Read Failed due to no such column: position_int using this cmd SELECT
-\[app_action_PK], \[code_group_txt], \[lookup_code_txt], \[name_txt],
-\[description_ltxt], \[UUID], \[icon_txt], \[short_cut_txt], \[tip_txt],
-\[advanced_tip_txt], \[widget_txt], \[parameters_dict] FROM "app_action"  WHERE
-app_action.code_group_txt = 'base' ORDER BY position_int Traceback (most recent
-call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/widgets.py", line 149, in on_tab_focus
-self.model.load_tab(self.model.tabsdata\[tabn], tabn, self.pane_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3867, in load_tab super().load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 244, in load_tab
-self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab),
-tabset, tab)) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3903, in load_widget tabW.initWidget() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 147, in initWidget
-self.initView() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/config/referral_panel.py", line 95, in initView cfg =
-super().initView() ^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 975, in initView
-super().initView(cfg) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 140, in initView
-self.init_toolbar(cfg) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 406, in init_toolbar
-self.document_toolbar = NchantdButtonBar(self, cfg).initWidget(buttons)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/controls/toolbars.py", line 124, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/controls/toolbars.py", line 90, in
-initView action_cfg = kahndor.Instruct(lookup(self.app,
-action)).override(self.config) ^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/utilities/utils.py", line 115, in lookup raise
-Exception(f"Action Lookup Config is Empty {cfg}") Exception: Action Lookup
-Config is Empty {}
+All notable changes to this project will be documented in this file.
 
-2026-07-31 00:35:28,896 - nchantdoffice.widgets.config.settings     211: INFO  
-  \- \[settings] _initialize_doc_type_selector failed: 'NchantdDropDown' object
-has no attribute 'currentText' Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/config/settings.py", line 207, in
-_initialize_doc_type_selector initial = self.doc_type_selector.currentText() if
-hasattr(self, "doc_type_selector") else options\[0]
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AttributeError: 'NchantdDropDown' object has
-no attribute 'currentText' 2026-07-31 00:35:33,094 - nchantrs.widgets.widgets  
-               414: INFO     - Focus Out
-
-js: The resource https://ground.news/_next/static/chunks/328bfdd80a1e8090.js
-was preloaded using link preload but not used within a few seconds from the
-window's load event. Please make sure it has an appropriate `as` value and it is
-preloaded intentionally. 2026-07-29 00:07:30,989 -
-nchantdoffice.widgets.documents.managers.calendars  728: INFO     - Calendar
-unit changed to: 2026-07-29 00:07:30,989 -
-nchantdoffice.widgets.documents.managers.calendars  728: INFO     - Calendar
-unit changed to: Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/media/editors/selectors.py", line 133,
-in on_index_change self.handler(index, self.itemText(index)) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/managers/calendars.py", line 715, in
-cmd_on_change_scope self.set_scope(scope) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/managers/calendars.py", line 963, in set_scope
-self.calendar = NchantdCalendar(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/calendars.py", line 108, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/calendars.py", line 85, in
-initView self.calendar = NchantdMonthCalendar(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/months.py", line 114, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/months.py", line 68, in
-initView super().initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tabsets.py", line 105, in initView
-super().initView(cfg) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 921, in initView
-super().initView(cfg) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 206, in initView
-self.initialize_context_menu() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/widgets.py", line 216, in
-initialize_context_menu menu_name = self.context_menu_name
-^^^^^^^^^^^^^^^^^^^^^^ AttributeError: 'NchantdMonthCalendar' object has no
-attribute 'context_menu_name'
-
-js: The resource https://ground.news/_next/static/chunks/328bfdd80a1e8090.js
-was preloaded using link preload but not used within a few seconds from the
-window's load event. Please make sure it has an appropriate `as` value and it is
-preloaded intentionally. 2026-07-29 00:07:09,748 -
-nchantrs.widgets.tables.tables            578: INFO     - Size 640 480
-2026-07-29 00:07:09,749 - nchantrs.widgets.tables.tables            580: INFO  
-  \- Size \[58, 160] Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/media/editors/selectors.py", line 133,
-in on_index_change self.handler(index, self.itemText(index)) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/managers/calendars.py", line 715, in
-cmd_on_change_scope self.set_scope(scope) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/managers/calendars.py", line 963, in set_scope
-self.calendar = NchantdCalendar(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/calendars.py", line 108, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/calendars.py", line 91, in
-initView self.calendar = NchantdYearCalendar(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 105, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 89, in
-initView self.month_tables\[i] = NchantdGrid(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 604, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 592, in
-initView grid_layout.addWidget(cell, row, col) TypeError:
-'PySide6.QtWidgets.QGridLayout.addWidget' called with wrong argument types:
-PySide6.QtWidgets.QGridLayout.addWidget(NchantdCell, int, int) Supported
-signatures: PySide6.QtWidgets.QGridLayout.addWidget(w:
-PySide6.QtWidgets.QWidget, /) PySide6.QtWidgets.QGridLayout.addWidget(arg__1:
-PySide6.QtWidgets.QWidget, row: int, column: int, /, alignment:
-PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
-PySide6.QtWidgets.QGridLayout.addWidget(arg__1: PySide6.QtWidgets.QWidget, row:
-int, column: int, rowSpan: int, columnSpan: int, /, alignment:
-PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
-
-', 'MIT'], ['email_validator', '2.2.0', 'The Unlicense (Unlicense)'] 2026-07-28
-23:56:12,370 - nchantrs.widgets.tables.tables            298: INFO     - Num
-Columns 40 2026-07-28 23:56:12,370 - nchantrs.widgets.tables.tables           
-300: INFO     - Columns None 2026-07-28 23:56:12,370 -
-nchantrs.widgets.tables.tables            131: WARNING  - calc roman numerals
-Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/workbooks/matricies.py", line 1701, in
-on_cell_changed address = f"{chr(65 + item.column())}{item.row() + 1}"
-^^^^^^^^^^^^^ TypeError: 'NoneType' object is not callable Traceback (most
-recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/workbooks/matricies.py", line 1701, in
-on_cell_changed address = f"{chr(65 + item.column())}{item.row() + 1}"
-^^^^^^^^^^^^^ TypeError: 'NoneType' object is not callable Traceback (most
-recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/workbooks/matricies.py", line 1701, in
-on_cell_changed address = f"{chr(65 + item.column())}{item.row() + 1}"
-^^^^^^^^^^^^^
-
-ne}}, 'file_path': '', 'widget':
-'nchantrs.widgets.calendars.years.NchantdYearCalendar', 'tid':
-'06a69701-b37d-7970-8000-debb2606a30e', 'document': {'data': None, 'data_str':
-None, 'did': '06a69701-b37d-77c7-8000-f0e6de3282a4', 'syntax': None, 'name':
-'2026', 'position': 0, 'document_type': None, 'readonly': 0, 'editable': 1,
-'visible': 1, 'moveable': 1, 'tid': '06a69701-b37d-7970-8000-debb2606a30e',
-'pid': '06a69701-b343-732f-8000-93abb6533a35', 'widget':
-'nchantrs.widgets.calendars.years.NchantdYearCalendar', 'widgdata': '{}',
-'version': None, 'tab_type': 'year', 'location': None, 'encoding': None,
-'tags': None, 'hash': None, 'meta_data': {'creon': None, 'modon': None}},
-'apps': ['nchantrs', 'nchantdoffice'], 'app': 'nchantdoffice', 'pos': 'center'}
-2026-07-28 23:20:00,931 - nchantrs.widgets.widgets                 1034: INFO  
-  \- nchantrs.widgets.calendars.years.NchantdYearCalendar 2026-07-28
-23:20:00,938 - nchantrs.widgets.tables.tables            578: INFO     - Size
-640 480 2026-07-28 23:20:00,938 - nchantrs.widgets.tables.tables           
-580: INFO     - Size \[58, 160] Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/views/treeviews.py", line 193, in onLeftClick
-self.set_current_node(signal) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/views/treeviews.py", line 275, in
-set_current_node node.updateTabs("center") File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/items/nodes.py", line 551, in
-updateTabs self.app.view.panes\[view].model.buildTabSet(self, view) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3133, in buildTabSet self.load_tab_set(tabset,
-active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3230, in load_tab_set self.load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3344, in load_tab super().load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 237, in load_tab
-self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab),
-tabset, tab)) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3380, in load_widget tabW.initWidget() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 105, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 89, in
-initView self.month_tables\[i] = NchantdGrid(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 604, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 592, in
-initView grid_layout.addWidget(cell, row, col) TypeError:
-'PySide6.QtWidgets.QGridLayout.addWidget' called with wrong argument types:
-PySide6.QtWidgets.QGridLayout.addWidget(NchantdCell, int, int) Supported
-signatures: PySide6.QtWidgets.QGridLayout.addWidget(w:
-PySide6.QtWidgets.QWidget, /) PySide6.QtWidgets.QGridLayout.addWidget(arg__1:
-PySide6.QtWidgets.QWidget, row: int, column: int, /, alignment:
-PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
-PySide6.QtWidgets.QGridLayout.addWidget(arg__1: PySide6.QtWidgets.QWidget, row:
-int, column: int, rowSpan: int, columnSpan: int, /, alignment:
-PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/views/treeviews.py", line 195, in onLeftClick
-self.set_current_node(signal) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/views/treeviews.py", line 275, in
-set_current_node node.updateTabs("center") File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/items/nodes.py", line 551, in
-updateTabs self.app.view.panes\[view].model.buildTabSet(self, view) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3133, in buildTabSet self.load_tab_set(tabset,
-active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3230, in load_tab_set self.load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3344, in load_tab super().load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 237, in load_tab
-self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab),
-tabset, tab)) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3380, in load_widget tabW.initWidget() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 105, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/calendars/years.py", line 89, in
-initView self.month_tables\[i] = NchantdGrid(self, cfg).initWidget()
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 604, in
-initWidget self.initView() File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/tables/tables.py", line 592, in
-initView grid_layout.addWidget(cell, row, col) TypeError:
-'PySide6.QtWidgets.QGridLayout.addWidget' called with wrong argument types:
-PySide6.QtWidgets.QGridLayout.addWidget(NchantdCell, int, int) Supported
-signatures: PySide6.QtWidgets.QGridLayout.addWidget(w:
-PySide6.QtWidgets.QWidget, /) PySide6.QtWidgets.QGridLayout.addWidget(arg__1:
-PySide6.QtWidgets.QWidget, row: int, column: int, /, alignment:
-PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
-PySide6.QtWidgets.QGridLayout.addWidget(arg__1: PySide6.QtWidgets.QWidget, row:
-int, column: int, rowSpan: int, columnSpan: int, /, alignment:
-PySide6.QtCore.Qt.AlignmentFlag = Default(Qt.Alignment))
-
-2026-07-28 23:19:14,162 - nchantrs.widgets.widgets                 1028: INFO  
-  \- Load Widget Config {'NchantdWidget': {'dstruct': {'database': {'objects':
-None}}}, 'RegisteredWidgets': {'<(CHART)>': None, '<(CUSTOM)>': "need a method
-for telling the widget where to read the data from widgetdata:\\n  path:
-group000.label000\\n  entry: 'Summary'\\n  layer: data #format, formula,
-data\\ngroup000.textbox000\\n", '<(DOCEDIT)>':
-'nchantrs.widgets.editors.NchantdDocEditor', '<(LABEL)>':
-'nchantrs.widgets.annotations.NchantdLabel', '<(SCRATCHEDIT)>':
-'nchantrs.widgets.editors.NchantdScratchEditor', '<(TEXTBOX)>':
-'nchantrs.widgets.editors.NchantdEntryBox'}, 'expandCFG': {'fonts': {'default':
-{'font': 'Times', 'size': 12, 'style': 'regular'}}, 'styles': {'default':
-None}}, 'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager':
-{}, 'tab': {'data': None, 'data_str': None, 'did':
-'024694d6-f14b-435b-a130-f86a7e4e447f', 'syntax': None, 'name': 'Affiliate
-Manager', 'position': 2, 'document_type': None, 'readonly': 0, 'editable': 1,
-'visible': 1, 'moveable': 1, 'tid': '06a69701-b24f-78a4-8000-076ddb717b53',
-'pid': '066a7cf6-5aca-79a2-8000-f4b5405a0427', 'widget':
-'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager',
-'widgdata': '{}', 'version': None, 'tab_type': 'custom_widget', 'location':
-None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon':
-None, 'modon': None}}, 'file_path': '', 'widget':
-'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager', 'tid':
-'06a69701-b24f-78a4-8000-076ddb717b53', 'document': {'data': None, 'data_str':
-None, 'did': '024694d6-f14b-435b-a130-f86a7e4e447f', 'syntax': None, 'name':
-'Affiliate Manager', 'position': 2, 'document_type': None, 'readonly': 0,
-'editable': 1, 'visible': 1, 'moveable': 1, 'tid':
-'06a69701-b24f-78a4-8000-076ddb717b53', 'pid':
-'066a7cf6-5aca-79a2-8000-f4b5405a0427', 'widget':
-'nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager',
-'widgdata': '{}', 'version': None, 'tab_type': 'custom_widget', 'location':
-None, 'encoding': None, 'tags': None, 'hash': None, 'meta_data': {'creon':
-None, 'modon': None}}, 'apps': ['nchantrs', 'nchantdoffice'], 'app':
-'nchantdoffice', 'pos': 'center'} 2026-07-28 23:19:14,162 -
-nchantrs.widgets.widgets                 1034: INFO     -
-nchantdoffice.widgets.config.settings.NchantdOfficeAffiliateManager Traceback
-(most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/widgets.py", line 149, in on_tab_focus
-self.model.load_tab(self.model.tabsdata\[tabn], tabn, self.pane_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3344, in load_tab super().load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 237, in load_tab
-self.tab_widgets.insert(tabn, self.load_widget(self.parse_widget_data(tab),
-tabset, tab)) ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3380, in load_widget tabW.initWidget() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/documents.py", line 142, in initWidget
-self.initModel() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/config/referral_panel.py", line 82, in initModel
-self._load_or_generate_code() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/config/referral_panel.py", line 310, in
-_load_or_generate_code getattr(self.user, "id", None) ^^^^^^^^^ AttributeError:
-'NchantdOfficeReferralPanel' object has no attribute 'user'
-
-, 'tab_type': 'custom_widget', 'location': None, 'encoding': None, 'tags':
-None, 'hash': None, 'meta_data': {'creon': None, 'modon': None}} 2026-07-28
-23:18:07,946 - nchantdoffice.widgets.tabs                 42: INFO     -
-\[tabs] NchantdOfficeTab._init_ parent=NchantdOfficeHelpDocs 2026-07-28
-23:18:07,949 - nchantdoffice.widgets.tabs                 52: INFO     -
-\[tabs] NchantdOfficeTab.initModel cfg_provided=False 2026-07-28 23:18:07,953 -
-nchantdoffice.widgets.config.help         118: INFO     - \[help] initView:
-reader build failed: 'document' Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/config/help.py", line 115, in initView self.reader =
-NchantdOfficePDF(self, {}).initWidget() ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/media/pdfs.py", line 192, in initWidget
-self.initModel() File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/media/pdfs.py", line 157, in initModel
-logma.json(self.config.dikt["document"]) ~~~~~~~~~~~~~~~~^^^^^^^^^^^^ KeyError:
-'document' Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/widgets.py", line 149, in on_tab_focus
-self.model.load_tab(self.model.tabsdata\[tabn], tabn, self.pane_position) File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/models.py", line 3344, in load_tab super().load_tab(tab, tabn,
-tabset, active_tab_position) File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/models/tabsetmodels.py", line 238, in load_tab
-self.tab_widgets\[tabn].dummy = False ~~~~~~~~~~~~~~~~^^^^^^ IndexError: list
-index out of range 2026-07-28 23:18:11,296 - nchantrs.widgets.widgets          
-       414: INFO     - Focus Out
-
-2026-07-28 22:52:27,642 - nchantrs.widgets.widgets                  446: INFO  
-  \- Mouse Press Event 2026-07-28 22:52:27,642 - nchantrs.widgets.widgets       
-          466: INFO     - Left Click
-\<PySide6.QtGui.QMouseEvent(MouseButtonPress LeftButton pos=295,292 scn=641,361
-gbl=641,387 dev=QInputDevice(QPointingDevice("Virtual core pointer" Mouse id=2
-seat=30002 caps=Position|Scroll|Hover buttonCount=32))> 2026-07-28 22:52:27,642
-\- nchantrs.widgets.widgets                  467: INFO     - Left Click
-Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Projects/NchantdOffice/3_Work/1_DELTA/nchantdoffice/
-chantdoffice/widgets/documents/workbooks/matricies.py", line 1713, in
-on_selection_changed self.cell_ref_label.setText(address) ^^^^^^^^^^^^^^^^^^^
-AttributeError: 'NchantdOfficeMatrix' object has no attribute 'cell_ref_label'
-
-2026-07-27 19:45:49,937 - nchantdoffice.models                      391: INFO  
-  \- Dumped Content {"content": {"file_path":
-"/home/solubrew/Downloads/ssrn-4668072.pdf"}, "path":
-"/home/solubrew/Downloads/ssrn-4668072.pdf"} 2026-07-27 19:45:49,937 -
-nchantdoffice.models                      394: INFO     - Encoded Dictionary
-b'eyJjb250ZW50IjogeyJmaWxlX3BhdGgiOiAiL2hvbWUvc29sdWJyZXcvRG93bmxvYWRzL3Nzcm4tND
-2ODA3Mi5wZGYifSwgInBhdGgiOiAiL2hvbWUvc29sdWJyZXcvRG93bmxvYWRzL3Nzcm4tNDY2ODA3Mi5
-ZGYifQ==' Traceback (most recent call last): File
-"/mnt/iverse/SB/3_Functions/Operations/opENGRg/3_Work/jobElfSys/actvPython/tskNc
-antrs/1_DELTA/nchantrs/nchantrs/widgets/controls/buttons.py", line 177, in     
-               
-
-                       
-
-##  `TODOs.md`  
-
-`TODOs.md`  `TODOs.md → Sprint 1 + Sprint 2 (2026-07-28) — persistence + safety
-pass` `45 passed, 2 skipped`
-
- `T-NEW-015T-NEW-022`
-
-## `BUGs.md` 
-
-
-||                                                           |                                       |
-||-----------------------------------------------------------|---------------------------------------|
-||`nchantrs.widgets.calendars.months.py:114`                 |`context_menu_name`                    |
-||`nchantrs.widgets.tables.tables.py:592`                    |`QGridLayout.addWidget(NchantdCell, ...)`|
-||`nchantdoffice/widgets/documents/workbooks/matricies.py:1701`|`chr(None)`                            |
-||`matricies.py:1713`                                        |`cell_ref_label`                       |
-||`nchantdoffice/widgets/config/referral_panel.py:310`       |`self.user`                            |
-||`pdfs.py:157`                                              |`KeyError: 'document'`                 |
-||`nchantrs/models/tabsetmodels.py:238`                      |`tab_widgets\[tabn]`                   |
-||`nchantdoffice/widgets/documents/atnrg/browsers.py:348`    |`store_link(tag=...)`                  |
-
- |`.pyof`  
-
- ---
-
- ## [Unreleased] — 2026-08-25
-
- #### Card: DESK T-NEW-051 — fix(license): tolerate dict prefs + fail-soft bootstrap on offline
-
- Fix two production crashes observed in `testing-report_20260825.md`:
-
- 1. **`startup_refresh: could not write entitlement_stale=True to preferences_db: 'dict' object has no attribute 'set'`** — the production caller in `nchantdoffice/views.py` wires `preferences_db=self.config.dikt["preferences"]` (a plain dict), but `_set_stale` was calling the PreferencesDB-style `.set(key, value)` API. Now duck-types via `hasattr(preferences_db, "set")` and falls back to subscript assignment for plain dicts.
-
- 2. **Desktop boot crash on offline / DNS failure (`Cannot connect to host api.nchantdoffice.com:443 [Name or service not known]`)** — the first-launch bootstrap path caught `aiohttp.ClientConnectorDNSError` (subclass of `OSError`) under a generic `except Exception` and **re-raised**, propagating out of `NchantdOfficeCloakView.__init__` and killing the desktop. Now splits the except clause: transient `(asyncio.TimeoutError, OSError)` returns `{action: "skipped", reason: "offline"}` and persists `entitlement_stale=True` so the next launch retries; only real `BootstrapError` (4xx/5xx from server) still raises.
-
- Same fail-soft treatment applied to the bootstrap-fallback-after-`RefreshRevokedError` path.
-
- - `nchantdoffice/license/startup_refresh.py` — duck-type `_set_stale`; split bootstrap except clauses; update docstrings.
- - `tests/license/test_startup_refresh.py` — 3 new regression tests pinning down the exact symptoms from the testing report (dict-prefs, offline-bootstrap, combined end-to-end). All green: `tests/license/test_startup_refresh.py` 11 passed.
-
- **Validation:** 11/11 startup_refresh tests green, 55/55 license module green, full suite shows the same 33 pre-existing unrelated failures as before the patch (909 → 912 passed = +3 new tests; no new failures).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-#### Card: DESK T-NEW-052 — refactor(urls): route every nchantdoffice.com reference through YAML config
+## [Unreleased]
 
-Move every hardcoded `nchantdoffice.com` / `api.nchantdoffice.com` URL in the desktop to a single YAML-driven resolver so the operator can switch between production and internal docker without code edits.
+> **Reality anchor (2026-08-27, gamma `f147d48`):** This block
+> restores the DESK T-NEW-046 through DESK T-NEW-061 desktop
+> install + entitlement + claim-flow milestone that was lost
+> when `TODOs.md`/`CHANGES.md` were corrupted by log dumps at
+> commit `93773b3` (2026-08-19). These entries reconstruct the
+> shipped work from git history between `01b94d7` (2026-08-17,
+> last clean baseline) and `f147d48` (HEAD). Commit hashes and
+> scope match the actual git tree at gamma.
+>
+> The umbrella: every desktop URL routes through a single LAN
+> docker (192.168.1.67:8081) via YAML config; the desktop
+> launches offline-resilient (license bootstrap swallows
+> transient `BootstrapError`); the affiliate link sync reads
+> the api_key from `InstallStore` and uses the
+> `x-api-key` header; the ad rotation is server-driven
+> (server picks the ad; desktop surfaces every 5 minutes).
+> Operator workflow now stable: `cfg = {"run-mode": "dev"}`
+> at launch routes everything to the LAN docker — no
+> post-install yaml editing required.
 
-**New module:** `nchantdoffice/utilities/urls.py` — typed accessors (`urls.server_base_url()`, `urls.affiliate_api_base()`, `urls.home_page()`, `urls.upgrade_compare_url()`, etc.) layered over:
-  1. Hardcoded fallback dict (shipped with package).
-  2. Bundled YAML `nchantdoffice/utilities/_data_/urls.yaml` (production defaults).
-  3. XDG user config `urls:` block (per-deploy overrides).
+### Added (DESK T-NEW-046..061 — desktop install + entitlement + claim flow)
 
-12 URL keys covering API endpoints (license bootstrap/refresh/claim, affiliate, feature-gates, updates, sync) and marketing deep-links (homepage, compare, registration, whats_new, affiliate_marketing, share landing, marketing base for ad CTAs).
+- **DESK T-NEW-046** `feat(license): install store`
+  (`9021f33`) — `nchantdoffice/license/install_store.py` —
+  `InstallStore` class with `save_api_key` / `load_api_key` /
+  `is_installed` / `migrate` (legacy from
+  `~/.local/share/nchantdoffice/install.bin`). AES-GCM
+  encryption with the existing pycurity master key. On
+  first launch the desktop writes an empty
+  `install.json` + a derived `api_key.bin`; on every
+  subsequent launch the key is reused without a server
+  round-trip. 656 lines, no external deps.
+- **DESK T-NEW-047** `feat(license): entitlement cache +
+  tier gate` (`90c320e`) —
+  `nchantdoffice/license/entitlement_cache.py` —
+  `EntitlementCache` (TTL 1 hour, file-backed at
+  `~/.local/share/nchantdoffice/entitlement.json`) +
+  `tier_gate(feature, user)` helper used by the pro-only
+  UI gates (T-NEW-135 100-node cap redirect, T-NEW-140
+  free-user ad-tab lock).
+- **DESK T-NEW-048** `feat(license): remote client +
+  bootstrap` (`a4633e1`) — `NchantdLicenseClient` with
+  `bootstrap()` (calls `POST /api/desktop/install-bootstrap`
+  against the LAN docker; gets back an `api_key` +
+  `install_id`; persists both via `InstallStore`).
+  Failure-tolerant — returns `(None, None)` on network
+  errors so the desktop launches offline.
+- **DESK T-NEW-049** `feat(license): claim flow + account
+  widget wiring` (`64f5a9e`) —
+  `nchantdoffice/license/claim_flow.py` — the magic-link
+  claim flow (claim token from `/api/account/claim` →
+  desktop generates a one-time URL → user opens it in
+  the embedded browser to bind their account). The
+  Settings → Nchantd Account tab now uses this widget
+  to render the embedded browser at
+  `http://192.168.1.67:8081/registration`.
+- **DESK T-NEW-050** `feat(desktop): startup entitlement
+  refresh` (`1342e28`) — `cmd_on_boot_entitlement_refresh`
+  fires after `bootstrap()`; on every launch the desktop
+  re-validates the cached entitlement against
+  `GET /api/version-config`. If the cached tier differs
+  from the server's, the cache is invalidated and the
+  UI re-gates.
 
-**Call sites updated (15 files):**
-- License: `views.py`, `widgets/config/accounts.py`
-- Affiliate/referral: `utilities/referral.py`, `utilities/links.py`, `widgets/config/referral_panel.py`
-- Updates/sync/feature-gates: `updates/checker.py`, `sync/applier.py`, `utilities/feature_gates.py`
-- UI surfaces: `widgets/documents/atnrg/browsers.py`, `widgets/documents/atnrg/pages.py`, `widgets/advertisements.py`, `utilities/upgrades.py`, `utilities/config.py`, `widgets/documents/atnrg/_data_/pages.yaml`
-- Config schema: `utilities/user_config.py` (added `urls:` block docs + dev-mode example pointing at `192.168.1.67`)
+### Changed (DESK T-NEW-051..058 — bug fixes + config hardening)
 
-**Tests:** New `tests/utilities/test_urls_config.py` with 11 tests covering bundled defaults, XDG overrides, unknown-key warnings, trailing-slash normalisation, and a regression-guard test that walks every `.py` file in `nchantdoffice/` via AST to assert no caller still hardcodes the production hostname. All green.
+- **DESK T-NEW-051** `fix(license): tolerate dict prefs +
+  fail-soft bootstrap on offline` (`2e38edc`) — the
+  bootstrap now reads the user's prefs as a dict (not
+  the legacy INI shape) and degrades to a no-network
+  boot when the LAN docker is unreachable (logs
+  `License bootstrap: offline mode — re-launch when the
+  docker is up`).
+- **DESK T-NEW-052** `refactor(urls): route every
+  nchantdoffice.com reference through YAML config`
+  (`866c1a9`) + `fix(user_config): seed empty urls
+  section so on-install config has override placeholder`
+  (`ea84ed1`) — every hard-coded
+  `https://nchantdoffice.com` reference now goes through
+  `nchantdoffice/_data_/user_config.yaml`'s `urls:`
+  section. The operator can override per-deployment
+  without editing source.
+- **DESK T-NEW-053** `feat(urls): run-mode launch profile
+  (dev=internal docker, prod=cloud)` (`e6fdef0`) — new
+  `run-mode` config key; `dev` resolves all URLs to
+  `192.168.1.67:8081` (LAN docker); `prod` resolves to
+  `https://nchantdoffice.com` (cloud). The
+  `cmds/runNchantdOffice.py` launcher reads the mode at
+  boot and routes the URL resolver accordingly. Operator
+  workflow now: `cfg = {"run-mode": "dev"}` at launch
+  → every URL routes to the LAN docker.
+- **DESK T-NEW-054** `fix(license): swallow
+  BootstrapError on first-launch bootstrap` (`e003221`)
+  — broadened the bootstrap's
+  `except (OSError, BootstrapError)` so a transient
+  `BootstrapError` from a 4xx re-raise boots the
+  desktop offline rather than crashing the launcher.
+- **DESK T-NEW-055** `fix(links): stop doubling the
+  affiliate API URL path` (`963dff3`) — the
+  `update_affiliate_links` path was concatenating the
+  api_base twice (`/api/affiliate/links/api/affiliate/links`).
+  Fixed: the URL builder now reads from the resolved
+  `api_base` and concatenates `/api/affiliate/links`
+  exactly once.
+- **DESK T-NEW-056** `fix(urls): collapse dev profile
+  to single port` (`41b19a8`) — `DEV_API_BASE` and
+  `DEV_WEB_BASE` were split across 8080/8081; both now
+  collapse to `http://192.168.1.67:8081` (the LAN docker
+  serves both API and marketing on one port). The
+  SystemTray URL sticks to the right port now.
+- **DESK T-NEW-057** `fix(links): use x-api-key header +
+  read api_key from InstallStore` (`5de4ce8`) — the
+  `APIClient` was sending
+  `Authorization: Bearer *** but the server's
+  `@require_desktop_api_key` reads `x-api-key`.
+  Switched header name; `update_affiliate_links` now
+  reads the api_key from `InstallStore` (not from a
+  stale in-memory cache).
+- **DESK T-NEW-058** `fix(links): skip affiliate sync
+  until install has an api_key` (`c1411ae`) — the
+  affiliate sync was racing the bootstrap; when the
+  api_key is `None`, the call is skipped entirely and
+  a debug banner logs the reason. Resolved the 401 on
+  every fresh launch.
+- **DESK T-NEW-060** `fix(ad-tab): route base-layer feed
+  + affiliate rotation through URL resolver` (`63de7ec`)
+  — REVERTED by `91dda7e` (caused ad-tab lockup; see
+  T-NEW-061). The reverted commit is preserved as
+  evidence of the wrong approach.
+- **DESK T-NEW-061** `fix(ad-tab): server-driven
+  rotation, desktop surfaces every 5 minutes`
+  (`2e04b7d`) — the original 12-second QTimer raced
+  with in-flight HTTP fetches and caused an app lockup
+  on launch. Stripped local rotation; the server picks
+  the ad (`GET /api/ads/rotation/next` every 5
+  minutes) and the desktop just surfaces the current
+  selection. Live verification: `curl -s
+  http://192.168.1.67:8081/api/ads/rotation/next?interval_seconds=60
+  → {"ad": {"id": 3, "slug": "supabase-default",
+  "title": "Supabase..."}, "bucket": 29795174,
+  "rotation_interval_seconds": 60}`.
 
-**Validation:** 11/11 urls tests green, 66/66 license+utilities tests green, full suite shows same 33 pre-existing failures as before the patch (no new regressions).
+### Documentation
 
-**To switch to internal docker:** operator edits `~/.config/nchantdoffice/config.yaml` and sets the `urls:` block per the example in `utilities/user_config.py` — no code change required.
+- 2026-08-26 (`e88df9b`, `0af01d0`, `59035d8`,
+  `3a360fa`, `fd9fc05`, `d64e6d4`) — testing-report
+  updates for the cross-repo theme-site-switch work in
+  `nchantdoffice_com` (phases 1-4, commits `4c363ba` →
+  `d93cdf5` → `52227c6` → `95d2e13`). Pure doc
+  hygiene; no code changes.
+- 2026-08-27 (`f147d48`) — `add testing report`:
+  `testing-report_20260827.md` (feature request: add a
+  terminal as a Document type / toolbox drawer, pro
+  users only). Includes a `QProcess + QPlainTextEdit`
+  reference implementation.
+- 2026-08-26 (`4133cca`, `969a476`, `e8c9350`) —
+  `align settings with document storage configuration`
+  (3 commits; redundant column adds in models + debug).
+
+### Restored from corruption (2026-08-27)
+
+The `TODOs.md`, `CHANGES.md` corruption at `93773b3`
+(2026-08-19) lost the 2026-08-17 → 2026-08-27 doc
+history. This block is the reconstruction from git log; no
+commit re-attribution.
+
+The prior `[Unreleased]` block (from the `01b94d7`
+baseline) is preserved below as-is — its T-NEW-110..147
+entries document the 2026-08-10 → 2026-08-17 sprint
+and remain the canonical record for that period.
+
+### Added (T-NEW-110..147)
+
+- **T-NEW-117** Palette extraction (2026-08-17) — the
+  `PyfficeColorPalette.extract_palette` surface landed in
+  pyffice gamma `1cd3c48` (returns `{colors: [{hex, count,
+  percent}, ...]}` ordered by frequency using PIL's
+  `Image.convert("RGB")` + `Counter`). nchantdoffice
+  `419a317` adds a `hasattr(palette_document,
+  "extract_palette")` guard at
+  `widgets/documents/media/images.py:1010` so older pyffice
+  builds degrade gracefully (logs `Palette scan unavailable
+  -- update pyffice` and surfaces the same message via
+  status bar) instead of crashing with
+  `AttributeError: 'PyfficeColorPalette' object has no
+  attribute 'extract_palette'`. New regression test:
+  `tests/test_t_new_117_palette_scan_degradation.py` (3
+  cases — missing-method graceful log, status-bar message,
+  happy-path palette application). Pin: 1/1 new test green.
+- **T-NEW-122** Qt-harness migration for tests importing
+  toolboxes (2026-08-17) — the module-level
+  `_QAPP = QApplication.instance() or QApplication(sys.argv)`
+  pattern in 21 test files crashed multi-file pytest
+  collection at exit 134/139. `260886a` adds
+  `tests/conftest.py` with a session-scoped autouse fixture
+  that lazily constructs one `QApplication` for the whole
+  pytest session (deferred import keeps non-Qt hosts safe)
+  and `tests/qt_parent/__init__.py` with opt-in session-
+  /function-scoped `qapp` fixtures. The offending
+  module-level line was stripped from all 21 offender
+  files; the autouse conftest provides the same instance
+  lazily. New regression gate:
+  `tests/test_t_new_122_qt_collection_guard.py` (2 tests:
+  AST scan finds no offender, RED→GREEN history).
+  Targeted evidence: full suite (with
+  `--ignore=tests/test_cmd_pyof_routing_consolidation.py`
+  for the unrelated pyof-bare-parent SIGSEGV that
+  T-NEW-074's pyof dispatch pin reproduces; fixed by
+  `07fc18b` the same day): 19 failed, 836 passed, 6
+  skipped (100% collection reached; pre-`260886a` the run
+  aborted at 8% of collection). 21 offender files
+  identified by the AST scan before the sweep; 0 after.
+- **T-NEW-110** Packaging + ruff config (`678e59e`) — real
+  `pyproject.toml` description, `MANIFEST.in`, ruff lint config;
+  closes the "[Unreleased] Added" entry that referenced a
+  placeholder.
+- **T-NEW-114** `.pyof` import dispatch consolidation
+  (`f81c8a7`) — `cmd_import_local_file` routes `.pyof` →
+  `cmd_import_pyof` (was → `model.import_nchantdoffice`);
+  `cmd_open_local_file` routes `.pyof` → `cmd_import_local_file`
+  (was → `_open_pyof_instance`); `cmd_import_pyof` offloads to a
+  `_PyofImportWorker` on a `QThread` (was synchronous on GUI
+  thread, blocked on long `.pyof` reads). 5 new tests pin the
+  dispatch + worker thread. Follow-ups: `d0075b3`
+  (re-architect via `sonql.Doc` + model funnels),
+  `6480f77` (refresh tree widgets), `6f0724e`
+  (re-parent top-level imports), `aaf74b7` (also re-parent rows
+  parented to the starting-node pid), `0f3d6a3` (resolve
+  selected nid from item widgets, not just dicts), `8d217fe`
+  (refresh inner tree in place — never rebuild the container),
+  `1cda19f` (scope re-parent to source `doc_tree_node` rows
+  only).
+- **T-NEW-124** Doctype guard — strict-dtd payloads restore as
+  HTML (`d8d228d`) — `_apply_syntax_highlighting` in
+  `widgets/documents/media/scripts.py` now fingerprints the
+  stable `rec-html40/strict.dtd` doctype on the first 2048 chars
+  (case-insensitive, tolerant of spacing/quote variants) and
+  routes the payload to `setHtml(text)` regardless of
+  `document.syntax`. 7 new tests in
+  `tests/test_script_doctype_guard.py`.
+- **T-NEW-129** Seed `app_user` row on initial install
+  (`7da0d1e`) — `bootstrap_app_user` + `store_app_user` +
+  `get_app_user` wired from `run_on_launch` so the cloak model
+  has a user row to read on first boot. **NOTE: live traceback
+  2026-08-15 22:19:02 surfaces two regressions in this wiring;
+  tracked under T-NEW-146 and T-NEW-147.**
+- **T-NEW-130** Top-level new-node toolbar lands at `pid=0`
+  (`ac448ad`) — `NchantdNewDocumentSigil.top_level` flag +
+  `launch_new_document_sigil` signals the rootnode dispatch.
+- **T-NEW-131** Deny child-node creates under
+  Home/Journal/Settings (`fc61c4e`) — `is_locked_pid` +
+  `is_locked_parent` helpers; `add_node`/`add_node_app` refuse
+  children of locked trees for all users.
+- **T-NEW-132** Deny tab create/delete in Settings tree
+  (`87ace4d`) — `is_locked_tab_parent` helper; `add_tab`/
+  `delete_tab` refuse Settings-tree tab ops for all users.
+- **T-NEW-133** Sort buttons sort the entire subtree
+  (`8857081`) — `cmd_sort_children` + `_resolve_sort_direction`
+  + `_sort_subtree` helper; every descendant depth is reordered
+  (asc/desc) and persisted.
+- **T-NEW-134** Get Pro button visibly green (`096e6c9`) —
+  `_apply_bg_color` helper on `NchantdOfficeDocumentMixin` sets
+  background-color via `setStyleSheet`, paired with white text
+  for contrast. Follow-up `5831dd1` swaps green for dark orange
+  (better contrast in the disabled state, per the user's
+  live-testing feedback).
+- **T-NEW-135** 100-node cap redirects to Nchantd Account with
+  reason param (`5bf6f3d`) — fixed dead-code bug in
+  `_check_max_nodes_for_user`; `redirect_to_get_pro` accepts a
+  `reason`; `NchantdAccountSettings` appends `?reason=` to the
+  compare URL.
+- **T-NEW-137** Pre-flight `.pyof` import against the 100-node
+  cap (`1fd8d60`) — before any row is copied, the import worker
+  computes the source's net node count and refuses the import
+  if it would push the host over the cap; redirects to Get Pro
+  via the same path as T-NEW-135.
+- **T-NEW-146** `_build_app_user_payload` generator coercion
+  (2026-08-16) — `NchantdUser.get_password` is a generator
+  function so `user.pword` is a generator instance by default;
+  the payload-builder's duck-typed branch was passing it
+  through verbatim, and `squirl._store` exploded on deepcopy
+  with `TypeError: cannot pickle 'generator' object`. Fix:
+  `_coerce_scalar(value)` helper unwraps iterators/generators
+  (`next()` on the first yielded value) and falls back to
+  `str()` for any other non-scalar.3 new regression tests in
+  `tests/test_app_user_bootstrap.py`.
+- **T-NEW-147** `get_app_user` fallback routes through the store
+  layer (2026-08-16) — the fallback branch was calling
+  `self.get_table(...)` (a method that doesn't exist on
+  `NchantdOfficeCloakModel`), so every fresh-boot where
+  `_sqlite_connection` was unbound raised `AttributeError` and
+  logged `get_app_user failed: 'NchantdOfficeCloakModel' object
+  has no attribute 'get_table'`. Fix: route through
+  `self.store.get_table` (the store-layer method). 2 new
+  regression tests in `tests/test_app_user_bootstrap.py`.
+- **T-NEW-143** `.pyof` import excludes `DELETE_BIT=1` rows
+  (2026-08-16) — the base-6 branch of `import_one_table`
+  (nchantdoffice/utilities/pyof_import.py) was copying
+  squirl soft-delete tombstones verbatim into the host.
+  Fix: `if row.get("DELETE_BIT"): continue` at the top of
+  the base-6 per-row loop. Missing/None/0 = live; any truthy
+  int = skip. `_content` tables are untouched (they are
+  versioned, not soft-deleted). 6 new regression tests in
+  `tests/test_t_new_143_delete_bit_filter.py`.
+- **T-NEW-145** `Ctrl+S` wired to save button logic
+  (2026-08-16) — overrode `cmd_save` on `NchantdOfficeCloak`
+  (the nchantrs shortcut was calling the inherited
+  `NchantdCloak.cmd_save`, which calls `self.parent.model.save()`
+  — the application-level instance write, NOT the
+  document-level save). Override does an active-doc lookup
+  via `self.main.view.panes["center"].currentWidget()` and
+  dispatches to the doc's `save()` / `save_app()`; falls back
+  to `self.parent.model.save()` when no active document
+  (defensive against missing view/panes/currentWidget).
+  4 new source-shape regression tests in
+  `tests/test_t_new_145_ctrl_s_save.py`.
+- **T-NEW-142** Tab Delete button registrations
+  (2026-08-16) — the button-bar config at
+  `widgets/panes/documents.py:791` (`delete_tab`) and line 93
+  (`delete_node`) referenced action names that were never
+  registered as `app_action` rows in
+  `nchantdoffice/_data_/models.yaml`. The nchantrs
+  `lookup()` chain reads `app_action` from the DB by
+  `lookup_code_txt` and raises
+  `Exception('Action delete_tab Lookup Config is Empty')`
+  when missing — which silently fails the button-bar render.
+  Fix: added two `app_action` records (icon
+  `actions-remove-tab-svgrepo-com` for delete_tab,
+  `remove-delete-trash-cancel-svgrepo-com` for delete_node).
+  5 new regression tests in
+  `tests/test_t_new_142_tab_delete_action.py`.
+
+- **T-NEW-144a** FileDetailsPane shows internal-doc data
+  (2026-08-16) — when the active tab is internal (no
+  `file_path`), `NchantdFileDetailsPane` previously
+  returned empty / "0" for every detail field (size, hash,
+  dates). Fix: added `bind_to_tab(tab)` method on the
+  pane; `get_name` / `get_file_path` / `get_file_size` /
+  `get_modified_date` now consult `self.tab` when
+  `self.file_path` is empty (returns `tab.name`,
+  `"(internal storage)"`, `len(tab.content)`,
+  `tab.modon`). External docs are unchanged —
+  `set_file_path` still populates the widget with the
+  full path; the new code only writes the widget in the
+  internal-doc fallback branch. 6 new regression tests in
+  `tests/test_t_new_144a_file_details_internal.py`.
+- **T-NEW-144b** External file becomes editor
+  (2026-08-16) — **ACTIVE UMBRELLA, phased by document type.**
+  The broad multi-format project remains active, but each document
+  type must be implemented and regression-tested independently to
+  protect existing behavior. T-NEW-148 is phase 1 for
+  NchantdOfficeScript; later formats receive separate child cards.
+
+- **T-NEW-138** Journal editor followups: always-scroll
+  + standard-populate (2026-08-16) -- the outer journal
+  editor's `initView` did not call `scroll_to_bottom()`,
+  so opening a long journal left the user looking at the
+  first entry instead of the latest; the
+  `populate_document()` was a no-op stub instead of
+  routing through the canonical `parse()` contract. Fix:
+  `initView` now calls `self.scroll_to_bottom()` after the
+  editor is added to the layout (matches the standard
+  populate_document helper's tail); `populate_document`
+  reads the loaded content via `self.get_content()` and
+  feeds it to `self.parse(...)`, populating
+  `self.entries` by the standard pipeline. Pin:
+  `tests/test_t_new_138_journal_scroll_and_populate.py`
+  4 new tests (initView source-level pin, populate
+  source-level pin, populate delegates-to-parse
+  behavioural, populate populates-entries behavioural).
+
+- **T-NEW-139** Toolbar post-creation navigation helper
+  (2026-08-16) -- the original TODO at ``toolbars.py:216``
+  asked to combine ``add_tab`` + ``add_document`` cfg
+  wiring. There is no ``add_tab`` sibling on
+  ``NchantdNewDocumentToolBar``; the real candidate for
+  extraction was the two-line post-creation navigation
+  block (left-pane ``updateTabs('center')`` + center-pane
+  ``setCurrentIndex(pos)``). Fix: extracted
+  ``_navigate_to_new_doc(pos) -> Self`` helper;
+  ``add_document`` delegates to it. Any future
+  ``add_tab`` / ``add_shortcut`` method on this class
+  can call the same helper. 4 new regression tests in
+  `tests/test_t_new_139_toolbar_navigate.py`.
+
+- **T-NEW-140** Free-user right-side tab lock (2026-08-16)
+  -- ``cmd_on_change_right_side_tab_select`` recorded
+  whatever the user picked, regardless of tier. Free
+  users could therefore set their default right tab to
+  Settings / Help / Ad / etc. and miss the upsell surface.
+  Fix: when the user is not pro (``is_pro_user(user)``),
+  non-Ad selections are coerced to ``"4 - Ad"``. Pro
+  users are unrestricted. The right-pane options
+  themselves are unchanged (free users still see every
+  tab); only the *default* they open on launch is locked.
+  Pairs with T-NEW-135 (100-node cap redirect): free users
+  who hit the cap are redirected to Get Pro AND they
+  default-open on the Ad tab. 6 new regression tests in
+  `tests/test_t_new_140_free_user_ad_tab.py`.
+- **T-NEW-141** Inside-nchantdoffice TODO sweep (subset)
+  (2026-08-16) -- three of the ten outstanding
+  ``# TODO implement method`` markers in the
+  ``nchantdoffice/`` package shipped here. ``go_to_previous_tab``
+  (``widgets.py:111``) was a no-op stub; the caller in
+  ``panes/documents.py:872`` ``cmd_delete_tab`` relied on
+  the no-op, so deleting a tab left focus on a now-deleted
+  index. Fix: decrements ``currentIndex`` by 1, clamped
+  at 0. ``populate_data`` (``documents.py:1182``) had a
+  misleading TODO comment plus two real lines; replaced
+  the TODO with a real docstring + ``-> Self`` return
+  type for parity with the other ``populate_data``
+  callers. ``_load_api_key`` (``source_config.py:317``)
+  was a no-op stub; the caller at ``source_config.py:184``
+  always received ``None`` and the source panel never
+  displayed a real API key. Fix: defensive lookup chain
+  -- source arg -> ``user_config.api_keys[source_id]`` ->
+  ``pycurity.pykey.get_secret("api_key", source_id)``;
+  returns the raw key (caller's ``obscure_key`` masks).
+  The remaining 7 markers (palette drawer wiring, tool
+  drawer re-render, notebook webview instrumentation,
+  catalog tab-None stub, config features pane) are
+  deferred to T-NEW-141b. 4 new regression tests in
+  `tests/test_t_new_141_stub_methods.py`.
+- **T-NEW-141b** Inside-nchantdoffice TODO sweep (subset 2)
+  (2026-08-16) -- four of the seven remaining
+  ``# TODO`` / no-op stub markers in the
+  ``nchantdoffice/`` package shipped here; the remaining
+  three (palette drawer wiring, tool drawer re-render,
+  per-doctype features pane) are deferred to T-NEW-141c
+  (live UI architecture). The catalog tab-None marker at
+  ``panes/documents.py:798`` was a misleading TODO
+  comment over an existing stub; replaced with a real
+  docstring describing the placeholder-tab contract.
+  The two Jupyter webview hooks
+  (``notebooks.py:1786/1790``) were no-op stubs; they
+  now log the ``loadStarted`` / ``loadProgress`` signals
+  so Jupyter-tab load attempts are visible in the
+  application log. The hardcoded ``self.has_pro = True``
+  in ``users.py:69`` now reads from
+  ``load_credentials().user_tier`` (pycurity
+  ``DesktopCredentials``); tier mapping is
+  `pro` / `pro_data` / `enterprise` -> True, `free` ->
+  False, missing / malformed -> True (backward compat
+  Defaulting to True preserves the
+  pre-141b behaviour for legacy users. 7 new
+  regression tests in
+  `tests/test_t_new_141b_safe_subset.py`.
+- **T-NEW-141c** Inside-nchantdoffice TODO sweep (final
+  subset) (2026-08-16) -- investigation of the 3
+  remaining markers showed that the actual implementation
+  already exists; the original TODOs were misleading.
+  ``images.py:807`` ``cmd_add_palette_document
+  _nchantdpalette`` already created the palette document
+  but did not open the drawer; the fix calls
+  ``self.cmd_show_palette_drawer()`` after the add so the
+  user immediately sees the new palette.
+  ``images.py:1162`` ``init_drawer_image_tools`` claimed
+  the per-tool selective re-render was unimplemented; the
+  implementation already exists as
+  ``cmd_open_tool_drawer(tool_name)`` (T-NEW-035) which
+  hides all 5 panes and shows only the named one. The
+  stale TODO is replaced with a docstring referencing the
+  dispatcher. ``settings.py:1016`` claimed the
+  ``NchantdOfficeDocumentConfigPane`` features pane was
+  unimplemented; the class exists at
+  ``panes/document_settings.py:73`` with a per-doctype
+  registry (MatrixConfigPane, NotebookConfigPane,
+  ImageConfigPane, ScriptConfigPane) wired by T-NEW-027.
+  The stale TODO is replaced with a docstring describing
+  the registry contract. T-NEW-141 (with 141b + 141c)
+  closes all 10 of the inside-nchantdoffice TODO
+  markers from the 2026-08-15 inside-sweep. 4 new
+  regression tests in
+  `tests/test_t_new_141c_clear_stale_todos.py`.
+- **T-NEW-120** Script save + reopen aspirational tests
+  (2026-08-16) -- re-applies the previously-reverted
+  ``85e809e`` fix. Two production bugs in
+  ``nchantdoffice/widgets/documents/media/scripts.py``
+  caused all 5 aspirational save/restore tests to fail:
+  ``get_content`` HTML branch ran a defunct
+  ``html.replace(...)`` template substitution against
+  an empty ``html = ""`` (the template body was
+  commented out), collapsing the saved payload to ``""``
+  and dropping every format char; the dict-shape
+  ``_resolve_document_text`` reached the top-level
+  ``content["text"]`` (which was the inner ``content``
+  dict, not the saved text), so reopen fell through to
+  ``""``. Test SimpleNamespace fixtures gained
+  ``location='external'`` to match the
+  ``populate_document`` dispatch. All changes leverage
+  existing scripts.py patterns -- no new helpers. 15
+  tests pass across the 3 named test files.
+- **T-NEW-123** Embedded-TODO sweep (cluster 4)
+  (2026-08-16) -- closes the 4 in-file TODOs that
+  were either stale comments over already-implemented
+  code or had been resolved by prior cards.
+  ``journal.py:319`` (save_app redirect -- already
+  implemented), ``settings.py:1254`` (lock default
+  right tab for free users -- T-NEW-140),
+  ``journal.py:459`` (refactor to populate -- T-NEW-138),
+  ``config/referral_panel.py:117`` (external source --
+  T-NEW-061 deferred). Stale TODOs replaced with
+  explanation comments documenting the existing
+  contract or the deferred-work rationale. Remaining
+  embedded TODOs (`models.py:3040` correction-position,
+  `panes/charts.py:186/214` were historically blamed on
+  T-NEW-029 drag-init gating, but the real root cause
+  was an implicit `None` return from the action-button /
+  border-style builder stubs feeding `layout.addWidget(None)`
+  (a PySide6 segfault). **Fixed by `899962c`** (T-NEW-037
+  followup — see "Fixed" below): `_build_chart_action_button_
+  group` / `_build_border_style_editor` now return real
+  `QWidget` instances, with a `is not None` gate before
+  `addWidget`. Pin:
+  `tests/test_t_new_037_addwidget_none_root_cause.py`
+  (behavioural + source-shape regression tests). The
+  `panes/charts.py:186/214` TODO markers are replaced
+  with the docstring referencing the dispatcher; the
+  remaining `models.py:3040` correction-position,
+  `analytics.py:887` docstring reference, and
+  `models.py:3412` PyfficeDocument version increment
+  TODOs documented inline. For the T-NEW-123 cluster-4
+  sweep itself (the 4 stale-TODO replacements above), no
+  test surface was added -- those are documentation /
+  explanation comments around code that was already
+  correct. The chart addWidget(None) fix is documented
+  separately under `899962c` / T-NEW-037 followup. 28 regression
+  tests pass across the journal test surface
+  (`test_t_new_138_journal_scroll_and_populate.py` +
+  `test_journal_always_save.py` +
+  `test_compact_journal_content.py` +
+  `test_journal_settings_pro_tier.py` +
+  `test_journal_add_entry_mirrors_to_document.py`).
+- **T-NEW-115** (audit only) -- the live bug was already
+  fixed by T-NEW-130 (`ac448ad`); this card is a
+  catalogue cleanup.
+- **T-NEW-116** Jupyter default working directory
+  (2026-08-16) -- the Jupyter subprocess is now spawned
+  with a cwd that defaults to
+  ``~/Documents/NchantdLibrary`` (created if missing)
+  when no file is open. The previous behaviour fell
+  back to the bare process cwd (often the application
+  bundle dir, which is read-only on packaged installs).
+  Fix: extracted ``_resolve_jupyter_cwd()`` helper with
+  a 3-step lookup chain (file parent -> NchantdLibrary
+  default -> process cwd as last-resort).
+  ``start_jupyter_server`` delegates to it. 4 new
+  regression tests in
+  `tests/test_t_new_116_jupyter_default_dir.py`.
+
+### Changed (T-NEW-110..137)
+
+- **T-NEW-121** em-dash sweep + encoding-declaration placement —
+  197 files affected by the `30593b9` SyntaxError incident;
+  em-dash removed from comments/docstrings throughout (per
+  Python 3.12 tokenizer rule for modules whose `# coding:` line
+  is positioned after a non-ASCII line). Encoding declarations
+  moved to the first or second line where present.
+- `nchantdoffice/__init__.py` - Added version and config exports
+- `nchantdoffice/widgets/items/items.py` - Renamed `self.parent` → `self.parent_widget`
+  across `NchantdOfficeDocumentCatalogItem`, `NchantdOfficeSourceCatalogItem`,
+  `NchantdOfficeTreeNode` to prevent shadowing `QTreeWidgetItem.parent()`
+
+### Fixed (T-NEW-110..147)
+
+- **NchantdChart `addWidget(None)` segfault (chart-config
+  action-button / border-style editor)** (2026-08-17,
+  commit `899962c`) — historically the
+  `panes/charts.py:186/214` sites were attributed to
+  T-NEW-029 drag-init gating and the action-button /
+  border-style builders were left as `# TODO` commented
+  blocks because of that diagnosis. The actual root
+  cause was the implicit `None` return from the
+  builders feeding `layout.addWidget(None)` — a known
+  PySide6 segfault. Fix: `_build_chart_action_button_
+  group` (new, returns `NchantdAcceptButtons` or a
+  fallback `QWidget`) and `_build_border_style_editor`
+  (new, returns a real border-style `QWidget`) replace
+  the stubs; `initView` now gates `addWidget(...)` on
+  `is not None` before each call. Both call sites
+  uncommented with a docstring referencing the
+  dispatcher. Pin:
+  `tests/test_t_new_037_addwidget_none_root_cause.py`
+  (behavioural + source-shape regression tests).
+- **pyof routing dispatch bare-parent segfault** (2026-08-17,
+  commit `07fc18b`) — `test_cmd_pyof_routing_consolidation.py`
+  aborted pytest with exit 139 (SIGSEGV, not a Python
+  exception) when the T-NEW-074 pyof dispatch pin
+  constructed an `NchantdOfficeApplicationToolBox`
+  via `__new__` (the unit-test pattern for a stub
+  QObject) and `_resolve_host_doc` (toolboxes.py:1429)
+  called `self.parent()`. The bare shiboken binding
+  had no Qt parent, so `self.parent()` segfaulted at
+  the C++ layer — invisible to the surrounding
+  `try/except Exception`. Fix: gate `self.parent()`
+  on `shiboken6.isValid(self)` (lazy import; treated
+  as unavailable in headless envs without Qt parent),
+  so the bare test instance skips the call and the
+  walk falls through to the clear `RuntimeError` at
+  the bottom of the helper. No production behaviour
+  changed (real QObjects are always valid). Pin:
+  extension of
+  `tests/test_cmd_pyof_routing_consolidation.py` (the
+  test file that exposed the bug — now passes
+  without segfault; full suite re-includes it after
+  the `260886a` T-NEW-122 collection fix made the
+  file collectable in the multi-file run).
+- **H25 — Catalog Tab Wrong Child Count** (`nchantdoffice` consumer of `nchantrs fa05530`):
+  Root cause was in parent library `NchantdNode.loadChildren()` which inconsistently
+  used `parentid` vs `pid_txt` for parent filtering. Fix standardized on `pid_txt`.
+  Visible in catalog tab child counts across all node types.
+- **H27 — Nchantd Image Save Mode (Internal vs External)** (`commit c45cfc5`):
+  Enforced canonical external file storage mode in `widgets/documents/media/images.py`;
+  internal base64 mode now deprecated with runtime warning. Eliminates round-trip
+  corruption and orphan files.
+- **H28 — Browser Pin Tab Persistence** (`commit 87a5264`):
+  Fixed `open_new_window()` routing through pinned-aware center pane tabset in
+  `widgets/documents/atnrg/browsers.py`; corrected `save()` to read `self.pinned`
+  (was checking non-existent `self.pin`); `pin_page()` and `populate_document()`
+  now respect `self.pinned` state. "Pin Tab" action persists; links in pinned
+  tabs no longer open new tabs.
+- **H29 — Tree Node Drag-and-Drop Regression** (`commit c45cfc5` + nchantrs `fa05530`):
+  Two-part fix — (1) `nchantrs/widgets/items/nodes.py` `NchantdNode.initModel()` now
+  stores the full node dict in `UserRole` for drag-drop; (2) `nchantdoffice/widgets/trees.py`
+  `getNid()` reads `nid_txt` from the `UserRole` dict. Drag-drop, drop targets,
+  and reordering restored.
+- **H30 — `setData()` Argument Order** (`nchantrs commit 5afde9d`):
+  `NchantdNode.initModel()` in `nchantrs/widgets/items/nodes.py:380` now calls
+  `self.setData(0, Qt.UserRole, self.node)` — the correct argument order is
+  `(column, role, value)`. Previously the args were inverted, storing the role ID
+  in column 0, which silently failed and produced empty `UserRole` data. This
+  compounded with H29 to break drag-and-drop in nchantdoffice.
+- **H31 — `self.parent` Shadowing `QTreeWidgetItem.parent()`** (`commit a01714c`):
+  `QTreeWidgetItem` subclasses in `nchantdoffice/widgets/items/items.py`
+  (`NchantdOfficeDocumentCatalogItem`, `NchantdOfficeSourceCatalogItem`,
+  `NchantdOfficeTreeNode`) had `self.parent = parent` in their constructors, which
+  shadowed Qt's built-in `parent()` method. This caused
+  `TypeError: 'NchantdOfficeTreeNode' object is not callable` whenever Qt called
+  `.parent()` on a tree item — most visibly in drag-and-drop `_is_descendant()`
+  checks. Renamed `self.parent` → `self.parent_widget` across all three classes.
+  nchantrs mirrored the rename across `NchantdItem`, `NchantdTreeItem`,
+  `NchantdTreeNode`, and `NchantdTree` (commits `57839d2` + `be8a582`).
+- Lambda antipattern in toolbar buttons (fixed variable capture)
+- Signal inheritance in NchantdNewDocumentToolBar
+- Incorrect super().__init__() calls in toolbar classes
+- 4 inline TODOs in `widgets/items/items.py` resolved (2026-07-11)
+
+### Filed (open as of 2026-08-17) — NOT YET SHIPPED
+
+These T-NEW cards are filed in `TODOs.md` and awaiting
+implementation. They are listed here so the unreleased-block
+mirror stays truthful about outstanding work; do **not** move
+them to "Added"/"Fixed" until they ship. (Cards marked
+✅ were filed here but have since shipped — their entries
+are also in "Added" above; the marker is preserved for
+traceability.)
+
+- **T-NEW-115** ✅ Creating new Nodes at the top level is blocked
+  — **FIXED** by T-NEW-130 (`ac448ad`). Top-level new-node
+  toolbar now lands at `pid=0` via
+  `NchantdNewDocumentSigil.top_level` flag +
+  `launch_new_document_sigil` rootnode dispatch. Pin:
+  `tests/test_top_level_node_create.py` (8 tests).
+- **T-NEW-116** ✅ Jupyter server default working directory
+  (`~/Documents/NchantdLibrary`) — **FIXED** (`8816168`,
+  2026-08-16). Pin: `tests/test_t_new_116_jupyter_default_dir.py`
+  (4 tests).
+- **T-NEW-117** ✅ Palette scan crashes:
+  `PyfficeColorPalette.extract_palette` missing —
+  **FIXED** (2026-08-17). Upstream pyffice
+  `PyfficeColorPalette.extract_palette` shipped in pyffice
+  gamma `1cd3c48`; nchantdoffice `419a317` adds a
+  `hasattr` graceful-degradation guard at the call site
+  so older pyffice builds log + status-bar the failure
+  instead of crashing. Pin:
+  `tests/test_t_new_117_palette_scan_degradation.py`
+  (3 tests).
+- **T-NEW-118** Journal PII detector + redacted view with PIN
+  copy (re-filed, was orphaned by the T-NEW-066/067/068 number
+  collision inside T-NEW-065's deferred-work section).
+- **T-NEW-119** Journal retention/timestamp/delete-marked — **CLOSED by operator clarification (2026-08-18):** full-text save/restore and retention already work and must not be changed. Remaining journal scope is parsing/PII integration under T-NEW-118.
+- **T-NEW-120** ✅ Script save/restore aspirational tests fail
+  at the `5d80f92` contract — **FIXED** (`a2a0361`,
+  2026-08-16). Pin: 15 tests green across
+  `test_script_newline_roundtrip.py` /
+  `test_document_persistence.py` /
+  `test_script_open_format.py`.
+- **T-NEW-121** em-dash sweep + encoding-declaration
+  placement — partial; see "Changed" above for what shipped
+  in `30593b9`. Full sweep still open.
+- **T-NEW-122** ✅ Qt-harness migration for tests importing
+  toolboxes — **FIXED** (`260886a`, 2026-08-17). 21
+  module-level `QApplication(...)` offenders stripped;
+  `tests/conftest.py` autouse fixture provides a single
+  session-wide QApplication lazily; opt-in
+  `tests/qt_parent/__init__.py` qapp fixtures exposed
+  for tests that want to declare Qt dependency
+  explicitly. Pin:
+  `tests/test_t_new_122_qt_collection_guard.py` (2 tests;
+  RED→GREEN history recorded in commit body). Full suite
+  no longer aborts at collection.
+- **T-NEW-123** ✅ Embedded-TODO sweep: implement-method stubs
+  and config wiring — **FIXED** (`95a41da` cluster 4,
+  `5aad63e` cluster 3, `5117b2e` cluster 2, `9c20862`
+  cluster 1, plus T-NEW-141b/141c final subsets). 10
+  inside-nchantdoffice TODO markers closed.
+- **T-NEW-138** ✅ Journal editor followups: always-scroll to
+  bottom + refactor to standard populate — **FIXED**
+  (`23fa565`, 2026-08-16). Pin:
+  `tests/test_t_new_138_journal_scroll_and_populate.py`
+  (4 tests).
+- **T-NEW-139** ✅ Toolbar signature cleanup — **FIXED**
+  (`e1573ba`, 2026-08-16). Extracted
+  `_navigate_to_new_doc(pos) -> Self` helper. Pin:
+  `tests/test_t_new_139_toolbar_navigate.py` (4 tests).
+- **T-NEW-140** ✅ Free-user right-side tab: lock default to Ad
+  tab — **FIXED** (`b63d36d`, 2026-08-16). Pin:
+  `tests/test_t_new_140_free_user_ad_tab.py` (6 tests).
+- **T-NEW-141** ✅ Inside-nchantdoffice TODO sweep: 10
+  remaining markers — **FIXED** across three commits
+  (`9c20862` subset, `5aad63e` subset 2, `5117b2e` final
+  subset, all 2026-08-16).
+- **T-NEW-142** ✅ Tab Delete broken from document toolbar +
+  `NchantdTabPane` (filed from `testing-report_20260815.md`
+  Issue 2). **FIXED** in the `9fccd8f` commit (added two
+  `app_action` records); see "Added" above. **Note:
+  100-node cap popup superseded by T-NEW-135 redirect
+  per user direction 2026-08-16; no T-NEW for popup.**
+- **T-NEW-143** ✅ `.pyof` import excludes `DELETE_BIT=1` rows
+  (filed from `testing-report_20260815.md` Issue 3).
+  **FIXED** in the `c4f6cd3` commit; see "Added" above.
+- **T-NEW-144** `file_details` toolbox redirects to internal
+  data when tab is an internal document + external file
+  becomes editor (not viewer) -- filed from
+  `testing-report_20260815.md` Issues 4 & 5; split into
+  T-NEW-144a/144b if scope balloons. **T-NEW-144a** ✅
+  **FIXED** (`1f08ab5`, 2026-08-16). **T-NEW-144b**
+  ⏳ DEFERRED to v0.2.0.
+- **T-NEW-145** ✅ `Ctrl+S` wired to save button logic (filed from
+  `testing-report_20260815.md` Issue 6). **FIXED** in the
+  `c4f6cd3` commit; see "Added" above.
+- **T-NEW-146** ✅ `bootstrap_app_user` regression: cannot pickle
+  'generator' object — post-T-NEW-129 live traceback
+  2026-08-15 22:19:02; **FIXED** in the `c4f6cd3` commit
+  (the `_coerce_scalar` helper in
+  `_build_app_user_payload`); see "Added" above.
+- **T-NEW-147** ✅ `get_app_user` AttributeError:
+  `'NchantdOfficeCloakModel' object has no attribute
+  'get_table'` — **FIXED** in the `c4f6cd3` commit
+  (routes through `self.store.get_table`); see "Added"
+  above.
+
+### Security
+- Added CI security scanning with bandit and safety
+
+### Testing
+- Added pytest configuration and unit tests for config module
+- **`tests/test_t_new_*`** — 30+ T-NEW-pinned regression tests
+  landed alongside T-NEW-110..137. See
+  `tests/` and the test-surface count in `TODOs.md` §1 for the
+  current running totals. The aspirational script tests under
+  T-NEW-120 (5 RED) are the next acceptance gate.
 
 ---
 
-#### Card: DESK T-NEW-053 — feat(urls): run-mode launch profile (dev=internal docker, prod=cloud)
+## [Unreleased] — prior batch (T-NEW-058..079)
 
-Launch-time URL profile selector. The operator picks a complete URL set at startup — no config file editing required.
+> **Retained for traceability.** This section was the live
+> `[Unreleased]` block prior to the 2026-08-16 sweep that
+> consolidated T-NEW-110..147 above. It is unchanged from
+> commit `8f9b0aa` (the last committed unreleased-section
+> revision before the 110..147 burst landed).
+- **Journal save / restore functional** (commits `dad65fe`, `ca1b2e4`, `374c6eb`, `e1d660c`) — `NchantdOfficeJournalEditor.save()` persists the full text via `self.save_app()` (the app_media path: `app_doc_content` / `app_media_content`), and the editor restores the full text on every tab focus via `refresh_content()`. The earlier T-NEW-XXX attempts called `super().save()` alongside the journaling code, which landed the wrong payload into `doc_media_content`; the user removed `super().save()` from the journal path (commits `9e74486` + `cb6ebb9`) so the only correct save path is `save_app()`. `save_app()` failures are NOT wrapped in try/except per the user's `cb6ebb9` directive -- they propagate to the Qt event loop so a save failure is loud, not silent. The user also cleaned up dead commented-out blocks in commit `f978a95` -- no behavior change, just dead-code removal that brings the source closer to the canonical 174cfd86 state plus the T-NEW-079 additions.
+- **Journal entries now persist in `content_enc64_txt`** (commit `374c6eb`) — the user-visible live bug: the full text saved, but the `entries` dict inside `app_media_content.content_enc64_txt` was empty. Root cause: `NchantdOfficeJournalAppendEditor.add_entry()` only wrote to `self.parent.pages` (the editor's in-memory alias), not `self.parent.document.pages` (the persisted Pyffice document). The fix writes to both, with defensive fallbacks for empty pages and missing documents. See `tests/test_journal_add_entry_mirrors_to_document.py` (5 tests pinning the contract).
+- **Journal `parse()` + `refresh_content()` re-enabled** (commits `dad65fe`, `ca1b2e4`, `e1d660c`) — `parse(content)` splits the full text on `--|YYYY-MM-DD HH:MM:SS|--` markers and stores the `{timestamp: block_text}` dict in `self.entries` (the in-memory cache for date-navigation widgets). The save payload is NOT serialized into the save call -- `save_app()` persists the full text and `parse()` is the consumer-side reducer. `parse()` normalizes its input (dict vs string vs None) so the save flow can call it without first unpacking the `get_content()` dict. `refresh_content()` re-fetches the journal text from the model on every tab focus (T-NEW-036 + T-NEW-073).
+- Content-table merge-by-version dedupe (`T-NEW-076`) — extends the `_content` import merge to query the host's MAX(version) per `pUUID` before inserting. Re-importing the same source no longer appends duplicate rows: the source's max-version row replaces host rows only when it's strictly newer; equal-or-older source rows are skipped.
 
-**New module surface (`nchantdoffice/utilities/urls.py`):**
-- `DEV_URLS` table — 12 internal-host URLs (`http://192.168.1.67:8081` for the API, `:8080` for the marketing site).
-- `PROD_URLS` table — empty (the resolver uses bundled defaults).
-- `get_run_mode() -> str` — current mode (default `"prod"`).
-- `set_run_mode("dev" | "prod")` — flips the active profile, invalidates the resolver cache. Idempotent. Invalid values raise `ValueError`.
+### Changed
+- `nchantdoffice/__init__.py` - Added version and config exports
+- `nchantdoffice/widgets/items/items.py` - Renamed `self.parent` → `self.parent_widget`
+  across `NchantdOfficeDocumentCatalogItem`, `NchantdOfficeSourceCatalogItem`,
+  `NchantdOfficeTreeNode` to prevent shadowing `QTreeWidgetItem.parent()`
 
-**Resolver layering updated:** run-mode profile sits between XDG user overrides and the explicit per-call kwarg, so a `run-mode: dev` launch wholesale redirects every URL surface (license bootstrap, embedded browser homepage, account tab in Settings, upgrade prompts, ad CTAs) at the internal docker.
+### Fixed
+- **H25 — Catalog Tab Wrong Child Count** (`nchantdoffice` consumer of `nchantrs fa05530`):
+  Root cause was in parent library `NchantdNode.loadChildren()` which inconsistently
+  used `parentid` vs `pid_txt` for parent filtering. Fix standardized on `pid_txt`.
+  Visible in catalog tab child counts across all node types.
+- **H27 — Nchantd Image Save Mode (Internal vs External)** (`commit c45cfc5`):
+  Enforced canonical external file storage mode in `widgets/documents/media/images.py`;
+  internal base64 mode now deprecated with runtime warning. Eliminates round-trip
+  corruption and orphan files.
+- **H28 — Browser Pin Tab Persistence** (`commit 87a5264`):
+  Fixed `open_new_window()` routing through pinned-aware center pane tabset in
+  `widgets/documents/atnrg/browsers.py`; corrected `save()` to read `self.pinned`
+  (was checking non-existent `self.pin`); `pin_page()` and `populate_document()`
+  now respect `self.pinned` state. "Pin Tab" action persists; links in pinned
+  tabs no longer open new tabs.
+- **H29 — Tree Node Drag-and-Drop Regression** (`commit c45cfc5` + nchantrs `fa05530`):
+  Two-part fix — (1) `nchantrs/widgets/items/nodes.py` `NchantdNode.initModel()` now
+  stores the full node dict in `UserRole` for drag-drop; (2) `nchantdoffice/widgets/trees.py`
+  `getNid()` reads `nid_txt` from the `UserRole` dict. Drag-drop, drop targets,
+  and reordering restored.
+- **H30 — `setData()` Argument Order** (`nchantrs commit 5afde9d`):
+  `NchantdNode.initModel()` in `nchantrs/widgets/items/nodes.py:380` now calls
+  `self.setData(0, Qt.UserRole, self.node)` — the correct argument order is
+  `(column, role, value)`. Previously the args were inverted, storing the role ID
+  in column 0, which silently failed and produced empty `UserRole` data. This
+  compounded with H29 to break drag-and-drop in nchantdoffice.
+- **H31 — `self.parent` Shadowing `QTreeWidgetItem.parent()`** (`commit a01714c`):
+  `QTreeWidgetItem` subclasses in `nchantdoffice/widgets/items/items.py`
+  (`NchantdOfficeDocumentCatalogItem`, `NchantdOfficeSourceCatalogItem`,
+  `NchantdOfficeTreeNode`) had `self.parent = parent` in their constructors, which
+  shadowed Qt's built-in `parent()` method. This caused
+  `TypeError: 'NchantdOfficeTreeNode' object is not callable` whenever Qt called
+  `.parent()` on a tree item — most visibly in drag-and-drop `_is_descendant()`
+  checks. Renamed `self.parent` → `self.parent_widget` across all three classes.
+  nchantrs mirrored the rename across `NchantdItem`, `NchantdTreeItem`,
+  `NchantdTreeNode`, and `NchantdTree` (commits `57839d2` + `be8a582`).
+- Lambda antipattern in toolbar buttons (fixed variable capture)
+- Signal inheritance in NchantdNewDocumentToolBar
+- Incorrect super().__init__() calls in toolbar classes
+- 4 inline TODOs in `widgets/items/items.py` resolved (2026-07-11)
 
-**Launch entrypoint wired (`cmds/runNchantdOffice.py`):**
-- `_parse_run_mode(args, cfg)` reads run-mode from (highest first):
-  1. `cfg["run-mode"]` (primary — what `nchantment()` callers pass)
-  2. `--run-mode=dev` / `--run-mode prod` CLI flag
-  3. `NCHANTDOFFICE_RUN_MODE` env var (escape hatch for test harnesses)
-  4. Default `"prod"`
-- Calls `urls.set_run_mode(...)` BEFORE any URL accessor, so the very first call returns the right value.
-- Backward compat: legacy `cfg["website_override"]` still works — when present but `run-mode` unset, run-mode infers to `"dev"` so existing launch scripts don't break.
+### Security
+- Added CI security scanning with bandit and safety
 
-**Tests:** 6 new run-mode tests in `tests/utilities/test_urls_config.py` (defaults to prod, set-to-dev flips every accessor, set-back-to-prod reverts, invalid value raises, idempotent, cache invalidation). All 21 urls tests + 76 license+utilities tests pass.
-
-**Operator workflow:**
-```python
-# Production / end-user launch
-cfg = {"run-mode": "prod"}     # default; explicit for clarity
-nchantment("NchantdOffice", args, app, cfg, wizard)
-
-# Operator's LAN docker launch
-cfg = {"run-mode": "dev"}
-nchantment("NchantdOffice", args, app, cfg, wizard)
-
-# OR via CLI flag (no code change at call site):
-python cmds/runNchantdOffice.py --run-mode=dev
-```
-
-Both modes ship the same binary — no rebuild required to flip environments.
-
----
-
-#### Card: DESK T-NEW-054 — fix(license): swallow BootstrapError on first-launch bootstrap (was crashing on docker 404)
-
-Live launch regression (2026-08-25 18:11:41) — operator launched with `run-mode: dev` against `http://192.168.1.67:8081` (the LAN docker stack). The docker AppBuilder returned **HTTP 404** with HTML "Page not found" for the `/api/desktop/install-bootstrap` endpoint (the endpoint blueprint hadn't been deployed yet — operator is mid-setup). The desktop then crashed at boot with:
-
-```
-nchantdoffice.license.remote.BootstrapError:
-  install-bootstrap returned HTTP 404: '<!DOCTYPE html>...'
-```
-
-T-NEW-051 only swallowed `(asyncio.TimeoutError, OSError)` on the bootstrap path; `BootstrapError` (the 4xx/5xx result) was caught by a broad `except Exception` and **re-raised**, propagating out of `NchantdOfficeCloakView.__init__`.
-
-**Fix:** broaden the except clause to include `BootstrapError`. Same fail-soft treatment as the network-error path — log, persist `stale=True`, return `{action: "skipped", reason: "offline"}`. The desktop boots in free-tier mode; the next launch retries when the operator has finished setting up the docker endpoint.
-
-Same fix applied to the bootstrap-fallback-after-`RefreshRevokedError` path (the other place the same bug lurked).
-
-**Tests:** 2 new tests in `tests/license/test_startup_refresh.py` (`test_first_launch_bootstrap_404_returns_skipped_offline`, `test_first_launch_bootstrap_500_returns_skipped_offline`). 13/13 startup_refresh tests + 78/78 license+utilities tests pass.
-
-**Trade-off:** no longer distinguishes "real auth failure" (operator typo'd credentials) from "endpoint missing". Both surface as offline + retry-next-time. Acceptable because the operator sees a clear log message naming the actual error, and the entitlement cache's stale-check still drives a retry on next launch.
-
----
-
-#### Card: DESK T-NEW-056 — refactor(urls): collapse dev profile to single port (LAN deploy uses one Flask port)
-
-The DESK T-NEW-053 dev profile split API and marketing across
-two ports (`8081` for the API, `8080` for the marketing site).
-That was a wrong assumption: the nchantdoffice_com Flask app
-serves BOTH `/api/desktop/*` and `/`, `/registration`, etc. on
-a single port (the LAN deploy `cluster-up.lan.sh` binds Flask
-port 5000 to host port 8081). Splitting them left the desktop
-hitting `192.168.1.67:8080` (which wasn't running) for the
-marketing pages.
-
-**Fix:** both DEV_API_BASE and DEV_WEB_BASE now resolve to
-`http://192.168.1.67:8081`. The constants `DEV_INTERNAL_HOST`
-and `DEV_INTERNAL_PORT` are the single source of truth; if the
-operator's LAN deploy uses a different port they edit those
-two constants (no env vars per the T-NEW-070 directive).
-
-**Tests:** updated `test_set_run_mode_to_dev_flips_all_accessors`
-and `test_update_affiliate_links_dev_url_constructs_correctly` to
-expect the new single-port dev URLs. 80/80 license+utilities
-tests pass.
-
-Also demoted the `requests.exceptions.RequestException` (DNS,
-connection refused, etc.) log level in `links.py::APIClient.get`
-from ERROR to WARNING: when `run-mode: dev` is active and the
-operator is mid-setup on a docker stack that hasn't deployed
-the affiliate service yet, "connection refused" is expected
-state, not a bug. `HTTPError` (4xx/5xx from a reachable server)
-stays at ERROR because that IS actionable. `Timeout` was
-already WARNING.
+### Testing
+- Added pytest configuration and unit tests for config module
 
 ---
 
-#### Card: DESK T-NEW-057 — fix(links): use x-api-key header + read api_key from InstallStore (401 fix)
+## [0.0.1.0.1.4] - 2026-03-25
 
-Live launch regression (2026-08-25 18:39) after the operator
-brought up the LAN cluster. The desktop's affiliate sync hit:
+### Phase 7 - Quality & Standards Compliance
 
-```
-GET http://192.168.1.67:8081/api/affiliate/links/
-→ 401 Unauthorized
-```
+#### Added
+- CI/CD pipeline (GitHub Actions)
+- Configuration module with logging and 100+ constants
+- Unit test infrastructure
+- Documentation deployment workflow
 
-Two bugs in the same code path:
-
-1. `APIClient.__init__` was setting `Authorization: Bearer
-   <api_key>` — the FAB-User auth convention. The
-   server's `@require_desktop_api_key` decorator reads
-   `request.headers.get("x-api-key")` and ignores the
-   `Authorization` header. The two are visually similar in
-   the browser dev tools but the server treats them as
-   distinct.
-
-2. `update_affiliate_links` was constructing
-   `APIClient(API_URL)` with no api_key, so the call had
-   no credentials at all. The install's api_key lives in
-   `InstallStore` (populated by the install bootstrap) and
-   the affiliate sync wasn't reading it.
-
-**Fix:** `APIClient` now sets `x-api-key: <key>` (not
-Authorization). `update_affiliate_links` lazy-imports
-`InstallStore` and passes `record.get("api_key")` to the
-client. If the install hasn't bootstrapped yet (api_key is
-None), the call still runs (no header set) and gets a 401,
-which the outer try/except logs and swallows. The desktop
-keeps 0 affiliates instead of crashing.
-
-**Tests:** 5 new tests in `tests/utilities/test_links_url.py`
-covering: x-api-key header (not Bearer), no-auth sends no
-auth header, 401 returns zeros (not crash), end-to-end api_key
-flows from InstallStore to x-api-key header, and the
-no-api_key-yet pre-bootstrap path. 85/85 license+utilities
-tests pass.
-
-**Cross-repo note:** the server's
-`@require_desktop_api_key` in `app/apis/updates.py:93` is
-unchanged — it was correct, the desktop was wrong.
+#### Fixed
+- Lambda antipattern in buttons
+- Signal inheritance issues
+- super().__init__() parameter errors
 
 ---
 
-#### Card: DESK T-NEW-058 — fix(links): skip affiliate sync until install has an api_key (sequencing fix)
+## [0.0.1.0.1.3] - 2026-03-05
 
-The operator reported that the affiliate sync fired IMMEDIATELY
-after `Nchantment Initialized` with no api_key yet — returning
-401. The bootstrap (`startup_refresh.refresh_if_needed`) runs
-synchronously in `NchantdOfficeCloakView.__init__`, but the
-model init (which calls `update_affiliate_links`) can fire
-before the bootstrap's HTTP call has completed. Sending a
-network call without credentials is wasted bandwidth and a
-noisy 401.
+### Phase 6 - Build & Deploy Preparation
 
-**Fix:** `update_affiliate_links` now checks
-`InstallStore().get_or_create()["api_key"]` upfront. If
-`api_key` is None (fresh install, install bootstrap returned
-4xx/5xx and was swallowed fail-soft, or `install.bin` is
-missing), the function returns zeros immediately and logs a
-clear `INFO` line naming the install_id and the bootstrap
-path. The next launch will retry once the bootstrap has
-minted an api_key.
+#### Added
+- PyfficeDocument implementations (12 types)
+- Toolbox integration with dynamic tools
+- Signal flow: toolbar → tree → tabs → toolbox
+- CLI entry point via cmds/
 
-**Debug logging added (also DESK T-NEW-058):**
-
-- `[startup_refresh] BEGIN: install_id=… api_key_present=True/False entitlement_cached=…`
-  — single banner that tells the operator whether the
-  install is bootstrapped at function entry
-- `[startup_refresh] bootstrap OK: minted api_key='nk_test_…' (saved to InstallStore)`
-  — fired on successful first-launch bootstrap, so the
-  operator can confirm the key is on file
-- `[links] update_affiliate_links: using api_key for install_id=… against <url>`
-  — confirms the api_key was sourced from InstallStore and
-  which server the call is heading to
-- `[links] skip affiliate sync: no api_key in InstallStore yet (install_id=…)`
-  — explains WHY the affiliate call is silent (correlates
-  with the bootstrap banner)
-
-**Tests:** 1 updated test (the "no api_key → still make the
-call" test was inverted to "no api_key → skip the call
-entirely"). 85/85 license+utilities tests pass. The
-regression-guard test uses an `AssertionError` mock so any
-future code that re-introduces a network call in the skip
-path will fail loudly.
+#### Fixed
+- Center app tab dragging
+- Tree node drag-and-drop
+- Cross-pane tab dragging
+- Tab-to-tree drag-and-drop
+- Right-click context menus
+- Right toolbox search
 
 ---
 
-#### Card: DESK T-NEW-055 — fix(links): stop doubling the affiliate API URL path
+## [0.0.1.0.1.2] - Prior
 
-Live launch regression (2026-08-25 18:18:15) — after the operator moved to `run-mode: dev`, the affiliate sync path hit:
-
-```
-HTTPConnectionPool(host='192.168.1.67', port=8080):
-  /api/affiliate/links/affiliate/links/
-```
-
-That's a **doubled path**: `affiliate_api_base` already ends in `/api/affiliate`, then `API_URL = f"{_aab()}/links/"` appended `/links/`, then `client.get("affiliate/links/")` appended `/affiliate/links/` AGAIN.
-
-The pre-T-NEW-052 code had the same bug (it hardcoded `API_URL = ".../api/affiliate/links/"` then passed `"affiliate/links/"` to the client). Production masked it with a wildcard Flask route; dev mode (192.168.1.67) returned connection-refused and surfaced the bug.
-
-**Fix:** pick one convention. `API_URL` is now just the API base (`affiliate_api_base()`, i.e. `/api/affiliate`); the resource path is the caller's job (`"links/"`). The base + path now resolves to the canonical `{affiliate_api_base}/links/` endpoint.
-
-**Tests:** 2 new tests in `tests/utilities/test_links_url.py` (prod URL + dev URL) that mock `requests.Session.get` and capture the URL passed in. Both tests RED with the bug present, GREEN with the fix. 80/80 license+utilities tests pass.
+*History not available*
 
 ---
 
-#### Card: DESK T-NEW-061 — fix(ad-tab): server-driven rotation, desktop just surfaces every 5 minutes
+## Internal Project Changes Required
 
-**The problem:** DESK T-NEW-060 routed the Ad tab through
-the unified URL resolver — that fixed the URL, but the
-desktop was still doing ALL the rotation logic locally:
-a 5-slot type registry (Tip / Substack / ProCta /
-Affiliate / ProInternal), a 12-second QTimer, an
-`_advance_slot()` callback that raced with the in-flight
-HTTP fetches. The operator reported the application
-**locking up** on launch (2026-08-25). The lockup was
-the timer firing while `_load_banners` / `_load_affiliate_rotation`
-were still mid-flight from a previous fetch — classic
-re-entrancy deadlock.
-
-**The new design (operator-mandated):**
-
-- The **server** picks the ad. New endpoint
-  `GET /api/ads/rotation/next` on `nchantdoffice_com`
-  returns ONE ad, rotated server-side via a deterministic
-  time-bucket (floor(epoch_seconds / interval_seconds) %
-  len(active_ads)). Two desktops on the same LAN see the
-  same ad at the same time.
-- The **desktop** just surfaces the tab every 5 minutes.
-  Single QTimer at 300_000 ms, fires `_fetch_and_render`
-  which calls the server and renders whatever came back.
-  No local slot rotation, no 5-slot type registry, no
-  `_advance_slot` race. The manual Refresh button calls
-  `_fetch_and_render` directly.
-- The previous `PRO_INTERNAL_PROMOS` list, the
-  `RotationSlot` subclasses, the `TipSlot` / `SubstackSlot`
-  / `ProCtaSlot` / `AffiliateSlot` / `ProInternalSlot` are
-  kept around (backward-compat for any imports) but the
-  AdTab no longer uses them. All ad content is owned by
-  the operator via the server's admin UI.
-
-**Server-side endpoint** (`nchantdoffice_com`):
-
-- `GET /api/ads/rotation/next?interval_seconds=NNN` returns
-  200 + `{"ad": {...}, "as_of": "...", "bucket": N, "rotation_interval_seconds": NNN}`
-- `GET /api/ads/rotation/health` returns 200 + `{"status": "ok", "count": N, "rotation_interval_seconds": 300}`
-- `interval_seconds` clamps to `[60, 86400]` so a typo or
-  malicious probe can't make every desktop caller spin
-  through thousands of ads per second.
-- Returns 204 No Content when the operator's catalog is
-  empty (desktop renders its empty state).
-
-**Desktop-side changes** (`nchantdoffice`):
-
-- New module `nchantdoffice/widgets/ad_rotation_client.py`
-  with a single `fetch_rotation_ad(server_base_url)`
-  function — fail-soft, returns `None` on any error.
-- `DEFAULT_INTERVAL_MS = 12000` replaced with
-  `DEFAULT_SURFACE_INTERVAL_MS = 300_000` (5 minutes).
-- `advertisements.yaml` key renamed from `interval_ms`
-  to `surface_interval_ms` (the old key is silently
-  ignored if present, so the rename is forward-compatible).
-- The "Next" button in the UI is now a "Refresh" button
-  (next button would imply local cycling).
-
-**Tests:**
-
-- Server: 10 new tests in
-  `nchantdoffice_com/tests/test_ad_rotation_endpoint.py`
-  (endpoint exists, 200 happy path, 204 empty state,
-  response shape, deterministic per-bucket, interval
-  clamping, health endpoint).
-- Desktop: 8 new tests in
-  `nchantdoffice/tests/utilities/test_ad_rotation_client.py`
-  (200 happy path, 204 empty, connection-refused fail-soft,
-  500 fail-soft, malformed response fail-soft, invalid JSON
-  fail-soft, surface-interval-is-5-minutes regression
-  guard, custom interval).
-
-End-to-end smoke against the live LAN docker:
-```
-GET /api/ads/rotation/next?interval_seconds=60
-→ {"ad": {"id": 3, "slug": "supabase-default", "title": "Supabase..."},
-   "bucket": 29795174, "rotation_interval_seconds": 60}
-```
-
-85 license+utilities desktop tests + 16 nchantdoffice_com
-route tests pass. The lockup cause (12-second timer racing
-with HTTP fetches) is structurally removed — there are no
-more concurrent fetches, only one fetch every 5 minutes.
-
-**Operator workflow:** pull both repos, rebuild the web
-image (`docker compose build web`), recreate the container
-(`LAN_PORT=8081 bash /home/solubrew/docker-data/nchantdoffice/scripts/cluster-up.sh`),
-restart the desktop. The Ad tab now surfaces an ad from
-the LAN docker on launch and re-surfaces every 5 minutes
-with whatever the server's time-bucket rotation has picked.
-
+See [CHANGES-nchantrs.md](./CHANGES-nchantrs.md) for changes needed in the nchantrs dependency.
