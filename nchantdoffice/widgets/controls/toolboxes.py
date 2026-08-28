@@ -569,64 +569,17 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         return self
 
     def add_tools_drawer(self) -> Self:
-        """T-NEW-160: add the Search pane to the tools drawer."""
-        try:
-            cfg = {"layout": "vertical"}
-            self.application_search_pane = NchantdApplicationSearchPane(self, cfg).initWidget()
-            self.add_drawer_item(self.application_search_pane, 0, 0)
-        except Exception as e:
-            logma.error(f"[toolboxes] add_tools_drawer: search pane failed: {e}", exc_info=True)
+        """No-op: search pane is added via ``init_drawer_application()``."""
         return self
 
     def build_toolbox(self, cfg=None) -> Self:
-        """T-NEW-160: build drawers, ensuring the tools drawer (search) is present."""
+        """Delegate to the base class. Search pane is added by
+        ``init_drawer_application()`` which is called by ``init_toolbox()``."""
         if cfg is None:
             cfg = {}
         cfg["toolbox"] = self.config.dikt.get("toolbox", {})
-        logma.info(f"cfg {cfg}")
         self.init_toolbox()
         super().build_toolbox(cfg)
-        # T-NEW-160: ensure the search pane drawer is available even
-        # when the document-specific toolbox configs don't declare it.
-        try:
-            if getattr(self, "drawers", None) is not None and "search" not in (
-                getattr(self, "_search_drawer_added", None) or []
-            ):
-                if not hasattr(self, "_search_drawer_added"):
-                    self._search_drawer_added = []
-                if "search" not in self._search_drawer_added:
-                    self.add_search_drawer()
-                    self._search_drawer_added.append("search")
-        except Exception as e:
-            build_search = getattr(self, "add_search_drawer", None)
-            if callable(build_search):
-                try:
-                    build_search()
-                except Exception:
-                    pass
-            logma.error(f"[toolboxes] build_toolbox: search drawer wiring failed: {e}", exc_info=True)
-        return self
-
-    def add_search_drawer(self) -> Self:
-        """T-NEW-160: register the search pane as its own toolbox drawer.
-
-        The nchantrs ``NchantdDrawer`` pattern: add the pane widget
-        as an item in a new drawer titled "Search". Falls back to
-        raising the pane's minimum height when the drawer API is
-        unavailable.
-        """
-        try:
-            if getattr(self, "application_search_pane", None) is None:
-                cfg = {"layout": "vertical"}
-                self.application_search_pane = NchantdApplicationSearchPane(self, cfg).initWidget()
-            if hasattr(self, "add_drawer"):
-                items = {"title": "Search", "items": {"0": {"widget": self.application_search_pane}}}
-                self.add_drawer("search", items)
-                logma.info("[toolboxes] add_search_drawer: Search drawer added")
-            else:
-                logma.warning("[toolboxes] add_search_drawer: add_drawer API unavailable; pane not registered as drawer")
-        except Exception as e:
-            logma.error(f"[toolboxes] add_search_drawer failed: {e}", exc_info=True)
         return self
 
     def cmd_application_search_pane(self, event=None, *args, **kwargs) -> Self:
@@ -1235,10 +1188,10 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         # cnt += 1
         if cnt not in items:
             items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-            cfg = {"layout": "vertical", "handler": self.cmd_application_search_pane}
-            self.application_search_pane = NchantdApplicationSearchPane(self, cfg).initWidget()
-            items[cnt]["widget"] = self.application_search_pane
-            cnt += 1
+        cfg = {"layout": "vertical", "handler": self.cmd_application_search_pane}
+        self.application_search_pane = NchantdApplicationSearchPane(self, cfg).initWidget()
+        items[cnt]["widget"] = self.application_search_pane
+        cnt += 1
         return items
 
     def refresh_for_document(self, document) -> Self:

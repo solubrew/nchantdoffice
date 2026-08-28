@@ -179,16 +179,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   + testing-report_20260826 doc-hygiene commits catalogued
   + testing-report_20260827 (terminal feature request) noted
   + BUGs.md unchanged (intentional trace archive, already clean)
-+- 2026-08-27 (`78249cd`) — `feat(toolbox): implement application search
++- 2026-08-27 (`c320158`) — `feat(toolbox): implement application search
   pane (T-NEW-160)`: wired Run Search button to
   `model.search_documents()` with scope routing (This Tab /
-  This Node / This Instance / Journal / Web / LLM), added
-  results rendering (title + did + node), registered search as
-  a toolbox drawer via `init_drawer_application()` (drawer item
-  cnt=0 with `insert_generic_action`), added Enter key
-  support on query entry. Web opens default browser; LLM is a
-  stub that logs unimplemented. Defensive: empty/whitespace query
-  is a no-op; missing model degrades to logged warning (no crash).
+  This Node / This Instance / Journal), added results rendering
+  (title + did + node). Web opens search URL in a new embedded
+  browser tab via `model.open_web_tab()` (system browser as
+  fallback); LLM is a stub. Enter key on query entry triggers
+  search. Search pane registered as cnt=0 item in
+  `init_drawer_application()` (the Application drawer). Defensive:
+  empty/whitespace query is a no-op; missing model degrades to
+  logged warning (no crash). (`a1a0ce8` adds embedded browser tab).
 - 2026-08-26 (`4133cca`, `969a476`, `e8c9350`) —
   `align settings with document storage configuration`
   (3 commits; redundant column adds in models + debug).
