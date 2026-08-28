@@ -159,15 +159,9 @@ bodies remain below for traceability, but do not override this list.
 
 ### P0 -- confirmed broken in operator testing
 
-1. **T-NEW-148 -- External Script Save writes back to disk.**
-   `NchantdOfficeScript.save()` captures editor content but only reaches
-   the DB path; `PyfficeDocument.save()` increments the version without
-   writing bytes. Preserve internal Script persistence unchanged.
-   **Affected sites:** `widgets/documents/media/scripts.py:1336-1344`,
-   `widgets/documents/documents.py:601-689`, pyffice
-   `document.py:1065-1084`.
-   **Acceptance:** external UTF-8 file bytes equal current editor text;
-   DB write still occurs; internal documents do not touch disk.
+1. **~~T-NEW-148~~ -- External Script Save writes back to disk.** ✅ Closed `9f18e30`.
+   `_write_external_file()` uses syntax-aware exporter; atomic rename;
+   internal docs untouched.
 2. **T-NEW-149 -- Matrix internal value persistence and restore.**
    Save captures a grid, but cell changes are not mirrored incrementally
    and no real DB round-trip proves `content_enc64_txt` restores into a

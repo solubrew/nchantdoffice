@@ -179,7 +179,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   + testing-report_20260826 doc-hygiene commits catalogued
   + testing-report_20260827 (terminal feature request) noted
   + BUGs.md unchanged (intentional trace archive, already clean)
-+- 2026-08-27 (`c320158`) — `feat(toolbox): implement application search
++- 2026-08-27 (`5a98d41`) — `refactor(search): remove redundant search
+  drawer methods` (`a1a0ce8` web search in embedded browser tab;
+  `c320158` initial search pane impl).
++- 2026-08-18 (`9f18e30`) — `fix(script): save external files with
+  syntax-aware exporter (T-NEW-148)`: `_write_external_file()`
+  now uses the syntax-aware exporter so bytes on disk match what
+  the user sees in the editor (HTML for HTML docs, plain text for
+  code). Atomic write via rename. `_export_editor_payload()` added
+  for syntax-aware text extraction. Acceptance: external UTF-8 file
+  bytes equal current editor text; DB write still occurs; internal
+  documents do not touch disk.
+  + `tests/test_t_new_148_script_external_save.py` (101 lines).
+- 2026-08-27 (`c320158`) — `feat(toolbox): implement application search
   pane (T-NEW-160)`: wired Run Search button to
   `model.search_documents()` with scope routing (This Tab /
   This Node / This Instance / Journal), added results rendering
