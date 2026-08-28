@@ -179,28 +179,17 @@ bodies remain below for traceability, but do not override this list.
 4. **~~T-NEW-151~~ -- Fix nchantrs password verifier mismatch.** ✅ Closed in nchantrs gamma (`users.py:185`).
    `verify_password = verify_pword` alias added; 4/4 AST tests green.
    RED test at `tests/unit/nchantrs/utilities/test_verify_password.py`.
-5. **[NEW] T-NEW-159 -- Tree pane position not persisted across node/tab refreshes.**
+5. **~~T-NEW-159~~ -- Tree pane position not persisted across node/tab refreshes.** ⚠️ Open.
    Left-side tree window loses user-adjusted position after node/tab
    operations that trigger a tree refresh.
    **Source:** `testing-report_20260827.md` (2026-08-27).
-6. **[NEW] T-NEW-160 -- Application Search pane implementation (toolbox drawer).**
-   The `NchantdApplicationSearchPane` at
-   `widgets/controls/toolboxes.py:104` is a UI-only stub: scope
-   dropdown, query entry, Run Search button, response area — but no
-   click handlers, no model wiring, no results rendering. The nchantrs
-   upstream base (`nchantrs.widgets.panes.searches`) referenced by
-   `cmd_application_search_pane` (line 374) does NOT exist.
-   **Scope:** wire the Run Search button to
-   `self.app.model.search_documents(query, scope=...)` (scopes: This
-   Tab / This Node / This Instance / Journal / Web / LLM per the
-   dropdown), render hit list into the response area (title + did +
-   node), and register the pane as a first-class drawer item in the
-   Application ToolBox so it surfaces in the drawer list.
-   **Acceptance:** typing a query + clicking Run Search surfaces
-   matching documents (non-empty result for a term known to exist);
-   empty/whitespace query is a no-op with status feedback; missing
-   model degrades to a logged warning (no crash).
-   **Source:** operator request 2026-08-27 (this session).
+6. **~~T-NEW-160~~ -- Application Search pane implementation (toolbox drawer).** ✅ Closed `c320158`/`a1a0ce8`/`5a98d41`.
+   Wired Run Search button to `model.search_documents()` with scope
+   routing; results rendering (title + did + node); Web opens embedded
+   browser tab; LLM stub; Enter key support; Search pane registered
+   in `init_drawer_application()`. Defensive: empty query no-op;
+   missing model degrades to warning.
+   **Source:** operator request 2026-08-27.
 
 ### P1 -- operator workflow and performance
 

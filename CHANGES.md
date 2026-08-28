@@ -194,6 +194,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from toolbar; implementation preserved for 0.0.3. Matrix 0.0.2
   scope: open, edit, save .csv files only. Full Excel formula /
   general functionality returns in 0.0.3.
++- 2026-08-27 (`12a7b55`) — `add auto save on focus change to
+  Nchantd Script`: Nchantd Script now auto-saves on focus
+  change events (blur/focus out) so unsaved editor content is
+  persisted when the user switches tabs or windows. New module
+  `nchantdoffice/widgets/editors.py` added; refactored
+  `documents.py` and `scripts.py` to use the new editor
+  abstraction.
 - 2026-08-27 (`c320158`) — `feat(toolbox): implement application search
   pane (T-NEW-160)`: wired Run Search button to
   `model.search_documents()` with scope routing (This Tab /
