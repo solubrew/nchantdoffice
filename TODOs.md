@@ -175,16 +175,9 @@ bodies remain below for traceability, but do not override this list.
    Remove `Apply Formula` and `Auto Calculate` actions from toolbar
    construction while leaving their implementation available for 0.0.3.
    **Affected site:** `matricies.py:2016-2019`.
-4. **T-NEW-151 -- Fix nchantrs password verifier mismatch.**
-   `NchantdUser.get_password()` (nchantrs `users.py:117`) calls
-   `self.verify_password(password)` but the class only defines
-   `verify_pword` (line 164). The RED test
-   `test_nchantd_user_defines_verify_password_alias` in
-   `nchantrs/tests/unit/nchantrs/utilities/test_verify_password.py`
-   pins the fix: add `verify_password = verify_pword` as an instance
-   or class-level alias inside `NchantdUser`. Breaks desktop
-   first-boot `app_user` bootstrap. Commits to be filed in
-   **nchantrs** gamma (not nchantdoffice).
+4. **~~T-NEW-151~~ -- Fix nchantrs password verifier mismatch.** ✅ Closed in nchantrs gamma (`users.py:185`).
+   `verify_password = verify_pword` alias added; 4/4 AST tests green.
+   RED test at `tests/unit/nchantrs/utilities/test_verify_password.py`.
 5. **[NEW] T-NEW-159 -- Tree pane position not persisted across node/tab refreshes.**
    Left-side tree window loses user-adjusted position after node/tab
    operations that trigger a tree refresh.
