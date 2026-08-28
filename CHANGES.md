@@ -168,7 +168,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   CHANGES.md from corruption (gamma f147d48):
   - TODOs.md restored from `01b94d7` (2026-08-17 clean baseline)
   + corruption note added to header
-  + T-NEW-151 (nchantrs verify_password alias) scoped to correct repo
+  + T-NEW-151 (nchantrs verify_password alias) closed: `verify_password = verify_pword` at users.py:185; 4/4 AST tests green (`969f486`)
   + T-NEW-159 filed (tree pane position not persisted,
     testing-report_20260827)
   + T-NEW-160 filed (application search pane implementation)
@@ -179,7 +179,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   + testing-report_20260826 doc-hygiene commits catalogued
   + testing-report_20260827 (terminal feature request) noted
   + BUGs.md unchanged (intentional trace archive, already clean)
-+- 2026-08-27 (`c320158`) — `feat(toolbox): implement application search
++- 2026-08-18 (`9f18e30`) — `fix(script): save external files with
+  syntax-aware exporter (T-NEW-148)`: `_write_external_file()`
+  now uses the syntax-aware exporter so bytes on disk match what
+  the user sees in the editor (HTML for HTML docs, plain text for
+  code). Atomic write via rename. `_export_editor_payload()` added
+  for syntax-aware text extraction. Acceptance: external UTF-8 file
+  bytes equal current editor text; DB write still occurs; internal
+  documents do not touch disk.
+  + `tests/test_t_new_148_script_external_save.py` (101 lines).
++- 2026-08-25 (`5a95c54`) — `feat(matrix): hide formula toolbar until
+  0.0.3 (T-NEW-150)`: set `_FORMULA_TOOLBAR_ENABLED = False`
+  in matricies.py; Apply Formula + Auto Calculate actions hidden
+  from toolbar; implementation preserved for 0.0.3. Matrix 0.0.2
+  scope: open, edit, save .csv files only. Full Excel formula /
+  general functionality returns in 0.0.3.
+- 2026-08-27 (`c320158`) — `feat(toolbox): implement application search
   pane (T-NEW-160)`: wired Run Search button to
   `model.search_documents()` with scope routing (This Tab /
   This Node / This Instance / Journal), added results rendering
@@ -189,7 +204,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   search. Search pane registered as cnt=0 item in
   `init_drawer_application()` (the Application drawer). Defensive:
   empty/whitespace query is a no-op; missing model degrades to
-  logged warning (no crash). (`a1a0ce8` adds embedded browser tab).
+  logged warning (no crash). (`a1a0ce8` adds embedded browser tab;
+  `5a98d41` removes redundant add_search_drawer / build_toolbox
+  overrides; clean delegation to init_drawer_application).
 - 2026-08-26 (`4133cca`, `969a476`, `e8c9350`) —
   `align settings with document storage configuration`
   (3 commits; redundant column adds in models + debug).

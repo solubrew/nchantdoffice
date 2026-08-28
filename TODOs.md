@@ -159,15 +159,9 @@ bodies remain below for traceability, but do not override this list.
 
 ### P0 -- confirmed broken in operator testing
 
-1. **T-NEW-148 -- External Script Save writes back to disk.**
-   `NchantdOfficeScript.save()` captures editor content but only reaches
-   the DB path; `PyfficeDocument.save()` increments the version without
-   writing bytes. Preserve internal Script persistence unchanged.
-   **Affected sites:** `widgets/documents/media/scripts.py:1336-1344`,
-   `widgets/documents/documents.py:601-689`, pyffice
-   `document.py:1065-1084`.
-   **Acceptance:** external UTF-8 file bytes equal current editor text;
-   DB write still occurs; internal documents do not touch disk.
+1. **~~T-NEW-148~~ -- External Script Save writes back to disk.** ✅ Closed `9f18e30`.
+   `_write_external_file()` uses syntax-aware exporter; atomic rename;
+   internal docs untouched.
 2. **T-NEW-149 -- Matrix internal value persistence and restore.**
    Save captures a grid, but cell changes are not mirrored incrementally
    and no real DB round-trip proves `content_enc64_txt` restores into a
@@ -177,20 +171,14 @@ bodies remain below for traceability, but do not override this list.
    **Acceptance:** a non-square entered grid survives save, tab close,
    and reopen by the same document ID. This card is internal-only; do not
    expand it into external spreadsheet export.
-3. **T-NEW-150 -- Disable Matrix formula toolbar until 0.0.3.**
-   Remove `Apply Formula` and `Auto Calculate` actions from toolbar
-   construction while leaving their implementation available for 0.0.3.
-   **Affected site:** `matricies.py:2016-2019`.
-4. **T-NEW-151 -- Fix nchantrs password verifier mismatch.**
-   `NchantdUser.get_password()` (nchantrs `users.py:117`) calls
-   `self.verify_password(password)` but the class only defines
-   `verify_pword` (line 164). The RED test
-   `test_nchantd_user_defines_verify_password_alias` in
-   `nchantrs/tests/unit/nchantrs/utilities/test_verify_password.py`
-   pins the fix: add `verify_password = verify_pword` as an instance
-   or class-level alias inside `NchantdUser`. Breaks desktop
-   first-boot `app_user` bootstrap. Commits to be filed in
-   **nchantrs** gamma (not nchantdoffice).
+3. **~~T-NEW-150~~ -- Disable Matrix formula toolbar until 0.0.3.** ✅ Closed `5a95c54`.
+   `_FORMULA_TOOLBAR_ENABLED = False`; Apply Formula + Auto Calculate
+   hidden; implementation preserved for 0.0.3. Matrix for 0.0.2: open,
+   edit, save .csv files only. Excel formula/general functionality
+   returns in 0.0.3.
+4. **~~T-NEW-151~~ -- Fix nchantrs password verifier mismatch.** ✅ Closed in nchantrs gamma (`users.py:185`).
+   `verify_password = verify_pword` alias added; 4/4 AST tests green.
+   RED test at `tests/unit/nchantrs/utilities/test_verify_password.py`.
 5. **[NEW] T-NEW-159 -- Tree pane position not persisted across node/tab refreshes.**
    Left-side tree window loses user-adjusted position after node/tab
    operations that trigger a tree refresh.
