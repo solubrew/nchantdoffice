@@ -48,6 +48,7 @@ from pycurity.pyhash import decode64
 from pycurity.pysan import Sanitized
 from nchantdoffice.widgets.panes.files import NchantdFileDetailsPane
 from typing import Self, Any
+from nchantdoffice.widgets.editors import NchantdOfficeDocEditor
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -147,7 +148,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         # ``default_text`` before falling back to its built-in
         # default.
         self.config.dikt["default_text"] = ""
-        self.document_editor = NchantdDocEditor(self, self.config).initWidget()
+        self.config.dikt["focus_out_handler"] = (
+            self.save
+        )  # TODO: this is hacky need to implement it cleaner not sure how
+        self.document_editor = NchantdOfficeDocEditor(self, self.config).initWidget()
         fcbcfg["editor"] = self.document_editor
         self.font_config_header = NchantdFontConfigBar(self, fcbcfg)
         dfs_cfg = {
@@ -502,6 +506,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             logma.info("No images found in the document.")
         else:
             logma.info(f"Total images extracted: {image_count}")
+
+    def focusOutEvent(self, event=None, *args, **kwargs):
+        """"""
+        super().focusOutEvent(event, args, kwargs)
+        return self
 
     def get_text_background_color_options(self, event=None, *args, **kwargs) -> list[str]:
         """Return the list of available text-background colours.
@@ -1235,6 +1244,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         if getattr(self.document, "location", None) == "external" and getattr(self, "file_path", None):
             self._write_external_file()
         super().save()
+        logma.info("[ Nchantd Script ] - Save")
         return self
 
     def set_page_view(self) -> None:
@@ -1463,7 +1473,7 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             "toml": IniLexer,
             "r": RLexer,
             "bash": BashLexer,
-            "scad": CLexer
+            "scad": CLexer,
         }
         lexer_cls = lexer_map.get(self.document.syntax)
         if lexer_cls is not None:

@@ -126,51 +126,6 @@ class NchantdOfficeDocumentMixin:
         self.customContextMenuRequested.connect(self._show_context_menu)
         return self
 
-    def _show_context_menu(self, pos) -> Self:
-        """"""
-        # Re-initialize context menu to ensure it's fresh
-        if self.context_menu is None:
-            self.initialize_context_menu(self.context_menu_name)
-        if self.context_menu is not None:
-            global_pos = self.mapToGlobal(pos)
-            self.context_menu.exec(global_pos)
-        return self
-
-    @staticmethod
-    def _apply_bg_color(button, color) -> None:
-        """T-NEW-134 helper: apply a background color to a
-        button via ``setStyleSheet`` so the rendered button is
-        visibly tinted.
-
-        Accepts either a named CSS color (``"orange"``,
-        ``"red"``, ...) or a hex string (``"#FF8C00"``). Pairs
-        the background with ``color: white`` for contrast on
-        saturated fills -- an orange Get Pro button without a
-        contrasting text is hard to read.
-
-        The T-NEW-134 cfg ships dark orange (``#FF8C00``)
-        because orange is the universal ecommerce upsell
-        color (Stripe / Shopify / GitHub Pro all use it);
-        green reads as success / approved which doesn't carry
-        the same conversion intent.
-
-        No-op when ``color`` is None / empty / whitespace --
-        missing config must never apply an empty stylesheet
-        (which Qt would otherwise log as a malformed rule).
-        """
-        if not color:
-            return
-        if not isinstance(color, str) or not color.strip():
-            return
-        # Normalize: strip whitespace, pass through verbatim
-        # (Qt accepts both CSS named colors and hex literals).
-        css_color = color.strip()
-        stylesheet = f"QPushButton {{ background-color: {css_color}; " f"color: white; }}"
-        try:
-            button.setStyleSheet(stylesheet)
-        except Exception as e:
-            logma.warning(f"[documents] _apply_bg_color: setStyleSheet " f"failed for color={css_color!r}: {e}")
-
     def initView(self, cfg=None) -> Self:
         """"""
         super().initView(cfg)
@@ -295,43 +250,6 @@ class NchantdOfficeDocumentMixin:
         """ "" """
         self.save()
 
-    @staticmethod
-    def _save_action(document) -> str:
-        """Return the save action name for a document (T-NEW-038).
-
-        When the document's location is ``"internal"`` (stored
-        in the NchantdOffice SQLite database), the action
-        name is ``save_database`` -- the nchantrs action table
-        (applicationmodels.yaml:609) maps that to the
-        ``database-save`` icon. For ``"external"`` (or any
-        unknown / missing location), the action stays the
-        legacy ``save`` (icon: ``save.svg``).
-
-        Defensive: missing document, missing location
-        attribute, or non-string location all fall back to
-        the legacy ``save`` action rather than raising.
-
-        Args:
-            document: the document instance, or ``None``
-                when the helper is called before a document
-                is open (e.g. from a static UI binding).
-
-        Returns:
-            ``"save_database"`` for internal documents,
-            ``"save"`` otherwise.
-        """
-        if document is None:
-            return "save"
-        try:
-            location = getattr(document, "location", None)
-        except Exception:
-            return "save"
-        if not isinstance(location, str):
-            return "save"
-        if location == "internal":
-            return "save_database"
-        return "save"
-
     def create_data_table(self) -> "DataFrame":
         """"""
         df = DataFrame()
@@ -432,8 +350,8 @@ class NchantdOfficeDocumentMixin:
                 "action": self._save_action(self.document),
                 "handler": self.cmd_save_tab,
             },
-            150: {"action": "redo", "handler": self.cmd_redo},
-            200: {"action": "undo", "handler": self.cmd_undo},
+            # PUSH to 0.0.3 150: {"action": "redo", "handler": self.cmd_redo},
+            # PUSH to 0.0.3 200: {"action": "undo", "handler": self.cmd_undo},
             400: {"action": "cancel", "handler": self.cmd_delete_tab},
             1000: {"action": "show_pane_right", "handler": self.cmd_show_pane_right},
         }
@@ -982,10 +900,55 @@ class NchantdOfficeDocumentMixin:
         logma.warning(f"update_document_page({page_num}) called but multi-page support is not implemented")
         return self
 
+    @staticmethod
+    def _apply_bg_color(button, color) -> None:
+        """T-NEW-134 helper: apply a background color to a
+        button via ``setStyleSheet`` so the rendered button is
+        visibly tinted.
+
+        Accepts either a named CSS color (``"orange"``,
+        ``"red"``, ...) or a hex string (``"#FF8C00"``). Pairs
+        the background with ``color: white`` for contrast on
+        saturated fills -- an orange Get Pro button without a
+        contrasting text is hard to read.
+
+        The T-NEW-134 cfg ships dark orange (``#FF8C00``)
+        because orange is the universal ecommerce upsell
+        color (Stripe / Shopify / GitHub Pro all use it);
+        green reads as success / approved which doesn't carry
+        the same conversion intent.
+
+        No-op when ``color`` is None / empty / whitespace --
+        missing config must never apply an empty stylesheet
+        (which Qt would otherwise log as a malformed rule).
+        """
+        if not color:
+            return
+        if not isinstance(color, str) or not color.strip():
+            return
+        # Normalize: strip whitespace, pass through verbatim
+        # (Qt accepts both CSS named colors and hex literals).
+        css_color = color.strip()
+        stylesheet = f"QPushButton {{ background-color: {css_color}; " f"color: white; }}"
+        try:
+            button.setStyleSheet(stylesheet)
+        except Exception as e:
+            logma.warning(f"[documents] _apply_bg_color: setStyleSheet " f"failed for color={css_color!r}: {e}")
+
     def _store_document(self) -> Self:
         """"""
         document = self.document.to_dict()
         self.app.model.store_document(document)
+        return self
+
+    def _show_context_menu(self, pos) -> Self:
+        """"""
+        # Re-initialize context menu to ensure it's fresh
+        if self.context_menu is None:
+            self.initialize_context_menu(self.context_menu_name)
+        if self.context_menu is not None:
+            global_pos = self.mapToGlobal(pos)
+            self.context_menu.exec(global_pos)
         return self
 
 
@@ -1070,9 +1033,9 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         """"""
         super().export_file()
 
-    def focusOutEvent(self, event) -> None:
+    def focusOutEvent(self, event=None, *args, **kwargs):
         """"""
-        super().focusOutEvent(event)
+        super().focusOutEvent(event, args, kwargs)
         self.save()
 
     def get_content_internal(self) -> dict[str, Any]:
@@ -1233,6 +1196,43 @@ class NchantdOfficeDocument(NchantdOfficeDocumentMixin, NchantdOfficeTab):
         """"""
         super().unlock_view()
         return self
+
+    @staticmethod
+    def _save_action(document) -> str:
+        """Return the save action name for a document (T-NEW-038).
+
+        When the document's location is ``"internal"`` (stored
+        in the NchantdOffice SQLite database), the action
+        name is ``save_database`` -- the nchantrs action table
+        (applicationmodels.yaml:609) maps that to the
+        ``database-save`` icon. For ``"external"`` (or any
+        unknown / missing location), the action stays the
+        legacy ``save`` (icon: ``save.svg``).
+
+        Defensive: missing document, missing location
+        attribute, or non-string location all fall back to
+        the legacy ``save`` action rather than raising.
+
+        Args:
+            document: the document instance, or ``None``
+                when the helper is called before a document
+                is open (e.g. from a static UI binding).
+
+        Returns:
+            ``"save_database"`` for internal documents,
+            ``"save"`` otherwise.
+        """
+        if document is None:
+            return "save"
+        try:
+            location = getattr(document, "location", None)
+        except Exception:
+            return "save"
+        if not isinstance(location, str):
+            return "save"
+        if location == "internal":
+            return "save_database"
+        return "save"
 
 
 class NchantdOfficeDocumentManager(NchantdOfficeDocumentMixin, NchantdManager):
