@@ -164,6 +164,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   terminal as a Document type / toolbox drawer, pro
   users only). Includes a `QProcess + QPlainTextEdit`
   reference implementation.
+- 2026-08-27 (`9d0a18b`) — `docs: restore TODOs.md +
+  CHANGES.md from corruption (gamma f147d48):
+  - TODOs.md restored from `01b94d7` (2026-08-17 clean baseline)
+  + corruption note added to header
+  + T-NEW-151 (nchantrs verify_password alias) scoped to correct repo
+  + T-NEW-159 filed (tree pane position not persisted,
+    testing-report_20260827)
+  + T-NEW-160 filed (application search pane implementation)
+  - CHANGES.md restored from `01b94d7`
+  + new `[Unreleased]` block reconstructing DESK T-NEW-046..061
+    (desktop install + entitlement + claim-flow milestone)
+  + DESK T-NEW-060 revert preserved as evidence
+  + testing-report_20260826 doc-hygiene commits catalogued
+  + testing-report_20260827 (terminal feature request) noted
+  + BUGs.md unchanged (intentional trace archive, already clean)
++- 2026-08-27 (`78249cd`) — `feat(toolbox): implement application search
+  pane (T-NEW-160)`: wired Run Search button to
+  `model.search_documents()` with scope routing (This Tab /
+  This Node / This Instance / Journal / Web / LLM), added
+  results rendering (title + did + node), registered search as
+  a toolbox drawer via `init_drawer_application()` (drawer item
+  cnt=0 with `insert_generic_action`), added Enter key
+  support on query entry. Web opens default browser; LLM is a
+  stub that logs unimplemented. Defensive: empty/whitespace query
+  is a no-op; missing model degrades to logged warning (no crash).
 - 2026-08-26 (`4133cca`, `969a476`, `e8c9350`) —
   `align settings with document storage configuration`
   (3 commits; redundant column adds in models + debug).

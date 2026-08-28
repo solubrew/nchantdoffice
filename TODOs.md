@@ -195,6 +195,24 @@ bodies remain below for traceability, but do not override this list.
    Left-side tree window loses user-adjusted position after node/tab
    operations that trigger a tree refresh.
    **Source:** `testing-report_20260827.md` (2026-08-27).
+6. **[NEW] T-NEW-160 -- Application Search pane implementation (toolbox drawer).**
+   The `NchantdApplicationSearchPane` at
+   `widgets/controls/toolboxes.py:104` is a UI-only stub: scope
+   dropdown, query entry, Run Search button, response area — but no
+   click handlers, no model wiring, no results rendering. The nchantrs
+   upstream base (`nchantrs.widgets.panes.searches`) referenced by
+   `cmd_application_search_pane` (line 374) does NOT exist.
+   **Scope:** wire the Run Search button to
+   `self.app.model.search_documents(query, scope=...)` (scopes: This
+   Tab / This Node / This Instance / Journal / Web / LLM per the
+   dropdown), render hit list into the response area (title + did +
+   node), and register the pane as a first-class drawer item in the
+   Application ToolBox so it surfaces in the drawer list.
+   **Acceptance:** typing a query + clicking Run Search surfaces
+   matching documents (non-empty result for a term known to exist);
+   empty/whitespace query is a no-op with status feedback; missing
+   model degrades to a logged warning (no crash).
+   **Source:** operator request 2026-08-27 (this session).
 
 ### P1 -- operator workflow and performance
 

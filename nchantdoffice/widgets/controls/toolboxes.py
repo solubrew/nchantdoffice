@@ -102,54 +102,256 @@ pxcfg = join(here, "_data_", "toolboxes.yaml")
 
 
 class NchantdApplicationSearchPane(NchantdPane):
-    """"""
+    """T-NEW-160: application search pane with scope routing.
+
+    Scopes: This Tab / This Node / This Instance / Journal / Web / LLM.
+    Routes ``Run Search`` to ``self.app.model.search_documents()``
+    for the local scopes and opens a URL for Web; LLM is a stub
+    (logs unimplemented). Results rendered as plain text lines in
+    the response area.
+
+    Defensive: empty/whitespace query → no-op with log line;
+    missing app/model → log warning, no crash.
+    """
+
+    # Map dropdown labels to model.search_documents scope args.
+    # "Web" and "LLM" are handled separately (URL open / remote LLM).
+    _SCOPE_MAP = {
+        "This Tab": "tab",
+        "This Node": "node",
+        "This Instance": "global",
+        "Journal": "journal",
+    }
 
     def __init__(self, parent=None, cfg=None) -> None:
-        """ """
+        """."""
         super().__init__(parent, cfg)
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdApplicationSearchPane").override(cfg))
         self.handler = self.config.dikt.get("handler", None)
+        self.app = getattr(parent, "app", None) if parent else None
+        self._scope = "This Tab"  # default selection
 
     def initModel(self, cfg=None) -> Self:
-        """"""
+        """."""
         super().initModel(cfg)
         return self
 
     def initView(self, cfg=None) -> Self:
-        """"""
+        """."""
         if cfg is None:
             cfg = {}
         cfg["layout"] = "vertical"
         super().initView(cfg)
-        options = ["This Tab", "This Node", "This Instance", "Journal", "Web", "LLM"]
-        cfg = {"label": "Search Focus", "layout": "horizontal", "options": options}
-        self.search_area_select = NchantdDropDown(self, cfg).initWidget()
+
+        # Scope selector
+        options = list(self._SCOPE_MAP.keys()) + ["Web", "LLM"]
+        scope_cfg = {"label": "Search Focus", "layout": "horizontal", "options": options}
+        self.search_area_select = NchantdDropDown(self, scope_cfg).initWidget()
         self.layout.addWidget(self.search_area_select)
-        cfg = {
+
+        # Track current scope selection
+        self._scope = "This Tab"
+
+        # Query entry
+        entry_cfg = {
             "layout": "vertical",
             "size": ["auto", 100],
         }
-        self.application_search_entry = NchantdEntryBox(self, cfg).initWidget()
-        logma.info(f"application_search_entry {self.application_search_entry.size().height()}")
+        self.application_search_entry = NchantdEntryBox(self, entry_cfg).initWidget()
         self.application_search_entry.setMinimumHeight(self.application_search_entry.size().height())
         self.layout.addWidget(self.application_search_entry)
-        cfg = {"text": "Run Search", "layout": "horizontal"}
-        self.search_button = NchantdButton(self, cfg).initWidget()
+
+        # Wire Enter key on the entry box to trigger search
+        try:
+            self.application_search_entry.returnPressed.connect(self._on_run_search)
+        except Exception:
+            pass  # not all entry widgets support returnPressed
+
+        # Run Search button
+        btn_cfg = {"text": "Run Search", "layout": "horizontal"}
+        self.search_button = NchantdButton(self, btn_cfg).initWidget()
+        self.search_button.clicked.connect(self._on_run_search)
         self.layout.addWidget(self.search_button)
-        cfg = {
+
+        # Results area
+        results_cfg = {
             "layout": "vertical",
             "size": ["auto", 450],
         }
-        self.application_response_area = NchantdEntryBox(self, cfg).initWidget()
-        self.application_response_area.setMinimumHeight(cfg["size"][1])
+        self.application_response_area = NchantdEntryBox(self, results_cfg).initWidget()
+        self.application_response_area.setMinimumHeight(results_cfg["size"][1])
         self.layout.addWidget(self.application_response_area)
         return self
 
     def initWidget(self) -> Self:
-        """"""
+        """."""
         self.initModel()
         self.initView()
         return self
+
+    # ------------------------------------------------------------------ #
+    # Internal helpers                                                     #
+    # ------------------------------------------------------------------ #
+
+    def _on_run_search(self) -> None:
+        """Run the selected search and render results."""
+        try:
+            # Read scope from dropdown (defensive: fallback to default)
+            try:
+                self._scope = str(self.search_area_select.currentText() or "This Tab")
+            except Exception:
+                self._scope = "This Tab"
+
+            # Read query
+            try:
+                query = str(self.application_search_entry.text() or "").strip()
+            except Exception:
+                query = ""
+
+            if not query:
+                logma.info("[search] empty query, skipping")
+                self._set_response("Enter a search term above and click Run Search.")
+                return
+
+            # Web / LLM stubs
+            if self._scope == "Web":
+                self._run_web_search(query)
+                return
+            if self._scope == "LLM":
+                self._run_llm_search(query)
+                return
+
+            # Local search via model
+            model = getattr(self.app, "model", None) if self.app else None
+            if model is None or not hasattr(model, "search_documents"):
+                logma.warning("[search] model.search_documents unavailable")
+                self._set_response("Search unavailable: model not connected.")
+                return
+
+            scope_arg = self._SCOPE_MAP.get(self._scope, "global")
+            active_nid = None
+            active_tid = None
+
+            # Resolve active node / tab for scoped searches
+            if scope_arg in ("node", "tab"):
+                try:
+                    view = getattr(self.app, "view", None)
+                    if view is not None:
+                        tree = getattr(view, "left_pane", None) or getattr(view, "tree", None)
+                        if tree is not None:
+                            current = getattr(tree, "currentItem", None)
+                            if callable(current):
+                                item = current()
+                                if item is not None:
+                                    nid = getattr(item, "nid", None) or getattr(item, "uuid", None)
+                                    active_nid = nid
+                                    pane = getattr(view, "center", None)
+                                    if pane is not None:
+                                        tab_widget = getattr(pane, "currentWidget", None)
+                                        active_tid = getattr(tab_widget, "tid", None)
+                except Exception as e:
+                    logma.warning(f"[search] failed to resolve active node/tab: {e}")
+
+            results = model.search_documents(
+                query,
+                scope=scope_arg,
+                active_nid=active_nid,
+                active_tid=active_tid,
+            )
+            self._render_results(results, query)
+
+        except Exception as e:
+            logma.error(f"[search] _on_run_search failed: {e}", exc_info=True)
+            self._set_response(f"Search error: {e}")
+
+    def _run_web_search(self, query: str) -> None:
+        """Open the default web search engine with the query."""
+        import webbrowser
+
+        engines = {
+            "Google": "https://www.google.com/search?q={q}",
+            "DuckDuckGo": "https://duckduckgo.com/?q={q}",
+            "Bing": "https://www.bing.com/search?q={q}",
+            "Yahoo": "https://search.yahoo.com/search?p={q}",
+            "Yandex": "https://yandex.com/search/?text={q}",
+        }
+        url = engines.get("Google", "https://duckduckgo.com/?q={q}").format(q=query.replace(" ", "+"))
+        try:
+            webbrowser.open(url)
+            self._set_response(f"Opened web search: {query}\nURL: {url}")
+        except Exception as e:
+            self._set_response(f"Failed to open browser: {e}")
+
+    def _run_llm_search(self, query: str) -> None:
+        """LLM stub — log and surface a placeholder."""
+        logma.info(f"[search] LLM search requested: {query!r} (not yet implemented)")
+        self._set_response(
+            f"LLM search: {query!r}\n\nLLM integration is not yet wired.\n"
+            "Results from the local catalog are shown above."
+        )
+
+    def _render_results(self, results, query: str) -> None:
+        """Render a DataFrame or list of results into the response area."""
+        try:
+            if results is None or (hasattr(results, "__len__") and len(results) == 0):
+                self._set_response(f"No results for: {query!r}")
+                return
+
+            lines = []
+            count = 0
+
+            # Handle DataFrame
+            if hasattr(results, "iterrows"):
+                for _idx, row in results.iterrows():
+                    title = str(row.get("name_txt", row.get("title", row.get("doc_name", ""))))
+                    did = str(row.get("did", row.get("uuid", "")))
+                    node = str(row.get("node_name", row.get("nid", "")))
+                    if title and title not in ("nan", "None"):
+                        lines.append(f"  • {title}  [{did[:8]}...]")
+                        if node and node not in ("nan", "None"):
+                            lines[-1] += f" @ {node}"
+                        count += 1
+                        if count >= 50:
+                            lines.append("  ... (truncated, refine your query)")
+                            break
+
+            # Handle list of dicts
+            elif isinstance(results, list):
+                for item in results[:50]:
+                    if isinstance(item, dict):
+                        title = str(item.get("name_txt", item.get("title", "")))
+                        did = str(item.get("did", item.get("uuid", "")))
+                        if title and title not in ("nan", "None"):
+                            lines.append(f"  • {title}  [{did[:8]}...]")
+                            count += 1
+                    else:
+                        lines.append(f"  • {item}")
+                        count += 1
+
+            if not lines:
+                self._set_response(f"No named results for: {query!r}")
+            else:
+                header = f"{count} result{'s' if count != 1 else ''} for: {query!r}\n"
+                self._set_response(header + "\n".join(lines))
+
+        except Exception as e:
+            logma.error(f"[search] _render_results failed: {e}", exc_info=True)
+            self._set_response(f"Results rendered with error: {e}")
+
+    def _set_response(self, text: str) -> None:
+        """Write text into the response area (defensive)."""
+        try:
+            widget = getattr(self, "application_response_area", None)
+            if widget is not None:
+                try:
+                    widget.setPlainText(text)
+                except Exception:
+                    try:
+                        widget.setText(text)
+                    except Exception:
+                        logma.warning(f"[search] could not set response text")
+        except Exception:
+            pass
 
 
 class NchantdLLMQueryPane(NchantdPane):
@@ -348,17 +550,64 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         return self
 
     def add_tools_drawer(self) -> Self:
-        """"""
+        """T-NEW-160: add the Search pane to the tools drawer."""
+        try:
+            cfg = {"layout": "vertical"}
+            self.application_search_pane = NchantdApplicationSearchPane(self, cfg).initWidget()
+            self.add_drawer_item(self.application_search_pane, 0, 0)
+        except Exception as e:
+            logma.error(f"[toolboxes] add_tools_drawer: search pane failed: {e}", exc_info=True)
         return self
 
     def build_toolbox(self, cfg=None) -> Self:
-        """"""
+        """T-NEW-160: build drawers, ensuring the tools drawer (search) is present."""
         if cfg is None:
             cfg = {}
         cfg["toolbox"] = self.config.dikt.get("toolbox", {})
         logma.info(f"cfg {cfg}")
         self.init_toolbox()
         super().build_toolbox(cfg)
+        # T-NEW-160: ensure the search pane drawer is available even
+        # when the document-specific toolbox configs don't declare it.
+        try:
+            if getattr(self, "drawers", None) is not None and "search" not in (
+                getattr(self, "_search_drawer_added", None) or []
+            ):
+                if not hasattr(self, "_search_drawer_added"):
+                    self._search_drawer_added = []
+                if "search" not in self._search_drawer_added:
+                    self.add_search_drawer()
+                    self._search_drawer_added.append("search")
+        except Exception as e:
+            build_search = getattr(self, "add_search_drawer", None)
+            if callable(build_search):
+                try:
+                    build_search()
+                except Exception:
+                    pass
+            logma.error(f"[toolboxes] build_toolbox: search drawer wiring failed: {e}", exc_info=True)
+        return self
+
+    def add_search_drawer(self) -> Self:
+        """T-NEW-160: register the search pane as its own toolbox drawer.
+
+        The nchantrs ``NchantdDrawer`` pattern: add the pane widget
+        as an item in a new drawer titled "Search". Falls back to
+        raising the pane's minimum height when the drawer API is
+        unavailable.
+        """
+        try:
+            if getattr(self, "application_search_pane", None) is None:
+                cfg = {"layout": "vertical"}
+                self.application_search_pane = NchantdApplicationSearchPane(self, cfg).initWidget()
+            if hasattr(self, "add_drawer"):
+                items = {"title": "Search", "items": {"0": {"widget": self.application_search_pane}}}
+                self.add_drawer("search", items)
+                logma.info("[toolboxes] add_search_drawer: Search drawer added")
+            else:
+                logma.warning("[toolboxes] add_search_drawer: add_drawer API unavailable; pane not registered as drawer")
+        except Exception as e:
+            logma.error(f"[toolboxes] add_search_drawer failed: {e}", exc_info=True)
         return self
 
     def cmd_application_search_pane(self, event=None, *args, **kwargs) -> Self:
@@ -965,12 +1214,12 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         # self.default_llm_select = NchantdDropDown(self, cfg)
         # items[cnt]["widget"] = self.default_llm_select
         # cnt += 1
-        # if cnt not in items:
-        #     items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
-        # cfg = {"layout": "vertical", "handler": self.cmd_application_search_pane}
-        # self.application_search_pane = NchantdApplicationSearchPane(self, cfg)
-        # items[cnt]["widget"] = self.application_search_pane
-        # cnt += 1
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "dropdown"}
+            cfg = {"layout": "vertical", "handler": self.cmd_application_search_pane}
+            self.application_search_pane = NchantdApplicationSearchPane(self, cfg).initWidget()
+            items[cnt]["widget"] = self.application_search_pane
+            cnt += 1
         return items
 
     def refresh_for_document(self, document) -> Self:
