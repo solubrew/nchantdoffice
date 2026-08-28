@@ -265,9 +265,13 @@ class NchantdApplicationSearchPane(NchantdPane):
             self._set_response(f"Search error: {e}")
 
     def _run_web_search(self, query: str) -> None:
-        """Open the default web search engine with the query."""
-        import webbrowser
+        """Open a web search in the application's embedded browser tab.
 
+        Uses ``self.app.model.open_web_tab(url)`` to open the search URL
+        in a new browser tab in the center tabset (or focus an existing
+        tab already on that URL). Falls back to system browser only if
+        the model is unavailable.
+        """
         engines = {
             "Google": "https://www.google.com/search?q={q}",
             "DuckDuckGo": "https://duckduckgo.com/?q={q}",
@@ -275,12 +279,27 @@ class NchantdApplicationSearchPane(NchantdPane):
             "Yahoo": "https://search.yahoo.com/search?p={q}",
             "Yandex": "https://yandex.com/search/?text={q}",
         }
-        url = engines.get("Google", "https://duckduckgo.com/?q={q}").format(q=query.replace(" ", "+"))
+        url = engines.get("Google", "https://duckduckgo.com/?q={q}").format(
+            q=query.replace(" ", "+")
+        )
         try:
-            webbrowser.open(url)
-            self._set_response(f"Opened web search: {query}\nURL: {url}")
+            model = getattr(self.app, "model", None) if self.app else None
+            if model is not None and hasattr(model, "open_web_tab"):
+                result = model.open_web_tab(url)
+                if result is not None:
+                    self._set_response(f"Opening search: {query}\nURL: {url}")
+                    return
+                # open_web_tab returned None — fall through to system browser
+            logma.warning(f"[search] open_web_tab unavailable, falling back to system browser")
         except Exception as e:
-            self._set_response(f"Failed to open browser: {e}")
+            logma.warning(f"[search] open_web_tab failed ({e}), falling back to system browser")
+        # Fallback: try system browser
+        try:
+            import webbrowser
+            webbrowser.open(url)
+            self._set_response(f"Browser fallback: {url}")
+        except Exception as e2:
+            self._set_response(f"Failed to open search: {e2}\nURL: {url}")
 
     def _run_llm_search(self, query: str) -> None:
         """LLM stub — log and surface a placeholder."""
