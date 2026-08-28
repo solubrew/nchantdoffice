@@ -171,10 +171,11 @@ bodies remain below for traceability, but do not override this list.
    **Acceptance:** a non-square entered grid survives save, tab close,
    and reopen by the same document ID. This card is internal-only; do not
    expand it into external spreadsheet export.
-3. **T-NEW-150 -- Disable Matrix formula toolbar until 0.0.3.**
-   Remove `Apply Formula` and `Auto Calculate` actions from toolbar
-   construction while leaving their implementation available for 0.0.3.
-   **Affected site:** `matricies.py:2016-2019`.
+3. **~~T-NEW-150~~ -- Disable Matrix formula toolbar until 0.0.3.** ✅ Closed `5a95c54`.
+   `_FORMULA_TOOLBAR_ENABLED = False`; Apply Formula + Auto Calculate
+   hidden; implementation preserved for 0.0.3. Matrix for 0.0.2: open,
+   edit, save .csv files only. Excel formula/general functionality
+   returns in 0.0.3.
 4. **~~T-NEW-151~~ -- Fix nchantrs password verifier mismatch.** ✅ Closed in nchantrs gamma (`users.py:185`).
    `verify_password = verify_pword` alias added; 4/4 AST tests green.
    RED test at `tests/unit/nchantrs/utilities/test_verify_password.py`.
