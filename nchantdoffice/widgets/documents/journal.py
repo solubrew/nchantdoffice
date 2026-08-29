@@ -363,9 +363,12 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         return self
 
     def initView(self):
-        """"""
+        """T-NEW-118: bind Ctrl+Shift+C for PII-redacted copy."""
         super().initView()
         self.setText(self.text)
+        # T-NEW-118: bind Ctrl+Shift+C -> copy without PII
+        shortcut = pyqt.QShortcut(pyqt.QKeySequence("Ctrl+Shift+C"), self)
+        shortcut.activated.connect(self.cmd_copy_without_pii)
         return self
 
     def initWidget(self):
@@ -451,6 +454,40 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
         logma.info(f"Save Entry {current_text}")
         self.save()
         super().focusOutEvent(event)
+        return self
+
+    def cmd_copy_without_pii(self) -> Self:
+        """T-NEW-118: copy the current text selection with PII redacted.
+
+        Uses ``pycurity.pymatch.extract_all_pii()`` to scan the
+        selected text for sensitive data (SSN, credit cards, phone
+        numbers, emails, AWS keys, JWT tokens, private keys). The
+        masked version is placed on the clipboard. Full-text save/restore
+        and retention are unchanged; only the clipboard copy path
+        is affected.
+        """
+        try:
+            from pycurity.pymatch import extract_all_pii
+        except ImportError:
+            logma.warning("[journal] cmd_copy_without_pii: pycurity not available")
+            return self
+        selected = self.textCursor().selectedText()
+        if not selected:
+            return self
+        try:
+            results = extract_all_pii(selected, mask_values=True)
+            masked = selected
+            # Build a single replacement pass from all non-empty findings.
+            for pii_type, items in results.items():
+                if not items:
+                    continue
+                for item in items:
+                    if item:
+                        masked = masked.replace(str(item), f"[{pii_type}]")
+            pyqt.QApplication.instance().clipboard().setText(masked)
+            logma.info(f"[journal] cmd_copy_without_pii: copied {len(selected)} chars, {sum(len(v) for v in results.values())} PII chars masked")
+        except Exception as exc:
+            logma.warning(f"[journal] cmd_copy_without_pii failed: {exc}")
         return self
 
     def get_journal_text(self):

@@ -16,6 +16,32 @@
 from os.path import abspath, dirname, join
 import datetime as dt
 
+
+# T-NEW-121: safe text encoding with BOM stripping.
+# Tries UTF-8 first, falls back to latin-1, then errors='replace'.
+# Also strips BOM (\ufeff) which confuses JSON parsers.
+def _safe_encoding(path) -> str:
+    """Return the correct text encoding for a file, probing the content.
+
+    BOM-stripped. Returns 'utf-8' by default; latin-1 as fallback.
+    """
+    from pathlib import Path as _Path
+    try:
+        with open(_Path(path), "rb") as f:
+            raw = f.read(4)
+        # Strip BOM
+        if raw.startswith((b"\xef\xbb\xbf",)):
+            return "utf-8-sig"
+        # Heuristic: if valid UTF-8, use it; otherwise latin-1.
+        try:
+            raw.decode("utf-8")
+            return "utf-8"
+        except UnicodeDecodeError:
+            return "latin-1"
+    except Exception:
+        return "utf-8"
+
+
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||

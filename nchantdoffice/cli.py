@@ -32,6 +32,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 logma = Logma(__name__)
 
 
+from nchantdoffice.utilities.util_helpers import _safe_encoding  # noqa: E402
+
+
 @click.group()
 @click.version_option(version="0.0.1")
 def cli() -> None:
@@ -86,7 +89,7 @@ def load_recent_files() -> list[dict[str, Any]]:
     path = get_recent_files_path()
     if path.exists():
         try:
-            with open(path, 'r') as f:
+            with open(path, 'r', encoding=_safe_encoding(path)) as f:
                 data = json.load(f)
                 logma.debug(f"[cli] load_recent_files: {len(data)} entries")
                 return data
@@ -247,9 +250,9 @@ def open(filepath: str, readonly: bool) -> None:
             click.echo(f"Warning: File does not have .pyof extension", err=True)
         
         # Read and validate document
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding=_safe_encoding(path)) as f:
             doc_data = json.load(f)
-        
+
         # Check required fields
         required_fields = ['version', 'type', 'created', 'modified', 'content']
         for field in required_fields:
@@ -302,9 +305,9 @@ def export(filepath: str, export_format: str, output: Optional[str]) -> None:
             sys.exit(1)
         
         # Read source document
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding=_safe_encoding(path)) as f:
             doc_data = json.load(f)
-        
+
         # Determine output path
         if output:
             output_path = Path(output)
@@ -402,7 +405,7 @@ def save(filepath: str, backup: bool) -> None:
             click.echo(f"Backup created: {backup_path}")
         
         # Update modified timestamp
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding=_safe_encoding(path)) as f:
             doc_data = json.load(f)
 
         doc_data['modified'] = datetime.now().isoformat()

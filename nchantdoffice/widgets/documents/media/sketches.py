@@ -1576,7 +1576,7 @@ class NchantdOfficeSketch(NchantdOfficeDocument):
         import json
 
         try:
-            with open(file_path, "r") as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 sketch_data = json.load(f)
 
             # Restore layers

@@ -51,6 +51,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `_`-prefixed top-level node names sort before all others (stable, name-asc
   within each group). Applies on every init and tree refresh.
 
+- **T-NEW-118** `feat(journal): PII-redacted clipboard copy` (`f32f627`) —
+  `NchantdOfficeJournalAppendEditor.cmd_copy_without_pii()` scans the selected
+  text with `pycurity.pymatch.extract_all_pii()`, masks all PII types with
+  `[type]` placeholders, and copies the redacted text to clipboard. Bound to
+  Ctrl+Shift+C. Full-text save/restore and retention are unchanged.
+
+- **T-NEW-121** `fix(cli/util): source-encoding guard` (`f32f627`) —
+  `_safe_encoding()` helper probes file content, strips BOM, returns
+  `utf-8`/`utf-8-sig`/`latin-1`. Applied to all 7 unguarded `open(path, 'r')`
+  calls across `cli.py`, `upgrades.py`, `device_id.py`, `sketches.py`.
+
+- **T-NEW-157** `fix(models): correct tab position in import_text` (`f32f627`) —
+  `import_text()` now resolves the next tab position from `get_documents()` when
+  `current_tab.pos` is unavailable, instead of silently forcing `0`.
+
 ### Added (COMP-006 — whooshish search integration)
 
 - **COMP-006** `feat(whooshish): integrate micromole whooshish search`

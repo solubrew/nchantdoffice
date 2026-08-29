@@ -2607,11 +2607,25 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     document = self.codex.init_script(self._file_open_cfg(file))
                     current_tab.open_file(file)
                     # document.load_document()
+                    # T-NEW-157: resolve the next tab position properly
+                    # instead of silently forcing 0 when current_tab.pos fails.
                     try:
                         pos = current_tab.pos + 1
-                    except Exception as e:
-                        logma.warning(e)
-                        pos = 0  # TODO: need to find correction position
+                    except Exception:
+                        # Get the max position of existing tabs under the
+                        # same parent node and tabset, then add 1.
+                        try:
+                            docs = self.get_documents(
+                                self.get_current_node(),
+                                tabset="center"
+                            )
+                            if not docs.empty:
+                                max_pos = docs["position_int"].max()
+                                pos = int(max_pos) + 1 if max_pos is not None else 0
+                            else:
+                                pos = 0
+                        except Exception:
+                            pos = 0
                     self.add_document(document, document.did, self.get_current_node().nid, pos)
                 else:
                     logma.info(f"Load Document to existing tab {file}")

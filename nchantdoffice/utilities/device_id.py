@@ -53,7 +53,7 @@ def _load_or_create_device_id() -> str:
     """
     try:
         if os.path.exists(DEVICE_ID_PATH):
-            with open(DEVICE_ID_PATH, "r") as fh:
+            with open(DEVICE_ID_PATH, "r", encoding="utf-8") as fh:
                 value = fh.read().strip()
                 if value:
                     return value

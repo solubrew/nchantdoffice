@@ -276,14 +276,21 @@ Scanned all companion-interaction code paths:
 
 ### P2 -- parsing, privacy, and technical debt
 
-10. **T-NEW-118 -- Journal parsing + PII integration only.**
-    Full-text save/restore and retention already work and MUST NOT be
-    changed. Integrate existing `pycurity.pymatch.extract_all_pii()` into
-    journal parsing/redaction/PIN-copy behavior. Any expansion of base PII
-    functionality belongs upstream in pycurity.
-11. **T-NEW-121 -- Source-encoding guard and ASCII cleanup.**
-12. **T-NEW-157 -- Search correction-position fallback.**
-    Resolve `models.py:3039` instead of silently forcing position 0.
+10. **~~T-NEW-118~~ — Journal parsing + PII integration only.~~ ✅ Closed `f32f627`.
+    `NchantdOfficeJournalAppendEditor.cmd_copy_without_pii()` scans the
+    selected text with `pycurity.pymatch.extract_all_pii()`, masks all PII
+    types with `[type]` placeholders, and copies the redacted text to
+    clipboard. Bound to Ctrl+Shift+C in `initView()`. Full-text save/restore
+    and retention are unchanged. `journal.py:456–490`.
+11. **~~T-NEW-121~~ — Source-encoding guard and ASCII cleanup.~~ ✅ Closed `f32f627`.
+    `_safe_encoding()` helper in `util_helpers.py` probes file content,
+    strips BOM, returns `utf-8`/`utf-8-sig`/`latin-1`. Applied to all
+    7 unguarded `open(path, 'r')` calls across `cli.py`, `upgrades.py`,
+    `device_id.py`, `sketches.py`. `util_helpers.py:17–43`.
+12. **~~T-NEW-157~~ — Search correction-position fallback.~~ ✅ Closed `f32f627`.
+    `import_text()` now resolves the next tab position from `get_documents()`
+    when `current_tab.pos` is unavailable, instead of silently forcing `0`.
+    `models.py:2614–2630`.
 13. ~~**T-NEW-158** — Referral desktop passphrase guard.~~ ✅ Closed `b4c2e0d` + COMPAT-001.
     `_qt_passphrase_prompt()` surfaces a `QInputDialog` with
     `EchoMode.Password` instead of falling through to

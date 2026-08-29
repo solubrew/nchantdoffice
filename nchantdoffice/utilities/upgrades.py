@@ -68,7 +68,7 @@ def _load_state() -> dict:
     if not os.path.exists(prompt_counter_path):
         return dict(DEFAULT_STATE)
     try:
-        with open(prompt_counter_path, "r") as fh:
+        with open(prompt_counter_path, "r", encoding="utf-8") as fh:
             data = json.load(fh)
         if not isinstance(data, dict):
             return dict(DEFAULT_STATE)
