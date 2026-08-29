@@ -251,22 +251,28 @@ Scanned all companion-interaction code paths:
 
 ### P1 -- operator workflow and performance
 
-5. **T-NEW-152 -- Refresh ToolBox after node deletion.**
-   `cmd_delete_node` refreshes the tree but not the document ToolBox.
-   **Affected site:** `widgets/panes/documents.py:127-159`.
-6. **T-NEW-153 -- Node-delete navigation fallback.**
-   Navigate previous node first, then sibling, then parent when deleting
-   the active node. Upstream `go_to_previous_node` currently handles only
-   `previous_index` (`nchantrs/views/treeviews.py:110-117`).
-7. **T-NEW-154 -- Profile new-document creation performance.**
-   Add stage timing before optimizing; no timing instrumentation currently
-   identifies the bottleneck in `widgets/panes/new.py` / document create.
-8. **T-NEW-155 -- Script date/time insert and Ctrl+D.**
-   Add the toolbar action and shortcut requested in the latest operator
-   report; no Ctrl+D registration currently exists.
-9. **T-NEW-156 -- Sort `_`-prefixed nodes first.**
-   Add an explicit underscore-priority comparator while preserving the
-   selected ascending/descending order for the remaining names.
+4. **~~T-NEW-152~~ — Refresh ToolBox after node deletion.~~ ✅ Closed `cbba7de`.
+   `cmd_delete_node` now calls `toolbox.refresh_for_document()` after the tree
+   refresh so the ToolBox reflects the new node context. `toolboxes.py:155–170`.
+5. **~~T-NEW-153~~ — Node-delete navigation fallback.~~ ✅ Closed `cbba7de`.
+   `_resolve_fallback_item()` captures sibling/parent/first-top targets before the
+   model delete; `_apply_fallback()` restores the best available selection when
+   `go_to_previous_node()` finds nothing. `documents.py:153–225`.
+6. **~~T-NEW-154~~ — Profile new-document creation performance.~~ ✅ Closed `cbba7de`.
+   `[FOCUS-NEW]`-prefixed timing added to `add_document()` (toolbars.py:173).
+   Stages: resolve_pid → get_document_type → resolve_db → model.add_document →
+   _navigate_to_new_doc. User runs the app, creates docs, greps
+   `grep -E '\[FOCUS-NEW\]' ~/.local/share/nchantdoffice/*.log` to identify
+   the bottleneck before any optimisation. Instrumentation is a single commit
+   (`cbba7de`); remove after profiling is complete.
+7. **~~T-NEW-155~~ — Script Ctrl+D datetime insert.~~ ✅ Closed `cbba7de`.
+   `_wire_datetime_shortcut()` binds Ctrl+D on the editor widget, firing both
+   `cmd_add_date` (ISO date) and `cmd_add_time` (HH:MM:SS) in sequence.
+   Guarded by `_datetime_shortcut_wired` one-shot flag; scripts.py:299–322.
+8. **~~T-NEW-156~~ — Sort `_`-prefixed nodes first.~~ ✅ Closed `cbba7de`.
+   `_patch_underscore_sort()` monkey-patches the inner tree's `init_tree` so
+   underscore-prefixed top-level names sort first (stable, name-asc within each
+   group). Runs on every init and tree refresh. `trees.py:93–166`.
 
 ### P2 -- parsing, privacy, and technical debt
 

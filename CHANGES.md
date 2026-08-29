@@ -17,12 +17,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Matrix documents). Previously read `document.data` which was always `None`
   for internal docs, causing an empty table on tab reopen.
 
+- **T-NEW-152** `fix(documents): refresh ToolBox after node deletion` (`cbba7de`) —
+  `cmd_delete_node()` now calls `toolbox.refresh_for_document()` after the tree
+  refresh so the ToolBox reflects the new node context.
+
+- **T-NEW-153** `fix(documents): node-delete navigation fallback` (`cbba7de`) —
+  `_resolve_fallback_item()` captures sibling/parent/first-top targets before the
+  model delete; `_apply_fallback()` restores the best available selection when
+  `go_to_previous_node()` finds nothing.
+
+- **T-NEW-155** `feat(scripts): Ctrl+D datetime shortcut` (`cbba7de`) —
+  `_wire_datetime_shortcut()` binds Ctrl+D on the editor widget, firing both
+  `cmd_add_date` (ISO date) and `cmd_add_time` (HH:MM:SS) sequentially.
+
 - **T-NEW-159** `fix(views): persist and restore splitter sizes` (`cbba7de`) —
   `NchantdOfficeCloakView.initView()` calls `_restore_splitter_sizes()` after
   `super().initView()` builds the panes. `splitterMoved` signal wired to
   `_save_splitter_sizes()` which persists `splitter.sizes()` to
   `config.dikt['preferences']['splitter_sizes']`. Tree pane width survives
   view rebuilds.
+
+### Added
+
+- **T-NEW-154** `feat(toolbars): [FOCUS-NEW] profiling instrumentation` (`cbba7de`) —
+  `[FOCUS-NEW]`-prefixed stage timing added to `add_document()` in
+  toolbars.py: stages resolve_pid → get_document_type → resolve_db →
+  model.add_document → _navigate_to_new_doc. To profile: run the app,
+  create documents, then `grep -E '\[FOCUS-NEW\]' ~/.local/share/nchantdoffice/*.log`.
+  Remove instrumentation after profiling is complete.
+
+- **T-NEW-156** `feat(trees): underscore-prefixed nodes sort first` (`cbba7de`) —
+  `_patch_underscore_sort()` monkey-patches the inner tree's `init_tree` so that
+  `_`-prefixed top-level node names sort before all others (stable, name-asc
+  within each group). Applies on every init and tree refresh.
 
 ### Added (COMP-006 — whooshish search integration)
 

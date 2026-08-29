@@ -172,10 +172,15 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
 
     def add_document(self, signal=None, *args, **kwargs) -> Self:
         """Add a new document."""
+        import time
+        _t0 = time.perf_counter()
         cfg = args[0]["action"].action
+        logma.info(f"[FOCUS-NEW] add_document ENTER t={(_t0 - _t0):.3f}")
         if isinstance(cfg["parameters_dict"], str):
             cfg["parameters_dict"] = j.loads(cfg["parameters_dict"].replace("'", '"'))
+        t1 = time.perf_counter()
         pid = self.app.view.panes["left"].tree.model.current_node.nid
+        logma.info(f"[FOCUS-NEW] resolve_pid t={t1-_t0:.3f}")
         pos = len(self.app.view.panes["center"].model.tabsdata)
         code = cfg["lookup_code_txt"][-len(cfg["lookup_code_txt"]) + cfg["lookup_code_txt"].rfind("_") + 1 :]
         did = uuid()
@@ -186,9 +191,11 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         # fallback below. Stale "TODO:0 need to figure out how
         # to look up the widget from the document types table"
         # was removed -- the canonical path is in place.
+        t2 = time.perf_counter()
         if widget is None or widget == "":
             widget = self.app.model.get_document_type(cfg["lookup_code_txt"]).get("widget_txt", None)
-        logma.info(f"Widget {widget}")
+        logma.info(f"[FOCUS-NEW] get_document_type t={t2-_t0:.3f}")
+        logma.info(f"[FOCUS-NEW] resolve_widget t={time.perf_counter()-_t0:.3f}")
         # T-NEW-040: replaced the hardcoded ``db = "db"`` with
         # a call to ``_resolve_db_alias()`` so MultiInstance
         # support is a one-line plumbing change when
@@ -196,15 +203,12 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         # Single-instance mode (the current default) still
         # returns ``"db"``.
         db = self._resolve_db_alias()
+        logma.info(f"[FOCUS-NEW] resolve_db t={time.perf_counter()-_t0:.3f}")
         context = ""
         content = {}
         if cfg["lookup_code_txt"] == "add_script_document_nchantdscript":
-            # text = """
-            # <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-            # <html><head><meta name="qrichtext" content="1" /><meta charset="utf-8" /></head><body><[content]></body></html>
-            # """
             text = ""
-            content["content"] = {"text": text.replace("<[content]>", "")}
+            content["content"] = {"text": text}
         syntax = ""
         doc_type = cfg["lookup_code_txt"]
         document = {
@@ -224,14 +228,18 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
             "syntax": syntax,
         }
         params = cfg["parameters_dict"]
+        t3 = time.perf_counter()
         self.app.model.add_document(document, did, pid, pos, widget, params, doc_type, "center", db, True)
+        logma.info(f"[FOCUS-NEW] model.add_document t={time.perf_counter()-t3:.3f} total={time.perf_counter()-_t0:.3f}")
         # T-NEW-139: post-creation navigation extracted to
         # _navigate_to_new_doc(pos) so any future sibling
         # (add_tab, add_shortcut, etc.) can reuse it.
+        t4 = time.perf_counter()
         self._navigate_to_new_doc(pos)
-
+        logma.info(f"[FOCUS-NEW] _navigate_to_new_doc t={time.perf_counter()-t4:.3f} total={time.perf_counter()-_t0:.3f}")
         # Emit signal that document was created
         self.document_created.emit(doc_type)
+        logma.info(f"[FOCUS-NEW] add_document EXIT total={time.perf_counter()-_t0:.3f}")
         return self
 
     def add_node(self, signal=None, *args, **kwargs) -> Self:

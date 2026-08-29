@@ -153,10 +153,76 @@ class NchantdOfficeNodeEditPane(NchantdPane):
             pass
         self.app.model.delete_node(node)
         tree = self.app.view.panes["left"].tree
+        # T-NEW-153: resolve fallback targets BEFORE deletion so we know
+        # the deleted item's siblings/parent even after the model is gone.
+        fallback_item = self._resolve_fallback_item(tree)
         tree.view.go_to_previous_node()
+        # T-NEW-153: if go_to_previous_node landed on nothing (no history),
+        # apply the resolved fallback: sibling -> parent -> first top-level.
+        if tree.currentItem() is None:
+            self._apply_fallback(tree, fallback_item)
         tree.refresh()
-
+        # T-NEW-152: refresh the ToolBox after node deletion so it reflects
+        # the new node context (e.g. disabled delete actions if only root remains).
+        toolbox = getattr(self.app, "toolbox", None)
+        if toolbox is not None and hasattr(toolbox, "refresh_for_document"):
+            # pass the current center widget as the document context
+            center = self.app.view.panes.get("center")
+            if center is not None:
+                current_widget = center.currentWidget()
+                if current_widget is not None:
+                    try:
+                        toolbox.refresh_for_document(current_widget)
+                    except Exception as e:
+                        logma.warning(f"[documents] toolbox refresh failed: {e}")
         return self
+
+    def _resolve_fallback_item(self, tree) -> dict:
+        """T-NEW-153: resolve navigation fallback targets before node deletion.
+
+        Returns a dict with ``sibling`` (item before current in same parent),
+        ``parent`` (current item's parent), and ``first_top`` (first top-level
+        item).  Callers use these after the deletion to restore a sensible
+        selection when ``go_to_previous_node`` finds nothing.
+        """
+        result = {"sibling": None, "parent": None, "first_top": None}
+        try:
+            current = tree.currentItem()
+            if current is None:
+                return result
+            # Sibling: item above current (previous in parent's child list)
+            result["sibling"] = tree.itemAbove(current)
+            # Parent
+            try:
+                idx = tree.indexFromItem(current)
+                parent_idx = tree.parent(idx)
+                if parent_idx.isValid():
+                    result["parent"] = tree.itemFromIndex(parent_idx)
+            except Exception:
+                pass
+            # First top-level item
+            try:
+                root = tree.invisibleRootItem()
+                if root.childCount() > 0:
+                    result["first_top"] = root.child(0)
+            except Exception:
+                pass
+        except Exception:
+            pass
+        return result
+
+    def _apply_fallback(self, tree, fallback: dict) -> None:
+        """T-NEW-153: apply the fallback navigation targets.
+
+        Tries in order: sibling -> parent -> first top-level item.
+        """
+        for item in [fallback.get("sibling"), fallback.get("parent"), fallback.get("first_top")]:
+            if item is not None:
+                try:
+                    tree.setCurrentItem(item)
+                    return
+                except Exception:
+                    pass
 
     def cmd_duplicate_document(self, event=None, *args, **kwargs) -> Self:
         """"""

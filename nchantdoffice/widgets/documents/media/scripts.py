@@ -225,9 +225,11 @@ class NchantdOfficeScript(NchantdOfficeDocument):
             self.open_file(self.document.file_path)
         elif self.document.location == "internal":
             self.load_data(self.document.data)
+        # T-NEW-155: wire Ctrl+D -> insert current datetime.
+        # The toolbar has separate Insert Date / Insert Time buttons; Ctrl+D
+        # fires both at once (the canonical "timestamp" shortcut).
+        self._wire_datetime_shortcut()
         # self.populate_document()
-        # PUSH to 0.0.3 force external until
-        # self.document.set_location("external")
         #
         # if self.document.location == "external":
         #     self.open_file(self.document.file_path)
@@ -298,6 +300,27 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         if hasattr(self, "document_editor") and self.document_editor is not None:
             self.document_editor.insert(datetime.now().strftime("%H:%M:%S"))
         return self
+
+    def _wire_datetime_shortcut(self) -> None:
+        """T-NEW-155: bind Ctrl+D to insert today's date and current time.
+
+        Plugs a ``QShortcut`` on the editor widget that fires both
+        ``cmd_add_date`` and ``cmd_add_time`` sequentially.  Safe to call
+        multiple times (guarded by a one-shot flag); re-materialising a
+        script tab does not double-register the shortcut.
+        """
+        editor = getattr(self, "document_editor", None)
+        if editor is None:
+            return
+        if getattr(self, "_datetime_shortcut_wired", False):
+            return
+        try:
+            sc = pyqt.QShortcut(pyqt.QKeySequence("Ctrl+D"), editor)
+            sc.activated.connect(self.cmd_add_date)
+            sc.activated.connect(self.cmd_add_time)
+            self._datetime_shortcut_wired = True
+        except Exception:
+            pass
 
     def cmd_on_compatability_changed(self, event=None, *args, **kwargs) -> Self:
         """Record the user-selected compatibility level on the config.

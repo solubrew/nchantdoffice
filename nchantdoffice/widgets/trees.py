@@ -86,13 +86,18 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         return self
 
     def initView(self) -> Self:
-        """"""
+        """T-NEW-156: patch the inner tree's view so it sorts underscore-
+        prefixed names first on every init_tree() call."""
         logma.info("[trees] initView")
         try:
             super().initView()
             cfg = {"node_widget": NchantdOfficeTreeNode}
             self.tree = NchantdApplicationTree(self.parent, cfg).initWidget()
             logma.debug("[trees] initView: NchantdApplicationTree built")
+            # T-NEW-156: monkey-patch view.init_tree so underscore-prefixed
+            # names sort first. The sort runs after every init_tree() call
+            # (initial build AND tree refresh), so the ordering is consistent.
+            self._patch_underscore_sort(self.tree)
 
             # Ensure the tree maintains selection highlight when not focused
             if hasattr(self.tree, "setSelectionMode"):
@@ -128,6 +133,42 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         except Exception as e:
             logma.error(f"[trees] initView failed: {e}", exc_info=True)
             raise
+
+    def _patch_underscore_sort(self, tree) -> None:
+        """T-NEW-156: monkey-patch the inner tree's ``init_tree`` so that
+        underscore-prefixed node names sort before all other names.
+
+        The upstream ``init_tree`` sorts by ``['position_int', 'name_txt']``
+        which places ``_private`` nodes deep in the list (underscore has a
+        higher ASCII value than letters).  The patch wraps init_tree and
+        applies an additional sort pass on the top-level items after every
+        call, using a comparator that puts ``_``-prefixed names first while
+        preserving the existing ascending/descending order for the rest.
+        """
+        try:
+            view = getattr(tree, "view", None)
+            if view is None or not hasattr(view, "init_tree"):
+                return
+            original_init_tree = view.init_tree
+
+            def _underscore_first_init_tree(*args, **kwargs):
+                original_init_tree(*args, **kwargs)
+                try:
+                    root = tree.invisibleRootItem()
+                    items = [root.child(i) for i in range(root.childCount())]
+                    # stable sort: underscore-prefixed first, then name asc
+                    items.sort(key=lambda it: (0 if it.text(0).startswith("_") else 1, it.text(0)))
+                    # takeAll then re-add in the new order
+                    for it in items:
+                        root.removeChild(it)
+                    for it in items:
+                        root.addChild(it)
+                except Exception as e:
+                    logma.warning(f"[trees] underscore sort pass failed: {e}")
+
+            view.init_tree = _underscore_first_init_tree
+        except Exception as e:
+            logma.warning(f"[trees] _patch_underscore_sort setup failed: {e}")
         return self
 
     def _on_tree_selection_changed(self, selected, deselected) -> None:
