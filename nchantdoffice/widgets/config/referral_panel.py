@@ -46,7 +46,10 @@ from kahndor.logma import Logma
 from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.groups import NchantdGridScrollGroupBox, NchantdGroup
-from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
+from nchantdoffice.widgets.documents.documents import (
+    NchantdOfficeDocument,
+    NchantdOfficeDocumentManager,
+)
 from nchantdoffice.utilities.referral import (
     DEFAULT_API_BASE,
     DEFAULT_PAYOUT_MIN_CENTS,
@@ -71,17 +74,6 @@ logma = Logma(__name__)
 
 here = join(dirname(__file__), "")  # ||
 pxcfg = join(here, "_data_", "referral_panel.yaml")  # optional; falls back to code-driven layout
-
-# T-DESK: NchantdOfficeAffiliateManager (the old placeholder that just
-# rendered an external /affiliate_marketing webview) was replaced by
-# ``NchantdOfficeReferralPanel`` (see ``widgets/config/referral_panel.py``).
-# The class name is preserved here as a re-export so any existing
-# registry/init code that references ``NchantdOfficeAffiliateManager``
-# keeps working without changes.
-from nchantdoffice.widgets.config.referral_panel import NchantdOfficeReferralPanel
-
-NchantdOfficeAffiliateManager = NchantdOfficeReferralPanel
-
 
 class NchantdOfficeReferralPanel(NchantdOfficeDocument):
     """In-app Referral Panel (DESK-2 / ATNRG spec §5).
