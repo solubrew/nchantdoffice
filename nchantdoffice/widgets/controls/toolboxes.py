@@ -221,13 +221,14 @@ class NchantdApplicationSearchPane(NchantdPane):
                 self._run_llm_search(query)
                 return
 
-            # Local search via model
+            # Local search: try whooshish first (COMP-006), fall back to LIKE.
             model = getattr(self.app, "model", None) if self.app else None
-            if model is None or not hasattr(model, "search_documents"):
-                logma.warning("[search] model.search_documents unavailable")
+            if model is None:
+                logma.warning("[search] model unavailable")
                 self._set_response("Search unavailable: model not connected.")
                 return
 
+            results = None
             scope_arg = self._SCOPE_MAP.get(self._scope, "global")
             active_nid = None
             active_tid = None
@@ -252,12 +253,40 @@ class NchantdApplicationSearchPane(NchantdPane):
                 except Exception as e:
                     logma.warning(f"[search] failed to resolve active node/tab: {e}")
 
-            results = model.search_documents(
-                query,
-                scope=scope_arg,
-                active_nid=active_nid,
-                active_tid=active_tid,
-            )
+            # Try whooshish first (full-text, BM25-ranked)
+            if hasattr(model, "whooshish_search") and hasattr(model, "store"):
+                idx = getattr(model.store, "_search_index", None)
+                if idx is not None:
+                    try:
+                        results = model.whooshish_search(
+                            query,
+                            scope=scope_arg,
+                            active_nid=active_nid,
+                            active_tid=active_tid,
+                            limit=20,
+                        )
+                    except Exception as e:
+                        logma.warning(f"[search] whooshish_search failed: {e}")
+
+            # Fall back to LIKE-based search_documents
+            if results is None:
+                if not hasattr(model, "search_documents"):
+                    logma.warning("[search] model.search_documents unavailable")
+                    self._set_response("Search unavailable: no search backend.")
+                    return
+                try:
+                    df = model.search_documents(
+                        query,
+                        scope=scope_arg,
+                        active_nid=active_nid,
+                        active_tid=active_tid,
+                    )
+                    # Convert DataFrame to list-of-dict for unified rendering
+                    results = df.to_dict(orient="records") if df is not None else []
+                except Exception as e:
+                    logma.warning(f"[search] search_documents failed: {e}")
+                    results = []
+
             self._render_results(results, query)
 
         except Exception as e:

@@ -207,6 +207,10 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.codex.init_contacts(docs["contacts"])
         self.settings.load_document(docs["settings"])
         # self.init_mole()
+        # COMP-006: enable whooshish full-text search on boot.
+        # Whoosh index lives at {store.path}.whoosh/ and stays
+        # in sync with every store write via write-hooks.
+        self.store.enable_whooshish_search()
         return self
 
     def add_document(
@@ -1780,6 +1784,133 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         except Exception as e:
             logma.warning(f"Error getting documents for node {node}: {e}")
             return DataFrame()
+
+    def whooshish_search(
+        self,
+        query: str,
+        scope: str = "global",
+        active_nid: Optional[str] = None,
+        active_tid: Optional[str] = None,
+        limit: int = 20,
+    ) -> List[Dict[str, Any]]:
+        """Full-text search via whooshish.
+
+        Drop-in upgrade over the LIKE-based ``search_documents()``.
+        Queries the whoosh index (built from ``vw_app_documents``,
+        ``vw_app_tab``, ``vw_app_tree_node``) using fuzzy/BM25 ranking.
+
+        Scope semantics mirror ``search_documents()``:
+          - ``"global"``: all indexed docs, tabs, and nodes.
+          - ``"node"``: index results to the active node's subtree.
+          - ``"tab"``: index results to the active tab.
+
+        Args:
+            query: search string (whoosh query parser handles
+                multi-word, quoted phrases, wildcards, etc.).
+            scope: ``"global"``, ``"node"``, or ``"tab"``.
+            active_nid: required for ``scope="node"``.
+            active_tid: required for ``scope="tab"``.
+            limit: max results per indexed table.
+
+        Returns:
+            List of result dicts from the whoosh index, each with
+            at least ``"name"``, ``"score"``, and table-specific
+            fields (``did``, ``nid``, ``tid``). Returns an empty
+            list when whooshish is not enabled or query is empty.
+        """
+        try:
+            if not isinstance(query, str) or not query.strip():
+                return []
+            store = getattr(self, "store", None)
+            if store is None:
+                logma.warning("[model] whooshish_search: no store")
+                return []
+            idx = getattr(store, "_search_index", None)
+            if idx is None:
+                logma.warning("[model] whooshish_search: search not enabled")
+                return []
+            results: List[Dict[str, Any]] = []
+            # Primary table for doc search
+            doc_results = store.search(
+                query,
+                table="vw_app_documents",
+                limit=limit,
+                filters=None,
+            )
+            # Scope filter for docs (by did → node/tab)
+            if scope in ("node", "tab"):
+                doc_results = [
+                    r for r in doc_results
+                    if self._filter_result_by_scope(r, scope, active_nid, active_tid)
+                ]
+            results.extend(doc_results)
+            # Tab search
+            tab_results = store.search(
+                query,
+                table="vw_app_tab",
+                limit=limit,
+                filters=None,
+            )
+            tab_filtered: List[Dict[str, Any]] = []
+            for r in tab_results:
+                r_nid = str(r.get("nid", ""))
+                r_tid = str(r.get("tid", ""))
+                if scope == "node" and active_nid and r_nid == str(active_nid):
+                    tab_filtered.append(r)
+                elif scope == "tab" and active_tid and r_tid == str(active_tid):
+                    tab_filtered.append(r)
+                elif scope == "global":
+                    tab_filtered.append(r)
+            results.extend(tab_filtered)
+            # Node search
+            node_results = store.search(
+                query,
+                table="vw_app_tree_node",
+                limit=limit,
+                filters=None,
+            )
+            node_filtered: List[Dict[str, Any]] = []
+            for r in node_results:
+                r_nid = str(r.get("nid", ""))
+                if scope in ("node", "tab") and active_nid and r_nid == str(active_nid):
+                    node_filtered.append(r)
+                elif scope == "global":
+                    node_filtered.append(r)
+            results.extend(node_filtered)
+            # Sort by score descending
+            results.sort(key=lambda r: r.get("score", 0.0), reverse=True)
+            return results[: limit * 3]
+        except Exception as e:
+            logma.error(
+                f"[model] whooshish_search failed: {e}",
+                exc_info=True,
+            )
+            return []
+
+    def _filter_result_by_scope(
+        self,
+        result: Dict[str, Any],
+        scope: str,
+        active_nid: Optional[str],
+        active_tid: Optional[str],
+    ) -> bool:
+        """Return True if a whoosh result matches the active node/tab.
+
+        For tab scope we look up the tab's node via the tab's did.
+        For node scope we compare nids directly.
+        """
+        if scope == "global":
+            return True
+        r_nid = str(result.get("nid", ""))
+        r_tid = str(result.get("tid", ""))
+        if scope == "node":
+            return bool(active_nid and r_nid == str(active_nid))
+        if scope == "tab":
+            if active_tid and r_tid == str(active_tid):
+                return True
+            # Also include docs in the active node (tab's parent)
+            return bool(active_nid and r_nid == str(active_nid))
+        return True
 
     def search_documents(self, query, scope="global", active_nid=None, active_tid=None) -> "DataFrame":
         """Search documents (T-NEW-033).
@@ -3710,6 +3841,92 @@ class NchantdOfficeStore(NchantdStore):
         # loaded rows back into the in-memory registry.
         self._sqlite_connection = None
         self._sqlite_path = None
+
+    # WHOOSHISH INTEGRATION (COMP-006, 2026-08-29):
+    # whooshish uses the same write-hooks pattern as the journal:
+    # MicroStash._whoosh_write fires AFTER each SQLite commit and
+    # keeps the whoosh index in sync. The index lives at
+    # ``{store.path}.whoosh/`` as a self-contained sidecar.
+    #
+    # Indexed tables / views:
+    #   vw_app_tab        — tab name, tab_type, widgdata, did (node context)
+    #   vw_app_tree_node  — node name, node type, widgdata, focus (tabset context)
+    #   vw_app_documents  — doc name, description, doc type (content)
+    #
+    # Field config maps logical field names (for queries) to raw DB column
+    # names (from the view schema). The whooshish SearchIndex auto-detects
+    # column types: *_txt/NAME/title/DESCRIPTION → TEXT (full-text indexed),
+    # *id*/uuid/key → ID (exact), everything else → STORED (no index).
+    #
+    # MicroStash's _whoosh_write is called from the single-writer queue so
+    # there is no concurrent writer problem.
+    _WHOOSHISH_TABLES = {
+        "vw_app_tab": {
+            # logical_name -> DB column name
+            "name": "name_txt",
+            "content": "widgdata_dict",  # widgdata is JSON — whooshish auto-parse
+            "tab_type": "tab_type_txt",
+            "tid": "tid_txt",  # used for exact-match post-filtering
+            "did": "did_txt",  # used to find which node a tab lives in
+            "nid": "pid_txt",  # pid in the tab row = parent node nid
+            "boosts": {"name": 3.0, "content": 1.0},
+        },
+        "vw_app_tree_node": {
+            "name": "name_txt",
+            "content": "widgdata_dict",  # JSON — whooshish auto-parse
+            "node_type": "type_txt",
+            "nid": "nid_txt",  # used for exact-match post-filtering
+            "boosts": {"name": 3.0, "content": 1.0},
+        },
+        "vw_app_documents": {
+            "name": "name_txt",
+            "description": "description_ltxt",
+            "content": "content_enc64_txt",  # base64 doc content
+            "doc_type": "document_type_txt",
+            "did": "did_txt",  # used for exact-match post-filtering
+            "boosts": {"name": 3.0, "description": 2.0, "content": 1.0},
+        },
+    }
+
+    def enable_whooshish_search(self, analyzer: str = "simple") -> bool:
+        """Enable whooshish full-text search on this store's tables.
+
+        Calls ``MicroStash.enable_search()`` which wires write-hooks to
+        keep the whoosh index in sync with every INSERT/UPDATE/DELETE.
+        The index is opened (or created) at ``{self.path}.whoosh/``.
+
+        Safe to call multiple times: micromole's enable_search() is
+        idempotent (checks ``_search_index is not None`` before
+        proceeding).
+
+        Args:
+            analyzer: ``"simple"`` (default, no stemming) or
+                ``"porter"`` (English stemming).
+
+        Returns:
+            True on success, False on any error (logged).
+        """
+        try:
+            self.enable_search(
+                tables=self._WHOOSHISH_TABLES,
+                analyzer=analyzer,
+            )
+            logma.info(
+                "[store] whooshish search enabled",
+                extra={"tables": list(self._WHOOSHISH_TABLES.keys())},
+            )
+            return True
+        except ImportError as e:
+            logma.warning(
+                f"[store] whooshish not available: {e}",
+            )
+            return False
+        except Exception as e:
+            logma.error(
+                f"[store] enable_whooshish_search failed: {e}",
+                exc_info=True,
+            )
+            return False
 
     def close_sqlite(self) -> None:
         """T-NEW-007: detach the ``pyof`` SQuiRL doc if one is
