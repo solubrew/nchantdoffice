@@ -129,10 +129,13 @@ def test_update_affiliate_links_uses_correct_api_url(
     monkeypatch: pytest.MonkeyPatch,
     fake_install_store,
 ) -> None:
-    """``update_affiliate_links`` must hit ``{affiliate_api_base}/links/`` —
+    """``update_affiliate_links`` must hit ``{server_base_url}/api/v1/quicklinks/``.
 
-    NOT ``{affiliate_api_base}/links/affiliate/links/``. Regression
-    for DESK T-NEW-055 — the pre-fix code doubled the path.
+    Fixed in COMPAT-002 (2026-08-29): the old
+    ``{affiliate_api_base}/links/`` path (maps to
+    ``/api/affiliate/links/``) was wrong — the live server
+    serves quicklinks at ``/api/v1/quicklinks/`` via
+    ``server_base_url``.
 
     We mock the requests Session so the assertion runs offline.
     The test is run-mode agnostic — it just verifies the URL
@@ -141,9 +144,7 @@ def test_update_affiliate_links_uses_correct_api_url(
     from nchantdoffice.utilities import links
     from nchantdoffice.utilities import urls
 
-    # Pick prod (production URLs) for the assertion — the doubled
-    # path bug was identical in dev and prod; production was just
-    # masking it via a wildcard route.
+    # Pick prod (production URLs) for the assertion.
     urls.set_run_mode("prod")
     urls.reload()
 
@@ -161,19 +162,17 @@ def test_update_affiliate_links_uses_correct_api_url(
     result = links.update_affiliate_links(model=_FakeModel(), reload=False)
     assert result == {"affiliate_count": 0, "non_affiliate_count": 0}
 
-    # The captured URL must be exactly ``{base}/links/`` —
-    # NOT ``{base}/links/affiliate/links/``.
+    # The captured URL must be exactly ``{server_base_url}/api/v1/quicklinks/``.
     assert len(mock.calls) == 1, (
         f"expected exactly 1 GET call, got {len(mock.calls)}: {mock.calls}"
     )
     captured_url = mock.calls[0]["url"]
-    expected_base = urls.affiliate_api_base()
-    assert captured_url == f"{expected_base}/links/", (
-        f"doubled-path regression (DESK T-NEW-055): "
-        f"got {captured_url!r}, expected {expected_base + '/links/'!r}. "
-        f"The pre-fix code passed 'affiliate/links/' to client.get() "
-        f"while API_URL already ended with '/links/', producing the "
-        f"doubled path."
+    expected_base = urls.server_base_url()
+    assert captured_url == f"{expected_base}/api/v1/quicklinks/", (
+        f"got {captured_url!r}, expected {expected_base + '/api/v1/quicklinks/'!r}. "
+        f"The pre-fix code hit affiliate_api_base + '/links/' "
+        f"(which resolved to /api/affiliate/links/ — wrong). "
+        f"Now hits server_base_url + '/api/v1/quicklinks/'."
     )
 
 
@@ -181,17 +180,13 @@ def test_update_affiliate_links_dev_url_constructs_correctly(
     monkeypatch: pytest.MonkeyPatch,
     fake_install_store,
 ) -> None:
-    """In dev mode, the URL must be ``http://192.168.1.67:8081/api/affiliate/links/``.
+    """In dev mode, the URL must be ``http://192.168.1.67:8081/api/v1/quicklinks/``.
 
-    Same contract as the prod test, just with the dev profile
-    active. Confirms the run-mode profile flows through to the
-    affiliate URL correctly AND that the path isn't doubled.
-
-    COM T-NEW-053 follow-up: dev mode used to split API and
-    marketing across 8081/8080 ports. The actual LAN deploy
-    serves both on a single port (the nchantdoffice_com Flask
-    app handles /api/* and /* on port 5000), so both URLs now
-    point at the same host:port.
+    COMPAT-002 (2026-08-29): same contract as the prod test
+    but with the dev profile active. Confirms the run-mode
+    profile flows through to the correct ``server_base_url``,
+    and that the path is ``/api/v1/quicklinks/`` (not the
+    old ``/api/affiliate/links/``).
     """
     from nchantdoffice.utilities import links
     from nchantdoffice.utilities import urls
@@ -216,11 +211,11 @@ def test_update_affiliate_links_dev_url_constructs_correctly(
         assert len(mock.calls) == 1
         captured_url = mock.calls[0]["url"]
         assert captured_url == (
-            "http://192.168.1.67:8081/api/affiliate/links/"
+            "http://192.168.1.67:8081/api/v1/quicklinks/"
         ), (
             f"dev-mode URL construction failed: got {captured_url!r}. "
-            f"Expected the canonical ``/api/affiliate/links/`` path "
-            f"without doubling."
+            f"Expected ``http://192.168.1.67:8081/api/v1/quicklinks/`` "
+            f"(server_base_url + /api/v1/quicklinks/)."
         )
     finally:
         # Always reset run-mode so the next test in the suite

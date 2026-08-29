@@ -64,8 +64,8 @@ def update_affiliate_links(model, last_affiliate_update_dttm: str = "2025-01-01 
     # doubled path (``/api/affiliate/links/affiliate/links/``).
     # Production was masking this with a wildcard route; dev
     # mode surfaced the bug with a hard 404/connection-refused.
-    from nchantdoffice.utilities.urls import affiliate_api_base as _aab
-    API_URL = _aab()
+    from nchantdoffice.utilities.urls import server_base_url as _sbu
+    API_URL = _sbu()
     # DESK T-NEW-057: the server's @require_desktop_api_key
     # decorator reads ``x-api-key`` (NOT Authorization: Bearer).
     # Read the install's api_key from the global InstallStore
@@ -137,9 +137,9 @@ def update_affiliate_links(model, last_affiliate_update_dttm: str = "2025-01-01 
         # DESK T-NEW-055: was ``"affiliate/links/"`` (doubled with
         # the ``/api/affiliate`` already in the base). Now just
         # ``"links/"`` — the base + path resolves to
-        # ``{affiliate_api_base}/links/`` which is the canonical
+        # ``server_base_url}/api/v1/quicklinks/`` which is the canonical
         # endpoint for fetching affiliate link rows.
-        response = client.get("links/", params=params)
+        response = client.get("api/v1/quicklinks/", params=params)
         # Normalise the response shape: a list/tuple goes straight
         # through, a dict is unwrapped via "links", and anything else
         # (None when the API is unreachable, an unexpected type)
@@ -327,11 +327,11 @@ def example_with_client() -> None:
 # quickstart pane, etc.).
 
 # DESK T-NEW-052: the constant now mirrors the
-# ``urls.affiliate_api_base()`` resolver. The bundled default
-# stays the production URL; operators override via XDG
-# ``urls.affiliate_api_base`` (typically ``http://<internal>/api/affiliate``).
-from nchantdoffice.utilities.urls import affiliate_api_base as _aab
-DEFAULT_AFFILIATE_API_BASE = _aab()
+# ``urls.server_base_url()`` resolver. The bundled default
+# is ``https://nchantdoffice.com`` (which serves the
+# quicklinks API at ``/api/v1/quicklinks/``).
+from nchantdoffice.utilities.urls import server_base_url as _sbu
+DEFAULT_AFFILIATE_API_BASE = _sbu() + "/api/v1"
 
 
 def track_quicklink_click(offer_id: Optional[int] = None,
