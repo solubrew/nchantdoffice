@@ -191,6 +191,63 @@ bodies remain below for traceability, but do not override this list.
    missing model degrades to warning.
    **Source:** operator request 2026-08-27.
 
+## Companion-Site Integration Review (2026-08-29)
+
+Scanned all companion-interaction code paths:
+`license/`, `utilities/referral.py`, `utilities/links.py`,
+`sync/applier.py`, `widgets/ad_rotation_client.py`,
+`widgets/config/referral_panel.py`, `utilities/urls.py`.
+
+### Live API confirmations (192.168.1.67:80)
+
+| Endpoint | Status |
+|---|---|
+| `/api/v1/quicklinks/` | 200 ✅ |
+| `/api/v1/quicklinks/categories` | 200 ✅ |
+| `/api/v1/referral/earnings/<uid>` | 200 ✅ |
+| `/api/v1/referral/share/<uid>` | 200 ✅ |
+| `/api/ads/rotation/next` | 200 ✅ |
+| `/api/desktop/entitlement` | 401 (needs api_key — correct) |
+
+### Open items
+
+1. **COMPAT-001 🔴 — `referral_panel.py` circular import (T-NEW-158 regression).**
+   Line 81: `from nchantdoffice.widgets.config.referral_panel import NchantdOfficeReferralPanel`
+   imports itself before the class is defined. Breaks
+   `test_referral_panel_qt_passphrase.py` with `ImportError`. Fix: move the
+   `NchantdOfficeAffiliateManager = NchantdOfficeReferralPanel` alias to the
+   bottom of the file, or remove it if no callers use that name.
+   The re-export was added to maintain ABI compat but creates the cycle.
+
+2. **COMPAT-002 🟡 — `affiliate_api_base` URL may not match live server.**
+   `urls.yaml` and `_BUNDLED_DEFAULTS` both set
+   `affiliate_api_base = "https://nchantdoffice.com/api/affiliate"`.
+   The production server at `nchantdoffice.com` returned empty (404/timeout) on
+   `GET /api/affiliate/links/`. The live server (`/api/v1/quicklinks/` etc.)
+   responds at `/api/v1/` paths. If the affiliate endpoint is empty because
+   the domain isn't live, that's expected (prod URLs point at the cloud that
+   hasn't shipped). Verify before shipping. The desktop's
+   `update_affiliate_links()` correctly routes through
+   `urls.affiliate_api_base` so a URL fix in `urls.yaml` resolves the
+   mismatch without code changes.
+
+3. **COMPAT-003 🟡 — `sync.applier._rollback_last` is a stub.**
+   `sync/rollback.py:164` logs "not implemented" — it writes a rollback
+   marker but never actually reverses a failed `_apply_data_json`. If the
+   journal is the license safety net, the rollback should at minimum record the
+   failed state so a subsequent retry doesn't apply the same update twice.
+
+4. **COMPAT-004 🟡 — `users.py:69` `has_pro` is hardcoded.**
+   `utilities/users.py:69` has a `# TODO: need to connect to service`
+   comment. Currently returns `True`. Needs either the
+   `nchantdoffice_com` service call for local Pro status or a local cache
+   backed by the entitlement cache.
+
+5. **COMPAT-005 ⚪ — `bspatch` binary delta deferred.**
+   `sync/applier.py:275` skips `binary_delta` updates with a logged note.
+   If binary update delivery is planned, the `bspatch` binary-apply path
+   needs a real implementation. Currently safe (no-op + log).
+
 ### P1 -- operator workflow and performance
 
 5. **T-NEW-152 -- Refresh ToolBox after node deletion.**
