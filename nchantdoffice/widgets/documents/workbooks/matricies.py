@@ -1954,11 +1954,19 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         the same envelope shape with the same fallback.
         """
         logma.info(f"[matricies] Populate worksheet {self.file_path}")
-        data = self.document.data
-        if isinstance(data, dict):
-            data = DataFrame(data).values.tolist()
+        data = getattr(self.document, "data", None)
+        # T-NEW-149: document.content['grid'] is where save() stores the
+        # 2D cell grid for internal documents (DB round-trip). Fall back to
+        # document.data for external/file-path documents loaded via open_file().
+        doc_content = getattr(self.document, "content", None)
+        if isinstance(doc_content, dict):
+            grid = doc_content.get("grid")
+            if isinstance(grid, list) and len(grid) > 0:
+                data = grid
         if data is None:
             data = []
+        elif isinstance(data, dict):
+            data = DataFrame(data).values.tolist()
         logma.info(f"Data {data}")
         self.table.update_data(data)
         self._apply_cell_sizes()

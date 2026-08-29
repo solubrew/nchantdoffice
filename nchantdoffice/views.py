@@ -16,6 +16,7 @@
 from os.path import dirname, join
 
 # ======================================3rd Party Library Modules=====================================================||
+from nchantrs.libraries import pyqt
 
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
@@ -83,12 +84,59 @@ class NchantdOfficeCloakView(NchantdCloakView):
             logma.warning(f"[views] license refresh unavailable: {exc}")
 
     def initView(self, cfg=None) -> Self:
-        """"""
+        """T-NEW-159: restore splitter sizes after super().initView()
+        builds the panes so the tree pane width survives a view rebuild."""
         super().init_pre_view(cfg)
         cfg = {}
         self.panes["toolbar"] = NchantdNewDocumentToolBar(self.parent, cfg).initWidget()
         super().initView(cfg)
+        self._restore_splitter_sizes()
+        # Wire splitterMoved -> save on first init only.  Defer with a
+        # single-shot so the signal is set up after the splitter exists
+        # (it is created by super().initView -> build_panes).
+        pyqt.QTimer.singleShot(0, self._wire_splitter_save)
         return self
+
+    def _wire_splitter_save(self) -> None:
+        """Connect splitterMoved so user drags are persisted."""
+        splitter = getattr(self, "splitter", None)
+        if splitter is not None:
+            try:
+                splitter.splitterMoved.connect(self._save_splitter_sizes)
+            except Exception:
+                pass  # not a QSplitter or signal unavailable
+
+    def _save_splitter_sizes(self) -> None:
+        """T-NEW-159: persist splitter sizes to config whenever the user
+        drags a pane divider.  Mirrors the ``last_selected_node`` pattern."""
+        splitter = getattr(self, "splitter", None)
+        if splitter is None:
+            return
+        try:
+            sizes = splitter.sizes()
+        except Exception:
+            return
+        if "preferences" not in self.config.dikt:
+            self.config.dikt["preferences"] = {}
+        self.config.dikt["preferences"]["splitter_sizes"] = sizes
+        try:
+            self.config.save()
+        except Exception:
+            pass  # config may not be writable (read-only env)
+
+    def _restore_splitter_sizes(self) -> None:
+        """T-NEW-159: restore splitter sizes from config after the panes
+        are built.  Falls back to the hard-coded defaults silently."""
+        splitter = getattr(self, "splitter", None)
+        if splitter is None:
+            return
+        sizes = self.config.dikt.get("preferences", {}).get("splitter_sizes")
+        if not sizes:
+            return
+        try:
+            splitter.setSizes(list(sizes))
+        except Exception:
+            pass  # invalid sizes or splitter not ready yet
 
     def switch_to_account_tab(self) -> Self:
         """Switch the center tabset to the user's account tab.
