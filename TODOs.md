@@ -162,15 +162,12 @@ bodies remain below for traceability, but do not override this list.
 1. **~~T-NEW-148~~ -- External Script Save writes back to disk.** ✅ Closed `9f18e30`.
    `_write_external_file()` uses syntax-aware exporter; atomic rename;
    internal docs untouched.
-2. **T-NEW-149 -- Matrix internal value persistence and restore.**
-   Save captures a grid, but cell changes are not mirrored incrementally
-   and no real DB round-trip proves `content_enc64_txt` restores into a
-   fresh Matrix widget.
-   **Affected sites:** `widgets/documents/workbooks/matricies.py:1713-1741,
-   1896-1950,2353-2392`, `models.py:3399-3434`.
-   **Acceptance:** a non-square entered grid survives save, tab close,
-   and reopen by the same document ID. This card is internal-only; do not
-   expand it into external spreadsheet export.
+2. ~~**T-NEW-149** — Matrix cell persistence.~~ ✅ Closed `cbba7de`.
+   `populate_document()` now reads `document.content['grid']` as primary source —
+   the attribute where `save()` stores the 2D cell grid for internal Matrix docs.
+   Previously read `document.data` which was always `None` for internal docs,
+   causing empty table on tab reopen. Falls back to `document.data` for
+   external/file-path docs. `matricies.py:1956–1965`.
 3. **~~T-NEW-150~~ -- Disable Matrix formula toolbar until 0.0.3.** ✅ Closed `5a95c54`.
    `_FORMULA_TOOLBAR_ENABLED = False`; Apply Formula + Auto Calculate
    hidden; implementation preserved for 0.0.3. Matrix for 0.0.2: open,
@@ -179,10 +176,11 @@ bodies remain below for traceability, but do not override this list.
 4. **~~T-NEW-151~~ -- Fix nchantrs password verifier mismatch.** ✅ Closed in nchantrs gamma (`users.py:185`).
    `verify_password = verify_pword` alias added; 4/4 AST tests green.
    RED test at `tests/unit/nchantrs/utilities/test_verify_password.py`.
-5. **~~T-NEW-159~~ -- Tree pane position not persisted across node/tab refreshes.** ⚠️ Open.
-   Left-side tree window loses user-adjusted position after node/tab
-   operations that trigger a tree refresh.
-   **Source:** `testing-report_20260827.md` (2026-08-27).
+2. ~~**T-NEW-159** — Tree pane position not persisted.~~ ✅ Closed `cbba7de`.
+   `initView()` now calls `_restore_splitter_sizes()` after `super().initView()`
+   builds the panes. `splitterMoved` signal wired to `_save_splitter_sizes()`
+   which persists `splitter.sizes()` to `config.dikt['preferences']['splitter_sizes']`.
+   Tree pane width survives view rebuilds. `views.py:85–140`.
 6. **~~T-NEW-160~~ -- Application Search pane implementation (toolbox drawer).~~ ✅ Closed `c320158`/`a1a0ce8`/`5a98d41`; upgraded to whooshish (COMP-006 `80cecf6`).
    Wired Run Search button to `model.search_documents()` with scope
    routing; results rendering (title + did + node); Web opens embedded

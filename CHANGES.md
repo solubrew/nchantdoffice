@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **T-NEW-149** `fix(matricies): read document.content['grid'] on populate` (`cbba7de`) —
+  `populate_document()` now reads `document.content['grid']` as the primary
+  source (the attribute where `save()` stores the 2D cell grid for internal
+  Matrix documents). Previously read `document.data` which was always `None`
+  for internal docs, causing an empty table on tab reopen.
+
+- **T-NEW-159** `fix(views): persist and restore splitter sizes` (`cbba7de`) —
+  `NchantdOfficeCloakView.initView()` calls `_restore_splitter_sizes()` after
+  `super().initView()` builds the panes. `splitterMoved` signal wired to
+  `_save_splitter_sizes()` which persists `splitter.sizes()` to
+  `config.dikt['preferences']['splitter_sizes']`. Tree pane width survives
+  view rebuilds.
+
 ### Added (COMP-006 — whooshish search integration)
 
 - **COMP-006** `feat(whooshish): integrate micromole whooshish search`
