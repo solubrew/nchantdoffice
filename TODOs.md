@@ -183,7 +183,7 @@ bodies remain below for traceability, but do not override this list.
    Left-side tree window loses user-adjusted position after node/tab
    operations that trigger a tree refresh.
    **Source:** `testing-report_20260827.md` (2026-08-27).
-6. **~~T-NEW-160~~ -- Application Search pane implementation (toolbox drawer).** ✅ Closed `c320158`/`a1a0ce8`/`5a98d41`.
+6. **~~T-NEW-160~~ -- Application Search pane implementation (toolbox drawer).~~ ✅ Closed `c320158`/`a1a0ce8`/`5a98d41`; upgraded to whooshish (COMP-006 `80cecf6`).
    Wired Run Search button to `model.search_documents()` with scope
    routing; results rendering (title + did + node); Web opens embedded
    browser tab; LLM stub; Enter key support; Search pane registered
@@ -242,6 +242,15 @@ Scanned all companion-interaction code paths:
    is not blocking. When/if binary update delivery is needed, the
    `bspatch` path requires a separate card.
 
+6. **COMP-006** — whooshish internal search integration. ✅ Implemented `80cecf6`.
+   `NchantdOfficeStore.enable_whooshish_search()` indexes `vw_app_tab`,
+   `vw_app_tree_node`, `vw_app_documents` via MicroStash write-hooks.
+   `NchantdOfficeCloakModel.whooshish_search()` queries all 3 views,
+   merges, ranks by BM25 score, applies scope filter (global/node/tab).
+   `NchantdApplicationSearchPane` tries whooshish first, falls back to
+   LIKE. Boot: `initModel()` calls `enable_whooshish_search()`.
+   Index at `{store.path}.whoosh/`, survives restarts.
+
 ### P1 -- operator workflow and performance
 
 5. **T-NEW-152 -- Refresh ToolBox after node deletion.**
@@ -271,10 +280,12 @@ Scanned all companion-interaction code paths:
 11. **T-NEW-121 -- Source-encoding guard and ASCII cleanup.**
 12. **T-NEW-157 -- Search correction-position fallback.**
     Resolve `models.py:3039` instead of silently forcing position 0.
-13. **T-NEW-158 -- Referral desktop passphrase guard.**
-    Replace the unnumbered `T-NEW-XXX` marker at
-    `widgets/config/referral_panel.py:395` with the real Qt masked-entry
-    flow so the desktop never falls into a CLI getpass prompt.
+13. ~~**T-NEW-158** — Referral desktop passphrase guard.~~ ✅ Closed `b4c2e0d` + COMPAT-001.
+    `_qt_passphrase_prompt()` surfaces a `QInputDialog` with
+    `EchoMode.Password` instead of falling through to
+    `getpass.getpass()`. Test `test_referral_panel_qt_passphrase.py`
+    verifies the dialog fires. COMPAT-001 closed the circular import
+    that was blocking the test suite.
 
 ### Active umbrella sequencing
 
@@ -299,6 +310,15 @@ The production marker sweep found 23 TODO-family hits across 11 files.
 All except `models.py:3039` and `referral_panel.py:395` are historical
 closeout comments or deliberate abstract/delegated behavior; they are not
 new backlog items.
+
+**Re-audit 2026-08-29:** confirmed all `TODO`/`FIXME` markers across the
+entire `nchantdoffice/` tree are either:
+- Historical closeout context (`T-NEW-037`, `T-NEW-079`, `T-NEW-123`, `T-NEW-138`, `T-NEW-140`, `T-NEW-141b/c`)
+- `PUSH to 0.0.3` deliberate deferred slots (all marked as such)
+- `AUDITOR-NOT-FEATURE-ENVY` suppressions added during the maintainability audit
+- `T-removed` historical comments explaining what was removed
+
+No real work items remain untracked in code.
 
 ### Historical live-open section (superseded)
 

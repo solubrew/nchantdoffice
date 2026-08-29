@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (COMP-006 — whooshish search integration)
+
+- **COMP-006** `feat(whooshish): integrate micromole whooshish search`
+  (`80cecf6`) — `models.py` + `widgets/controls/toolboxes.py` —
+  Full-text search via Whoosh for internal node/tab/document content.
+  `NchantdOfficeStore.enable_whooshish_search()` indexes `vw_app_tab`,
+  `vw_app_tree_node`, `vw_app_documents` via MicroStash write-hooks;
+  index at `{store.path}.whoosh/`, survives restarts. `whooshish_search()`
+  queries all 3 views, merges and ranks by BM25, applies scope filter
+  (global/node/tab). `NchantdApplicationSearchPane` tries whooshish first,
+  falls back to LIKE. `initModel()` calls `enable_whooshish_search()`
+  on boot.
+
+### Fixed
+
+- **COMPAT-001** `fix(referral_panel): remove self-import cycle`
+  (`b4c2e0d`) — `widgets/config/referral_panel.py` —
+  Removed self-import at line 81; added missing `NchantdOfficeDocumentManager`
+  import; `test_referral_panel_qt_passphrase.py` now passes.
+
+- **COMPAT-002** `fix(links): route update_affiliate_links via server_base_url`
+  (`1c6336b`) — `utilities/links.py` — `update_affiliate_links()`
+  now hits `server_base_url + /api/v1/quicklinks/` (the live endpoint)
+  instead of `affiliate_api_base + /links/`. `DEFAULT_AFFILIATE_API_BASE`
+  updated to `server_base_url + /api/v1`. Tests updated.
+
+- **T-NEW-158** `fix(referral_panel): close Qt passphrase guard` —
+  `_qt_passphrase_prompt()` surfaces a `QInputDialog` with `EchoMode.Password`
+  instead of falling through to `getpass.getpass()`.
+
 > **Reality anchor (2026-08-27, gamma `f147d48`):** This block
 > restores the DESK T-NEW-046 through DESK T-NEW-061 desktop
 > install + entitlement + claim-flow milestone that was lost
