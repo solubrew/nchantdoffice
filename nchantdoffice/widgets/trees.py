@@ -166,30 +166,30 @@ class NchantdOfficeApplicationTree(NchantdWidget):
             logma.warning(f"[trees] _sort_underscore_first setup failed: {e}")
 
 
-def _do_sort(tree) -> None:
-    """Sort top-level items in-place: underscore-prefixed first, then name asc.
+    def _do_sort(tree) -> None:
+        """Sort top-level items in-place: underscore-prefixed first, then name asc.
 
-    takeTopLevelItem removes the item from the view's row list without
-    destroying its children or resetting isExpanded — expansion state
-    survives intact."""
-    try:
-        count = tree.topLevelItemCount()
-        if count < 2:
-            return
-        # Collect items with their sort keys (underscore-first, then name)
-        items = []
-        for i in range(count):
-            it = tree.topLevelItem(i)
-            name = it.text(0) if it else ""
-            items.append((it, 0 if name.startswith("_") else 1, name))
-        # Stable sort: _underscore first, then name ascending
-        items.sort(key=lambda x: (x[1], x[2]))
-        # Re-order using takeTopLevelItem / insertTopLevelItem
-        for i, (it, _, _) in enumerate(items):
-            tree.takeTopLevelItem(tree.indexOfTopLevelItem(it))
-            tree.insertTopLevelItem(i, it)
-    except Exception as e:
-        logma.warning(f"[trees] _do_sort failed: {e}")
+        takeTopLevelItem removes the item from the view's row list without
+        destroying its children or resetting isExpanded — expansion state
+        survives intact."""
+        try:
+            count = tree.topLevelItemCount()
+            if count < 2:
+                return
+            # Collect items with their sort keys (underscore-first, then name)
+            items = []
+            for i in range(count):
+                it = tree.topLevelItem(i)
+                name = it.text(0) if it else ""
+                items.append((it, 0 if name.startswith("_") else 1, name))
+            # Stable sort: _underscore first, then name ascending
+            items.sort(key=lambda x: (x[1], x[2]))
+            # Re-order using takeTopLevelItem / insertTopLevelItem
+            for i, (it, _, _) in enumerate(items):
+                tree.takeTopLevelItem(tree.indexOfTopLevelItem(it))
+                tree.insertTopLevelItem(i, it)
+        except Exception as e:
+            logma.warning(f"[trees] _do_sort failed: {e}")
 
     def _on_tree_selection_changed(self, selected, deselected) -> None:
         """Handle tree selection change - emit document_selected signal"""
