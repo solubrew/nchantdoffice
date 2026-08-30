@@ -51,11 +51,13 @@ print("[runNchantdOffice] pre-Qt webengine env:", {k: os.environ.get(k) for k in
 # ======================================3rd Party Library Modules=====================================================||
 
 # ======================================Solutions Brewer Library Modules==============================================||
+try:
+    sys.path.insert(0, "/home/solubrew/Documents/AIM")
+    import crow  # Commented out - not needed for local system
 
-sys.path.insert(0, "/home/solubrew/Documents/AIM")
-import crow  # Commented out - not needed for local system
-
-crow.crowLoad("NchantdOffice", "DELTA")
+    crow.crowLoad("NchantdOffice", "DELTA")
+except:
+    pass
 from kahndor.logma import Logma
 from nchantrs.nchantrs import nchantment
 

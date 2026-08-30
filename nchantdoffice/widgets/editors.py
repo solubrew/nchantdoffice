@@ -41,7 +41,7 @@ class NchantdOfficeDocEditor(NchantdDocEditor):
 
     def __init__(self, parent=None, cfg=None):
         super().__init__(parent, cfg)
-        self.config.override(kahndor.Instruct(PXCFG).select("Nchantd").override(cfg))
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeDocEditor").override(cfg))
 
     def initModel(self, cfg=None):
         """"""
