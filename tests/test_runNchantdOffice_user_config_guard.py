@@ -47,31 +47,42 @@ def _ast_function_or_import(src):
 
 
 def test_crow_crowLoad_before_user_config_import():
-    """crow.crowLoad is no longer used — the sys.path.insert at
-    /home/solubrew/Documents/AIM replaces it for local development.
-    This test verifies the old contract is gone (no live crowLoad
-    call in the actual code) so the file cannot regress by
-    re-adding it without updating the test.
+    """crow.crowLoad is required for the install wizard — it
+    registers the application and inserts the instance into the
+    app_instance table. This test verifies the call IS present
+    and occurs before the user_config import.
     """
     src = _read()
-    # Use AST to find actual crowLoad CALLS, not string mentions
-    # in embedded docs. The heredoc (# ||...||) contains CHANGES.md
-    # which references "crow.crowLoad" in prose.
     tree = ast.parse(src)
+
+    crow_load_lineno = None
+    user_config_lineno = None
+
     for node in ast.walk(tree):
+        # Skip string constants (heredocs, docstrings)
         if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
-            continue  # skip docstring / heredoc string literals
+            continue
         if isinstance(node, ast.Expr):
             if isinstance(node.value, ast.Call):
                 func = node.value.func
                 if isinstance(func, ast.Attribute) and func.attr == "crowLoad":
-                    raise AssertionError(
-                        "crow.crowLoad() call found — must not be used in "
-                        "runNchantdOffice.py (replaced by sys.path.insert at "
-                        "/home/solubrew/Documents/AIM for local development). "
-                        "If crow.crowLoad is intentionally needed again, update "
-                        "this test AND re-add the ordering contract."
-                    )
+                    crow_load_lineno = node.value.lineno
+        if isinstance(node, ast.ImportFrom):
+            if node.module and "user_config" in node.module:
+                user_config_lineno = node.lineno
+
+    assert crow_load_lineno is not None, (
+        "crow.crowLoad() call is missing from runNchantdOffice.py — "
+        "the install wizard requires it to register the application "
+        "and insert the instance into app_instance."
+    )
+    assert user_config_lineno is not None, (
+        "user_config import is missing from runNchantdOffice.py"
+    )
+    assert crow_load_lineno < user_config_lineno, (
+        f"crow.crowLoad (line {crow_load_lineno}) must appear before "
+        f"user_config import (line {user_config_lineno})"
+    )
 
 
 def test_qt_webengine_env_setup_before_user_config():
