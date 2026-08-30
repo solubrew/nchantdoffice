@@ -269,10 +269,13 @@ Scanned all companion-interaction code paths:
    `_wire_datetime_shortcut()` binds Ctrl+D on the editor widget, firing both
    `cmd_add_date` (ISO date) and `cmd_add_time` (HH:MM:SS) in sequence.
    Guarded by `_datetime_shortcut_wired` one-shot flag; scripts.py:299–322.
-8. **~~T-NEW-156~~ — Sort `_`-prefixed nodes first.~~ ✅ Closed `cbba7de`.
-   `_patch_underscore_sort()` monkey-patches the inner tree's `init_tree` so
-   underscore-prefixed top-level names sort first (stable, name-asc within each
-   group). Runs on every init and tree refresh. `trees.py:93–166`.
+8. **~~T-NEW-156~~ — Sort `_`-prefixed nodes first.~~ ✅ Closed `998fd4b`.
+   `_sort_underscore_first()` sorts top-level items after tree build so
+   underscore-prefixed names appear first. Uses `takeTopLevelItem` /
+   `insertTopLevelItem` — these detach the row without destroying the item
+   hierarchy, so collapsed/expanded state survives. `_do_sort()` is the
+   module-level helper. Also hooks `tree.model.save_state` to re-sort on
+   refresh. `trees.py:133–187`.
 
 ### P2 -- parsing, privacy, and technical debt
 
