@@ -582,6 +582,15 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """
         text = self._export_editor_payload()
         logma.info(f"File Path {self.file_path}")
+        # T-NEW-010 followup: capture the editor's current HTML
+        # into the Pyffice unit so reopen can restore formatting.
+        editor = getattr(self, "document_editor", None)
+        if editor is not None and hasattr(editor, "toHtml"):
+            html = editor.toHtml()
+            doc_text = getattr(self.document, "text", None)
+            if doc_text is not None:
+                doc_text.html = html
+                logma.info(f"[scripts] get_content: captured {len(html)} chars of HTML into document.text.html")
         content = {"content": {"file_path": self.file_path}, "text": text}
         logma.info(f"CONTENT {content}")
         return content
@@ -1157,6 +1166,15 @@ class NchantdOfficeScript(NchantdOfficeDocument):
           everything else -> plain-text
         """
         super().open_file(file, _populate_document, _save)
+        # T-NEW-024: derive syntax from extension before populate
+        if file:
+            self._apply_extension_syntax(file)
+            # Sync the doc_media row so the DB retains the extension
+            # syntax (not the "html" default written at tab-creation).
+            if hasattr(self, "app") and self.app and hasattr(self.app, "model"):
+                self.app.model.update_doc_media_syntax(
+                    self.document.did, self.document.syntax
+                )
         self.populate_document()
         return self
 
@@ -1188,7 +1206,14 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         """
         logma.info(f"Populating Document")
         logma.info(f"\n[ NchantdOfficeScript ] - File Path {self.file_path}")
-        text = self.document.text.value
+        # T-NEW-023: reload from disk when file_path is set.
+        # This runs BEFORE the in-memory payload so disk is the
+        # source-of-truth on reopen (user expectation: disk wins).
+        if self.file_path and self._load_external_file():
+            logma.info("[scripts] populate_document: loaded from disk")
+            super().populate_document()
+            return self
+        text = self._resolve_document_text()
         logma.info(f"Syntax {self.document.syntax}")
         logma.info(f"File Format {self.document.file_format}")
         self._apply_syntax_highlighting(text)
@@ -1262,8 +1287,10 @@ class NchantdOfficeScript(NchantdOfficeDocument):
         preserved. Internal-origin scripts save only to the database
         -- the on-disk file path is left untouched.
         """
-        # if self.document is None:
-        #     self.new_document()
+        # T-NEW-010 followup: capture the current editor contents
+        # before the parent save runs so the Pyffice text unit reflects
+        # what the user actually sees (not a stale cached value).
+        self.get_content()
         if getattr(self.document, "location", None) == "external" and getattr(self, "file_path", None):
             self._write_external_file()
         super().save()
@@ -1680,16 +1707,18 @@ class NchantdOfficeScript(NchantdOfficeDocument):
                 return False
             with open(path, "r", encoding="utf-8", errors="replace") as f:
                 text = f.read()
-            editor = getattr(self, "document_editor", None) or getattr(self, "editor", None)
-            if editor is None:
-                return False
-            if hasattr(editor, "setPlainText"):
-                editor.setPlainText(text)
-            elif hasattr(editor, "set_text"):
-                editor.set_text(text)
-            else:
-                return False
             logma.info(f"[scripts] _load_external_file loaded {len(text)} chars from {path}")
+            # Route through _apply_syntax_highlighting so the correct
+            # editor setter fires (setMarkdown for .md, setPlainText
+            # for .py/.js, etc.) rather than hardcoding setPlainText.
+            # Also update self.document.syntax directly (the fixture's
+            # self.document is a separate SimpleNamespace that
+            # _apply_extension_syntax won't mutate if it only updates
+            # the script's own attribute).
+            derived = self._apply_extension_syntax(path)
+            if hasattr(self, "document") and self.document is not None:
+                self.document.syntax = derived
+            self._apply_syntax_highlighting(text)
             return True
         except Exception as e:
             logma.error(f"[scripts] _load_external_file failed: {e}", exc_info=True)

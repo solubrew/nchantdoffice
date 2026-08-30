@@ -76,27 +76,33 @@ def _make_browser(profile, store):
     # ``active_url`` SimpleNamespace, the run-on-save AttributeError
     # shadows the round-trip test we actually care about.
     active_url = SimpleNamespace(active_url="https://example.test/path?q=1")
+    # Structure matches what browsers.py:435 expects:
+    #   get_active_url() -> self.active_page.document.active_url.active_url
+    # Also needs to_dict() for get_content() serialization.
+    active_page_ns = SimpleNamespace(
+        document=SimpleNamespace(
+            active_url=active_url,
+        ),
+        to_dict=lambda: profile,  # used by get_content() / save() for doc_media storage
+    )
     browser.document = SimpleNamespace(
         did="browser-1",
         location="internal",
         content=None,
         file_path=None,
-        syntax="json",  # store_document writes doc_media.syntax_txt (T-NEW-024 followup)
-        active_page=SimpleNamespace(
-            to_dict=lambda profile=profile: profile,
-            active_url=active_url,
-        ),
+        syntax="json",
+        active_page=active_page_ns,
         version=1,
         save=lambda path=None: None,
         set_content=lambda content: setattr(browser.document, "content", content),
         to_dict=lambda: {
             "did": "browser-1",
             "content": browser.document.content or {"content": profile},
-            "version": 1,
-            "syntax": "json",
-            "location": "internal",
         },
     )
+    # browsers.py:435 accesses browser.active_page (not browser.document.active_page).
+    # Mirror the same object so both paths resolve correctly.
+    browser.active_page = active_page_ns
     browser.file_path = None
     browser.config = SimpleNamespace(dikt={})
     browser.context_menu = SimpleNamespace(get_menu=lambda *_a, **_k: None)

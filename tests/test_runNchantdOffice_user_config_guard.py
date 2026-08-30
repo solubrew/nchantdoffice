@@ -47,52 +47,43 @@ def _ast_function_or_import(src):
 
 
 def test_crow_crowLoad_before_user_config_import():
-    """crow.crowLoad must run BEFORE the nchantdoffice.utilities.user_config
-    import (so sys.path is set up first)."""
+    """crow.crowLoad is no longer used — the sys.path.insert at
+    /home/solubrew/Documents/AIM replaces it for local development.
+    This test verifies the old contract is gone (no live crowLoad
+    call in the actual code) so the file cannot regress by
+    re-adding it without updating the test.
+    """
     src = _read()
-    items = _ast_function_or_import(src)
-    crow_line = None
-    user_config_line = None
-    for name, line in items:
-        if name == "<call> crowLoad":
-            crow_line = line
-        if "nchantdoffice.utilities.user_config" in str(name):
-            user_config_line = line
-    assert crow_line is not None, "crow.crowLoad() not found"
-    assert user_config_line is not None, "user_config import not found"
-    assert crow_line < user_config_line, (
-        f"crow.crowLoad (line {crow_line}) must run BEFORE "
-        f"nchantdoffice.utilities.user_config import (line "
-        f"{user_config_line}). Otherwise the import fails with "
-        f"ModuleNotFoundError."
-    )
+    # Use AST to find actual crowLoad CALLS, not string mentions
+    # in embedded docs. The heredoc (# ||...||) contains CHANGES.md
+    # which references "crow.crowLoad" in prose.
+    tree = ast.parse(src)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
+            continue  # skip docstring / heredoc string literals
+        if isinstance(node, ast.Expr):
+            if isinstance(node.value, ast.Call):
+                func = node.value.func
+                if isinstance(func, ast.Attribute) and func.attr == "crowLoad":
+                    raise AssertionError(
+                        "crow.crowLoad() call found — must not be used in "
+                        "runNchantdOffice.py (replaced by sys.path.insert at "
+                        "/home/solubrew/Documents/AIM for local development). "
+                        "If crow.crowLoad is intentionally needed again, update "
+                        "this test AND re-add the ordering contract."
+                    )
 
 
-def test_qt_webengine_env_setup_after_crow_load():
+def test_qt_webengine_env_setup_before_user_config():
     """The QtWebEngine env setup (QTWEBENGINE_CHROMIUM_FLAGS etc.)
-    must run AFTER crow.crowLoad so the imports of nchantrs/Qt
-    pick up the env vars correctly. But it runs BEFORE any
-    Qt-using code."""
+    must run BEFORE any nchantdoffice import that uses Qt WebEngine.
+    With crow.crowLoad removed, the ordering is driven by the
+    sys.path.insert and early exit / runtime flow."""
     src = _read()
-    items = _ast_function_or_import(src)
-    crow_line = None
-    webengine_setenv_line = None
-    for name, line in items:
-        if name == "<call> crowLoad":
-            crow_line = line
-        if "QTWEBENGINE_CHROMIUM_FLAGS" in src[:line*100]:  # heuristic
-            pass
-    # The QtWebEngine env setup is in the if-block, not a top-level
-    # statement, so we can't pin via top-level items. Instead, check
-    # the if-block ordering via the source text positions.
-    crow_pos = src.find("crow.crowLoad")
-    webengine_setenv_pos = src.find('os.environ["QTWEBENGINE_CHROMIUM_FLAGS"]')
-    assert crow_pos != -1 and webengine_setenv_pos != -1
-    # Note: QtWebEngine env setenv must be AFTER crowLoad
-    # (the if-block is conditional on the user_config import
-    # succeeding, which requires crowLoad to have run).
-    # The check above (test_crow_crowLoad_before_user_config_import)
-    # already enforces this transitively.
+    # Verify QtWebEngine env is still set up (the setup code is present)
+    assert 'os.environ["QTWEBENGINE_CHROMIUM_FLAGS"]' in src, (
+        "QtWebEngine env setup is missing from runNchantdOffice.py"
+    )
 
 
 def test_write_default_config_called():

@@ -63,6 +63,13 @@ pxcfg = join(here, "_data_", "advertisements.yaml")
 # just renders whatever comes back, every 5 minutes.
 DEFAULT_SURFACE_INTERVAL_MS = 5 * 60 * 1000
 
+# T-DESK-066: local slot rotation interval (ms). The Ad tab
+# cycles through the local slot list (tip → substack → pro_cta
+# → affiliate → pro_internal) every 5 seconds by default.
+# Operator-overridable via ``advertisements.yaml``:
+# ``NchantdOfficeAdTab: { rotation_interval_ms: 5000 }``.
+DEFAULT_ROTATION_INTERVAL_MS = 5000
+
 
 # ---------------------------------------------------------------------------
 # T-DESK-066 — local tip feed (mirrored from
@@ -762,9 +769,9 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
 
         self.layout.addLayout(layout)
 
-        # Start the surface timer (Free users only — the
-        # Pro short-circuit above returned early).
-        self._start_surface_timer()
+        # Start the local slot rotation timer (Free users only —
+        # the Pro short-circuit above returned early).
+        self._start_rotation()
         return cfg
 
     def _render_current_slot(self) -> None:
@@ -928,6 +935,57 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             placeholder = NchantdLabel(self._slot_container)
             placeholder.setText("<i>No ads right now.</i>")
             self._slot_container.addWidget(placeholder)
+
+    def _advance_slot(self) -> None:
+        """Advance ``current_slot_index`` by one and wrap to 0
+        after the last slot. Called by the rotation QTimer on
+        every interval tick. After advancing the index, re-renders
+        the visible slot.
+
+        T-DESK-066.
+        """
+        if not self.slots:
+            return
+        self.current_slot_index = (self.current_slot_index + 1) % len(self.slots)
+        self._render_current_slot()
+
+    def _start_rotation(self) -> None:
+        """Start the QTimer that advances the local slot rotation
+        every ``rotation_interval_ms``.
+
+        Reads the interval from ``self.config`` (key
+        ``rotation_interval_ms``, default ``DEFAULT_ROTATION_INTERVAL_MS``
+        = 5000 ms). The timer calls ``_advance_slot`` on each tick.
+
+        Pro users never reach this code path (initView returns
+        early before this is called).
+
+        T-DESK-066.
+        """
+        try:
+            interval_ms = int(
+                self.config.dikt.get(
+                    "rotation_interval_ms", DEFAULT_ROTATION_INTERVAL_MS,
+                )
+            )
+        except Exception:
+            interval_ms = DEFAULT_ROTATION_INTERVAL_MS
+        self._timer = pyqt.QTimer(self)
+        self._timer.setInterval(interval_ms)
+        self._timer.timeout.connect(self._advance_slot)
+        self._timer.start()
+        logma.info(
+            f"[ad_tab] rotation timer started (interval="
+            f"{interval_ms}ms)"
+        )
+        # Fire the initial slot render immediately so the user
+        # sees content right away instead of a blank container.
+        try:
+            self._render_current_slot()
+        except Exception as e:
+            logma.warning(
+                f"[ad_tab] initial slot render failed (non-blocking): {e}"
+            )
 
     def _start_surface_timer(self) -> None:
         """Start the QTimer that re-asks the server for the

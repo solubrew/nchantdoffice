@@ -75,7 +75,18 @@ class _EditorStub:
 
 
 def _bare_qt_widget(cls):
-    return cls.__new__(cls)
+    widget = cls.__new__(cls)
+    # NchantdOfficeWebBrowser.get_content() -> get_active_url() accesses
+    # self.active_page.document.active_url at browsers.py:435.
+    # When created bare via __new__, self.active_page stays unset.
+    # Inject it so get_content() doesn't AttributeError.
+    if cls.__name__ == "NchantdOfficeWebBrowser":
+        widget.active_page = SimpleNamespace(
+            document=SimpleNamespace(
+                active_url=SimpleNamespace(active_url=None),
+            ),
+        )
+    return widget
 
 
 # ---------------------------------------------------------------------------

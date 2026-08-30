@@ -3942,6 +3942,21 @@ class NchantdOfficeStore(NchantdStore):
             )
             return False
 
+    def enable_search(self, *, tables=None, analyzer="simple", index_dir=None):
+        """Forward to micromole.search.enable_search.
+
+        NchantdOfficeStore inherits from NchantdStore (MicroStash),
+        but the live deployment may run an older nchantrs that
+        doesn't yet carry this method. Bridge the gap by delegating
+        directly to micromole here so enable_whooshish_search()
+        always works regardless of the nchantrs version.
+        """
+        from micromole.search import enable_search as _enable_search
+
+        _enable_search(
+            self, tables=tables, analyzer=analyzer, index_dir=index_dir
+        )
+
     def close_sqlite(self) -> None:
         """T-NEW-007: detach the ``pyof`` SQuiRL doc if one is
         registered. The sonql doc owns its SQLite connection

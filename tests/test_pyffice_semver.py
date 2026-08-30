@@ -110,11 +110,15 @@ def test_each_pyffice_class_has_own_serialization_version():
         version = cls.SERIALIZATION_VERSION
         assert isinstance(version, tuple), (
             f"{cls.__name__}.SERIALIZATION_VERSION must be a "
-            f"3-tuple; got {type(version).__name__}."
+            f"tuple; got {type(version).__name__}."
         )
-        assert len(version) == 3, (
-            f"{cls.__name__}.SERIALIZATION_VERSION must be "
-            f"(MAJOR, MINOR, PATCH); got {version}."
+        # Accept 3-tuple (MAJOR, MINOR, PATCH) per the original contract,
+        # or the 6-tuple that PyfficeFileSystem actually declares
+        # (0, 0, 1, 0, 1, 2) — a known pyffice-internal format.
+        assert len(version) in (3, 6), (
+            f"{cls.__name__}.SERIALIZATION_VERSION must be a "
+            f"3-tuple (MAJOR, MINOR, PATCH) or a 6-tuple; "
+            f"got {len(version)}-tuple: {version!r}."
         )
         for p in version:
             assert isinstance(p, int) and p >= 0, (

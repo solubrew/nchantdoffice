@@ -38,7 +38,12 @@ AD_TAB = PROJ_ROOT / "nchantdoffice" / "widgets" / "advertisements.py"
 
 
 def _read(path):
-    return path.read_text()
+    raw = path.read_text()
+    marker = "# -*- coding: utf-8 -*-"
+    idx = raw.find(marker)
+    if idx >= 0:
+        return raw[idx + len(marker):].lstrip("\n")
+    return raw
 
 
 def _ast_find_function(src, name):
@@ -155,41 +160,39 @@ def test_ad_tab_redirect_helper_handles_missing_view_gracefully():
 
 
 def test_ad_tab_target_url_is_compare_not_get_pro():
-    """T-DESK-062: the 'Remove ads' / 'Go Pro' CTA opens the
-    /compare page on the live server, not the fictional
-    /get_pro page (which 404s).
+    """T-DESK-062: the 'Remove ads' / 'Go Pro' CTA must open
+    /compare (the live server's canonical upsell page), not
+    /get_pro (which 404s).
 
-    Pinned by grepping the source: every hardcoded URL on
-    the upgrade flow must point at /compare.
+    Contract:
+      (a) No hardcoded nchantdoffice.com/get_pro in either file.
+      (b) ``redirect_to_get_pro`` imports and calls
+          ``upgrade_compare_url()`` so the URL is assembled
+          dynamically from the resolver, not a literal string.
     """
-    import os
-    ad_tab_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "..", "nchantdoffice", "widgets", "advertisements.py",
-    )
-    with open(ad_tab_path) as f:
-        ad_src = f.read()
+    import ast
+
+    ad_src = _read(AD_TAB)
+    up_path = PROJ_ROOT / "nchantdoffice" / "utilities" / "upgrades.py"
+    up_src = _read(up_path)
+
+    # (a) No hardcoded /get_pro anywhere
     assert "nchantdoffice.com/get_pro" not in ad_src, (
         "advertisements.py still references the old /get_pro "
-        "URL. The live server only exposes /compare. Update "
-        "the CTA target_url."
+        "URL. The live server only exposes /compare."
     )
-    assert "nchantdoffice.com/compare" in ad_src, (
-        "advertisements.py should point the CTA at /compare."
-    )
-
-    upgrades_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "..", "nchantdoffice", "utilities", "upgrades.py",
-    )
-    with open(upgrades_path) as f:
-        up_src = f.read()
     assert "nchantdoffice.com/get_pro" not in up_src, (
         "utilities/upgrades.py still references the old /get_pro "
-        "URL. The QMessageBox 'Go Pro' button should open "
-        "/compare."
+        "URL. The QMessageBox 'Go Pro' button should open /compare."
     )
-    assert "nchantdoffice.com/compare" in up_src, (
-        "utilities/upgrades.py should point the 'Go Pro' button "
-        "at /compare."
+
+    # (b) redirect_to_get_pro imports and calls upgrade_compare_url
+    helper_body = _function_source_segment(ad_src, "redirect_to_get_pro")
+    assert helper_body, (
+        "advertisements.py must expose redirect_to_get_pro"
+    )
+    assert "upgrade_compare_url" in helper_body, (
+        "redirect_to_get_pro must import and call "
+        "upgrade_compare_url() so the URL is resolved dynamically "
+        "from the unified URL config (T-DESK-062)."
     )

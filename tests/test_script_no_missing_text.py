@@ -72,19 +72,18 @@ def test_script_initview_sets_default_text_empty():
     src = inspect.getsource(NchantdOfficeScript.initView)
     assert 'self.config.dikt["default_text"] = ""' in src, (
         "T-NEW-064 missing: initView does not set "
-        'config.dikt["default_text"] = "" before constructing '
-        "NchantdDocEditor. See testing-report_20260810.md line 12."
+        'self.config.dikt["default_text"] = "" before constructing '
+        "NchantdOfficeDocEditor. See testing-report_20260810.md line 12."
     )
-    # The assignment must appear BEFORE the NchantdDocEditor
-    # constructor so the upstream fallback reads the empty
-    # string.
+    # The assignment must appear BEFORE the NchantdOfficeDocEditor
+    # constructor so the upstream fallback reads the empty string.
     assign_idx = src.find('self.config.dikt["default_text"] = ""')
-    editor_idx = src.find("NchantdDocEditor(self, self.config)")
+    editor_idx = src.find("NchantdOfficeDocEditor(self, self.config)")
     assert assign_idx >= 0, "default_text assignment not found"
-    assert editor_idx >= 0, "NchantdDocEditor constructor not found"
+    assert editor_idx >= 0, "NchantdOfficeDocEditor constructor not found"
     assert assign_idx < editor_idx, (
         f"T-NEW-064 ordering bug: default_text assignment "
-        f"({assign_idx}) must come BEFORE NchantdDocEditor "
+        f"({assign_idx}) must come BEFORE NchantdOfficeDocEditor "
         f"constructor ({editor_idx}) so the upstream fallback "
         f"reads the empty string."
     )

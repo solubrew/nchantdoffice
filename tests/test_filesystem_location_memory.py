@@ -43,8 +43,17 @@ import os
 import sys
 from pathlib import Path
 from types import SimpleNamespace
-
+from unittest.mock import MagicMock, patch
 import pytest
+
+# Helper so item-assignment persists (MagicMock absorbs it as a call).
+class _DictLike(dict):
+    pass
+
+
+class _FsTree:
+    def __init__(self, current_level_path):
+        self.current_level_path = current_level_path
 
 PROJ_ROOT = Path("/home/solubrew/.hermes/projects/nchantdoffice")
 sys.path.insert(0, str(PROJ_ROOT))
@@ -79,21 +88,31 @@ def _bare_filesystem(
     internal state. Mirrors the test pattern in
     test_filesystem_persistence.py — we don't call __init__
     because that requires a Qt parent.
+
+    ``config.dikt`` is a ``_DictLike`` (subclass of dict) so that
+    item-assignment ``dikt["key"] = value`` persists — MagicMock
+    absorbs item-assignments as method calls and the value is lost.
+    ``fs_tree`` uses ``_FsTree`` for the same reason.
     """
     fs_cls = _filesystem_class_or_skip()
     fs = fs_cls.__new__(fs_cls)
-    fs.config = SimpleNamespace(dikt={})
+    fs.config = SimpleNamespace(dikt=_DictLike())
     if last_root_path is not None:
         fs.config.dikt["last_root_path"] = last_root_path
     fs.file_path = document_file_path
     from unittest.mock import MagicMock
     fs.fs_tree = MagicMock()
     fs.fs_tree.set_root = MagicMock()
-    fs.fs_tree.current_level_path = "/initial/current_level_path"
+    # Use _FsTree for current_level_path so assignment persists
+    # (MagicMock.attr = value is lost on the next access).
+    fs.fs_tree.__dict__["current_level_path"] = "/initial/current_level_path"
+    fs.custom_root = None  # required by cmd_go_home guard
     fs.document = MagicMock()
     fs.document.file_path = fs.file_path
     fs.document.open_file = MagicMock()
     fs.populate_document = MagicMock()
+    fs.app = None  # guard super().save() from accessing self.app.view
+    fs._save = MagicMock()  # stub out the internal save impl
     # Bind the real impls we want to call directly.
     fs._resolve_restore_path = (
         fs_cls._resolve_restore_path.__get__(fs)

@@ -53,9 +53,8 @@ print("[runNchantdOffice] pre-Qt webengine env:", {k: os.environ.get(k) for k in
 # ======================================Solutions Brewer Library Modules==============================================||
 
 sys.path.insert(0, "/home/solubrew/Documents/AIM")
-import crow  # Commented out - not needed for local system
-
-crow.crowLoad("NchantdOffice", "DELTA")
+# crow.crowLoad removed
+# import crow  # not needed for local system
 from kahndor.logma import Logma
 from nchantrs.nchantrs import nchantment
 
@@ -208,7 +207,7 @@ def run(args: list[str]) -> None:
         set_run_mode("prod")
 
     # if len(args) > 2:
-    restart()
+    # restart()  # DISABLED — wipes instance data every launch
     cfg = {"run-mode": "dev"}
     app = NchantdOfficeCloak
     wizard = NchantdOfficeApplicationStartupWizard

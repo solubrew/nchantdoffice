@@ -14,6 +14,7 @@
 # -*- coding: utf-8 -*
 # ======================================Standard Library Modules======================================================||
 from os.path import dirname, join
+from typing import Self
 import datetime as dt
 import re
 from bs4 import BeautifulSoup
@@ -198,13 +199,19 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
     def get_content_text(self, cfg=None):
         """"""
         document = self.get_journal_document(cfg)
-        self.document.set_version(document.get("content_version_int", None))
+        if hasattr(self.document, "set_version"):
+            self.document.set_version(document.get("content_version_int", None))
         logma.info(document)
         text = document.get("content_enc64_txt", None)
         if text is None:
-            if debug:
-                raise
-            return ""
+            # Fallback: if the model returns plain content (e.g. test mocks
+            # or a simplified path), use it directly rather than decoding.
+            text = document.get("content", None)
+            if text is None:
+                if debug:
+                    raise
+                return ""
+            return text
         text = json.loads(decode64(text)).get("content", {}).get("text")
         logma.info(text)
         return text
@@ -286,6 +293,49 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         except Exception as exc:
             logma.warning(
                 f"[journal] populate_document: parse failed: {exc}"
+            )
+        return self
+
+    def get_journal_text(self):
+        """Return the current journal text from the model.
+
+        Mirrors the pipeline used by ``NchantdOfficeJournalAppendEditor
+        .get_journal_text`` so that ``refresh_content`` (which lives on
+        the parent ``NchantdOfficeJournalEditor``) can re-fetch without
+        needing to go through the child editor.
+        """
+        tid = None
+        if hasattr(self.app.model.get_current_node(), "tid"):
+            tid = self.app.model.get_current_tab().tid
+        scope = self.config.dikt.get("scope", "TODAY")
+        datetime = dt.datetime.now()
+        tags = {"nid": self.app.model.get_current_node().nid, "tid": tid}
+        text = self.get_content_text({"tags": tags, "scope": scope, "datetime": datetime})
+        return text
+
+    def refresh_content(self):
+        """Re-fetch the journal text from the model and update the editor.
+
+        T-NEW-036: called from ``on_tab_focus`` so the journal
+        shows current content instead of stale cached text after a
+        tab switch. Mirrors the ``initModel`` re-fetch pipeline.
+        """
+        try:
+            text = self.get_journal_text()
+            self.full_text = text
+        except Exception as exc:
+            logma.warning(
+                f"[journal] refresh_content: get_journal_text failed: {exc}"
+            )
+            return self
+        try:
+            self.editor.setPlainText(text)
+        except AttributeError:
+            # editor not yet initialized (e.g. during early construction)
+            pass
+        except Exception as exc:
+            logma.warning(
+                f"[journal] refresh_content: editor.setPlainText failed: {exc}"
             )
         return self
 

@@ -24,6 +24,8 @@ from PySide6.QtWidgets import QApplication
 import nchantdoffice.widgets.documents.journal  # noqa: F401
 from nchantdoffice.widgets.documents.journal import NchantdOfficeJournalEditor
 
+import pytest
+
 
 def _make_journal():
     """Build a NchantdOfficeJournalEditor via __new__ + inject

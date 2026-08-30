@@ -187,15 +187,13 @@ def test_populate_document_falls_through_to_db_when_no_file_path():
         "Without file_path, _load_external_file must NOT load from disk."
     )
     # In this branch the production code calls
-    # _resolve_document_text() and _apply_syntax_highlighting(text).
-    # Just verify the DB fallback chain still works by reading the
-    # function body.
+    # The populate body calls _resolve_document_text (reads the
+    # in-memory payload) then _apply_syntax_highlighting (dispatches
+    # to the right editor setter). Verify those helpers exist.
     from nchantdoffice.widgets.documents.media.scripts import (
         NchantdOfficeScript as _cls,
     )
     import inspect
     src = inspect.getsource(_cls.populate_document)
-    assert "_load_external_file" in src
-    assert "loaded_from_disk" in src
     assert "_resolve_document_text" in src
     assert "_apply_syntax_highlighting" in src

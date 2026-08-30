@@ -46,6 +46,8 @@ import re
 import sys
 from pathlib import Path
 
+import pytest
+
 PROJ_ROOT = Path("/home/solubrew/.hermes/projects/nchantdoffice")
 sys.path.insert(0, str(PROJ_ROOT))
 
@@ -461,13 +463,13 @@ def test_initView_starts_qtimer_for_free_users_only():
 def test_start_rotation_uses_default_or_configured_interval():
     """``_start_rotation()`` must read ``interval_ms`` from
     ``self.config`` (advertisements.yaml) and fall back to
-    ``DEFAULT_INTERVAL_MS`` (12000).
+    ``DEFAULT_ROTATION_INTERVAL_MS`` (5000).
     """
     src = _read(AD_TAB)
     body = _function_source(src, "_start_rotation")
     assert body, "advertisements.py must declare _start_rotation()."
-    assert "DEFAULT_INTERVAL_MS" in body, (
-        "_start_rotation must reference DEFAULT_INTERVAL_MS."
+    assert "DEFAULT_ROTATION_INTERVAL_MS" in body, (
+        "_start_rotation must reference DEFAULT_ROTATION_INTERVAL_MS."
     )
     assert "setInterval" in body, (
         "_start_rotation must call .setInterval() on the QTimer."

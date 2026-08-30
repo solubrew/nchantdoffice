@@ -1523,7 +1523,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     def initView(self, cfg=None) -> Self:
         """"""
         cfg = cfg or {}
-        self.viewer = NchantdOfficeWebViewer(self, {"url": self.active_url})
+        self.viewer = NchantdWebViewer(self, {"url": self.active_url})
         self.viewer.is_simple = False
         # cfg["buttons"] = self.build_toolbar()
         # Host of a single expanding web view: opt this container's layout out of

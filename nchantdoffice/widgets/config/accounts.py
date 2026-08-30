@@ -37,6 +37,11 @@ here = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
 
+# Re-export ClaimFlow so the test suite can monkeypatch it on the
+# accounts module (e.g. test_claim_flow.py patches
+# accounts_mod.ClaimFlow to verify sync_with_server wires through).
+from nchantdoffice.license.claim_flow import ClaimFlow  # noqa: F401
+
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "accounts.yaml")
 
@@ -245,9 +250,15 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
 
             if stash and cfg["url"] == _urls.upgrade_compare_url():
                 cfg["url"] = self._append_url_param(cfg["url"], "reason", str(stash))
-            if hasattr(
-                getattr(self.app, "model", None),
-                "get_pro_redirect_reason",
+                # Clear the stash after a successful reason-param
+                # append so the param is only added once per session.
+            if (
+                stash
+                and cfg["url"] == _urls.upgrade_compare_url()
+                and hasattr(
+                    getattr(self.app, "model", None),
+                    "get_pro_redirect_reason",
+                )
             ):
                 self.app.model.get_pro_redirect_reason = None
         except Exception as e:
@@ -476,11 +487,10 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         contract means this is a no-op rather than an error.
         """
         try:
-            # Lazy import -- ClaimFlow depends on aiohttp and the
-            # rest of the license package; importing at module
-            # top would break any code path that loads the
-            # widget tree without those deps (the test suite in
-            # particular).
+            # Lazy import -- ClaimFlow is re-exported at module level
+            # (above), but we also re-import here so the import stays
+            # lazy and doesn't break minimal test environments that
+            # don't have aiohttp on the path.
             from nchantdoffice.license.claim_flow import ClaimFlow  # noqa: F401
 
             app_model = getattr(self.app, "model", None)

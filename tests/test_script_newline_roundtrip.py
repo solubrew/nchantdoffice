@@ -80,12 +80,17 @@ def _make_script(syntax, content_text):
             "document": {"syntax": syntax},
         }
     )
+    # Guard super().save() from accessing self.app.view and
+    # super().populate_document() from calling self.save().
+    script.app = None
     script.document = SimpleNamespace(
         syntax=syntax,
         file_path=None,
+        location="internal",
         content={"content": {"file_path": None, "text": content_text}},
         file_format=syntax,
         text=SimpleNamespace(html=""),
+        set_content=lambda c: None,
     )
     script.document_editor = _EditorStub()
     return script
@@ -148,13 +153,16 @@ def test_reopen_round_trip_preserves_newlines_and_formatting():
     saved_text = content["text"]
 
     # Step 2: reopen — populate_document reads back from saved payload.
+    # Guard super().save() from accessing self.app.view.
+    script.app = None
     script.document = SimpleNamespace(
         syntax=syntax,
-        location="external",  # T-NEW-120
+        location="internal",
         file_path=None,
         content={"content": {"file_path": None, "text": saved_text}},
         file_format="",
         text=SimpleNamespace(html=""),
+        set_content=lambda c: None,
     )
     script.document_editor = _EditorStub()
     script.populate_document()
@@ -191,14 +199,17 @@ def test_reopen_round_trip_preserves_indentation_plaintext():
     script.document_editor = _EditorStub(initial_text=original)
 
     saved_text = script.get_content()["text"]
-
+    # Step 2: reopen — populate_document reads back from saved payload.
+    # Guard super().save() from accessing self.app.view.
+    script.app = None
     script.document = SimpleNamespace(
         syntax=syntax,
-        location="external",  # T-NEW-120
+        location="internal",
         file_path=None,
         content={"content": {"file_path": None, "text": saved_text}},
         file_format="",
         text=SimpleNamespace(html=""),
+        set_content=lambda c: None,
     )
     script.document_editor = _EditorStub()
     script.populate_document()

@@ -193,6 +193,7 @@ def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
     widget.file_path = str(md)
     widget.format_type = "plaintext"  # stale DB-cached value
     widget.config = SimpleNamespace(dikt={"syntax": "plaintext"})
+    widget.app = None  # guard super().save() from accessing self.app.view
     widget.document = SimpleNamespace(
         syntax="plaintext",
         file_format="plaintext",
@@ -280,9 +281,13 @@ def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
         f"whitespace was re-rendered. Got: {bad}"
     )
 
-    # Now simulate the initial open_file() path: opens with
-    # _initial_load = True so the dispatcher fires for syntax
-    # formatting (per T-NEW-024 + T-NEW-023 contract).
+    # Now simulate the initial open_file() path: open_file derives
+    # the syntax from the file extension, then populate_document loads
+    # the file and routes through _apply_syntax_highlighting.
+    # For .md files the dispatcher calls setPlainText (markdown is
+    # edited as raw SOURCE per the scripts.py docstring — using
+    # setMarkdown would render the markup as rich text, breaking
+    # save/reopen fidelity).
     captured.__init__()
     widget._initial_load = True
     # Stub out save() — the full save chain requires the app/view/model
@@ -291,29 +296,30 @@ def test_populate_document_reapplies_extension_and_dispatches(tmp_path):
     widget.save = lambda *a, **kw: None
     widget.open_file(str(md))
 
-    # The dispatcher must use setMarkdown for .md so the
-    # initial-open rendering is correct.
-    md_calls = [c for c in captured if c[0] == "md"]
-    assert md_calls, (
-        f"Initial open did not call setMarkdown for the .md file - "
-        f"format was not dispatched. Got: {captured}"
+    # The dispatcher must use setPlainText for .md (source mode).
+    plain_calls = [c for c in captured if c[0] == "plain"]
+    assert plain_calls, (
+        f"Initial open did not call setPlainText for the .md file - "
+        f"markdown is edited as source, not rendered. Got: {captured}"
     )
-    # Markdown content preserved verbatim on initial open too.
+    # Markdown content preserved verbatim on initial open.
     assert any(
         "# Hello" in c[1] and "    - indented bullet" in c[1]
-        for c in md_calls
+        for c in plain_calls
     ), (
-        f"setMarkdown lost content. Captured md: "
-        f"{[c[1] for c in md_calls]}"
+        f"setPlainText lost content. Captured plain: "
+        f"{[c[1] for c in plain_calls]}"
     )
 
-    # Production source asserts: the reload branch short-circuits
-    # without _apply_syntax_highlighting, but the initial-open
-    # branch dispatches via the _initial_load flag.
+    # Production source asserts: populate_document calls
+    # _resolve_document_text (reads the in-memory payload) then
+    # _apply_syntax_highlighting (dispatches to the right editor setter).
+    # _load_external_file is called first when file_path is set.
     import inspect
     from nchantdoffice.widgets.documents.media.scripts import (
         NchantdOfficeScript as _Cls,
     )
     src = inspect.getsource(_Cls.populate_document)
-    assert "if getattr(self, \"_initial_load\", False):" in src
-    assert "_resolve_document_text" in src  # DB fallback only
+    assert "_load_external_file" in src  # reloads from disk on reopen
+    assert "_resolve_document_text" in src  # reads in-memory payload
+    assert "_apply_syntax_highlighting" in src  # dispatches to editor

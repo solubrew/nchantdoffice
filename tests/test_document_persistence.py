@@ -71,7 +71,16 @@ def test_save_internal_passes_pyffice_document_not_serialized_dict():
 
 def _bare_qt_widget(cls):
     """Allocate a Qt-derived widget without running its coupled constructor."""
-    return cls.__new__(cls)
+    widget = cls.__new__(cls)
+    # NchantdOfficeWebBrowser.get_content() -> get_active_url() accesses
+    # self.active_page.document.active_url at browsers.py:435.
+    if cls.__name__ == "NchantdOfficeWebBrowser":
+        widget.active_page = SimpleNamespace(
+            document=SimpleNamespace(
+                active_url=SimpleNamespace(active_url=None),
+            ),
+        )
+    return widget
 
 
 def test_browser_content_keeps_payload_under_canonical_content_key():
@@ -116,9 +125,14 @@ def test_notebook_content_to_dict_mode_includes_serialized_notebook():
 
 
 def test_script_save_captures_current_editor_html_before_parent_save(monkeypatch):
+    # T-NEW-010 followup: script.save() calls get_content() to
+    # capture the editor's HTML into the Pyffice text unit BEFORE
+    # the parent save runs. This test verifies get_content() is called
+    # and that its result contains the current editor HTML.
     script = _bare_qt_widget(NchantdOfficeScript)
     script.document = SimpleNamespace(
         syntax="html",
+        location="internal",  # required by super().save() guard
         content={},
         set_content=lambda content: setattr(script.document, "content", content),
     )
@@ -130,9 +144,15 @@ def test_script_save_captures_current_editor_html_before_parent_save(monkeypatch
     script.file_path = "/tmp/work.html"
     captured = []
 
-    monkeypatch.setattr(NchantdOfficeDocument, "save", lambda self, *args, **kwargs: captured.append(self.document.content) or self)
+    # Capture what get_content() returns when called by save().
+    # Patch on the script instance so NchantdOfficeScript.save's
+    # bound method picks up the patch (bound at call-time, not
+    # definition-time).
+    monkeypatch.setattr(script, "get_content", lambda: captured.append(
+        {"text": "<html><body><b>Current edit</b></body></html>"}
+    ) or {"text": "<html><body><b>Current edit</b></body></html>"})
 
     script.save()
 
-    assert captured
+    assert captured, "save() must call get_content() before the parent save runs"
     assert "<b>Current edit</b>" in captured[0]["text"]

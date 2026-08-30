@@ -50,6 +50,7 @@ from nchantdoffice.widgets.documents.documents import (
     NchantdOfficeDocument,
     NchantdOfficeDocumentManager,
 )
+from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantdoffice.utilities.referral import (
     DEFAULT_API_BASE,
     DEFAULT_PAYOUT_MIN_CENTS,

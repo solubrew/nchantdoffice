@@ -68,20 +68,13 @@ def test_open_file_persists_doc_media_syntax_update():
     src = _bare_scripts_source()
     fn_src = _flattened(_find_function_source(src, "open_file"))
 
-    # The open_file must call _apply_extension_syntax (already
-    # implemented) AND must trigger a doc_media UPDATE. The
-    # cleanest path is to call a helper (e.g.
-    # ``_sync_doc_media_syntax``) inside open_file after the
-    # extension detection so the DB row stays in sync.
+    # open_file must call _apply_extension_syntax (already
+    # implemented) AND must trigger a doc_media UPDATE.
     assert "_apply_extension_syntax" in fn_src, (
         f"open_file must call _apply_extension_syntax; "
         f"body: {fn_src!r}"
     )
-    # Pin the new behaviour: open_file must also call a helper
-    # that UPDATEs the doc_media row. The helper name is up
-    # to the implementer; what matters is that _some_ doc_media
-    # update call appears in open_file (or, more flexibly, the
-    # extension detector itself writes the row).
+    # Wire the model helper that updates the doc_media row.
     assert (
         "_update_doc_media_syntax" in fn_src
         or "update_doc_media" in fn_src

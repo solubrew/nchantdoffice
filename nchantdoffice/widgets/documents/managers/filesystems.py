@@ -952,7 +952,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
             logma.error(f"[filesystems] cmd_flatten_files failed: {e}", exc_info=True)
         return self
 
-    def cmd_go_home(self, event=None, *args, **kwargs):
+    def cmd_go_home(self, event=None, path=None, *args, **kwargs):
         """T-NEW-068 — navigate to a "home" directory.
 
         Default ``path`` is ``expanduser("~")``. Accepts an
@@ -963,7 +963,7 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
         Returns self for chainable callers.
         """
-        path = self.custom_root or expanduser("~")
+        path = path if path is not None else (self.custom_root or expanduser("~"))
         self.fs_tree.current_level_path = path
         self.save()
         return self.cmd_set_root(path=path)
@@ -1066,9 +1066,9 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
                 self.populate_table_two()
         return self
 
-    def cmd_set_root(self, event=None, *args, **kwargs):
+    def cmd_set_root(self, event=None, path=None, *args, **kwargs):
         """T-NEW-068 — navigate to ``path`` (or the current
-        ``fs_tree.current_level_path`` when None).
+        ``fs_tree.current_level_path`` when ``path`` is None).
 
         Accepts an explicit ``path`` kwarg. Persists the
         resolved path to ``config.dikt["last_root_path"]`` so
@@ -1077,7 +1077,8 @@ class NchantdOfficeFileSystem(NchantdOfficeDocument):
 
         Returns self for chainable callers.
         """
-        path = getattr(self.fs_tree, "current_level_path", None)
+        # Use explicit path if provided; fall back to current_level_path.
+        path = path if path is not None else getattr(self.fs_tree, "current_level_path", None)
         logma.info(f"[filesystems] Command Set Root path={path!r}")
         if path:
             self.fs_tree.current_level_path = path

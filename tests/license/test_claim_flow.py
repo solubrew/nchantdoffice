@@ -479,7 +479,12 @@ def test_accounts_widget_sync_with_server_calls_claim_flow(
             request_calls.append(email)
             return None
 
-    monkeypatch.setattr(accounts_mod, "ClaimFlow", _StubClaimFlow)
+    # Patch at the source module (not accounts_mod) because
+    # sync_with_server uses a local import:
+    #   from nchantdoffice.license.claim_flow import ClaimFlow
+    import nchantdoffice.license.claim_flow as claim_flow_mod
+
+    monkeypatch.setattr(claim_flow_mod, "ClaimFlow", _StubClaimFlow)
 
     # A minimal stand-in for the widget — the real widget is a
     # PySide6 QWidget and would force us into a Qt event loop.
