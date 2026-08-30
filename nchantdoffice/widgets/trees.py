@@ -86,13 +86,17 @@ class NchantdOfficeApplicationTree(NchantdWidget):
         return self
 
     def initView(self) -> Self:
-        """"""
+        """T-NEW-156: build tree, then re-order top-level items so
+        underscore-prefixed names sort before all others — without
+        destroying collapsed/expanded state (unlike the broken
+        removeChild/addChild approach, takeTopLevelItem preserves it)."""
         logma.info("[trees] initView")
         try:
             super().initView()
             cfg = {"node_widget": NchantdOfficeTreeNode}
             self.tree = NchantdApplicationTree(self.parent, cfg).initWidget()
             logma.debug("[trees] initView: NchantdApplicationTree built")
+            self._sort_underscore_first()
 
             # Ensure the tree maintains selection highlight when not focused
             if hasattr(self.tree, "setSelectionMode"):
@@ -129,6 +133,63 @@ class NchantdOfficeApplicationTree(NchantdWidget):
             logma.error(f"[trees] initView failed: {e}", exc_info=True)
             raise
         return self
+
+    def _sort_underscore_first(self) -> None:
+        """T-NEW-156: stable-sort top-level items so underscore-prefixed
+        names appear before all others, preserving collapsed/expanded state.
+
+        Uses takeTopLevelItem/insertTopLevelItem which detach the item from
+        the view without destroying its child hierarchy (expansion state is
+        kept in the item, not the model).  A second pass handles any items
+        that were added or refreshed since the initial sort."""
+        try:
+            tree = getattr(self, "tree", None)
+            if tree is None:
+                return
+            _do_sort(tree)
+            # If the underlying tree later rebuilds (e.g. a refresh call
+            # adds new top-level items), sort those too by hooking into the
+            # tree's refresh mechanism if available.
+            if hasattr(tree, "model") and hasattr(tree.model, "save_state"):
+                _orig_save = tree.model.save_state
+
+                def _sorted_save(*args, **kwargs):
+                    result = _orig_save(*args, **kwargs)
+                    try:
+                        _do_sort(tree)
+                    except Exception:
+                        pass
+                    return result
+
+                tree.model.save_state = _sorted_save
+        except Exception as e:
+            logma.warning(f"[trees] _sort_underscore_first setup failed: {e}")
+
+
+def _do_sort(tree) -> None:
+    """Sort top-level items in-place: underscore-prefixed first, then name asc.
+
+    takeTopLevelItem removes the item from the view's row list without
+    destroying its children or resetting isExpanded — expansion state
+    survives intact."""
+    try:
+        count = tree.topLevelItemCount()
+        if count < 2:
+            return
+        # Collect items with their sort keys (underscore-first, then name)
+        items = []
+        for i in range(count):
+            it = tree.topLevelItem(i)
+            name = it.text(0) if it else ""
+            items.append((it, 0 if name.startswith("_") else 1, name))
+        # Stable sort: _underscore first, then name ascending
+        items.sort(key=lambda x: (x[1], x[2]))
+        # Re-order using takeTopLevelItem / insertTopLevelItem
+        for i, (it, _, _) in enumerate(items):
+            tree.takeTopLevelItem(tree.indexOfTopLevelItem(it))
+            tree.insertTopLevelItem(i, it)
+    except Exception as e:
+        logma.warning(f"[trees] _do_sort failed: {e}")
 
     def _on_tree_selection_changed(self, selected, deselected) -> None:
         """Handle tree selection change - emit document_selected signal"""
