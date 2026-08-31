@@ -1839,10 +1839,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             )
             # Scope filter for docs (by did → node/tab)
             if scope in ("node", "tab"):
-                doc_results = [
-                    r for r in doc_results
-                    if self._filter_result_by_scope(r, scope, active_nid, active_tid)
-                ]
+                doc_results = [r for r in doc_results if self._filter_result_by_scope(r, scope, active_nid, active_tid)]
             results.extend(doc_results)
             # Tab search
             tab_results = store.search(
@@ -2615,10 +2612,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                         # Get the max position of existing tabs under the
                         # same parent node and tabset, then add 1.
                         try:
-                            docs = self.get_documents(
-                                self.get_current_node(),
-                                tabset="center"
-                            )
+                            docs = self.get_documents(self.get_current_node(), tabset="center")
                             if not docs.empty:
                                 max_pos = docs["position_int"].max()
                                 pos = int(max_pos) + 1 if max_pos is not None else 0
@@ -3774,67 +3768,6 @@ class NchantdOfficeStore(NchantdStore):
         "DELETE": list,
         "ARCHIVE": list,
     }
-    _DOC_MEDIA_COLUMNS = [
-        {"name": "did", "type": "text"},
-        {"name": "compatibility_txt", "type": "text"},
-        {"name": "document_type_txt", "type": "text"},
-        {"name": "syntax_txt", "type": "text"},
-        {"name": "name_txt", "type": "text"},
-        {"name": "filename_txt", "type": "text"},
-        {"name": "description_ltxt", "type": "text"},
-        {"name": "path_txt", "type": "text"},
-        {"name": "store_location_txt", "type": "text"},
-        {"name": "encoding_txt", "type": "text"},
-        {"name": "tags_dict", "type": "text"},
-        {"name": "version_int", "type": "integer"},
-        {"name": "pyffice_version_txt", "type": "text"},
-        {"name": "hash_txt", "type": "text"},
-        # Match the dstruct column names exactly:
-        # nchantrs/models/_data_/applicationmodels.yaml line 1668
-        # has ``policy_FK`` (capital F) and ``meta_data_enc64_dict``
-        # (not ``policy_fk`` / ``metadata_ltxt``). The dstruct
-        # created the table with those names and the INSERT must
-        # use the same names or SQLite raises
-        # ``no such column: policy_fk``.
-        {"name": "policy_FK", "type": "integer"},
-        {"name": "meta_data_enc64_dict", "type": "text"},
-    ]
-    # Canonical column list for doc_media_content. The schema lives
-    # in nchantrs/nchantrs/models/_data_ (doc_media_content entry).
-    # Passed to _store as the columns argument so squirl's
-    # _fill_admin_cols doesn't have to look it up in the dstruct.
-    _DOC_MEDIA_CONTENT_COLUMNS = [
-        {"name": "UUID", "type": "text"},
-        {"name": "pUUID", "type": "text"},
-        {"name": "page_int", "type": "integer"},
-        {"name": "entry_int", "type": "integer"},
-        {"name": "version_int", "type": "integer"},
-        {"name": "hash_txt", "type": "text"},
-        {"name": "content_enc64_txt", "type": "text"},
-        {"name": "context_ltxt", "type": "text"},
-    ]
-    # T-removed (FIX P8): explicit column schema for app_media_content.
-    # The parent NchantdStore.store_app_media_content() calls
-    # self._store(table, payload, db) WITHOUT passing columns=,
-    # which forces squirl's _fill_admin_cols() to look up the
-    # table schema in db_objects["table"][table]["columns"].
-    # The desktop's loaded dstruct (nchantdoffice/_data/models.yaml)
-    # does not include app_media_content, so that lookup yields
-    # ``None``, then ``list(None)`` raises
-    # ``TypeError: 'NoneType' object is not iterable``.
-    #
-    # Passing columns= explicitly bypasses the dstruct lookup, the
-    # same pattern the parent itself uses for doc_media_content.
-    _APP_MEDIA_CONTENT_COLUMNS = [
-        {"name": "UUID", "type": "text"},
-        {"name": "pUUID", "type": "text"},
-        {"name": "page_int", "type": "integer"},
-        {"name": "entry_int", "type": "integer"},
-        {"name": "version_int", "type": "integer"},
-        {"name": "hash_txt", "type": "text"},
-        {"name": "content_enc64_txt", "type": "text"},
-        {"name": "context_ltxt", "type": "text"},
-    ]
     # Default dimension for vector embeddings used by the
     # vectorized_data virtual table. 384 matches the
     # all-MiniLM-L6-v2 sentence-transformer model and keeps the
@@ -3953,9 +3886,7 @@ class NchantdOfficeStore(NchantdStore):
         """
         from micromole.search import enable_search as _enable_search
 
-        _enable_search(
-            self, tables=tables, analyzer=analyzer, index_dir=index_dir
-        )
+        _enable_search(self, tables=tables, analyzer=analyzer, index_dir=index_dir)
 
     def close_sqlite(self) -> None:
         """T-NEW-007: detach the ``pyof`` SQuiRL doc if one is
@@ -4485,12 +4416,7 @@ class NchantdOfficeStore(NchantdStore):
         # T-007-followup: pass the schema columns explicitly so squirl's
         # _fill_admin_cols has the column metadata it needs even when
         # the table isn't pre-registered in the dstruct.
-        columns = None
-        if table == "doc_media":
-            columns = self._DOC_MEDIA_COLUMNS
-        elif table == "app_media":
-            columns = self._DOC_MEDIA_COLUMNS  # app_media uses the same shape
-        self._store(table, payload, db, columns=columns)
+        self._store(table, payload, db, columns=self._get_table_columns(table))
         return document["did"]
 
     def store_doc_media_content(self, content, db="db", how="INSERT") -> str:
@@ -4520,7 +4446,7 @@ class NchantdOfficeStore(NchantdStore):
                 content["context"],
             ]
         ]
-        self._store(table, payload, db, columns=self._DOC_MEDIA_CONTENT_COLUMNS)
+        self._store(table, payload, db, columns=self._get_table_columns(table))
         # PUSH 0.0.3 move this to a non blocking process
         # set delete for all but the last 30 versions eventually base on variable policy of time/szie/counts
         # self._archive_versions(table, content["pUUID"], "pUUID", "UUID", 3)
@@ -4556,7 +4482,7 @@ class NchantdOfficeStore(NchantdStore):
             table,
             payload,
             db,
-            columns=self._APP_MEDIA_CONTENT_COLUMNS,
+            columns=self._get_table_columns(table),
         )
         return content.get("uuid")
 
@@ -4648,6 +4574,11 @@ class NchantdOfficeStore(NchantdStore):
         except Exception as e:
             logma.error(f"[models] _delete({table}) failed: {e}", exc_info=True)
         return self
+
+    def _get_table_columns(self, table):
+        """"""
+        columns = [x["name_txt"] for x in self.MODEL_OBJECTS.get("table", [])]
+        return columns
 
 
 def _content_to_app_media_row(content) -> List[Any]:
