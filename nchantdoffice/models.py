@@ -3779,6 +3779,7 @@ class NchantdOfficeStore(NchantdStore):
         self.name = name.lower().replace(" ", "")  # "nchantdoffice"
         # this controls the location of the database storage on the local drive
         super().__init__(self.name, parent, cfg)
+        self.MODEL_OBJECTS = self.parent.MODEL_OBJECTS
         # T-NEW-007: one SQLite DB per app instance. Each
         # NchantdOfficeStore holds at most one active SQLite
         # connection. ``open_sqlite`` is the canonical entry
@@ -4577,7 +4578,11 @@ class NchantdOfficeStore(NchantdStore):
 
     def _get_table_columns(self, table):
         """"""
-        columns = [x["name_txt"] for x in self.MODEL_OBJECTS.get("table", [])]
+        columns = [x["name"] for x in self.MODEL_OBJECTS.get("table", {}).get(table, {}).get("columns", [])]
+        if columns == []:
+            logma.warning(f"No Columns defined for {table}")
+            if debug:
+                raise Exception(f"No Columns {self.MODEL_OBJECTS}")
         return columns
 
 
