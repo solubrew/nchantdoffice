@@ -43,7 +43,7 @@ def update_affilate_links(model, last_affilate_update_dttm: str = "2025-01-01 00
             where the affiliate exists
     :return:
     """
-    API_URL = "https://nchantdoffice.com/api/affiliate/links/"
+    API_URL = "https://nchantdoffice.com/api/"
     client = APIClient(API_URL)
     if reload:
         last_affilate_update_dttm = "2025-01-01 00:00:00"
