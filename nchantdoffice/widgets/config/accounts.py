@@ -29,6 +29,7 @@ from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.media.images import NchantdImage
 from nchantrs.widgets.media.editors.editors import NchantdEntryEditor
+from nchantdoffice.config import COMPANION_BASE_URL
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -237,14 +238,14 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         profile_layout.setAlignment(pyqt.Qt.AlignmentFlag.AlignTop)
         layout.addLayout(profile_layout)
         cfg = {
-            "url": "https://www.nchantdoffice.com/registration",
+            "url": f"{COMPANION_BASE_URL}/registration",
             "size": [1200, 750],
             "is_simple": True,
         }
         if self.user.has_pro:
-            cfg["url"] = "https://www.nchantdoffice.com/whats_new"
+            cfg["url"] = f"{COMPANION_BASE_URL}/whats_new"
         elif self.user.has_account:
-            cfg["url"] = "https://www.nchantdoffice.com/get_pro"
+            cfg["url"] = f"{COMPANION_BASE_URL}/get_pro"
         self.browser = NchantdWebViewer(self, cfg).initWidget()
         layout.addWidget(self.browser)
         self.layout.addLayout(layout)
@@ -335,11 +336,11 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
 
             # Determine appropriate URL based on user status
             if self.user.has_pro:
-                url = "https://www.nchantdoffice.com/whats_new"
+                url = f"{COMPANION_BASE_URL}/whats_new"
             elif self.user.has_account:
-                url = "https://www.nchantdoffice.com/get_pro"
+                url = f"{COMPANION_BASE_URL}/get_pro"
             else:
-                url = "https://www.nchantdoffice.com/registration"
+                url = f"{COMPANION_BASE_URL}/registration"
 
             # Update browser
             if hasattr(self.browser, "load_url"):

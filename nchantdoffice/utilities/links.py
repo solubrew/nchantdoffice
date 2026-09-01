@@ -26,6 +26,8 @@ import time
 from kahndor import kahndor
 from kahndor.logma import Logma
 
+from nchantdoffice.config import COMPANION_BASE_URL
+
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 log = True
@@ -43,7 +45,7 @@ def update_affilate_links(model, last_affilate_update_dttm: str = "2025-01-01 00
             where the affiliate exists
     :return:
     """
-    API_URL = "https://nchantdoffice.com/api/"
+    API_URL = f"{COMPANION_BASE_URL}/api/"
     client = APIClient(API_URL)
     if reload:
         last_affilate_update_dttm = "2025-01-01 00:00:00"
