@@ -142,7 +142,7 @@ _BUNDLED_YAML_PATH = Path(__file__).parent / "_data_" / "urls.yaml"
 # docker-compose.lan.yml). Per T-NEW-070, no env-var reads —
 # the operator edits these constants to retarget the dev box.
 DEV_INTERNAL_HOST = "http://192.168.1.67"
-DEV_INTERNAL_PORT = "8081"
+DEV_INTERNAL_PORT = "5000"
 DEV_API_BASE = f"{DEV_INTERNAL_HOST}:{DEV_INTERNAL_PORT}"
 DEV_WEB_BASE = f"{DEV_INTERNAL_HOST}:{DEV_INTERNAL_PORT}"
 
