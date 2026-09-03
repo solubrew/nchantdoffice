@@ -397,35 +397,38 @@ def test_load_slots_returns_canonical_order():
 
 
 # ---------------------------------------------------------------------------
-# Contract 5: _advance_slot wraps index to 0
+# Contract 5: _start_surface_timer exists and wires the server-driven cadence
 # ---------------------------------------------------------------------------
 
 
-def test_advance_slot_wraps_index_to_zero():
-    """``_advance_slot()`` must increment ``current_slot_index``
-    by 1 and wrap to 0 when it passes the last slot. The
-    arithmetic wrap is the whole point of the rotation.
+def test_start_surface_timer_exists_and_uses_surface_interval():
+    """``_start_surface_timer()`` must exist and read the
+    server-driven surface cadence from config, falling back to
+    ``DEFAULT_SURFACE_INTERVAL_MS`` (5 minutes).
+
+    DESK T-NEW-061: replaced the previous local 5-second
+    slot rotation with a server-driven fetch that re-asks
+    ``GET /api/ads/rotation/next`` every 5 minutes. The
+    QTimer callback is ``_fetch_and_render`` (not the old
+    ``_advance_slot`` local cycler).
     """
     src = _read(AD_TAB)
-    fn = _ast_function(src, "_advance_slot")
+    fn = _ast_function(src, "_start_surface_timer")
     assert fn is not None, (
-        "advertisements.py must declare _advance_slot() "
-        "(the QTimer callback that cycles the rotation)."
+        "advertisements.py must declare _start_surface_timer() "
+        "(the QTimer that re-asks the server every 5 minutes)."
     )
-    body = _function_source(src, "_advance_slot")
-    assert "current_slot_index" in body, (
-        "_advance_slot must mutate self.current_slot_index."
+    body = _function_source(src, "_start_surface_timer")
+    assert "DEFAULT_SURFACE_INTERVAL_MS" in body, (
+        "_start_surface_timer must reference DEFAULT_SURFACE_INTERVAL_MS."
     )
-    # The wrap must use modulo by len(self.slots). Either
-    # ``current_slot_index % len(slots)`` or an explicit
-    # ``if … : current_slot_index = 0`` is acceptable.
-    assert (
-        "% len(self.slots)" in body
-        or "% len(slots)" in body
-        or "current_slot_index = 0" in body
-    ), (
-        "_advance_slot must wrap current_slot_index to 0 after "
-        "the last slot (modulo len(self.slots) or an explicit reset)."
+    assert "setInterval" in body, (
+        "_start_surface_timer must call .setInterval() on the QTimer."
+    )
+    # The timer must call _fetch_and_render, not the old _advance_slot.
+    assert "_fetch_and_render" in body, (
+        "_start_surface_timer must connect the QTimer to _fetch_and_render "
+        "(the server-driven ad fetch, not the old local slot cycler)."
     )
 
 
@@ -434,45 +437,50 @@ def test_advance_slot_wraps_index_to_zero():
 # ---------------------------------------------------------------------------
 
 
-def test_initView_starts_qtimer_for_free_users_only():
-    """``initView()`` must start a QTimer for Free users and
-    never start it for Pro users (the existing
-    ``_is_visible_for_user`` short-circuit). The Pro-user
-    path must NOT reference QTimer.
+def test_initView_starts_surface_timer_for_free_users_only():
+    """``initView()`` must start the server-driven surface
+    timer for Free users and never start it for Pro users
+    (the existing ``_is_visible_for_user`` short-circuit).
+    The Pro-user path must NOT reference QTimer.
 
-    The QTimer configuration lives in ``_start_rotation()``
-    — ``initView`` delegates to it. The contract is that
-    the Pro check happens BEFORE the timer starts (not
-    where the timer is configured).
+    DESK T-NEW-061: the timer configuration lives in
+    ``_start_surface_timer()`` — ``initView`` delegates to it.
+    The contract is that the Pro check happens BEFORE the
+    timer starts.
     """
     src = _read(AD_TAB)
     body = _function_source(src, "initView")
-    assert "_start_rotation" in body, (
+    assert "_start_surface_timer" in body, (
         "initView must delegate QTimer startup to "
-        "_start_rotation() (the configuration lives there)."
+        "_start_surface_timer() (the configuration lives there)."
     )
-    # The Pro short-circuit must come BEFORE the _start_rotation call.
+    # The Pro short-circuit must come BEFORE the surface timer call.
     is_visible = body.find("_is_visible_for_user")
-    start_rot = body.find("_start_rotation")
-    assert -1 < is_visible < start_rot, (
+    start_timer = body.find("_start_surface_timer")
+    assert -1 < is_visible < start_timer, (
         "initView must check _is_visible_for_user BEFORE "
-        "calling _start_rotation (Pro users get no rotation)."
+        "calling _start_surface_timer (Pro users get no timer)."
     )
 
 
-def test_start_rotation_uses_default_or_configured_interval():
-    """``_start_rotation()`` must read ``interval_ms`` from
+# ---------------------------------------------------------------------------
+# Contract 6b: _start_surface_timer uses the surface cadence (5 min)
+# ---------------------------------------------------------------------------
+
+
+def test_start_surface_timer_uses_5min_cadence():
+    """``_start_surface_timer()`` must read ``surface_ms`` from
     ``self.config`` (advertisements.yaml) and fall back to
-    ``DEFAULT_ROTATION_INTERVAL_MS`` (5000).
+    ``DEFAULT_SURFACE_INTERVAL_MS`` (300_000 ms = 5 minutes).
     """
     src = _read(AD_TAB)
-    body = _function_source(src, "_start_rotation")
-    assert body, "advertisements.py must declare _start_rotation()."
-    assert "DEFAULT_ROTATION_INTERVAL_MS" in body, (
-        "_start_rotation must reference DEFAULT_ROTATION_INTERVAL_MS."
+    body = _function_source(src, "_start_surface_timer")
+    assert body, "advertisements.py must declare _start_surface_timer()."
+    assert "DEFAULT_SURFACE_INTERVAL_MS" in body, (
+        "_start_surface_timer must reference DEFAULT_SURFACE_INTERVAL_MS."
     )
     assert "setInterval" in body, (
-        "_start_rotation must call .setInterval() on the QTimer."
+        "_start_surface_timer must call .setInterval() on the QTimer."
     )
 
 
@@ -1056,63 +1064,33 @@ def test_substack_slot_render_uses_substack_event_name():
 # old widgets in the container.
 
 
-def test_render_current_slot_uses_layout_box_not_container():
-    """T-NEW-070 runtime bug fix: _render_current_slot must
-    call .count() on the container's LAYOUT (layout_box), not
-    on the container widget itself.
+def test_render_current_slot_is_removed():
+    """DESK T-NEW-061 closeout: the local slot rotation
+    (_render_current_slot, _advance_slot, _start_rotation)
+    is replaced by the server-driven _fetch_and_render.
+    _render_current_slot must NOT exist — replaced by _render_ad
+    which renders a single server ad.
 
-    Bug history:
-    - Original: for i in reversed(range(self._slot_container.count()))
-    - Symptom: AttributeError on every slot rotation
-      (4x in 2026-08-11 11:27 log)
-    - Fix: use self._slot_container.layout_box.count() and
-      self._slot_container.layout_box.takeAt(i)
+    The layout_box fix (T-NEW-070) is absorbed into
+    _render_ad which uses layout_box.count() and layout_box.takeAt().
     """
     src = _read(AD_TAB)
-    # Find _render_current_slot method
-    tree = ast.parse(src)
-    method_node = None
-    for node in ast.walk(tree):
-        if (
-            isinstance(node, ast.FunctionDef)
-            and node.name == "_render_current_slot"
-        ):
-            method_node = node
-            break
-    assert method_node is not None, "_render_current_slot must exist"
-
-    # Build the method body WITHOUT the docstring (so comment
-    # mentions of the old pattern don't trip the check).
-    body_nodes = [n for n in method_node.body if not (
-        isinstance(n, ast.Expr)
-        and isinstance(n.value, ast.Constant)
-        and isinstance(n.value.value, str)
-    )]
-    body_src = ast.unparse(ast.Module(body_nodes, type_ignores=[]))
-
-    # Must NOT call .count() on self._slot_container directly
-    # (NchantdVScrollGroupBox has no count() method)
-    bad_pattern = re.compile(r"self\._slot_container\.count\s*\(")
-    assert not bad_pattern.search(body_src), (
-        f"_render_current_slot must not call "
-        f"'self._slot_container.count()' on the widget — "
-        f"NchantdVScrollGroupBox has no count() method. Use "
-        f"self._slot_container.layout_box.count() instead."
+    fn = _ast_function(src, "_render_current_slot")
+    assert fn is None, (
+        "_render_current_slot must be removed — "
+        "replaced by _render_ad (server-driven single ad)."
     )
-
-    # Must call .count() on layout_box
-    assert "layout_box.count()" in body_src, (
-        "_render_current_slot must call .count() on the "
-        "container's layout_box (not the container widget)"
+    # Verify _render_ad exists and uses the layout_box pattern.
+    render_ad = _ast_function(src, "_render_ad")
+    assert render_ad is not None, "_render_ad must exist."
+    body = _function_source(src, "_render_ad")
+    assert "layout_box.count()" in body, (
+        "_render_ad must use layout_box.count() "
+        "(T-NEW-070 fix: NchantdVScrollGroupBox has no count() method)."
     )
-
-    # Must also use layout_box for takeAt (the takeAt is what
-    # actually removes the items from the layout)
-    assert "layout_box.takeAt" in body_src, (
-        "_render_current_slot must call .takeAt() on layout_box "
-        "to actually remove the items"
+    assert "layout_box.takeAt" in body, (
+        "_render_ad must use layout_box.takeAt() to remove items."
     )
-
 
 def test_nchantd_vscroll_group_box_has_no_count_method():
     """Sanity check: NchantdVScrollGroupBox (in nchantrs) is a

@@ -59,19 +59,14 @@ pxcfg = join(here, "_data_", "advertisements.yaml")
 # DESK T-NEW-061: replaced the previous ``DEFAULT_INTERVAL_MS = 12000``
 # (12-second local slot rotation) which caused UI lockups when the
 # timer callback raced with the in-flight HTTP fetches. The new
-# design is server-driven: the server picks the ad, the desktop
-# just renders whatever comes back, every 5 minutes.
+# DESK T-NEW-061: server-driven ad surfacing cadence (ms).
+# The server picks the ad; the desktop re-asks every 5 minutes.
+# Operator-overridable via ``advertisements.yaml``:
+# ``NchantdOfficeAdTab: { surface_interval_ms: 300000 }``.
 DEFAULT_SURFACE_INTERVAL_MS = 5 * 60 * 1000
 
-# T-DESK-066: local slot rotation interval (ms). The Ad tab
-# cycles through the local slot list (tip → substack → pro_cta
-# → affiliate → pro_internal) every 5 seconds by default.
-# Operator-overridable via ``advertisements.yaml``:
-# ``NchantdOfficeAdTab: { rotation_interval_ms: 5000 }``.
-DEFAULT_ROTATION_INTERVAL_MS = 5000
 
-
-# ---------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 # T-DESK-066 — local tip feed (mirrored from
 # nchantdofficeATNRG/content/memes/tips.md, commit 48352d3).
 #
@@ -81,8 +76,6 @@ DEFAULT_ROTATION_INTERVAL_MS = 5000
 #
 # Markdown bold wrappers are tolerated (the ATNRG source uses
 # **…**) — the renderer strips them before display.
-# ---------------------------------------------------------------------------
-
 TIPS_FEED: list = [
     "**Use Ctrl + Shift + T** (or Cmd + Shift + T on Mac) to instantly reopen the last closed browser tab.",
     "**Batch your email** — check it only 2–3 times a day instead of reacting to every notification.",
@@ -114,6 +107,7 @@ TIPS_FEED: list = [
     "**Review your calendar every Sunday night** for 10 minutes to spot conflicts and plan the week.",
     "**Use Ctrl + F (or Cmd + F)** aggressively inside long documents and web pages — never scroll manually.",
     "**End every work session by writing the very next action** for tomorrow so you start instantly.",
+    "**Review your energy, not just your calendar** — schedule high-focus work when you're sharpest.",
 ]
 
 
@@ -666,12 +660,6 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         super().__init__("NchantdOfficeAdTab", parent, cfg)
         self.parent = parent
         self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeAdTab").override(cfg))
-        # T-DESK-066: the four-slot rotation engine state.
-        # ``slots`` replaces the old flat ``banners`` list.
-        # ``current_slot_index`` is the visible-slot pointer;
-        # ``_timer`` is the QTimer that advances it.
-        self.slots: list = []
-        self.current_slot_index: int = 0
         self._timer = None
         # Kept as a backwards-compat shim (some tests still
         # assert on the flat shape).
@@ -769,63 +757,10 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
 
         self.layout.addLayout(layout)
 
-        # Start the local slot rotation timer (Free users only —
-        # the Pro short-circuit above returned early).
-        self._start_rotation()
+        # DESK T-NEW-061: start the server-driven surface timer.
+        # Free users only — the Pro short-circuit above returned early.
+        self._start_surface_timer()
         return cfg
-
-    def _render_current_slot(self) -> None:
-        """Render the slot at ``self.current_slot_index`` into
-        the ``_slot_container``. Clears the container first so
-        only one slot is visible at a time (the rotation, not
-        a stack).
-
-        T-DESK-066 step 6.
-
-        Runtime bug fix (2026-08-11): ``NchantdVScrollGroupBox``
-        is a QWidget (extends NchantdWidget) — it has no
-        ``count()`` method. The ``count()`` and ``takeAt()``
-        live on its inner ``layout_box`` (a QVBoxLayout). The
-        previous code called ``self._slot_container.count()``
-        which raised ``AttributeError`` 4x in the 11:27 log.
-        Now we operate on the layout instead.
-        """
-        try:
-            # Remove every child widget from the container.
-            # The container's children are added via
-            # ``addWidget()`` (line 720) which delegates to
-            # ``self._slot_container.layout_box.addWidget()``.
-            # To remove them, iterate over the layout_box.
-            layout_box = self._slot_container.layout_box
-            for i in reversed(range(layout_box.count())):
-                item = layout_box.takeAt(i)
-                w = item.widget() if item is not None else None
-                if w is not None:
-                    w.setParent(None)
-                    w.deleteLater()
-        except Exception as e:
-            logma.warning(f"[ad_tab] _render_current_slot clear failed: {e}")
-
-        if not self.slots:
-            placeholder = NchantdLabel(self._slot_container)
-            placeholder.setText("<i>No ads available right now.</i>")
-            self._slot_container.addWidget(placeholder)
-            return
-
-        idx = self.current_slot_index % len(self.slots)
-        slot = self.slots[idx]
-        try:
-            widget = slot.render(self._slot_container)
-            self._slot_container.addWidget(widget)
-            # Wire the Pro CTA's button (the only slot whose
-            # click handler needs ``self``).
-            btn = getattr(widget, "_pro_cta_button", None)
-            if btn is not None:
-                btn.clicked.connect(self._on_remove_ads_clicked)
-        except Exception as e:
-            logma.warning(
-                f"[ad_tab] render slot[{idx}] ({slot.kind}) failed: {e}"
-            )
 
     def _fetch_and_render(self) -> None:
         """Fetch the next ad from the server and render it.
@@ -935,57 +870,6 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             placeholder = NchantdLabel(self._slot_container)
             placeholder.setText("<i>No ads right now.</i>")
             self._slot_container.addWidget(placeholder)
-
-    def _advance_slot(self) -> None:
-        """Advance ``current_slot_index`` by one and wrap to 0
-        after the last slot. Called by the rotation QTimer on
-        every interval tick. After advancing the index, re-renders
-        the visible slot.
-
-        T-DESK-066.
-        """
-        if not self.slots:
-            return
-        self.current_slot_index = (self.current_slot_index + 1) % len(self.slots)
-        self._render_current_slot()
-
-    def _start_rotation(self) -> None:
-        """Start the QTimer that advances the local slot rotation
-        every ``rotation_interval_ms``.
-
-        Reads the interval from ``self.config`` (key
-        ``rotation_interval_ms``, default ``DEFAULT_ROTATION_INTERVAL_MS``
-        = 5000 ms). The timer calls ``_advance_slot`` on each tick.
-
-        Pro users never reach this code path (initView returns
-        early before this is called).
-
-        T-DESK-066.
-        """
-        try:
-            interval_ms = int(
-                self.config.dikt.get(
-                    "rotation_interval_ms", DEFAULT_ROTATION_INTERVAL_MS,
-                )
-            )
-        except Exception:
-            interval_ms = DEFAULT_ROTATION_INTERVAL_MS
-        self._timer = pyqt.QTimer(self)
-        self._timer.setInterval(interval_ms)
-        self._timer.timeout.connect(self._advance_slot)
-        self._timer.start()
-        logma.info(
-            f"[ad_tab] rotation timer started (interval="
-            f"{interval_ms}ms)"
-        )
-        # Fire the initial slot render immediately so the user
-        # sees content right away instead of a blank container.
-        try:
-            self._render_current_slot()
-        except Exception as e:
-            logma.warning(
-                f"[ad_tab] initial slot render failed (non-blocking): {e}"
-            )
 
     def _start_surface_timer(self) -> None:
         """Start the QTimer that re-asks the server for the
