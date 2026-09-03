@@ -788,11 +788,68 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             ad = None
         self._render_ad(ad)
 
+    def _switch_to_this_tab(self) -> None:
+        """Switch the right-pane tabset to this tab.
+
+        Called after every successful ad render so the right pane
+        auto-surfaces when a new ad arrives on the 5-minute tick.
+
+        Guards:
+          - Only runs after initView has built the UI
+            (``_slot_container`` exists).
+          - Only runs when not already on this tab
+            (avoid redundant switch on the initial render).
+          - Wrapped in try/except so any Qt or navigation
+            failure is silent — the tab is visible and the
+            ad renders regardless.
+        """
+        if not getattr(self, "_slot_container", None):
+            return  # initView hasn't run yet
+        try:
+            app = getattr(self, "app", None)
+            if app is None:
+                return
+            right_pane = getattr(app.view, "panes", {}).get("right")
+            if right_pane is None:
+                return
+            # Find this tab's position in the right pane tabset.
+            # Walk the tab bar (QTabBar) by index until we find
+            # the tab whose widget is this NchantdOfficeAdTab instance.
+            tab_bar = right_pane.tabBar()
+            if tab_bar is None:
+                return
+            ad_index = -1
+            for i in range(tab_bar.count()):
+                widget_at_i = right_pane.widget(i)
+                if widget_at_i is self:
+                    ad_index = i
+                    break
+            if ad_index < 0:
+                logma.info(
+                    "[ad_tab] _switch_to_this_tab: "
+                    "this tab not found in right pane tabset"
+                )
+                return
+            # Skip if we're already on the Ad tab (initial render).
+            if right_pane.currentIndex() == ad_index:
+                return
+            right_pane.setCurrentIndex(ad_index)
+            logma.info(
+                f"[ad_tab] surfaced (right pane tab index={ad_index})"
+            )
+        except Exception as e:
+            logma.warning(
+                f"[ad_tab] _switch_to_this_tab failed (non-blocking): {e}"
+            )
+
     def _render_ad(self, ad: Optional[dict]) -> None:
         """Render a single ad dict (or None for the empty state).
 
         Pulled out of ``_fetch_and_render`` so tests can drive
         the renderer directly without mocking the network.
+
+        After rendering, switches the right pane to this tab so the
+        new ad is auto-surfaced to the user on every 5-minute tick.
         """
         if not getattr(self, "_slot_container", None):
             return  # initView hasn't run yet
@@ -865,6 +922,9 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                 f"border-radius: 8px; padding: 6px; }}"
             )
             self._slot_container.addWidget(card)
+            # Surface the Ad tab after a successful render so the
+            # new ad is visible to the user on every 5-minute tick.
+            self._switch_to_this_tab()
         except Exception as e:
             logma.warning(f"[ad_tab] _render_ad failed: {e}")
             placeholder = NchantdLabel(self._slot_container)

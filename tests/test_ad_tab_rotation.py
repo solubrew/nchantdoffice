@@ -1133,3 +1133,60 @@ def test_nchantd_vscroll_group_box_has_no_count_method():
         "NchantdVScrollGroupBox must have self.layout_box "
         "(the QVBoxLayout where addWidget lands)"
     )
+
+# ---------------------------------------------------------------------------
+# Contract 12: _switch_to_this_tab surfaces the Ad tab in the right pane
+# ---------------------------------------------------------------------------
+
+
+def test_switch_to_this_tab_method_exists():
+    """DESK T-NEW-061 follow-up: _switch_to_this_tab()
+    must exist on NchantdOfficeAdTab and switch the right-pane
+    tabset to this tab after rendering an ad.
+
+    This method is called at the end of _render_ad so that every
+    5-minute server fetch auto-surfaces the new ad to the user.
+    """
+    src = _read(AD_TAB)
+    fn = _ast_function(src, "_switch_to_this_tab")
+    assert fn is not None, (
+        "NchantdOfficeAdTab must declare _switch_to_this_tab() "
+        "to auto-surface the Ad tab in the right pane on every ad render."
+    )
+
+
+def test_render_ad_calls_switch_to_this_tab():
+    """_render_ad() must call _switch_to_this_tab() after
+    successfully rendering an ad card.
+
+    This wires the auto-surfacing: every time the 5-minute
+    timer fires and _fetch_and_render produces an ad, the
+    right pane switches to the Ad tab so the user sees it.
+    """
+    src = _read(AD_TAB)
+    body = _function_source(src, "_render_ad")
+    assert "_switch_to_this_tab" in body, (
+        "_render_ad must call _switch_to_this_tab() after "
+        "rendering the ad card so the right pane auto-surfaces."
+    )
+
+
+def test_switch_to_this_tab_checks_already_on_tab():
+    """_switch_to_this_tab() must guard against switching when
+    already on the Ad tab (avoid redundant signal firing on
+    the initial render).
+
+    The implementation must check currentIndex() == ad_index
+    before calling setCurrentIndex.
+    """
+    src = _read(AD_TAB)
+    body = _function_source(src, "_switch_to_this_tab")
+    assert "currentIndex" in body, (
+        "_switch_to_this_tab must check currentIndex() "
+        "to avoid switching when already on the Ad tab."
+    )
+    assert "setCurrentIndex" in body, (
+        "_switch_to_this_tab must call setCurrentIndex "
+        "on the right pane to switch tabs."
+    )
+
