@@ -48,6 +48,7 @@ try:
 except Exception:  # pragma: no cover -- rare miss in headless envs
     QObject = object  # type: ignore
     QThread = object  # type: ignore
+
     def Signal(*args, **kwargs):  # type: ignore
         return None
 
@@ -60,6 +61,7 @@ class _PyofImportWorker(QObject):
     bar. Uses Qt.QueuedConnection (the default for cross-thread
     signals) so the slot runs on the main thread.
     """
+
     finished = Signal(str, list)
 
     def __init__(
@@ -86,6 +88,7 @@ class _PyofImportWorker(QObject):
             logma.error(f"[import_pyof] worker failed: {e}", exc_info=True)
             results = []
         self.finished.emit(self._path, results)
+
 
 from nchantrs.widgets.media.editors.selectors import NchantdDropDown
 from nchantrs.widgets.media.editors.editors import NchantdEntryBox
@@ -308,9 +311,7 @@ class NchantdApplicationSearchPane(NchantdPane):
             "Yahoo": "https://search.yahoo.com/search?p={q}",
             "Yandex": "https://yandex.com/search/?text={q}",
         }
-        url = engines.get("Google", "https://duckduckgo.com/?q={q}").format(
-            q=query.replace(" ", "+")
-        )
+        url = engines.get("Google", "https://duckduckgo.com/?q={q}").format(q=query.replace(" ", "+"))
         try:
             model = getattr(self.app, "model", None) if self.app else None
             if model is not None and hasattr(model, "open_web_tab"):
@@ -325,6 +326,7 @@ class NchantdApplicationSearchPane(NchantdPane):
         # Fallback: try system browser
         try:
             import webbrowser
+
             webbrowser.open(url)
             self._set_response(f"Browser fallback: {url}")
         except Exception as e2:
@@ -1184,12 +1186,13 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                 # 5: {"action": "export_instance", "type": "", "handler": self.cmd_export_instance},
             },
         }
-        if self.app.model.user.has_pro:
-            cfg["actions"][0] = {
-                "action": "new_instance",
-                "type": "",
-                "handler": self.cmd_create_new_instance,
-            }  # PUSH to 0.0.3 change a pop dialog for instance selection/open/new
+        if hasattr(self.app.model.user, "has_pro"):
+            if self.app.model.user.has_pro:
+                cfg["actions"][0] = {
+                    "action": "new_instance",
+                    "type": "",
+                    "handler": self.cmd_create_new_instance,
+                }
         self.document_buttonbar = NchantdButtonBar(self, cfg)
         items[cnt]["widget"] = self.document_buttonbar
         cnt += 1
@@ -1292,9 +1295,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         test in ``tests/test_pyof_import.py`` injects a stub returning a
         temp ``.pyof`` path. Defaults to ``QFileDialog.getOpenFileName``.
         """
-        logma.info(
-            f"[cmd_import_pyof] ENTRY event={event}"
-        )
+        logma.info(f"[cmd_import_pyof] ENTRY event={event}")
         try:
             from PySide6.QtWidgets import QFileDialog  # type: ignore
         except Exception as e:
@@ -1346,6 +1347,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             # (_pyof_import_thread) so the GC does not reap them
             # mid-flight.
             from nchantdoffice.utilities.pyof_import_via_doc import import_pyof_via_doc
+
             # Re-parent top-level rows from the source to the
             # currently selected node on the host. When the user
             # clicks the import button on a .pyof, the source's
@@ -1357,7 +1359,9 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             # fall back to "0" (the source root).
             target_parent_nid = self._resolve_selected_nid()
             worker = _PyofImportWorker(
-                import_pyof_via_doc, path, host_doc,
+                import_pyof_via_doc,
+                path,
+                host_doc,
                 target_parent_nid=target_parent_nid,
             )
             thread = QThread()
@@ -1447,18 +1451,13 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         the horizontal scroll position and the container layout.
         """
         from nchantrs.widgets.trees import NchantdApplicationTree  # noqa
-        logma.info(
-            "[_refresh_tree_widgets] searching for inner tree widgets "
-            "in the app hierarchy"
-        )
+
+        logma.info("[_refresh_tree_widgets] searching for inner tree widgets " "in the app hierarchy")
         try:
             app = getattr(self, "app", None)
             if app is None:
                 # Unit tests skip QObject init via __new__ -- no app.
-                logma.info(
-                    "[_refresh_tree_widgets] no self.app (unit test); "
-                    "skipping tree refresh"
-                )
+                logma.info("[_refresh_tree_widgets] no self.app (unit test); " "skipping tree refresh")
                 return
             view = getattr(app, "view", None)
             if view is None:
@@ -1494,10 +1493,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                     f"[_refresh_tree_widgets] findChildren walk failed: {e}",
                     exc_info=True,
                 )
-            logma.info(
-                f"[_refresh_tree_widgets] found {len(candidates)} inner "
-                f"tree(s) to refresh"
-            )
+            logma.info(f"[_refresh_tree_widgets] found {len(candidates)} inner " f"tree(s) to refresh")
             for label, inner_tree in candidates:
                 try:
                     refresh_fn = getattr(inner_tree, "refresh", None)
@@ -1512,18 +1508,12 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
                         if callable(init_tree_fn):
                             init_tree_fn()
                         else:
-                            logma.warning(
-                                f"[_refresh_tree_widgets] {label} has no "
-                                f"refresh()/init_tree(); skipping"
-                            )
+                            logma.warning(f"[_refresh_tree_widgets] {label} has no " f"refresh()/init_tree(); skipping")
                             continue
-                    logma.info(
-                        f"[_refresh_tree_widgets] refreshed inner tree: {label}"
-                    )
+                    logma.info(f"[_refresh_tree_widgets] refreshed inner tree: {label}")
                 except Exception as e:
                     logma.error(
-                        f"[_refresh_tree_widgets] failed to refresh "
-                        f"{label}: {type(e).__name__}: {e}",
+                        f"[_refresh_tree_widgets] failed to refresh " f"{label}: {type(e).__name__}: {e}",
                         exc_info=True,
                     )
         except Exception as e:
@@ -1557,8 +1547,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         app = getattr(self, "app", None)
         model_obj = getattr(app, "model", None)
         if model_obj is not None:
-            candidates.append(("app.model.current_node",
-                               getattr(model_obj, "current_node", None)))
+            candidates.append(("app.model.current_node", getattr(model_obj, "current_node", None)))
         view = getattr(app, "view", None)
         panes = getattr(view, "panes", {}) or {}
         for pos, pane in panes.items():
@@ -1566,18 +1555,14 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             inner = getattr(pane, "tree", None)
             tm = getattr(inner, "model", None) if inner is not None else None
             if tm is not None:
-                candidates.append(
-                    (f"panes[{pos}].tree.model.current_node",
-                     getattr(tm, "current_node", None)))
+                candidates.append((f"panes[{pos}].tree.model.current_node", getattr(tm, "current_node", None)))
                 break
         # QTreeWidget currentItem fallback
         for pos, pane in panes.items():
             inner = getattr(pane, "tree", None)
             if inner is not None and hasattr(inner, "currentItem"):
                 try:
-                    candidates.append(
-                        (f"panes[{pos}].tree.currentItem()",
-                         inner.currentItem()))
+                    candidates.append((f"panes[{pos}].tree.currentItem()", inner.currentItem()))
                 except Exception:
                     pass
                 break
@@ -1604,18 +1589,14 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             try:
                 nid = _nid_from(cand)
             except Exception as e:
-                logma.warning(
-                    f"[_resolve_selected_nid] {label} extraction failed: {e}"
-                )
+                logma.warning(f"[_resolve_selected_nid] {label} extraction failed: {e}")
             if nid:
                 logma.info(
-                    f"[_resolve_selected_nid] resolved nid={nid!r} "
-                    f"from {label} (type={type(cand).__name__})"
+                    f"[_resolve_selected_nid] resolved nid={nid!r} " f"from {label} (type={type(cand).__name__})"
                 )
                 return nid
             logma.info(
-                f"[_resolve_selected_nid] {label} yielded no nid "
-                f"(type={type(cand).__name__}, value={cand!r:.60})"
+                f"[_resolve_selected_nid] {label} yielded no nid " f"(type={type(cand).__name__}, value={cand!r:.60})"
                 if cand is not None
                 else f"[_resolve_selected_nid] {label} is None"
             )
@@ -1694,10 +1675,8 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             pass
         try:
             import shiboken6 as _shiboken6  # type: ignore
-            _parent_callable = (
-                callable(getattr(self, "parent", None))
-                and _shiboken6.isValid(self)
-            )
+
+            _parent_callable = callable(getattr(self, "parent", None)) and _shiboken6.isValid(self)
         except Exception:
             _parent_callable = False
         if _parent_callable:
@@ -1762,6 +1741,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         connection.
         """
         import sqlite3 as _sqlite3
+
         if isinstance(obj, _sqlite3.Connection):
             return False
         return all(callable(getattr(obj, n, None)) for n in ("attach", "get_tables", "upsert"))
@@ -1772,6 +1752,7 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
         ``_resolve_host_doc`` and ``import_pyof_via_doc`` (the SQuiRL
         re-architect of the orchestrator)."""
         import sqlite3 as _sqlite3
+
         try:
             store = getattr(getattr(self, "app", None), "model", None)
             store = getattr(store, "store", store) if store is not None else None
@@ -1784,7 +1765,6 @@ class NchantdOfficeApplicationToolBox(NchantdToolBox):
             "NchantdOfficeApplicationToolBox._resolve_host_db_conn: "
             "deprecated. Use _resolve_host_doc via import_pyof_via_doc."
         )
-
 
 
 # ====================================================================================================================||

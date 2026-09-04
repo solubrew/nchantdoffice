@@ -1129,18 +1129,6 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
                 cell_item.setData(pyqt.Qt.ItemDataRole.DisplayRole, f"#ERROR: {e}")
         return self
 
-    def fullscreen_mode(self) -> Self:
-        """Toggle fullscreen mode for the parent window"""
-        window = self.window()
-        if window:
-            if window.isFullScreen():
-                window.showNormal()
-                logma.info("Exited fullscreen mode")
-            else:
-                window.showFullScreen()
-                logma.info("Entered fullscreen mode")
-        return self
-
     def find_replace(self) -> Self:
         """Open a find and replace dialog"""
         dialog = pyqt.QDialog(self)
@@ -1242,6 +1230,22 @@ class NchantdOfficeMatrix(NchantdOfficeDocument):
         layout.addRow(btn_layout)
 
         dialog.exec()
+        return self
+
+    def focusOutEvent(self, event=None, *args, **kwargs):
+        """"""
+        super().focusOutEvent(event, args, kwargs)
+
+    def fullscreen_mode(self) -> Self:
+        """Toggle fullscreen mode for the parent window"""
+        window = self.window()
+        if window:
+            if window.isFullScreen():
+                window.showNormal()
+                logma.info("Exited fullscreen mode")
+            else:
+                window.showFullScreen()
+                logma.info("Entered fullscreen mode")
         return self
 
     def get_cell_value(self, address) -> str | None:
