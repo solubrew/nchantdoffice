@@ -28,12 +28,12 @@ import platform
 from kahndor import kahndor
 from kahndor.logma import Logma
 from nchantrs.wizards.apps import NchantdApplicationStartupWizard
-
+from nchantrs.wizards.users import NchantdNewUserWizard
 from nchantdoffice.updates.db import NchantdOfficeDBUpdate
-
 from subtrix.utilities import uuid
 from nchantrs.widgets.browsers.downloads import CodecDownloadThread
 from nchantrs.widgets.browsers.codecs.h264 import OpenH264Downloader
+from nchantdoffice.utilities.users import NchantdOfficeUser
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -43,7 +43,7 @@ debug = True
 if not log:
     logma.off()
 # ====================================================================================================================||
-pxcfg = join(here, "_data_", "wizards.yaml")
+PXCFG = join(here, "_data_", "wizards.yaml")
 
 
 class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
@@ -52,7 +52,7 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
     def __init__(self, app=None, cfg=None) -> None:
         """ """
         super().__init__(app, cfg)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeApplicationStartupWizard")).override(cfg)
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeApplicationStartupWizard")).override(cfg)
         cfg = {}
         self.db_update = NchantdOfficeDBUpdate(self, cfg)
         self.download_codec = None
@@ -163,6 +163,15 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         """"""
         self.downloaded = 1
 
+    def run_application(self) -> Self:
+        """
+        Override to restore last selected node on regular (non-install) startup
+        """
+        super().run_application()
+        # Restore last selected node or default to Home node
+        self.restore_last_node()
+        return self
+
     def run_application_install(self, paths) -> Self:
         """"""
         super().run_application_install(paths)
@@ -191,12 +200,6 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
 
         return self
 
-    def run_model_update(self) -> Self:
-        """"""
-        # Deactivate the Default Nchantrs Browser Type - this isn't really an update but a part of building on top of Nchantrs
-        self.app.model.deactivate("app_document_type", uuid="066fae58-be2f-7095-8000-11dd4a720555")
-        return self
-
     def run_install_complete(self) -> Self:
         """Override to select Home node after install completes"""
         super().run_install_complete()
@@ -204,13 +207,10 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
         self.select_home_node()
         return self
 
-    def run_application(self) -> Self:
-        """
-        Override to restore last selected node on regular (non-install) startup
-        """
-        super().run_application()
-        # Restore last selected node or default to Home node
-        self.restore_last_node()
+    def run_model_update(self) -> Self:
+        """"""
+        # Deactivate the Default Nchantrs Browser Type - this isn't really an update but a part of building on top of Nchantrs
+        self.app.model.deactivate("app_document_type", uuid="066fae58-be2f-7095-8000-11dd4a720555")
         return self
 
     def restore_last_node(self) -> Self:
@@ -425,6 +425,37 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
                 raise e
             logma.warning(f"Error selecting node {target_nid}: {e}")
         return False
+
+
+class NchantdOfficeNewUserWizard(NchantdNewUserWizard):
+    """"""
+
+    def __init__(self, parent=None, cfg=None):
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeNewUserWizard").override(cfg))
+
+    def initModel(self, cfg=None):
+        """"""
+        super().initModel(cfg)
+        return self
+
+    def initView(self, cfg=None):
+        """"""
+        super().initView(cfg)
+        return self
+
+    def initWidget(self, cfg=None):
+        """"""
+        self.initModel(cfg)
+        self.initView(cfg)
+        return self
+
+    def create_user(self, user, user_object=None):
+        """"""
+        if user_object is None:
+            user_object = NchantdOfficeUser
+        super().create_user(user, user_object)
+        return self
 
 
 # ====================================================================================================================||

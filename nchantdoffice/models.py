@@ -1326,10 +1326,17 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.has_changed = True
         return self
 
-    def create_new_instance(self) -> "NchantdOfficeCloakModel":
+    def create_new_instance(self, cfg=None, primary=False, activate=True) -> "NchantdOfficeCloakModel":
         """"""
-        super().create_new_instance()
-        return self
+        cfg = cfg or {}
+        instance_pages = super().create_new_instance(cfg, primary, activate)
+        return instance_pages
+
+    def create_new_user(self, cfg=None, primary=False, activate=True) -> "NchantdOfficeCloakModel":
+        """"""
+        cfg = cfg or {}
+        user_pages = super().create_new_user(cfg, primary, activate)
+        return user_pages
 
     def create_nodeset_month(self, month, year, pid=None) -> Any:
         """"""

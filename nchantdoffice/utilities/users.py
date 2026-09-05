@@ -77,6 +77,10 @@ class NchantdOfficeUser(NchantdUser):
         # missing / malformed creds) default to True to
         # preserve the original hardcoded behaviour.
         self.has_pro = self._resolve_has_pro_from_credentials()
+        self.easter_egg = None
+        self.nchantd_account_wizard_visible = True
+        self.nchantd_account_status = False
+        self.nchantd_account_credits = 0
 
     @staticmethod
     def _resolve_has_pro_from_credentials() -> bool:
@@ -94,6 +98,7 @@ class NchantdOfficeUser(NchantdUser):
             from nchantdoffice.utilities.credentials import (
                 load_credentials,
             )
+
             creds = load_credentials()
         except Exception as exc:
             logma.warning(
