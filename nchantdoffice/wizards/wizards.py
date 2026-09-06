@@ -130,13 +130,13 @@ class NchantdOfficeApplicationStartupWizard(NchantdApplicationStartupWizard):
                 logma.warning(f"[wizards] Vault init skipped: {e}")
         super().create_config_file()
 
-    def create_instance(self):
+    def create_instance(self, cfg=None, primary=True, activate=False):
         """"""
-        super().create_instance()
+        return super().create_instance(cfg, primary, activate)
 
-    def create_user(self):
+    def create_user(self, cfg=None, primary=True, activate=False):
         """"""
-        super().create_user()
+        return super().create_user(cfg, primary, activate)
 
     def create_database_application(self) -> Self:
         """"""

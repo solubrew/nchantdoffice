@@ -213,6 +213,47 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self.store.enable_whooshish_search()
         return self
 
+    def add_day_node(self, day, month, year, pid=None) -> Any:
+        """"""
+        self.get_today_node()
+        year_df = self.nodes[self.nodes["name_txt"] == year]
+        if year_df.empty:
+            pid = self.create_nodeset_year(year)
+            self.nodes = self.get_nodes()
+        else:
+            pid = year_df["nid_txt"].values[0]
+        year_df = self.nodes[self.nodes["pid_txt"] == pid]
+        month_df = year_df[year_df["name_txt"] == month]
+        if month_df.empty:
+            pid = self.create_nodeset_month(month, year, pid)
+            self.nodes = self.get_nodes()
+        else:
+            pid = month_df["nid_txt"].values[0]
+        month_df = self.nodes[self.nodes["pid_txt"] == pid]
+        day_df = month_df[month_df["name_txt"] == day]
+        if day_df.empty:
+            pos = month_df["position_int"].astype(int).max() + 1
+            if isnan(pos):
+                pos = 1
+            pid, row = self.store.store_app_tree_node(day, "daynode", pid, pos, {"focus": "userapp"})
+            self.nodes = self.get_nodes()
+            self.create_tabset_day(pid)
+            self.has_changed = True
+            return pid
+
+    def add_day_tabs(self, pid) -> Self:
+        """
+        Add day tab to a week/month node.
+
+        :param pid: Parent node ID (typically week or month node) to add the day tab to
+        :return: self
+        """
+        widget = "nchantrs.widgets.calendars.days.NchantdDailyJournal"
+        widgdata = {}
+        self.parent.app.view.panes["center"].model.add_tab("Daily Journal", pid, 1, widget, widgdata)
+        self.has_changed = True
+        return self
+
     def add_document(
         self, document, did, pid, pos, widget=None, widgdata=None, doc_type=None, tabset="center", db="db", tab_new=True
     ):
@@ -876,33 +917,9 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         self._apply_tab_style(tab)
         return tab
 
-    def add_day_node(self, day, month, year, pid=None) -> Any:
+    def add_user(self, user, db="db"):
         """"""
-        self.get_today_node()
-        year_df = self.nodes[self.nodes["name_txt"] == year]
-        if year_df.empty:
-            pid = self.create_nodeset_year(year)
-            self.nodes = self.get_nodes()
-        else:
-            pid = year_df["nid_txt"].values[0]
-        year_df = self.nodes[self.nodes["pid_txt"] == pid]
-        month_df = year_df[year_df["name_txt"] == month]
-        if month_df.empty:
-            pid = self.create_nodeset_month(month, year, pid)
-            self.nodes = self.get_nodes()
-        else:
-            pid = month_df["nid_txt"].values[0]
-        month_df = self.nodes[self.nodes["pid_txt"] == pid]
-        day_df = month_df[month_df["name_txt"] == day]
-        if day_df.empty:
-            pos = month_df["position_int"].astype(int).max() + 1
-            if isnan(pos):
-                pos = 1
-            pid, row = self.store.store_app_tree_node(day, "daynode", pid, pos, {"focus": "userapp"})
-            self.nodes = self.get_nodes()
-            self.create_tabset_day(pid)
-            self.has_changed = True
-            return pid
+        return super().add_user(user, db)
 
     def add_week_tabs(self, pid) -> Self:
         """
@@ -917,19 +934,6 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         widget = "nchantrs.widgets.calendars.timelines.NchantdWeeklyDashboard"
         widgdata = {}
         self.parent.app.view.panes["center"].model.add_tab("Weekly Dashboard", pid, 1, widget, widgdata)
-        self.has_changed = True
-        return self
-
-    def add_day_tabs(self, pid) -> Self:
-        """
-        Add day tab to a week/month node.
-
-        :param pid: Parent node ID (typically week or month node) to add the day tab to
-        :return: self
-        """
-        widget = "nchantrs.widgets.calendars.days.NchantdDailyJournal"
-        widgdata = {}
-        self.parent.app.view.panes["center"].model.add_tab("Daily Journal", pid, 1, widget, widgdata)
         self.has_changed = True
         return self
 
@@ -4334,7 +4338,7 @@ class NchantdOfficeStore(NchantdStore):
         super().store_app_instance(instance, db)
         # self._store("app_instance", [_build_app_instance_payload(instance)], db)
 
-    def store_app_user(self, user, db="db") -> None:
+    def store_app_user(self, user, instance, db="db") -> None:
         """T-NEW-129: store primitive for ``app_user`` rows.
 
         Takes a pre-built payload dict and writes it through
@@ -4351,7 +4355,7 @@ class NchantdOfficeStore(NchantdStore):
         # else:
         #     payload = _build_app_user_payload(user)
         # self._store("app_user", [payload], db)
-        super().store_app_user(user, db)
+        return super().store_app_user(user, instance, db)
 
     def store_doc_media(self, document, db="db", how="INSERT") -> str:
         """

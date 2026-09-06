@@ -91,6 +91,7 @@ class NchantdOfficeCloak(NchantdCloak):
         self.has_library = True
         self.library_optional = True
         self.toolbox = None
+        self.new_instance = False
 
     def run_on_launch(self) -> Self:
         """Called on every application startup.
