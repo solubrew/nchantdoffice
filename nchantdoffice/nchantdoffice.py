@@ -33,13 +33,13 @@ from pycurity.pyvice import Device
 from nchantdoffice.utilities.users import NchantdOfficeUser
 
 # ====================================================================================================================||
-here = join(dirname(__file__), "")  # ||
+HERE = join(dirname(__file__), "")  # ||
 log = True
 logma = Logma(__name__)
-
+if not log:
+    logma.off()
 # ====================================================================================================================||
-logma.info(f"here: {here}")
-pxcfg = join(here, "_data_", "nchantdoffice.yaml")
+PXCFG = join(HERE, "_data_", "nchantdoffice.yaml")
 
 
 class NchantdOfficeCloak(NchantdCloak):
@@ -48,41 +48,20 @@ class NchantdOfficeCloak(NchantdCloak):
     def __init__(self, name, instance=None, parent=None, cfg=None, args=None) -> None:
         """ """
         super().__init__(name, instance, parent, None, args)
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeCloak").override(cfg))
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeCloak").override(cfg))
         self.config.override({"app": "nchantdoffice"})
         self.parent = parent
-        logma.info(f"NchantdOfficeCloak: {self.config.dikt.get('config', None)}")
         if self.parent is None:
             self.parent = self
         self.main = NchantdOfficeMainWindow(self)
         self.model = NchantdOfficeCloakModel(name, self.instance, self)
         self.view = NchantdOfficeCloakView(self)
         self.dbupdate = NchantdOfficeDBUpdate(self)
-        # T-NEW-058 §1.2/§2 — construct the UpdateChecker at boot
-        # so the boot hook (run_on_launch) can invoke check() without
-        # importing the class there. The instance is caller-driven;
-        # the class itself does not start a background thread.
-        # T-NEW-059: pass self.config.dikt so UpdateChecker.check()
-        # honours the user's check_update_interval_hours override
-        # (Interface Tab settings → "Update check interval (hours)").
         self.update_checker = UpdateChecker(cfg=self.config.dikt)
-        # T-NEW-042b: NchantdUser.__init__ (parent) reads
-        # self.parent.device.user at line 65. Set self.device
-        # BEFORE constructing NchantdOfficeUser(self) so the
-        # parent class has access to it. Real-world crash
-        # reported 2026-08-11 14:21:27:
-        #   AttributeError: 'NchantdOfficeCloak' object has no
-        #   attribute 'device'
         self.device = Device()
-        # T-NEW-042 (DESK-0): instantiate the user singleton so
-        # self.user.uuid is the canonical per-install identifier
-        # (replaces the previously-hardcoded application_NCD
-        # constant). The UUID is loaded from user_config if
-        # present, otherwise generated + persisted on first
-        # launch — guaranteeing stability across launches.
         self.user = NchantdOfficeUser(self)
         self.user.persist_uuid()
-        self.application_NCD = self.user.uuid
+        self.application_NCD = "40c94efb-d374-437f-a48b-3c6b843fd110"  # is an identifier for the application within in the nchantrs ecosystem
         self.install = True
         self.primary_focus = "office_platform"
         self.is_installable = True
@@ -117,24 +96,7 @@ class NchantdOfficeCloak(NchantdCloak):
         """
         super().run_on_launch()
         self.model.set_today()
-        # T-NEW-129: seed the ``app_user`` row on first install.
-        # Idempotent: a no-op once the row exists, so safe to
-        # call every launch. Wrapped in try/except inside the
-        # method itself -- a missing store or table never blocks
-        # app boot.
-        # try:
-        #     self.model.bootstrap_app_user()
-        # except Exception as e:
-        #     logma.warning(f"[nchantdoffice] run_on_launch: " f"bootstrap_app_user raised: {e}")
-        # Restore last selected node or default to Home
         self.select_initial_node()
-        # T-NEW-058 §2.4 — delegate to the testable module-level
-        # helper. Tests in tests/test_update_checker_boot_hook.py
-        # call run_update_process() directly so they don't need to
-        # instantiate the full NchantdOfficeCloak (which is a Qt
-        # singleton).
-        # T-NEW-060: pass self.main so the tray icon can be
-        # populated when an update-available response comes back.
         run_update_process(
             dbupdate=self.dbupdate,
             update_checker=self.update_checker,
@@ -241,7 +203,7 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
         logma.info(f"NchantdOfficeMainWindow init: parent={type(parent).__name__}")
         super().__init__(parent, cfg)
         self.parent = parent
-        self.config.override(kahndor.Instruct(pxcfg).select("NchantdOfficeMainWindow").override(cfg))
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeMainWindow").override(cfg))
         # T-NEW-060 — QSystemTrayIcon for update notifications.
         # The icon is created in __init__ (cheap; no menu yet) so
         # that callers can wire menu actions later without re-checking
@@ -295,7 +257,7 @@ class NchantdOfficeMainWindow(NchantdMainWindow):
         ----------
         info : UpdateInfo
             The result of ``UpdateChecker.check()``. Only
-            ``latest_version`` and ``download_url`` are read here.
+            ``latest_version`` and ``download_url`` are read HERE.
         """
         if self.tray_icon is None:
             return
