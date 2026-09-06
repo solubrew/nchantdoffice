@@ -4074,6 +4074,7 @@ class NchantdOfficeStore(NchantdStore):
         params = {"table": [table]}
         rdr = self.docs["db"].read(params, cfg)
         df = next(rdr).dikt[table]["df"]
+        logma.warning(df)
         df = df.sort_values(by=["sequence_int"])
         if df.empty:
             raise Exception("Documents Are Empty")

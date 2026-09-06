@@ -346,12 +346,10 @@ NchantdOfficeTabSetModel:
                 SELECT
                   name_txt, widget_txt, widgdata_dict, pid_txt, did_txt, position_int, tab_type_txt,
                   tabset_type_txt, readonly_bit, editable_bit, visible_bit, moveable_bit, tid_txt, 'app' as "app_data_type"
-                FROM app_tab
-                WHERE ACTIVE_BIT = 1
+                FROM vw_app_tab
                 UNION
                 SELECT
                   name_txt, widget_txt, widgdata_dict, pid_txt, did_txt, position_int, tab_type_txt,
                   tabset_type_txt, readonly_bit, editable_bit, visible_bit, moveable_bit, tid_txt, 'doc' as "app_data_type"
-                FROM doc_tab
-                WHERE ACTIVE_BIT = 1
+                FROM vw_doc_tab
                 GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
