@@ -972,6 +972,23 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                 f"[ad_tab] initial fetch failed (non-blocking): {e}"
             )
 
+    def _cleanup(self) -> None:
+        """Stop the surface timer when this tab is being replaced
+        (e.g. due to lazy-loading focus swap).
+
+        Without this, the timer's ``_fetch_and_render`` fires on the
+        old instance after Qt has removed it from the tabset. The
+        subsequent ``_switch_to_this_tab`` then walks the NEW tabset,
+        which holds a dummy placeholder instead of ``self``, and logs:
+        "this tab not found in right pane tabset".
+        """
+        timer = getattr(self, "_timer", None)
+        if timer is not None:
+            timer.stop()
+            timer.deleteLater()
+            self._timer = None
+            logma.info("[ad_tab] surface timer stopped (tab replaced)")
+
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------

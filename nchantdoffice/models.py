@@ -5104,6 +5104,13 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         # Workaround for bug in nchantrs.models.tabsetmodels.NchantdTabSetModel.load_tab
         # which uses 'tabn in self.tab_widgets' incorrectly for a list.
         if tabn < len(self.tab_widgets):
+            # Stop the ad tab's surface timer before replacing the widget.
+            # Without this, the timer's next tick fires on the orphaned instance
+            # after Qt has removed it from the tabset → _switch_to_this_tab walks
+            # the new tabset and finds a dummy, not self → "tab not found" log.
+            outgoing = self.tab_widgets[tabn]
+            if hasattr(outgoing, "_cleanup"):
+                outgoing._cleanup()
             # remove from parent QTabWidget
             self.parent.removeTab(tabn)
             # remove from our internal list so super().load_tab doesn't shift other tabs
