@@ -4869,6 +4869,15 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         active_tab_position = 0
         try:
             self.parent.blockSignals(True)
+            # Stop surface timers on all widgets before clear() orphans them.
+            # Without this, any widget with a timer (e.g. NchantdOfficeAdTab)
+            # would keep firing after Qt has removed it from the tabset.
+            for w in self.tab_widgets:
+                if hasattr(w, "_cleanup"):
+                    try:
+                        w._cleanup()
+                    except Exception:
+                        pass
             self.parent.clear()
             self.tabsdata = []
             self.tab_widgets = []
