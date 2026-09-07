@@ -5006,7 +5006,15 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
         for tabn, tab in enumerate(self.tabsdata):
             logma.info(f"Tab {tab}")
-            if tabn == active_tab_position:
+            # The right-pane Ad tab must be eagerly materialized, not left
+            # as a dummy: its 5-minute surface QTimer (DESK T-NEW-061) is
+            # what raises the tab when a new ad arrives. A dummy Ad tab has
+            # no timer, so the raise cadence dies on every buildTabSet
+            # rebuild (node switch) and never restarts until manually
+            # clicked.
+            widget_cls = str(tab.get("widget") or tab.get("widget_txt") or "")
+            is_ad_tab = tabset == "right" and "NchantdOfficeAdTab" in widget_cls
+            if tabn == active_tab_position or is_ad_tab:
                 self.load_tab(tab, tabn, tabset, active_tab_position)
             else:
                 # Placeholder only; the real widget is built lazily on first focus.
