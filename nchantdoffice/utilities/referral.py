@@ -53,20 +53,30 @@ _FORMAT_RE = re.compile(r"^([A-Z0-9]{2,4})-([A-Z0-9]{3,4})-([A-Z0-9]{2,4})$")
 # `salt=` kwarg in ReferralCode.generate() if needed.
 _DEFAULT_REFERRAL_SALT = "default-salt"
 
-# T-NEW-070 (DESK-2 hard-break): NCHANT_API_BASE env var
-# removed. The API base URL now comes from the user config
-# file (~/.config/nchantdoffice/config.yaml) via
-# get_server_url(). When dev_mode is true, the server URL
-# defaults to http://localhost:5000 (the nchantdoffice_com
-# cmds/serve_detached.py port) so operators can run a local
-# test server without writing any env vars.
+# The API base URL comes from the canonical run-mode resolver
+# (nchantdoffice/utilities/urls.py) — T-NEW-053 / DESK T-NEW-053.
+# ``set_run_mode()`` is called at startup; ``server_base_url()``
+# then returns the correct host for the active profile:
+#   - prod  -> bundled yaml / XDG override  -> https://nchantdoffice.com
+#   - dev   -> DEV_URLS["server_base_url"]   -> http://192.168.1.67:5000
 #
 # The v1 namespaced endpoints live at:
 #   https://nchantdoffice.com/api/v1/{affiliate,referral,quicklinks}
 # (T-DESK-052 alignment, 2026-08-07). The previous
 # /api/affiliate/... paths no longer exist on the live server.
-from nchantdoffice.utilities.user_config import get_server_url  # noqa: E402
-DEFAULT_API_BASE = get_server_url() + "/api/v1"
+from nchantdoffice.utilities.urls import server_base_url  # noqa: E402
+
+
+def _get_default_api_base() -> str:
+    """Resolve the API base via the run-mode resolver at call time.
+
+    ``server_base_url()`` returns a str (never a dict) — it extracts
+    the ``server_base_url`` key from the active profile internally.
+    """
+    return f"{server_base_url()}/api/v1"
+
+
+DEFAULT_API_BASE = _get_default_api_base()
 
 # Referral state machine (mirrors ATNRG spec §6)
 REFERRAL_STATE_ACTIVE = "active"

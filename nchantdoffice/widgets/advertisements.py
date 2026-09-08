@@ -1079,17 +1079,20 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         # back to self.banners (which _load_banners already
         # populated) for offline-first behavior.
         try:
-            api_base = ""
+            from nchantdoffice.utilities.urls import server_base_url as _sbu
+
+            api_base = _sbu()  # str — run-mode aware (T-NEW-053)
             try:
-                # The AdTab's config may carry the API base URL
-                # in models.yaml — try to read it. We use a
-                # permissive get() so this never crashes; an
-                # empty string means _load_affiliate_rotation
-                # uses the relative URL.
-                api_base = (self.config.get("api_base_url", "")
-                            if self.config else "")
+                # The AdTab's config may also carry an explicit API
+                # base URL in models.yaml — cfg wins over run-mode.
+                cfg_base = (
+                    self.config.get("api_base_url", "")
+                    if self.config else ""
+                )
+                if cfg_base:
+                    api_base = cfg_base
             except Exception:
-                api_base = ""
+                pass
             affiliate_banners = _load_affiliate_rotation(
                 api_base_url=api_base,
             )

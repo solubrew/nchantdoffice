@@ -25,14 +25,20 @@ class TestClientConstruction:
     """The client defaults + how it sends auth."""
 
     def test_default_base_url_is_v1(self):
-        """T-DESK-052: default base URL must be the v1 endpoint,
-        not the old /api/affiliate path."""
+        """T-DESK-052 / T-NEW-053: default base URL must be the v1
+        endpoint (from urls.yaml server_base_url), not the old
+        /api/affiliate path.
+
+        The canonical server_base_url is https://api.nchantdoffice.com
+        (per nchantdoffice/utilities/_data_/urls.yaml), so the v1
+        API base is https://api.nchantdoffice.com/api/v1.
+        """
         from nchantdoffice.utilities.referral import (
             DEFAULT_API_BASE,
         )
-        assert DEFAULT_API_BASE == "https://nchantdoffice.com/api/v1", (
-            f"DEFAULT_API_BASE must be /api/v1 (the live server's "
-            f"v1 namespace), got {DEFAULT_API_BASE!r}"
+        assert DEFAULT_API_BASE == "https://api.nchantdoffice.com/api/v1", (
+            f"DEFAULT_API_BASE must be the v1 namespace at api.nchantdoffice.com, "
+            f"got {DEFAULT_API_BASE!r}"
         )
 
     def test_no_auth_header_without_api_key(self):
