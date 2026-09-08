@@ -52,7 +52,6 @@ from nchantdoffice.widgets.documents.documents import (
 )
 from nchantrs.widgets.browsers.browsers import NchantdWebViewer
 from nchantdoffice.utilities.referral import (
-    DEFAULT_API_BASE,
     DEFAULT_PAYOUT_MIN_CENTS,
     REFERRAL_STATE_ACTIVE,
     REFERRAL_STATE_EXPIRED,
@@ -95,7 +94,7 @@ class NchantdOfficeReferralPanel(NchantdOfficeDocument):
         """
         self.name = "NchantdOffice Referral Panel"
         super().__init__(self.name, parent, cfg)
-        self.api_client = ReferralAPIClient(base_url=DEFAULT_API_BASE)
+        self.api_client = ReferralAPIClient()
         self.user = user
         self.referral_code: ReferralCode = None
         self.share_urls: dict = {}

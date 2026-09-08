@@ -46,10 +46,22 @@ REFRESH_INTERVAL_SECONDS = 6 * 60 * 60
 from nchantdoffice.utilities.user_config import (  # noqa: E402
     get_cache_dir,
     get_server_timeout,
-    get_server_url,
 )
-_DEFAULT_API_BASE = get_server_url()
-_CACHE_DIR = get_cache_dir()
+
+
+def _get_default_api_base() -> str:
+    """Resolve at call time via urls.server_base_url() (run-mode aware)."""
+    from nchantdoffice.utilities.urls import server_base_url
+    return server_base_url()
+
+
+def _get_cache_dir():
+    """Resolve at call time so the module is import-safe."""
+    return get_cache_dir()
+
+
+_DEFAULT_API_BASE_GETTER = _get_default_api_base
+_CACHE_DIR = _get_cache_dir()
 _CACHE_PATH = _CACHE_DIR / "base_layer_cache.json"
 
 # Timeout for the HTTP call (short — desktop should not hang
@@ -172,7 +184,7 @@ def get_base_layer_ads(
         unavailable (the ad tab handles this by falling
         back to its own hardcoded list).
     """
-    base = api_base or _DEFAULT_API_BASE
+    base = api_base or _DEFAULT_API_BASE_GETTER()
 
     # Step 1: Check cache.
     cache = _read_cache()

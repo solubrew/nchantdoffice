@@ -41,10 +41,7 @@ from nchantrs.widgets.annotations import NchantdLabel
 from nchantrs.widgets.controls.buttons import NchantdButton
 from nchantrs.widgets.groups import NchantdGridScrollGroupBox
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocument
-from nchantdoffice.utilities.referral import (
-    DEFAULT_API_BASE,
-    ReferralAPIClient,
-)
+from nchantdoffice.utilities.referral import ReferralAPIClient
 from nchantdoffice.widgets.documents.documents import NchantdOfficeDocumentMixin
 
 # T-NEW-028 — Right-side tab visibility. The fallback list is the
@@ -109,7 +106,7 @@ class NchantdOfficeAffiliateManager(NchantdOfficeDocument):
         """
         self.name = "NchantdOffice Affiliate Panel"
         super().__init__(self.name, parent, cfg)
-        self.api_client = ReferralAPIClient(base_url=DEFAULT_API_BASE)
+        self.api_client = ReferralAPIClient()
         self.user = user
         self.stripe_connect_status: dict = {}
         self.connect_button: NchantdButton = None

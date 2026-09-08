@@ -349,16 +349,17 @@ class ReferralAPIClient:
     ``None`` / empty result rather than raising, so the in-app
     panel degrades gracefully when offline.
     """
-
-    def __init__(self, base_url: str = DEFAULT_API_BASE,
+    def __init__(self, base_url: Optional[str] = None,
                  api_key: Optional[str] = None,
                  user_id: Optional[int] = None,
                  timeout: float = 5.0) -> None:
-        """
-        Args:
-            base_url: API base URL. Defaults to DEFAULT_API_BASE
-                (``https://nchantdoffice.com/api/v1``). Override
-                for testing.
+        """Args:
+            base_url: API base URL. When ``None`` (default), resolves
+                LAZILY at construction time via the run-mode resolver
+                (``urls.server_base_url()``). Required because the module
+                may be imported before ``set_run_mode()`` runs at startup
+                — a module-level default would bake the prod URL before
+                dev mode is set. Pass an explicit URL only for testing.
             api_key: per-desktop api_key from the registration
                 response. When set, sent as ``x-api-key`` header
                 on every request. Optional — the v1 endpoints
@@ -373,7 +374,8 @@ class ReferralAPIClient:
                 ``connect_timeout=5`` which was too tight
                 against the live server).
         """
-        self.base_url = base_url.rstrip("/")
+        resolved = base_url if base_url is not None else _get_default_api_base()
+        self.base_url = resolved.rstrip("/")
         self.api_key = api_key
         self.user_id = user_id
         self.timeout = timeout

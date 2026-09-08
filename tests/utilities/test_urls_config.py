@@ -185,7 +185,7 @@ def test_run_mode_defaults_to_prod() -> None:
 
 def test_set_run_mode_to_dev_flips_all_accessors() -> None:
     """``set_run_mode("dev")`` swaps every accessor to the internal
-    docker stack at ``http://192.168.1.67:8081``.
+    docker stack at ``http://192.168.1.67:5000``.
 
     Regression guard for DESK T-NEW-053 — the operator launched
     the desktop with ``run-mode: dev`` and expects every URL
@@ -193,39 +193,39 @@ def test_set_run_mode_to_dev_flips_all_accessors() -> None:
     upgrade prompts, ad CTAs) to point at the internal site.
 
     Both the API and the marketing site hit the SAME port
-    (8081) on the dev box because the nchantdoffice_com
+    (5000) on the dev box because the nchantdoffice_com
     Flask app serves both paths on a single port (COM T-NEW-053
     follow-up: split-port was a wrong assumption; see
     docker-compose.lan.yml for the deploy shape).
     """
     urls.set_run_mode("dev")
-    assert urls.server_base_url() == "http://192.168.1.67:8081"
+    assert urls.server_base_url() == "http://192.168.1.67:5000"
     assert (
         urls.affiliate_api_base()
-        == "http://192.168.1.67:8081/api/affiliate"
+        == "http://192.168.1.67:5000/api/affiliate"
     )
-    assert urls.feature_gates_url() == "http://192.168.1.67:8081"
-    assert urls.updates_url() == "http://192.168.1.67:8081"
-    assert urls.sync_url() == "http://192.168.1.67:8081"
-    assert urls.home_page() == "http://192.168.1.67:8081/"
+    assert urls.feature_gates_url() == "http://192.168.1.67:5000"
+    assert urls.updates_url() == "http://192.168.1.67:5000"
+    assert urls.sync_url() == "http://192.168.1.67:5000"
+    assert urls.home_page() == "http://192.168.1.67:5000/"
     assert (
         urls.upgrade_compare_url()
-        == "http://192.168.1.67:8081/compare"
+        == "http://192.168.1.67:5000/compare"
     )
-    assert urls.share_landing_url() == "http://192.168.1.67:8081"
+    assert urls.share_landing_url() == "http://192.168.1.67:5000"
     assert (
         urls.registration_url()
-        == "http://192.168.1.67:8081/registration"
+        == "http://192.168.1.67:5000/registration"
     )
     assert (
         urls.whats_new_url()
-        == "http://192.168.1.67:8081/whats_new"
+        == "http://192.168.1.67:5000/whats_new"
     )
     assert (
         urls.affiliate_marketing_url()
-        == "http://192.168.1.67:8081/affiliate_marketing"
+        == "http://192.168.1.67:5000/affiliate_marketing"
     )
-    assert urls.marketing_base_url() == "http://192.168.1.67:8081"
+    assert urls.marketing_base_url() == "http://192.168.1.67:5000"
 
 
 def test_set_run_mode_back_to_prod_reverts_all_accessors() -> None:
@@ -236,7 +236,7 @@ def test_set_run_mode_back_to_prod_reverts_all_accessors() -> None:
     wholesale replace, not a partial overlay.
     """
     urls.set_run_mode("dev")
-    assert urls.server_base_url() == "http://192.168.1.67:8081"
+    assert urls.server_base_url() == "http://192.168.1.67:5000"
     urls.set_run_mode("prod")
     assert urls.server_base_url() == "https://api.nchantdoffice.com"
     assert urls.home_page() == "https://www.nchantdoffice.com/"
@@ -286,7 +286,7 @@ def test_set_run_mode_invalidates_resolver_cache() -> None:
     urls.set_run_mode("dev")
     assert urls._resolve.cache_info().currsize == 0
     # Next accessor repopulates with dev values.
-    assert urls.server_base_url() == "http://192.168.1.67:8081"
+    assert urls.server_base_url() == "http://192.168.1.67:5000"
 
 
 # -----------------------------------------------------------------------------

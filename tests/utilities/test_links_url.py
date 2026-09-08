@@ -180,7 +180,7 @@ def test_update_affiliate_links_dev_url_constructs_correctly(
     monkeypatch: pytest.MonkeyPatch,
     fake_install_store,
 ) -> None:
-    """In dev mode, the URL must be ``http://192.168.1.67:8081/api/v1/quicklinks/``.
+    """In dev mode, the URL must be ``http://192.168.1.67:5000/api/v1/quicklinks/``.
 
     COMPAT-002 (2026-08-29): same contract as the prod test
     but with the dev profile active. Confirms the run-mode
@@ -211,10 +211,10 @@ def test_update_affiliate_links_dev_url_constructs_correctly(
         assert len(mock.calls) == 1
         captured_url = mock.calls[0]["url"]
         assert captured_url == (
-            "http://192.168.1.67:8081/api/v1/quicklinks/"
+            "http://192.168.1.67:5000/api/v1/quicklinks/"
         ), (
             f"dev-mode URL construction failed: got {captured_url!r}. "
-            f"Expected ``http://192.168.1.67:8081/api/v1/quicklinks/`` "
+            f"Expected ``http://192.168.1.67:5000/api/v1/quicklinks/`` "
             f"(server_base_url + /api/v1/quicklinks/)."
         )
     finally:
@@ -249,7 +249,7 @@ def test_apiclient_uses_x_api_key_header_not_bearer(
     )
 
     APIClient(
-        base_url="http://192.168.1.67:8081",
+        base_url="http://192.168.1.67:5000",
         api_key="nk_test_DESKTOP_KEY_abc123",
     )
 
@@ -281,7 +281,7 @@ def test_apiclient_no_auth_sends_no_auth_headers(
         lambda: session,
     )
 
-    APIClient(base_url="http://192.168.1.67:8081")
+    APIClient(base_url="http://192.168.1.67:5000")
 
     # No auth header should be set on the session.
     assert session.headers.get("x-api-key") is None

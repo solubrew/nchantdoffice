@@ -44,13 +44,6 @@ APP_ID: str = "nchantdoffice"
 APP_TYPE: str = "desktop"  # desktop, web, mobile, cli
 APP_PLATFORM: str = "qt5"  # qt5, qt6, gtk, web
 
-# Companion server URL — override via COMPANION_BASE_URL env var
-# for LAN docker dev/testing. Defaults to the production public domain.
-# e.g. export COMPANION_BASE_URL="http://192.168.1.67:5000"
-COMPANION_BASE_URL: str = environ.get(
-    "COMPANION_BASE_URL", "https://nchantdoffice.com"
-)
-
 # Window Configuration
 WINDOW_MIN_WIDTH: int = 800
 WINDOW_MIN_HEIGHT: int = 600
@@ -456,7 +449,6 @@ __all__ = [
     "APP_ID",
     "APP_TYPE",
     "APP_PLATFORM",
-    "COMPANION_BASE_URL",
     # Window Configuration
     "WINDOW_MIN_WIDTH",
     "WINDOW_MIN_HEIGHT",
