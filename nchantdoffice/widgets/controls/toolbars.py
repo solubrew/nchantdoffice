@@ -173,6 +173,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
     def add_document(self, signal=None, *args, **kwargs) -> Self:
         """Add a new document."""
         import time
+
         _t0 = time.perf_counter()
         cfg = args[0]["action"].action
         logma.info(f"[FOCUS-NEW] add_document ENTER t={(_t0 - _t0):.3f}")
@@ -182,9 +183,10 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         pid = self.app.view.panes["left"].tree.model.current_node.nid
         logma.info(f"[FOCUS-NEW] resolve_pid t={t1-_t0:.3f}")
         pos = len(self.app.view.panes["center"].model.tabsdata)
-        code = cfg["lookup_code_txt"][-len(cfg["lookup_code_txt"]) + cfg["lookup_code_txt"].rfind("_") + 1 :]
+        # code = cfg["lookup_code_txt"][-len(cfg["lookup_code_txt"]) + cfg["lookup_code_txt"].rfind("_") + 1 :]
         did = uuid()
-        name = f"{code.lower().replace(' ', '')} {did[-5:]}"
+        name = f"{did[-5:]}"  # PUSH to 0.0.3 implement user dialog
+        # need to store the document icon to the tab
         widget = args[0]["action"].action["widget_txt"]
         # T-NEW-041: the canonical widget lookup from the
         # document_types table is the safe .get('widget_txt', None)
@@ -236,7 +238,9 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         # (add_tab, add_shortcut, etc.) can reuse it.
         t4 = time.perf_counter()
         self._navigate_to_new_doc(pos)
-        logma.info(f"[FOCUS-NEW] _navigate_to_new_doc t={time.perf_counter()-t4:.3f} total={time.perf_counter()-_t0:.3f}")
+        logma.info(
+            f"[FOCUS-NEW] _navigate_to_new_doc t={time.perf_counter()-t4:.3f} total={time.perf_counter()-_t0:.3f}"
+        )
         # Emit signal that document was created
         self.document_created.emit(doc_type)
         logma.info(f"[FOCUS-NEW] add_document EXIT total={time.perf_counter()-_t0:.3f}")
@@ -479,10 +483,7 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
                     lookup_code = action.action.get("lookup_code_txt")
             top_level = lookup_code == "add_node_top_app_rootnode"
         except Exception as e:
-            logma.warning(
-                f"[toolbars] launch_new_document_sigil: lookup_code "
-                f"detection failed: {e}"
-            )
+            logma.warning(f"[toolbars] launch_new_document_sigil: lookup_code " f"detection failed: {e}")
         if top_level:
             cfg["top_level"] = True
         sigil = NchantdNewDocumentSigil("Test", self, cfg).initWidget()

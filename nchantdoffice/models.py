@@ -28,6 +28,7 @@ from numpy import isnan, nan
 # ======================================Solutions Brewer Library Modules==============================================||
 from kahndor import kahndor
 from micromole.micromole import MicroMole
+from nchantrs.libraries import pyqt
 from nchantrs.models.tabsetmodels import NchantdTabSetModel
 from nchantrs.models.applicationmodels import NchantdCloakModel
 from nchantrs.models.models import NchantdStore
@@ -4920,11 +4921,11 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 # Empty tabsets should have catalog as the FIRST tab, not the last
                 if len(self.tabsdata) == 0:
                     self.new_document.position = 0
-                    self.parent.insertTab(0, self.new_document, " + ")
+                    self.parent.insertTab(0, self.new_document, "")
+                    self._set_tab_icon(0, "plus")
                 else:
                     self.new_document.position = len(self.tabsdata) + 1
-                    self.parent.addTab(self.new_document, " + ")
-
+                    self.parent.addTab(self.new_document, self._get_tab_icon(self.new_document.position, "plus"), "")
             # When building center pane, also build right pane tabs
             if tabset == "center" and hasattr(self.parent, "app"):
                 right_pane = self.parent.app.view.panes.get("right")
@@ -5006,6 +5007,9 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
         for tabn, tab in enumerate(self.tabsdata):
             logma.info(f"Tab {tab}")
+            icon_name = tab.get("icon", tab.get("icon_name", "dot"))
+            if tabn == active_tab_position:
+                self.load_tab(tab, tabn, tabset, active_tab_position, icon_name)
             # The right-pane Ad tab must be eagerly materialized, not left
             # as a dummy: its 5-minute surface QTimer (DESK T-NEW-061) is
             # what raises the tab when a new ad arrives. A dummy Ad tab has
@@ -5022,11 +5026,13 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 dummy.dummy = True
                 dummy.toolbox_config = {}
                 dummy.position = tabn
+                dummy.icon_name = icon_name
                 dummy.name = tab.get("name", tab.get("name_txt", None))
                 _type = tab.get("tab_type", tab.get("tab_type_txt", "custom_widget"))
                 dummy.type = _type[-len(_type) + _type.rfind("_") + 1 :]
                 self.tab_widgets.insert(tabn, dummy)
                 self.parent.insertTab(tabn, dummy, dummy.name)
+                self._set_tab_icon(tabn, dummy.icon_name)
 
         self.parent.setCurrentIndex(active_tab_position)
         return self
@@ -5116,7 +5122,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         self.parent.setCurrentIndex(tabn)
         return self
 
-    def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0) -> Self:
+    def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0, icon_name=None) -> Self:
         """"""
         # Workaround for bug in nchantrs.models.tabsetmodels.NchantdTabSetModel.load_tab
         # which uses 'tabn in self.tab_widgets' incorrectly for a list.
@@ -5136,7 +5142,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         # super().load_tab calls self.load_widget, which we override.
         # Ensure we pass the converted document if needed, but nchantrs' load_tab
         # expects the 'tab' dict which it then passes to parse_widget_data.
-        super().load_tab(tab, tabn, tabset, active_tab_position)
+        super().load_tab(tab, tabn, tabset, active_tab_position, icon_name=icon_name)
         return self
 
     def load_widget(self, cfg, tabset="center", document=None, tab_type="custom_widget") -> Any:

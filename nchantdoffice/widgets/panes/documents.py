@@ -107,9 +107,12 @@ class NchantdOfficeNodeEditPane(NchantdPane):
             cfg["readonly"] = True
         self.position_entry = NchantdLabeledSpinBox(self, cfg).initWidget()
         layout.addWidget(self.position_entry)
-        cfg = {"show_label": False, "layout": "horizontal", "two_rows": True, "size": ["auto", "auto"]}
-        self.font_bar = NchantdFontConfigBar(self, cfg).initWidget()
-        layout.addWidget(self.font_bar)
+
+        # PUSH to 0.0.3
+        # cfg = {"show_label": False, "layout": "horizontal", "two_rows": True, "size": ["auto", "auto"]}
+        # self.font_bar = NchantdFontConfigBar(self, cfg).initWidget()
+        # layout.addWidget(self.font_bar)
+
         cfg = {"buttons": {"ok": {"handler": self.cmd_set_node_name}}}
         self.accept_button = NchantdOkButtons(self, cfg).initWidget()
         layout.addWidget(self.accept_button)
@@ -383,9 +386,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
         """
         direction = "ascending"
         for source in (
-            kwargs.get("order")
-            or kwargs.get("args")
-            or kwargs.get("direction"),
+            kwargs.get("order") or kwargs.get("args") or kwargs.get("direction"),
             kwargs,
             args,
         ):
@@ -397,11 +398,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
                     return low
                 continue
             if isinstance(source, dict):
-                inner = (
-                    source.get("order")
-                    or source.get("args")
-                    or source.get("direction")
-                )
+                inner = source.get("order") or source.get("args") or source.get("direction")
                 if isinstance(inner, str):
                     low = inner.strip().lower()
                     if low in ("ascending", "descending"):
@@ -414,11 +411,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
                         if low in ("ascending", "descending"):
                             return low
                     elif isinstance(cand, dict):
-                        inner = (
-                            cand.get("order")
-                            or cand.get("args")
-                            or cand.get("direction")
-                        )
+                        inner = cand.get("order") or cand.get("args") or cand.get("direction")
                         if isinstance(inner, str):
                             low = inner.strip().lower()
                             if low in ("ascending", "descending"):
@@ -428,11 +421,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
             if low in ("ascending", "descending"):
                 return low
         elif isinstance(event, dict):
-            inner = (
-                event.get("order")
-                or event.get("args")
-                or event.get("direction")
-            )
+            inner = event.get("order") or event.get("args") or event.get("direction")
             if isinstance(inner, str):
                 low = inner.strip().lower()
                 if low in ("ascending", "descending"):
@@ -457,9 +446,7 @@ class NchantdOfficeNodeEditPane(NchantdPane):
             # Older Qt nodes that don't accept the order= kwarg.
             node.sortChildren(0, direction)
         except Exception as e:
-            logma.warning(
-                f"[documents] _sort_subtree: node sort failed: {e}"
-            )
+            logma.warning(f"[documents] _sort_subtree: node sort failed: {e}")
             return
         try:
             count = node.childCount()
@@ -538,9 +525,12 @@ class NchantdOfficeNoteEditPane(NchantdPane):
         cfg = {"label": "Note Name: ", "value": note}
         self.name_entry = NchantdLabeledEntry(self, cfg).initWidget()
         layout.addWidget(self.name_entry)
-        cfg = {"show_label": False, "layout": "horizontal", "two_rows": True, "size": ["auto", "auto"]}
-        self.font_bar = NchantdFontConfigBar(self, cfg).initWidget()
-        layout.addWidget(self.font_bar)
+
+        # PUSH to 0.0.3
+        # cfg = {"show_label": False, "layout": "horizontal", "two_rows": True, "size": ["auto", "auto"]}
+        # self.font_bar = NchantdFontConfigBar(self, cfg).initWidget()
+        # layout.addWidget(self.font_bar)
+
         cfg = {}
         self.accept_buttons = NchantdOkButtons(self, cfg).initWidget()
         layout.addWidget(self.accept_buttons)
@@ -913,9 +903,12 @@ class NchantdOfficeTabEditPane(NchantdPane):
         }
         self.save_mode_select = NchantdDropDown(self, cfg).initWidget()
         layout.addWidget(self.save_mode_select)
-        cfg = {"show_label": False, "layout": "horizontal", "two_rows": True, "size": ["auto", "auto"]}
-        self.font_bar = NchantdFontConfigBar(self, cfg).initWidget()
-        layout.addWidget(self.font_bar)
+
+        # PUSH to 0.0.3
+        # cfg = {"show_label": False, "layout": "horizontal", "two_rows": True, "size": ["auto", "auto"]}
+        # self.font_bar = NchantdFontConfigBar(self, cfg).initWidget()
+        # layout.addWidget(self.font_bar)
+
         cfg = {"buttons": {"ok": {"handler": self.cmd_set_tab_name}}}
         self.accept_buttons = NchantdOkButtons(self, cfg).initWidget()
         layout.addWidget(self.accept_buttons)
