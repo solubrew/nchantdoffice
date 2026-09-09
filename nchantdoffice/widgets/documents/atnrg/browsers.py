@@ -1523,6 +1523,14 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         # resize so the ad stack grows/shrinks with the pane.
         self._current_layout = None
         self._user = None
+        # Surface-timer state (ported from the native tab,
+        # advertisements.py): a 5-min QTimer that raises this
+        # tab in the right pane so the (server-rotated) slim
+        # ad page is periodically surfaced to the user.
+        # ``_ads_visible`` defaults False so resizes/ticks
+        # before initView's tier gate are no-ops.
+        self._ads_visible = False
+        self._timer = None
 
     def _ad_layout_for_height(self, height: int) -> str:
         """Pick the slim-ad layout appropriate for a pane height.
@@ -1605,6 +1613,104 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         if self.viewer is not None:
             self.viewer.populate_document(url)
         logma.info(f"[ad_tab] layout {layout} -> {url}")
+
+    # ------------------------------------------------------------------
+    # Surface timer (ported from the native tab,
+    # advertisements.py:_start_surface_timer / _switch_to_this_tab /
+    # _cleanup). Raises this tab in the right pane on a 5-minute
+    # cadence so the server-rotated slim ad page is surfaced to
+    # the user. Pro users / active free-grant never reach here.
+    # ------------------------------------------------------------------
+
+    def _surface_interval_ms(self) -> int:
+        """Surface cadence from cfg (default 5 min), like the native tab."""
+        DEFAULT_SURFACE_INTERVAL_MS = 300_000
+        try:
+            return int(
+                self.config.dikt.get(
+                    "surface_interval_ms", DEFAULT_SURFACE_INTERVAL_MS,
+                )
+            )
+        except Exception:
+            return DEFAULT_SURFACE_INTERVAL_MS
+
+    def _switch_to_this_tab(self) -> None:
+        """Switch the right-pane tabset to this tab.
+
+        Same behavior as advertisements.py:_switch_to_this_tab —
+        walk the right pane's QTabBar, find the index whose widget
+        is this AdTab instance, setCurrentIndex to it. Silent
+        no-op if we're already on the tab or the tab isn't in
+        the pane (e.g. mid lazy-load swap).
+        """
+        if not self._ads_visible:
+            return
+        try:
+            app = getattr(self, "app", None)
+            if app is None:
+                return
+            right_pane = getattr(app.view, "panes", {}).get("right")
+            if right_pane is None:
+                return
+            tab_bar = right_pane.tabBar()
+            if tab_bar is None:
+                return
+            ad_index = -1
+            for i in range(tab_bar.count()):
+                widget_at_i = right_pane.widget(i)
+                if widget_at_i is self:
+                    ad_index = i
+                    break
+            if ad_index < 0:
+                logma.info(
+                    "[ad_tab] _switch_to_this_tab: "
+                    "this tab not found in right pane tabset"
+                )
+                return
+            # Skip if we're already on the Ad tab.
+            if right_pane.currentIndex() == ad_index:
+                return
+            right_pane.setCurrentIndex(ad_index)
+            logma.info(
+                f"[ad_tab] surfaced (right pane tab index={ad_index})"
+            )
+        except Exception as e:
+            logma.warning(
+                f"[ad_tab] _switch_to_this_tab failed (non-blocking): {e}"
+            )
+
+    def _start_surface_timer(self) -> None:
+        """Start the QTimer that raises this tab every surface_interval_ms.
+
+        Same cadence config as the native tab (advertisements.yaml
+        ``surface_interval_ms``, default 5 minutes). The slim page
+        itself meta-refreshes server-side; this timer's job is
+        only the periodic raise.
+        """
+        surface_ms = self._surface_interval_ms()
+        self._timer = pyqt.QTimer(self)
+        self._timer.setInterval(surface_ms)
+        self._timer.timeout.connect(self._switch_to_this_tab)
+        self._timer.start()
+        logma.info(
+            f"[ad_tab] surface timer started (interval={surface_ms}ms)"
+        )
+
+    def _cleanup(self) -> None:
+        """Stop the surface timer when this tab is being replaced
+        (lazy-loading focus swap / node switch).
+
+        Same rationale as advertisements.py:_cleanup: without this,
+        the timer fires on an instance Qt has already removed from
+        the tabset, and _switch_to_this_tab logs "this tab not
+        found" every 5 minutes.
+        """
+        timer = getattr(self, "_timer", None)
+        if timer is not None:
+            timer.stop()
+            timer.deleteLater()
+            self._timer = None
+            logma.info("[ad_tab] surface timer stopped (tab replaced)")
 
     def initModel(self, cfg=None) -> Self:
         """ """
@@ -1691,6 +1797,11 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                 self._current_layout = desired
                 if desired != self.LAYOUT_STACK2:
                     self._load_ad_layout(desired)
+            # Start the surface timer AFTER the viewer is built
+            # so the first tick (and any subsequent) can find
+            # this tab in the right pane tabset. Mirrors the
+            # native tab's initView in advertisements.py.
+            self._start_surface_timer()
         return cfg
 
     def initWidget(self) -> Self:
