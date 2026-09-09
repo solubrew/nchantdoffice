@@ -1473,7 +1473,35 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
 
 
 class NchantdOfficeAdTab(NchantdOfficeDocument):
-    """"""
+    """Right-pane "Ad" tab backed by the slim web viewer.
+
+    T-NEW-051 (desk): replaces the stopgap native-Qt banner
+    renderer with the embedded NchantdWebViewer pointed at
+    nchantdoffice_com's slim ad pages:
+
+        {server_base_url}/ads/slim/full    single full-length hero
+        {server_base_url}/ads/slim/stack2  2 vertical stacked boxes
+        {server_base_url}/ads/slim/stack3  3 vertical stacked boxes
+
+    The server picks the ad + handles its own rotation via
+    ``<meta http-equiv="refresh">`` (300s), so the desktop just
+    loads the URL once per layout switch — no local QTimer,
+    no local slot rotation.
+
+    Pro/free-tier gating mirrors the previous native tab:
+    hidden for Pro users (``user.has_pro``) and for users with
+    an active ad-tab-free-hours grant
+    (``user_config.is_ad_tab_free_active``).
+    """
+
+    # Height thresholds (px) for size-appropriate layout picks.
+    # Right pane is typically 300-800px tall; stack2 fits 2 ad
+    # boxes (~400px), stack3 needs ~600px, full wants height.
+    LAYOUT_FULL = "full"
+    LAYOUT_STACK2 = "stack2"
+    LAYOUT_STACK3 = "stack3"
+    STACK3_MIN_HEIGHT = 620
+    STACK2_MIN_HEIGHT = 380
 
     def __init__(self, parent=None, cfg=None) -> None:
         """ """
@@ -1490,14 +1518,107 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self.did = None
         self.viewer = None
         self.pin = False
+        # T-NEW-051 (desk): current slim layout + user ref for
+        # tier gating. ``_current_layout`` is re-derived on
+        # resize so the ad stack grows/shrinks with the pane.
+        self._current_layout = None
+        self._user = None
+
+    def _ad_layout_for_height(self, height: int) -> str:
+        """Pick the slim-ad layout appropriate for a pane height.
+
+        Size ladder (px, pane height):
+          >= 620 -> stack3 (3 vertical boxes)
+          >= 380 -> stack2 (2 vertical boxes)
+          <  380 -> full   (single full-length hero)
+        """
+        if height >= self.STACK3_MIN_HEIGHT:
+            return self.LAYOUT_STACK3
+        if height >= self.STACK2_MIN_HEIGHT:
+            return self.LAYOUT_STACK2
+        return self.LAYOUT_FULL
+
+    def _ad_base_url(self) -> str:
+        """Base URL for the slim ad pages.
+
+        Routes through the unified URL config
+        (``urls.server_base_url``, same helper the rotation
+        client uses) so the LAN override in urls.yaml applies.
+        """
+        from nchantdoffice.utilities.urls import server_base_url
+        return server_base_url().rstrip("/")
+
+    def _ad_url_for_layout(self, layout: str) -> str:
+        """Compose the slim-ad page URL for ``layout``."""
+        return f"{self._ad_base_url()}/ads/slim/{layout}"
+
+    def _is_visible_for_user(self) -> bool:
+        """Whether this tab should be rendered for the current user.
+
+        Mirrors the native tab's gate (advertisements.py):
+        hidden for Pro users (they paid to remove ads) and for
+        users with an active ad-tab-free-hours grant
+        (T-NEW-044 UI-2 — free-tier referral reward). Returns
+        True for Free users / users without an account.
+        """
+        from nchantdoffice.utilities.user_config import is_ad_tab_free_active
+
+        if is_ad_tab_free_active():
+            return False
+        user = self._user
+        if user is None:
+            return True
+        return not bool(getattr(user, "has_pro", False))
+
+    def resizeEvent(self, event) -> None:
+        """Re-pick the slim-ad layout when the pane resizes.
+
+        Fires on every resize tick; only reloads the viewer
+        when the size ladder crosses a layout boundary so the
+        server's own 300s meta-refresh rotation is not
+        disturbed by jitter resizes.
+        """
+        super().resizeEvent(event)
+        try:
+            if self.viewer is None or not getattr(self, "_ads_visible", True):
+                return
+            desired = self._ad_layout_for_height(self.height())
+            if desired != self._current_layout:
+                self._load_ad_layout(desired)
+        except Exception as e:
+            logma.warning(f"[ad_tab] resize layout switch failed: {e}")
+
+    def _load_ad_layout(self, layout: str) -> None:
+        """Point the web viewer at the slim-ad page for ``layout``.
+
+        Updates the document's active URL, the viewer widget,
+        and persists the page so a tab re-open restores the
+        last-selected layout.
+        """
+        url = self._ad_url_for_layout(layout)
+        self._current_layout = layout
+        try:
+            if self.document is not None:
+                self.document.set_page_active(url)
+        except Exception as e:
+            logma.warning(f"[ad_tab] document.set_page_active failed: {e}")
+        if self.viewer is not None:
+            self.viewer.populate_document(url)
+        logma.info(f"[ad_tab] layout {layout} -> {url}")
 
     def initModel(self, cfg=None) -> Self:
-        """"""
+        """ """
         if cfg is None:
             cfg = {}
         if cfg.get("document", None) is None:
             cfg["document"] = {"data": {"unit": {}}}
-        cfg["url"] = self.config.dikt.get("url", self.config.dikt.get("default_url", HOMEURL))
+        # T-NEW-051 (desk): default the URL to the size-appropriate
+        # slim-ad page instead of the generic browser homepage.
+        # An explicit cfg["url"] still wins (operator override).
+        if self.config.dikt.get("url", None) is None:
+            cfg["url"] = self._ad_url_for_layout(self.LAYOUT_STACK2)
+        else:
+            cfg["url"] = self.config.dikt.get("url")
         self.config.override(cfg)
         super().initModel(self.config.dikt)
 
@@ -1520,8 +1641,11 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self.profiles = self.document.profile_manager
         return self
 
-    def initView(self, cfg=None) -> Self:
-        """"""
+    # -> Any (not Self): the tier-gated early path returns the
+    # cfg dict without a fully-built widget, mirroring the
+    # native tab's initView contract in advertisements.py.
+    def initView(self, cfg=None) -> Any:
+        """ """
         cfg = cfg or {}
         self.viewer = NchantdWebViewer(self, {"url": self.active_url})
         self.viewer.is_simple = False
@@ -1536,11 +1660,41 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self.layout.addWidget(self.viewer)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(3)
-        self.populate_document()
-        return self
+
+        # T-NEW-051 (desk): capture user reference for tier
+        # gating (same shape as the native tab's initView).
+        try:
+            self._user = pyqt.QApplication.instance().model.user
+        except Exception:
+            self._user = None
+
+        # Pro users / active-free-grant users get no web viewer
+        # at all — the caller hides the whole tab; we just
+        # refuse to render or start any network activity.
+        # (Computed once here; resizeEvent reads the cached
+        # flag — is_ad_tab_free_active hits user config.)
+        self._ads_visible = self._is_visible_for_user()
+        if not self._ads_visible:
+            logma.info("[ad_tab] hidden: user is Pro tier or ad-free active")
+            return cfg
+
+        if self.viewer is not None:
+            self.populate_document()
+            # Derive the initial layout from the pane's current
+            # size — but only once the widget actually has a
+            # size (height 0 mid-construction would falsely
+            # pick ``full``; the first real resizeEvent
+            # corrects the ladder anyway).
+            self._current_layout = self.LAYOUT_STACK2
+            if self.height() > 0:
+                desired = self._ad_layout_for_height(self.height())
+                self._current_layout = desired
+                if desired != self.LAYOUT_STACK2:
+                    self._load_ad_layout(desired)
+        return cfg
 
     def initWidget(self) -> Self:
-        """"""
+        """ """
         self.initModel()
         self.initView()
         return self
