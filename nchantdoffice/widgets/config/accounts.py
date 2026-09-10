@@ -233,6 +233,17 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             cfg["url"] = _urls.whats_new_url()
         elif self.user.has_account:
             cfg["url"] = _urls.upgrade_compare_url()
+        # DESK T-NEW-140: if a server session cookie already exists
+        # in the persistent profile (the user previously logged in
+        # to nchantdoffice.com in this desktop profile), route to
+        # the server-rendered account page instead of the marketing
+        # upsell. The cookie IS persisted (QWebEngineProfile is
+        # shared across tabs/views), but the URL was always the
+        # marketing page because that's what cfg["url"] was set
+        # to. Routing to /user-account/home when the cookie is
+        # present lets the server's session-cookie check pick up
+        # the existing login and serve the dashboard.
+        cfg["url"] = self._resolve_initial_url(_urls, cfg["url"])
         # T-NEW-135: when the redirect_to_get_pro helper fired
         # with a reason (e.g. ``hit_100_nodes``), the model
         # stashed it on ``app.model.get_pro_redirect_reason``.
@@ -269,6 +280,68 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         layout.addWidget(self.browser)
         self.layout.addLayout(layout)
         return self
+
+    def _resolve_initial_url(self, _urls, fallback_url: str) -> str:
+        """DESK T-NEW-140: pick the initial URL for the account browser.
+
+        If the desktop's shared web profile already holds a server
+        session cookie for the nchantdoffice origin, the user has a
+        live (or remembered) server login — route to the account
+        home so they land on their dashboard instead of the
+        registration/compare marketing page.
+
+        Cookie check is best-effort: any failure (no profile yet,
+        cookie API unavailable, empty store) falls back to the
+        marketing URL decided by the has_pro/has_account branch.
+        """
+        try:
+            profile = self._get_shared_web_profile()
+            if profile is None:
+                return fallback_url
+            from nchantrs.libraries import pyqt as _pyqt
+
+            origin_qurl = _pyqt.QUrl(_urls.server_base_url())
+            cookies = profile.cookieStore().cookiesForUrl(origin_qurl)
+            session_names = {
+                "nchantdoffice_session_instance",  # Flask app (this server)
+                "session",  # Flask default if the name is ever changed
+                "remember_token",  # flask-login "remember me" cookie
+            }
+            for cookie in cookies:
+                try:
+                    name = cookie.name().data().decode("utf-8", "replace")
+                except Exception:
+                    continue
+                if name in session_names:
+                    logma.info(
+                        f"[accounts] session cookie {name!r} present -> "
+                        f"routing to user-account home"
+                    )
+                    return _urls.user_account_url()
+            logma.info(
+                "[accounts] no session cookie found -> keeping marketing URL"
+            )
+        except Exception as e:
+            logma.warning(f"[accounts] session-cookie check failed: {e}")
+        return fallback_url
+
+    def _get_shared_web_profile(self):
+        """Return the app-level shared QWebEngineProfile (or None).
+
+        The profile pool lives on ``app.model.get_web_profiles()``
+        (nchantrs applicationmodels). The pool's *default* profile is
+        the persistent one every embedded view shares — that's where
+        the server session cookie is stored.
+        """
+        try:
+            model = getattr(getattr(self, "app", None), "model", None)
+            if model is None or not hasattr(model, "get_web_profiles"):
+                return None
+            pool = model.get_web_profiles()
+            return pool.get_default_profile()
+        except Exception as e:
+            logma.warning(f"[accounts] shared profile lookup failed: {e}")
+            return None
 
     @staticmethod
     def _append_url_param(url: str, key: str, value: str) -> str:

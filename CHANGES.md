@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **T-NEW-140** `fix(accounts): route Settings tab by session-cookie presence` —
+  the Settings node's embedded browser always loaded the marketing
+  URL (registration/compare/whats_new based on `has_pro`/`has_account`),
+  even when the user had an active server login. The session cookie
+  WAS persisted (the shared QWebEngineProfile pool keeps it across
+  tab open/close), but the tab never routed to the logged-in
+  dashboard. Now `NchantdOfficeAccountSettings.initView` calls
+  `_resolve_initial_url()`, which checks the shared profile's cookie
+  store for `nchantdoffice_session_instance` (plus `session` and
+  `remember_token` fallbacks) via
+  `QWebEngineProfile.cookieStore().cookiesForUrl()`. Cookie present →
+  `urls.user_account_url()` (`/user-account/home`, server renders the
+  dashboard from the live session). No cookie → marketing URL as
+  before. Best-effort: any profile/cookie API failure falls back to
+  the marketing URL; tab construction never blocks.
+  - `nchantdoffice/utilities/urls.py`: new `user_account_url()`
+    accessor + entries in `_BUNDLED_DEFAULTS`, `DEV_URLS`, and the
+    bundled `_data_/urls.yaml` (key: `user_account_url`).
+  - `tests/test_account_tab_session_routing.py` (new): 11 tests
+    pinning the routing contract — session-cookie names route to
+    account home; unrelated/no cookies keep marketing; profile-pool
+    and cookie-API failures fall back safely.
+
 ### Changed
 
 - **T-NEW-140/LAN-TLS** `docs: retarget dev-profile + XDG docs at https://192.168.1.67` —

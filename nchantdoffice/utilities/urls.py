@@ -91,6 +91,7 @@ _BUNDLED_DEFAULTS: Dict[str, str] = {
     "share_landing_url":        "https://nchantdoffice.com",
     "registration_url":         "https://www.nchantdoffice.com/registration",
     "whats_new_url":            "https://www.nchantdoffice.com/whats_new",
+    "user_account_url":         "https://nchantdoffice.com/user-account/home",
     "affiliate_marketing_url":  "https://www.nchantdoffice.com/affiliate_marketing",
     "marketing_base_url":       "https://nchantdoffice.com",
 }
@@ -166,6 +167,7 @@ DEV_URLS: Dict[str, str] = {
     "share_landing_url":        DEV_WEB_BASE,
     "registration_url":         f"{DEV_WEB_BASE}/registration",
     "whats_new_url":            f"{DEV_WEB_BASE}/whats_new",
+    "user_account_url":         f"{DEV_WEB_BASE}/user-account/home",
     "affiliate_marketing_url":  f"{DEV_WEB_BASE}/affiliate_marketing",
     "marketing_base_url":       DEV_WEB_BASE,
 }
@@ -465,6 +467,19 @@ def whats_new_url() -> str:
     Override key: ``urls.whats_new_url``.
     """
     return _resolve()["whats_new_url"]
+
+
+def user_account_url() -> str:
+    """Logged-in user's account home (server-rendered settings page).
+
+    Used by the embedded account browser when a server session
+    cookie already exists — the tab routes here instead of the
+    marketing registration/compare page so a returning user sees
+    their account, not an upsell.
+
+    Override key: ``urls.user_account_url``.
+    """
+    return _resolve()["user_account_url"]
 
 
 def affiliate_marketing_url() -> str:
