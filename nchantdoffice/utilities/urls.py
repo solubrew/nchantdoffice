@@ -137,14 +137,23 @@ _BUNDLED_YAML_PATH = Path(__file__).parent / "_data_" / "urls.yaml"
 # Override the port by editing these constants if your LAN
 # deploy uses a different host port. Both marketing and API
 # MUST live on the same port — the nchantdoffice_com Flask app
-# serves both on its single port (e.g. 5000 inside the
-# container, mapped to LAN_WEB_PORT on the host via
-# docker-compose.lan.yml). Per T-NEW-070, no env-var reads —
+# serves both behind Caddy. Per T-NEW-070, no env-var reads —
 # the operator edits these constants to retarget the dev box.
-DEV_INTERNAL_HOST = "http://192.168.1.67"
-DEV_INTERNAL_PORT = "5000"
-DEV_API_BASE = f"{DEV_INTERNAL_HOST}:{DEV_INTERNAL_PORT}"
-DEV_WEB_BASE = f"{DEV_INTERNAL_HOST}:{DEV_INTERNAL_PORT}"
+#
+# COM-SEC (2026-09-10): the LAN deploy is TLS-terminated by Caddy
+# at https://192.168.1.67 (internal CA; the server issues Secure
+# session cookies that Chromium only honors on trustworthy
+# origins). The plain-HTTP :5000 binding is gone — traffic goes
+# through Caddy on :443, so the port is empty and the base URL
+# carries the https scheme. Clients trust Caddy's root CA via
+# nchantdoffice_com/scripts/trust-lan-ca.sh (operator host) or
+# trust-lan-ca-remote.sh (other LAN machines).
+DEV_INTERNAL_HOST = "https://192.168.1.67"
+DEV_INTERNAL_PORT = ""
+DEV_API_BASE = (
+    f"{DEV_INTERNAL_HOST}:{DEV_INTERNAL_PORT}" if DEV_INTERNAL_PORT else DEV_INTERNAL_HOST
+)
+DEV_WEB_BASE = DEV_API_BASE
 
 DEV_URLS: Dict[str, str] = {
     "server_base_url":          f"{DEV_API_BASE}",
