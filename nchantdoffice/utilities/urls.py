@@ -92,6 +92,7 @@ _BUNDLED_DEFAULTS: Dict[str, str] = {
     "registration_url":         "https://www.nchantdoffice.com/registration",
     "whats_new_url":            "https://www.nchantdoffice.com/whats_new",
     "user_account_url":         "https://nchantdoffice.com/user-account/home",
+    "login_url":                "https://nchantdoffice.com/auth/login",
     "affiliate_marketing_url":  "https://www.nchantdoffice.com/affiliate_marketing",
     "marketing_base_url":       "https://nchantdoffice.com",
 }
@@ -168,6 +169,7 @@ DEV_URLS: Dict[str, str] = {
     "registration_url":         f"{DEV_WEB_BASE}/registration",
     "whats_new_url":            f"{DEV_WEB_BASE}/whats_new",
     "user_account_url":         f"{DEV_WEB_BASE}/user-account/home",
+    "login_url":                f"{DEV_WEB_BASE}/auth/login",
     "affiliate_marketing_url":  f"{DEV_WEB_BASE}/affiliate_marketing",
     "marketing_base_url":       DEV_WEB_BASE,
 }
@@ -480,6 +482,18 @@ def user_account_url() -> str:
     Override key: ``urls.user_account_url``.
     """
     return _resolve()["user_account_url"]
+
+
+def login_url() -> str:
+    """Server login page for users who HAVE an account but whose
+    session cookie is absent/expired (DESK T-NEW-140 v4).
+
+    The Settings tab routes here — never to /registration — when
+    the local user record says an account exists.
+
+    Override key: ``urls.login_url``.
+    """
+    return _resolve()["login_url"]
 
 
 def affiliate_marketing_url() -> str:

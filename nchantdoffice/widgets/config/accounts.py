@@ -183,6 +183,12 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         self.profile_label = None
         self.browser = None
         self.button = None
+        # DESK T-NEW-140 v5: cookie snapshot (filled by cookieAdded
+        # signal during _watch_cookie_load).
+        self._known_cookies = []
+        self._active_cookie_watcher = None
+        self._cookie_watch_armed_at = None
+        self._url_guard_busy = False
 
     def initModel(self) -> "NchantdOfficeAccountSettings":
         """"""
@@ -303,7 +309,7 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         return self
 
     def _make_marketing_url_guard(self):
-        """Build the urlChanged redirect guard (DESK T-NEW-140 v3).
+        """Build the urlChanged redirect guard (DESK T-NEW-140 v5).
 
         Returns a callable(QUrl) that rewrites any navigation to a
         marketing page into a navigation to the account home WHEN
@@ -321,10 +327,9 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
                 url_str = qurl.toString()
                 if not any(m in url_str for m in marketing_markers):
                     return
-                profile = self._get_shared_web_profile()
-                if profile is None:
-                    return
-                if not self._profile_has_session_cookie(profile, _urls_mod):
+                if not self._has_session_cookie_in_snapshot(
+                    _urls_mod.server_base_url()
+                ):
                     return
                 # Cookie present + marketing URL -> redirect.
                 self._url_guard_busy = True
@@ -345,72 +350,121 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
 
         return _guard
 
+    # --- Cookie snapshot (DESK T-NEW-140 v5) ---------------------------
+    # PySide6's QWebEngineCookieStore has NO ``cookiesForUrl`` method.
+    # The only public access is the ``cookieAdded`` signal. So we
+    # maintain our own cookie snapshot populated by that signal,
+    # and use it for the synchronous routing check.
+    #
+    # Every code path logs verbosely — v1-v4 silently fell back to
+    # the marketing URL because the sync check always failed (Qt API
+    # mismatch / wrong API). v5 logs every branch.
+    _SESSION_COOKIE_NAMES = frozenset({
+        "nchantdoffice_session_instance",  # Flask app session cookie
+        "session",                         # Flask default (in case of rename)
+        "remember_token",                  # flask-login "remember me" cookie
+    })
+
+    def _on_cookie_added_to_snapshot(self, cookie):
+        """Append to the in-memory cookie snapshot."""
+        try:
+            name = cookie.name().data().decode("utf-8", "replace")
+            domain = cookie.domain().data().decode("utf-8", "replace")
+            path = cookie.path().data().decode("utf-8", "replace")
+            self._known_cookies.append((name, domain, path))
+            logma.info(
+                f"[accounts] snapshot += ({name!r}, domain={domain!r}, "
+                f"path={path!r}) [total={len(self._known_cookies)}]"
+            )
+        except Exception as e:
+            logma.warning(f"[accounts] snapshot append failed: {e!r}")
+
+    def _has_session_cookie_in_snapshot(self, server_origin: str) -> bool:
+        """True if any snapshot cookie is a session cookie for the origin.
+
+        Domain matching is suffix-based per RFC 6265 (a cookie for
+        ``192.168.1.67`` matches the origin ``https://192.168.1.67``).
+        """
+        # Read the class attribute dynamically so subclasses can extend it.
+        session_names = getattr(type(self), "_SESSION_COOKIE_NAMES", frozenset({
+            "nchantdoffice_session_instance",
+            "session",
+            "remember_token",
+        }))
+        try:
+            host = server_origin.split("://", 1)[-1].split("/", 1)[0].lower()
+        except Exception as e:
+            logma.warning(f"[accounts] origin parse failed: {e}")
+            return False
+        logma.info(
+            f"[accounts] snapshot check: origin_host={host!r}, "
+            f"snapshot size={len(self._known_cookies)}, "
+            f"session_names={sorted(session_names)}"
+        )
+        for name, domain, _path in self._known_cookies:
+            if name not in session_names:
+                continue
+            d = domain.lower().lstrip(".")
+            if host == d or host.endswith("." + d):
+                logma.info(
+                    f"[accounts] snapshot MATCH: name={name!r} "
+                    f"domain={domain!r} -> origin_host={host!r}"
+                )
+                return True
+        logma.info("[accounts] snapshot: no session cookie match for origin")
+        return False
+
     def _resolve_initial_url(self, _urls, fallback_url: str) -> str:
         """DESK T-NEW-140: pick the initial URL for the account browser.
 
-        If the desktop's shared web profile already holds a server
-        session cookie for the nchantdoffice origin, the user has a
-        live (or remembered) server login — route to the account
-        home so they land on their dashboard instead of the
-        registration/compare marketing page.
-
-        Returns only the *synchronous* answer: the in-memory cookie
-        store may still be loading from disk (cookiesForUrl only
-        sees what has been loaded). Callers that get the marketing
-        fallback here should also hook ``_watch_cookie_load`` to
-        re-route once the persistent cookies have streamed in.
+        Decision tree (every branch logs):
+          cookie present                   -> user_account_url() (logged in)
+          no cookie, user.has_account=True -> login_url() (logged out, has acct)
+          no cookie, !has_account           -> keep marketing URL (anon signup)
         """
+        logma.info(
+            f"[accounts] initView routing: fallback_url={fallback_url}, "
+            f"user.has_account={getattr(self.user, 'has_account', False) if self.user else 'no_user'}, "
+            f"user.has_pro={getattr(self.user, 'has_pro', False) if self.user else 'no_user'}"
+        )
         try:
             profile = self._get_shared_web_profile()
+            logma.info(
+                f"[accounts] initView: shared profile -> "
+                f"{'OK at ' + profile.storageName() if profile else 'NONE'}"
+            )
             if profile is None:
                 return fallback_url
-            if self._profile_has_session_cookie(profile, _urls):
+            origin = _urls.server_base_url()
+            if self._has_session_cookie_in_snapshot(origin):
+                logma.info(
+                    f"[accounts] initView -> user_account_url() (cookie present)"
+                )
                 return _urls.user_account_url()
+            # No cookie. If the local user record says an account
+            # exists, route to LOGIN (never to /registration).
+            if getattr(self.user, "has_account", False):
+                logma.info(
+                    "[accounts] initView -> login_url() (user.has_account, "
+                    "no cookie — must re-authenticate)"
+                )
+                return _urls.login_url()
+            logma.info(
+                "[accounts] initView -> keeping marketing URL "
+                "(no cookie, no account)"
+            )
         except Exception as e:
-            logma.warning(f"[accounts] session-cookie check failed: {e}")
+            logma.warning(f"[accounts] initView routing check failed: {e!r}")
         return fallback_url
 
-    def _profile_has_session_cookie(self, profile, _urls) -> bool:
-        """True if profile's cookie store holds a server session cookie."""
-        try:
-            from nchantrs.libraries import pyqt as _pyqt
-
-            origin_qurl = _pyqt.QUrl(_urls.server_base_url())
-            cookies = profile.cookieStore().cookiesForUrl(origin_qurl)
-            session_names = {
-                "nchantdoffice_session_instance",  # Flask app (this server)
-                "session",  # Flask default if the name is ever changed
-                "remember_token",  # flask-login "remember me" cookie
-            }
-            for cookie in cookies:
-                try:
-                    name = cookie.name().data().decode("utf-8", "replace")
-                except Exception:
-                    continue
-                if name in session_names:
-                    return True
-        except Exception as e:
-            logma.warning(f"[accounts] cookie-store query failed: {e}")
-        return False
-
     def _watch_cookie_load(self, _urls) -> None:
-        """DESK T-NEW-140: re-route to the account home once the
-        persistent cookie store finishes loading.
+        """DESK T-NEW-140 v5: signal-driven cookie loader.
 
-        ``cookiesForUrl`` is synchronous against the in-memory store,
-        which may be empty right after profile construction — the
-        persistent cookies load asynchronously. This hook:
-
-          1. calls ``loadAllCookies()`` to force the disk read,
-          2. connects a one-shot ``cookieAdded`` listener that
-             re-runs the session-cookie check on each arrival,
-          3. navigates the embedded browser to
-             ``user_account_url()`` the moment a session cookie
-             appears (and disconnects the listener).
-
-        Only armed when the synchronous check came back empty AND
-        the embedded browser hasn't navigated past the marketing
-        page (i.e. the user hasn't started interacting).
+        1. reset the snapshot,
+        2. connect cookieAdded -> snapshot.append,
+        3. call loadAllCookies() to trigger the disk read,
+        4. each cookieAdded fills the snapshot; we re-check after
+           every add and route when the session cookie arrives.
         """
         import datetime as _dt
 
@@ -418,44 +472,48 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             profile = self._get_shared_web_profile()
             browser = getattr(self, "browser", None)
             if profile is None or browser is None:
+                logma.info(
+                    "[accounts] watch: profile or browser missing "
+                    f"(profile={'OK' if profile else 'NONE'}, "
+                    f"browser={'OK' if browser else 'NONE'})"
+                )
                 return
             store = profile.cookieStore()
+            # Reset the snapshot so the new loadAllCookies() stream
+            # produces a clean, complete snapshot (no stale entries
+            # from previous calls).
+            self._known_cookies = []
+            logma.info("[accounts] watch: snapshot reset; connecting cookieAdded")
 
-            def _on_cookie_added(cookie):
-                # Re-check the full store (the newly added cookie may
-                # not be the session one). Wrap in try/except because
-                # Qt signal handlers do NOT propagate exceptions
-                # to the caller — they'd be silently dropped.
-                try:
-                    if self._profile_has_session_cookie(profile, _urls):
-                        logma.info(
-                            "[accounts] session cookie arrived after load -> "
-                            "routing to user-account home"
-                        )
-                        try:
-                            store.cookieAdded.disconnect(_on_cookie_added)
-                        except Exception:
-                            pass
-                        self._navigate_account_home(_urls)
-                except Exception as e:
-                    logma.warning(f"[accounts] cookie-watcher handler failed: {e}")
+            def _on_cookie_added_with_route(cookie):
+                self._on_cookie_added_to_snapshot(cookie)
+                if self._has_session_cookie_in_snapshot(_urls.server_base_url()):
+                    logma.info(
+                        "[accounts] watch: session cookie arrived -> "
+                        "routing to user_account_url()"
+                    )
+                    try:
+                        store.cookieAdded.disconnect(_on_cookie_added_with_route)
+                    except Exception:
+                        pass
+                    self._navigate_account_home(_urls)
 
-            # Replace any previous watcher so repeated shows don't
-            # accumulate listeners (each would fire the same redirect).
             prev = getattr(self, "_active_cookie_watcher", None)
             if prev is not None:
                 try:
                     store.cookieAdded.disconnect(prev)
                 except Exception:
                     pass
-            self._active_cookie_watcher = _on_cookie_added
-            store.cookieAdded.connect(_on_cookie_added)
-            # Force the disk read; cookies stream in via cookieAdded.
+            self._active_cookie_watcher = _on_cookie_added_with_route
+            store.cookieAdded.connect(_on_cookie_added_with_route)
             store.loadAllCookies()
             self._cookie_watch_armed_at = _dt.datetime.now()
-            logma.info("[accounts] cookie-load watcher armed")
+            logma.info(
+                "[accounts] watch armed; loadAllCookies() fired "
+                f"at {_dt.datetime.now().isoformat(timespec='seconds')}"
+            )
         except Exception as e:
-            logma.warning(f"[accounts] cookie-load watcher failed: {e}")
+            logma.warning(f"[accounts] watch failed: {e!r}")
 
     def _navigate_account_home(self, _urls) -> None:
         """Navigate the embedded account browser to the account home."""

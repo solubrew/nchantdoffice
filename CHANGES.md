@@ -25,7 +25,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `urls.user_account_url()` (`/user-account/home`, server renders the
   dashboard from the live session). No cookie → marketing URL as
   before.
-  - **v2 (2026-09-10 14:36)**: cookie check is asynchronous-aware.
+  - **T-NEW-140 v5** `fix(accounts): signal-based cookie snapshot — every branch logs`
+    - The root cause of v1-v4 silently failing: PySide6's
+      `QWebEngineCookieStore` has **no `cookiesForUrl` method**.
+      Every sync check called the missing API, fell into the
+      `except` branch, and silently defaulted to the marketing URL
+      (laptop log: `'QWebEngineCookieStore' object has no attribute
+      'cookiesForUrl'`). v5 replaces the sync API with a self-
+      maintained cookie snapshot populated by the actual public API
+      (the `cookieAdded` signal). The watcher's `loadAllCookies()`
+      call triggers the disk read; each cookieAdded slot appends to
+      the snapshot; the routing decision reads from the snapshot.
+      Every code path now logs verbosely so future regressions are
+      diagnosable from the log alone.
+    - **Logged-out-but-has-account routes to login, not registration.**
+      Added `login_url()` to the URL resolver (urls.py + bundled
+      yaml). When the session cookie is gone but the local user
+      record says `has_account=True`, the Settings tab now routes
+      to `/auth/login` — never to `/registration`.
+    - `_make_marketing_url_guard` updated to read from the snapshot
+      (the v3 guard still referenced the deleted
+      `_profile_has_session_cookie` method, which is why the guard
+      fired zero times on the laptop).
+    - 14 unit tests (was 13). All pass. Tests pin: sync routing
+      decision, snapshot append/match, URL guard redirect logic,
+      cookie-load watcher arms + routes + doesn't accumulate
+      listeners across shows, no-cookie + has_account → login_url.
+    - `urls.user_account_url()` and `urls.login_url()` are XDG-
+      overridable like every other URL.
+
     `cookiesForUrl()` reads the in-memory store, which may be empty
     while `loadAllCookies()` is still streaming from disk. After the
     synchronous check returns no cookie, `showEvent` arms a one-shot

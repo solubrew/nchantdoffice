@@ -45,4 +45,5 @@ marketing_base_url:   "https://nchantdoffice.com"        # base for ad CTAs (com
 registration_url:     "https://www.nchantdoffice.com/registration"   # sign-up page
 whats_new_url:        "https://www.nchantdoffice.com/whats_new"      # changelog for paid users
 user_account_url:     "https://nchantdoffice.com/user-account/home"  # logged-in account dashboard (DESK T-NEW-140)
+login_url:            "https://nchantdoffice.com/auth/login"        # login for existing accounts (DESK T-NEW-140 v4)
 affiliate_marketing_url: "https://www.nchantdoffice.com/affiliate_marketing"  # affiliate dashboard
