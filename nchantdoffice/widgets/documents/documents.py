@@ -45,7 +45,7 @@ from typing import Any, Iterator, Self
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
 debug = True
-log = True
+log = False
 if not log:
     logma.off()
 
@@ -551,11 +551,7 @@ class NchantdOfficeDocumentMixin:
             self.file_path = getattr(self.document, "file_path", None)
         # Note: we intentionally allow saving to DB even when file_path is None.
         # Widgets like browsers save content to DB without a file_path.
-        if (
-            not hasattr(self, "app")
-            or self.app is None
-            or not hasattr(self.app, "view")
-        ):
+        if not hasattr(self, "app") or self.app is None or not hasattr(self.app, "view"):
             return self
         if self.app.view.panes["left"].tree.model.current_node is None:
             return self
@@ -712,11 +708,7 @@ class NchantdOfficeDocumentMixin:
             self.file_path = getattr(self.document, "file_path", None)
         # Note: we intentionally allow saving to DB even when file_path is None.
         # Widgets like browsers save content to DB without a file_path.
-        if (
-            not hasattr(self, "app")
-            or self.app is None
-            or not hasattr(self.app, "view")
-        ):
+        if not hasattr(self, "app") or self.app is None or not hasattr(self.app, "view"):
             return self
         if self.app.view.panes["left"].tree.model.current_node is None:
             return self
