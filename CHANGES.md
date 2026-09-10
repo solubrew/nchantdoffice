@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **T-NEW-140/LAN-TLS** `docs: retarget dev-profile + XDG docs at https://192.168.1.67` —
+  `README.md` XDG example, `docs/index.md` dev-profile section, and
+  `docs/DESKTOP_LICENSE_FLOW.md` sister-doc table updated from the dead
+  `http://192.168.1.67:8081` / `localhost:5000` targets to the live
+  Caddy-fronted LAN endpoint (`https://192.168.1.67`, internal CA trusted
+  via `nchantdoffice_com/scripts/trust-lan-ca*.sh`). Matches server-side
+  docs rewrite in nchantdoffice_com `e61aec2`.
+
 ### Fixed
 
 - **T-NEW-140/LAN-TLS** `fix(urls): dev profile retargets at Caddy-fronted HTTPS endpoint` (`fb56d3d`) —

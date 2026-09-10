@@ -83,9 +83,9 @@ comes from a single user config file:
 
 ```yaml
 # ~/.config/nchantdoffice/config.yaml  (XDG — global default)
-dev_mode: true                          # points at http://localhost:5000
+dev_mode: false                         # true points at http://localhost:5000 (Flask dev server, no docker)
 server:
-  url: "http://localhost:5000"
+  url: "https://nchantdoffice.com"     # prod default; resolve via urls.py
   timeout: 3
 cache:
   dir: /tmp/nchantdoffice-test           # override cache for tests

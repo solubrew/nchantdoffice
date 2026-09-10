@@ -44,10 +44,13 @@ cfg = {"run-mode": "dev"}      # routes every URL to the LAN docker
 nchantment("NchantdOffice", args, app, cfg, wizard)
 ```
 
-The dev profile targets `http://192.168.1.67:8081` (the operator's
-LAN docker stack). See `nchantdoffice_com/docs/deploy-lan.md`
-for how to bring the LAN stack up and `DESK T-NEW-053` in this
-repo's `CHANGES.md [Unreleased]` for the design rationale.
+The dev profile targets `https://192.168.1.67` (the operator's
+LAN docker stack, Caddy-fronted TLS via internal CA — as of
+`fb56d3d`; trust the CA on each client host via
+`nchantdoffice_com/scripts/trust-lan-ca*.sh`). See
+`nchantdoffice_com/docs/deploy-lan.md` for how to bring the LAN
+stack up and `DESK T-NEW-053` in this repo's
+`CHANGES.md [Unreleased]` for the design rationale.
 
 The AST regression guard in `tests/utilities/test_urls_config.py`
 pins the no-hardcoded-hostnames invariant — if a future commit
