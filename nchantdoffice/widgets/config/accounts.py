@@ -286,7 +286,64 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         self.browser = NchantdWebViewer(self, cfg).initWidget()
         layout.addWidget(self.browser)
         self.layout.addLayout(layout)
+        # DESK T-NEW-140 v3: install a standing URL guard on the
+        # embedded browser. Tab re-activation re-fires
+        # populate_document(active_url) with the URL recorded at
+        # construction — if that was a marketing page (widget built
+        # before login), every return to the Settings node reloads
+        # the marketing page even though the session cookie now
+        # exists. The guard redirects any marketing-URL load to the
+        # account home whenever a session cookie is present.
+        try:
+            self.browser.engine.urlChanged.connect(
+                self._make_marketing_url_guard()
+            )
+        except Exception as e:
+            logma.warning(f"[accounts] url-guard install failed: {e}")
         return self
+
+    def _make_marketing_url_guard(self):
+        """Build the urlChanged redirect guard (DESK T-NEW-140 v3).
+
+        Returns a callable(QUrl) that rewrites any navigation to a
+        marketing page into a navigation to the account home WHEN
+        the shared profile holds a session cookie. Re-entrancy is
+        guarded by a flag: the guard's own redirect doesn't loop.
+        """
+        import nchantdoffice.utilities.urls as _urls_mod
+
+        marketing_markers = ("/registration", "/compare", "/whats_new")
+
+        def _guard(qurl):
+            if getattr(self, "_url_guard_busy", False):
+                return
+            try:
+                url_str = qurl.toString()
+                if not any(m in url_str for m in marketing_markers):
+                    return
+                profile = self._get_shared_web_profile()
+                if profile is None:
+                    return
+                if not self._profile_has_session_cookie(profile, _urls_mod):
+                    return
+                # Cookie present + marketing URL -> redirect.
+                self._url_guard_busy = True
+                try:
+                    logma.info(
+                        f"[accounts] url-guard: {url_str} -> account home "
+                        f"(session cookie present)"
+                    )
+                    self._navigate_account_home(_urls_mod)
+                finally:
+                    # Release on the next event-loop tick so the
+                    # redirect's own urlChanged doesn't re-trigger.
+                    from nchantrs.libraries import pyqt as _pyqt
+
+                    _pyqt.QTimer.singleShot(0, lambda: setattr(self, "_url_guard_busy", False))
+            except Exception as e:
+                logma.warning(f"[accounts] url-guard failed: {e}")
+
+        return _guard
 
     def _resolve_initial_url(self, _urls, fallback_url: str) -> str:
         """DESK T-NEW-140: pick the initial URL for the account browser.
@@ -383,6 +440,15 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
                 except Exception as e:
                     logma.warning(f"[accounts] cookie-watcher handler failed: {e}")
 
+            # Replace any previous watcher so repeated shows don't
+            # accumulate listeners (each would fire the same redirect).
+            prev = getattr(self, "_active_cookie_watcher", None)
+            if prev is not None:
+                try:
+                    store.cookieAdded.disconnect(prev)
+                except Exception:
+                    pass
+            self._active_cookie_watcher = _on_cookie_added
             store.cookieAdded.connect(_on_cookie_added)
             # Force the disk read; cookies stream in via cookieAdded.
             store.loadAllCookies()
@@ -397,6 +463,13 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         if browser is None:
             return
         url = _urls.user_account_url()
+        # Refresh the viewer's active_url so future tab-activation
+        # re-fires of populate_document(active_url) load the account
+        # home, not the stale marketing URL recorded at construction.
+        try:
+            browser.set_url_path(url)
+        except Exception as e:
+            logma.warning(f"[accounts] set_url_path refresh failed: {e}")
         try:
             engine = getattr(browser, "engine", None)
             if engine is not None:
@@ -470,16 +543,17 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         return self
 
     def showEvent(self, event):
-        """DESK T-NEW-140: arm the cookie-load watcher on first show.
+        """DESK T-NEW-140: re-evaluate routing on every show.
 
-        By the time the user sees the Settings tab, the webview
-        has a surface and the persistent cookie store should be
-        streaming in. Arming the watcher here is the right moment:
-        - synchronous cookie check has already run at initView
-        - if it found no cookie, it's because the persistent load
-          is still in flight, not because the user isn't logged in
-        - ``showEvent`` runs after the first paint, so the disk
-        I/O for cookie load is well underway by now
+        The tab widget is NOT destroyed when the user navigates away —
+        Qt just hides it. So a tab constructed BEFORE login (no
+        session cookie) keeps showing the marketing page forever,
+        even after the user logs in elsewhere in the app. Re-running
+        the routing decision on every showEvent fixes that.
+
+        Also arms the async cookie-load watcher when the synchronous
+        check comes back empty (persistent cookies may still be
+        streaming in from disk).
         """
         super_show = getattr(super(), "showEvent", None)
         if super_show is not None:
@@ -488,10 +562,36 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             except Exception:
                 pass
         try:
-            if getattr(self, "_cookie_watch_armed_at", None) is None:
-                urls = getattr(self, "_pending_cookie_watch_urls", None)
-                if urls is not None and hasattr(self, "browser") and self.browser is not None:
-                    self._watch_cookie_load(urls)
+            urls = getattr(self, "_pending_cookie_watch_urls", None)
+            browser = getattr(self, "browser", None)
+            if urls is None or browser is None:
+                return
+            # Synchronous check first — cookie may already be loaded
+            # (e.g. this show follows a completed login elsewhere).
+            profile = self._get_shared_web_profile()
+            if profile is not None and self._profile_has_session_cookie(profile, urls):
+                # Only re-route if the browser is still parked on a
+                # marketing URL (user may have navigated manually).
+                engine = getattr(browser, "engine", None)
+                current = (
+                    engine.url().toString() if engine is not None and hasattr(engine, "url") else ""
+                )
+                marketing_markers = (
+                    "/registration", "/compare", "/whats_new",
+                )
+                if any(m in current for m in marketing_markers) or not current:
+                    logma.info(
+                        "[accounts] showEvent: session cookie present -> "
+                        "routing to user-account home"
+                    )
+                    self._navigate_account_home(urls)
+                    return
+            # No cookie synchronously → arm/re-arm the watcher. The
+            # watcher is one-shot per cookieAdded burst; re-arming on
+            # each show covers the "logged in since last show" case
+            # where cookieAdded fired while this tab was hidden and
+            # the one-shot already consumed itself.
+            self._watch_cookie_load(urls)
         except Exception as e:
             logma.warning(f"[accounts] showEvent cookie-watch arm failed: {e}")
 
