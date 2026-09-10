@@ -227,6 +227,8 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             "size": [1600, 750],
             "is_simple": True,
         }
+        if self.user is None:
+            raise Exception("No User configured")
         if self.user.has_pro:
             cfg["url"] = _urls.whats_new_url()
         elif self.user.has_account:

@@ -1743,8 +1743,8 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             self.initialize_context_menu(self.context_menu_name)
         cfg = {}
         self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
-        self.library = self.document.library
-        self.profiles = self.document.profile_manager
+        # self.library = self.document.library
+        # self.profiles = self.document.profile_manager
         return self
 
     # -> Any (not Self): the tier-gated early path returns the
@@ -1830,7 +1830,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             url = self.get_active_url()
         logma.info(f"Populate Document {url}")
         if self.pinned is False:
-            self.viewer.populate_document(url)
+            self.viewer.populate_viewport(url)
         self.save()
         self.document.save()
         return self
