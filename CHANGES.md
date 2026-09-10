@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **T-NEW-140/LAN-TLS** `fix(urls): dev profile retargets at Caddy-fronted HTTPS endpoint` (`fb56d3d`) —
+  `DEV_INTERNAL_HOST`/`DEV_INTERNAL_PORT` moved from `http://192.168.1.67:5000` (the
+  plain-HTTP host binding removed from the LAN deploy) to `https://192.168.1.67` with
+  empty port. Dev-mode (`run-mode: dev`) desktop launches resolve every URL through
+  Caddy on :443, so embedded-browser navigation (`/registration`, `/auth/login`) works
+  again and `Secure` session cookies are honored (trustworthy origin). Clients trust
+  the Caddy internal CA via `nchantdoffice_com/scripts/trust-lan-ca*.sh`.
+
 - **T-NEW-149** `fix(matricies): read document.content['grid'] on populate` (`cbba7de`) —
   `populate_document()` now reads `document.content['grid']` as the primary
   source (the attribute where `save()` stores the 2D cell grid for internal
