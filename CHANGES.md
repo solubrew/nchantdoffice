@@ -24,15 +24,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `QWebEngineProfile.cookieStore().cookiesForUrl()`. Cookie present →
   `urls.user_account_url()` (`/user-account/home`, server renders the
   dashboard from the live session). No cookie → marketing URL as
-  before. Best-effort: any profile/cookie API failure falls back to
-  the marketing URL; tab construction never blocks.
+  before.
+  - **v2 (2026-09-10 14:36)**: cookie check is asynchronous-aware.
+    `cookiesForUrl()` reads the in-memory store, which may be empty
+    while `loadAllCookies()` is still streaming from disk. After the
+    synchronous check returns no cookie, `showEvent` arms a one-shot
+    `cookieAdded` watcher that re-routes the browser the moment the
+    session cookie arrives. Best-effort: any profile/cookie API
+    failure falls back to the marketing URL; tab construction never
+    blocks.
   - `nchantdoffice/utilities/urls.py`: new `user_account_url()`
     accessor + entries in `_BUNDLED_DEFAULTS`, `DEV_URLS`, and the
     bundled `_data_/urls.yaml` (key: `user_account_url`).
-  - `tests/test_account_tab_session_routing.py` (new): 11 tests
+  - `tests/test_account_tab_session_routing.py` (new): 19 tests
     pinning the routing contract — session-cookie names route to
     account home; unrelated/no cookies keep marketing; profile-pool
-    and cookie-API failures fall back safely.
+    and cookie-API failures fall back safely; the cookie-load
+    watcher arms on first show and re-routes when cookies stream in.
 
 ### Changed
 

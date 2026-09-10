@@ -244,6 +244,13 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         # present lets the server's session-cookie check pick up
         # the existing login and serve the dashboard.
         cfg["url"] = self._resolve_initial_url(_urls, cfg["url"])
+        # If the synchronous check returned the marketing URL (cookie
+        # not yet loaded into memory), arm a watcher that re-routes
+        # the moment the persistent cookie store finishes streaming
+        # cookies in. The watcher fires after the webview's first
+        # showEvent (see initWidget → showEvent path).
+        self._pending_cookie_watch_urls = _urls
+        self._cookie_watch_armed_at = None
         # T-NEW-135: when the redirect_to_get_pro helper fired
         # with a reason (e.g. ``hit_100_nodes``), the model
         # stashed it on ``app.model.get_pro_redirect_reason``.
@@ -290,14 +297,25 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         home so they land on their dashboard instead of the
         registration/compare marketing page.
 
-        Cookie check is best-effort: any failure (no profile yet,
-        cookie API unavailable, empty store) falls back to the
-        marketing URL decided by the has_pro/has_account branch.
+        Returns only the *synchronous* answer: the in-memory cookie
+        store may still be loading from disk (cookiesForUrl only
+        sees what has been loaded). Callers that get the marketing
+        fallback here should also hook ``_watch_cookie_load`` to
+        re-route once the persistent cookies have streamed in.
         """
         try:
             profile = self._get_shared_web_profile()
             if profile is None:
                 return fallback_url
+            if self._profile_has_session_cookie(profile, _urls):
+                return _urls.user_account_url()
+        except Exception as e:
+            logma.warning(f"[accounts] session-cookie check failed: {e}")
+        return fallback_url
+
+    def _profile_has_session_cookie(self, profile, _urls) -> bool:
+        """True if profile's cookie store holds a server session cookie."""
+        try:
             from nchantrs.libraries import pyqt as _pyqt
 
             origin_qurl = _pyqt.QUrl(_urls.server_base_url())
@@ -313,17 +331,85 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
                 except Exception:
                     continue
                 if name in session_names:
-                    logma.info(
-                        f"[accounts] session cookie {name!r} present -> "
-                        f"routing to user-account home"
-                    )
-                    return _urls.user_account_url()
-            logma.info(
-                "[accounts] no session cookie found -> keeping marketing URL"
-            )
+                    return True
         except Exception as e:
-            logma.warning(f"[accounts] session-cookie check failed: {e}")
-        return fallback_url
+            logma.warning(f"[accounts] cookie-store query failed: {e}")
+        return False
+
+    def _watch_cookie_load(self, _urls) -> None:
+        """DESK T-NEW-140: re-route to the account home once the
+        persistent cookie store finishes loading.
+
+        ``cookiesForUrl`` is synchronous against the in-memory store,
+        which may be empty right after profile construction — the
+        persistent cookies load asynchronously. This hook:
+
+          1. calls ``loadAllCookies()`` to force the disk read,
+          2. connects a one-shot ``cookieAdded`` listener that
+             re-runs the session-cookie check on each arrival,
+          3. navigates the embedded browser to
+             ``user_account_url()`` the moment a session cookie
+             appears (and disconnects the listener).
+
+        Only armed when the synchronous check came back empty AND
+        the embedded browser hasn't navigated past the marketing
+        page (i.e. the user hasn't started interacting).
+        """
+        import datetime as _dt
+
+        try:
+            profile = self._get_shared_web_profile()
+            browser = getattr(self, "browser", None)
+            if profile is None or browser is None:
+                return
+            store = profile.cookieStore()
+
+            def _on_cookie_added(cookie):
+                # Re-check the full store (the newly added cookie may
+                # not be the session one). Wrap in try/except because
+                # Qt signal handlers do NOT propagate exceptions
+                # to the caller — they'd be silently dropped.
+                try:
+                    if self._profile_has_session_cookie(profile, _urls):
+                        logma.info(
+                            "[accounts] session cookie arrived after load -> "
+                            "routing to user-account home"
+                        )
+                        try:
+                            store.cookieAdded.disconnect(_on_cookie_added)
+                        except Exception:
+                            pass
+                        self._navigate_account_home(_urls)
+                except Exception as e:
+                    logma.warning(f"[accounts] cookie-watcher handler failed: {e}")
+
+            store.cookieAdded.connect(_on_cookie_added)
+            # Force the disk read; cookies stream in via cookieAdded.
+            store.loadAllCookies()
+            self._cookie_watch_armed_at = _dt.datetime.now()
+            logma.info("[accounts] cookie-load watcher armed")
+        except Exception as e:
+            logma.warning(f"[accounts] cookie-load watcher failed: {e}")
+
+    def _navigate_account_home(self, _urls) -> None:
+        """Navigate the embedded account browser to the account home."""
+        browser = getattr(self, "browser", None)
+        if browser is None:
+            return
+        url = _urls.user_account_url()
+        try:
+            engine = getattr(browser, "engine", None)
+            if engine is not None:
+                engine.setUrl(pyqt.QUrl(url))
+                logma.info(f"[accounts] routed to {url}")
+                return
+        except Exception as e:
+            logma.warning(f"[accounts] engine.setUrl failed: {e}")
+        try:
+            browser.setUrl(pyqt.QUrl(url))
+            logma.info(f"[accounts] routed to {url} (viewer-level)")
+        except Exception as e:
+            logma.warning(f"[accounts] viewer.setUrl failed: {e}")
 
     def _get_shared_web_profile(self):
         """Return the app-level shared QWebEngineProfile (or None).
@@ -378,10 +464,36 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             return url
 
     def initWidget(self) -> "NchantdOfficeAccountSettings":
-        """"""
+        """ """
         self.initModel()
         self.initView()
         return self
+
+    def showEvent(self, event):
+        """DESK T-NEW-140: arm the cookie-load watcher on first show.
+
+        By the time the user sees the Settings tab, the webview
+        has a surface and the persistent cookie store should be
+        streaming in. Arming the watcher here is the right moment:
+        - synchronous cookie check has already run at initView
+        - if it found no cookie, it's because the persistent load
+          is still in flight, not because the user isn't logged in
+        - ``showEvent`` runs after the first paint, so the disk
+        I/O for cookie load is well underway by now
+        """
+        super_show = getattr(super(), "showEvent", None)
+        if super_show is not None:
+            try:
+                super_show(event)
+            except Exception:
+                pass
+        try:
+            if getattr(self, "_cookie_watch_armed_at", None) is None:
+                urls = getattr(self, "_pending_cookie_watch_urls", None)
+                if urls is not None and hasattr(self, "browser") and self.browser is not None:
+                    self._watch_cookie_load(urls)
+        except Exception as e:
+            logma.warning(f"[accounts] showEvent cookie-watch arm failed: {e}")
 
     def cmd_refresh(self, event=None, *args, **kwargs):
         """"""

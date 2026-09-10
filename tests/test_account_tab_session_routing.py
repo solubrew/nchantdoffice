@@ -90,9 +90,18 @@ def _get_widget_cls():
 
 
 def _make_self(profile=None):
-    """Duck-typed stand-in for the widget instance."""
+    """Duck-typed stand-in for the widget instance.
+
+    Wires the two cookie-related helpers so calling
+    _resolve_initial_url with this fake exercises the full path.
+    """
+    import nchantdoffice.widgets.config.accounts as _acct_mod
+
     return types.SimpleNamespace(
         _get_shared_web_profile=lambda: profile,
+        _profile_has_session_cookie=lambda p, urls: _acct_mod.NchantdOfficeAccountSettings._profile_has_session_cookie(
+            None, p, urls
+        ),
     )
 
 
@@ -142,6 +151,154 @@ class TestResolveInitialUrl:
         s = _make_self(_BoomProfile())
         urls = _FakeUrls()
         assert self._call(s, urls, urls.registration_url()) == urls.registration_url()
+
+
+class TestProfileHasSessionCookie:
+    def _call(self, fake_self, profile, urls):
+        return _get_widget_cls()._profile_has_session_cookie(fake_self, profile, urls)
+
+    def test_session_cookie_found(self):
+        s = types.SimpleNamespace()
+        urls = _FakeUrls()
+        assert self._call(s, _FakeProfile(["nchantdoffice_session_instance"]), urls)
+
+    def test_remember_token_found(self):
+        s = types.SimpleNamespace()
+        urls = _FakeUrls()
+        assert self._call(s, _FakeProfile(["remember_token"]), urls)
+
+    def test_unrelated_not_found(self):
+        s = types.SimpleNamespace()
+        urls = _FakeUrls()
+        assert not self._call(s, _FakeProfile(["theme", "_ga"]), urls)
+
+    def test_empty_not_found(self):
+        s = types.SimpleNamespace()
+        urls = _FakeUrls()
+        assert not self._call(s, _FakeProfile([]), urls)
+
+
+class TestCookieLoadWatcher:
+    def test_watcher_routes_on_cookie_added(self):
+        """Simulates: initView found no cookie (store still loading);
+        the watcher fires when the session cookie streams in."""
+        calls = []
+        urls = _FakeUrls()
+
+        store = _FakeCookieStore([])  # starts empty
+
+        class _LiveStore:
+            """Cookie store whose cookieAdded can be connected and fired."""
+
+            def __init__(self):
+                self._handlers = []
+                self._cookies = []
+
+            def cookiesForUrl(self, qurl):
+                return list(self._cookies)
+
+            def loadAllCookies(self):
+                # Simulate the disk read streaming cookies in —
+                # fire each handler with each cookie.
+                for c in self._cookies:
+                    for h in list(self._handlers):
+                        h(c)
+
+            def cookieAdded(self):
+                # Signal-like object
+                return self
+
+            def _connect(self, handler):
+                self._handlers.append(handler)
+
+            def _disconnect(self, handler):
+                if handler in self._handlers:
+                    self._handlers.remove(handler)
+
+        # Piggyback connect/disconnect on the store object
+        live = _LiveStore()
+
+        class _Signal:
+            def __init__(self, store):
+                self._store = store
+
+            def connect(self, h):
+                self._store._connect(h)
+
+            def disconnect(self, h):
+                self._store._disconnect(h)
+
+        live.cookieAdded = _Signal(live)
+
+        class _LiveProfile:
+            def __init__(self, store):
+                self._store = store
+
+            def cookieStore(self):
+                return self._store
+
+        # Seed the session cookie as if loaded from disk
+        live._cookies = [_FakeCookie("nchantdoffice_session_instance")]
+        profile = _LiveProfile(live)
+
+        s = types.SimpleNamespace(
+            browser=types.SimpleNamespace(),  # non-None: watcher arms
+            _get_shared_web_profile=lambda: profile,
+            _navigate_account_home=lambda urls_: calls.append(urls_.user_account_url()),
+            _profile_has_session_cookie=lambda p, urls_: _get_widget_cls()._profile_has_session_cookie(s, p, urls_),
+            _cookie_watch_armed_at=None,
+        )
+        _get_widget_cls()._watch_cookie_load(s, urls)
+        # loadAllCookies fired synchronously in our simulation →
+        # the watcher should have routed already.
+        assert calls == [urls.user_account_url()]
+
+    def test_watcher_no_cookie_no_route(self):
+        calls = []
+        urls = _FakeUrls()
+
+        class _EmptyStore:
+            def cookiesForUrl(self, qurl):
+                return []
+
+            def loadAllCookies(self):
+                pass
+
+            cookieAdded = types.SimpleNamespace(
+                connect=lambda h: None, disconnect=lambda h: None
+            )
+
+        class _EmptyProfile:
+            def cookieStore(self):
+                return _EmptyStore()
+
+        s = types.SimpleNamespace(
+            _get_shared_web_profile=lambda: _EmptyProfile(),
+            _navigate_account_home=lambda urls_: calls.append(1),
+            _cookie_watch_armed_at=None,
+        )
+        _get_widget_cls()._watch_cookie_load(s, urls)
+        assert calls == []
+
+
+class TestNavigateAccountHome:
+    def test_engine_seturl_preferred(self):
+        urls = _FakeUrls()
+        set_calls = []
+        engine = types.SimpleNamespace(setUrl=lambda q: set_calls.append(str(q)))
+        browser = types.SimpleNamespace(engine=engine)
+        s = types.SimpleNamespace(browser=browser)
+
+        # pyqt.QUrl may not be importable without a QApplication; the
+        # method imports it at module level via the widget module's
+        # import. Call through the class with our fake self.
+        _get_widget_cls()._navigate_account_home(s, urls)
+        assert len(set_calls) == 1
+        assert urls.USER_ACCOUNT in set_calls[0]
+
+    def test_no_browser_noop(self):
+        s = types.SimpleNamespace(browser=None)
+        _get_widget_cls()._navigate_account_home(s, _FakeUrls())  # must not raise
 
 
 class TestGetSharedWebProfile:
