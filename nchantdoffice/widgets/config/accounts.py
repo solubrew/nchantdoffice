@@ -239,9 +239,16 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         # session cookie before the tab reactivated.
         #
         # Pro users keep whats_new (deliberate changelog view, no
-        # upsell); every other tier lands on the server router.
+        # upsell); brand-new installs (local user record says no
+        # account has ever been claimed) go straight to registration;
+        # everyone else lands on the server router (/user-account/home
+        # -> dashboard when the session cookie is valid, login page
+        # otherwise). The local has_account flag is the only desktop-
+        # side state consulted — no cookie introspection.
         if self.user.has_pro:
             cfg["url"] = _urls.whats_new_url()
+        elif not getattr(self.user, "has_account", False):
+            cfg["url"] = _urls.registration_url()
         else:
             cfg["url"] = _urls.user_account_url()
         # T-NEW-135: when the redirect_to_get_pro helper fired
