@@ -102,9 +102,32 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
         return self
 
     def acceptNavigationRequest(self, url, request_type, is_main_frame) -> bool:
-        """Handle navigation requests."""
-        # self.load_url(url)
-        # self.parent.update_toolbox_url_inspection()
+        """Handle navigation requests.
+
+        T-NEW-069 — when the navigation is the main frame
+        (i.e. the URL the user is actually navigating to,
+        not an iframe or sub-resource), refresh the URL
+        inspection toolbox so the labels update.
+
+        ``self.parent`` may not exist yet on the very first
+        navigation that fires during initView's ``setHtml``;
+        the engine signal (connected in
+        ``init_drawer_url_inspection``) is the canonical
+        update path. This hook is the secondary path that
+        fires before the signal is connected.
+        """
+        # Only fire on main-frame navigations; sub-resource
+        # requests would otherwise refresh the toolbox on
+        # every <script>/<img> load.
+        if is_main_frame:
+            parent_obj = getattr(self, "parent", None)
+            if parent_obj is not None and hasattr(
+                parent_obj, "update_toolbox_url_inspection"
+            ):
+                try:
+                    parent_obj.update_toolbox_url_inspection()
+                except Exception:
+                    pass
         return super().acceptNavigationRequest(url, request_type, is_main_frame)
 
     def autofill_form(self) -> None:

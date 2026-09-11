@@ -150,6 +150,29 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         buttons[100] = "_skip"
         buttons[150] = "_skip"
         buttons[200] = "_skip"
+        # T-NEW-069 — delegate URL history restore to the inner
+        # viewer. Calling ``_get_url_history`` reads the persisted
+        # ``config.dikt["url_history"]`` most-recent-first, so
+        # the dropdown is rebuilt from disk on every open (the
+        # single source of truth lives on the viewer).
+        try:
+            history = self.viewer._get_url_history()
+        except Exception:
+            history = []
+        try:
+            if (
+                getattr(self, "url_select_entry", None) is not None
+                and getattr(
+                    self.url_select_entry, "combobox", None
+                ) is not None
+            ):
+                self.url_select_entry.update_options(
+                    history or [], replace=True, sort=False
+                )
+        except Exception as _exc:
+            logma.warning(
+                f"[browsers] build_toolbar dropdown seed failed: {_exc}"
+            )
         return buttons
 
     def cmd_check_is_pinned(self, event=None, *args, **kwargs) -> Self:
@@ -670,7 +693,16 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return items
 
     def init_drawer_url_inspection(self) -> Dict[int, Any]:
-        """Build the URL inspection drawer (current URL / domain / sub / params / whois)."""
+        """Build the URL inspection drawer (current URL / domain / sub / params / whois).
+
+        T-NEW-069 — also wire the engine's ``urlChanged`` signal
+        to ``cmd_active_url_change`` at this point. Earlier
+        wiring crashed because the engine's
+        ``urlChanged`` fires during ``initView`` (the engine's
+        initial ``setHtml`` triggers a `about:blank` → `about:blank`
+        navigation that landed before ``update_toolbox_url_inspection``
+        existed, raising ``AttributeError``).
+        """
         items = self.toolbox_config[100].get("items", {})
         cnt = 0
 
@@ -738,6 +770,23 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             },
         )
         cnt += 1
+        # T-NEW-069 — wire the engine's urlChanged signal here,
+        # after the drawer widgets exist. Using the Qt signal
+        # rather than overloading ``cmd_url_change`` ensures the
+        # dropdown/label refresh fires on programmatic loads too.
+        try:
+            engine = getattr(self.viewer, "engine", None)
+            if engine is not None and hasattr(engine, "urlChanged"):
+                # Avoid double-connecting if this drawer is
+                # rebuilt (e.g. tab re-init).
+                if not getattr(self, "_url_signal_connected", False):
+                    engine.urlChanged.connect(self.cmd_active_url_change)
+                    self._url_signal_connected = True
+        except Exception as _exc:
+            logma.warning(
+                f"[browsers] init_drawer_url_inspection could not "
+                f"connect urlChanged: {_exc}"
+            )
         return items
 
     # Push to 0.0.3
@@ -1032,14 +1081,55 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         init_drawer_url_inspection). The toolbox refresh runs
         unconditionally so the user sees the current URL on
         focus.
+
+        T-NEW-069 — robustness fixes on top of T-028:
+
+        * ``self.viewer.url_select_entry`` may be None when the
+          toolbar/lazy-init path skipped ``initView`` (a real
+          regression in subclasses that mount the viewer in a
+          tab that's only rendered later). Skip the dropdown
+          updates instead of crashing.
+        * ``url_select_entry.update_options`` requires ``sort``
+          kwarg; the legacy one-arg call would TypeError.
+        * ``url_select_entry.set_value(None)`` is a no-op (good);
+          guard against empty/None URLs explicitly so we don't
+          confuse the dropdown.
+        * The history seed (``update_options(replace=True, ...)``)
+          overwrites the cached dropdown with the persisted
+          history (most-recent-first), so the dropdown matches
+          what ``_get_url_history`` returns.
         """
         if url is None:
             url = self.get_active_url()
+        # Normalise: empty string treated as "no URL".
+        if isinstance(url, str) and not url.strip():
+            url = None
         logma.info(f"Populate Document {url}")
-        self.viewer.url_select_entry.update_options(self.get_url_history())
-        self.viewer.url_select_entry.set_value(url)
-        if self.pinned is False:
+        # Defensive: toolbar dropdown may be uninitialised.
+        entry = getattr(self.viewer, "url_select_entry", None)
+        if entry is not None:
+            try:
+                history = self.get_url_history() or []
+                if getattr(entry, "combobox", None) is not None:
+                    entry.update_options(history, replace=True, sort=False)
+                    # Set the active entry to ``url`` only if we
+                    # actually have a URL — an empty/None value
+                    # would otherwise trip the ComboBox
+                    # ``set_value`` None check.
+                    if url is not None:
+                        entry.set_value(url)
+            except Exception as _exc:
+                logma.warning(
+                    f"[browsers] populate_document dropdown sync "
+                    f"failed (non-blocking): {_exc}"
+                )
+        if self.pinned is False and url is not None:
             self.viewer.populate_viewport(url)
+        elif url is None:
+            logma.info(
+                "[browsers] populate_document: no URL yet — deferring "
+                "viewport load to the first cmd_active_url_change"
+            )
         return self
 
     def get_content(self) -> Dict[str, Any]:
@@ -1071,33 +1161,78 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return self
 
     def set_current_domain(self) -> Self:
-        """"""
-        # if self.document.active_page.active_url.domain is None:
-        #     raise Exception("Domain is None")
-        logma.info(f"Domain {self.document.active_page.active_url.domain}")
-        # self.domain.initWidget()
-        self.domain.setText(self.document.active_page.active_url.domain)
+        """T-NEW-069 — safely read the active page's domain into the label.
+
+        Guarded against:
+        * the dropdown / label not yet built (``self.domain is None``),
+        * the document / active_page not yet constructed,
+        * ``active_url`` being None (the legacy code crashed with
+          ``AttributeError: 'NoneType' object has no attribute 'domain'``).
+        """
+        if not hasattr(self, "domain") or self.domain is None:
+            return self
+        try:
+            page = getattr(self.document, "active_page", None)
+            url = getattr(page, "active_url", None) if page is not None else None
+            domain = getattr(url, "domain", None) if url is not None else None
+            if domain:
+                self.domain.setText(domain)
+        except Exception as _exc:
+            logma.warning(f"[browsers] set_current_domain failed: {_exc}")
         return self
 
     def set_current_sub_domain(self) -> Self:
-        """"""
-        self.sub_domain.setText(self.document.active_page.active_url.sub_domain)
+        if not hasattr(self, "sub_domain") or self.sub_domain is None:
+            return self
+        try:
+            page = getattr(self.document, "active_page", None)
+            url = getattr(page, "active_url", None) if page is not None else None
+            sub = getattr(url, "sub_domain", None) if url is not None else None
+            if sub is not None:
+                self.sub_domain.setText(sub)
+        except Exception as _exc:
+            logma.warning(f"[browsers] set_current_sub_domain failed: {_exc}")
         return self
 
     def set_current_parameters(self) -> Self:
-        """"""
-        self.parameters.setText(self.document.active_page.active_url.parameters)
+        if not hasattr(self, "parameters") or self.parameters is None:
+            return self
+        try:
+            page = getattr(self.document, "active_page", None)
+            url = getattr(page, "active_url", None) if page is not None else None
+            params = getattr(url, "parameters", None) if url is not None else None
+            if params is not None:
+                self.parameters.setText(params)
+        except Exception as _exc:
+            logma.warning(f"[browsers] set_current_parameters failed: {_exc}")
         return self
 
     def set_current_url(self) -> Self:
-        """"""
-        logma.info(f"Set URL Label {self.document.active_page.active_url.active_url}")
-        self.url_label.setText(self.document.active_page.active_url.active_url)
+        """T-NEW-069 — refresh the current-URL label safely."""
+        if not hasattr(self, "url_label") or self.url_label is None:
+            return self
+        try:
+            page = getattr(self.document, "active_page", None)
+            url = getattr(page, "active_url", None) if page is not None else None
+            active = getattr(url, "active_url", None) if url is not None else None
+            if active:
+                logma.info(f"Set URL Label {active}")
+                self.url_label.setText(active)
+        except Exception as _exc:
+            logma.warning(f"[browsers] set_current_url failed: {_exc}")
         return self
 
     def set_current_whois(self) -> Self:
-        """"""
-        self.whois.setText(self.document.active_page.active_url.whois)
+        if not hasattr(self, "whois") or self.whois is None:
+            return self
+        try:
+            page = getattr(self.document, "active_page", None)
+            url = getattr(page, "active_url", None) if page is not None else None
+            whois = getattr(url, "whois", None) if url is not None else None
+            if whois is not None:
+                self.whois.setText(whois)
+        except Exception as _exc:
+            logma.warning(f"[browsers] set_current_whois failed: {_exc}")
         return self
 
     def set_profile(self, profile) -> Self:
@@ -1424,7 +1559,56 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return self
 
     def _on_url_change(self):
-        """"""
+        """T-NEW-069 — react to a real URL change in the engine.
+
+        The signal is connected in ``init_drawer_url_inspection``
+        (delayed until the dropdown widget exists) — the engine
+        can fire ``urlChanged`` before the drawer/widgets have
+        been built. Defensive against missing document / page
+        attributes so a mid-init navigation never crashes.
+        """
+        try:
+            self.update_toolbox_url_inspection()
+        except Exception as _exc:
+            logma.warning(f"[browsers] _on_url_change failed: {_exc}")
+        return self
+
+    def cmd_active_url_change(self, *args, **kwargs) -> Self:
+        """T-NEW-069 — hook for the engine's ``urlChanged`` signal.
+
+        Single canonical update path for the URL inspection
+        toolbox. Reads ``self.viewer.engine.url()`` (when
+        available), pushes it through ``_track_url`` on the
+        viewer, refreshes the label fields, and marks the app
+        model as dirty so the next save() persists the new
+        URL via the PyfficeWebBrowser → PyfficeWebPage →
+        PyfficeURL round-trip.
+        """
+        url_str = None
+        try:
+            engine = getattr(self.viewer, "engine", None)
+            if engine is not None and hasattr(engine, "url"):
+                url_str = engine.url().toString()
+        except Exception:
+            url_str = None
+        if url_str:
+            try:
+                track = getattr(self.viewer, "_track_url", None)
+                if track is not None:
+                    track(url_str)
+            except Exception:
+                pass
+            try:
+                if self.document is not None and getattr(self.document, "active_page", None) is not None:
+                    if hasattr(self.document.active_page, "set_url"):
+                        self.document.active_page.set_url(url_str)
+            except Exception:
+                pass
+        try:
+            self.app.model.has_changed = True
+        except Exception:
+            pass
+        return self._on_url_change()
 
     def _ensure_drawer_item(self, items, cnt) -> Dict[str, Any]:
         """Lazily create a default drawer-item slot.

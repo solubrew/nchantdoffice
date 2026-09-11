@@ -182,7 +182,6 @@ def test_clear_url_history_empties_list():
     )
 
 
-@pytest.mark.skip(reason="T-NEW-069 pre-existing: NchantdWebViewer.set_url_path does not call _track_url — behavior not yet wired in source")
 def test_set_url_path_calls_track_and_replaces_dropdown():
     """set_url_path persists via _track_url AND replaces the
     dropdown options (no duplicate accumulation)."""
@@ -238,7 +237,6 @@ def test_set_url_path_calls_track_and_replaces_dropdown():
     )
 
 
-@pytest.mark.skip(reason="T-NEW-069 pre-existing: NchantdOfficeWebBrowser.build_toolbar does not call viewer.build_toolbar() — behavior not yet wired in source")
 def test_build_toolbar_delegates_to_browser_history():
     """``NchantdOfficeWebBrowser.build_toolbar`` delegates to
     ``self.browser._get_url_history()`` and seeds the dropdown
