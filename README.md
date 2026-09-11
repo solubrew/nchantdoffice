@@ -55,6 +55,31 @@ nchantdoffice
 nchantdoffice-cli --help
 ```
 
+## Settings tab and login persistence
+
+The Settings tab embeds a QtWebEngine browser whose target URL is
+always the server's `/user-account/home` (`urls.user_account_url()`,
+XDG-overridable). The server decides what the user sees:
+
+- Valid session cookie → the account dashboard
+- No/expired cookie → 302 to `/auth/login?next=/user-account/home`
+  (that page carries a "Create Account" link for fresh installs)
+
+The session cookie itself is a 30-day persistent Flask session
+(`session.permanent = True` server-side); ticking "Remember me" on
+the login form additionally issues a 180-day `remember_token`.
+Both survive desktop restarts and container rebuilds.
+
+**Do not** try to read the QtWebEngine cookie store from desktop
+code — PySide6's `QWebEngineCookieStore` has no public synchronous
+read API, and the `cookieAdded` signal path is racy (see
+CHANGES.md T-NEW-140 history). For a programmatic identity check
+use `GET {server}/api/auth/whoami` (200 = logged in, 401 = not),
+which is exactly what the embedded browser sends cookies to.
+
+Pro users (`user.has_pro`) land on `urls.whats_new_url()` instead —
+deliberate changelog view, no upsell.
+
 ## Development
 
 ### Setting up a development environment
