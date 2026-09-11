@@ -627,7 +627,9 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
             # Synchronous check first — cookie may already be loaded
             # (e.g. this show follows a completed login elsewhere).
             profile = self._get_shared_web_profile()
-            if profile is not None and self._profile_has_session_cookie(profile, urls):
+            if profile is not None and self._has_session_cookie_in_snapshot(
+                urls.server_base_url()
+            ):
                 # Only re-route if the browser is still parked on a
                 # marketing URL (user may have navigated manually).
                 engine = getattr(browser, "engine", None)
