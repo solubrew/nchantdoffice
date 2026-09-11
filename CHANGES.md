@@ -11,69 +11,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **T-NEW-140** `fix(accounts): route Settings tab by session-cookie presence` —
-  the Settings node's embedded browser always loaded the marketing
-  URL (registration/compare/whats_new based on `has_pro`/`has_account`),
-  even when the user had an active server login. The session cookie
-  WAS persisted (the shared QWebEngineProfile pool keeps it across
-  tab open/close), but the tab never routed to the logged-in
-  dashboard. Now `NchantdOfficeAccountSettings.initView` calls
-  `_resolve_initial_url()`, which checks the shared profile's cookie
-  store for `nchantdoffice_session_instance` (plus `session` and
-  `remember_token` fallbacks) via
-  `QWebEngineProfile.cookieStore().cookiesForUrl()`. Cookie present →
-  `urls.user_account_url()` (`/user-account/home`, server renders the
-  dashboard from the live session). No cookie → marketing URL as
-  before.
-  - **T-NEW-140 v5.1** `fix(accounts): signal-based cookie snapshot — every branch logs`
-    - The root cause of v1-v4 silently failing: PySide6's
-      `QWebEngineCookieStore` has **no `cookiesForUrl` method**.
-      Every sync check called the missing API, fell into the
-      `except` branch, and silently defaulted to the marketing URL
-      (laptop log: `'QWebEngineCookieStore' object has no attribute
-      'cookiesForUrl'`). v5 replaces the sync API with a self-
-      maintained cookie snapshot populated by the actual public API
-      (the `cookieAdded` signal). The watcher's `loadAllCookies()`
-      call triggers the disk read; each cookieAdded slot appends to
-      the snapshot; the routing decision reads from the snapshot.
-      Every code path now logs verbosely so future regressions are
-      diagnosable from the log alone.
-    - **Logged-out-but-has-account routes to login, not registration.**
-      Added `login_url()` to the URL resolver (urls.py + bundled
-      yaml). When the session cookie is gone but the local user
-      record says `has_account=True`, the Settings tab now routes
-      to `/auth/login` — never to `/registration`.
-    - `_make_marketing_url_guard` updated to read from the snapshot
-      (the v3 guard still referenced the deleted
-      `_profile_has_session_cookie` method, which is why the guard
-      fired zero times on the laptop).
-    - **v5.1 (`de333cd`)**: stale method reference in `showEvent`
-      still called `_profile_has_session_cookie()` (deleted in v5).
-      Replaced with `_has_session_cookie_in_snapshot()` so the
-      watcher arms correctly on every show. 14 unit tests still pass.
-    - 14 unit tests (was 13). All pass. Tests pin: sync routing
-      decision, snapshot append/match, URL guard redirect logic,
-      cookie-load watcher arms + routes + doesn't accumulate
-      listeners across shows, no-cookie + has_account → login_url.
-    - `urls.user_account_url()` and `urls.login_url()` are XDG-
-      overridable like every other URL.
+- **T-NEW-140 v6.3 (`e421016`)** `fix(accounts): always route to /user-account/home — server is the source of truth`
+  - **The fix and why v1-v5 failed**: the Settings tab's embedded
+    browser must show either the dashboard (logged in) or the login
+    page (logged out). The web form login on `/auth/login` doesn't
+    write a `DesktopCredentials` record, so any local `has_account`
+    flag derived from it stays False forever — Option B (route to
+    `/registration` when no local flag) kept re-routing logged-in
+    users back to the registration page on every tab reactivation.
+  - **The fix**: the Settings tab now always loads
+    `urls.user_account_url()`. The server (nchantdoffice_com
+    `704098a`) is the source of truth: with a valid session cookie
+    it renders the dashboard; without one it 302s to
+    `/auth/login?next=/user-account/home`. The login page has a
+    "Create Account" link for clean installs (DESK T-NEW-140 v6.3
+    UX trade-off: one extra click on a clean install vs. the
+    reliable post-login dashboard).
+  - Pro users keep `urls.whats_new_url()` (deliberate changelog
+    view, no upsell). The `has_account` local flag is preserved
+    in `NchantdOfficeUser` (derived from
+    `DesktopCredentials.is_complete()`) for future API-driven
+    registration flows — but it is no longer consulted by the
+    Settings tab routing.
+  - **v6.2 leftover**: `_resolve_has_account_from_credentials()`
+    added in `nchantdoffice/utilities/users.py`; never wired to
+    anything that fires on web-form login (which doesn't write
+    the credentials record). Lives on for future desktop-initiated
+    registration flows (the API path writes the record correctly).
+  - **Lesson for future QtWebEngine work**: PySide6's
+    `QWebEngineCookieStore` has **no public synchronous read API**.
+    The `cookieAdded` signal is fire-only — the only way to read the
+    cookie store is to wait for signals after `loadAllCookies()`. We
+    tried that in v1-v5 and it was racy, didn't fire pre-reactivation,
+    and the snapshot got reset on every show. Stop trying to read
+    cookies from the desktop; the server already sees them on every
+    request via the embedded browser's normal cookie sending. Use
+    `/api/auth/whoami` (nchantdoffice_com `da2e321`) for any
+    programmatic identity check.
 
-    `cookiesForUrl()` reads the in-memory store, which may be empty
-    while `loadAllCookies()` is still streaming from disk. After the
-    synchronous check returns no cookie, `showEvent` arms a one-shot
-    `cookieAdded` watcher that re-routes the browser the moment the
-    session cookie arrives. Best-effort: any profile/cookie API
-    failure falls back to the marketing URL; tab construction never
-    blocks.
-  - `nchantdoffice/utilities/urls.py`: new `user_account_url()`
-    accessor + entries in `_BUNDLED_DEFAULTS`, `DEV_URLS`, and the
-    bundled `_data_/urls.yaml` (key: `user_account_url`).
-  - `tests/test_account_tab_session_routing.py` (new): 19 tests
-    pinning the routing contract — session-cookie names route to
-    account home; unrelated/no cookies keep marketing; profile-pool
-    and cookie-API failures fall back safely; the cookie-load
-    watcher arms on first show and re-routes when cookies stream in.
+### Changed
 
+- **T-NEW-140 v6 (`11d9c7c`)** `fix(accounts): v6 — server-side routing, drop v1-v5 cookie machinery`
+  - Stripped the v1-v5 cookie snapshot / URL guard / showEvent
+    re-route / `_get_shared_web_profile` / etc. from
+    `nchantdoffice/widgets/config/accounts.py` — every code path
+    was a workaround for the missing public cookie API, and they
+    collectively added 300+ lines that didn't reliably work.
+  - `initView` now sets `cfg["url"]` to one of:
+    `whats_new_url()` (pro) or `user_account_url()` (everyone else).
+  - The marketing URLs (registration, compare) are no longer
+    the default landing for the Settings tab. The login page
+    carries the registration link.
+
+- **T-NEW-140 v6.1 (`072efe8`)** `fix(auth): clear stale flashes before post-login redirect`
+  - The login handler now calls `flask.get_flashed_messages()`
+    after `login_user()` to drain the session's flash buffer before
+    issuing the post-login redirect. Without this, the
+    "Please log in to access this page" message flashed by
+    Flask-Login on the pre-login redirect would carry through the
+    login POST and render on the next page (the dashboard) where it
+    is confusing — the user is now authenticated.
 ### Changed
 
 - **T-NEW-140/LAN-TLS** `docs: retarget dev-profile + XDG docs at https://192.168.1.67` —
