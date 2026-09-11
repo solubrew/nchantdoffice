@@ -228,27 +228,22 @@ class NchantdOfficeAccountSettings(NchantdAccountSettings):
         }
         if self.user is None:
             raise Exception("No User configured")
-        # DESK T-NEW-140 v6: route through the SERVER, which owns the
-        # session state. /user-account/home renders the dashboard when
-        # the embedded browser's session cookie is valid and 302s to
-        # /auth/login?next=/user-account/home when it is not. The
-        # login page links to registration for brand-new users. This
-        # replaces v1-v5 desktop-side cookie introspection — the
-        # QtWebEngine cookie store has no public synchronous read API,
-        # and the signal-based snapshot never reliably captured the
-        # session cookie before the tab reactivated.
+        # DESK T-NEW-140 v6.3: always route through the SERVER, which
+        # owns the session state. /user-account/home renders the
+        # dashboard when the embedded browser's session cookie is
+        # valid and 302s to /auth/login?next=/user-account/home when it
+        # is not. The login page has a prominent 'create account'
+        # link for brand-new users. This is the right place to put
+        # the auth decision because the source of truth is the
+        # server's session-cookie state, not the desktop's local
+        # state (the web login form on /auth/login doesn't write a
+        # DesktopCredentials record, so a has_account flag derived
+        # from it would stay False even after a successful login).
         #
         # Pro users keep whats_new (deliberate changelog view, no
-        # upsell); brand-new installs (local user record says no
-        # account has ever been claimed) go straight to registration;
-        # everyone else lands on the server router (/user-account/home
-        # -> dashboard when the session cookie is valid, login page
-        # otherwise). The local has_account flag is the only desktop-
-        # side state consulted — no cookie introspection.
+        # upsell); every other tier lands on the server router.
         if self.user.has_pro:
             cfg["url"] = _urls.whats_new_url()
-        elif not getattr(self.user, "has_account", False):
-            cfg["url"] = _urls.registration_url()
         else:
             cfg["url"] = _urls.user_account_url()
         # T-NEW-135: when the redirect_to_get_pro helper fired

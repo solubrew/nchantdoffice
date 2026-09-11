@@ -77,6 +77,18 @@ class NchantdOfficeUser(NchantdUser):
         # missing / malformed creds) default to True to
         # preserve the original hardcoded behaviour.
         self.has_pro = self._resolve_has_pro_from_credentials()
+        # DESK T-NEW-140 v6.2: ``has_account`` tracks whether the
+        # desktop has successfully registered or claimed an
+        # account on the server. It flips to True the moment the
+        # local DesktopCredentials cache holds a complete record
+        # (server returned both desktop_uuid AND api_key). After
+        # that point the Settings tab can route through the
+        # server's /user-account/home (which 302s to login if no
+        # session cookie, otherwise shows the dashboard) rather
+        # than dropping the user back to /registration on every
+        # tab reactivation. A clean install has no credentials
+        # record → has_account=False → direct to /registration.
+        self.has_account = self._resolve_has_account_from_credentials()
         self.easter_egg = None
         self.nchantd_account_wizard_visible = True
         self.nchantd_account_status = False
@@ -143,6 +155,44 @@ class NchantdOfficeUser(NchantdUser):
             # default to True (matches the pre-141b behaviour).
             return True
         return tier in ("pro", "pro_data", "enterprise")
+
+    @staticmethod
+    def _resolve_has_account_from_credentials() -> bool:
+        """T-NEW-140 v6.2: True if the desktop has a complete
+        DesktopCredentials record on disk.
+
+        ``is_complete()`` is True once the server has returned
+        both ``desktop_uuid`` (used for same-device detection) AND
+        ``api_key`` (used in the ``x-api-key`` header on every auth
+        call). The record is written by the register / claim /
+        login flows, so a True here means the desktop has
+        successfully established an account on the server at some
+        point. The session cookie itself may or may not still be
+        valid — the user-account router handles both cases
+        (dashboard if logged in, login if not). A clean install has
+        no record, so this returns False and the Settings tab routes
+        straight to /registration per Option B.
+
+        Defensive: any exception (missing pykey, corrupted file,
+        permission error) returns False — better to show the
+        registration page than to assume an account exists.
+        """
+        try:
+            from nchantdoffice.utilities.credentials import (
+                load_credentials,
+            )
+
+            creds = load_credentials()
+        except Exception as exc:
+            logma.warning(
+                f"[users] _resolve_has_account_from_credentials: "
+                f"load_credentials failed: {exc}; defaulting has_account=False"
+            )
+            return False
+
+        if creds is None:
+            return False
+        return bool(creds.is_complete())
 
 
 # ====================================================================================================================||
