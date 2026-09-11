@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `urls.user_account_url()` (`/user-account/home`, server renders the
   dashboard from the live session). No cookie → marketing URL as
   before.
-  - **T-NEW-140 v5** `fix(accounts): signal-based cookie snapshot — every branch logs`
+  - **T-NEW-140 v5.1** `fix(accounts): signal-based cookie snapshot — every branch logs`
     - The root cause of v1-v4 silently failing: PySide6's
       `QWebEngineCookieStore` has **no `cookiesForUrl` method**.
       Every sync check called the missing API, fell into the
@@ -47,6 +47,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       (the v3 guard still referenced the deleted
       `_profile_has_session_cookie` method, which is why the guard
       fired zero times on the laptop).
+    - **v5.1 (`de333cd`)**: stale method reference in `showEvent`
+      still called `_profile_has_session_cookie()` (deleted in v5).
+      Replaced with `_has_session_cookie_in_snapshot()` so the
+      watcher arms correctly on every show. 14 unit tests still pass.
     - 14 unit tests (was 13). All pass. Tests pin: sync routing
       decision, snapshot append/match, URL guard redirect logic,
       cookie-load watcher arms + routes + doesn't accumulate
