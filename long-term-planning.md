@@ -43,6 +43,8 @@ classes of issue that are cheaper to fix than a rewrite:
 3. **The SQLite layer is unindexed and synchronous** — 0 `CREATE INDEX`
    in the whole project, 0 `PRAGMA journal_mode = WAL`. Reads are
    `SELECT *` into pandas DataFrames on the GUI thread.
+    INDEXes are handled in the squirl layer by the models.yaml index list 
+
 4. **The widget layer uses `QTableWidget` + per-cell `setCellWidget`** —
    the editable spreadsheet builds N×M child widgets per sheet, then
    `insertRow(self.table.rowCount())` on every row — quadratic memory
