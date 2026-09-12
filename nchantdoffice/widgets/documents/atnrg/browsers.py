@@ -1666,6 +1666,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         {server_base_url}/ads/slim/full    single full-length hero
         {server_base_url}/ads/slim/stack2  2 vertical stacked boxes
         {server_base_url}/ads/slim/stack3  3 vertical stacked boxes
+        {server_base_url}/ads/slim/stack5  5 vertical stacked boxes
 
     The server picks the ad + handles its own rotation via
     ``<meta http-equiv="refresh">`` (300s), so the desktop just
@@ -1679,12 +1680,15 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     """
 
     # Height thresholds (px) for size-appropriate layout picks.
-    # Right pane is typically 300-800px tall; stack2 fits 2 ad
-    # boxes (~400px), stack3 needs ~600px, full wants height.
+    # Right pane is typically 300-800px tall; stack5 is the
+    # default docked layout (5 compact boxes fit ~380-620px),
+    # stack3 for the tallest panes, full for short panes.
     LAYOUT_FULL = "full"
     LAYOUT_STACK2 = "stack2"
     LAYOUT_STACK3 = "stack3"
+    LAYOUT_STACK5 = "stack5"
     STACK3_MIN_HEIGHT = 620
+    STACK5_MIN_HEIGHT = 380
     STACK2_MIN_HEIGHT = 380
 
     def __init__(self, parent=None, cfg=None) -> None:
@@ -1721,13 +1725,13 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
 
         Size ladder (px, pane height):
           >= 620 -> stack3 (3 vertical boxes)
-          >= 380 -> stack2 (2 vertical boxes)
+          >= 380 -> stack5 (5 compact vertical boxes)
           <  380 -> full   (single full-length hero)
         """
         if height >= self.STACK3_MIN_HEIGHT:
             return self.LAYOUT_STACK3
-        if height >= self.STACK2_MIN_HEIGHT:
-            return self.LAYOUT_STACK2
+        if height >= self.STACK5_MIN_HEIGHT:
+            return self.LAYOUT_STACK5
         return self.LAYOUT_FULL
 
     def _ad_base_url(self) -> str:
@@ -1906,7 +1910,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         # slim-ad page instead of the generic browser homepage.
         # An explicit cfg["url"] still wins (operator override).
         if self.config.dikt.get("url", None) is None:
-            cfg["url"] = self._ad_url_for_layout(self.LAYOUT_STACK2)
+            cfg["url"] = self._ad_url_for_layout(self.LAYOUT_STACK5)
         else:
             cfg["url"] = self.config.dikt.get("url")
         self.config.override(cfg)
@@ -1975,11 +1979,11 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             # size (height 0 mid-construction would falsely
             # pick ``full``; the first real resizeEvent
             # corrects the ladder anyway).
-            self._current_layout = self.LAYOUT_STACK2
+            self._current_layout = self.LAYOUT_STACK5
             if self.height() > 0:
                 desired = self._ad_layout_for_height(self.height())
                 self._current_layout = desired
-                if desired != self.LAYOUT_STACK2:
+                if desired != self.LAYOUT_STACK5:
                     self._load_ad_layout(desired)
             # Start the surface timer AFTER the viewer is built
             # so the first tick (and any subsequent) can find
