@@ -47,3 +47,6 @@ htmlcov/
 /zz-tomb_/
 /zz-work_/
 /.cache/
+
+# Runtime state files (live counters, prompt cooldowns)
+nchantdoffice/utilities/_data_/.upgrade_prompt_state.json
