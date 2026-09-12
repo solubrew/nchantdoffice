@@ -36,6 +36,7 @@ from nchantrs.widgets.controls.advanced_buttons import NchantdLabeledSpinBox
 from nchantrs.widgets.widgets import NchantdWidget
 from nchantrs.widgets.tables.lists import NchantdList, NchantdListWidget
 from nchantrs.widgets.browsers.profiles import NchantdWebProfile
+from nchantrs.widgets.browsers.pages import NchantdWebEnginePage
 from nchantdoffice.widgets.documents.atnrg.pages import NchantdOfficeWebPage
 
 # ====================================================================================================================||
@@ -1656,6 +1657,53 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
         return content
 
 
+class _NchoInterceptionPage(NchantdWebEnginePage):
+    """Web page that intercepts ``ncho://`` action links.
+
+    T-NEW-075 (desk): companion to ``NchantdOfficeAdTab``'s
+    ``ncho://`` scheme. The slim-ad footer renders action links
+    (currently just "Get Pro" → ``ncho://action/open_settings``)
+    that must launch a DESKTOP surface, not a web navigation.
+    This page subclass sniffs the scheme in
+    ``acceptNavigationRequest`` before the WebEngine sees it,
+    dispatches to the registered handler, and blocks the
+    navigation (return False) so the ad page stays loaded.
+
+    Every other URL (http/https/file/...) falls through to the
+    stock NchantdWebEnginePage behaviour unchanged.
+    """
+
+    def __init__(self, profile, parent, handlers=None) -> None:
+        # Positional (profile, parent) mirrors the engine's own
+        # construction shape at engines.py:49 — the base class
+        # signature is (parent, profile, ...) but the historical
+        # call works because both slots are interchangeable at
+        # runtime for QWebEnginePage. Keep the same shape to
+        # avoid behavioural drift.
+        super().__init__(profile, parent)
+        self.handlers = dict(handlers or {})
+
+    def acceptNavigationRequest(self, url, navigation_type, is_main_frame) -> bool:
+        url_str = url.toString()
+        if url.scheme().lower() == "ncho":
+            handler = self.handlers.get(url_str)
+            if handler is None:
+                logma.warning(
+                    f"[ncho_page] no handler for action {url_str!r}; "
+                    "blocking navigation"
+                )
+                return False
+            try:
+                handler(url_str)
+            except Exception as exc:
+                logma.warning(
+                    f"[ncho_page] handler for {url_str!r} failed "
+                    f"(non-blocking): {exc}"
+                )
+            return False
+        return super().acceptNavigationRequest(url, navigation_type, is_main_frame)
+
+
 class NchantdOfficeAdTab(NchantdOfficeDocument):
     """Right-pane "Ad" tab backed by the slim web viewer.
 
@@ -1694,6 +1742,13 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     LAYOUT_STACK3 = "stack3"
     LAYOUT_STACK5 = "stack5"
     LAYOUT_ROTATE = "rotate"
+    # T-NEW-075 (desk): custom URL scheme the slim-ad footer
+    # uses to talk back to the desktop (currently only "Get
+    # Pro" -> open the Settings node). Intercepted in
+    # _NchoInterceptionPage.acceptNavigationRequest so the
+    # navigation never reaches the WebEngine — we route
+    # through the registered handler and revert the URL.
+    NCHO_ACTION_OPEN_SETTINGS = "ncho://action/open_settings"
     STACK3_MIN_HEIGHT = 620
     STACK5_MIN_HEIGHT = 380
     STACK2_MIN_HEIGHT = 380
@@ -1912,6 +1967,98 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             self._timer = None
             logma.info("[ad_tab] surface timer stopped (tab replaced)")
 
+    def _install_ncho_interception_page(self) -> None:
+        """Swap the viewer's default page for one that intercepts
+        ``ncho://`` action links.
+
+        T-NEW-075 (desk): the slim-ad footer's "Get Pro" button
+        links to ``ncho://action/open_settings``. The WebEngine
+        has no handler for that scheme and would show an error
+        page. We swap in a page subclass that sniffs the scheme
+        in ``acceptNavigationRequest`` and routes through
+        ``self._ncho_action_handlers`` instead; the navigation
+        itself is swallowed (return False).
+
+        The original page is kept in ``self._original_page`` so
+        tests/cleanup can still reach it. The new page reuses the
+        engine's own profile so cookies/cache carry over.
+        """
+        try:
+            engine = getattr(self.viewer, "engine", None)
+            if engine is None:
+                logma.warning(
+                    "[ad_tab] _install_ncho_interception_page: "
+                    "no engine on viewer; skipping"
+                )
+                return
+            self._ncho_action_handlers = {
+                self.NCHO_ACTION_OPEN_SETTINGS: self._open_settings_node,
+            }
+            self._original_page = engine.page()
+            try:
+                profile = self._original_page.profile()
+            except Exception:
+                profile = None
+            new_page = _NchoInterceptionPage(
+                profile, engine, handlers=self._ncho_action_handlers,
+            )
+            engine.setPage(new_page)
+            logma.info(
+                "[ad_tab] _install_ncho_interception_page: "
+                "swapped to _NchoInterceptionPage with "
+                f"{len(self._ncho_action_handlers)} handler(s)"
+            )
+        except Exception as exc:
+            logma.warning(
+                "[ad_tab] _install_ncho_interception_page failed "
+                f"(non-blocking): {exc}"
+            )
+
+    def _open_settings_node(self, _action_url: str) -> None:
+        """Route the ``ncho://action/open_settings`` action to the
+        desktop's Settings node.
+
+        T-NEW-075 (desk): triggered by the slim-ad footer's
+        "Get Pro" button. Delegates to the canonical
+        ``switch_to_account_tab`` router (which itself falls
+        back to the user's ``settings_tab`` when
+        ``account_tab`` is absent).
+
+        Never raises — logs and returns on failure so the
+        caller (``acceptNavigationRequest``) stays non-blocking.
+        """
+        try:
+            app = getattr(self, "app", None)
+            if app is None:
+                return
+            # The canonical router lives on the QMainWindow
+            # (``app.view``); some legacy instantiations wire it
+            # directly on ``app``. Try both.
+            switcher = None
+            inner_view = getattr(app, "view", None)
+            if inner_view is not None and hasattr(
+                inner_view, "switch_to_account_tab"
+            ):
+                switcher = inner_view.switch_to_account_tab
+            elif hasattr(app, "switch_to_account_tab"):
+                switcher = app.switch_to_account_tab
+            if switcher is None:
+                logma.warning(
+                    "[ad_tab] _open_settings_node: no "
+                    "switch_to_account_tab available on app/view"
+                )
+                return
+            switcher()
+            logma.info(
+                "[ad_tab] _open_settings_node: routed to "
+                "switch_to_account_tab"
+            )
+        except Exception as exc:
+            logma.warning(
+                f"[ad_tab] _open_settings_node failed "
+                f"(non-blocking): {exc}"
+            )
+
     def initModel(self, cfg=None) -> Self:
         """ """
         if cfg is None:
@@ -1967,6 +2114,14 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         cfg["default_toolbar"] = False
         super().initView(cfg)
         self.viewer.initWidget()
+        # T-NEW-075 (desk): swap the viewer's page for one that
+        # intercepts ``ncho://`` action links (e.g. "Get Pro" →
+        # open the Settings node). We do this AFTER initWidget
+        # so the viewer has already created its default page
+        # (which we then replace). The new page inherits the
+        # default profile + delegates every other request to
+        # the original handler.
+        self._install_ncho_interception_page()
         self.layout.addWidget(self.viewer)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(3)
