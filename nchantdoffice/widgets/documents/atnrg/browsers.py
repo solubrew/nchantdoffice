@@ -1668,10 +1668,15 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         {server_base_url}/ads/slim/stack3  3 vertical stacked boxes
         {server_base_url}/ads/slim/stack5  5 vertical stacked boxes
 
-    The server picks the ad + handles its own rotation via
-    ``<meta http-equiv="refresh">`` (300s), so the desktop just
-    loads the URL once per layout switch — no local QTimer,
-    no local slot rotation.
+    T-NEW-074 (desk): the desktop no longer picks a layout.
+    It points at ``/ads/slim/rotate``; the server picks one
+    of the four concrete URLs based on a per-bucket random
+    draw filtered by which formats have compatible ads. The
+    desktop's height-based size ladder (``_ad_layout_for_height``)
+    is preserved as a fallback only — if ``/rotate`` ever
+    302s to a format too tall for the pane, the next meta-refresh
+    swaps to a shorter one. Two LAN panes stay locked to the
+    same bucket so they show the same format at the same time.
 
     Pro/free-tier gating mirrors the previous native tab:
     hidden for Pro users (``user.has_pro``) and for users with
@@ -1679,14 +1684,16 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     (``user_config.is_ad_tab_free_active``).
     """
 
-    # Height thresholds (px) for size-appropriate layout picks.
-    # Right pane is typically 300-800px tall; stack5 is the
-    # default docked layout (5 compact boxes fit ~380-620px),
-    # stack3 for the tallest panes, full for short panes.
+    # Layout names (must match the url_prefix route names in
+    # nchantdoffice_com/app/routes/slim_ads.py and the
+    # ``SLIM_LAYOUTS`` tuple there). The constants stay on the
+    # desktop so legacy callers (e.g. operator previews) can
+    # still target a specific layout by setting ``url`` in cfg.
     LAYOUT_FULL = "full"
     LAYOUT_STACK2 = "stack2"
     LAYOUT_STACK3 = "stack3"
     LAYOUT_STACK5 = "stack5"
+    LAYOUT_ROTATE = "rotate"
     STACK3_MIN_HEIGHT = 620
     STACK5_MIN_HEIGHT = 380
     STACK2_MIN_HEIGHT = 380
@@ -1745,7 +1752,12 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         return server_base_url().rstrip("/")
 
     def _ad_url_for_layout(self, layout: str) -> str:
-        """Compose the slim-ad page URL for ``layout``."""
+        """Compose the slim-ad page URL for ``layout``.
+
+        Use ``LAYOUT_ROTATE`` (the default) so the server
+        picks a layout per rotation bucket. Any other name
+        forces a specific layout (operator preview / e2e tests).
+        """
         return f"{self._ad_base_url()}/ads/slim/{layout}"
 
     def _is_visible_for_user(self) -> bool:
@@ -1909,8 +1921,12 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         # T-NEW-051 (desk): default the URL to the size-appropriate
         # slim-ad page instead of the generic browser homepage.
         # An explicit cfg["url"] still wins (operator override).
+        # T-NEW-074 (desk): default is now ``/rotate`` — the server
+        # picks the concrete layout per bucket. An operator who
+        # wants to pin a specific layout sets cfg["url"] to the
+        # full /ads/slim/<layout> URL.
         if self.config.dikt.get("url", None) is None:
-            cfg["url"] = self._ad_url_for_layout(self.LAYOUT_STACK5)
+            cfg["url"] = self._ad_url_for_layout(self.LAYOUT_ROTATE)
         else:
             cfg["url"] = self.config.dikt.get("url")
         self.config.override(cfg)
