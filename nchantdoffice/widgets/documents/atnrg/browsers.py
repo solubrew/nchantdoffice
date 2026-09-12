@@ -1660,7 +1660,7 @@ class NchantdOfficeSlimTabSearch(NchantdWidget):
 class _NchoInterceptionPage(NchantdWebEnginePage):
     """Web page that intercepts ``ncho://`` action links.
 
-    T-NEW-075 (desk): companion to ``NchantdOfficeAdTab``'s
+    T-NEW-165 (desk): companion to ``NchantdOfficeAdTab``'s
     ``ncho://`` scheme. The slim-ad footer renders action links
     (currently just "Get Pro" → ``ncho://action/open_settings``)
     that must launch a DESKTOP surface, not a web navigation.
@@ -1716,7 +1716,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         {server_base_url}/ads/slim/stack3  3 vertical stacked boxes
         {server_base_url}/ads/slim/stack5  5 vertical stacked boxes
 
-    T-NEW-074 (desk): the desktop no longer picks a layout.
+    T-NEW-164 (desk): the desktop no longer picks a layout.
     It points at ``/ads/slim/rotate``; the server picks one
     of the four concrete URLs based on a per-bucket random
     draw filtered by which formats have compatible ads. The
@@ -1742,7 +1742,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
     LAYOUT_STACK3 = "stack3"
     LAYOUT_STACK5 = "stack5"
     LAYOUT_ROTATE = "rotate"
-    # T-NEW-075 (desk): custom URL scheme the slim-ad footer
+    # T-NEW-165 (desk): custom URL scheme the slim-ad footer
     # uses to talk back to the desktop (currently only "Get
     # Pro" -> open the Settings node). Intercepted in
     # _NchoInterceptionPage.acceptNavigationRequest so the
@@ -1971,7 +1971,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         """Swap the viewer's default page for one that intercepts
         ``ncho://`` action links.
 
-        T-NEW-075 (desk): the slim-ad footer's "Get Pro" button
+        T-NEW-165 (desk): the slim-ad footer's "Get Pro" button
         links to ``ncho://action/open_settings``. The WebEngine
         has no handler for that scheme and would show an error
         page. We swap in a page subclass that sniffs the scheme
@@ -2018,7 +2018,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         """Route the ``ncho://action/open_settings`` action to the
         desktop's Settings node.
 
-        T-NEW-075 (desk): triggered by the slim-ad footer's
+        T-NEW-165 (desk): triggered by the slim-ad footer's
         "Get Pro" button. Delegates to the canonical
         ``switch_to_account_tab`` router (which itself falls
         back to the user's ``settings_tab`` when
@@ -2068,7 +2068,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         # T-NEW-051 (desk): default the URL to the size-appropriate
         # slim-ad page instead of the generic browser homepage.
         # An explicit cfg["url"] still wins (operator override).
-        # T-NEW-074 (desk): default is now ``/rotate`` — the server
+        # T-NEW-164 (desk): default is now ``/rotate`` — the server
         # picks the concrete layout per bucket. An operator who
         # wants to pin a specific layout sets cfg["url"] to the
         # full /ads/slim/<layout> URL.
@@ -2114,7 +2114,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         cfg["default_toolbar"] = False
         super().initView(cfg)
         self.viewer.initWidget()
-        # T-NEW-075 (desk): swap the viewer's page for one that
+        # T-NEW-165 (desk): swap the viewer's page for one that
         # intercepts ``ncho://`` action links (e.g. "Get Pro" →
         # open the Settings node). We do this AFTER initWidget
         # so the viewer has already created its default page

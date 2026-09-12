@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] — 2026-09-12 (slim-ad rotation landing + Get Pro interception)
+
+### Added
+
+- **DESK T-NEW-164 Ad tab lands on server-side rotation (`3336f9f`)** —
+  `NchantdOfficeAdTab` now defaults to `LAYOUT_ROTATE = "rotate"`
+  and loads `https://<host>/ads/slim/rotate` on first surface.
+  - Server picks the concrete format via
+    `/ads/slim/rotate?interval_seconds=NNN` (302 → `/ads/slim/…`).
+  - The legacy priority-based ladder (`stack3 ≥ 620dp`,
+    `stack5 ≥ 380dp`, `full < 0dp` ) is preserved as a fallback
+    until the operator is satisfied with the server's picks.
+  - This supersedes the local QTimer + 5-slot registry that
+    caused app locks before DESK T-091.
+
+- **DESK T-NEW-165 Get Pro button interception (`5d334b9`)** —
+  the slim-ad footer's "Get Pro" button uses the custom
+  `ncho://action/open_settings` scheme. The Ad tab swaps its
+  WebEngine page for a subclass
+  `_NchoInterceptionPage(NchantdWebEnginePage)` (in
+  `widgets/documents/atnrg/browsers.py`) that sniffs `ncho://`
+  requests in `acceptNavigationRequest` and dispatches to a
+  per-instance handler dict (`_ncho_action_handlers`).
+  - Returning `False` from `acceptNavigationRequest` blocks the
+    URL change — the ad page stays loaded, only the launcher
+    fires.
+  - Wired handler: `ncho://action/open_settings` →
+    `self.app.view.switch_to_account_tab` (the existing
+    Settings-node router; `jump_to_account_tab` in
+    `documents.py:1075`).
+  - Subclass kept in-module (single-site, single-responsibility)
+    so other web views are untouched. `NCHO_ACTION_SCHEME`
+    constant + handler registry leave room for future actions.
+  - 9 AST-shaped checks pinning the wiring live in nchantrs:
+    `tests/test_browser_ncho_interception_tnew165.py` (`7cbf413`).
+
+### Fixed
+
+- **Stuck-format bug (`62cf6ac`, server side)** — the slim page's
+  meta refresh had no `url=` (self-reload) so the Ad tab was pinned
+  on whatever format `/rotate` first landed on. Fix landed in
+  nchantdoffice_com `62cf6ac` (meta refresh + footer refresh link
+  both re-enter `/rotate`). Desktop picked it up automatically
+  since the template ships in the backend image.
+
 ## [Unreleased]
 
 ### Fixed

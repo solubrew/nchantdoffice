@@ -322,6 +322,22 @@ Two complementary edits in `nchantrs/widgets/browsers/browsers.py`:
 Ad tab now renders on first surface; layout rotation reloads fresh; server-side
 meta-refresh (300s) still rotates. User confirmed live 2026-09-12.
 
+### Updates since 2026-09-12
+
+- **2026-09-12 (DESK T-NEW-164, `3336f9f`)** — the Ad tab now
+  boots on `/ads/slim/rotate` (the server picks the layout).
+  The local `_load_ad_layout()` priority-based ladder is kept
+  as a fallback for offline / unconfigured servers.
+- **2026-09-12 (DESK T-NEW-165, `5d334b9`)** — the slim ad
+  surface now ships a footer "Get Pro" button that uses
+  `ncho://action/open_settings`. `_NchoInterceptionPage` subclass
+  overrides `acceptNavigationRequest` to dispatch to the
+  Settings-node launcher without navigating. AST regression
+  guards in nchantrs `tests/test_browser_ncho_interception_tnew165.py` (`7cbf413`).
+- **2026-09-12 (`62cf6ac`)** — slim-ad meta refresh fixed:
+  `/rotate` is now reached on every tick instead of self-reloading
+  the previously-landed concrete layout.
+
 ---
 
 ## 8. Remaining work
