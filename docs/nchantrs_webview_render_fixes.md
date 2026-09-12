@@ -1,10 +1,10 @@
 # Root-cause fixes in `nchantrs` for blank `QWebEngineView` rendering
 
-Status: proposed (changes live in the shared `nchantrs` library, **not** in
-`nchantdoffice`). This document explains *why* embedded web views render blank
-and specifies the exact edits needed so the workaround currently sitting in
-`nchantdoffice/widgets/documents/workbooks/notebooks.py` can eventually be
-removed.
+Status: **landed** in `nchantrs` gamma — `1a0c23c` (2026-09-11, Fix B `showEvent`
+hoist) + `af7c19e` (2026-09-12, empty-active_url guard). The notebook workaround
+in `nchantdoffice/widgets/documents/workbooks/notebooks.py` is still present —
+see "Remaining work" below — but the Ad tab blanking (Cause D, added 2026-09-12)
+is fully resolved.
 
 All line numbers reference the running copy:
 `.../tskNchantrs/1_DELTA/nchantrs/nchantrs/...`
@@ -256,7 +256,86 @@ After applying the `nchantrs` fixes:
 
 ---
 
-## 7. File / line index
+## 7. Cause D — empty `active_url` clobbers a loaded page (Ad tab)
+
+**Discovered 2026-09-12 via the user's live desktop log**, while rotating the Ad tab
+through the layout cycle (`stack2` → `stack3`).
+
+### Symptom
+
+The Ad tab's `_load_ad_layout()` correctly populated the engine with the slim-ad URL:
+
+```
+13:50:15,729  Load Document: https://192.168.1.67/ads/slim/stack3
+```
+
+…then 9 ms later, the Viewer's first `showEvent` re-loaded an **empty** URL over it:
+
+```
+13:50:15,738  [webviewer] showEvent ... | active_url=
+13:50:15,738  [webviewer] first show -> loading active_url
+13:50:15,738  Load Document:
+```
+
+`engine.load("")` clobbered the page that `_load_ad_layout` had just loaded, leaving
+the tab visibly blank. Subsequent `showEvent` cycles never re-triggered the
+blanking (`_did_initial_load = True`), so the page stayed blank for the rest of
+the session.
+
+### Root cause
+
+`NchantdURL` **subclasses** `pyqt.QUrl`. The Viewer's `set_url_path` (called with
+the AdTab's `NchantdOfficeURL` wrapper) had its isinstance branches in this order:
+
+```python
+if isinstance(url, pyqt.QUrl):    # ← fires first because NchantdURL IS-A QUrl
+    url_str = url.toString()      #    reads the wrapper's empty QUrl state
+elif isinstance(url, NchantdURL):
+    url_str = url.get_url()       # ← never reached
+```
+
+`NchantdOfficeURL.__init__` (nchantdoffice `pages.py`) sets `self.url` from its
+**config** (`config.get("url", config.get("homepage", HOMEURL))`), not from the
+positional URL arg the caller passed in. For the AdTab's call site
+(`initModel` at line 1929, cfg={}), the config had no `url`/`homepage`, so the
+wrapper's `.url` was `HOMEURL` while the **QUrl internal state was empty**.
+`url.toString()` returned `""`, which was then re-wrapped as a new empty
+`NchantdURL` and assigned to `self.active_url` — silently, with no error.
+
+The Viewer's `showEvent` first-load guard was `if active_url is not None`, which
+an empty-string `active_url` passes. `engine.load("")` then blanked the page.
+
+### Fix (`af7c19e`, 2026-09-12)
+
+Two complementary edits in `nchantrs/widgets/browsers/browsers.py`:
+
+1. **`set_url_path`**: reorder isinstance checks (`NchantdURL` first, fall back to
+   `toString()` only when `.url` is empty); bail out cleanly when normalisation
+   yields `''` (no history entry, no `active_url` clobber).
+2. **`showEvent` first-load**: require a non-empty `.url` string on
+   `self.active_url`; when empty, keep the engine's already-loaded page (AdTab
+   pre-loads via `populate_document` before the first show), else fall back to
+   `cmd_goto_page()` (config default).
+
+### Verification
+
+Ad tab now renders on first surface; layout rotation reloads fresh; server-side
+meta-refresh (300s) still rotates. User confirmed live 2026-09-12.
+
+---
+
+## 8. Remaining work
+
+The notebook workaround in `nchantdoffice/widgets/documents/workbooks/notebooks.py`
+(self-heal retry loop on `about:blank`, init to `about:blank` then re-navigate
+after server readiness) is still in place. With Cause B + Cause D fixed in
+`nchantrs`, it can be simplified to a single clean `_navigate_browser` after
+readiness. The launch/URL logging and the `loadFinished ok=...` diagnostic
+remain useful — keep them.
+
+---
+
+## 9. File / line index
 
 | Concern | File | Line |
 |---|---|---|

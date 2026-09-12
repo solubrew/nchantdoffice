@@ -93,7 +93,7 @@
 - **T-NEW-066** ✅ Matrix chart extraction from Excel workbooks — **landed in pyffice** (upstream of nchantdoffice). `PyfficeMatrix.load_excel()` now extracts charts from `ws._charts` via two new helpers (`_extract_charts_from_worksheet` + `_chart_from_openpyxl`). 5 tests in `tests/pyffice_unit/unit/matrix/chartExtractionTEST.py`. Commit `95a8d9f` (pyffice gamma, merged as `4ed8768`). User-facing: NchantdOfficeMatrix inherits the change automatically.
 - **T-NEW-067** ✅ PyfficeChart direct .xlsx loading — **landed in pyffice**. New `PyfficeChart.load_from_xlsx(file_path, chart_index=0, include_data=True)` opens a chart directly without going through Matrix. 4 tests in `tests/pyffice_unit/unit/charts/loadFromXlsxTEST.py`. Commit `3fb26cf` (pyffice gamma, merged as `b3aee3f`). User-facing: NchantdOfficeChart inherits the change automatically.
 - **T-NEW-068** ✅ NchantdFilesystem location memory, commit `46cb95f` (2026-08-10, t-new-068).
-- **T-NEW-069** ✅ NchantdBrowser URL history tracking, commit `10e62cc` (2026-08-10, t-new-069).
+- **T-NEW-069** ✅ NchantdBrowser URL history tracking, commit `10e62cc` (2026-08-10, t-new-069); extended 2026-09-11/12 by `8f0db6b`/`1a0c23c`/`af7c19e` (nchantrs) + `62233cf` (nchantdoffice) + `64d4518` (pyffice) — URL dropdown wiring, history persistence round-trip, `populate_document` Viewer alias, and the empty-active_url blanking fix that restored the Ad tab.
 - **T-NEW-070** ✅ NchantdOfficeNotebook click capture/redirect/replace, commit `264df18` (2026-08-10, t-new-070).
 - **T-NEW-071** ✅ NchantdOfficeJournalSettings pro-tier editor, commit `a9c1f6f` (2026-08-10, t-new-071).
 - **T-NEW-072** ✅ TODOs.md update-process consolidation — added "Update Process Overview" section + T-NEW-061 deferred card body.

@@ -11,6 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **T-NEW-069 Ad tab blank after rotation — fully resolved (`62233cf` here + nchantrs
+  `af7c19e`)** — three-layer fix across repos:
+  - `populate_document` (nchantdoffice `widgets/documents/atnrg/browsers.py`): guards
+    `None` url, tracks via `_track_url`, syncs the dropdown, dedups the active URL, and
+    logs `cmd_goto_page` errors instead of silently failing.
+  - `set_current_domain`: None-safe read from
+    `self.document.active_page.active_url.domain`.
+  - `_on_url_change`: calls `update_toolbox_url_inspection` + `setCurrentText(url)` on the
+    dropdown with dedup `replace=True`.
+  - `init_drawer_url_inspection`: wired `self.engine.urlChanged.connect(
+    self.cmd_active_url_change)` at the end of drawer build (late-bind, post-toolbar).
+  - Root cause of the *final* symptom (empty active_url clobbering a loaded page) fixed in
+    nchantrs `af7c19e`: `NchantdURL` subclasses `QUrl`, so `set_url_path`'s isinstance
+    ordering read the wrapper's empty QUrl state instead of `.url`. See nchantrs CHANGES.md.
+  - Verified on live desktop 2026-09-12: Ad tab renders on first surface, layout rotation
+    (stack2↔stack3) reloads fresh, server-side meta-refresh rotation working.
+
+- **runtime `.upgrade_prompt_state.json` untracked (`644c4ab`)** — live counter state
+  (tabs_created, quicklinks_clicked, prompt cooldowns) removed from source control and
+  ignored via a narrow `.gitignore` entry. The sibling yaml configs in `_data_/` remain
+  tracked.
+
 - **T-NEW-140 v6.3 (`e421016`)** `fix(accounts): always route to /user-account/home — server is the source of truth`
   - **The fix and why v1-v5 failed**: the Settings tab's embedded
     browser must show either the dashboard (logged in) or the login
