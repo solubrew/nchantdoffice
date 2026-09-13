@@ -1773,6 +1773,9 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         # resize so the ad stack grows/shrinks with the pane.
         self._current_layout = None
         self._user = None
+        # T-NEW-167 (desk): telemetry emitter — created lazily
+        # in initView (needs the built viewer for context).
+        self._telemetry = None
         # Surface-timer state (ported from the native tab,
         # advertisements.py): a 5-min QTimer that raises this
         # tab in the right pane so the (server-rotated) slim
@@ -1781,6 +1784,24 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         # before initView's tier gate are no-ops.
         self._ads_visible = False
         self._timer = None
+
+    def _telemetry_ensure(self):
+        """Lazily build the T-NEW-167 telemetry emitter.
+
+        Returns None (and degrades to no-op) on any failure —
+        telemetry must never break the ad surface.
+        """
+        if getattr(self, "_telemetry", None) is not None:
+            return self._telemetry
+        try:
+            from nchantdoffice.widgets.documents.atnrg.ad_telemetry import (
+                AdTabTelemetry,
+            )
+            self._telemetry = AdTabTelemetry(self)
+        except Exception as exc:
+            logma.warning(f"[ad_tab] telemetry init failed (noop): {exc}")
+            self._telemetry = None
+        return self._telemetry
 
     def _ad_layout_for_height(self, height: int) -> str:
         """Pick the slim-ad layout appropriate for a pane height.
@@ -1812,8 +1833,28 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         Use ``LAYOUT_ROTATE`` (the default) so the server
         picks a layout per rotation bucket. Any other name
         forces a specific layout (operator preview / e2e tests).
+
+        T-NEW-167 (desk): appends lightweight telemetry params
+        (``inst``/``uid``/``ut``/``stk``/``top``) the page's
+        render beacon reads via ``sendBeacon``. The params
+        survive the ``/rotate`` 302 and each meta-refresh (the
+        base template's refresh/footer URLs preserve the query
+        string), so the page keeps self-identifying across
+        rotation ticks. ``stk``/``top`` reflect tab state at
+        URL-build time; fresh per-event positions come from the
+        desktop emitter's rotation / session_tick events.
         """
-        return f"{self._ad_base_url()}/ads/slim/{layout}"
+        url = f"{self._ad_base_url()}/ads/slim/{layout}"
+        try:
+            telemetry = self._telemetry_ensure()
+            if telemetry is None:
+                return url
+            params = telemetry.url_params()
+            if params:
+                url = f"{url}?{params}"
+        except Exception as exc:
+            logma.warning(f"[ad_tab] telemetry url params failed: {exc}")
+        return url
 
     def _is_visible_for_user(self) -> bool:
         """Whether this tab should be rendered for the current user.
@@ -1868,6 +1909,15 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         if self.viewer is not None:
             self.viewer.populate_document(url)
         logma.info(f"[ad_tab] layout {layout} -> {url}")
+        # T-NEW-167 (desk): rotation event — the viewer will fire
+        # loadFinished shortly; the round-trip is fire-and-forget
+        # so any failure logs without affecting rotation.
+        try:
+            telemetry = self._telemetry_ensure()
+            if telemetry is not None:
+                telemetry.emit_rotation(layout)
+        except Exception as exc:
+            logma.warning(f"[ad_tab] rotation emit failed: {exc}")
 
     # ------------------------------------------------------------------
     # Surface timer (ported from the native tab,
@@ -1966,6 +2016,14 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             timer.deleteLater()
             self._timer = None
             logma.info("[ad_tab] surface timer stopped (tab replaced)")
+        # T-NEW-167 (desk): stop the telemetry heartbeat too —
+        # same lifecycle as the surface timer.
+        telemetry_timer = getattr(self, "_telemetry_timer", None)
+        if telemetry_timer is not None:
+            telemetry_timer.stop()
+            telemetry_timer.deleteLater()
+            self._telemetry_timer = None
+            logma.info("[ad_tab] telemetry timer stopped (tab replaced)")
 
     def _install_ncho_interception_page(self) -> None:
         """Swap the viewer's default page for one that intercepts
@@ -2024,9 +2082,29 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         back to the user's ``settings_tab`` when
         ``account_tab`` is absent).
 
+        T-NEW-167 (desk): also records a click telemetry event.
+        The viewer's URL is the post-302 layout, so we read
+        ``_current_layout`` as the click's layout (best-effort).
+
         Never raises — logs and returns on failure so the
         caller (``acceptNavigationRequest``) stays non-blocking.
         """
+        # T-NEW-167: emit click BEFORE the router so a router
+        # failure still records the user gesture. Layout is the
+        # current layout at click time; slot_index stays None
+        # (the ncho:// handler doesn't expose which box was
+        # clicked — the click comes from the footer's "Get Pro"
+        # button, not a per-ad link).
+        try:
+            telemetry = self._telemetry_ensure()
+            if telemetry is not None:
+                telemetry.emit_click(
+                    layout=self._current_layout,
+                    slot_index=None,
+                    campaign_slug="get-pro",
+                )
+        except Exception as exc:
+            logma.warning(f"[ad_tab] click emit failed: {exc}")
         try:
             app = getattr(self, "app", None)
             if app is None:
@@ -2161,7 +2239,53 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             # this tab in the right pane tabset. Mirrors the
             # native tab's initView in advertisements.py.
             self._start_surface_timer()
+            # T-NEW-167 (desk): 30s session-tick telemetry timer.
+            # Independent of the 5-min surface timer so "time
+            # application has been open" is tracked at usable
+            # granularity even when the surface timer is quiet.
+            self._start_telemetry_timer()
         return cfg
+
+    def _start_telemetry_timer(self) -> None:
+        """Start the T-NEW-167 session-tick heartbeat.
+
+        Emits a ``session_tick`` event every 30s carrying
+        session_age_seconds + the tab's current stack position /
+        on-top state (so we can see how often the Ad tab is
+        actually the visible one). Stops in _cleanup alongside
+        the surface timer.
+        """
+        try:
+            telemetry = self._telemetry_ensure()
+            if telemetry is None:
+                return
+            from pyqt import QTimer
+            self._telemetry_timer = QTimer(self)
+            self._telemetry_timer.setInterval(
+                telemetry.SESSION_TICK_INTERVAL_S * 1000
+            )
+            self._telemetry_timer.timeout.connect(
+                self._emit_telemetry_tick
+            )
+            self._telemetry_timer.start()
+            logma.info(
+                "[ad_tab] telemetry session timer started "
+                f"({telemetry.SESSION_TICK_INTERVAL_S}s)"
+            )
+        except Exception as exc:
+            logma.warning(
+                f"[ad_tab] telemetry timer start failed (noop): {exc}"
+            )
+
+    def _emit_telemetry_tick(self) -> None:
+        """One heartbeat: session_tick + tab-top snapshot."""
+        try:
+            telemetry = self._telemetry_ensure()
+            if telemetry is None:
+                return
+            telemetry.emit_session_tick()
+        except Exception as exc:
+            logma.warning(f"[ad_tab] telemetry tick failed: {exc}")
 
     def initWidget(self) -> Self:
         """ """

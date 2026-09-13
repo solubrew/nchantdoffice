@@ -172,17 +172,21 @@ def test_layout_ladder_falls_back_to_full(ad_tab_class_node):
 # ---------------------------------------------------------------------------
 
 
-def test_initModel_defaults_to_stack5_not_stack2(ad_tab_class_node):
-    """initModel must default the URL to stack5, not stack2.
+def test_initModel_defaults_to_rotate_not_stack2(ad_tab_class_node):
+    """initModel must default the URL to /rotate, not stack2.
 
     Regression guard: the user-reported bug was that the docked
-    Ad tab only showed 2 ad boxes (stack2). initModel pinned
-    that default — now it must pin stack5 instead.
+    Ad tab only showed 2 ad boxes (stack2).
+
+    T-NEW-164 update: the desktop no longer pins a layout at
+    all — the default is LAYOUT_ROTATE and the SERVER picks
+    the concrete layout per rotation bucket (which also fixed
+    the stuck-on-stack3 bug). stack2 stays forbidden.
     """
     src = _function_source(ad_tab_class_node, "initModel")
-    assert "_ad_url_for_layout(self.LAYOUT_STACK5)" in src, (
-        "initModel must default the URL to LAYOUT_STACK5 "
-        "(the new dense layout for the docked Ad tab)."
+    assert "_ad_url_for_layout(self.LAYOUT_ROTATE)" in src, (
+        "initModel must default the URL to LAYOUT_ROTATE "
+        "(server-side rotation per T-NEW-164)."
     )
     assert "_ad_url_for_layout(self.LAYOUT_STACK2)" not in src, (
         "initModel must NOT default to LAYOUT_STACK2 — that "

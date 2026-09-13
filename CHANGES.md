@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] — 2026-09-12 (ad telemetry emitter — T-NEW-167)
+
+### Added
+
+- **`widgets/documents/atnrg/ad_telemetry.py`** — `AdTabTelemetry`
+  emitter class. Constructed with the Ad tab instance; reads the
+  desktop's `desktop_uuid` (server-issued, primary) → `install_id`
+  (local fallback) from `nchantdoffice.license.install_store`, and
+  the right-pane tabset from the tab's `parent()` to derive
+  `stack_position` + `is_on_top`. Three public emit hooks:
+  - `emit_rotation(layout)` — desktop loadFinished on a new layout
+    pick
+  - `emit_click(slug)` — desktop `ncho://` interception (Get Pro)
+  - `emit_session_tick()` — 30-second heartbeat from the AdTab's
+    telemetry timer
+  Plus `build_event(event_type, ...)` (closed contract,
+  schema_version=1), `build_batch(events)` (caps at 200, the
+  server's `MAX_BATCH_SIZE`), and `url_params()` (returns
+  `?inst=...&uid=...&ut=...&stk=...&top=...` for the Ad tab to
+  append to its slim-page URL so the page beacon knows the
+  desktop's identity and stack position).
+- **`NchantdOfficeAdTab` wiring** (`browsers.py`) —
+  `initView` constructs the emitter, starts the 30 s telemetry
+  timer (`_start_telemetry_timer`), and `_cleanup` stops it.
+  `_load_ad_layout` emits `rotation` after each viewer-URL
+  update; `_open_settings_node` emits `click` for the Get Pro
+  CTA; `_emit_telemetry_tick` calls `emit_session_tick` with the
+  current `stack_position`/`is_on_top`.
+- **`tests/test_ad_tab_telemetry_tnew167.py`** — 17 tests:
+  emitter contract, identity preference (`desktop_uuid` wins),
+  `_identity` survives a missing store, `url_params` empty when
+  identity unknown, batch cap enforcement, AST pinning of the
+  three browsers.py hook points + the telemetry timer start/stop
+  + `url_params()` call in `_ad_url_for_layout`.
+- **Updated `tests/test_ad_tab_slim_layout_ladder.py`** — the
+  pre-existing `initModel_defaults_to_stack5_not_stack2` test
+  pinned the now-superseded `LAYOUT_STACK5` default. Renamed
+  to `initModel_defaults_to_rotate_not_stack2` and updated
+  to assert `LAYOUT_ROTATE` (T-NEW-164's shipped contract).
+  This was a stale test, not a code regression.
+
 ## [Unreleased] — 2026-09-12 (slim-ad rotation landing + Get Pro interception)
 
 ### Added
