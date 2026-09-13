@@ -212,6 +212,21 @@ new `[Unreleased]` anchor that consolidates these 16+
 commits between `18336e5` and `655f36b`. T-NEW-only test files
 report **307 passed / 0 failed** at this branch tip.
 
+**Reality-anchor update (2026-09-12, gamma `64ee4c4`):** the
+Ad tab gained a **telemetry emitter** (T-NEW-167) —
+`nchantdoffice/widgets/documents/atnrg/ad_telemetry.py`
+(`AdTabTelemetry`) emits `rotation` (layout load), `click`
+(Get Pro interception), and 30 s `session_tick` events to the
+server's `POST /api/ads/telemetry/events` (best-effort batch,
+max 200), and appends `inst/uid/ut/stk/top` params to the slim
+URL so page-side beacons carry the desktop's stack context.
+Identity = `desktop_uuid` (server-issued) → `install_id`
+fallback. 17 tests in
+`tests/test_ad_tab_telemetry_tnew167.py`; the stale
+`initModel_defaults_to_stack5_not_stack2` pin was renamed to
+assert `LAYOUT_ROTATE` (T-NEW-164's contract). Server side
+landed in `nchantdoffice_com@a741145`.
+
 For a repo-local cross-reference of every shipped + filed
 T-NEW card with commit SHAs, see
 [`CHANGES.md`](./CHANGES.md) `[Unreleased]` block.
