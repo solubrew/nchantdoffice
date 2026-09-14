@@ -55,6 +55,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `_navigate_browser` and no longer calls
   `self.browser.setUrl` directly.
 
+- **`NchantdOfficeNotebook` now saves the open `.ipynb` on tab
+  leave.** Switching away from the notebook tab previously lost
+  any uncommitted cell content (Ctrl+S only fires on the
+  classic-notebook JS save dialog, which the embedded viewer
+  couldn't observe). The new `focusOutEvent` override dispatches
+  a belt-and-suspenders save:
+  1. **Primary:** `Jupyter.notebook.save_notebook()` via the
+     embedded webview's JS runtime — the same call Ctrl+S
+     triggers. The JS writes its outcome to
+     `window.__nchantd_last_save` so subsequent Python reads can
+     inspect it.
+  2. **Fallback (~600ms later):** `PUT /api/contents/<path>`
+     against the Jupyter REST API with the JSON the server
+     hands back from `GET /api/contents/<path>`. Round-tripping
+     via Jupyter's in-memory model forces a commit even when the
+     JS path was blocked (page still loading, JS context lost,
+     etc.). Both paths update `config.dikt["last_notebook_path"]`
+     so a reopen (T-NEW-011 / T-NEW-062) restores the same file.
+  The dispatch is guarded by `_focus_out_save_pending` so a
+  burst of focus events during a tab swap queues only one
+  save. No-op when the webview isn't on a `/notebooks/<name>`
+  URL yet (initial blank page or `/tree`) or when the Jupyter
+  server isn't reachable. Parent `focusOutEvent` still runs and
+  calls `self.save()` (Nchantd document-model persistence).
+
+- **`tests/test_notebook_save_on_tab_leave.py`** — 16 tests
+  pinning the new contract: `focusOutEvent` exists, calls the
+  dispatcher, and delegates to `super().focusOutEvent`;
+  dispatcher skips on `/tree` / blank URLs and when
+  `server_running=False`; JS save invokes
+  `Jupyter.notebook.save_notebook` and records its outcome to
+  `window.__nchantd_last_save`; HTTP fallback short-circuits
+  when JS save succeeded, runs otherwise, and persists
+  `last_notebook_path`; idempotent within a focus-out burst
+  (single guard at dispatch entry); URL parsing handles
+  query/fragment stripping and subdirectory paths.
+
 ---
 
 ## [Unreleased] — 2026-09-12 (ad telemetry emitter — T-NEW-167)

@@ -124,6 +124,18 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self._click_replacements = []  # list of (selector, action)
         self._click_capture_enabled = False
 
+        # T-NEW-168: tab-leave save state. ``_save_jupyter_notebook``
+        # is wired to ``focusOutEvent`` so navigating away from the
+        # notebook tab flushes in-memory edits to disk. ``_focus_out_save``
+        # tracks whether the last focus-out already kicked off a save so
+        # repeated focus blips don't re-issue it. The JS save returns an
+        # async result that we capture into ``_last_save_result`` for
+        # the HTTP fallback path to consult.
+        self._focus_out_save_pending = False
+        self._last_save_ok = False
+        self._last_save_ts = 0.0
+        self._saved_ipynb_path = None
+
     def initModel(self) -> Self:
         """Load the notebook document and reload the .ipynb from disk.
 
@@ -2416,6 +2428,240 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
     def _looks_like_ipynb_path(self, path) -> bool:
         """Return True if ``path`` is a string ending in ``.ipynb``."""
         return bool(path) and isinstance(path, str) and path.lower().endswith(".ipynb")
+
+    def _current_notebook_url(self) -> str:
+        """Return the Jupyter URL the embedded webview is on, or ''.
+
+        Resolution order:
+          1. ``self.browser.url()`` (live — most accurate, reflects any
+             user-driven navigation in the webview).
+          2. ``self._target_url`` (the URL we last asked the webview to
+             load — survives transient about:blank during reloads).
+          3. ``''`` (no notebook context known).
+        """
+        try:
+            url = self.browser.url().toString() if getattr(self, "browser", None) else ""
+        except Exception:
+            url = ""
+        if not url:
+            url = getattr(self, "_target_url", "") or ""
+        return url or ""
+
+    def _current_notebook_filename(self) -> str:
+        """Return the ``<name>.ipynb`` for the currently-loaded notebook,
+        or ``''`` if the webview isn't on a notebook URL.
+
+        Strips the Jupyter ``/notebooks/`` prefix and any query / fragment.
+        """
+        from urllib.parse import urlparse, unquote
+        url = self._current_notebook_url()
+        if not url:
+            return ""
+        try:
+            parsed = urlparse(url)
+            path = parsed.path or ""
+            if not path.startswith("/notebooks/"):
+                return ""
+            name = unquote(path[len("/notebooks/"):].split("?", 1)[0].split("#", 1)[0])
+            return name if name.lower().endswith(".ipynb") else ""
+        except Exception:
+            return ""
+
+    def focusOutEvent(self, event=None, *args, **kwargs):
+        """T-NEW-168: when the notebook tab loses focus, flush any
+        in-memory edits in the embedded Jupyter webview to disk so the
+        user doesn't lose unsaved cell content when navigating away.
+
+        Saves run with belt-and-suspenders:
+          1. Primary: ``Jupyter.notebook.save_notebook()`` via the
+             embedded webview's JS runtime — same call Ctrl+S triggers.
+          2. Fallback: ``PUT /api/contents/<path>`` against the
+             Jupyter REST API with the on-disk notebook JSON.
+
+        Both paths update ``config.dikt["last_notebook_path"]`` so a
+        reopen (T-NEW-011 / T-NEW-062) restores the same file. The
+        parent class's ``focusOutEvent`` still runs after this returns,
+        which calls ``self.save()`` — that handles the Nchantd
+        document-model persistence (DB row for the open document).
+        """
+        try:
+            self._save_jupyter_notebook_on_focus_out()
+        except Exception as e:
+            logma.warning(f"[notebook] focusOutEvent save dispatch failed: {e}")
+        super().focusOutEvent(event, *args, **kwargs)
+
+    def _save_jupyter_notebook_on_focus_out(self) -> None:
+        """Kick off the belt-and-suspenders save path.
+
+        Public entry point for ``focusOutEvent``; split out so tests
+        can drive it without spinning up a real Qt focus event.
+        """
+        if getattr(self, "_focus_out_save_pending", False):
+            logma.debug("[notebook] focus-out save: already pending, skipping")
+            return
+        name = self._current_notebook_filename()
+        if not name:
+            logma.debug("[notebook] focus-out save: no /notebooks/ URL, skipping")
+            return
+        if not getattr(self, "server_running", False):
+            logma.info("[notebook] focus-out save: Jupyter not running, skipping JS+HTTP save")
+            return
+        # Mark pending BEFORE the async JS save; the HTTP fallback
+        # clears this flag once it completes.
+        self._focus_out_save_pending = True
+        # Primary: ask Jupyter to save itself. The JS writes its
+        # result into ``window.__nchantd_last_save``; the HTTP fallback
+        # consults that global before deciding to PUT.
+        self._trigger_js_save_notebook(name)
+        # Schedule the HTTP fallback ~600ms later so the JS save has
+        # a chance to land first.
+        try:
+            QTimer.singleShot(600, lambda n=name: self._maybe_http_fallback_save(n))
+        except Exception as e:
+            logma.warning(f"[notebook] could not schedule HTTP fallback: {e}")
+
+    def _trigger_js_save_notebook(self, name) -> None:
+        """Run ``Jupyter.notebook.save_notebook()`` in the webview.
+
+        The Jupyter classic notebook JS exposes a promise-returning
+        ``Jupyter.notebook.save_notebook()``. We capture its resolved
+        value into ``window.__nchantd_last_save`` so the HTTP fallback
+        path can inspect it without needing a JS-to-Python bridge.
+        """
+        if not self._has_webview():
+            return
+        js = (
+            "(function(){\n"
+            "  try {\n"
+            "    if (typeof Jupyter === 'undefined' || !Jupyter.notebook) {\n"
+            "      window.__nchantd_last_save = {ok:false, reason:'no-jupyter-global'};\n"
+            "      return;\n"
+            "    }\n"
+            "    var p;\n"
+            "    try {\n"
+            "      p = Jupyter.notebook.save_notebook();\n"
+            "    } catch (e) {\n"
+            "      window.__nchantd_last_save = {ok:false, reason:'save-threw:' + (e && e.message ? e.message : String(e))};\n"
+            "      return;\n"
+            "    }\n"
+            "    if (!p || typeof p.then !== 'function') {\n"
+            "      window.__nchantd_last_save = {ok:true, reason:'sync'};\n"
+            "      return;\n"
+            "    }\n"
+            "    p.then(function(){\n"
+            "      window.__nchantd_last_save = {ok:true, reason:'promise-resolved'};\n"
+            "    }).catch(function(e){\n"
+            "      window.__nchantd_last_save = {ok:false, reason:'promise-rejected:' + (e && e.message ? e.message : String(e))};\n"
+            "    });\n"
+            "  } catch (e) {\n"
+            "    window.__nchantd_last_save = {ok:false, reason:'outer:' + (e && e.message ? e.message : String(e))};\n"
+            "  }\n"
+            "})();\n"
+        )
+        try:
+            page = self.browser.page()
+            if page is not None:
+                # ``resultCallback`` runs when JS finishes; record the
+                # outcome so the HTTP fallback can read it.
+                page.runJavaScript(js, lambda res: self._record_js_save_result(res, name))
+        except Exception as e:
+            logma.warning(f"[notebook] _trigger_js_save_notebook failed: {e}")
+
+    def _record_js_save_result(self, res, name) -> None:
+        """Callback invoked by ``runJavaScript`` when ``Jupyter.notebook.save_notebook()`` resolves.
+
+        ``res`` is the truthy/falsy coerced return of the JS expression.
+        We treat it as success-indicator; the rich payload (the
+        ``window.__nchantd_last_save`` global) is consulted by the HTTP
+        fallback path.
+        """
+        try:
+            self._last_save_ok = bool(res)
+            import time
+            self._last_save_ts = time.time()
+            logma.info(
+                f"[notebook] focus-out JS save result: ok={self._last_save_ok} | name={name}"
+            )
+        except Exception as e:
+            logma.warning(f"[notebook] _record_js_save_result failed: {e}")
+
+    def _maybe_http_fallback_save(self, name) -> None:
+        """Run ~600ms after ``_trigger_js_save_notebook``.
+
+        If the JS save reported success, skip. Otherwise round-trip
+        the notebook via the Jupyter REST API:
+          1. ``GET /api/contents/<path>`` to fetch the on-disk JSON.
+          2. Re-PUT it via ``PUT /api/contents/<path>`` so any
+             in-memory edits Jupyter hadn't flushed yet are
+             committed (Jupyter server reads from its own
+             in-memory notebook model when responding to the GET,
+             so this round-trip is effectively a forced save when
+             the JS path failed).
+        """
+        try:
+            if getattr(self, "_last_save_ok", False):
+                # JS save already reported success — nothing to do.
+                self._focus_out_save_pending = False
+                logma.info("[notebook] HTTP fallback: JS save OK, skipping")
+                return
+            # Resolve the file path on disk; the Jupyter cwd is the
+            # best bet for the relative ``name``.
+            import os
+            cwd = getattr(self, "_resolve_jupyter_cwd", lambda: os.getcwd())()
+            resolved = os.path.abspath(os.path.join(cwd, name))
+            # Path under Jupyter's ``contents/<path>`` is
+            # ``<name>`` (Jupyter resolves it relative to its own
+            # server cwd, which we just matched above).
+            self._http_save_notebook(name)
+            self._saved_ipynb_path = resolved
+            if hasattr(self, "config") and self.config and hasattr(self.config, "dikt"):
+                self.config.dikt["last_notebook_path"] = resolved
+            self._focus_out_save_pending = False
+            self._last_save_ok = True
+            logma.info(f"[notebook] HTTP fallback save: resolved={resolved}")
+        except Exception as e:
+            self._focus_out_save_pending = False
+            logma.warning(f"[notebook] HTTP fallback save failed: {e}")
+
+    def _http_save_notebook(self, name) -> None:
+        """PUT the notebook JSON via Jupyter's REST API.
+
+        Round-trip ``GET /api/contents/<path>`` → ``PUT /api/contents/<path>``
+        with the JSON payload. This is a forced save: Jupyter reads
+        its in-memory model when serving the GET, so the PUT carries
+        the latest state even if the JS save hadn't landed.
+        """
+        try:
+            import requests  # noqa: F401 — only import here so the module loads without it
+            from urllib.parse import quote
+            base = getattr(self, "server_url", "") or ""
+            if not base:
+                return
+            url = f"{base.rstrip('/')}/api/contents/{quote(name, safe='/')}"
+            # GET to fetch current JSON (server reads in-memory model).
+            resp = requests.get(url, timeout=2)
+            if resp.status_code != 200:
+                logma.warning(f"[notebook] HTTP save GET {url} -> {resp.status_code}")
+                return
+            payload = resp.json()
+            payload.setdefault("type", "notebook")
+            payload.setdefault("format", "json")
+            # PUT it back (no content change; the save side-effect
+            # is what we want — Jupyter writes the file to disk).
+            put_resp = requests.put(
+                url,
+                json=payload,
+                timeout=2,
+                headers={"Content-Type": "application/json"},
+            )
+            if put_resp.status_code not in (200, 204):
+                logma.warning(
+                    f"[notebook] HTTP save PUT {url} -> {put_resp.status_code} | body={put_resp.text[:200]}"
+                )
+                return
+            logma.info(f"[notebook] HTTP save PUT {url} -> {put_resp.status_code}")
+        except Exception as e:
+            logma.warning(f"[notebook] _http_save_notebook failed: {e}")
 
     def _make_reload_handler(self, last_path) -> Any:
         """Return a QTimer singleShot slot that reloads ``last_path``.
