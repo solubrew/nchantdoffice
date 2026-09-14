@@ -92,6 +92,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (single guard at dispatch entry); URL parsing handles
   query/fragment stripping and subdirectory paths.
 
+- **`NchantdOfficeNotebook` persists the open-state to the
+  database on every tab/visibility/app-quit transition.**
+  `focusOutEvent` already covered "user switched to another
+  visible tab", but the user reported that the notebook tab
+  *survives* tab-switches and only evaporates on new-tab
+  creation, left-pane node changes, and app quit. None of
+  those paths go through `focusOutEvent`. The fix wires
+  `hideEvent` (fires whenever Qt hides the widget — tab
+  switches, `addTab`, `removeTab`, parent-minimize, close) and
+  `closeEvent` (fires on permanent destruction) to a single
+  `save_open_state()` entry point which:
+
+  1. Captures the live Jupyter path with priority
+     `current_notebook_path` → `_pending_notebook_path` →
+     `file_path`, filtered to paths that actually exist on
+     disk so a stale entry can't poison reopen.
+  2. Persists it to `config.dikt["last_notebook_path"]` via the
+     shared `_persist_last_notebook_path()` helper (used by
+     every other path that writes this key).
+  3. Calls `self.save()` — the canonical Nchantd document
+     save chain that runs `get_content` →
+     `document.set_content` → DB row write. `get_content` was
+     extended to carry `last_notebook_path` and
+     `current_notebook_path` so the DB envelope records the
+     full open-state, not just the bound `file_path`.
+
+  `shutdown` (wired to `QApplication.aboutToQuit` and atexit)
+  calls `save_open_state` *before* stopping the Jupyter
+  subprocess so the user's last interaction is captured even
+  when the event loop teardown races the close events.
+  `_in_shutdown` is set after the save so the explicit
+  shutdown-path save runs to completion; the flag then
+  prevents a duplicate save from the atexit handler that
+  fires after interpreter teardown. `initModel` reads the
+  persisted `last_notebook_path` from the DB envelope, seeds
+  `config.dikt`, and uses it (when it points at an existing
+  file) as the reopen target instead of the older `file_path`
+  binding.
+
+- **`tests/test_notebook_open_state_persistence.py`** — 19
+  tests pinning the new contract: `save_open_state`,
+  `hideEvent`, and `closeEvent` exist on the class;
+  `save_open_state` uses `current_notebook_path` when set,
+  falls back to `_pending_notebook_path`, then to `file_path`,
+  and skips nonexistent paths; returns `self` for chaining;
+  short-circuits during `_in_shutdown`; `get_content` carries
+  `last_notebook_path` and `current_notebook_path`; `hideEvent`
+  persists and delegates to `super().hideEvent` even when
+  `save_open_state` raises; `closeEvent` sets `_in_shutdown`
+  after the save completes; `shutdown` runs `save_open_state`
+  *before* `stop_jupyter_server`; `initModel` reads
+  `last_notebook_path` from the saved content and prefers it
+  over `file_path` when it exists on disk; repeated
+  `save_open_state` calls don't corrupt state (idempotent).
+
 ---
 
 ## [Unreleased] — 2026-09-12 (ad telemetry emitter — T-NEW-167)

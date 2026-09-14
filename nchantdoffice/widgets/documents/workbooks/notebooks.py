@@ -163,6 +163,36 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             or self.document.file_path
         )
         self.file_path = resolved_path
+        # T-NEW-168 followup: prefer the open-state ``last_notebook_path``
+        # over the canonical ``file_path`` when restoring. ``file_path``
+        # is the .ipynb the document was bound to (may have been
+        # rebound to a default); ``last_notebook_path`` is the file the
+        # user actually had open inside the Jupyter webview at the time
+        # of the last save. Seed it into config.dikt so initView's
+        # pending-notebook lookup picks it up before the Jupyter server
+        # starts.
+        last_notebook = (
+            nested_content.get("last_notebook_path")
+            or nested_content.get("current_notebook_path")
+            or saved_content.get("last_notebook_path")
+            or self.config.dikt.get("last_notebook_path")
+        )
+        if last_notebook and self._looks_like_ipynb_path(last_notebook):
+            try:
+                self.config.dikt["last_notebook_path"] = last_notebook
+            except Exception as e:
+                logma.debug(f"[notebook] initModel: seed last_notebook_path failed: {e}")
+            # Prefer the more-specific path for the reload call when
+            # it actually exists on disk; otherwise fall back to the
+            # canonical binding.
+            try:
+                import os as _os_initmodel
+
+                if _os_initmodel.path.isfile(last_notebook):
+                    resolved_path = last_notebook
+                    self.file_path = resolved_path
+            except Exception as e:
+                logma.debug(f"[notebook] initModel: last_notebook exists check failed: {e}")
         self.context_menu.get_menu("context.document.notebook")
         # Reload the .ipynb from disk so the user returns to the
         # notebook they were last viewing (T-NEW-011).
@@ -901,8 +931,38 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         ``store_document`` (``TypeError: Object of type bytes is
         not JSON serializable``) and conflicted with the canonical
         "external file is the source of truth" model.
+
+        T-NEW-168 followup: persist the *open state* so re-opening
+        the notebook document restores the same ``.ipynb`` the user
+        was last viewing inside Jupyter (not just the same external
+        file). The DB envelope therefore carries three keys:
+
+          - ``file_path``: the on-disk ``.ipynb`` the document is
+            bound to (canonical, unchanged).
+          - ``last_notebook_path``: the most recently-opened
+            ``.ipynb`` inside the Jupyter webview (may differ from
+            ``file_path`` while a different file is open in the
+            filebrowser). Drives ``initView._pending_notebook_path``
+            on reopen.
+          - ``current_notebook_path``: the live Jupyter file
+            currently loaded in the embedded viewer. Same as
+            ``last_notebook_path`` in steady state; preserved so
+            callers can tell which is the "current" vs the "last"
+            anchor.
         """
         payload = {"file_path": self.file_path}
+        last_path = None
+        current_path = None
+        try:
+            if hasattr(self, "config") and self.config and hasattr(self.config, "dikt"):
+                last_path = self.config.dikt.get("last_notebook_path")
+            current_path = getattr(self, "current_notebook_path", None)
+        except Exception:
+            logma.debug("[notebook] get_content: config read failed", exc_info=True)
+        if last_path:
+            payload["last_notebook_path"] = last_path
+        if current_path:
+            payload["current_notebook_path"] = current_path
         save_mode = getattr(self, "save_mode", "file_path")
         if save_mode in ("to_dict", "both"):
             payload["notebook_bytes"] = self.get_binary()
@@ -1350,6 +1410,25 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
     def shutdown(self) -> Self:
         """Shutdown the notebook and clean up"""
+        # T-NEW-168 followup: persist the live open-state to the DB
+        # before tearing the Jupyter subprocess down. ``aboutToQuit``
+        # may not reach every widget's ``closeEvent`` (Qt only fires
+        # it on widgets with the WA_DeleteOnClose attribute, and
+        # even then it can race the event loop teardown). Doing the
+        # save here, synchronously, while we still have a live
+        # ``self.save()`` chain and a writable DB handle, guarantees
+        # the user's last-open notebook survives an app quit.
+        #
+        # ``_in_shutdown`` is set AFTER the save so the explicit
+        # shutdown-path save runs even when it would normally be
+        # short-circuited; the flag then prevents a duplicate save
+        # from the atexit handler that fires after interpreter
+        # teardown.
+        try:
+            self.save_open_state()
+        except Exception as e:
+            logma.warning(f"[notebook] shutdown: save_open_state failed: {e}")
+        self._in_shutdown = True
         self.stop_kernel()
         self.stop_jupyter_server()
         return self
@@ -2676,6 +2755,179 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
         return _handler
 
+    # ------------------------------------------------------------------
+    # Open-state persistence (T-NEW-168 followup)
+    # ------------------------------------------------------------------
+    #
+    # Why this layer exists
+    # ----------------------
+    # ``focusOutEvent`` already fires ``self.save()`` via the parent
+    # chain, which means a tab-switch inside the same window persists
+    # the open state. But the user reported that the notebook tab
+    # *survives* tab-switches and only evaporates on:
+    #
+    #   (a) opening a NEW tab (``addTab`` of any kind),
+    #   (b) node changes in the left-pane tree (which rebuild the
+    #       center pane around a different document),
+    #   (c) app quit / kill (no ``focusOutEvent`` for the aboutToQuit
+    #       codepath).
+    #
+    # Those paths do not pass through ``focusOutEvent``. The fix is to
+    # also persist via ``hideEvent`` (Qt fires this whenever the widget
+    # is removed from the visible tab stack) and via the
+    # ``aboutToQuit`` signal we already wire for Jupyter server
+    # shutdown.
+    #
+    # ``save_open_state()`` is the single entry point. It:
+    #
+    #   1. Captures the live ``current_notebook_path`` from the
+    #      embedded Jupyter webview (falls back to the existing
+    #      ``file_path`` so the document always has SOMETHING to
+    #      reopen from).
+    #   2. Writes that into ``config.dikt["last_notebook_path"]`` so
+    #      ``initView`` finds it on the next app launch.
+    #   3. Calls ``self.save()`` which walks the parent chain to
+    #      ``NchantdOfficeDocument.get_content`` -> ``store_document``
+    #      -> DB row. ``get_content`` now includes
+    #      ``last_notebook_path`` + ``current_notebook_path`` so the
+    #      full open-state survives the round-trip.
+
+    def save_open_state(self) -> Self:
+        """Persist the live Jupyter open-state to ``config.dikt`` and the DB.
+
+        Idempotent — safe to call from ``focusOutEvent``, ``hideEvent``,
+        ``aboutToQuit``, and the URL sync hook without producing a
+        write storm. Returns ``self`` so callers can chain.
+
+        Skipped entirely when the widget is mid-teardown
+        (``_in_shutdown``) so we don't try to talk to a stopped
+        Jupyter subprocess or a closed DB handle.
+        """
+        if getattr(self, "_in_shutdown", False):
+            logma.debug("[notebook] save_open_state: shutdown in progress, skipping")
+            return self
+        try:
+            live_path = self._capture_live_notebook_path()
+            if live_path:
+                self._persist_last_notebook_path(live_path)
+            else:
+                # No live path — fall back to the canonical file_path
+                # so reopen at least lands on the bound .ipynb.
+                live_path = getattr(self, "file_path", None) or ""
+            self.current_notebook_path = live_path or None
+            # Drive the DB save through the canonical ``self.save()``
+            # chain (NchantdOfficeDocument.save calls get_content ->
+            # document.set_content -> document.save).
+            self.save()
+        except Exception as e:
+            logma.warning(f"[notebook] save_open_state failed: {e}", exc_info=True)
+        return self
+
+    def _capture_live_notebook_path(self) -> str:
+        """Return the on-disk path of the Jupyter file the webview is showing.
+
+        Combines three sources in priority order:
+
+          1. ``self.current_notebook_path`` (set by ``_sync_notebook_from_url``
+             whenever the webview navigates).
+          2. ``self._pending_notebook_path`` (set by ``open_notebook``
+             during a not-yet-completed navigation).
+          3. ``self.file_path`` (the document's canonical .ipynb
+             binding — least precise but always present after init).
+
+        Empty string if none of those resolve (e.g. the webview is on
+        ``/tree`` and no file has ever been opened).
+        """
+        # (1) explicit current path
+        live = getattr(self, "current_notebook_path", None)
+        if live and self._path_exists(live):
+            return live
+        # (2) pending navigation
+        pending = getattr(self, "_pending_notebook_path", None)
+        if pending and self._path_exists(pending):
+            return pending
+        # (3) canonical binding
+        bound = getattr(self, "file_path", None)
+        if bound and self._path_exists(bound):
+            return bound
+        return ""
+
+    @staticmethod
+    def _path_exists(path) -> bool:
+        if not path:
+            return False
+        import os as _os
+
+        try:
+            return _os.path.isfile(path)
+        except Exception:
+            return False
+
+    def _persist_last_notebook_path(self, path) -> None:
+        """Write ``path`` into ``config.dikt["last_notebook_path"]``.
+
+        Centralised so every code path (focus-out, hide, URL sync,
+        http fallback, open_notebook) routes through the same setter
+        rather than scattering ``config.dikt["last_notebook_path"] =``
+        literals.
+        """
+        if not path:
+            return
+        try:
+            if hasattr(self, "config") and self.config is not None:
+                if not hasattr(self.config, "dikt") or self.config.dikt is None:
+                    self.config.dikt = {}
+                self.config.dikt["last_notebook_path"] = path
+        except Exception as e:
+            logma.debug(f"[notebook] _persist_last_notebook_path failed: {e}")
+
+    def hideEvent(self, event) -> None:
+        """Persist open-state when this widget stops being visible.
+
+        Qt fires ``hideEvent`` on:
+
+          - tab-switch to a different tab in the same tab widget,
+          - ``addTab`` of any other widget to the center pane (the
+            current one is hidden, the new one shown),
+          - the widget being removed from its parent
+            (``removeTab`` / ``deleteLater``),
+          - the parent window being minimised or closed.
+
+        Combined with ``focusOutEvent`` (which covers keyboard-focus
+        loss) this gives full coverage for "tab is no longer the
+        visible centre widget" without having to thread a save call
+        through every model action (``cmd_create_new_instance``,
+        tree node changes, ``addTab``, etc.).
+        """
+        try:
+            self.save_open_state()
+        except Exception as e:
+            logma.warning(f"[notebook] hideEvent save failed: {e}")
+        # Delegate to super so any future parent behaviour still
+        # runs (e.g. cascading hide events to children).
+        super().hideEvent(event)
+
+    def closeEvent(self, event) -> None:
+        """Persist open-state when this widget is permanently closed.
+
+        Belt-and-suspenders alongside ``hideEvent``: Qt fires
+        ``closeEvent`` only when the widget is being destroyed (not
+        on every hide), so this is the last chance to write the DB
+        row before the document goes away. Without this, killing
+        the center tab via the X button or quitting the app would
+        lose the last ``current_notebook_path``.
+
+        ``_in_shutdown`` is set AFTER the save so the explicit
+        close-path save runs to completion; the flag then prevents
+        a duplicate save from the atexit handler.
+        """
+        try:
+            self.save_open_state()
+        except Exception as e:
+            logma.warning(f"[notebook] closeEvent save failed: {e}")
+        self._in_shutdown = True
+        super().closeEvent(event)
+
     def _navigate_browser(self, url) -> Self:
         """Point the embedded web viewer at ``url``.
 
@@ -2706,6 +2958,14 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         handler (interpreter teardown). Combined with the die-with-parent signal
         set on the subprocess, this covers clean quit, exceptions, and crashes so
         no orphaned server is left holding the port.
+
+        T-NEW-168 followup: also register ``save_open_state`` as a
+        separate atexit handler so the DB save happens even when the
+        interpreter exits without ever firing ``aboutToQuit`` (e.g.
+        the user kills the process, the REPL is closed, or the test
+        suite tears down the notebook widget directly). The save is
+        idempotent and skipped via ``_in_shutdown`` once the
+        shutdown path has already run.
         """
         if getattr(self, "_shutdown_hooks_installed", False):
             return self
@@ -2721,9 +2981,10 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             import atexit
 
             atexit.register(self.stop_jupyter_server)
-            logma.info("[notebook] atexit shutdown hook registered")
+            atexit.register(self.save_open_state)
+            logma.info("[notebook] atexit shutdown + save_open_state hooks registered")
         except Exception as e:
-            logma.error(f"[notebook] could not register atexit shutdown hook: {e}")
+            logma.error(f"[notebook] could not register atexit shutdown hooks: {e}")
         return self
 
     def _sync_notebook_from_url(self, url) -> None:
