@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] — 2026-09-14 (notebook pending-target race fix)
+
+### Fixed
+
+- **`NchantdOfficeNotebook` lands on the saved `.ipynb` instead of
+  the Jupyter filebrowser tree.** Three race conditions were
+  stacked on top of each other in the notebook-tab init flow:
+  1. `initView` scheduled a duplicate `QTimer.singleShot(1000,
+     open_notebook)` which ran concurrently with
+     `start_jupyter_server`'s own `/tree` navigation. The
+     reload either fired before the Jupyter subprocess bound
+     the port (the embedded viewer showed an
+     ERR_CONNECTION_REFUSED page that `start_jupyter_server`'s
+     later navigation clobbered back to `/tree`) or lost the
+     last-writer-wins race outright.
+  2. `open_notebook` called `self.browser.setUrl(QUrl(target))`
+     directly, bypassing the `_navigate_browser` self-heal
+     path. No `_target_url` was recorded, no `navigating
+     embedded browser ->` log line was emitted, and the
+     loadFinished retry budget didn't reset — if the embedded
+     viewer clobbered the load there was no recovery and no
+     audit trail.
+  3. `start_jupyter_server` unconditionally navigated to
+     `/tree` once the server reported readiness, even when a
+     `last_notebook_path` was set on the widget config.
+- **Fix:** `initView` now records the saved notebook path on
+  `self._pending_notebook_path` and the duplicate timer is
+  gone. `start_jupyter_server` consults
+  `_pending_notebook_path` after its readiness poll succeeds
+  and, if the file exists, navigates to
+  `/notebooks/<basename>` (URL-encoded). When no pending
+  target is set (or the file was deleted between sessions)
+  the navigation falls back to `/tree` as before.
+  `open_notebook` now routes through `self._navigate_browser`
+  so `_target_url` / retry budget / log line are consistent
+  with the rest of the class.
+
+### Added
+
+- **`tests/test_notebook_pending_target.py`** — 8 tests pinning
+  the new contract: `initView` stashes `_pending_notebook_path`
+  and no longer schedules a duplicate `QTimer.singleShot`;
+  `start_jupyter_server` source consults the pending target;
+  pending-notebook URL is `/notebooks/<basename>`; missing-file
+  fallback is `/tree`; `open_notebook` body calls
+  `_navigate_browser` and no longer calls
+  `self.browser.setUrl` directly.
+
+---
+
 ## [Unreleased] — 2026-09-12 (ad telemetry emitter — T-NEW-167)
 
 ### Added

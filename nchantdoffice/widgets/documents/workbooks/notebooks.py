@@ -104,6 +104,11 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         self._target_url = None
         self._nav_retries = 0
         self.pinned = False
+        # Set by initView to the previously-saved .ipynb path so
+        # ``start_jupyter_server`` can land the embedded browser on
+        # the actual notebook (not the filebrowser tree) once the
+        # Jupyter server reports readiness. Cleared once consumed.
+        self._pending_notebook_path = None
 
         # T-NEW-070 — click-capture state. Python-side lists of
         # handlers / redirect rules / replacement actions.
@@ -215,24 +220,37 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             f"[notebook] initView: autostart={autostart} | server_running={self.server_running} | "
             f"target server_url={self.server_url}"
         )
-        if autostart and not self.server_running:
-            logma.info("[notebook] initView: scheduling start_jupyter_server in 500ms (QTimer.singleShot)")
-            QTimer.singleShot(500, self.start_jupyter_server)
-
-        # T-044: re-load the previously-open .ipynb file when one
-        # is configured. Looks for the path on
-        # ``config.dikt["last_notebook_path"]`` first, then falls
-        # back to ``self.current_notebook_path``. The actual
-        # reload is deferred 1 second so it runs after the
-        # Jupyter server is up.
+        # T-044: remember the previously-open .ipynb file when one
+        # is configured so ``start_jupyter_server`` can land the
+        # embedded browser on the actual notebook (instead of the
+        # filebrowser tree) once the server is ready. Looks for
+        # the path on ``config.dikt["last_notebook_path"]`` first,
+        # then falls back to ``self.current_notebook_path``.
+        #
+        # Previously a second ``QTimer.singleShot(1000, ...)`` was
+        # scheduled here to call ``open_notebook`` directly, but
+        # that ran concurrently with ``start_jupyter_server``'s
+        # own ``/tree`` navigation and either lost the race or
+        # fired before the server was reachable. Routing the
+        # target through ``start_jupyter_server`` (which polls
+        # readiness before navigating) eliminates the race.
         last_path = None
         if hasattr(self, "config"):
             last_path = self.config.dikt.get("last_notebook_path")
         if not last_path:
             last_path = getattr(self, "current_notebook_path", None)
-        if last_path and self._looks_like_ipynb_path(last_path):
-            logma.info(f"[notebook] initView: scheduling reload of {last_path}")
-            QTimer.singleShot(1000, self._make_reload_handler(last_path))
+        self._pending_notebook_path = (
+            last_path if (last_path and self._looks_like_ipynb_path(last_path)) else None
+        )
+        if self._pending_notebook_path:
+            logma.info(
+                f"[notebook] initView: pending notebook target={self._pending_notebook_path} "
+                "(start_jupyter_server will navigate after readiness)"
+            )
+
+        if autostart and not self.server_running:
+            logma.info("[notebook] initView: scheduling start_jupyter_server in 500ms (QTimer.singleShot)")
+            QTimer.singleShot(500, self.start_jupyter_server)
         # PUSH to 0.0.3 force external until
         self.document.set_location("external")
 
@@ -734,8 +752,18 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
         """Open a local .ipynb file in the embedded webview.
 
         T-044 helper - resolves to an absolute path, validates the
-        file exists, then issues a webview.setUrl() to the Jupyter
-        server's ``/notebooks/<name>`` endpoint. Returns ``self``.
+        file exists, then issues a navigation through
+        ``_navigate_browser`` so the embedded viewer lands on
+        Jupyter's ``/notebooks/<name>`` endpoint.
+
+        Routes through ``_navigate_browser`` (not ``browser.setUrl``
+        directly) so ``_target_url`` is recorded, the
+        loadFinished self-heal retry budget resets for this URL,
+        and the standard ``navigating embedded browser ->``
+        log line is emitted. Previously ``open_notebook`` called
+        ``self.browser.setUrl(QUrl(target))`` directly, which
+        silently bypassed all three and left no audit trail /
+        recovery path if the embedded viewer clobbered the load.
         """
         if not self._looks_like_ipynb_path(path):
             logma.warning(f"[notebook] open_notebook: not a .ipynb path: {path}")
@@ -753,10 +781,7 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
             if hasattr(self, "config"):
                 self.config.dikt["last_notebook_path"] = path
             target = f"{self.server_url}/notebooks/{urllib.parse.quote(os.path.basename(path))}"
-            if hasattr(self, "browser") and self.browser is not None and hasattr(self.browser, "setUrl"):
-                from PySide6 import QtCore
-
-                self.browser.setUrl(QtCore.QUrl(target))
+            self._navigate_browser(target)
             logma.info(f"[notebook] open_notebook: navigated to {target}")
         except Exception as e:
             logma.error(f"[notebook] open_notebook failed: {e}", exc_info=True)
@@ -1510,10 +1535,39 @@ class NchantdOfficeNotebook(NchantdOfficeDocument):
 
             self.server_running = True
             self.server_url = f"http://localhost:{port}"
-            landing_url = f"{self.server_url}/tree"
+            # Prefer landing on the user's last-opened notebook when
+            # one is queued by initView. Falling back to ``/tree``
+            # keeps the original "first run, no file yet" UX.
+            #
+            # We compute the candidate URL *before* clearing
+            # ``self._pending_notebook_path`` so a failed existence
+            # check leaves the pending target intact for retry on
+            # the next server start.
+            target_url = f"{self.server_url}/tree"
+            pending = getattr(self, "_pending_notebook_path", None)
+            if pending:
+                import os as _os
+                import urllib.parse as _urllib_parse
+
+                if _os.path.isfile(pending):
+                    target_url = (
+                        f"{self.server_url}/notebooks/"
+                        f"{_urllib_parse.quote(_os.path.basename(pending))}"
+                    )
+                    self._pending_notebook_path = None
+                    logma.info(
+                        f"[notebook] Jupyter server READY with pending notebook "
+                        f"| landing on {target_url} (file={pending})"
+                    )
+                else:
+                    logma.warning(
+                        f"[notebook] pending notebook path no longer exists; "
+                        f"falling back to /tree | path={pending}"
+                    )
+            landing_url = target_url
             logma.info(f"[notebook] Jupyter server READY | server_url={self.server_url} | landing_url={landing_url}")
 
-            # Navigate to the tree landing page Jupyter reports it is serving.
+            # Navigate to the resolved landing URL (tree or notebook).
             self._navigate_browser(landing_url)
             self.update_status_labels()
 
