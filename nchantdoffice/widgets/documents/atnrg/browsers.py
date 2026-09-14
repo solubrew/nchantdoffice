@@ -102,11 +102,23 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return self
 
     def initView(self, cfg=None) -> Self:
-        """"""
+        """ """
         if cfg is None:
             cfg = {}
         url = self.get_active_url()
         cfg["url"] = url
+        # `links_in_place=True` keeps ``target=_blank``/popup link clicks
+        # (e.g. "open in new window" buttons on sites that use them) from
+        # being dropped by Qt's default createWindow handling, which
+        # otherwise bounces them back to the original page silently. With
+        # the flag, ``NchantdWebEnginePage.createWindow`` returns a
+        # ``_RedirectCapturePage`` that loads the URL in the current view
+        # (see nchantrs.widgets.browsers.pages). The general browser is
+        # a tabbed browsing surface — there is no separate tab tree to
+        # fall through to, so the in-place route is the right default.
+        # Notebooks set the same flag explicitly in their own initView;
+        # this is the equivalent for the document browser widget.
+        cfg["links_in_place"] = cfg.get("links_in_place", True)
         self.viewer = NchantdWebViewer(self, cfg)
         self.viewer.is_simple = False
         cfg["buttons"] = self.build_toolbar()

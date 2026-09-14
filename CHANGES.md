@@ -147,6 +147,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   over `file_path` when it exists on disk; repeated
   `save_open_state` calls don't corrupt state (idempotent).
 
+- **`NchantdOfficeWebBrowser.initView` opts the embedded
+  viewer into `links_in_place=True` so `target="_blank"` /
+  `window.open` link clicks load the requested URL into the
+  current view instead of bouncing back to the original page.**
+
+  Root cause: `NchantdWebEnginePage.createWindow` falls through
+  to `super().createWindow(type_)` (i.e. plain
+  `QWebEnginePage.createWindow`) when `links_in_place` is unset
+  anywhere in the page → engine → viewer config chain. Plain
+  `QWebEnginePage.createWindow` returns a page with no parent,
+  and Qt silently drops the popup — the user sees a click that
+  appears to do nothing (or "bounce back" to the page they were
+  on, depending on what else fired). When the flag is set, the
+  nchantrs chain returns a `_RedirectCapturePage` that loads
+  the requested URL into the existing view. The general
+  browser widget had no caller setting the flag; the notebook
+  widget did. `initView` now sets it by default with
+  `cfg["links_in_place"] = cfg.get("links_in_place", True)` so
+  the general browser matches the notebook's behaviour and
+  callers can still opt out by passing `links_in_place=False`.
+
+- **`tests/test_browser_links_in_place.py`** — 3 tests pinning
+  the new contract: `initView` defaults `links_in_place=True`
+  when no caller cfg is supplied; a caller-supplied
+  `links_in_place=False` overrides the default; and
+  pre-existing cfg keys are preserved alongside the default.
+  The full nchantrs `createWindow` chain is exercised by
+  nchantrs's own `_test_links_in_place_propagation.py`
+  (off-tree) — these tests only pin the wiring from
+  `initView` into the viewer's cfg dict.
+
 ---
 
 ## [Unreleased] — 2026-09-12 (ad telemetry emitter — T-NEW-167)
