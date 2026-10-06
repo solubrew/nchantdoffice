@@ -48,11 +48,12 @@ from pycurity.pyhash import text_hashing_function, encode64
 from pycurity.pyhash import decode64
 from nchantdoffice.utilities.config import PyfficeApplicationConfig, NchantdOfficeBrowserConfig
 from nchantrs.models.models import NchantdInstance
+from nchantrs.utilities.utils import lookup
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
 logma = Logma(__name__)
-log = False
+log = True
 debug = True
 if not log:
     logma.off()
@@ -546,19 +547,19 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
     ) -> Self:
         """"""
         context = ""
-        logma.info(f"document {document}")
-        logma.info(f"document type {type(document)}")
+        # logma.info(f"document {document}")
+        # logma.info(f"document type {type(document)}")
         content = document.get("content", {}) or {}
         if content == {}:
             content = document.get("data", {}) or {}
         if isinstance(content, dict):
-            logma.info(f"Content {content}")
+            # logma.info(f"Content {content}")
             # T-NEW-049: use _safe_json_default so Instruct objects
             # in the content dict don't crash the log line itself.
-            logma.info(f"Dumped Content {j.dumps(content, default=_safe_json_default)}")
+            # logma.info(f"Dumped Content {j.dumps(content, default=_safe_json_default)}")
             try:
                 enc_content = encode64(j.dumps(content, default=_safe_json_default))
-                logma.info(f"Encoded Dictionary {enc_content}")
+                # logma.info(f"Encoded Dictionary {enc_content}")
             except Exception as e:
                 logma.warning(f"Dictionary Encoding Failed")
                 logma.warning(e)
@@ -567,7 +568,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
                     raise e
         elif isinstance(content, str):
             try:
-                logma.info(f"Content {content[:500]}")
+                # logma.info(f"Content {content[:500]}")
                 enc_content = encode64(content)
             except Exception as e:
                 logma.warning(f"String Encoding Failed")
@@ -2407,11 +2408,15 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             logma.info(f"Content {tab['content']}")
             tab["uuid"] = tab["unique_id"]
             logma.info(f"Tab Type {tab['type']}")
-            widget_resolver = getattr(self.app.model, "_resolve_widget_from_registry", None)
+            widget_resolver = self._resolve_widget_from_registry
             if callable(widget_resolver):
-                tab["widget"] = widget_resolver(tab["type"], fallback=None) or self.app.model.get_document_type(
-                    tab["type"]
-                ).get("widget_txt", None)
+                tab["widget"] = widget_resolver(tab["type"], fallback=None)
+                if tab["widget"] is None:
+                    logma.info(f"Document Type {tab["type"]}")
+                    document_type = self.app.model.get_document_type(tab["type"])
+                    if document_type is None:
+                        raise Exception(f"No Document Type for tab Import {tab["type"]}")
+                    tab["widget"] = document_type.get("widget_txt", None)
             else:
                 tab["widget"] = self.app.model.get_document_type(tab["type"]).get("widget_txt", None)
             tab["did"] = uuid()
@@ -3114,7 +3119,7 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
         # internally; we only need to keep the log call from
         # blowing up the user-visible save.
         doc_payload = pydoc.to_dict()
-        logma.info(f"PAYLOAD {doc_payload}")
+        # logma.info(f"PAYLOAD {doc_payload}")
         table = "doc_media"
         if app_doc:
             table = "app_media"
@@ -3725,8 +3730,8 @@ class NchantdOfficeCloakModel(NchantdCloakModel):
             store = getattr(self, "store", None)
             if store is not None and hasattr(store, "get_table"):
                 df = store.get_table(
-                    "app_document_type",
-                    {"WHERE": {"EQUAL": {"document_type_txt": lookup_code}}},
+                    "vw_app_document_type",
+                    {"WHERE": {"EQUAL": {"document_txt": lookup_code}}},
                 )
                 if df is not None and not getattr(df, "empty", True):
                     row = df.iloc[0].to_dict()
@@ -4075,7 +4080,7 @@ class NchantdOfficeStore(NchantdStore):
         params = {"table": [table]}
         rdr = self.docs["db"].read(params, cfg)
         df = next(rdr).dikt[table]["df"]
-        logma.warning(df)
+        # logma.info(df)
         df = df.sort_values(by=["sequence_int"])
         if df.empty:
             raise Exception("Documents Are Empty")
@@ -4903,11 +4908,9 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
                 active_tab_position = int(active_tab_position)
             except (ValueError, TypeError):
                 active_tab_position = 0
-
             if tabsdata:
                 if active_tab_position >= len(tabsdata):
                     active_tab_position = 0
-
                 # H9: Delegate to the office load_tab_set override, which builds
                 # the tab set lazily (active tab loaded, others left as dummy
                 # placeholders) instead of duplicating that loop inline here.
@@ -4944,11 +4947,13 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
     def convert_db_to_doc(self, document_) -> Dict[str, Any]:
         """"""
-        logma.info(f"\n\n{document_}\n\n")
+        # logma.info(f"\n\n{document_}\n\n")
         document = {}
-        logma.info(f"ENCODED {document_['content_enc64_txt']}")
+        # logma.info(f"ENCODED {document_['content_enc64_txt']}")
         document["data"] = decode64(document_["content_enc64_txt"])
-        logma.info(f"DECODED {document['data']}")
+        # logma.info(f"DECODED {document['data']}")
+        if document["data"] is None:
+            document["data"] = "{}"
         try:
             document["data"] = j.loads(document["data"])
         except Exception as e:
@@ -4970,6 +4975,20 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         document["widgdata"] = document_["widgdata_dict"]
         document["version"] = document_.get("content_version_int", None)
         document["tab_type"] = document_.get("tab_type_txt", "custom_widget")
+        document["icon_name"] = "dot"
+        if document["tab_type"] == "custom_widget":
+            if document["widget"] == "nchantdoffice.widgets.controls.toolboxes.NchantdOfficeApplicationToolBox":
+                document["icon_name"] = "toolbox"
+            elif document["widget"] == "nchantdoffice.widgets.documents.journal.NchantdOfficeJournalEditor":
+                document["icon_name"] = "diary"
+            elif document["widget"] == "nchantdoffice.widgets.documents.media.notes.NchantdOfficeScratchEditor":
+                document["icon_name"] = "paper-roll"
+            elif document["widget"] == "nchantrs.widgets.calculators.calculators.NchantdAdvancedCalculator":
+                document["icon_name"] = "calculator"
+            elif document["widget"] == "nchantdoffice.widgets.documents.atnrg.browsers.NchantdOfficeAdTab":
+                document["icon_name"] = "ad"
+        else:
+            document["icon_name"] = lookup(self.parent.app, document["tab_type"]).get("icon_txt")
         document["document_type"] = document_.get("document_type_txt", None)
         document["location"] = document_.get("store_location_txt", None) if not nan else None
         document["encoding"] = document_.get("encoding_txt", None)
@@ -4992,6 +5011,29 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         tab_docs = self.parent.app.model.get_tab_documents(nid, tabset)
         return tab_docs
 
+    def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0, icon_name=None) -> Self:
+        """"""
+        # Workaround for bug in nchantrs.models.tabsetmodels.NchantdTabSetModel.load_tab
+        # which uses 'tabn in self.tab_widgets' incorrectly for a list.
+        if tabn < len(self.tab_widgets):
+            # Stop the ad tab's surface timer before replacing the widget.
+            # Without this, the timer's next tick fires on the orphaned instance
+            # after Qt has removed it from the tabset → _switch_to_this_tab walks
+            # the new tabset and finds a dummy, not self → "tab not found" log.
+            outgoing = self.tab_widgets[tabn]
+            if hasattr(outgoing, "_cleanup"):
+                outgoing._cleanup()
+            # remove from parent QTabWidget
+            self.parent.removeTab(tabn)
+            # remove from our internal list so super().load_tab doesn't shift other tabs
+            self.tab_widgets.pop(tabn)
+
+        # super().load_tab calls self.load_widget, which we override.
+        # Ensure we pass the converted document if needed, but nchantrs' load_tab
+        # expects the 'tab' dict which it then passes to parse_widget_data.
+        super().load_tab(tab, tabn, tabset, active_tab_position, icon_name=icon_name)
+        return self
+
     def load_tab_set(self, tabset="center", active_tab_position=0) -> Self:
         """Lazily build the tab set.
 
@@ -5007,9 +5049,18 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
         for tabn, tab in enumerate(self.tabsdata):
             logma.info(f"Tab {tab}")
-            icon_name = tab.get("icon", tab.get("icon_name", "dot"))
-            if tabn == active_tab_position:
-                self.load_tab(tab, tabn, tabset, active_tab_position, icon_name)
+            icon_name = tab.get("icon_name", "dot")
+            # tab_type = tab.get("tab_type", None)
+            if icon_name == "custom_widget":
+                icon_name = "dot"
+            # if tab_type not in ("custom_widget", ):
+            #     action = lookup(self.parent.app, tab_type)
+            #     if action is not None:
+            #         icon_name = action.get("icon_txt")
+            logma.info(f"Icon Name {icon_name}")
+            # logma.info(f"Tab Type {tab_type}")
+            # if tabn == active_tab_position:
+            #     self.load_tab(tab, tabn, tabset, active_tab_position, icon_name)
             # The right-pane Ad tab must be eagerly materialized, not left
             # as a dummy: its 5-minute surface QTimer (DESK T-NEW-061) is
             # what raises the tab when a new ad arrives. A dummy Ad tab has
@@ -5019,7 +5070,7 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
             widget_cls = str(tab.get("widget") or tab.get("widget_txt") or "")
             is_ad_tab = tabset == "right" and "NchantdOfficeAdTab" in widget_cls
             if tabn == active_tab_position or is_ad_tab:
-                self.load_tab(tab, tabn, tabset, active_tab_position)
+                self.load_tab(tab, tabn, tabset, active_tab_position, icon_name)
             else:
                 # Placeholder only; the real widget is built lazily on first focus.
                 dummy = pyqt.QWidget(self.parent)
@@ -5036,6 +5087,41 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
 
         self.parent.setCurrentIndex(active_tab_position)
         return self
+
+    def load_widget(self, cfg, tabset="center", document=None) -> Any:
+        """ """
+        logma.info(f"Load Widget {cfg}")
+        logma.info(f"Tabset {tabset}")
+        logma.info(f"Document {document}")
+
+        # If document is not None, use it to populate cfg, similar to base load_widget
+        if document:
+            cfg["widget"] = document.get("widget", document.get("widget_txt", cfg.get("widget")))
+            cfg["tid"] = document.get("tid", document.get("tid_txt", cfg.get("tid")))
+            cfg["document"] = document
+
+        # Workaround for KeyError: 'tab' in lookupWidget
+        # This happens when 'widget' is not in cfg, and 'tab' is the first key.
+        widget_name = cfg.get("widget")
+        if (not widget_name) and "tab" in cfg:
+            tab_data = cfg["tab"]
+            widget_name = tab_data.get("widget", tab_data.get("widget_txt", None))
+
+        if widget_name:
+            # Rebuild cfg so the widget name is the FIRST key,
+            # which is what nchantrs.widgets.widgets.lookupWidget expects:
+            # registered_widget = lookupWidget(list(cfg.keys())[0])
+            new_cfg = {widget_name: cfg.get(widget_name, {})}
+            for k, v in cfg.items():
+                if k != widget_name:
+                    new_cfg[k] = v
+            cfg = new_cfg
+            cfg["widget"] = widget_name
+
+        tabW = super().load_widget(cfg, tabset, document)
+        if hasattr(tabW, "initWidget"):
+            tabW.initWidget()
+        return tabW
 
     def open_web_tab(self, url, name=None) -> Optional[Self]:
         """Open ``url`` as a browser tab in this (center) tabset — or focus the
@@ -5122,68 +5208,9 @@ class NchantdOfficeTabSetModel(NchantdTabSetModel):
         self.parent.setCurrentIndex(tabn)
         return self
 
-    def load_tab(self, tab, tabn=0, tabset="center", active_tab_position=0, icon_name=None) -> Self:
+    def set_focus(self, tabn=None) -> Self:
         """"""
-        # Workaround for bug in nchantrs.models.tabsetmodels.NchantdTabSetModel.load_tab
-        # which uses 'tabn in self.tab_widgets' incorrectly for a list.
-        if tabn < len(self.tab_widgets):
-            # Stop the ad tab's surface timer before replacing the widget.
-            # Without this, the timer's next tick fires on the orphaned instance
-            # after Qt has removed it from the tabset → _switch_to_this_tab walks
-            # the new tabset and finds a dummy, not self → "tab not found" log.
-            outgoing = self.tab_widgets[tabn]
-            if hasattr(outgoing, "_cleanup"):
-                outgoing._cleanup()
-            # remove from parent QTabWidget
-            self.parent.removeTab(tabn)
-            # remove from our internal list so super().load_tab doesn't shift other tabs
-            self.tab_widgets.pop(tabn)
-
-        # super().load_tab calls self.load_widget, which we override.
-        # Ensure we pass the converted document if needed, but nchantrs' load_tab
-        # expects the 'tab' dict which it then passes to parse_widget_data.
-        super().load_tab(tab, tabn, tabset, active_tab_position, icon_name=icon_name)
-        return self
-
-    def load_widget(self, cfg, tabset="center", document=None, tab_type="custom_widget") -> Any:
-        """ """
-        logma.info(f"Load Widget {cfg}")
-        logma.info(f"Tabset {tabset}")
-        logma.info(f"Document {document}")
-        logma.info(f"Tab Type {tab_type}")
-
-        # If document is not None, use it to populate cfg, similar to base load_widget
-        if document:
-            cfg["widget"] = document.get("widget", document.get("widget_txt", cfg.get("widget")))
-            cfg["tid"] = document.get("tid", document.get("tid_txt", cfg.get("tid")))
-            cfg["document"] = document
-
-        # Workaround for KeyError: 'tab' in lookupWidget
-        # This happens when 'widget' is not in cfg, and 'tab' is the first key.
-        widget_name = cfg.get("widget")
-        if (not widget_name) and "tab" in cfg:
-            tab_data = cfg["tab"]
-            widget_name = tab_data.get("widget", tab_data.get("widget_txt", None))
-
-        if widget_name:
-            # Rebuild cfg so the widget name is the FIRST key,
-            # which is what nchantrs.widgets.widgets.lookupWidget expects:
-            # registered_widget = lookupWidget(list(cfg.keys())[0])
-            new_cfg = {widget_name: cfg.get(widget_name, {})}
-            for k, v in cfg.items():
-                if k != widget_name:
-                    new_cfg[k] = v
-            cfg = new_cfg
-            cfg["widget"] = widget_name
-
-        tabW = super().load_widget(cfg, tabset, document, tab_type)
-        if hasattr(tabW, "initWidget"):
-            tabW.initWidget()
-        return tabW
-
-    def set_focus(self) -> Self:
-        """"""
-        super().set_focus()
+        super().set_focus(tabn)
         return self
 
     def _widget_current_url(self, widget) -> Optional[str]:

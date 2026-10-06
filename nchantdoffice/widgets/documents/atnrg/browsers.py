@@ -38,6 +38,9 @@ from nchantrs.widgets.tables.lists import NchantdList, NchantdListWidget
 from nchantrs.widgets.browsers.profiles import NchantdWebProfile
 from nchantrs.widgets.browsers.pages import NchantdWebEnginePage
 from nchantdoffice.widgets.documents.atnrg.pages import NchantdOfficeWebPage
+from nchantrs.widgets.config.accounts import NchantdAccountSettings
+from nchantrs.widgets.controls.toolbars import NchantdButtonBar
+from nchantdoffice.utilities.urls import home_page as _home_page
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
@@ -50,7 +53,8 @@ if not log:
 PXCFG = join(here, "_data_", "browsers.yaml")
 # DESK T-NEW-052: route through the unified URL config so the
 # operator can point the embedded browser at an internal site.
-from nchantdoffice.utilities.urls import home_page as _home_page
+
+
 HOMEPAGE = {"url": _home_page()}
 HOMEURL = HOMEPAGE.get("url")
 
@@ -76,7 +80,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         cfg = cfg or {}
         if cfg.get("document", None) is None:
             cfg["document"] = {"data": {"unit": {}}}
-        # cfg["url"] = self.config.dikt.get("url", self.get_current_page())
         self.config.override(cfg)
         super().initModel(self.config)
         # this translates url code from the web app tab catalog
@@ -93,12 +96,9 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         cfg = {"document": self.document.active_page.to_dict()}
         intercept = False
         self.get_current_profile()
-        # self.profile = self.app.web_config.get_profile()
         self.active_page = NchantdOfficeWebPage(self, self.current_profile, intercept, cfg)
         self.active_page.initWidget()
         self.active_page.document.load_document(self.document.get_active_page().get_url_document().to_dict())
-        # # self.active_url = self.active_page.get_active_url()
-        # self.get_current_profile()
         return self
 
     def initView(self, cfg=None) -> Self:
@@ -163,30 +163,54 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         buttons[100] = "_skip"
         buttons[150] = "_skip"
         buttons[200] = "_skip"
-        # T-NEW-069 — delegate URL history restore to the inner
-        # viewer. Calling ``_get_url_history`` reads the persisted
-        # ``config.dikt["url_history"]`` most-recent-first, so
-        # the dropdown is rebuilt from disk on every open (the
-        # single source of truth lives on the viewer).
         try:
-            history = self.viewer._get_url_history()
-        except Exception:
+            history = self.viewer._get_url_history() or []
+        except Exception as e:
+            logma.warning(f"No History {history}")
+            logma.warning(e)
             history = []
         try:
-            if (
-                getattr(self, "url_select_entry", None) is not None
-                and getattr(
-                    self.url_select_entry, "combobox", None
-                ) is not None
-            ):
-                self.url_select_entry.update_options(
-                    history or [], replace=True, sort=False
-                )
+            self.url_select_entry.update_options(history, replace=True, sort=False)
         except Exception as _exc:
-            logma.warning(
-                f"[browsers] build_toolbar dropdown seed failed: {_exc}"
-            )
+            logma.warning(f"[browsers] build_toolbar dropdown seed failed: {_exc}")
         return buttons
+
+    def cmd_active_url_change(self, *args, **kwargs) -> Self:
+        """T-NEW-069 — hook for the engine's ``urlChanged`` signal.
+
+        Single canonical update path for the URL inspection
+        toolbox. Reads ``self.viewer.engine.url()`` (when
+        available), pushes it through ``_track_url`` on the
+        viewer, refreshes the label fields, and marks the app
+        model as dirty so the next save() persists the new
+        URL via the PyfficeWebBrowser → PyfficeWebPage →
+        PyfficeURL round-trip.
+        """
+        url_str = None
+        try:
+            engine = getattr(self.viewer, "engine", None)
+            if engine is not None and hasattr(engine, "url"):
+                url_str = engine.url().toString()
+        except Exception:
+            url_str = None
+        if url_str:
+            try:
+                track = getattr(self.viewer, "_track_url", None)
+                if track is not None:
+                    track(url_str)
+            except Exception:
+                pass
+            try:
+                if self.document is not None and getattr(self.document, "active_page", None) is not None:
+                    if hasattr(self.document.active_page, "set_url"):
+                        self.document.active_page.set_url(url_str)
+            except Exception:
+                pass
+        try:
+            self.app.model.has_changed = True
+        except Exception:
+            pass
+        return self._on_url_change()
 
     def cmd_check_is_pinned(self, event=None, *args, **kwargs) -> Self:
         """Check whether the current browser tab is pinned.
@@ -297,8 +321,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
     def cmd_goto_page(self, event=None, *args, **kwargs) -> Self:
         """"""
         logma.info(f"Event {event}")
-        # page = None
-        # self.document.set_page_active(page)
         url = self.document.active_page.active_url.active_url
         logma.info(f"Goto {url}")
         self.populate_document(url)
@@ -453,25 +475,25 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         df = DataFrame(data, columns=columns)
         return df
 
-    def defocus(self) -> Self:
-        """"""
-        super().defocus()
-        logma.debug(f"LifecycleState: {dir(pyqt.QWebEnginePage.LifecycleState)}")
-        self.viewer.page.setLifecycleState(pyqt.QWebEnginePage.LifecycleState.Frozen)
-        return self
-
-    def focusOutEvent(self, event) -> Self:
+    def focusOutEvent(self, event, *args, **kwargs) -> Self:
         """"""
         super().focusOutEvent(event)
+        logma.debug(f"LifecycleState: {dir(pyqt.QWebEnginePage.LifecycleState)}")
+        self.viewer.page.setLifecycleState(pyqt.QWebEnginePage.LifecycleState.Frozen)
         self.save()
         return self
 
     def get_active_url(self) -> Optional[str]:
         """"""
-        if self.active_page.document.active_url.active_url is None:
+        logma.inspect_caller()
+        if self.active_page.document.active_url.url_string is None:
             logma.info("No active url")
+            logma.info(f"{self.active_page.document.active_url}")
             return None
-        url = self.active_page.document.active_url.active_url
+        logma.info(f"Acitve Page {self.active_page}")
+        logma.info(f"Document {self.active_page.document}")
+        logma.info(f"Active URL {self.active_page.document.active_url}")
+        url = self.active_page.document.active_url.url_string
         logma.info(f"URL {url}")
         return url
 
@@ -505,7 +527,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def get_current_domain(self) -> Optional[str]:
         """"""
-        if self.document.active_page.active_url.active_url is None:
+        if self.document.active_page.active_url.url_string is None:
             logma.info("No active url")
             return None
         domain = self.document.active_page.active_url.domain
@@ -540,7 +562,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def get_current_parameters(self) -> Optional[Any]:
         """"""
-        if self.document.active_page.active_url.active_url is None:
+        if self.document.active_page.active_url.url_string is None:
             logma.info("No active url")
             return None
         parameters = self.document.active_page.active_url.parameters
@@ -549,12 +571,19 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
 
     def get_current_sub_domain(self) -> Optional[str]:
         """"""
-        if self.document.active_page.active_url.active_url is None:
+        if self.document.active_page.active_url.url_string is None:
             logma.info("No active url")
             return None
         sub_domain = self.document.active_page.active_url.sub_domain
         logma.info(f"Sub Domain {sub_domain}")
         return sub_domain
+
+    def get_current_url(self) -> Any:
+        """"""
+        if self.active_url is None:
+            return self.default_url
+        url = self.active_url.unit.url_string
+        return url
 
     def get_current_whois(self) -> Optional[Any]:
         """"""
@@ -612,44 +641,35 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         # Home Page
         slot = self._ensure_drawer_item(items, cnt)
         slot["type"] = "dropdown"
-        slot["widget"] = self.default_home_page_entry = NchantdLabeledEntry(
-            self,
-            {
-                "label": "Home Page",
-                "layout": "horizontal",
-                "handler": self.cmd_set_home_page,
-                "value": self.get_current_home_page(),
-                "size": ["auto", "auto"],
-            },
-        )
+        cfg = {
+            "label": "Home Page",
+            "layout": "horizontal",
+            "handler": self.cmd_set_home_page,
+            "value": self.get_current_home_page(),
+            "size": ["auto", "auto"],
+        }
+        slot["widget"] = self.default_home_page_entry = NchantdLabeledEntry(self, cfg)
         cnt += 1
-
+        cfg = {
+            "label": "Actions taken here will affect all browser tabs related to the current active profile",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+        }
         slot = self._ensure_drawer_item(items, cnt)
         slot["type"] = "dropdown"
-        slot["widget"] = self.notification_label = NchantdLabel(
-            self,
-            {
-                "label": "Actions taken here will affect all browser tabs related to the current active profile",
-                "layout": "horizontal",
-                "size": ["auto", "auto"],
-            },
-        )
+        slot["widget"] = self.notification_label = NchantdLabel(self, cfg)
         cnt += 1
-
         # Privacy Controls
         slot = self._ensure_drawer_item(items, cnt)
         slot["type"] = "dropdown"
-        slot["widget"] = self.clear_cookies_button = NchantdButtonWidget(
-            self,
-            {
-                "text": "Clear Cookies",
-                "layout": "horizontal",
-                "size": ["auto", "auto"],
-                "handler": self.cmd_clear_cookies,
-            },
-        )
+        cfg = {
+            "text": "Clear Cookies",
+            "layout": "horizontal",
+            "size": ["auto", "auto"],
+            "handler": self.cmd_clear_cookies,
+        }
+        slot["widget"] = self.clear_cookies_button = NchantdButtonWidget(self, cfg)
         cnt += 1
-
         slot = self._ensure_drawer_item(items, cnt)
         slot["type"] = "dropdown"
         slot["widget"] = self.clear_cache_button = NchantdButtonWidget(
@@ -796,10 +816,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
                     engine.urlChanged.connect(self.cmd_active_url_change)
                     self._url_signal_connected = True
         except Exception as _exc:
-            logma.warning(
-                f"[browsers] init_drawer_url_inspection could not "
-                f"connect urlChanged: {_exc}"
-            )
+            logma.warning(f"[browsers] init_drawer_url_inspection could not " f"connect urlChanged: {_exc}")
         return items
 
     # Push to 0.0.3
@@ -1132,10 +1149,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
                     if url is not None:
                         entry.set_value(url)
             except Exception as _exc:
-                logma.warning(
-                    f"[browsers] populate_document dropdown sync "
-                    f"failed (non-blocking): {_exc}"
-                )
+                logma.warning(f"[browsers] populate_document dropdown sync " f"failed (non-blocking): {_exc}")
         if self.pinned is False and url is not None:
             self.viewer.populate_viewport(url)
         elif url is None:
@@ -1571,6 +1585,17 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
             logma.error(f"[browsers] _delete_cookies failed: {e}", exc_info=True)
         return self
 
+    def _ensure_drawer_item(self, items, cnt) -> Dict[str, Any]:
+        """Lazily create a default drawer-item slot.
+
+        Centralises the ``if cnt not in items: items[cnt] = {...}`` pattern
+        used by every ``init_drawer_*`` method, removing the repeated
+        branch that the maintainability auditor flags as switch abuse.
+        """
+        if cnt not in items:
+            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
+        return items[cnt]
+
     def _on_url_change(self):
         """T-NEW-069 — react to a real URL change in the engine.
 
@@ -1585,54 +1610,6 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         except Exception as _exc:
             logma.warning(f"[browsers] _on_url_change failed: {_exc}")
         return self
-
-    def cmd_active_url_change(self, *args, **kwargs) -> Self:
-        """T-NEW-069 — hook for the engine's ``urlChanged`` signal.
-
-        Single canonical update path for the URL inspection
-        toolbox. Reads ``self.viewer.engine.url()`` (when
-        available), pushes it through ``_track_url`` on the
-        viewer, refreshes the label fields, and marks the app
-        model as dirty so the next save() persists the new
-        URL via the PyfficeWebBrowser → PyfficeWebPage →
-        PyfficeURL round-trip.
-        """
-        url_str = None
-        try:
-            engine = getattr(self.viewer, "engine", None)
-            if engine is not None and hasattr(engine, "url"):
-                url_str = engine.url().toString()
-        except Exception:
-            url_str = None
-        if url_str:
-            try:
-                track = getattr(self.viewer, "_track_url", None)
-                if track is not None:
-                    track(url_str)
-            except Exception:
-                pass
-            try:
-                if self.document is not None and getattr(self.document, "active_page", None) is not None:
-                    if hasattr(self.document.active_page, "set_url"):
-                        self.document.active_page.set_url(url_str)
-            except Exception:
-                pass
-        try:
-            self.app.model.has_changed = True
-        except Exception:
-            pass
-        return self._on_url_change()
-
-    def _ensure_drawer_item(self, items, cnt) -> Dict[str, Any]:
-        """Lazily create a default drawer-item slot.
-
-        Centralises the ``if cnt not in items: items[cnt] = {...}`` pattern
-        used by every ``init_drawer_*`` method, removing the repeated
-        branch that the maintainability auditor flags as switch abuse.
-        """
-        if cnt not in items:
-            items[cnt] = {"action": "insert_generic_action", "type": "custom"}
-        return items[cnt]
 
 
 class NchantdOfficeSlimTabSearch(NchantdWidget):
@@ -1700,18 +1677,12 @@ class _NchoInterceptionPage(NchantdWebEnginePage):
         if url.scheme().lower() == "ncho":
             handler = self.handlers.get(url_str)
             if handler is None:
-                logma.warning(
-                    f"[ncho_page] no handler for action {url_str!r}; "
-                    "blocking navigation"
-                )
+                logma.warning(f"[ncho_page] no handler for action {url_str!r}; " "blocking navigation")
                 return False
             try:
                 handler(url_str)
             except Exception as exc:
-                logma.warning(
-                    f"[ncho_page] handler for {url_str!r} failed "
-                    f"(non-blocking): {exc}"
-                )
+                logma.warning(f"[ncho_page] handler for {url_str!r} failed " f"(non-blocking): {exc}")
             return False
         return super().acceptNavigationRequest(url, navigation_type, is_main_frame)
 
@@ -1809,6 +1780,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             from nchantdoffice.widgets.documents.atnrg.ad_telemetry import (
                 AdTabTelemetry,
             )
+
             self._telemetry = AdTabTelemetry(self)
         except Exception as exc:
             logma.warning(f"[ad_tab] telemetry init failed (noop): {exc}")
@@ -1837,6 +1809,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         client uses) so the LAN override in urls.yaml applies.
         """
         from nchantdoffice.utilities.urls import server_base_url
+
         return server_base_url().rstrip("/")
 
     def _ad_url_for_layout(self, layout: str) -> str:
@@ -1945,7 +1918,8 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         try:
             return int(
                 self.config.dikt.get(
-                    "surface_interval_ms", DEFAULT_SURFACE_INTERVAL_MS,
+                    "surface_interval_ms",
+                    DEFAULT_SURFACE_INTERVAL_MS,
                 )
             )
         except Exception:
@@ -1979,22 +1953,15 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                     ad_index = i
                     break
             if ad_index < 0:
-                logma.info(
-                    "[ad_tab] _switch_to_this_tab: "
-                    "this tab not found in right pane tabset"
-                )
+                logma.info("[ad_tab] _switch_to_this_tab: " "this tab not found in right pane tabset")
                 return
             # Skip if we're already on the Ad tab.
             if right_pane.currentIndex() == ad_index:
                 return
             right_pane.setCurrentIndex(ad_index)
-            logma.info(
-                f"[ad_tab] surfaced (right pane tab index={ad_index})"
-            )
+            logma.info(f"[ad_tab] surfaced (right pane tab index={ad_index})")
         except Exception as e:
-            logma.warning(
-                f"[ad_tab] _switch_to_this_tab failed (non-blocking): {e}"
-            )
+            logma.warning(f"[ad_tab] _switch_to_this_tab failed (non-blocking): {e}")
 
     def _start_surface_timer(self) -> None:
         """Start the QTimer that raises this tab every surface_interval_ms.
@@ -2009,9 +1976,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self._timer.setInterval(surface_ms)
         self._timer.timeout.connect(self._switch_to_this_tab)
         self._timer.start()
-        logma.info(
-            f"[ad_tab] surface timer started (interval={surface_ms}ms)"
-        )
+        logma.info(f"[ad_tab] surface timer started (interval={surface_ms}ms)")
 
     def _cleanup(self) -> None:
         """Stop the surface timer when this tab is being replaced
@@ -2056,10 +2021,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         try:
             engine = getattr(self.viewer, "engine", None)
             if engine is None:
-                logma.warning(
-                    "[ad_tab] _install_ncho_interception_page: "
-                    "no engine on viewer; skipping"
-                )
+                logma.warning("[ad_tab] _install_ncho_interception_page: " "no engine on viewer; skipping")
                 return
             self._ncho_action_handlers = {
                 self.NCHO_ACTION_OPEN_SETTINGS: self._open_settings_node,
@@ -2070,7 +2032,9 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             except Exception:
                 profile = None
             new_page = _NchoInterceptionPage(
-                profile, engine, handlers=self._ncho_action_handlers,
+                profile,
+                engine,
+                handlers=self._ncho_action_handlers,
             )
             engine.setPage(new_page)
             logma.info(
@@ -2079,10 +2043,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
                 f"{len(self._ncho_action_handlers)} handler(s)"
             )
         except Exception as exc:
-            logma.warning(
-                "[ad_tab] _install_ncho_interception_page failed "
-                f"(non-blocking): {exc}"
-            )
+            logma.warning("[ad_tab] _install_ncho_interception_page failed " f"(non-blocking): {exc}")
 
     def _open_settings_node(self, _action_url: str) -> None:
         """Route the ``ncho://action/open_settings`` action to the
@@ -2126,28 +2087,17 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             # directly on ``app``. Try both.
             switcher = None
             inner_view = getattr(app, "view", None)
-            if inner_view is not None and hasattr(
-                inner_view, "switch_to_account_tab"
-            ):
+            if inner_view is not None and hasattr(inner_view, "switch_to_account_tab"):
                 switcher = inner_view.switch_to_account_tab
             elif hasattr(app, "switch_to_account_tab"):
                 switcher = app.switch_to_account_tab
             if switcher is None:
-                logma.warning(
-                    "[ad_tab] _open_settings_node: no "
-                    "switch_to_account_tab available on app/view"
-                )
+                logma.warning("[ad_tab] _open_settings_node: no " "switch_to_account_tab available on app/view")
                 return
             switcher()
-            logma.info(
-                "[ad_tab] _open_settings_node: routed to "
-                "switch_to_account_tab"
-            )
+            logma.info("[ad_tab] _open_settings_node: routed to " "switch_to_account_tab")
         except Exception as exc:
-            logma.warning(
-                f"[ad_tab] _open_settings_node failed "
-                f"(non-blocking): {exc}"
-            )
+            logma.warning(f"[ad_tab] _open_settings_node failed " f"(non-blocking): {exc}")
 
     def initModel(self, cfg=None) -> Self:
         """ """
@@ -2183,7 +2133,7 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         if self.context_menu_name is not None:
             self.initialize_context_menu(self.context_menu_name)
         cfg = {}
-        self.active_url = NchantdOfficeURL(self.document.active_page.active_url.active_url, self, cfg)
+        self.active_url = NchantdOfficeURL(self.document.active_page.active_url.url_string, self, cfg)
         # self.library = self.document.library
         # self.profiles = self.document.profile_manager
         return self
@@ -2272,22 +2222,14 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
             if telemetry is None:
                 return
             from pyqt import QTimer
+
             self._telemetry_timer = QTimer(self)
-            self._telemetry_timer.setInterval(
-                telemetry.SESSION_TICK_INTERVAL_S * 1000
-            )
-            self._telemetry_timer.timeout.connect(
-                self._emit_telemetry_tick
-            )
+            self._telemetry_timer.setInterval(telemetry.SESSION_TICK_INTERVAL_S * 1000)
+            self._telemetry_timer.timeout.connect(self._emit_telemetry_tick)
             self._telemetry_timer.start()
-            logma.info(
-                "[ad_tab] telemetry session timer started "
-                f"({telemetry.SESSION_TICK_INTERVAL_S}s)"
-            )
+            logma.info("[ad_tab] telemetry session timer started " f"({telemetry.SESSION_TICK_INTERVAL_S}s)")
         except Exception as exc:
-            logma.warning(
-                f"[ad_tab] telemetry timer start failed (noop): {exc}"
-            )
+            logma.warning(f"[ad_tab] telemetry timer start failed (noop): {exc}")
 
     def _emit_telemetry_tick(self) -> None:
         """One heartbeat: session_tick + tab-top snapshot."""
@@ -2307,10 +2249,10 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
 
     def get_active_url(self) -> Optional[str]:
         """"""
-        if self.document.active_page.active_url.active_url is None:
+        if self.document.active_page.active_url.url_string is None:
             logma.info("No active url")
             return None
-        url = self.document.active_page.active_url.active_url
+        url = self.document.active_page.active_url.url_string
         logma.info(f"URL {url}")
         return url
 
@@ -2329,6 +2271,270 @@ class NchantdOfficeAdTab(NchantdOfficeDocument):
         self.save()
         self.document.save()
         return self
+
+
+class NchantdOfficeAPISettings(NchantdAccountSettings):
+    """"""
+
+    def __init__(self, parent=None, cfg=None) -> None:
+        """ """
+        super().__init__(parent, cfg)
+        self.config.override(kahndor.Instruct(PXCFG).select("NchantdOfficeAPISettings").override(cfg))
+        self.user = pyqt.QApplication.instance().model.user
+        self.user_name = None
+        self.account_status = None
+        self.credits_status = None
+        self.scrolling_ad = None
+        self.register_button = None
+        self.profile_image = None
+        self.profile_label = None
+        self.browser = None
+        self.button = None
+
+    def initModel(self) -> "NchantdOfficeAPISettings":
+        """ """
+        super().initModel()
+        self.account = self.app.model.settings.account_settings
+        return self
+
+    def initView(self, cfg=None) -> "NchantdOfficeAPISettings":
+        """"""
+        cfg = cfg or {}
+        if not cfg.get("buttons", None):
+            cfg["buttons"] = {}
+        cfg["buttons"][100] = "_skip"
+        cfg["buttons"][101] = {"action": "refresh", "handler": self.cmd_refresh}
+        super().initView(cfg)
+        layout = pyqt.QHBoxLayout()
+        cfg = {}
+        self.api_entry_bar = NchantdButtonBar(self, cfg).initWidget()
+        layout.addWidget(self.api_entry_bar)
+        cfg = {}
+        self.browser = NchantdWebViewer(self, cfg).initWidget()
+        layout.addWidget(self.browser)
+        self.layout.addLayout(layout)
+        return self
+
+    def initWidget(self) -> "NchantdOfficeAPISettings":
+        """ """
+        self.initModel()
+        self.initView()
+        return self
+
+    def cmd_refresh(self, event=None, *args, **kwargs):
+        """"""
+        super().cmd_refresh(event, args, kwargs)
+
+    def save_account_settings(self) -> bool:
+        """Save account settings to user model"""
+        try:
+            # Update user name if changed
+            if self.user_name and self.user_name.text():
+                new_name = self.user_name.text()
+                if new_name != self.app.model.user.name:
+                    self.app.model.user.name = new_name
+                    logma.info(f"Updated user name to: {new_name}")
+            # Save to persistent storage
+            if hasattr(self.app.model, "save_user_settings"):
+                self.app.model.save_user_settings()
+                logma.info("Account settings saved")
+
+            return True
+
+        except Exception as e:
+            logma.error(f"Error saving account settings: {e}")
+            return False
+
+    def load_account_settings(self) -> bool:
+        """Load account settings from the local user model + live API.
+
+        Two-phase load:
+          1. Populate the local cached values (name, status, credits)
+             from ``self.app.model.user`` so the UI is never blank.
+          2. Make a live API call to nchantrs.com (via
+             ``sync_with_server``) to refresh the cached values
+             when an API key is configured.
+
+        Returns ``True`` if either phase succeeded.
+        """
+        try:
+            user = self.app.model.user
+            # Phase 1 - populate from local cache
+            if self.user_name:
+                self.user_name.setPlaceholderText(f"{user.name}")
+            if self.account_status:
+                self.account_status.setPlaceholderText(f"{user.nchantrs_account_status}")
+            if self.credits_status:
+                self.credits_status.setPlaceholderText(f"{user.nchantrs_account_credits}")
+            # Phase 2 - live API refresh (only if we have a key)
+            if getattr(user, "apikey", None):
+                try:
+                    self.sync_with_server()
+                except Exception as e:
+                    logma.error(f"[accounts] load_account_settings: live refresh failed: {e}", exc_info=True)
+                # Re-populate with whatever the sync updated
+                if self.user_name:
+                    self.user_name.setPlaceholderText(f"{user.name}")
+                if self.account_status:
+                    self.account_status.setPlaceholderText(f"{user.nchantrs_account_status}")
+                if self.credits_status:
+                    self.credits_status.setPlaceholderText(f"{user.nchantrs_account_credits}")
+
+            logma.info("Account settings loaded")
+            return True
+
+        except Exception as e:
+            logma.error(f"Error loading account settings: {e}", exc_info=True)
+            return False
+
+    def validate_account_settings(self) -> dict:
+        """Validate account settings before saving"""
+        errors = []
+        # Validate user name
+        if self.user_name and self.user_name.text():
+            name = self.user_name.text().strip()
+            if len(name) < 2:
+                errors.append("User name must be at least 2 characters")
+            if len(name) > 100:
+                errors.append("User name must be less than 100 characters")
+
+        return {"valid": len(errors) == 0, "errors": errors}
+
+    def update_account_status(self, status: str) -> "NchantdOfficeAPISettings":
+        """Update account status display"""
+        if self.account_status:
+            self.account_status.setPlaceholderText(str(status))
+            self.app.model.user.nchantrs_account_status = status
+        return self
+
+    def update_credits(self, credits: str) -> "NchantdOfficeAPISettings":
+        """Update credits display"""
+        if self.credits_status:
+            self.credits_status.setPlaceholderText(str(credits))
+            self.app.model.user.nchantrs_account_credits = credits
+        return self
+
+    def refresh_browser(self) -> "NchantdOfficeAPISettings":
+        """Refresh the embedded browser with appropriate URL"""
+        try:
+            if not self.browser:
+                return self
+            from nchantdoffice.utilities import urls as _urls
+
+            if self.user.has_pro:
+                url = _urls.whats_new_url()
+            elif self.user.has_account:
+                url = _urls.upgrade_compare_url()
+            else:
+                url = _urls.registration_url()
+            # Update browser
+            if hasattr(self.browser, "load_url"):
+                self.browser.load_url(url)
+            elif hasattr(self.browser, "setUrl"):
+                self.browser.setUrl(pyqt.QUrl(url))
+
+            logma.info(f"Browser refreshed with URL: {url}")
+
+        except Exception as e:
+            logma.error(f"Error refreshing browser: {e}")
+
+        return self
+
+    def get_account_data(self) -> dict:
+        """Get current account data as dictionary"""
+        return {
+            "name": self.user_name.text() if self.user_name and self.user_name.text() else self.app.model.user.name,
+            "status": self.app.model.user.nchantrs_account_status,
+            "credits": self.app.model.user.nchantrs_account_credits,
+            "has_pro": self.app.model.user.has_pro,
+            "has_account": self.app.model.user.has_account,
+            "is_paid": self.app.model.user.is_paid,
+            "apikey": self.app.model.user.apikey,
+        }
+
+    def sync_with_server(self) -> bool:
+        """Issue a magic-link to claim this install.
+
+        DESK T-NEW-049: the legacy sync-with-server flow called
+        ``https://api.nchantrs.com/account`` with the user's
+        ``apikey`` to refresh ``status`` / ``credits`` on the
+        local user object. That endpoint is going away in favour
+        of the account-claim flow (the user signs in via a
+        magic-link instead of pasting an API key), so the
+        sync call now delegates to :class:`ClaimFlow`.
+
+        Behaviour
+        ---------
+        Reads the ``install_store`` + ``entitlement_cache`` +
+        ``license_remote`` from ``self.app.model`` (these are
+        populated at app start -- see DESK T-NEW-046 + 047 +
+        048). Constructs a :class:`ClaimFlow` and calls
+        ``request_magic_link`` with the user's account email.
+        Returns ``True`` if the POST landed (200), ``False`` on
+        a network error.
+
+        Returns
+        -------
+        bool
+            ``True`` on a successful POST, ``False`` on a
+            network / import error. The legacy return contract
+            is preserved -- callers (e.g. ``load_account_settings``)
+            treat ``False`` as "skip the live refresh".
+
+        Why email and not apikey
+        ------------------------
+        The claim flow takes an email (the user types it in the
+        dialog). The legacy flow took an ``apikey`` (the user
+        pasted it once at install time). For backwards
+        compatibility, if the user has an ``apikey`` but no
+        known email, we still call ``request_magic_link`` with
+        an empty string -- the server-side enumeration-safe
+        contract means this is a no-op rather than an error.
+        """
+        try:
+            from nchantdoffice.license.claim_flow import ClaimFlow  # noqa: F401
+
+            app_model = getattr(self.app, "model", None)
+            if app_model is None:
+                logma.warning("[accounts] sync_with_server: no app.model available")
+                return False
+            install_store = getattr(app_model, "install_store", None)
+            entitlement_cache = getattr(app_model, "entitlement_cache", None)
+            license_remote = getattr(app_model, "license_remote", None)
+            if install_store is None or entitlement_cache is None or license_remote is None:
+                logma.warning(
+                    "[accounts] sync_with_server: license plumbing missing "
+                    "(install_store=%r, entitlement_cache=%r, "
+                    "license_remote=%r)",
+                    install_store,
+                    entitlement_cache,
+                    license_remote,
+                )
+                return False
+            user = getattr(app_model, "user", None)
+            email = ""
+            if user is not None:
+                email = getattr(user, "email", "") or getattr(user, "name", "")
+
+            server_base_url = getattr(app_model, "server_base_url", None)
+            if not server_base_url:
+                from nchantdoffice.utilities import urls
+
+                server_base_url = urls.server_base_url()
+            flow = ClaimFlow(
+                install_store=install_store,
+                entitlement_cache=entitlement_cache,
+                license_remote=license_remote,
+                server_base_url=server_base_url,
+            )
+            flow.sync_request_magic_link(email=email)
+            return True
+        except Exception as e:
+            logma.error(
+                f"[accounts] sync_with_server (claim flow) failed: {e}",
+                exc_info=True,
+            )
+            return False
 
 
 class NchantdOfficeWebProfile(NchantdWebProfile):

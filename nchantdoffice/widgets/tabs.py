@@ -29,8 +29,11 @@ from nchantrs.widgets.tabsets import NchantdTab, NchantdTabSet
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
-log = True
+log = False
 logma = Logma(__name__)
+debug = True
+if not log:
+    logma.off()
 
 # ====================================================================================================================||
 pxcfg = join(here, "_data_", "tabs.yaml")

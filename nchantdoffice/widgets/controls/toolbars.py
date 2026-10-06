@@ -158,18 +158,6 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         self.initView()
         return self
 
-    def _navigate_to_new_doc(self, pos: int) -> Self:
-        """T-NEW-139: shared post-creation navigation.
-
-        Refreshes the left-pane tree so the new doc shows up
-        in its parent's tab list, then focuses the new
-        tab in the center pane. Used by ``add_document``
-        and any future sibling (e.g. ``add_tab``).
-        """
-        self.app.view.panes["left"].tree.model.current_node.updateTabs("center")
-        self.app.view.panes["center"].setCurrentIndex(pos)
-        return self
-
     def add_document(self, signal=None, *args, **kwargs) -> Self:
         """Add a new document."""
         import time
@@ -306,113 +294,6 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         }
         self.app.model.add_node(name, ntype, pid, pos, parameters, None, True)
         return self
-
-    def _resolve_db_alias(self) -> str:
-        """Resolve the DB alias for store calls (T-NEW-040).
-
-        Single-instance mode (the current default): returns
-        ``"db"`` when ``self.app.model`` has no ``instance``
-        attribute. Multi-instance mode (future): returns
-        ``self.app.model.instance.db`` when the instance is
-        plumbed through. The MultiInstance plumbing isn't
-        complete in nchantdoffice yet -- the TODO at L167
-        "Switch to MultiInstance" was tracked separately --
-        but the helper centralizes the resolution so the
-        call sites don't need to know.
-
-        Defensive: missing ``self.app``, missing
-        ``self.app.model``, missing ``self.app.model.instance``,
-        or missing ``self.app.model.instance.db`` all fall
-        back to ``"db"`` (single-instance default).
-
-        Returns:
-            The DB alias string (``"db"`` by default).
-        """
-        try:
-            app = getattr(self, "app", None)
-            if app is None:
-                return "db"
-            model = getattr(app, "model", None)
-            if model is None:
-                return "db"
-            instance = getattr(model, "instance", None)
-            if instance is None:
-                return "db"
-            db = getattr(instance, "db", None)
-            if not isinstance(db, str) or not db:
-                return "db"
-            return db
-        except Exception as e:
-            logma.warning(f"[toolbars] _resolve_db_alias failed: {e}")
-            return "db"
-
-    def _compute_note_position(self, existing_count, base_x, base_y, step) -> dict[str, Any]:
-        """Compute the screen position for a new note, offset by
-        the number of existing notes (T-NEW-042).
-
-        Y = ``base_y + existing_count * step`` so each new note
-        appears below the previous one. X is unchanged.
-        ``existing_count`` is clamped to ``>= 0`` defensively
-        (a misbehaving ``get_documents`` query that returns
-        garbage shouldn't produce negative offsets).
-
-        Args:
-            existing_count: int -- number of existing notes for
-                the active node + tabset (from
-                ``self.app.model.get_documents``).
-            base_x, base_y: int -- default position (the legacy
-                ``(1287, 125)`` defaults).
-            step: int -- Y offset per existing note (px).
-
-        Returns:
-            ``{"x": base_x, "y": base_y + max(0, count)*step}``
-        """
-        try:
-            count = max(0, int(existing_count))
-        except (TypeError, ValueError):
-            count = 0
-        return {"x": base_x, "y": base_y + count * step}
-
-    def _count_existing_notes(self) -> int:
-        """Count the existing notes for the active node +
-        tabset. Returns 0 on any error (defensive: the caller
-        uses 0 as the default Y offset).
-
-        Used by the note-launcher path to compute the Y
-        position for a new note (T-NEW-042).
-        """
-        try:
-            app = getattr(self, "app", None)
-            if app is None:
-                return 0
-            model = getattr(app, "model", None)
-            if model is None:
-                return 0
-            view = getattr(app, "view", None)
-            panes = getattr(view, "panes", None) if view is not None else None
-            left = panes.get("left") if isinstance(panes, dict) else None
-            tree = getattr(left, "tree", None) if left is not None else None
-            tree_model = getattr(tree, "model", None) if tree is not None else None
-            current_node = getattr(tree_model, "current_node", None) if tree_model is not None else None
-            nid = getattr(current_node, "nid", None)
-            if nid is None:
-                return 0
-            df = model.get_documents(nid, "center")
-            # Filter to notes (the model returns all docs for
-            # the node+tabset; the "type" column discriminates).
-            try:
-                notes = df[df["type"] == "note"]
-            except Exception:
-                # Defensive: if "type" column is missing or
-                # not a string, fall back to total count.
-                try:
-                    return int(len(df))
-                except Exception:
-                    return 0
-            return int(len(notes))
-        except Exception as e:
-            logma.warning(f"[toolbars] _count_existing_notes failed: {e}")
-            return 0
 
     def add_note(self, signal=None, *args, **kwargs) -> Self:
         """Add a new note.
@@ -567,6 +448,125 @@ class NchantdNewDocumentToolBar(NchantdButtonBar):
         if "add_http_media" in value:
             return self.add_document
         return self.add_document
+
+    def _resolve_db_alias(self) -> str:
+        """Resolve the DB alias for store calls (T-NEW-040).
+
+        Single-instance mode (the current default): returns
+        ``"db"`` when ``self.app.model`` has no ``instance``
+        attribute. Multi-instance mode (future): returns
+        ``self.app.model.instance.db`` when the instance is
+        plumbed through. The MultiInstance plumbing isn't
+        complete in nchantdoffice yet -- the TODO at L167
+        "Switch to MultiInstance" was tracked separately --
+        but the helper centralizes the resolution so the
+        call sites don't need to know.
+
+        Defensive: missing ``self.app``, missing
+        ``self.app.model``, missing ``self.app.model.instance``,
+        or missing ``self.app.model.instance.db`` all fall
+        back to ``"db"`` (single-instance default).
+
+        Returns:
+            The DB alias string (``"db"`` by default).
+        """
+        try:
+            app = getattr(self, "app", None)
+            if app is None:
+                return "db"
+            model = getattr(app, "model", None)
+            if model is None:
+                return "db"
+            instance = getattr(model, "instance", None)
+            if instance is None:
+                return "db"
+            db = getattr(instance, "db", None)
+            if not isinstance(db, str) or not db:
+                return "db"
+            return db
+        except Exception as e:
+            logma.warning(f"[toolbars] _resolve_db_alias failed: {e}")
+            return "db"
+
+    def _compute_note_position(self, existing_count, base_x, base_y, step) -> dict[str, Any]:
+        """Compute the screen position for a new note, offset by
+        the number of existing notes (T-NEW-042).
+
+        Y = ``base_y + existing_count * step`` so each new note
+        appears below the previous one. X is unchanged.
+        ``existing_count`` is clamped to ``>= 0`` defensively
+        (a misbehaving ``get_documents`` query that returns
+        garbage shouldn't produce negative offsets).
+
+        Args:
+            existing_count: int -- number of existing notes for
+                the active node + tabset (from
+                ``self.app.model.get_documents``).
+            base_x, base_y: int -- default position (the legacy
+                ``(1287, 125)`` defaults).
+            step: int -- Y offset per existing note (px).
+
+        Returns:
+            ``{"x": base_x, "y": base_y + max(0, count)*step}``
+        """
+        try:
+            count = max(0, int(existing_count))
+        except (TypeError, ValueError):
+            count = 0
+        return {"x": base_x, "y": base_y + count * step}
+
+    def _count_existing_notes(self) -> int:
+        """Count the existing notes for the active node +
+        tabset. Returns 0 on any error (defensive: the caller
+        uses 0 as the default Y offset).
+
+        Used by the note-launcher path to compute the Y
+        position for a new note (T-NEW-042).
+        """
+        try:
+            app = getattr(self, "app", None)
+            if app is None:
+                return 0
+            model = getattr(app, "model", None)
+            if model is None:
+                return 0
+            view = getattr(app, "view", None)
+            panes = getattr(view, "panes", None) if view is not None else None
+            left = panes.get("left") if isinstance(panes, dict) else None
+            tree = getattr(left, "tree", None) if left is not None else None
+            tree_model = getattr(tree, "model", None) if tree is not None else None
+            current_node = getattr(tree_model, "current_node", None) if tree_model is not None else None
+            nid = getattr(current_node, "nid", None)
+            if nid is None:
+                return 0
+            df = model.get_documents(nid, "center")
+            # Filter to notes (the model returns all docs for
+            # the node+tabset; the "type" column discriminates).
+            try:
+                notes = df[df["type"] == "note"]
+            except Exception:
+                # Defensive: if "type" column is missing or
+                # not a string, fall back to total count.
+                try:
+                    return int(len(df))
+                except Exception:
+                    return 0
+            return int(len(notes))
+        except Exception as e:
+            logma.warning(f"[toolbars] _count_existing_notes failed: {e}")
+            return 0
+
+    def _navigate_to_new_doc(self, pos: int) -> Self:
+        """T-NEW-139: shared post-creation navigation.
+
+        Refreshes the left-pane tree so the new doc shows up
+        in its parent's tab list, then focuses the new
+        tab in the center pane. Used by ``add_document``
+        and any future sibling (e.g. ``add_tab``).
+        """
+        self.app.view.panes["left"].tree.model.current_node.updateTabs("center")
+        self.app.view.panes["center"].setCurrentIndex(pos)
+        return self
 
 
 class NchantdCellFormattingToolBar(NchantdButtonBar):

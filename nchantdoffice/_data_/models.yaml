@@ -311,7 +311,7 @@ NchantdOfficeTabSetModel:
               #- ['Search', 'widgets.documents.atnrg.browsers.NchantdOfficeSlimTabSearch', "{}", '0', "7e7a40ce-4455-4561-ae40-12852d810b81", 2, 'custom_widget', 'right']
               - ['', 'nchantrs.widgets.calculators.calculators.NchantdAdvancedCalculator', "{}", '0', "06875532-6b6d-7d9b-8000-c7073dc89ef6", 3, 'custom_widget', 'right']
               #- ['Feedback', 'widgets.documents.media.forms.NchantdOfficeFeedback', "{}", '0', "37f8112e-c361-4a06-b5ae-6541b3a77d8a", 3, 'custom_widget', 'right']
-              - ['Ad', 'nchantdoffice.widgets.documents.atnrg.browsers.NchantdOfficeAdTab', "{}", '0', "936073aa-37e1-4c38-8296-94dcd1ba9e0d", 4, 'custom_widget', 'right']
+              - ['', 'nchantdoffice.widgets.documents.atnrg.browsers.NchantdOfficeAdTab', "{}", '0', "936073aa-37e1-4c38-8296-94dcd1ba9e0d", 4, 'custom_widget', 'right']
             'params':
               'filters':
           'doc_tab':

@@ -39,6 +39,7 @@ pxcfg = join(here, "_data_", "pages.yaml")
 # DESK T-NEW-052: route through the unified URL config so the
 # operator can point the embedded browser at an internal site.
 from nchantdoffice.utilities.urls import home_page as _home_page
+
 HOMEPAGE = {"url": _home_page()}
 HOMEURL = HOMEPAGE.get("url")
 
@@ -121,9 +122,7 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
         # every <script>/<img> load.
         if is_main_frame:
             parent_obj = getattr(self, "parent", None)
-            if parent_obj is not None and hasattr(
-                parent_obj, "update_toolbox_url_inspection"
-            ):
+            if parent_obj is not None and hasattr(parent_obj, "update_toolbox_url_inspection"):
                 try:
                     parent_obj.update_toolbox_url_inspection()
                 except Exception:
@@ -142,17 +141,15 @@ class NchantdOfficeWebPage(NchantdWebEnginePage):
 
     def get_active_url(self) -> NchantdURL:
         """"""
-        cfg = {}
-        url = None
-        url = NchantdURL(url, self, cfg).initModel()
+        url = self.active_url
         return url
 
-    def open_new_tab(self) -> Self:
-        """Open a new browser tab."""
-        super().open_new_tab()
-        cfg = {}
-        self.parent.app.model.codex.init_browser(cfg).load_document()
-        return self
+    # def open_new_tab(self) -> Self:
+    #     """Open a new browser tab."""
+    #     super().open_new_tab()
+    #     cfg = {}
+    #     self.parent.app.model.codex.init_browser(cfg).load_document()
+    #     return self
 
     def submit_text_to_webpage(self, element_name: str = "input") -> None:
         """Submit text from QLineEdit to a specific webpage element.

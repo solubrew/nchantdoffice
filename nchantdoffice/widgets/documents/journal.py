@@ -48,7 +48,7 @@ from pycurity.pyhash import decode64
 
 # ====================================================================================================================||
 here = join(dirname(__file__), "")  # ||
-log = True
+log = False
 logma = Logma(__name__)
 debug = True
 if not log:
@@ -142,9 +142,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             text_cursor.movePosition(pyqt.QTextCursor.End)
             self.editor.setTextCursor(text_cursor)
         except Exception as exc:
-            logma.warning(
-                f"[journal] initView: scroll to bottom failed: {exc}"
-            )
+            logma.warning(f"[journal] initView: scroll to bottom failed: {exc}")
         return self
 
     def initWidget(self):
@@ -284,16 +282,12 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
         try:
             content = self.get_content()
         except Exception as exc:
-            logma.warning(
-                f"[journal] populate_document: get_content failed: {exc}"
-            )
+            logma.warning(f"[journal] populate_document: get_content failed: {exc}")
             return self
         try:
             self.entries = self.parse(content) or {}
         except Exception as exc:
-            logma.warning(
-                f"[journal] populate_document: parse failed: {exc}"
-            )
+            logma.warning(f"[journal] populate_document: parse failed: {exc}")
         return self
 
     def get_journal_text(self):
@@ -324,9 +318,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             text = self.get_journal_text()
             self.full_text = text
         except Exception as exc:
-            logma.warning(
-                f"[journal] refresh_content: get_journal_text failed: {exc}"
-            )
+            logma.warning(f"[journal] refresh_content: get_journal_text failed: {exc}")
             return self
         try:
             self.editor.setPlainText(text)
@@ -334,9 +326,7 @@ class NchantdOfficeJournalEditor(NchantdOfficeDocument):
             # editor not yet initialized (e.g. during early construction)
             pass
         except Exception as exc:
-            logma.warning(
-                f"[journal] refresh_content: editor.setPlainText failed: {exc}"
-            )
+            logma.warning(f"[journal] refresh_content: editor.setPlainText failed: {exc}")
         return self
 
     def save(self, path=None, format_=None, encrypt=False):
@@ -535,7 +525,9 @@ class NchantdOfficeJournalAppendEditor(NchantdAppendOnlyEditor):
                     if item:
                         masked = masked.replace(str(item), f"[{pii_type}]")
             pyqt.QApplication.instance().clipboard().setText(masked)
-            logma.info(f"[journal] cmd_copy_without_pii: copied {len(selected)} chars, {sum(len(v) for v in results.values())} PII chars masked")
+            logma.info(
+                f"[journal] cmd_copy_without_pii: copied {len(selected)} chars, {sum(len(v) for v in results.values())} PII chars masked"
+            )
         except Exception as exc:
             logma.warning(f"[journal] cmd_copy_without_pii failed: {exc}")
         return self

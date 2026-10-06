@@ -1,4 +1,7 @@
+#!/usr/bin/env python3
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
+
+
 """
 ---
 <(META)>:
@@ -36,18 +39,32 @@
     - Fire-and-forget: emit() never blocks the UI thread.
     - Identity is best-effort: missing install_store or user model
       just degrades fields to None, never raises.
----
 """
 
+# -*- coding: utf-8 -*
+# ======================================Standard Library Modules======================================================||
 from __future__ import annotations
-
+from os.path import abspath, dirname, join
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Union
 import time
 
-# -- @_@] ------------------------------------------------------------------*
+# ======================================3rd Party Library Modules=====================================================||
 
-import logma
 
-# -- @_@] ------------------------------------------------------------------*
+# ======================================Solutions Brewer Library Modules==============================================||
+from kahndor import kahndor
+from kahndor.logma import Logma
+
+# ====================================================================================================================||
+HERE = join(dirname(__file__), "")  # ||
+log = True
+logma = Logma(__name__)
+if not log:
+    logma.off()
+# ====================================================================================================================||
+PXCFG = join(HERE, "_data_", ".yaml")
+
 
 __all__ = ["AdTabTelemetry"]
 
@@ -94,16 +111,14 @@ class AdTabTelemetry:
         uid = None
         try:
             from nchantdoffice.license.install_store import InstallStore
+
             record = InstallStore().get_or_create()
-            inst = (
-                record.get("desktop_uuid")
-                or record.get("install_id")
-                or ""
-            )
+            inst = record.get("desktop_uuid") or record.get("install_id") or ""
         except Exception:
             inst = ""
         try:
             from pyqt import QApplication
+
             user = QApplication.instance().model.user
             uid = getattr(user, "id", None)
         except Exception:
@@ -191,13 +206,12 @@ class AdTabTelemetry:
             if nam is None:
                 return
             from pyqt import QNetworkRequest, QUrl
+
             base = _server_base()
             if not base:
                 return
             request = QNetworkRequest(QUrl(base + self.TELEMETRY_URL_PATH))
-            request.setHeader(
-                QNetworkRequest.ContentTypeHeader, "application/json"
-            )
+            request.setHeader(QNetworkRequest.ContentTypeHeader, "application/json")
             body = _json_dumps(payload).encode("utf-8")
             nam.post(request, body)
         except Exception as exc:
@@ -207,6 +221,7 @@ class AdTabTelemetry:
         if self._nam is None:
             try:
                 from pyqt import QNetworkAccessManager
+
                 self._nam = QNetworkAccessManager(self._tab)
             except Exception:
                 self._nam = None
@@ -219,9 +234,7 @@ class AdTabTelemetry:
     def emit_rotation(self, layout):
         """Ad page finished loading after a rotation tick."""
         try:
-            event = self.build_event(
-                "rotation", layout=layout
-            )
+            event = self.build_event("rotation", layout=layout)
             self._last_stack_position = event["stack_position"]
             self._last_on_top = event["is_on_top"]
             self._post(self.build_batch([event]))
@@ -263,6 +276,7 @@ class AdTabTelemetry:
             if not inst:
                 return ""
             from urllib.parse import urlencode
+
             stack_pos, on_top = self._tab_context()
             params = {
                 "inst": inst,
@@ -284,6 +298,7 @@ class AdTabTelemetry:
 def _iso_now():
     """UTC ISO timestamp for client_ts."""
     import datetime as dt
+
     return dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
 
 
@@ -291,6 +306,7 @@ def _server_base():
     """Server base URL from the unified urls config."""
     try:
         from nchantdoffice.utilities.urls import server_base_url
+
         return server_base_url().rstrip("/")
     except Exception:
         return ""
@@ -298,4 +314,10 @@ def _server_base():
 
 def _json_dumps(payload):
     import json
+
     return json.dumps(payload)
+
+
+# ====================================================================================================================||
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@||
