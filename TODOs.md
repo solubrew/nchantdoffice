@@ -3046,6 +3046,44 @@ reopen) is harness-blocked. Recommend splitting into:
 - T-NEW-047 (visible history replay on reopen -- needs the Qt
   parent subprocess harness from the Shroud review).
 
+**Progress (2026-10-06, T-NEW-079 followup):** the *model-layer*
+restore gates are now fixed end-to-end (pyffice `0093a7a` +
+nchantdoffice this commit). Root cause was a six-gate defect chain,
+not a Qt rendering issue:
+
+1. `PyfficeURL.__init__` silently dropped positional strings
+   (`url_string` stuck at HOMEURL).
+2. `PyfficeURL.to_dict` did not serialise `url_string` — the saved
+   blob carried no URL at all.
+3. `PyfficeWebPage.set_url` had a `pinned_on_dttm is None` guard
+   that no-op'd every navigation after the first `load_document`.
+4. `PyfficeWebBrowser.set_pages` discarded saved page dicts.
+5. `PyfficeWebPage.load_document` read the URL from the outer dict
+   (always None); the serialised form puts it under
+   `data.url.url_string`. Browser `load_document` did not consume
+   the widget's `data.content` blob shape either.
+6. The widget only saved on `focusOutEvent` — tab-switch fires
+   `hideEvent`, so the last URL was never persisted before the
+   lazy rebuild destroyed the widget.
+
+Fixes: pyffice `0093a7a` (URL ctor/serialise/set_url/load_document
+shapes + browser `data.content` restore); nchantdoffice
+`browsers.py` (`hideEvent`/`closeEvent` save hooks per the notebook
+Lesson-55 pattern + `initModel` passes the saved document into
+`load_document` instead of the URL-wiping no-args call).
+Empirically verified in the zuh venv: navigate → save → rebuild →
+`active_url.url_string` restored (site-X, not HOMEPAGE) across
+page-level, `data.content`, flat-URL-blob, `set_pages`, and
+`set_page_active` shapes. 6 new pinned tests in
+`tests/test_browser_db_roundtrip.py` (all green).
+
+**Still open under this card:** T-NEW-047 (Qt-visible history
+replay via the subprocess harness — the back/forward stack is
+serialised but the QWebEngineView still needs explicit replay), and
+the 9 pre-existing `test_browser_url_history.py` /
+Sprint-2-roundtrip mock failures (mocks target the pre-rename
+`active_url` attribute shape; need re-pointing at `url_string`).
+
 ### T-NEW-043 — Image rendering permanently narrows the right pane (CLOSED 2026-08-04, `8e3a1f2`)
 
 Per `testing-report_20260803.md`, opening/resizing an image document

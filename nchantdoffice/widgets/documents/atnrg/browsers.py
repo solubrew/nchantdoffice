@@ -76,7 +76,7 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         self.pin = False
 
     def initModel(self, cfg=None) -> Self:
-        """"""
+        """ """
         cfg = cfg or {}
         if cfg.get("document", None) is None:
             cfg["document"] = {"data": {"unit": {}}}
@@ -89,7 +89,14 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         document["document"]["home_url"] = HOMEURL
         logma.json(document)
         self.document = self.app.model.codex.init_browser(document)
-        self.document.load_document()
+        # T-NEW-079: the no-args ``load_document()`` was wiping the
+        # persisted URL on every tab-return — every freshly
+        # materialised browser widget rebuilt at HOMEPAGE even when
+        # the user had navigated to site-X before switching away.
+        # Pass the full cfg so ``PyfficeWebBrowser.load_document``
+        # routes through ``set_pages`` + ``set_page_active`` and the
+        # saved ``url_string`` / history land in the page model.
+        self.document.load_document(document)
         self.initialize_context_menu("context.document.browser")
         logma.json(self.document.to_dict())
         # need to connect to the active page aligned with PyfficeBrowser
@@ -476,12 +483,47 @@ class NchantdOfficeWebBrowser(NchantdOfficeDocument):
         return df
 
     def focusOutEvent(self, event, *args, **kwargs) -> Self:
-        """"""
+        """ """
         super().focusOutEvent(event)
         logma.debug(f"LifecycleState: {dir(pyqt.QWebEnginePage.LifecycleState)}")
         self.viewer.page.setLifecycleState(pyqt.QWebEnginePage.LifecycleState.Frozen)
         self.save()
         return self
+
+    def hideEvent(self, event) -> None:
+        """T-NEW-079 — persist browser state when the tab stops being visible.
+
+        Qt fires ``hideEvent`` on tab-switch (the outgoing tab is
+        hidden), on ``addTab`` of another widget, on ``removeTab``,
+        and on parent-window minimise. ``focusOutEvent`` only covers
+        keyboard-focus loss, which often does NOT fire on a
+        tab-switch — so without this hook the last URL was never
+        written to the DB before the lazy rebuild destroyed the
+        widget, and the tab-return rebuild fell back to HOMEPAGE.
+
+        Mirrors the proven NchantdOfficeNotebook Lesson-55 pattern
+        (``save_open_state`` on hide/close). Here the state IS the
+        document, so a direct ``self.save()`` is the whole story.
+        """
+        try:
+            self.save()
+        except Exception as e:
+            logma.warning(f"[browser] hideEvent save failed: {e}")
+        super().hideEvent(event)
+
+    def closeEvent(self, event) -> None:
+        """T-NEW-079 — last-chance persist when the widget is destroyed.
+
+        Belt-and-suspenders alongside ``hideEvent``: fires when the
+        tab is permanently closed (X button / app quit), after any
+        hide-save may have been skipped (e.g. unloading via
+        ``removeTab`` without a prior focus loss).
+        """
+        try:
+            self.save()
+        except Exception as e:
+            logma.warning(f"[browser] closeEvent save failed: {e}")
+        super().closeEvent(event)
 
     def get_active_url(self) -> Optional[str]:
         """"""

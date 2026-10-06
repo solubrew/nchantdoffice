@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] — 2026-10-06 (browser tab-return URL restore)
+
+### Fixed
+
+- **`NchantdOfficeWebBrowser` restores the last-visited site on
+  tab-return instead of reverting to HOMEPAGE.** Advances
+  T-NEW-044 / T-NEW-079-followup; the model-layer restore chain
+  was broken at six independent gates (details in TODOs.md). The
+  companion pyffice fix is `0093a7a`.
+  1. `PyfficeURL.__init__` dropped positional strings; now routed
+     through `load_unit`.
+  2. `PyfficeURL.to_dict` now serialises `url_string`.
+  3. `PyfficeWebPage.set_url` — the `pinned_on_dttm is None` guard
+     that no-op'd every navigation after the first `load_document`
+     is removed; input shapes (bare str / cfg dict / full URL
+     blob) are normalised.
+  4. `PyfficeWebBrowser.set_pages` now feeds saved page dicts into
+     `load_document` instead of discarding them.
+  5. `PyfficeWebPage.load_document` reads the URL from
+     `data.url.url_string` (legacy top-level fallback) and
+     unwraps the widget's `{"content": ...}` /
+     `{"data": {"content": ...}}` shapes;
+     `PyfficeWebBrowser.load_document` additionally re-hydrates
+     the active page from `data.content`.
+  6. The widget now persists on `hideEvent` + `closeEvent`
+     (notebook Lesson-55 pattern) — tab-switch fires `hideEvent`,
+     not `focusOutEvent`, so the last URL previously never reached
+     the DB before the lazy rebuild destroyed the widget.
+     `initModel` also passes the saved document into
+     `load_document` (was a URL-wiping no-args call).
+- **New pinned tests:** 6 state-restore regression tests in
+  `tests/test_browser_db_roundtrip.py` driving real pyffice
+  classes through navigate → save → rebuild → assert URL
+  restored (page round-trip, widget `content` shape, flat URL
+  blob, `set_pages` restore, `set_page_active`, full
+  save-then-rebuild). All green; suites match pre-change
+  baselines exactly (zero regressions).
+
 ## [Unreleased] — 2026-09-14 (notebook pending-target race fix)
 
 ### Fixed
