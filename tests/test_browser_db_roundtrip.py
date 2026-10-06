@@ -322,3 +322,37 @@ def test_full_save_then_rebuild_round_trip():
     assert browser2.active_page.active_url.url_string == "https://site-X.example.com/article?read=1", (
         f"tab-return restore lost the URL; got {browser2.active_page.active_url.url_string!r}"
     )
+
+
+def test_fresh_empty_document_keeps_active_url_as_object():
+    """T-NEW-079 followup (2026-10-06): a fresh/empty document (the
+    every-startup case) must still expose ``active_page`` and
+    ``active_page.active_url.url_string`` — never None. The early
+    ``return self`` on ``set_url(None)`` introduced here broke
+    ``NchantdOfficeWebBrowser.initModel`` (line 108) and
+    ``NchantdOfficeAdTab.initModel`` (line 2178) with
+    ``AttributeError: 'NoneType' object has no attribute 'url_string'`` /
+    ``'to_dict'``. Pre-fix the old ``set_url(None)`` built
+    ``PyfficeURL(None)`` → HOMEURL default and assigned it, which
+    downstream consumers relied on.
+    """
+    _, _, PyfficeWebBrowser = _pyffice_imports()
+    # Exact shapes the two widget initModel paths send in:
+    for label, cfg in [
+        ("empty data (NchantdOfficeWebBrowser)", {"document": {"data": {}, "home_url": "https://www.pyffice.com/"}}),
+        ("unit-only data (NchantdOfficeAdTab)", {"document": {"data": {"unit": {}}, "home_url": "https://www.pyffice.com/"}}),
+        ("no data key at all (legacy)", {"document": {"home_url": "https://www.pyffice.com/"}}),
+    ]:
+        b = PyfficeWebBrowser({})
+        b.load_document(cfg)
+        assert b.active_page is not None, f"{label}: active_page is None after load_document"
+        assert b.active_page.active_url is not None, f"{label}: active_page.active_url is None"
+        assert isinstance(b.active_page.active_url.url_string, str), (
+            f"{label}: active_url.url_string is not a str: {b.active_page.active_url.url_string!r}"
+        )
+        # CRASH SITE 1 (browsers.py:2178): self.document.active_page.active_url.url_string
+        _ = b.active_page.active_url.url_string
+        # CRASH SITE 2 (browsers.py:108): get_active_page().get_url_document().to_dict()
+        url_doc = b.get_active_page().get_url_document()
+        assert url_doc is not None, f"{label}: get_url_document() returned None"
+        _ = url_doc.to_dict()

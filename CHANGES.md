@@ -45,6 +45,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   save-then-rebuild). All green; suites match pre-change
   baselines exactly (zero regressions).
 
+### Hotfix — `PyfficeWebPage.set_url` `None` regression (2026-10-06)
+
+- **Regression discovered via live UI startup:** the new
+  `set_url` short-circuited `url=None` (early `return self`),
+  leaving `active_url=None` for fresh/empty documents. Downstream
+  consumers (`NchantdOfficeAdTab.initModel` at browsers.py:2178
+  reading `active_page.active_url.url_string`; `initModel` at
+  browsers.py:108 calling `get_active_page().get_url_document()
+  .to_dict()`) crashed with `AttributeError: 'NoneType' object
+  has no attribute ...` on every fresh-tab load.
+- **Fix:** `PyfficeWebPage.set_url` now defaults
+  `self.active_url = PyfficeURL(None)` when `url is None` and the
+  attribute is unset, restoring the pre-rename invariant the
+  rest of the codebase relied on.
+- **New pinned regression test:**
+  `test_fresh_empty_document_keeps_active_url_as_object` covers
+  the three empty-document shapes (`{}`, `{"unit":{}}`, no data)
+  through both crash sites. Drives the exact traceback paths
+  from the live UI log.
+
 ## [Unreleased] — 2026-09-14 (notebook pending-target race fix)
 
 ### Fixed
